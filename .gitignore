@@ -1,0 +1,4 @@
+*.py~
+build
+qtt.egg-info
+*.md~
