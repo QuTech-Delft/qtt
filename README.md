@@ -2,11 +2,16 @@
 
 Qcodes is a Python-based framework developed by QuTech (TU Delft/TNO) for automated tuning of qubits.
 
-Qcodes has taken inspiration from many similar frameworks that have come before it, including:
+Also see
 - [QuTech](https://http://qutech.nl/)
 - [TNO](https://tno.nl)
 
 QTT is compatible with Python 3.4+ and (at this moment Python 2.7). 
+
+## Structure
+
+QTT depends on Qcodes. Other repositories are the user scripts and measurement setups.
+
 
 ## Installation
 

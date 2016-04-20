@@ -29,6 +29,12 @@ import qtt
 #%%
 
 
+def partiala(method, **kwargs):
+  ''' Function to perform functools.partial on named arguments '''
+  def t(x):
+    return method(x, **kwargs)
+  return t
+
 
 class ModelError(Exception):
     ''' Error in Model '''
@@ -42,16 +48,21 @@ class DummyModel(MockModel):
         self._data = dict()
         #self.name = name
 
-        for instr in ['ivvi1x', 'gates', 'ivvi2']:
+        for instr in ['gates', 'ivvi1x', 'ivvi2']:
             #setattr(self, '%s_get' % instr, partial(self._generic_get, instrument=instr) )
             #setattr(self, '%s_set' % instr, partial(self._generic_set, instrument=instr) )
             if not instr in self._data:
                 self._data[instr] = dict()
-            setattr(self, '%s_get' % instr, lambda parameter: self._generic_get( instrument=instr, parameter=parameter) )
-            setattr(self, '%s_set' % instr, lambda parameter, value: self._generic_set( instrument=instr, parameter=parameter, value=value) )
+            #setattr(self, '%s_get' % instr, lambda parameter: self._generic_get( instrument=instr, parameter=parameter) )
+            #setattr(self, '%s_set' % instr, lambda parameter, value: self._generic_set( instrument=instr, parameter=parameter, value=value) )
+            setattr(self, '%s_get' % instr, partial(self._generic_get, instr ) )
+            setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
 
         self._data['ivvi1'] = dict()
-
+        self._data['gates']=dict()
+        self._data['keithley3']=dict()
+        self._data['keithley3']['amplitude']=.5
+        
         super().__init__(name=name)
 
     def compute(self):
@@ -60,35 +71,63 @@ class DummyModel(MockModel):
         # current through keithley1, 2 and 3
 
         v = float(self._data['ivvi1']['c11'])
-        logging.debug('here 0')
         c = qtt.logistic(v, 0., 1 / 40.)
 
         instrument = 'keithley3'
         if not instrument in self._data:
             self._data[instrument] = dict()
-        self._data[instrument]['amplitude'] = c + np.random.rand() / 10.
+        val=c + np.random.rand() / 10.
+        logging.debug('compute: value %f' % val)
+        self._data[instrument]['ampl'] = val
 
 
         return c
 
     def _generic_get(self, instrument, parameter):
+        if not parameter in self._data[instrument]:
+            self._data[instrument][parameter]=0
         return self._data[instrument][parameter]
 
     def _generic_set(self, instrument, parameter, value):
         logging.debug('_generic_set: param %s, val %s' % (parameter, value))
         self._data[instrument][parameter] = value
+
+    def gates_get2(self, param):
+        logging.debug('gates_get: %s' % param)
+        return self._data['gates']['param']
+        #return 1
+        
+    def gates_set2(self, param, value):
+        logging.debug('gates_set: %s value %s' % ( param, value) )
+        print('gates_set: %s value %s' % ( param, value) )
+        self._data['gates']['param']=value        
+        #self._generic_set('ivvi1', param, value)
+        pass
         
     def ivvi1_get(self, param):
         logging.debug('ivvi1_get: %s' % param)
         return self._generic_get('ivvi1', param)
         
     def ivvi1_set(self, param, value):
-        logging.debug('ivvi1_set: %s' % param)
+        logging.debug('ivvi1_set: %s value %s' % ( param, value) )
+        print('ivvi1_set: before generic_set')
         self._generic_set('ivvi1', param, value)
+        print('ivvi1_set: after generic_set')
 
+    def meter_get(self, param):
+        return self.keithley3_get(param)
+        
     def keithley3_get(self, param):
-        self.compute()
-        self._generic_get('keithley3', param)
+        return 0
+        self.compute()        
+        return self._generic_get('keithley3', param)
+
+    def keithley3_set(self, param, value):
+        self.compute()        
+        pass
+        print('huh?')
+        #return self._generic_get('keithley3', param)
+
 
     def write_old(self, instrument, parameter, value):
         if not instrument in self._data:
@@ -118,18 +157,18 @@ class VirtualIVVI(MockInstrument):
 
     ''' Virtual instrument representing an IVVI '''
 
-    def __init__(self, name, model, server_name=None, gates=['c%d' % i for i in range(1, 17)]):
-        super().__init__(name, model=model, server_name=server_name)
+    def __init__(self, name, model, gates=['c%d' % i for i in range(1, 17)], **kwargs):
+        super().__init__(name, model=model, **kwargs)
 
         self._gates = gates
         logging.debug('add gates')
         for i, g in enumerate(gates):
             cmdbase = g  # 'c{}'.format(i)
-            logging.info('add gate %s' % g )
+            logging.debug('add gate %s' % g )
             self.add_parameter(g,
                                label='Gate {} (mV)'.format(g),
                                get_cmd=cmdbase + '?',
-                               set_cmd=cmdbase + ' {:.4f}',
+                               set_cmd=cmdbase + ':{:.4f}',
                                get_parser=float,
                                vals=Numbers(-800, 400))
 
@@ -148,7 +187,7 @@ class VirtualIVVI(MockInstrument):
         ''' Get all parameters in instrument '''
         for g in self._gates:
             logging.debug('get_all %s: %s' % (self.name, g) )
-            #self.get(g)
+            self.get(g)
 
     def __repr__(self):
         ''' Return string description instance '''
@@ -160,9 +199,9 @@ class VirtualIVVI(MockInstrument):
 
 class MockSource(MockInstrument):
 
-    def __init__(self, name, model):
+    def __init__(self, name, model, **kwargs):
         ''' Dummy source object '''
-        super().__init__(name, model=model)
+        super().__init__(name, model=model, **kwargs)
 
         # this parameter uses built-in sweeping to change slowly
         self.add_parameter('amplitude',
@@ -177,8 +216,8 @@ class MockSource(MockInstrument):
 
 class MockMeter(MockInstrument):
 
-    def __init__(self, name, model):
-        super().__init__(name, model=model)
+    def __init__(self, name, model, **kwargs):
+        super().__init__(name, model=model, **kwargs)
 
         self.add_parameter('amplitude',
                            label='Current (nA)',
@@ -192,8 +231,8 @@ class MockMeter(MockInstrument):
 # from qcodes.utils.validators import Validator
 class virtual_gates(Instrument):
 
-    def __init__(self, name, instruments, gate_map):
-        super().__init__(name)
+    def __init__(self, name, instruments, gate_map, **kwargs):
+        super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
         # Create all functions for the gates as defined in self._gate_map

@@ -2,3 +2,4 @@
 build
 qtt.egg-info
 *.md~
+__pycache__
