@@ -44,7 +44,7 @@ class ModelError(Exception):
 class DummyModel(MockModel):
 
     ''' Dummy model for testing '''
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
         self._data = dict()
         #self.name = name
 
@@ -55,9 +55,13 @@ class DummyModel(MockModel):
                 self._data[instr] = dict()
             #setattr(self, '%s_get' % instr, lambda parameter: self._generic_get( instrument=instr, parameter=parameter) )
             #setattr(self, '%s_set' % instr, lambda parameter, value: self._generic_set( instrument=instr, parameter=parameter, value=value) )
-            setattr(self, '%s_get' % instr, partial(self._generic_get, instr ) )
-            setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
-
+            if 1:
+                setattr(self, '%s_get' % instr, partial(self._generic_get, instr ) )
+                setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
+            else:
+                setattr(self, '%s_get' % instr, self._dummy_get )
+                setattr(self, '%s_set' % instr, self._dummy_set )
+            
         self._data['ivvi1'] = dict()
         self._data['gates']=dict()
         self._data['keithley3']=dict()
@@ -65,9 +69,15 @@ class DummyModel(MockModel):
         
         super().__init__(name=name)
 
+    def _dummy_get(self, param):
+        return 0
+    def _dummy_set(self, param, value):
+        pass
+        
     def compute(self):
         ''' Compute output of the model '''
 
+        logging.debug('compute')
         # current through keithley1, 2 and 3
 
         v = float(self._data['ivvi1']['c11'])
@@ -78,8 +88,7 @@ class DummyModel(MockModel):
             self._data[instrument] = dict()
         val=c + np.random.rand() / 10.
         logging.debug('compute: value %f' % val)
-        self._data[instrument]['ampl'] = val
-
+        self._data[instrument]['amplitude'] = val
 
         return c
 
@@ -90,7 +99,7 @@ class DummyModel(MockModel):
 
     def _generic_set(self, instrument, parameter, value):
         logging.debug('_generic_set: param %s, val %s' % (parameter, value))
-        self._data[instrument][parameter] = value
+        self._data[instrument][parameter] = float(value)
 
     def gates_get2(self, param):
         logging.debug('gates_get: %s' % param)
@@ -118,7 +127,7 @@ class DummyModel(MockModel):
         return self.keithley3_get(param)
         
     def keithley3_get(self, param):
-        return 0
+        logging.debug('keithley3_get: %s' % param)
         self.compute()        
         return self._generic_get('keithley3', param)
 
@@ -206,8 +215,8 @@ class MockSource(MockInstrument):
         # this parameter uses built-in sweeping to change slowly
         self.add_parameter('amplitude',
                            label='Source Amplitude (\u03bcV)',
-                           get_cmd='ampl?',
-                           set_cmd='ampl {:.4f}',
+                           get_cmd='amplitude?',
+                           set_cmd='amplitude {:.4f}',
                            get_parser=float,
                            vals=Numbers(0, 10),
                            sweep_step=0.1,
@@ -228,6 +237,13 @@ class MockMeter(MockInstrument):
 
 
 #%%
+
+class MyInstrument(Instrument):
+
+    def __init__(self, name, **kwargs):
+        super().__init__(name, **kwargs)
+
+
 # from qcodes.utils.validators import Validator
 class virtual_gates(Instrument):
 
@@ -249,6 +265,7 @@ class virtual_gates(Instrument):
     def _get(self, gate):
         gatemap = self._gate_map[gate]
         gate = 'c%d' % gatemap[1]
+        logging.debug('_get: %s %s'  % (gatemap[0], gate) )
         return self._instrument_list[gatemap[0]].get(gate)
 
     def _set(self, value, gate):
