@@ -28,6 +28,10 @@ import qtt
 
 #%%
 
+def logTest():
+    logging.info('info')
+    logging.warning('warning')
+    logging.debug('debug')
 
 def partiala(method, **kwargs):
   ''' Function to perform functools.partial on named arguments '''
@@ -119,9 +123,7 @@ class DummyModel(MockModel):
         
     def ivvi1_set(self, param, value):
         logging.debug('ivvi1_set: %s value %s' % ( param, value) )
-        print('ivvi1_set: before generic_set')
         self._generic_set('ivvi1', param, value)
-        print('ivvi1_set: after generic_set')
 
     def meter_get(self, param):
         return self.keithley3_get(param)
@@ -326,6 +328,7 @@ class QCodesTimer(threading.Thread):
             
 class ParameterViewer(Qt.QtGui.QTreeWidget):
 
+    ''' Simple class to show qcodes parameters '''
     def __init__(self, station, name='QuTech Parameter Viewer', **kwargs):
         super().__init__(**kwargs)
         w = self
@@ -344,6 +347,8 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
         self.init()
         self.show()
 
+        self.callbacklist=[]
+        
     def init(self):
         ''' Initialize parameter viewer '''
         dd = self._station.snapshot()
@@ -381,3 +386,12 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
             x = self._itemsdict['gates'][g]
             logging.debug('update %s to %s' % (g, value))
             x.setText(1, str(value))
+
+        for f in self.callbacklist:
+            try:
+                f()
+            except Exception as e:
+                logging.debug('update function failed')                  
+                logging.debug(str(e))
+                
+            

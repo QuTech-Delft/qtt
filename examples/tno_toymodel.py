@@ -10,6 +10,7 @@ import math
 import sys
 import numpy as np
 import dill
+import time
 import deepdish
 
 import logging
@@ -26,6 +27,8 @@ from qcodes.utils.validators import Numbers
 l = logging.getLogger()
 # l.setLevel(logging.DEBUG)
 l.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
+l.handlers[0].setFormatter(formatter)
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -51,7 +54,7 @@ logging.warning('test')
 
 import qtt.qtt_toymodel
 reload(qtt.qtt_toymodel)
-from qtt.qtt_toymodel import ModelError, DummyModel, VirtualIVVI, MockMeter, MockSource
+from qtt.qtt_toymodel import ModelError, DummyModel, VirtualIVVI, MockMeter, MockSource, logTest
 
 
 model = DummyModel(name='dummymodel', server_name=None)
@@ -68,7 +71,6 @@ keithley3 = MockMeter('keithley3', model=model)
 
 source = MockSource('source', model=model)
 
-STOP
 
 #%%
 ivvi1.c1.set(200)
@@ -147,8 +149,9 @@ for v in [-20, 0, 20, 40, 60]:
 
 
 #%%
-import qcodes.instrument_drivers.QuTech.TimeStamp
-ts = qcodes.instrument_drivers.QuTech.TimeStamp.TimeStampInstrument(name='TimeStamp')
+#import qcodes.instrument_drivers.QuTech.TimeStamp
+from qtt.instrument_drivers.TimeStamp import TimeStampInstrument
+ts = TimeStampInstrument(name='TimeStamp')
 
 
 station = qc.Station(gates, source, keithley3, keithley1)
@@ -192,27 +195,32 @@ w.updatecallback()
 #%% Simple 1D scan loop
 
 
-def scan1D(scanjob, station, location=None, delay=1.0):
+def scan1D(scanjob, station, location=None, delay=1.0, qcodesplot=None):
 
     sweepdata = scanjob['sweepdata']
     param = getattr(gates, sweepdata['gate'])
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
     delay = scanjob.get('delay', delay)
-    logging.warning('delay: %f' % delay)
+    logging.debug('delay: %f' % delay)
     data = qc.Loop(sweepvalues, delay=delay).run(
         location=location, overwrite=True)
+
+    if qcodesplot is not None:
+        qcodesplot.clear(); qcodesplot.add(data.amplitude)
 
     return data
 
 
-STOP
+#%%
+#data = qc.Loop(sweepvalues, delay=.001).run(location='dummy', overwrite=True, background=False, data_manager=False)
+
 
 #%%
 
 plotQ=None
 #%%
-scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -420, 'end': 220, 'step': .5}), 'delay': .03})
+scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -420, 'end': 220, 'step': 1.}), 'delay': .01})
 data = scan1D(scanjob, station, location='testsweep3')
 
 
@@ -221,12 +229,15 @@ data.arrays
 
 #%
 
+reload(qcodes); reload(qc); plotQ=None
+
 #plotQ = qc.MatPlot(data.amplitude)
 if plotQ is None:
-    plotQ = qc.QtPlot(data.amplitude)
-    plotQ.win.setGeometry(1920, 100, 800, 600)
+    plotQ = qc.QtPlot(data.amplitude, remote=False)
+    plotQ.win.setGeometry(1920+360, 100, 800, 600)
     data.sync()    
     plotQ.update()
+    w.callbacklist.append( plotQ.update )
 else:
     data.sync()    
     plotQ.clear(); plotQ.add(data.amplitude)
@@ -237,32 +248,15 @@ else:
 #qtapp = QtGui.QApplication([])
 
 
-plotQ.clear(); plotQ.add(data.amplitude)
+
+#plotQ.clear(); plotQ.add(data.amplitude)
+#data.sync(); data.arrays
 
 #%%
 
-data.sync()
-data.arrays
-
-#%%
-
-qc.active_children()
-
-qc.halt_bg()
-
-
-#%%
-
-# qc.active_children()[2].terminate()
-
-
-#%%
-plotQ.win.resize(700, 400)
-g = plotQ.win.geometry
-
-#%%
-
-plotQ.win.setGeometry(1920, 100, 800, 600)
+#qc.active_children()
+#qc.halt_bg()
+#plotQ.win.setGeometry(1920, 100, 800, 600)
 
 #%%
 
@@ -293,37 +287,172 @@ for ii in range(1):
 
 
 #%%
-scanjob = dict(
-    {'sweepdata': dict({'gate': 'R', 'start': -420, 'end': 220, 'step': 2.5}), 'delay': .01})
-data = scan1D(scanjob, station, location='testsweep4')
-plotQ.add(data.amplitude)
+if 0:
+    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -420, 'end': 220, 'step': 2.5}), 'delay': .01})
+    data = scan1D(scanjob, station, location='testsweep4')
+    plotQ.add(data.amplitude)
+    
+    #%%
+    plotQ.add(np.array(data.amplitude) + .2)
+    
+    
+    #%%
+    
+    datax = qc.DataSet('testsweep3', mode=qcodes.DataMode.LOCAL)
+    
+    fig = qc.MatPlot(datax.amplitude)
+    
+    import pmatlab
+    pmatlab.tilefigs([fig.fig], [2, 2])
+
 
 #%%
-plotQ.add(np.array(data.amplitude) + .2)
 
 
-#%%
+qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
 
-datax = qc.DataSet('testsweep2', mode=qcodes.DataMode.LOCAL)
-
-fig = qc.MatPlot(datax.amplitude)
-
-import pmatlab
-pmatlab.tilefigs([fig.fig], [2, 2])
-
-
-#%%
-
-
-qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp')
-
-data = scan1D(scanjob, station, location=None)
+scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -220, 'end': 220, 'step': 2.5}), 'delay': .01})
+data = scan1D(scanjob, station, location=None, qcodesplot=plotQ)
 print(data)
+
+#%% Log file viewer
+
+dd=os.listdir(qcodes.DataSet.default_io.base_location)
+
+
+#%%
+
+import qtpy.QtCore as QtCore
+import qtpy.QtGui as QtGui
+import pyqtgraph as pg
+import pmatlab
+
+
+class LogViewer(QtGui.QWidget):
+
+    def __init__(self, window_title='Log Viewer', debugdict=dict()):
+        super(LogViewer, self).__init__()
+
+        self.text= QtGui.QLabel()
+        self.text.setText('Log files at %s' %  qcodes.DataSet.default_io.base_location)
+        self.logtree= QtGui.QTreeView() # QTreeWidget
+        self.logtree.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self._treemodel = QtGui.QStandardItemModel()
+        self.logtree.setModel(self._treemodel)
+        self.__debug = debugdict
+        self.qplot= qc.QtPlot(remote=False)
+        self.plotwindow= self.qplot.win
+        #self.plotwindow = pg.GraphicsWindow(title='dummy')
+
+        vertLayout = QtGui.QVBoxLayout()
+        vertLayout.addWidget(self.text)
+        vertLayout.addWidget(self.logtree)
+        vertLayout.addWidget(self.plotwindow)
+        self.setLayout(vertLayout)
+
+        self._treemodel.setHorizontalHeaderLabels(['Log', 'Comments'])
+
+#        header = QtGui.QTreeWidgetItem(["Date", "Log"])
+#        self.logtree.setHeaderItem(header)
+                        # Another alternative is
+                        # setHeaderLabels(["Tree","First",...])
+        self.setWindowTitle(window_title)
+        
+        self.logtree.header().resizeSection(0, 240)
+
+
+        # disable edit
+        self.logtree.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+
+                
+                
+        self.logtree.doubleClicked.connect(self.logCallback)
+             
+        self.updateLogs()
+    def updateLogs(self):
+        pass
+
+        model=self._treemodel
+        dd=pmatlab.findfilesR(qcodes.DataSet.default_io.base_location, '.*dat')        
+        print(dd)
+        #dd=os.listdir(qcodes.DataSet.default_io.base_location)
+
+        logs=dict()        
+        for i, d in enumerate(dd):
+            tag= os.path.basename(d)
+            datetag, logtag=d.split('/')[-2:]
+            if not datetag in logs:
+                logs[datetag]=dict()
+            logs[datetag][logtag]=d
+
+        for i, datetag in enumerate(sorted(logs.keys())[::-1]):             
+            #elem = QtGui.QStandardItem(d)
+            #model.appendRow([elem,elem])
+            parent1 = QtGui.QStandardItem(datetag)
+            for j, logtag in enumerate(logs[datetag]):
+                child1 = QtGui.QStandardItem(logtag)
+                child2 = QtGui.QStandardItem('info about plot')
+                child3 = QtGui.QStandardItem(os.path.join(datetag, logtag) )
+                parent1.appendRow([child1, child2, child3])
+            model.appendRow(parent1)
+            # span container columns
+            self.logtree.setFirstColumnSpanned(i, self.logtree.rootIndex(), True)
+
+            # expand first log...
+
+            # disable editing
+    def logCallback(self, index):
+        logging.debug('index %s'% str(index))
+        self.__debug['last']=index
+        pp=index.parent()
+        row=index.row()
+
+        
+        tag=pp.child(row,2).data()
+        
+        # load data
+        if tag is not None:
+            try:
+                logging.debug('load tag %s' % tag) 
+                data=qc.load_data(tag)
+        
+                self.qplot.clear(); 
+                self.qplot.add(data.amplitude); 
+        
+            except Exception as e:
+                logging.debug(e)
+                pass
+        pass
+
+xx=dict()
+
+logviewer = LogViewer(debugdict=xx)
+logviewer.setGeometry(1920+1280,60, 700,800)
+logviewer.qplot.win.setMaximumHeight(400)
+logviewer.show()
+self=logviewer
+
+
+logviewer.qplot.add(data.amplitude)
+
+
+
 
 
 #%% Load and analyse data
 
-data=qc.load_data('testsweep3')
+def load_data(location=None, **kwargs):
+       if isinstance(location, int):
+           dd=os.listdir(qcodes.DataSet.default_io.base_location)
+           lastdate=sorted(dd)[-1]
+           dd=sorted(os.listdir(os.path.join(qcodes.DataSet.default_io.base_location, lastdate) ))[::-1]
+           location=os.path.join(lastdate, dd[location])
+           #location=location.replace('.dat', '')
+           logging.info('location: %s' % location)
+       return qc.load_data(location, **kwargs)
+       
+       
+data=load_data(location=0)
 
 #qc.MatPlot(data.amplitude, fig=10)
 
@@ -354,7 +483,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         
         
         x=data.arrays[g]
-        X=data.arrays[value]
+        value=data.arrays[value]
     else:
         XX = dd['data_array']
         datashape = XX.shape
@@ -370,12 +499,12 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             XX = XX[0:sr.size, :]
 
         x = XX[:, 0]
-        X = XX[:, 2]
-    lowvalue = np.percentile(X, 1)
-    highvalue = np.percentile(X, 90)
+        value = XX[:, 2]
+    lowvalue = np.percentile(value, 1)
+    highvalue = np.percentile(value, 90)
     # sometimes a channel is almost completely closed, then the percentile
     # approach does not function well
-    ww = X[X > (lowvalue + highvalue) / 2]
+    ww = value[value > (lowvalue + highvalue) / 2]
     #[np.percentile(ww, 1), np.percentile(ww, 50), np.percentile(ww, 91) ]
     highvalue = np.percentile(ww, 90)
 
@@ -384,15 +513,15 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
               (lowvalue, highvalue))
     d = highvalue - lowvalue
 
-    vv1 = X > (lowvalue + .2 * d)
-    vv2 = X < (lowvalue + .8 * d)
+    vv1 = value > (lowvalue + .2 * d)
+    vv2 = value < (lowvalue + .8 * d)
     midpoint1 = vv1 * vv2
     ww = midpoint1.nonzero()[0]
     midpoint1 = np.mean(x[ww])
 
     # smooth signal
     kk = np.ones(3) / 3.
-    ww = X
+    ww = value
     for ii in range(4):
         ww = scipy.ndimage.filters.correlate1d(ww, kk, mode='nearest')
         #ww=scipy.signal.convolve(ww, kk, mode='same')
@@ -452,12 +581,12 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                     'analyseGateSweep: gate not good: gate is not closed (or fully closed) (line fit check)')
 
     # another check on closed gates
-    leftidx = range(mp, X.shape[0])
-    leftval = X[leftidx]
+    leftidx = range(mp, value.shape[0])
+    leftval = value[leftidx]
 
     #fitleft=np.polyfit([x[leftidx[-1]],x[leftidx[0]]], [lowvalue, midvalue], 1)
     fitleft = np.polyfit(
-        [x[leftidx[-1]], x[leftidx[0]]], [lowvalue, X[leftidx[0]]], 1)
+        [x[leftidx[-1]], x[leftidx[0]]], [lowvalue, value[leftidx[0]]], 1)
     leftpred = np.polyval(fitleft, x[leftidx])
 
     if np.abs(xleft[0]-xleft[-1])>150 and xleft.size>15:
@@ -487,7 +616,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     if fig is not None:
         cfigure(fig)
         plt.clf()
-        plt.plot(x, X, '.-b', linewidth=2)
+        plt.plot(x, value, '.-b', linewidth=2)
         plt.xlabel('Sweep %s [mV]' % g, fontsize=14)
         plt.ylabel('keithley [pA]', fontsize=14)
 
@@ -524,7 +653,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
               (goodgate, adata['pinchvalue']))
         adata['Xsmooth'] = ww
         adata['XX'] = XX
-        adata['X'] = X
+        adata['X'] = value
         adata['x'] = x
         adata['ww'] = ww
 
