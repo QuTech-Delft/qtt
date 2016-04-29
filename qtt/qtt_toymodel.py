@@ -53,12 +53,8 @@ class DummyModel(MockModel):
         #self.name = name
 
         for instr in ['gates', 'ivvi1x', 'ivvi2']:
-            #setattr(self, '%s_get' % instr, partial(self._generic_get, instrument=instr) )
-            #setattr(self, '%s_set' % instr, partial(self._generic_set, instrument=instr) )
             if not instr in self._data:
                 self._data[instr] = dict()
-            #setattr(self, '%s_get' % instr, lambda parameter: self._generic_get( instrument=instr, parameter=parameter) )
-            #setattr(self, '%s_set' % instr, lambda parameter, value: self._generic_set( instrument=instr, parameter=parameter, value=value) )
             if 1:
                 setattr(self, '%s_get' % instr, partial(self._generic_get, instr ) )
                 setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
