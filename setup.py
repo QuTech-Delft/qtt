@@ -12,6 +12,7 @@ extras = {
 #    'QtPlot': ('pyqtgraph', '0.9.10'),
     'SciPi': ('scipy', '0.15'),
     'qcodes': ('qcodes', '0.1'),
+    'scikit-image': ('scikit-image', '0.12'),
 #    'pandas': ('pandas', '0.15'),
     'Numpy': ('numpy', '1.9')
 }
