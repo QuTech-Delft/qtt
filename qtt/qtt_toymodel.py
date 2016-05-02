@@ -53,12 +53,8 @@ class DummyModel(MockModel):
         #self.name = name
 
         for instr in ['gates', 'ivvi1x', 'ivvi2']:
-            #setattr(self, '%s_get' % instr, partial(self._generic_get, instrument=instr) )
-            #setattr(self, '%s_set' % instr, partial(self._generic_set, instrument=instr) )
             if not instr in self._data:
                 self._data[instr] = dict()
-            #setattr(self, '%s_get' % instr, lambda parameter: self._generic_get( instrument=instr, parameter=parameter) )
-            #setattr(self, '%s_set' % instr, lambda parameter, value: self._generic_set( instrument=instr, parameter=parameter, value=value) )
             if 1:
                 setattr(self, '%s_get' % instr, partial(self._generic_get, instr ) )
                 setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
@@ -168,7 +164,7 @@ class VirtualIVVI(MockInstrument):
 
     ''' Virtual instrument representing an IVVI '''
 
-    def __init__(self, name, model, gates=['c%d' % i for i in range(1, 17)], **kwargs):
+    def __init__(self, name, model, gates=['c%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
         super().__init__(name, model=model, **kwargs)
 
         self._gates = gates
@@ -192,7 +188,8 @@ class VirtualIVVI(MockInstrument):
             logging.debug('add gates function %s: %s' % (self.name, g) )
             #model.write('%s:%s %f' % (self.name, g, 0) )
 
-        self.get_all()
+        if not mydebug:
+            self.get_all()
 
     def get_all(self):
         ''' Get all parameters in instrument '''
@@ -288,7 +285,7 @@ class virtual_gates(Instrument):
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate),
                            #get_parser=float,
-                           vals=Numbers(-800, 400), )
+                           vals=Numbers(-2000, 2000), )
                            # sweep_step=0.1,
                            # sweep_delay=0.05)
         self.add_function(
@@ -296,6 +293,10 @@ class virtual_gates(Instrument):
         self.add_function('set_{}'.format(gate), call_cmd=partial(
             self._set_wrap, gate=gate), args=[Numbers()])
 
+    def get_instrument_parameter(self, g):
+        gatemap = self._gate_map[g]
+        return getattr(self._instrument_list[gatemap[0]], 'c%d' % gatemap[1] )
+        
     def __repr__(self):
         s = 'virtual_gates: %s (%d gates)' % (self.name, len(self._gate_map))
 
@@ -351,6 +352,8 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
         
     def init(self):
         ''' Initialize parameter viewer '''
+        if self._station==None:
+            return
         dd = self._station.snapshot()
         #x = 
         pp = dd['instruments']['gates']['parameters']

@@ -11,7 +11,8 @@ import sys
 import numpy as np
 import dill
 import time
-import deepdish
+import pdb
+#import deepdish
 
 import logging
 logging.basicConfig(level=logging.DEBUG,
@@ -53,15 +54,17 @@ logging.warning('test')
 # from functools import partial
 
 import qtt.qtt_toymodel
-reload(qtt.qtt_toymodel)
+#reload(qtt.qtt_toymodel)
 from qtt.qtt_toymodel import ModelError, DummyModel, VirtualIVVI, MockMeter, MockSource, logTest
 
+
+logging.warning('make model...')
 
 model = DummyModel(name='dummymodel', server_name=None)
 #model=AModel()
 
 #l.setLevel(logging.DEBUG)
-ivvi2 = VirtualIVVI(name='ivvi2', model=model)
+ivvi2 = VirtualIVVI(name='ivvi2', model=model, server_name=None, debug=True)
 
 #%%
 ivvi1 = VirtualIVVI(name='ivvi1', model=model, server_name=None, gates=['c%d' % i for i in range(1, 17)])
@@ -73,6 +76,7 @@ source = MockSource('source', model=model)
 
 
 #%%
+logging.warning('test IVVI...')
 ivvi1.c1.set(200)
 print('get P1: %f, %f, %f'  % (ivvi1.c1.get(), ivvi1.get('c1'), ivvi1.get_c1() ) )
 ivvi1.c1.set(300)
@@ -140,6 +144,39 @@ gate = 'P1'
 # f=partial(self._set, gate=gate)
 
 #%%
+
+gate_boundaries = dict({
+    'T' : (-800, 400),
+    'L' : (-800, 400),
+    'P1' : (-800, 400),
+    'P2' : (-800, 400),
+    'P3' : (-800, 400),
+    'P4' : (-800, 400),
+    'D1' : (-800, 400),
+    'D2' : (-800, 400),
+    'D3' : (-800, 400),
+    'R' : (-800, 400),
+    'bias_1' : (-600, 600),
+    'bias_2' : (-600, 600),
+    'bias_3' : (-600, 600),
+    'bias_4' : (-600, 600),
+    })
+
+for i in [1,2,3,4]:
+    for c in ['a','b','c']:
+        gate_boundaries['SD%d%c' % (i,c)] = (-800, 400)
+for i in [1,2,3,4]:
+    gate_boundaries['P%d_fine' % (i)] = (-1000, 1000)
+        
+for g, bnds in gate_boundaries.items():
+    print('gate %s: %s' % (g, bnds))
+    
+    param = gates.get_instrument_parameter(g)
+    param._vals=Numbers(bnds[0], max_value=bnds[1])
+
+    
+
+#%%
 #l.setLevel(logging.DEBUG)
 
 for v in [-20, 0, 20, 40, 60]:
@@ -156,6 +193,10 @@ ts = TimeStampInstrument(name='TimeStamp')
 
 station = qc.Station(gates, source, keithley3, keithley1)
 station.set_measurement(keithley3.amplitude, ts.timestamp)
+
+station.metadata['sample']='4dot_sample'
+station.metadata['image']=None
+
 
 #%%
 
