@@ -102,7 +102,7 @@ ivvi1 = VirtualIVVI(name='ivvi1', model=model, server_name=None)
 
 
 #%%
-print('# set ivvi1: fine')
+print('# set ivvi1: fine under unix')
 ivvi1.c1.set(200)
 
 
