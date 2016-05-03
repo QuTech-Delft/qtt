@@ -4,10 +4,23 @@ from numpy import linalg as la
 import itertools
 import matplotlib.pyplot as plt
 import time
+import copy
+from functools import partial
+import sys
 
 try:
     import graphviz
 except:
+    pass
+
+try:
+    import multiprocessing
+    import multiprocessing as mp
+    from multiprocessing import Pool
+
+    _have_mp=True
+except:
+    _have_mp=False
     pass
 
 #%% Helper functions
@@ -48,6 +61,18 @@ def tprint(string, dt=1, output=False):
             
 def isdiagonal(HH):
     return not(np.any(HH-np.diag(np.diagonal(HH))))
+
+''' helper function '''
+def simulate_row(i, ds, npointsy, usediag):
+    dsx=copy.deepcopy(ds)
+    paramnames = list(dsx.vals2D.keys())
+    for j in range(npointsy):
+        for name in paramnames:
+            setattr(dsx, name, dsx.vals2D[name][i][j])
+        dsx.makeH()
+        dsx.solveH(usediag=usediag)
+        dsx.hcgs[i,j] = dsx.OCC
+    return dsx.hcgs[i]
             
 #%%
 
@@ -150,8 +175,43 @@ class DotSystem():
                 transitions[i,j] = diff1 + diff2 + diff3 + diff4
                 delocalizations[i,j] = min(occs[i,j,0]%1,abs(1-occs[i,j,0]%1)) + min(occs[i,j,0]%1,abs(1-occs[i,j,0]%1)) + min(occs[i,j,0]%1,abs(1-occs[i,j,0]%1))
         return transitions, delocalizations
+
+
+    def simulatehoneycomb(self, verbose=1, usediag=False, multiprocess=True):
+            '''Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
+            for each point, search for transitions and save in self.honeycomb'''
+            t0=time.time()
+            paramnames = list(self.vals2D.keys())
+            npointsx = np.shape(self.vals2D[paramnames[0]])[0]
+            npointsy = np.shape(self.vals2D[paramnames[0]])[1]
+            self.hcgs = np.empty((npointsx,npointsy,self.ndots))
+            
+            if multiprocess and _have_mp:
+                pool = Pool(processes=4)
+                aa= [ (i, self, npointsy, usediag) for i in range(npointsx)]
+                result=pool.starmap_async( simulate_row,  aa )
+                out=result.get()
+                self.hcgs=np.array(out)
+            else:
+                for i in range(npointsx):
+                    if verbose:
+                        tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
+                        
+                    for j in range(npointsy):
+                        for name in paramnames:
+                            setattr(self, name, self.vals2D[name][i][j])
+                        self.makeH()
+                        self.solveH(usediag=usediag)
+                        self.hcgs[i,j] = self.OCC
+            self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
     
-    def simulatehoneycomb(self, verbose=1, usediag=False):
+            if verbose:
+                print('simulatehoneycomb: %.2f [s]' % (time.time()-t0))
+                
+            sys.stdout.flush()
+    
+    
+    def simulatehoneycomb_original(self, verbose=1, usediag=False):
         '''Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
         for each point, search for transitions and save in self.honeycomb'''
         t0=time.time()
