@@ -56,17 +56,19 @@ class DotSystem():
     def __init__(self, name='dotsystem', ndots=3, **kwargs):
         self.name = name
         self.ndots=ndots
+        self.temperature = 0
         
     def makebasis(self, ndots=3, maxelectrons=2):
         ''' Define a basis of occupancy states with a specified number of dots and max occupancy '''
+        self.maxelectrons=maxelectrons
+        self.ndots = ndots
+
         basis = list(itertools.product(range(maxelectrons+1), repeat=ndots))
         basis = np.asarray(sorted(basis,key=lambda x: sum(x)))
         self.basis = np.ndarray.astype(basis,int)
         self.nbasis = np.sum(self.basis,axis=1)
         self.Nt = len(self.nbasis)
 
-        self.maxelectrons=maxelectrons
-        self.ndots = ndots
 
         self.eigenstates=np.zeros( (self.Nt, self.Nt), dtype=float)
 
@@ -188,10 +190,15 @@ class DotSystem():
         self.stateoccs = self.stateoccs[sortinds]
         self.nstates = self.nstates[sortinds]
         
-    def findcurrentoccupancy(self):
+    def findcurrentoccupancy(self, exact=True):
         if self.solved == True:
             self.orderstatesbyE()
-            self.OCC = np.around(self.stateoccs[0],decimals=2)
+            if exact:
+                    # almost exact...
+                    idx=self.energies==self.energies[0]
+                    self.OCC = np.around(np.mean(self.stateoccs[idx], axis=0),decimals=2)
+            else:                    
+                    self.OCC = np.around(self.stateoccs[0],decimals=2)
         else:
             self.solveH()
         return self.OCC
