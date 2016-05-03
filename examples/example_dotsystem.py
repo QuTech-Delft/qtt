@@ -20,6 +20,7 @@ except:
 
 
 import qtt; reload(qtt)
+import qtt.simulation.dotsystem; reload(qtt.simulation.dotsystem)
 from qtt.simulation.dotsystem import DotSystem, TripleDot
 
 
@@ -62,7 +63,7 @@ pmatlab.tilefigs(20, [2,2])
 class FourDot(DotSystem):
     
     def __init__(self, name='doubledot'):
-        super().__init__(name=name, ndots=3)
+        super().__init__(name=name, ndots=4)
         
         self.makebasis(ndots=self.ndots, maxelectrons=2)
         self.varnames = ['det%d' % (i+1) for i in range(self.ndots)]
@@ -125,6 +126,12 @@ print(ds.hcgs[0,0])
 pmatlab.tilefigs(10, [2,2])
 
 #%%
+
+ds.resetMu(0)
+ds.det2=4
+ds.det1=-20
+ds.det3=-20
+
 ds.makeH()
 ds.solveH()
 print(ds.OCC)
@@ -135,12 +142,13 @@ print(ds.OCC)
 val=5*ds.hcgs[:,:,0] + 2*ds.hcgs[:,:,1] + ds.hcgs[:,:,2]
 
 plt.figure(11); plt.clf()
-for ii in range(3):
+for ii in range(ds.ndots):
     plt.subplot(2,2,ii+1)
     val=ds.hcgs[:,:,ii]
     plt.pcolor(ds.vals2D[ paramnames[0]],ds.vals2D[ paramnames[1]],val,cmap='Blues')
     plt.xlabel('Abcissa gate (mV)')
     plt.ylabel('Ordinate gate (mV)')
+    plt.title('Occupancy in dot %d'% ii)
     plt.colorbar()
 plt.show()
 
