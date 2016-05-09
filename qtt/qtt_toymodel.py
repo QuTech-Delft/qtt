@@ -388,7 +388,7 @@ class QCodesTimer(threading.Thread):
 class ParameterViewer(Qt.QtGui.QTreeWidget):
 
     ''' Simple class to show qcodes parameters '''
-    def __init__(self, station, name='QuTech Parameter Viewer', **kwargs):
+    def __init__(self, station, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
         super().__init__(**kwargs)
         w = self
         w.setGeometry(1700, 50, 300, 600)
@@ -399,6 +399,7 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
                         # setHeaderLabels(["Tree","First",...])
         w.setWindowTitle(name)
 
+        self._instrumentnames=instrumentnames
         self._itemsdict = dict()
         self._itemsdict['gates'] = dict()
         self._timer = None
@@ -414,13 +415,14 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
             return
         dd = self._station.snapshot()
         #x = 
-        pp = dd['instruments']['gates']['parameters']
-        gatesroot = QtGui.QTreeWidgetItem(self, ["gates"])
-        for g in pp:
-            # ww=['gates', g]
-            value = pp[g]['value']
-            A = QtGui.QTreeWidgetItem(gatesroot, [g, str(value)])
-            self._itemsdict['gates'][g] = A
+        for iname in self._instrumentnames:
+            pp = dd['instruments'][iname]['parameters']
+            gatesroot = QtGui.QTreeWidgetItem(self, [iname])
+            for g in pp:
+                # ww=['gates', g]
+                value = pp[g]['value']
+                A = QtGui.QTreeWidgetItem(gatesroot, [g, str(value)])
+                self._itemsdict['gates'][g] = A
         self.setSortingEnabled(True)
         self.expandAll()
 
