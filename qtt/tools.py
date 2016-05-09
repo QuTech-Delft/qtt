@@ -1,5 +1,31 @@
 import numpy as np
 import scipy
+import sys
+
+#%% Helper tools
+
+def in_ipynb():
+    try:
+        cfg = get_ipython().config 
+        if cfg['IPKernelApp']['parent_appname'] == 'ipython-notebook':
+            return True
+        else:
+            return False
+    except NameError:
+        return False
+
+
+def pythonVersion():   
+    try:        
+        import IPython
+        ipversion='.'.join('%s' % x for x in IPython.version_info[:-1])
+    except:
+        ipversion='None'        
+            
+            
+    pversion='.'.join('%s' % x for x in sys.version_info[0:3])
+    print('python %s, ipython %s, notebook %s' %( pversion, ipversion, in_ipynb() ))
+
 
 #%%
 
