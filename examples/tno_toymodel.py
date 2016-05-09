@@ -15,8 +15,8 @@ import pdb
 #import deepdish
 
 import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)', )
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s: %(message)s  (%(filename)s:%(lineno)d)', )
+
 
 
 import qcodes
@@ -26,10 +26,9 @@ from qcodes.utils.validators import Numbers
 
 
 l = logging.getLogger()
-# l.setLevel(logging.DEBUG)
 l.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
-l.handlers[0].setFormatter(formatter)
+#formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
+#l.handlers[0].setFormatter(formatter)
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -37,9 +36,7 @@ import matplotlib.pyplot
 
 import pyqtgraph
 import qtt
-import qutechalgorithms
-
-logging.warning('test')
+#import qutechalgorithms
 
 
 [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2', 'AMockInsts'] ]
@@ -53,26 +50,27 @@ logging.warning('test')
 
 # from functools import partial
 
+server_name=None
+server_name=''
+
 import qtt.qtt_toymodel
 #reload(qtt.qtt_toymodel)
-from qtt.qtt_toymodel import ModelError, DummyModel, VirtualIVVI, MockMeter, MockSource, logTest
+from qtt.qtt_toymodel import DummyModel, VirtualIVVI, MockMeter, MockSource, logTest
 
 
 logging.warning('make model...')
 
-model = DummyModel(name='dummymodel', server_name=None)
-#model=AModel()
+model = DummyModel(name='dummymodel', server_name=server_name)
 
-#l.setLevel(logging.DEBUG)
-ivvi2 = VirtualIVVI(name='ivvi2', model=model, server_name=None, debug=True)
-
-#%%
 ivvi1 = VirtualIVVI(name='ivvi1', model=model, server_name=None, gates=['c%d' % i for i in range(1, 17)])
+ivvi2 = VirtualIVVI(name='ivvi2', model=model, server_name=server_name, debug=True)
 
-keithley1 = MockMeter('keithley1', model=model)
-keithley3 = MockMeter('keithley3', model=model)
 
 source = MockSource('source', model=model)
+keithley1 = MockMeter('keithley1', model=model)
+keithley2 = MockMeter('keithley2', model=model)
+keithley3 = MockMeter('keithley3', model=model)
+
 
 
 #%%
@@ -143,6 +141,33 @@ gate = 'P1'
 
 # f=partial(self._set, gate=gate)
 
+
+
+#%%
+import graphviz
+import matplotlib.pyplot as plt
+
+def showGraph(dot, fig=10):
+    dot.format='png'
+    outfile=dot.render('dot-dummy', view=False)    
+    print(outfile)
+    
+    im=plt.imread(outfile)
+    plt.figure(fig)
+    plt.clf()    
+    plt.imshow(im)
+    plt.tight_layout()
+    plt.axis('off')
+    
+
+    
+dot = gates.visualize()    
+#dot.view()
+
+showGraph(dot, fig=12)
+pmatlab.tilefigs(12, [1,2])
+
+
 #%%
 
 gate_boundaries = dict({
@@ -167,14 +192,9 @@ for i in [1,2,3,4]:
         gate_boundaries['SD%d%c' % (i,c)] = (-800, 400)
 for i in [1,2,3,4]:
     gate_boundaries['P%d_fine' % (i)] = (-1000, 1000)
-        
-for g, bnds in gate_boundaries.items():
-    print('gate %s: %s' % (g, bnds))
-    
-    param = gates.get_instrument_parameter(g)
-    param._vals=Numbers(bnds[0], max_value=bnds[1])
 
-    
+
+gates.set_boundaries(gate_boundaries)    
 
 #%%
 #l.setLevel(logging.DEBUG)
@@ -256,7 +276,8 @@ def scan1D(scanjob, station, location=None, delay=1.0, qcodesplot=None):
 #%%
 #data = qc.Loop(sweepvalues, delay=.001).run(location='dummy', overwrite=True, background=False, data_manager=False)
 
-
+qtt.pythonVersion()
+        
 #%%
 
 plotQ=None
@@ -298,6 +319,8 @@ else:
 #qc.active_children()
 #qc.halt_bg()
 #plotQ.win.setGeometry(1920, 100, 800, 600)
+
+STOP
 
 #%%
 
