@@ -2,6 +2,8 @@ import numpy as np
 import scipy
 import sys
 
+from pmatlab import tilefigs
+
 #%% Helper tools
 
 def in_ipynb():
@@ -26,7 +28,27 @@ def pythonVersion():
     pversion='.'.join('%s' % x for x in sys.version_info[0:3])
     print('python %s, ipython %s, notebook %s' %( pversion, ipversion, in_ipynb() ))
 
+#%%
 
+try:
+    import graphviz
+except:
+    pass
+import matplotlib.pyplot as plt
+
+def showDotGraph(dot, fig=10):
+    dot.format='png'
+    outfile=dot.render('dot-dummy', view=False)    
+    print(outfile)
+    
+    im=plt.imread(outfile)
+    plt.figure(fig)
+    plt.clf()    
+    plt.imshow(im)
+    plt.tight_layout()
+    plt.axis('off')
+    
+    
 #%%
 
 def logistic(x, x0=0, alpha=1):    
