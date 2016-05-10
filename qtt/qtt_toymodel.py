@@ -10,8 +10,6 @@
 import logging
 import numpy as np
 
-#import qcodes
-
 import qcodes as qc
 from qcodes import Instrument, MockInstrument, MockModel # , Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
