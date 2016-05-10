@@ -6,6 +6,7 @@ import qcodes
 import qcodes as qc
 import qtpy.QtCore as QtCore
 import qtpy.QtGui as QtGui
+import qtpy.QtWidgets as QtWidgets
 import pyqtgraph as pg
 #import pmatlab
 
@@ -25,16 +26,16 @@ def findfilesR(p, patt):
         lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
     return lst
 
-class LogViewer(QtGui.QWidget):
+class LogViewer(QtWidgets.QWidget):
 
     def __init__(self, window_title='Log Viewer', debugdict=dict()):
         super(LogViewer, self).__init__()
 
         self.verbose=0
-        self.text= QtGui.QLabel()
+        self.text= QtWidgets.QLabel()
         self.text.setText('Log files at %s' %  qcodes.DataSet.default_io.base_location)
-        self.logtree= QtGui.QTreeView() # QTreeWidget
-        self.logtree.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.logtree= QtWidgets.QTreeView() # QTreeWidget
+        self.logtree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self._treemodel = QtGui.QStandardItemModel()
         self.logtree.setModel(self._treemodel)
         self.__debug = debugdict
@@ -42,7 +43,7 @@ class LogViewer(QtGui.QWidget):
         self.plotwindow= self.qplot.win
         #self.plotwindow = pg.GraphicsWindow(title='dummy')
 
-        vertLayout = QtGui.QVBoxLayout()
+        vertLayout = QtWidgets.QVBoxLayout()
         vertLayout.addWidget(self.text)
         vertLayout.addWidget(self.logtree)
         vertLayout.addWidget(self.plotwindow)
@@ -50,11 +51,11 @@ class LogViewer(QtGui.QWidget):
 
         self._treemodel.setHorizontalHeaderLabels(['Log', 'Comments'])
         self.setWindowTitle(window_title)        
-        self.logtree.header().resizeSection(0, 240)
+        self.logtree.header().resizeSection(0, 200)
 
 
         # disable edit
-        self.logtree.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.logtree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         self.logtree.doubleClicked.connect(self.logCallback)
              
@@ -69,7 +70,7 @@ class LogViewer(QtGui.QWidget):
         logs=dict()        
         for i, d in enumerate(dd):
             tag= os.path.basename(d)
-            datetag, logtag=d.split('/')[-2:]
+            datetag, logtag,_=d.split('/')[-3:]
             if not datetag in logs:
                 logs[datetag]=dict()
             logs[datetag][logtag]=d
@@ -105,8 +106,8 @@ class LogViewer(QtGui.QWidget):
                 self.qplot.add(data.amplitude); 
         
             except Exception as e:
-                print('logCallback! error ...' )
-                logging.debug(e)
+                logging.info('logCallback! error ...' )
+                logging.warning(e)
                 pass
         pass
 
