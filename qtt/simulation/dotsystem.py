@@ -374,3 +374,19 @@ class TripleDot(DotSystem):
            'tun1','tun2']
         self.makevars()
         self.makevarMs()
+
+
+class FourDot(DotSystem):
+    
+    def __init__(self, name='doubledot'):
+        super().__init__(name=name, ndots=4)
+        
+        self.makebasis(ndots=self.ndots, maxelectrons=2)
+        self.varnames = ['det%d' % (i+1) for i in range(self.ndots)]
+        self.varnames += ['osC%d' % (i+1) for i in range(self.ndots)]
+        self.varnames += ['isC%d' % (i+1) for i in range(self.ndots)]
+        self.varnames += ['tun%d' % (i+1) for i in range(self.ndots)]
+        self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
+        self.makevars()        
+        self.makevarMs()
+        

@@ -156,7 +156,15 @@ def logistic(x, x0=0, alpha=1):
 
 #%%
 
-
+from itertools import chain
+def flatten(lst):
+    ''' Flatten a list
+    >>> flatten([ [1,2], [3,4], [10] ])
+    [1, 2, 3, 4, 10]
+    '''
+    return list(chain(*lst))
+    
+#%%
 def cutoffFilter(x, thr, omega):
     """ Smooth cutoff filter
     

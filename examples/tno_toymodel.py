@@ -107,6 +107,7 @@ qtt.pythonVersion()
 
 qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
 mwindows=qtt.setupMeasurementWindows(station)
+mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
 
 #%%
 

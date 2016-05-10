@@ -50,7 +50,7 @@ class DummyModel(MockModel):
         self._data = dict()
         #self.name = name
 
-        for instr in ['gates', 'ivvi1x', 'ivvi2']:
+        for instr in ['gates', 'ivvi1', 'ivvi2', 'keithley1', 'keithley2']:
             if not instr in self._data:
                 self._data[instr] = dict()
             if 1:
@@ -60,7 +60,6 @@ class DummyModel(MockModel):
                 setattr(self, '%s_get' % instr, self._dummy_get )
                 setattr(self, '%s_set' % instr, self._dummy_set )
             
-        self._data['ivvi1'] = dict()
         self._data['gates']=dict()
         self._data['keithley3']=dict()
         self._data['keithley3']['amplitude']=.5
@@ -110,18 +109,7 @@ class DummyModel(MockModel):
         self._data['gates']['param']=value        
         #self._generic_set('ivvi1', param, value)
         pass
-        
-    def ivvi1_get(self, param):
-        logging.debug('ivvi1_get: %s' % param)
-        return self._generic_get('ivvi1', param)
-        
-    def ivvi1_set(self, param, value):
-        logging.debug('ivvi1_set: %s value %s' % ( param, value) )
-        self._generic_set('ivvi1', param, value)
-
-    def meter_get(self, param):
-        return self.keithley3_get(param)
-        
+     
     def keithley3_get(self, param):
         logging.debug('keithley3_get: %s' % param)
         self.compute()        
@@ -132,30 +120,6 @@ class DummyModel(MockModel):
         pass
         print('huh?')
         #return self._generic_get('keithley3', param)
-
-
-    def write_old(self, instrument, parameter, value):
-        if not instrument in self._data:
-            self._data[instrument] = dict()
-
-        self._data[instrument][parameter] = value
-        return
-
-    def ask_old(self, instrument, parameter):
-        if not instrument in self._data:
-            raise ModelError('could not read from instrument %s the parameter %s ' %
-                             (instrument, parameter))
-        try:
-            # logging.warning('here')
-            self.compute()
-            # logging.warning('here2')
-            value = self._data[instrument][parameter]
-        except Exception as ex:
-            print(ex)
-            raise ModelError('could not read from instrument %s the parameter %s ' %
-                             (instrument, parameter))
-
-        return value
 
 
 class VirtualIVVI(MockInstrument):
@@ -302,7 +266,7 @@ class virtual_gates(Instrument):
 
     def set_boundaries(self, gate_boundaries):        
         for g, bnds in gate_boundaries.items():
-            print('gate %s: %s' % (g, bnds))
+            logging.debug('gate %s: %s' % (g, bnds))
             
             param = self.get_instrument_parameter(g)
             param._vals=Numbers(bnds[0], max_value=bnds[1])
