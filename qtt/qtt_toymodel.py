@@ -242,6 +242,10 @@ class MyInstrument(Instrument):
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
+try:
+    import graphviz
+except:
+        pass
 
 # from qcodes.utils.validators import Validator
 class virtual_gates(Instrument):
@@ -296,6 +300,15 @@ class virtual_gates(Instrument):
     def get_instrument_parameter(self, g):
         gatemap = self._gate_map[g]
         return getattr(self._instrument_list[gatemap[0]], 'c%d' % gatemap[1] )
+
+
+    def set_boundaries(self, gate_boundaries):        
+        for g, bnds in gate_boundaries.items():
+            print('gate %s: %s' % (g, bnds))
+            
+            param = self.get_instrument_parameter(g)
+            param._vals=Numbers(bnds[0], max_value=bnds[1])
+
         
     def __repr__(self):
         s = 'virtual_gates: %s (%d gates)' % (self.name, len(self._gate_map))
@@ -305,11 +318,56 @@ class virtual_gates(Instrument):
         # setattr(self, '_do_set_%s' %gate, func)
 
 
+    def visualize(self, fig=1):
+        ''' Create a graphical representation of the system (needs graphviz) '''
+        gates=self    
+        dot=graphviz.Digraph(name=self.name)
+    
+        inames = [x.name for x in gates._instrument_list]
+        
+        cgates=graphviz.Digraph('cluster_gates')
+        cgates.body.append('color=lightgrey')
+        cgates.attr('node', style='filled', color='seagreen1')
+        cgates.body.append('label="%s"' % 'Virtual gates') 
+        
+        iclusters=[]
+        for i, iname in enumerate(inames):
+            c0=graphviz.Digraph(name='cluster_%d' % i)
+            c0.body.append('style=filled')
+            c0.body.append('color=grey80')
+    
+            c0.node_attr.update(style='filled', color='white')
+            #c0.attr('node', style='filled', color='lightblue')
+            iclusters.append(c0)
+    
+        for g in gates._gate_map:
+            xx=gates._gate_map[g]
+            cgates.node(str(g), label='%s' % g)
+            
+            ix = inames[xx[0]] + '%d' % xx[1]
+            ixlabel='c%d' % xx[1]
+            icluster=iclusters[xx[0]]
+            icluster.node(ix, label=ixlabel, color='lightskyblue')
+    
+        for i, iname in enumerate(inames):
+            iclusters[i].body.append('label="%s"' % iname) 
+        
+        dot.subgraph(cgates)
+        for c0 in iclusters:
+            dot.subgraph(c0)
+        # group
+    
+        for g in gates._gate_map:
+            xx=gates._gate_map[g]
+            ix = inames[xx[0]] + '%d' % xx[1]
+            dot.edge(str(g), str(ix))
+    
+        return dot
 
 #%%
 
-import threading
 import time
+import threading
 
 
 class QCodesTimer(threading.Thread):
@@ -330,7 +388,7 @@ class QCodesTimer(threading.Thread):
 class ParameterViewer(Qt.QtGui.QTreeWidget):
 
     ''' Simple class to show qcodes parameters '''
-    def __init__(self, station, name='QuTech Parameter Viewer', **kwargs):
+    def __init__(self, station, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
         super().__init__(**kwargs)
         w = self
         w.setGeometry(1700, 50, 300, 600)
@@ -341,6 +399,7 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
                         # setHeaderLabels(["Tree","First",...])
         w.setWindowTitle(name)
 
+        self._instrumentnames=instrumentnames
         self._itemsdict = dict()
         self._itemsdict['gates'] = dict()
         self._timer = None
@@ -356,13 +415,14 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
             return
         dd = self._station.snapshot()
         #x = 
-        pp = dd['instruments']['gates']['parameters']
-        gatesroot = QtGui.QTreeWidgetItem(self, ["gates"])
-        for g in pp:
-            # ww=['gates', g]
-            value = pp[g]['value']
-            A = QtGui.QTreeWidgetItem(gatesroot, [g, str(value)])
-            self._itemsdict['gates'][g] = A
+        for iname in self._instrumentnames:
+            pp = dd['instruments'][iname]['parameters']
+            gatesroot = QtGui.QTreeWidgetItem(self, [iname])
+            for g in pp:
+                # ww=['gates', g]
+                value = pp[g]['value']
+                A = QtGui.QTreeWidgetItem(gatesroot, [g, str(value)])
+                self._itemsdict['gates'][g] = A
         self.setSortingEnabled(True)
         self.expandAll()
 

@@ -5,3 +5,4 @@ qtt.egg-info
 __pycache__
 examples/dummy.*
 examples/dot-dummy.*
+examples/2016*
