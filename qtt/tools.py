@@ -10,11 +10,44 @@ import qcodes
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
+# should be removed later
 from pmatlab import tilefigs
+from pmatlab import mkdirc
+
 
 
 #import pmatlab; pmatlab.qtmodules(verbose=1)
 
+#%% Measurement tools
+def resetgates(gates, activegates, basevalues=None, verbose=2):
+    """ Reset a set of gates to default values
+
+    Arguments
+    ---------
+        activegates : list or dict 
+            list of gates to reset
+        basevalues: dict
+            new values for the gates
+        verbose : integer
+            output level
+    
+    """
+    if verbose:
+        print('resetgates: setting gates to default values')
+    for g in (activegates):
+        if basevalues == None:
+            val = 0
+        else:
+            # print(g)
+            # print(basevalues)
+            if g in basevalues.keys():
+                val = basevalues[g]
+            else:
+                val = 0
+        if verbose >= 2:
+            print('  setting gate %s to %.1f [mV]' % (g, val))
+        gates.set(g, val)
+    
 #%%
 
 try:
@@ -118,6 +151,11 @@ def setupMeasurementWindows(station):
     logviewer.show()
 
     return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': logviewer} )
+
+import time
+def updatePlotTitle(qplot, basetxt='Live plot'):
+    txt = basetxt + ' (%s)' % time.asctime()
+    qplot.win.setWindowTitle(txt)
 
 
 def timeProgress(data):
