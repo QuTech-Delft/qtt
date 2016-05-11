@@ -8,16 +8,30 @@
 from imp import reload
 import sys
 import logging
+import numpy as np
 import matplotlib.pyplot
 matplotlib.pyplot.ion()
+import pdb
 
 import webbrowser
 import datetime
 
-import qtt
+
+
+import qcodes
+import qcodes as qc
+import qtt; reload(qtt)
+
+import logging
+l = logging.getLogger()
+l.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
+l.handlers[0].setFormatter(formatter)
+
+import matplotlib.pyplot as plt
 
 import virtualV2 as setup
-setup.initialize(reinit=False, server_name='test2')
+setup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
 
 def simulation():
     ''' Funny ... '''
@@ -32,10 +46,30 @@ station = setup.getStation()
 
 keithley1 = station.keithley1
 keithley3 = station.keithley3
+gates = station.gates
 
 station.set_measurement(keithley3.amplitude)
 
+datadir = '/home/eendebakpt/data/qdata'
 
+qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+mwindows=qtt.setupMeasurementWindows(station)
+mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
+
+    
+from functools import partial
+mwindows['parameterviewer'].callbacklist.append( partial(qtt.updatePlotTitle, mwindows['plotwindow']) )
+
+#liveplotwindow.win.setWindowTitle('sfs')
+
+import qtt.scans
+qtt.scans.mwindows=mwindows
+liveplotwindow=mwindows['plotwindow']
+
+        
+model = setup.model
+
+model.compute()
         
 #%% Define 1-dot combinations
 
@@ -61,7 +95,7 @@ timestart=str(datetime.datetime.now())
 #%%
 
 sdgates = qtt.flatten([s['gates'] for s in sddots])
-activegates=['T'] + list(qtt.flatten([s['gates'] for s in sddots]))
+activegates=['T'] + list(qtt.flatten([s['gates'] for s in one_dots])) + sdgates
 
 basevalues=dict()
 for g in activegates:
@@ -138,6 +172,9 @@ sdid=1
 
 ggsd=['SD%d%s' % (sdid,c) for c in ['a','b','c']];
 
+import qtt.structures
+from qtt.structures import sensingdot_t
+
 # define sensing dot
 sdval=getSDval(Tvalues[0], ggsd)
 sd=sensingdot_t(ggsd, sdval, index=sdid  )
@@ -191,30 +228,34 @@ def onedotScan(od, basevalues, outputdir, verbose=1):
     alldata['od']=od
     return alldata, od
     
-
+#%%
+    
+from qtt.scans import scanPinchValue
+    
 #%%
 
     
 for ii, Tvalue in enumerate(Tvalues):
     tag=basetag+'-T%d'  % Tvalue    
-    outputdir=mkdirc(os.path.join(datadir, tag))
+    outputdir=qtt.mkdirc(os.path.join(datadir, tag))
     if not measureFirst:
         continue;
 
-    gates.set_T(Tvalue)       # set T value
+    gates.set_T(float(Tvalue))       # set T value
     
-    experimentdata.initExperimentTwo(topgate=Tvalue)
+    gates.set_bias_2(-500)   # bias through O7, keithley 3
 
+    
     #%% Main loop
             
     print('## start of scan for topgate %.1f [mV]: tag %s' % (Tvalue, tag) )
-    tmp=mkdirc(os.path.join(outputdir, 'one_dot'));
+    tmp=qtt.mkdirc(os.path.join(outputdir, 'one_dot'));
        
     
     print('we have %d one-dots' % len(one_dots) )
     for ii, od in enumerate(one_dots):
         print('  gates: %s' % str(od['gates']) )
-        print('     channel: %s (keithley %d)' % (str(od['channel']), od['keithley']) )
+        print('     channel: %s (instrument %s)' % (str(od['channel']), od['instrument']) )
     
     print('active gates: %s' % str(activegates))
     
@@ -222,19 +263,20 @@ for ii, Tvalue in enumerate(Tvalues):
     #%% Initialize to default values
     
     print('## 1dot_script: initializing gates')
-    resetgates(activegates, basevalues)
-    resetgates(sdgates, basevalues)
+    qtt.resetgates(gates, activegates, basevalues)
+    qtt.resetgates(gates, sdgates, basevalues)
     
 
     #%% Perform sanity check on the channels
 
+    
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
-        scanPinchValue(outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+        alldata=scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
     for od in sddots:
-        ki=od['keithley']
+        ki=od['instrument']
         for gate in od['gates']:
-            scanPinchValue(outputdir, gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, full=full)
-            resetgates(activegates, basevalues, verbose=0)
+            scanPinchValue(station, outputdir, gate, basevalues=basevalues, gate=gate, keithleyidx=[ki], cache=cache, full=full)
+            qtt.resetgates(activegates, basevalues, verbose=0)
 
     ww=one_dots            
     for od in ww:      

@@ -14,7 +14,7 @@ import time
 import pdb
 
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)-8s: %(message)s  (%(filename)s:%(lineno)d)', )
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s: %(message)s  (%(filename)s:%(lineno)d)', )
 
 import qcodes
 import qcodes as qc
@@ -108,6 +108,7 @@ qtt.pythonVersion()
 qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
 mwindows=qtt.setupMeasurementWindows(station)
 mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
+plotQ=mwindows['plotwindow']
 
 #%%
 
@@ -131,23 +132,8 @@ def showCaller(offset=1):
 #%% Simple 1D scan loop
 
 
-def scan1D(scanjob, station, location=None, delay=1.0, qcodesplot=None, background=True):
+from qtt.scans import scan1D
 
-    sweepdata = scanjob['sweepdata']
-    param = getattr(gates, sweepdata['gate'])
-    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
-
-    delay = scanjob.get('delay', delay)
-    logging.debug('delay: %f' % delay)
-    data = qc.Loop(sweepvalues, delay=delay).run(
-        location=location, overwrite=True, background=background)
-
-    if qcodesplot is not None:
-        qcodesplot.clear(); qcodesplot.add(data.amplitude)
-
-    sys.stdout.flush()
-
-    return data
 
 
 
@@ -155,7 +141,6 @@ def scan1D(scanjob, station, location=None, delay=1.0, qcodesplot=None, backgrou
         
 #%%
 
-plotQ=mwindows['plotwindow']
 
 #%%
 scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -160, 'end': 160, 'step': 2.}), 'delay': .01})

@@ -22,7 +22,9 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     if isinstance(dd, qcodes.DataSet):
         data=dd
         XX=None
-        g='R'
+        
+        # should be made generic
+        g=[x for x in list(data.arrays.keys()) if x!='amplitude'][0]
         value='amplitude'
         
         x=data.arrays[g]

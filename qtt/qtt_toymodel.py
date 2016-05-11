@@ -77,13 +77,17 @@ class DummyModel(MockModel):
         logging.debug('compute')
         # current through keithley1, 2 and 3
 
+        # FIXME: loop over the gates instead of the dacs...
         v = float(self._data['ivvi1']['c11'])
-        c = qtt.logistic(v, 0., 1 / 40.)
-
+        c = qtt.logistic(v, -200., 1 / 40.)
+        if 0:
+            for jj, g in enumerate(['P1', 'P2', 'P3', 'P4']):
+                v = float(self._data['gates'][g])
+                c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
         instrument = 'keithley3'
         if not instrument in self._data:
             self._data[instrument] = dict()
-        val=c + np.random.rand() / 10.
+        val=c + (np.random.rand()-.5) / 20.
         logging.debug('compute: value %f' % val)
         self._data[instrument]['amplitude'] = val
 
@@ -190,11 +194,12 @@ class MockMeter(MockInstrument):
         super().__init__(name, model=model, **kwargs)
 
         self.add_parameter('amplitude',
-                           label='Current (nA)',
+                           label='%s Current (nA)' % name,
                            get_cmd='amplitude?',
                            get_parser=float)
 
-        self.add_function('readnext', call_cmd=partial(self.get, 'amplitude'))
+        #self.add_function('readnext', call_cmd=partial(self.get, 'amplitude'))
+        self.add_parameter('readnext', get_cmd=partial(self.get, 'amplitude'), label=name)
 
 
 #%%
@@ -247,7 +252,7 @@ class virtual_gates(Instrument):
 
     def _make_gate(self, gate):
         self.add_parameter(gate,
-                           label='Gate (mV)',  # (\u03bcV)',
+                           label='%s (mV)' % gate,  # (\u03bcV)',
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate),
                            #get_parser=float,
