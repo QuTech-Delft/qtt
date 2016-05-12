@@ -61,7 +61,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     highvalue = np.percentile(value, 90)
     # sometimes a channel is almost completely closed, then the percentile
     # approach does not function well
-    ww = value[value > (lowvalue + highvalue) / 2]
+    ww = value[value >= (lowvalue + highvalue) / 2]
     #[np.percentile(ww, 1), np.percentile(ww, 50), np.percentile(ww, 91) ]
     highvalue = np.percentile(ww, 90)
 
@@ -85,9 +85,10 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         #ww=scipy.signal.convolve2d(ww, kk, mode='same', boundary='symm')
     midvalue = .7 * lowvalue + .3 * highvalue
     if scandirection>=0:
-        mp = (ww > (.7 * lowvalue + .3 * highvalue)).nonzero()[0][0]
+        mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][0]
     else:
-        mp = (ww > (.7 * lowvalue + .3 * highvalue)).nonzero()[0][-1]
+        mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][-1]
+    mp=max(mp, 2) # fix for case with zero data signal
     midpoint2 = x[mp]
     
     if verbose >= 2:
@@ -229,3 +230,9 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     return adata
 
+#%% Testing
+
+if __name__=='__main__':
+     adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None)
+     
+    

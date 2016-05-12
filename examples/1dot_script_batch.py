@@ -6,7 +6,7 @@
 #%% Import the modules used in this program:
 
 from imp import reload
-import sys
+import sys,os
 import logging
 import numpy as np
 import matplotlib.pyplot
@@ -15,6 +15,7 @@ import pdb
 
 import webbrowser
 import datetime
+import copy
 
 
 
@@ -31,11 +32,26 @@ l.handlers[0].setFormatter(formatter)
 import matplotlib.pyplot as plt
 
 import virtualV2 as setup
-setup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+#setup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+setup.initialize(reinit=False, server_name=None )
 
 def simulation():
     ''' Funny ... '''
     return False
+
+
+
+#%%
+if 0:
+    ivvi1=setup.ivvi1
+    model = setup.model
+    
+    model._data
+    
+    #%%
+    #gates.set_R(20*np.random.rand())
+    ivvi1.c11.set(20*np.random.rand())
+    keithley3.amplitude.get()
     
 #%% Make instances available
 
@@ -69,7 +85,7 @@ liveplotwindow=mwindows['plotwindow']
         
 model = setup.model
 
-model.compute()
+#model.compute()
         
 #%% Define 1-dot combinations
 
@@ -227,7 +243,21 @@ def onedotScan(od, basevalues, outputdir, verbose=1):
     #basename='%s-sweep-2d' % (od['name'])
     alldata['od']=od
     return alldata, od
-    
+
+#%%
+def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbose=1):
+    """ Scan the pinch-off values for the 3 main gates of a 1-dot """
+    od['pinchvalue'] = np.zeros((3, 1))
+    keithleyidx = [od['instrument']]
+
+    for jj, g in enumerate(od['gates']):
+                #basename='%s-sweep-1d-%s' % (od['name'], g)
+        alldata=scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, keithleyidx=keithleyidx,cache=cache, full=full)
+
+        adata = alldata.metadata['adata']
+        od['pinchvalue'][jj] = adata['pinchvalue']
+        
+    return od    
 #%%
     
 from qtt.scans import scanPinchValue
@@ -272,11 +302,12 @@ for ii, Tvalue in enumerate(Tvalues):
     
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
         alldata=scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+        STOP
     for od in sddots:
         ki=od['instrument']
         for gate in od['gates']:
-            scanPinchValue(station, outputdir, gate, basevalues=basevalues, gate=gate, keithleyidx=[ki], cache=cache, full=full)
-            qtt.resetgates(activegates, basevalues, verbose=0)
+            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, full=full)
+            qtt.resetgates(gates,activegates, basevalues, verbose=0)
 
     ww=one_dots            
     for od in ww:      

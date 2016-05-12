@@ -46,11 +46,12 @@ class ModelError(Exception):
 class DummyModel(MockModel):
 
     ''' Dummy model for testing '''
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, gate_map, **kwargs):
         self._data = dict()
         #self.name = name
 
-        for instr in ['gates', 'ivvi1', 'ivvi2', 'keithley1', 'keithley2']:
+        self.gate_map=gate_map
+        for instr in [ 'ivvi1', 'ivvi2', 'keithley1', 'keithley2']:
             if not instr in self._data:
                 self._data[instr] = dict()
             if 1:
@@ -60,7 +61,7 @@ class DummyModel(MockModel):
                 setattr(self, '%s_get' % instr, self._dummy_get )
                 setattr(self, '%s_set' % instr, self._dummy_set )
             
-        self._data['gates']=dict()
+        #self._data['gates']=dict()
         self._data['keithley3']=dict()
         self._data['keithley3']['amplitude']=.5
         
@@ -71,6 +72,9 @@ class DummyModel(MockModel):
     def _dummy_set(self, param, value):
         pass
         
+    def gate2ivvi(self,g):
+        i, j = self.gate_map[g]
+        return 'ivvi%d' % (i+1), 'c%d'  % j
     def compute(self):
         ''' Compute output of the model '''
 
@@ -80,9 +84,14 @@ class DummyModel(MockModel):
         # FIXME: loop over the gates instead of the dacs...
         v = float(self._data['ivvi1']['c11'])
         c = qtt.logistic(v, -200., 1 / 40.)
-        if 0:
+        if 1:
             for jj, g in enumerate(['P1', 'P2', 'P3', 'P4']):
-                v = float(self._data['gates'][g])
+                i, j = self.gate2ivvi(g)
+                v = float(self._data[i][j] )
+                c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
+            for jj, g in enumerate(['D1', 'D2', 'D3', 'L', 'R']):
+                i, j = self.gate2ivvi(g)
+                v = float(self._data[i][j] )
                 c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
         instrument = 'keithley3'
         if not instrument in self._data:
@@ -102,17 +111,6 @@ class DummyModel(MockModel):
         logging.debug('_generic_set: param %s, val %s' % (parameter, value))
         self._data[instrument][parameter] = float(value)
 
-    def gates_get2(self, param):
-        logging.debug('gates_get: %s' % param)
-        return self._data['gates']['param']
-        #return 1
-        
-    def gates_set2(self, param, value):
-        logging.debug('gates_set: %s value %s' % ( param, value) )
-        print('gates_set: %s value %s' % ( param, value) )
-        self._data['gates']['param']=value        
-        #self._generic_set('ivvi1', param, value)
-        pass
      
     def keithley3_get(self, param):
         logging.debug('keithley3_get: %s' % param)
@@ -217,8 +215,8 @@ except:
 # from qcodes.utils.validators import Validator
 class virtual_gates(Instrument):
 
-    def __init__(self, name, instruments, gate_map, **kwargs):
-        super().__init__(name, **kwargs)
+    def __init__(self, name, instruments, gate_map, model=None, **kwargs):
+        super().__init__(name, model=model, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
         # Create all functions for the gates as defined in self._gate_map
