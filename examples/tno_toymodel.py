@@ -36,7 +36,6 @@ import qtt
 [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2', 'AMockInsts'] ]
 
 
-
 #%% Create a virtual model for testing
 #
 # The model resembles the 4-dot setup. The hardware consists of a virtual
