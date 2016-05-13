@@ -7,8 +7,10 @@ For global installation install: git, github desktop, anaconda
 ** Install necessary packages
 
 > conda install numpy matplotlib scipy spyder jupyter
-> conda install coverage pyqtgraph nose sckit-image
+> conda install coverage pyqtgraph nose sckit-image qtpy
 > pip install pyvisa
+> conda install -c https://conda.binstar.org/menpo opencv3
+
 
 ** Clone the necessary GIT repositories
 
@@ -36,13 +38,27 @@ Note: the following does NOT work with anaconda
 
 For Spyder one can use something like:
 
-@echo off
-
 ```
+@echo off
 echo "Starting spyder" 
 call activate eendebakpt
 d:
 cd d:\users\eendebakpt
-spyder --new-instance -w d:\users\eendebakpt --session=eendebakpt.session.tar 
+spyder --new-instance -w d:\users\eendebakpt 
+#spyder --show-console --new-instance -w d:\users\eendebakpt --session=eendebakpt.session.tar 
 call deactivate eendebakpt
 ```
+
+For a notebook session:
+
+```
+@echo off
+echo "Starting Jupyter notebook" 
+
+call activate eendebakpt
+d:
+cd d:\users\eendebakpt
+jupyter notebook
+call deactivate eendebakpt
+```
+
