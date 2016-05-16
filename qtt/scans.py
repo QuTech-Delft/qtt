@@ -24,9 +24,10 @@ from qtt.algorithms import analyseGateSweep
 #%% Static variables
 
 mwindows = None
-liveplotwindow = None
+#liveplotwindow = None
 
 def livePlot():
+    global mwindows
     if mwindows is not None:
         return mwindows.get('plotwindow', None)
     return None
@@ -85,7 +86,10 @@ def getParams(station, keithleyidx):
         if isinstance(x, int):
             params+=[ getattr(station, 'keithley%d' % x).amplitude ]
         else:
-            params+=[ getattr(station, x).amplitude ]
+            if isinstance(x, str):
+                params+=[ getattr(station, x).amplitude ]
+            else:
+                params+=[ x ]
     return params    
     
 def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=True, title_comment=None):
@@ -99,8 +103,10 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
     # legacy code...
-    keithleyidx=scanjob['keithleyidx']
-    params=getParams(station, keithleyidx)
+    minstrument = scanjob.get('instrument', None)
+    if minstrument is None:
+        minstrument = scanjob.get('keithleyidx', None)
+    params=getParams(station, minstrument)
     
     station.set_measurement(*params)
 
@@ -111,8 +117,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     data.sync()
     
     if liveplotwindow is None:        
-        liveplotwindow = livePlot()
-        
+        liveplotwindow = livePlot()        
     if liveplotwindow is not None:
         liveplotwindow.clear(); liveplotwindow.add(data.amplitude)
 
@@ -125,13 +130,15 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     return data
 
-def scan2D(station, scanjob, title_comment='', wait_time=None, background=False):
+def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=True):
     """ Make a 2D scan and create dictionary to store on disk """
 
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
-    keithleyidx = scanjob['keithleyidx']
-
+    minstrument = scanjob.get('instrument', None)
+    if minstrument is None:
+        minstrument = scanjob.get('keithleyidx', None)
+        
     print('fixme: compensategates')
     #compensateGates = scanjob.get('compensateGates', [])
     #gate_values_corners = scanjob.get('gate_values_corners', [[]])
@@ -145,24 +152,42 @@ def scan2D(station, scanjob, title_comment='', wait_time=None, background=False)
     #readdevs = ['keithley%d' % x for x in keithleyidx]
 
     gates=station.gates
-    param = getattr(gates, sweepdata['gates'][0])
-    stepparam = getattr(gates, stepdata['gates'][0])
+    
+    sweepgate=sweepdata.get('gate', None)
+    if sweepgate is None:
+        sweepgate=sweepdata.get('gates')[0]
+
+    stepgate=stepdata.get('gate', None)
+    if stepgate is None:
+        stepgate=stepdata.get('gates')[0]
+    param = getattr(gates, sweepgate)
+    stepparam = getattr(gates, stepgate)
 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
         
     logging.info('scan2D: %d %d'  % (len(stepvalues), len(sweepvalues)))
     innerloop = qc.Loop(stepvalues, delay=delay, showprogress=True)
-    
-    to=time.time()
+        
+
+
+    t0=time.time()
     #alldata=innerloop.run(background=False)
     fullloop = innerloop.loop(sweepvalues, delay=delay)
     
-    params=qtt.scans.getParams(station, keithleyidx)
+    params=getParams(station, minstrument)
 
     measurement=fullloop.each( *params )
     
-    alldata=measurement.run(background=False)
+    alldata=measurement.run(background=background)
+
+    if liveplotwindow is None:        
+        liveplotwindow = livePlot()        
+    if liveplotwindow is not None:
+        liveplotwindow.clear(); liveplotwindow.add(data.amplitude)
+
+    alldata.complete()
+    
     dt = time.time() - t0
 
 
