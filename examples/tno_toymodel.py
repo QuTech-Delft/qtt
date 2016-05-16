@@ -102,6 +102,7 @@ print(dd)
 
 #%%
 
+import qtt.scans
 
 qtt.pythonVersion()
 
@@ -109,6 +110,8 @@ qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
 mwindows=qtt.setupMeasurementWindows(station)
 mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
 plotQ=mwindows['plotwindow']
+
+qtt.scans.mwindows=mwindows
 
 #%%
 
@@ -143,12 +146,11 @@ from qtt.scans import scan1D
 
 
 #%%
-scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -160, 'end': 160, 'step': 2.}), 'delay': .01})
-data = scan1D(scanjob, station, location='testsweep3', background=True)
+scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 8.}), 'instrument': [keithley3.amplitude], 'delay': .01})
+data = scan1D(scanjob, station, location='testsweep13', background=True)
 
 
-data.sync()
-data.arrays
+data.sync(); data.arrays
 
 
 #data = scan1D(scanjob, station, location='testsweep3', background=True)
@@ -172,6 +174,14 @@ else:
 STOP
 
 #%%
+from imp import reload
+reload(qcodes.plots)
+reload(qtt.scans)
+
+scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 8.}), 'instrument': [keithley3.amplitude, keithley1.amplitude], 'delay': .01})
+scanjob['stepdata']=dict({'gate': 'D1', 'start': -290, 'end': 160, 'step': 8.})
+data = qtt.scans.scan2D(station, scanjob)
+
 
 #qc.active_children()
 #qc.halt_bg()
