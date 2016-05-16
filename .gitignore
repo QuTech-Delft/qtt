@@ -3,3 +3,5 @@ build
 qtt.egg-info
 *.md~
 __pycache__
+examples/dummy.*
+examples/dot-dummy.*
