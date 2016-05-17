@@ -111,7 +111,7 @@ mwindows=qtt.setupMeasurementWindows(station)
 mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
 plotQ=mwindows['plotwindow']
 
-qtt.scans.mwindows=mwindows
+qtt.live.mwindows=mwindows
 
 #%%
 
@@ -173,13 +173,56 @@ else:
 
 STOP
 
+
+#%% Extend model
+
+model=virtualV2.model
+
+import qtt.simulation.dotsystem
+reload(qtt.simulation.dotsystem)
+from qtt.simulation.dotsystem import DotSystem, FourDot, GateTransform
+
+ds=FourDot()
+
+
+for ii in range(ds.ndots):
+    setattr(ds, 'osC%d' % ( ii+1), 35)
+for ii in range(ds.ndots-1):
+    setattr(ds, 'isC%d' % (ii+1), 3)
+
+targetnames=['det%d' % (i+1) for i in range(4)]
+sourcenames=['P%d' % (i+1) for i in range(4)]
+
+Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=4)
+
+
+gate_transform = GateTransform(Vmatrix, sourcenames, targetnames)
+
+# fixme: does NOT work, we need to delegate the function to the network...
+[model.gate2ivvi_value(g) for g in sourcenames ] 
+
+model.fourdot = ds
+model.gate_transform=gate_transform
+
+self=model
+def computeSD(self):
+    return 0
+
+
+computeSD(self)
+    
+#%%
+
+stepvalues=gates.R[0:100:1]
+data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False)
+
 #%%
 from imp import reload
 reload(qcodes.plots)
 reload(qtt.scans)
 
-scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 8.}), 'instrument': [keithley3.amplitude, keithley1.amplitude], 'delay': .01})
-scanjob['stepdata']=dict({'gate': 'D1', 'start': -290, 'end': 160, 'step': 8.})
+scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 12.}), 'instrument': [keithley3.amplitude, keithley1.amplitude], 'delay': .01})
+scanjob['stepdata']=dict({'gate': 'D1', 'start': -290, 'end': 120, 'step': 12.})
 data = qtt.scans.scan2D(station, scanjob)
 
 
@@ -191,6 +234,10 @@ data = qtt.scans.scan2D(station, scanjob)
 #%%
 
 
+plotQ=qc.QtPlot(data.amplitude_0)
+plotQ.win.setGeometry(1920, 10, 800,600)
+plotQ=qc.QtPlot(data.amplitude_1)
+plotQ.win.setGeometry(1920+800, 10, 800,600)
 
 
 #%% Go!
