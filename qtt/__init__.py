@@ -3,6 +3,7 @@
 
 import numpy as np
 
+import qtt.live
 import qtt.tools
 from qtt.tools import *
 

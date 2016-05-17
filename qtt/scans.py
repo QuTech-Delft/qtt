@@ -10,6 +10,7 @@ import logging
 import time
 import qcodes
 import qcodes as qc
+import datetime
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
@@ -20,17 +21,8 @@ import matplotlib.pyplot as plt
 from pmatlab import tilefigs
 
 from qtt.algorithms import analyseGateSweep
+import qtt.live
 
-#%% Static variables
-
-mwindows = None
-#liveplotwindow = None
-
-def livePlot():
-    global mwindows
-    if mwindows is not None:
-        return mwindows.get('plotwindow', None)
-    return None
     
 #%%
 
@@ -92,6 +84,21 @@ def getParams(station, keithleyidx):
                 params+=[ x ]
     return params    
     
+def getDefaultParameter(data):
+    if 'amplitude' in data.arrays.keys():
+        return data.amplitude
+    if 'amplitude_0' in data.arrays.keys():
+        return data.amplitude_0
+    if 'amplitude_1' in data.arrays.keys():
+        return data.amplitude_1
+    
+    try:
+        name = next(iter(data.arrays.keys()))
+        return getattr(data, name)
+    except:
+        pass            
+    return None
+    
 def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=True, title_comment=None):
     ''' Simple 1D scan '''
     gates=station.gates
@@ -117,9 +124,9 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     data.sync()
     
     if liveplotwindow is None:        
-        liveplotwindow = livePlot()        
+        liveplotwindow = qtt.live.livePlot()        
     if liveplotwindow is not None:
-        liveplotwindow.clear(); liveplotwindow.add(data.amplitude)
+        liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(data) )
 
     # FIXME
     complete(data) #
@@ -167,7 +174,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
         
     logging.info('scan2D: %d %d'  % (len(stepvalues), len(sweepvalues)))
-    innerloop = qc.Loop(stepvalues, delay=delay, showprogress=True)
+    innerloop = qc.Loop(stepvalues, delay=delay, progress_interval=2)
         
 
 
@@ -182,9 +189,9 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     alldata=measurement.run(background=background)
 
     if liveplotwindow is None:        
-        liveplotwindow = livePlot()        
+        liveplotwindow = qtt.live.livePlot()        
     if liveplotwindow is not None:
-        liveplotwindow.clear(); liveplotwindow.add(data.amplitude)
+        liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(alldata) )
 
     alldata.complete()
     
