@@ -77,7 +77,7 @@ class DummyModel(MockModel):
         return 'ivvi%d' % (i+1), 'c%d'  % j
 
     def gate2ivvi_value(self,g):
-        i, j = self.gate_map[g]
+        i, j = self.gate2ivvi(g)
         value= self._data[i][j]
         return value
         

@@ -56,6 +56,8 @@ keithley3 = virtualV2.keithley3
 # virtual gates for the model
 gates=virtualV2.gates
 
+model=virtualV2.model
+
 #%%
 logging.warning('test IVVI...')
 virtualV2.ivvi1.c1.set(300)
@@ -198,17 +200,26 @@ Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=4)
 gate_transform = GateTransform(Vmatrix, sourcenames, targetnames)
 
 # fixme: does NOT work, we need to delegate the function to the network...
-[model.gate2ivvi_value(g) for g in sourcenames ] 
 
 model.fourdot = ds
 model.gate_transform=gate_transform
 
 self=model
-def computeSD(self):
-    return 0
+def computeSD(self, usediag=True):
+    gv=[gates.get(g) for g in sourcenames ] 
+    tv=gate_transform.transformGateScan(gv)
+    for k, val in tv.items():
+        print(k,val)
+        setattr(ds, k, val)
+    ds.makeH()
+    ds.solveH(usediag=usediag)
+    ret = ds.OCC
+
+    return ret
 
 
-computeSD(self)
+tmp=computeSD(self)
+print(tmp)
     
 #%%
 
