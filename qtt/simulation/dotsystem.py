@@ -101,8 +101,12 @@ class GateTransform:
         vals2Dout = {}
         
         zz=np.zeros( nn, dtype=float )
-        xx= [ vals2D.get(s, zz) for s in self.sourcenames]
-        xx=[ x.flatten() for x in xx]
+        if isinstance(vals2D, dict):
+            xx= [ vals2D.get(s, zz) for s in self.sourcenames]
+            xx=[ x.flatten() for x in xx]
+        else:
+            xx=vals2D
+            pass # xx= np.array(xx)
         
         v=np.vstack(xx)
         vout = self.Vmatrix.dot(v)
