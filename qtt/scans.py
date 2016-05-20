@@ -17,8 +17,7 @@ import qtpy.QtWidgets as QtWidgets
 
 import matplotlib.pyplot as plt
 
-# should be removed later
-from pmatlab import tilefigs
+from qtt import tilefigs
 
 from qtt.algorithms import analyseGateSweep
 import qtt.live

@@ -1,5 +1,5 @@
 import scipy
-from pmatlab import cfigure, plot2Dline
+from qtt import cfigure, plot2Dline
 import qcodes
 import numpy as np
 import matplotlib.pyplot as plt

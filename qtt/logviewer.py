@@ -70,7 +70,7 @@ class LogViewer(QtWidgets.QWidget):
         logs=dict()        
         for i, d in enumerate(dd):
             tag= os.path.basename(d)
-            datetag, logtag,_=d.split('/')[-3:]
+            datetag, logtag,_=d.split(os.sep)[-3:]
             if not datetag in logs:
                 logs[datetag]=dict()
             logs[datetag][logtag]=d

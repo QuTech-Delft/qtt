@@ -3,7 +3,8 @@ import qtpy
 
 import numpy as np
 import scipy
-import sys
+import matplotlib
+import sys, os
 import logging
 import qcodes
 
@@ -11,8 +12,7 @@ import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
 # should be removed later
-from pmatlab import tilefigs
-from pmatlab import mkdirc
+#from pmatlab import tilefigs
 
 
 
@@ -48,7 +48,46 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
             print('  setting gate %s to %.1f [mV]' % (g, val))
         gates.set(g, val)
     
-#%%
+#%% Tools from pmatlab
+
+def plot2Dline(line, *args, **kwargs):
+    """ Plot a 2D line in a matplotlib figure
+
+    line: 3x1 array
+        
+    >>> plot2Dline([-1,1,0], 'b')
+    """
+    if np.abs(line[1]) > .001:
+        xx = plt.xlim()
+        xx = np.array(xx)
+        yy = (-line[2] - line[0] * xx) / line[1]
+        plt.plot(xx, yy, *args, **kwargs)
+    else:
+        yy = np.array(plt.ylim())
+        xx = (-line[2] - line[1] * yy) / line[0]
+        plt.plot(xx, yy, *args, **kwargs)
+        
+def cfigure(*args, **kwargs):
+    """ Create Matplotlib figure with copy to clipboard functionality
+
+    By pressing the 'c' key figure is copied to the clipboard
+    
+    """
+    if 'facecolor' in kwargs:
+        fig = plt.figure(*args, **kwargs)
+    else:
+        fig = plt.figure(*args, facecolor='w', **kwargs)
+    ff = lambda xx, figx=fig: mpl2clipboard(fig=figx)
+    fig.canvas.mpl_connect('key_press_event', ff) # mpl2clipboard)
+    return fig
+
+def static_var(varname, value):
+    """ Helper function to create a static variable """
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    return decorate
+
 
 try:
     def monitorSizes(verbose=0):
@@ -82,8 +121,80 @@ except:
         return [[0, 0, 1600, 1200]]
     pass
 
+@static_var('monitorindex', -1)
+def tilefigs(lst, geometry=[2,2], ww=None, raisewindows=False, tofront=False, verbose=0):
+    """ Tile figure windows on a specified area """
+    mngr = plt.get_current_fig_manager()
+    be = matplotlib.get_backend()
+    if ww is None:
+        ww = monitorSizes()[tilefigs.monitorindex]
+
+    w = ww[2] / geometry[0]
+    h = ww[3] / geometry[1]
+
+    # wm=plt.get_current_fig_manager()
+
+    if isinstance(lst, int):
+        lst = [lst]
+
+    if verbose:
+        print('tilefigs: ww %s, w %d h %d' % (str(ww), w, h))
+    for ii, f in enumerate(lst):
+        if type(f) == matplotlib.figure.Figure:
+            fignum = f.number
+        else:
+            fignum = f
+        if not plt.fignum_exists(fignum):
+            if verbose >= 2:
+                print('tilefigs: fignum: %s' % str(fignum))
+            continue
+        fig = plt.figure(fignum)
+        iim = ii % np.prod(geometry)
+        ix = iim % geometry[0]
+        iy = np.floor(float(iim) / geometry[0])
+        x = ww[0] + ix * w
+        y = ww[1] + iy * h
+        if verbose:
+            print('ii %d: %d %d: f %d: %d %d %d %d' %
+                  (ii, ix, iy, fignum, x, y, w, h))
+            if verbose >= 2:
+                print('  window %s' % mngr.get_window_title())
+        if be == 'WXAgg':
+            fig.canvas.manager.window.SetPosition((x, y))
+            fig.canvas.manager.window.SetSize((w, h))
+        if be == 'WX':
+            fig.canvas.manager.window.SetPosition((x, y))
+            fig.canvas.manager.window.SetSize((w, h))
+        if be == 'agg':
+            fig.canvas.manager.window.SetPosition((x, y))
+            fig.canvas.manager.window.resize(w, h)
+        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg':
+            # assume Qt canvas
+            try:
+                fig.canvas.manager.window.move(x, y)
+                fig.canvas.manager.window.resize(w, h)
+                fig.canvas.manager.window.setGeometry(x, y, w, h)
+                # mngr.window.setGeometry(x,y,w,h)
+            except Exception as e:
+                print('problem with window manager: ', )
+                print(be)
+                print(e)
+                pass
+        if raisewindows:
+            mngr.window.raise_()
+        if tofront:
+            plt.figure(f)
+
 
 #%% Helper tools
+
+def mkdirc(d):
+    """ Similar to mkdir, but no warnings if the directory already exists """
+    try:
+        os.mkdir(d)
+    except:
+        pass
+    return d
 
 def in_ipynb():
     try:
