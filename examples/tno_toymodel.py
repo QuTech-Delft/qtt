@@ -9,7 +9,7 @@ from imp import reload
 import math
 import sys,os
 import numpy as np
-import dill
+#import dill
 import time
 import pdb
 import multiprocessing as mp
@@ -44,7 +44,8 @@ import qtt
 
 import virtualV2; # reload(virtualV2)
 
-virtualV2.initialize(server_name=None)
+server_name='testv2' # needs to be set for background loops to work
+virtualV2.initialize(server_name=server_name)
 #virtualV2.initialize(server_name='virtualV2'+time.strftime("%H.%M.%S"))
 
 import qtt.qtt_toymodel
@@ -67,11 +68,13 @@ print('get P1: %f'  % (virtualV2.ivvi1.c1.get(), ) )
 
 #%%
 
-dot = gates.visualize()    
-#dot.view()
-qtt.showDotGraph(dot, fig=12)
-qtt.tilefigs(12, [1,2])
-
+try:
+    dot = gates.visualize()    
+    #dot.view()
+    qtt.showDotGraph(dot, fig=12)
+    qtt.tilefigs(12, [1,2])
+except:
+    pass
 
 #%%
 
@@ -108,7 +111,8 @@ import qtt.scans
 
 qtt.pythonVersion()
 
-qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
+qcodes.DataSet.default_io = qcodes.DiskIO('d:\\qdata')
+#qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
 mwindows=qtt.setupMeasurementWindows(station)
 mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
 plotQ=mwindows['plotwindow']
@@ -141,15 +145,16 @@ from qtt.scans import scan1D
 
 
 
-
-
         
 #%%
 
 
 #%%
-scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 8.}), 'instrument': [keithley3.amplitude], 'delay': .01})
-data = scan1D(scanjob, station, location='testsweep13', background=True)
+FIXME: set everything under __name__
+
+if __name__=='__main__':
+    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 8.}), 'instrument': [keithley3.amplitude], 'delay': .01})
+    data = scan1D(scanjob, station, location=None, background=True)
 
 
 data.sync(); data.arrays
