@@ -75,15 +75,20 @@ class DummyModel(MockModel):
     def gate2ivvi(self,g):
         i, j = self.gate_map[g]
         return 'ivvi%d' % (i+1), 'c%d'  % j
+
+    def gate2ivvi_value(self,g):
+        i, j = self.gate2ivvi(g)
+        value= self._data[i][j]
+        return value
+        
     def compute(self):
         ''' Compute output of the model '''
 
         logging.debug('compute')
         # current through keithley1, 2 and 3
 
-        # FIXME: loop over the gates instead of the dacs...
-        v = float(self._data['ivvi1']['c11'])
-        c = qtt.logistic(v, -200., 1 / 40.)
+        #v = float(self._data['ivvi1']['c11'])
+        c = 1
         if 1:
             for jj, g in enumerate(['P1', 'P2', 'P3', 'P4']):
                 i, j = self.gate2ivvi(g)

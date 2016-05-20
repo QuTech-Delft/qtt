@@ -57,6 +57,8 @@ keithley3 = virtualV2.keithley3
 # virtual gates for the model
 gates=virtualV2.gates
 
+model=virtualV2.model
+
 #%%
 logging.warning('test IVVI...')
 virtualV2.ivvi1.c1.set(300)
@@ -102,6 +104,7 @@ print(dd)
 
 #%%
 
+import qtt.scans
 
 qtt.pythonVersion()
 
@@ -109,6 +112,8 @@ qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
 mwindows=qtt.setupMeasurementWindows(station)
 mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
 plotQ=mwindows['plotwindow']
+
+qtt.live.mwindows=mwindows
 
 #%%
 
@@ -143,12 +148,11 @@ from qtt.scans import scan1D
 
 
 #%%
-scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -160, 'end': 160, 'step': 2.}), 'delay': .01})
-data = scan1D(scanjob, station, location='testsweep3', background=True)
+scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 8.}), 'instrument': [keithley3.amplitude], 'delay': .01})
+data = scan1D(scanjob, station, location='testsweep13', background=True)
 
 
-data.sync()
-data.arrays
+data.sync(); data.arrays
 
 
 #data = scan1D(scanjob, station, location='testsweep3', background=True)
@@ -171,7 +175,67 @@ else:
 
 STOP
 
+
+#%% Extend model
+
+model=virtualV2.model
+
+import qtt.simulation.dotsystem
+reload(qtt.simulation.dotsystem)
+from qtt.simulation.dotsystem import DotSystem, FourDot, GateTransform
+
+ds=FourDot()
+
+
+for ii in range(ds.ndots):
+    setattr(ds, 'osC%d' % ( ii+1), 35)
+for ii in range(ds.ndots-1):
+    setattr(ds, 'isC%d' % (ii+1), 3)
+
+targetnames=['det%d' % (i+1) for i in range(4)]
+sourcenames=['P%d' % (i+1) for i in range(4)]
+
+Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=4)
+
+
+gate_transform = GateTransform(Vmatrix, sourcenames, targetnames)
+
+# fixme: does NOT work, we need to delegate the function to the network...
+
+model.fourdot = ds
+model.gate_transform=gate_transform
+
+self=model
+def computeSD(self, usediag=True):
+    gv=[gates.get(g) for g in sourcenames ] 
+    tv=gate_transform.transformGateScan(gv)
+    for k, val in tv.items():
+        print(k,val)
+        setattr(ds, k, val)
+    ds.makeH()
+    ds.solveH(usediag=usediag)
+    ret = ds.OCC
+
+    return ret
+
+
+tmp=computeSD(self)
+print(tmp)
+    
 #%%
+
+stepvalues=gates.R[0:100:1]
+data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False)
+
+#%%
+from imp import reload
+reload(qcodes.plots)
+reload(qtt.scans)
+
+scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 12.}), 'instrument': [keithley3.amplitude, keithley1.amplitude], 'delay': .01})
+scanjob['stepdata']=dict({'gate': 'D1', 'start': -290, 'end': 120, 'step': 12.})
+data = qtt.scans.scan2D(station, scanjob)
+
 
 #qc.active_children()
 #qc.halt_bg()
@@ -181,6 +245,10 @@ STOP
 #%%
 
 
+plotQ=qc.QtPlot(data.amplitude_0)
+plotQ.win.setGeometry(1920, 10, 800,600)
+plotQ=qc.QtPlot(data.amplitude_1)
+plotQ.win.setGeometry(1920+800, 10, 800,600)
 
 
 #%% Go!

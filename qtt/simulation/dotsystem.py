@@ -73,7 +73,47 @@ def simulate_row(i, ds, npointsy, usediag):
         dsx.solveH(usediag=usediag)
         dsx.hcgs[i,j] = dsx.OCC
     return dsx.hcgs[i]
-            
+   
+
+#%%
+# move into class?
+def defaultVmatrix(n):
+    Vmatrix=np.eye(n)
+    vals=[1,.25,.05,.01,.001, 0, 0]
+    for x in range(1, n):
+        for i in range(4-x):
+            Vmatrix[i, i+x]=vals[x]
+            Vmatrix[i+x, i]=vals[x]
+
+    return Vmatrix
+
+#%% FIXME: move into other submodule
+   
+class GateTransform:
+    ''' Class to describe virtual gate transformations '''    
+    def __init__(self, Vmatrix, sourcenames, targetnames):
+        self.Vmatrix = Vmatrix
+        self.sourcenames = sourcenames
+        self.targetnames = targetnames
+    def transformGateScan(self, vals2D, nn=None):
+        '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
+        to generate dictionary self.vals2D[name] = matrix of values'''
+        vals2Dout = {}
+        
+        zz=np.zeros( nn, dtype=float )
+        if isinstance(vals2D, dict):
+            xx= [ vals2D.get(s, zz) for s in self.sourcenames]
+            xx=[ x.flatten() for x in xx]
+        else:
+            xx=vals2D
+            pass # xx= np.array(xx)
+        
+        v=np.vstack(xx)
+        vout = self.Vmatrix.dot(v)
+        
+        for j, n in enumerate(self.targetnames):
+            vals2Dout[n] = vout[j].reshape(nn).astype(np.float)
+        return vals2Dout
 #%%
 
 class DotSystem():
