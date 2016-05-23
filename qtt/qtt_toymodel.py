@@ -10,8 +10,6 @@
 import logging
 import numpy as np
 
-#import qcodes
-
 import qcodes as qc
 from qcodes import Instrument, MockInstrument, MockModel # , Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
@@ -48,11 +46,12 @@ class ModelError(Exception):
 class DummyModel(MockModel):
 
     ''' Dummy model for testing '''
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, gate_map, **kwargs):
         self._data = dict()
         #self.name = name
 
-        for instr in ['gates', 'ivvi1x', 'ivvi2']:
+        self.gate_map=gate_map
+        for instr in [ 'ivvi1', 'ivvi2', 'keithley1', 'keithley2']:
             if not instr in self._data:
                 self._data[instr] = dict()
             if 1:
@@ -62,8 +61,7 @@ class DummyModel(MockModel):
                 setattr(self, '%s_get' % instr, self._dummy_get )
                 setattr(self, '%s_set' % instr, self._dummy_set )
             
-        self._data['ivvi1'] = dict()
-        self._data['gates']=dict()
+        #self._data['gates']=dict()
         self._data['keithley3']=dict()
         self._data['keithley3']['amplitude']=.5
         
@@ -74,19 +72,31 @@ class DummyModel(MockModel):
     def _dummy_set(self, param, value):
         pass
         
+    def gate2ivvi(self,g):
+        i, j = self.gate_map[g]
+        return 'ivvi%d' % (i+1), 'c%d'  % j
     def compute(self):
         ''' Compute output of the model '''
 
         logging.debug('compute')
         # current through keithley1, 2 and 3
 
+        # FIXME: loop over the gates instead of the dacs...
         v = float(self._data['ivvi1']['c11'])
-        c = qtt.logistic(v, 0., 1 / 40.)
-
+        c = qtt.logistic(v, -200., 1 / 40.)
+        if 1:
+            for jj, g in enumerate(['P1', 'P2', 'P3', 'P4']):
+                i, j = self.gate2ivvi(g)
+                v = float(self._data[i][j] )
+                c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
+            for jj, g in enumerate(['D1', 'D2', 'D3', 'L', 'R']):
+                i, j = self.gate2ivvi(g)
+                v = float(self._data[i][j] )
+                c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
         instrument = 'keithley3'
         if not instrument in self._data:
             self._data[instrument] = dict()
-        val=c + np.random.rand() / 10.
+        val=c + (np.random.rand()-.5) / 20.
         logging.debug('compute: value %f' % val)
         self._data[instrument]['amplitude'] = val
 
@@ -101,29 +111,7 @@ class DummyModel(MockModel):
         logging.debug('_generic_set: param %s, val %s' % (parameter, value))
         self._data[instrument][parameter] = float(value)
 
-    def gates_get2(self, param):
-        logging.debug('gates_get: %s' % param)
-        return self._data['gates']['param']
-        #return 1
-        
-    def gates_set2(self, param, value):
-        logging.debug('gates_set: %s value %s' % ( param, value) )
-        print('gates_set: %s value %s' % ( param, value) )
-        self._data['gates']['param']=value        
-        #self._generic_set('ivvi1', param, value)
-        pass
-        
-    def ivvi1_get(self, param):
-        logging.debug('ivvi1_get: %s' % param)
-        return self._generic_get('ivvi1', param)
-        
-    def ivvi1_set(self, param, value):
-        logging.debug('ivvi1_set: %s value %s' % ( param, value) )
-        self._generic_set('ivvi1', param, value)
-
-    def meter_get(self, param):
-        return self.keithley3_get(param)
-        
+     
     def keithley3_get(self, param):
         logging.debug('keithley3_get: %s' % param)
         self.compute()        
@@ -134,30 +122,6 @@ class DummyModel(MockModel):
         pass
         print('huh?')
         #return self._generic_get('keithley3', param)
-
-
-    def write_old(self, instrument, parameter, value):
-        if not instrument in self._data:
-            self._data[instrument] = dict()
-
-        self._data[instrument][parameter] = value
-        return
-
-    def ask_old(self, instrument, parameter):
-        if not instrument in self._data:
-            raise ModelError('could not read from instrument %s the parameter %s ' %
-                             (instrument, parameter))
-        try:
-            # logging.warning('here')
-            self.compute()
-            # logging.warning('here2')
-            value = self._data[instrument][parameter]
-        except Exception as ex:
-            print(ex)
-            raise ModelError('could not read from instrument %s the parameter %s ' %
-                             (instrument, parameter))
-
-        return value
 
 
 class VirtualIVVI(MockInstrument):
@@ -228,11 +192,12 @@ class MockMeter(MockInstrument):
         super().__init__(name, model=model, **kwargs)
 
         self.add_parameter('amplitude',
-                           label='Current (nA)',
+                           label='%s Current (nA)' % name,
                            get_cmd='amplitude?',
                            get_parser=float)
 
-        self.add_function('readnext', call_cmd=partial(self.get, 'amplitude'))
+        #self.add_function('readnext', call_cmd=partial(self.get, 'amplitude'))
+        self.add_parameter('readnext', get_cmd=partial(self.get, 'amplitude'), label=name)
 
 
 #%%
@@ -242,12 +207,16 @@ class MyInstrument(Instrument):
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
+try:
+    import graphviz
+except:
+        pass
 
 # from qcodes.utils.validators import Validator
 class virtual_gates(Instrument):
 
-    def __init__(self, name, instruments, gate_map, **kwargs):
-        super().__init__(name, **kwargs)
+    def __init__(self, name, instruments, gate_map, model=None, **kwargs):
+        super().__init__(name, model=model, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
         # Create all functions for the gates as defined in self._gate_map
@@ -281,7 +250,7 @@ class virtual_gates(Instrument):
 
     def _make_gate(self, gate):
         self.add_parameter(gate,
-                           label='Gate (mV)',  # (\u03bcV)',
+                           label='%s (mV)' % gate,  # (\u03bcV)',
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate),
                            #get_parser=float,
@@ -296,6 +265,15 @@ class virtual_gates(Instrument):
     def get_instrument_parameter(self, g):
         gatemap = self._gate_map[g]
         return getattr(self._instrument_list[gatemap[0]], 'c%d' % gatemap[1] )
+
+
+    def set_boundaries(self, gate_boundaries):        
+        for g, bnds in gate_boundaries.items():
+            logging.debug('gate %s: %s' % (g, bnds))
+            
+            param = self.get_instrument_parameter(g)
+            param._vals=Numbers(bnds[0], max_value=bnds[1])
+
         
     def __repr__(self):
         s = 'virtual_gates: %s (%d gates)' % (self.name, len(self._gate_map))
@@ -305,11 +283,56 @@ class virtual_gates(Instrument):
         # setattr(self, '_do_set_%s' %gate, func)
 
 
+    def visualize(self, fig=1):
+        ''' Create a graphical representation of the system (needs graphviz) '''
+        gates=self    
+        dot=graphviz.Digraph(name=self.name)
+    
+        inames = [x.name for x in gates._instrument_list]
+        
+        cgates=graphviz.Digraph('cluster_gates')
+        cgates.body.append('color=lightgrey')
+        cgates.attr('node', style='filled', color='seagreen1')
+        cgates.body.append('label="%s"' % 'Virtual gates') 
+        
+        iclusters=[]
+        for i, iname in enumerate(inames):
+            c0=graphviz.Digraph(name='cluster_%d' % i)
+            c0.body.append('style=filled')
+            c0.body.append('color=grey80')
+    
+            c0.node_attr.update(style='filled', color='white')
+            #c0.attr('node', style='filled', color='lightblue')
+            iclusters.append(c0)
+    
+        for g in gates._gate_map:
+            xx=gates._gate_map[g]
+            cgates.node(str(g), label='%s' % g)
+            
+            ix = inames[xx[0]] + '%d' % xx[1]
+            ixlabel='c%d' % xx[1]
+            icluster=iclusters[xx[0]]
+            icluster.node(ix, label=ixlabel, color='lightskyblue')
+    
+        for i, iname in enumerate(inames):
+            iclusters[i].body.append('label="%s"' % iname) 
+        
+        dot.subgraph(cgates)
+        for c0 in iclusters:
+            dot.subgraph(c0)
+        # group
+    
+        for g in gates._gate_map:
+            xx=gates._gate_map[g]
+            ix = inames[xx[0]] + '%d' % xx[1]
+            dot.edge(str(g), str(ix))
+    
+        return dot
 
 #%%
 
-import threading
 import time
+import threading
 
 
 class QCodesTimer(threading.Thread):
@@ -330,7 +353,7 @@ class QCodesTimer(threading.Thread):
 class ParameterViewer(Qt.QtGui.QTreeWidget):
 
     ''' Simple class to show qcodes parameters '''
-    def __init__(self, station, name='QuTech Parameter Viewer', **kwargs):
+    def __init__(self, station, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
         super().__init__(**kwargs)
         w = self
         w.setGeometry(1700, 50, 300, 600)
@@ -341,6 +364,7 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
                         # setHeaderLabels(["Tree","First",...])
         w.setWindowTitle(name)
 
+        self._instrumentnames=instrumentnames
         self._itemsdict = dict()
         self._itemsdict['gates'] = dict()
         self._timer = None
@@ -356,13 +380,14 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
             return
         dd = self._station.snapshot()
         #x = 
-        pp = dd['instruments']['gates']['parameters']
-        gatesroot = QtGui.QTreeWidgetItem(self, ["gates"])
-        for g in pp:
-            # ww=['gates', g]
-            value = pp[g]['value']
-            A = QtGui.QTreeWidgetItem(gatesroot, [g, str(value)])
-            self._itemsdict['gates'][g] = A
+        for iname in self._instrumentnames:
+            pp = dd['instruments'][iname]['parameters']
+            gatesroot = QtGui.QTreeWidgetItem(self, [iname])
+            for g in pp:
+                # ww=['gates', g]
+                value = pp[g]['value']
+                A = QtGui.QTreeWidgetItem(gatesroot, [g, str(value)])
+                self._itemsdict['gates'][g] = A
         self.setSortingEnabled(True)
         self.expandAll()
 

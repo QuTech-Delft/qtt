@@ -20,6 +20,7 @@ except:
 
 
 import qtt; reload(qtt)
+import qtt.simulation.dotsystem; reload(qtt.simulation.dotsystem)
 from qtt.simulation.dotsystem import DotSystem, TripleDot
 
 
@@ -62,7 +63,7 @@ pmatlab.tilefigs(20, [2,2])
 class FourDot(DotSystem):
     
     def __init__(self, name='doubledot'):
-        super().__init__(name=name, ndots=3)
+        super().__init__(name=name, ndots=4)
         
         self.makebasis(ndots=self.ndots, maxelectrons=2)
         self.varnames = ['det%d' % (i+1) for i in range(self.ndots)]
@@ -124,7 +125,123 @@ print(ds.hcgs[0,0])
 
 pmatlab.tilefigs(10, [2,2])
 
+STOP
+
 #%%
+
+
+sweepdata=['P4', -50, 80, 1.5]
+stepdata=['P1', -40, 80, 1.5]
+
+
+def make2Dscan(sweepdata, stepdata):
+        vals2D = {}
+        
+        sweepvalues=np.arange(sweepdata[1], sweepdata[2], sweepdata[3])
+        stepvalues=np.arange(stepdata[1], stepdata[2], stepdata[3])
+        x,y=np.meshgrid( sweepvalues, stepvalues )
+        
+        vals2D[sweepdata[0]] = x
+        vals2D[stepdata[0]] = y
+        return vals2D
+vals2D = make2Dscan(sweepdata, stepdata)
+
+
+#%%        
+    
+targetnames=['det%d' % (i+1) for i in range(4)]
+sourcenames=['P%d' % (i+1) for i in range(4)]
+Vmatrix=np.eye(4)
+for i in range(4-1):
+    pass
+    Vmatrix[i, i+1]=.25
+    Vmatrix[i+1, i]=.25
+for i in range(4-2):
+    pass
+    Vmatrix[i, i+2]=.03
+    Vmatrix[i+2, i]=.03
+
+print(Vmatrix)
+
+if 0:
+    targetnames=['det1', 'det4']
+    sourcenames=['P1', 'P4']
+    Vmatrix=np.eye(2)
+    Vmatrix[1,0]=.2
+    Vmatrix[0,1]=.2
+
+nn=vals2D['P1'].shape
+if 1:
+    def transformGateScan(vals2D, sourcenames, targetnames, Vmatrix, nn=None):
+        '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
+        to generate dictionary self.vals2D[name] = matrix of values'''
+        vals2Dout = {}
+        
+        zz=np.zeros( nn, dtype=float )
+        xx= [ vals2D.get(s, zz) for s in sourcenames]
+        xx=[ x.flatten() for x in xx]
+        
+        v=np.vstack(xx)
+        vout = Vmatrix.dot(v)
+        
+        for j, n in enumerate(targetnames):
+            vals2Dout[n] = vout[j].reshape(nn).astype(np.float)
+        return vals2Dout
+out= transformGateScan(vals2D, sourcenames, targetnames, Vmatrix, nn=nn)
+
+self.vals2D=out
+
+plt.figure(30); plt.clf();
+plt.imshow(out['det1'])
+
+ds.resetMu(0)
+ds.det2=4
+#ds.isC3=3
+
+ds.simulatehoneycomb(verbose=1, usediag=False, multiprocess=True)
+paramnames=['P1','P4']
+plt.figure(10); plt.clf()
+plt.pcolor(vals2D[ paramnames[0]],vals2D[ paramnames[1]],ds.honeycomb,cmap='Blues')
+plt.xlabel('Abcissa gate (mV)')
+plt.ylabel('Ordinate gate (mV)')
+plt.colorbar()
+plt.axis('image')
+plt.show()
+
+val=5*ds.hcgs[:,:,0] + 2*ds.hcgs[:,:,1] + ds.hcgs[:,:,2] + .5*ds.hcgs[:,:,3]
+
+plt.figure(11); plt.clf()
+plt.pcolor(vals2D[ paramnames[0]],vals2D[ paramnames[1]],val,cmap='Blues')
+plt.xlabel('Abcissa gate (mV)')
+plt.ylabel('Ordinate gate (mV)')
+plt.colorbar()
+plt.axis('image')
+plt.show()
+
+pmatlab.tilefigs([10,11, 20,30],[2,2])
+
+#%%
+plt.figure(11); plt.clf()
+for ii in range(ds.ndots):
+    plt.subplot(2,2,ii+1)
+    val=ds.hcgs[:,:,ii]
+#    plt.pcolor(vals2D[ paramnames[0]],vals2D[ paramnames[1]],val,cmap='Blues')
+    plt.imshow(val);
+    
+    plt.xlabel('Abcissa gate (mV)')
+    plt.ylabel('Ordinate gate (mV)')
+    plt.title('Occupancy in dot %d'% ii)
+    plt.colorbar()
+plt.show()
+
+
+#%%
+
+ds.resetMu(0)
+ds.det2=4
+ds.det1=-20
+ds.det3=-20
+
 ds.makeH()
 ds.solveH()
 print(ds.OCC)
@@ -132,15 +249,15 @@ print(ds.OCC)
 #%%
 
 
-val=5*ds.hcgs[:,:,0] + 2*ds.hcgs[:,:,1] + ds.hcgs[:,:,2]
 
 plt.figure(11); plt.clf()
-for ii in range(3):
+for ii in range(ds.ndots):
     plt.subplot(2,2,ii+1)
     val=ds.hcgs[:,:,ii]
     plt.pcolor(ds.vals2D[ paramnames[0]],ds.vals2D[ paramnames[1]],val,cmap='Blues')
     plt.xlabel('Abcissa gate (mV)')
     plt.ylabel('Ordinate gate (mV)')
+    plt.title('Occupancy in dot %d'% ii)
     plt.colorbar()
 plt.show()
 
@@ -346,7 +463,7 @@ def solveH2(self, usediag=False):
         return self.energies,self.eigenstates
 
 #%timeit a,b=solveH(self)
-%timeit a2,b2=solveH2(self, usediag=True)
+#%timeit a2,b2=solveH2(self, usediag=True)
 
 #%%
 self.makeH()
@@ -359,3 +476,223 @@ def showH(self, fig=10):
     plt.grid('on')
 
 showH(self)
+
+
+#%%
+from pmatlab import tprint
+
+try:
+    from numba import autojit, prange
+except:
+    def autojit(original_function):
+        """ dummy autojit decorator """
+        def dummy_function(*args, **kwargs):
+            return original_function(*args, **kwargs)
+        return dummy_function
+    pass
+
+    
+import multiprocessing as mp
+from multiprocessing import Pool
+from functools import partial
+
+import copy
+
+def simulate_row(i, ds, npointsy, usediag):
+    dsx=copy.deepcopy(ds)
+    paramnames = list(dsx.vals2D.keys())
+    for j in range(npointsy):
+        for name in paramnames:
+            setattr(dsx, name, dsx.vals2D[name][i][j])
+        dsx.makeH()
+        dsx.solveH(usediag=usediag)
+        dsx.hcgs[i,j] = dsx.OCC
+    return dsx.hcgs[i]
+
+def simulatehoneycomb(self, verbose=1, usediag=False, multiprocess=True):
+        '''Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
+        for each point, search for transitions and save in self.honeycomb'''
+        t0=time.time()
+        paramnames = list(self.vals2D.keys())
+        npointsx = np.shape(self.vals2D[paramnames[0]])[0]
+        npointsy = np.shape(self.vals2D[paramnames[0]])[1]
+        self.hcgs = np.empty((npointsx,npointsy,self.ndots))
+        
+        if multiprocess:
+            pool = Pool(processes=4)
+            aa= [ (i, self, npointsy, usediag) for i in range(npointsx)]
+            result=pool.starmap_async( simulate_row,  aa )
+            out=result.get()
+            self.hcgs=np.array(out)
+        else:
+            for i in range(npointsx):
+                if verbose:
+                    tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
+                    
+                for j in range(npointsy):
+                    for name in paramnames:
+                        setattr(self, name, self.vals2D[name][i][j])
+                    self.makeH()
+                    self.solveH(usediag=usediag)
+                    self.hcgs[i,j] = self.OCC
+        self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
+
+        if verbose:
+            print('simulatehoneycomb: %.2f [s]' % (time.time()-t0))
+            
+        sys.stdout.flush()
+
+paramnames = ['det1','det3']
+minmax = [[-40,80,-40,80],[-40,-40,80,80]]
+npointsx = 60
+npointsy = 120
+ds.makeparamvalues2D(paramnames,minmax,npointsx,npointsy)
+
+#simulatehoneycomb(ds, verbose=1, usediag=True, multiprocess=False)
+simulatehoneycomb(ds, verbose=1, usediag=True, multiprocess=True)
+
+plt.figure(10); plt.clf()
+plt.pcolor(ds.vals2D[ paramnames[0]],ds.vals2D[ paramnames[1]],ds.honeycomb,cmap='Blues')
+plt.xlabel('Abcissa gate (mV)')
+plt.ylabel('Ordinate gate (mV)')
+plt.colorbar()
+plt.show()
+
+#%%
+import copy
+from multiprocessing import Pool
+import multiprocessing as mp
+from pmatlab import tprint
+
+def worker(args):
+    name, que = name
+    que.put("%d is done" % name)
+    return name
+
+npointsx=60
+
+usediag=False
+
+#%%
+
+#%%
+
+import multiprocessing
+def workerx(name, que):
+    #time.sleep(2)
+    que.put("%d is done" % name)
+    return name
+    
+def worker(i, ds, npointsy, usediag, que):
+    #time.sleep(2)
+    que.put("%d is done" % i)
+    return i
+
+if __name__ == '__main__' and 1:
+    pool = multiprocessing.Pool(processes=3)
+    m = multiprocessing.Manager()
+    q = m.Queue()
+    ww=[]
+
+    args = [i+(q, ) for i in inputs]
+
+    for jj in args:
+        workers = pool.apply_async(worker, jj)
+        ww.append(workers)
+        
+    print( q.qsize() )
+    time.sleep(0.1)
+    print( q.qsize() )
+    print( [ w.ready() for w in ww] )
+    #print( [ w.successful() for w in ww] )
+
+    
+#%%
+import multiprocessing
+import multiprocessing as mp
+import time
+import copy
+from pmatlab import tprint
+
+usediag=False
+
+from multiprocessing import Pool
+
+def simulate_row(i, ds, npointsy, usediag, q):
+    #i, ds, npointsy, usediag, q=args
+    #print(i)
+    dsx=copy.deepcopy(ds)
+    paramnames = list(dsx.vals2D.keys())
+    for j in range(npointsy):
+        for name in paramnames:
+            setattr(dsx, name, dsx.vals2D[name][i][j])
+        dsx.makeH()
+        dsx.solveH(usediag=usediag)
+        dsx.hcgs[i,j] = dsx.OCC
+    q.put(dsx.hcgs[i])
+    return dsx.hcgs[i]
+
+
+
+#%%    
+inputs= [ (i, ds, npointsy, usediag) for i in range(npointsx)]
+
+if __name__ == '__main__' and 1:
+
+    pool = Pool(processes=4)
+    m = mp.Manager()
+    q = m.Queue()
+    
+    t0=time.time()
+    
+    #args=[ (1,q), (2,q)]
+    #result = pool.map_async(simulate_row, args)
+    
+    print(q.qsize())
+    ww=[]
+    args = [i+(q, ) for i in inputs]     # create with new queue
+    for a in args:
+        workers1 = pool.apply_async(simulate_row, a)
+        #workers1 = pool.apply_async(worker, a)
+        #workers1.successful()
+        ww.append(workers1)
+    
+    [w.ready() for w in ww]
+    
+    size = q.qsize()
+    tprint('multiprocessing queue: %d/%d' % (size, len(inputs) ))
+        
+    # monitor loop
+    while True:
+        size = q.qsize()
+        tprint('multiprocessing queue: %d/%d' % (size, len(inputs) ))
+        
+        if size==len(args):
+            break
+        time.sleep(0.1)
+
+    tprint('multiprocessing queue: %d/%d' % (q.qsize(), len(inputs) ))
+
+    print('dt: %.3f [s]' % (time.time()-t0))
+    
+#outputs = q.get()
+
+
+#results=[]
+#job=pool.starmap_async( mymap2,  aa, callback=results.append )
+
+#job.ready()
+
+#vv=out.get()
+
+
+#%%
+
+from multiprocessing import Pool
+
+def process_image(name, val):
+    return name*name + val
+
+pool = Pool(processes=4)              # process per core
+pool.map(partial(process_image, val=3) , range(5))  # proces data_inputs iterable with pool
+            
