@@ -219,11 +219,13 @@ if __name__=='__main__':
     reload(qcodes.plots)
     reload(qtt.scans)
     
-    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [keithley3.amplitude, keithley1.amplitude], 'delay': 0.})
-    scanjob['stepdata']=dict({'gate': 'P4', 'start': -190, 'end': 120, 'step': 6.})
+    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [keithley1.amplitude, keithley3.amplitude], 'delay': 0.})
+    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [keithley1.amplitude], 'delay': 0.})
+    #scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [gates.L], 'delay': 0.})
+    scanjob['stepdata']=dict({'gate': 'P3', 'start': -190, 'end': 120, 'step': 6.})
     data = qtt.scans.scan2D(station, scanjob, background=False)
 
-    plotQ.clear(); plotQ.add(data.amplitude_1)
+    plotQ.clear(); plotQ.add(data.amplitude)
 
 #%%
 

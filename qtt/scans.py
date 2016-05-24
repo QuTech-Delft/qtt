@@ -186,7 +186,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     measurement=fullloop.each( *params )
     
-    alldata=measurement.run(background=background)
+    alldata=measurement.run(background=background, data_manager=False)
 
     if liveplotwindow is None:        
         liveplotwindow = qtt.live.livePlot()        

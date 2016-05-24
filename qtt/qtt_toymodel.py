@@ -49,7 +49,7 @@ class ModelError(Exception):
 
 
 import qtt.simulation.dotsystem
-from qtt.simulation.dotsystem import DotSystem, FourDot, GateTransform
+from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransform
     
 import traceback    
 
@@ -110,19 +110,29 @@ class DummyModel(MockModelLocal):
         self._data['keithley3']['amplitude']=.5
 
         # initialize a 4-dot system
-        self.ds=FourDot(use_tunneling=False)
+        if 0:
+            self.ds=FourDot(use_tunneling=False)
+                
+            self.targetnames=['det%d' % (i+1) for i in range(4)]
+            self.sourcenames=['P%d' % (i+1) for i in range(4)]
+            
+            self.sddist1 = [6,4,2,1]
+            self.sddist2 = [1,2,4,6]
+        else:
+            self.ds=TripleDot(maxelectrons=2)
+                
+            self.targetnames=['det%d' % (i+1) for i in range(3)]
+            self.sourcenames=['P%d' % (i+1) for i in range(3)]
+            
+            self.sddist1 = [6,4,2]
+            self.sddist2 = [2,4,6]
+
         for ii in range(self.ds.ndots):
-            setattr(self.ds, 'osC%d' % ( ii+1), 35)
+            setattr(self.ds, 'osC%d' % ( ii+1), 55)
         for ii in range(self.ds.ndots-1):
             setattr(self.ds, 'isC%d' % (ii+1), 3)
         
-        self.targetnames=['det%d' % (i+1) for i in range(4)]
-        self.sourcenames=['P%d' % (i+1) for i in range(4)]
-        
-        self.sddist1 = [6,4,2,1]
-        self.sddist2 = [1,2,4,6]
-        
-        Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=4)
+        Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=self.ds.ndots)
         self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
         
         super().__init__(name=name)
