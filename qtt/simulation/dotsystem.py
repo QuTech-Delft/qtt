@@ -81,7 +81,7 @@ def defaultVmatrix(n):
     Vmatrix=np.eye(n)
     vals=[1,.25,.05,.01,.001, 0, 0]
     for x in range(1, n):
-        for i in range(4-x):
+        for i in range(n-x):
             Vmatrix[i, i+x]=vals[x]
             Vmatrix[i+x, i]=vals[x]
 
@@ -449,9 +449,9 @@ class DoubleDot(DotSystem):
 
 class TripleDot(DotSystem):
     
-    def __init__(self, name='tripledot'):
+    def __init__(self, name='tripledot', maxelectrons=3):
         super().__init__(name=name, ndots=3)
-        self.makebasis(ndots=self.ndots, maxelectrons=3)
+        self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
         self.varnames = ['det1','det2','det3',
             'eps11','eps12','eps13','eps21','eps22','eps23','eps31','eps32','eps33',
            'osC1','osC2','osC3',
