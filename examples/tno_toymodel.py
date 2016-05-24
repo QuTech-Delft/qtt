@@ -14,6 +14,7 @@ import time
 import pdb
 import multiprocessing as mp
 
+
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s: %(message)s  (%(filename)s:%(lineno)d)', )
 
@@ -21,6 +22,8 @@ import qcodes
 import qcodes as qc
 from qcodes import Instrument, MockInstrument, Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
+
+#import matplotlib.pyplot
 
 l = logging.getLogger()
 l.setLevel(logging.INFO)
@@ -30,6 +33,7 @@ l.handlers[0].setFormatter(formatter)
 import matplotlib
 matplotlib.use('Qt4Agg')
 import matplotlib.pyplot
+matplotlib.pyplot.ion()
 
 import pyqtgraph
 import qtt
@@ -48,7 +52,8 @@ from qtt.qtt_toymodel import DummyModel, VirtualIVVI, MockMeter, MockSource, log
 if __name__=='__main__':
 
 
-    server_name='testv2' # needs to be set for background loops to work
+    server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
+    server_name=None
     virtualV2.initialize(server_name=server_name)
     #virtualV2.initialize(server_name='virtualV2'+time.strftime("%H.%M.%S"))
     
@@ -56,6 +61,7 @@ if __name__=='__main__':
     keithley1 = virtualV2.keithley1
     keithley2 = virtualV2.keithley2
     keithley3 = virtualV2.keithley3
+    ivvi1 = virtualV2.ivvi1
     
     # virtual gates for the model
     gates=virtualV2.gates
@@ -111,6 +117,7 @@ if __name__=='__main__':
 #%%
 
 import qtt.scans
+import platform
 
 if __name__=='__main__':
     import pyqtgraph as pg
@@ -118,7 +125,8 @@ if __name__=='__main__':
     
     qtt.pythonVersion()
     
-    qcodes.DataSet.default_io = qcodes.DiskIO('d:\\qdata')
+    qdatadir = os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')
+    qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
     #qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
     mwindows=qtt.setupMeasurementWindows(station)
     mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
@@ -155,13 +163,30 @@ from qtt.scans import scan1D
 
         
 #%%
-
+if 0:
+    import h5py
+    
+    qcodes.DataSet.default_io
+    
+    import qcodes.tests
+    import qcodes.tests.data_mocks
+    data=qcodes.tests.data_mocks.DataSet1D()
+    
+    data.formatter
+    
+    from qcodes.data.hdf5_format import HDF5Format
+    from qcodes.data.gnuplot_format import GNUPlotFormat
+    
+    formatter = HDF5Format()
+    formatter = GNUPlotFormat()
+    
+    formatter.write(data)
 
 #%%
 #FIXME: set everything under __name__
 
 if __name__=='__main__':
-    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 8.}), 'instrument': [keithley3.amplitude], 'delay': .01})
+    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
     data = scan1D(scanjob, station, location=None, background=True)
 
 
@@ -188,7 +213,22 @@ if __name__=='__main__':
         plotQ.clear(); plotQ.add(data.amplitude)
         
 
+#%%
+from imp import reload
 if __name__=='__main__':
+    reload(qcodes.plots)
+    reload(qtt.scans)
+    
+    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [keithley3.amplitude, keithley1.amplitude], 'delay': 0.})
+    scanjob['stepdata']=dict({'gate': 'P4', 'start': -190, 'end': 120, 'step': 6.})
+    data = qtt.scans.scan2D(station, scanjob, background=False)
+
+    plotQ.clear(); plotQ.add(data.amplitude_1)
+
+#%%
+
+if __name__=='__main__':
+    
     STOP
 
 
@@ -224,11 +264,12 @@ if __name__=='__main__':
     model.gate_transform=gate_transform
     
     self=model
-    def computeSD(self, usediag=True):
+    def computeSD(self, usediag=True, verbose=0):
         gv=[gates.get(g) for g in sourcenames ] 
         tv=gate_transform.transformGateScan(gv)
         for k, val in tv.items():
-            print(k,val)
+            if verbose:
+                print('compudateSD: %d, %f'  % (k,val) )
             setattr(ds, k, val)
         ds.makeH()
         ds.solveH(usediag=usediag)
@@ -239,6 +280,35 @@ if __name__=='__main__':
     
     tmp=computeSD(self)
     print(tmp)
+
+    model._data=model.get_attribute('_data')
+    
+#%%  
+
+model._data = model.get_attribute('_data')
+#%timeit model.computeSD()
+
+#FIXME: check overhead of ivvi1.c1 
+#TEST: server_name=None, different instrument (not connected to model)
+
+t0=time.time()
+#scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
+#data = scan1D(scanjob, station, location=None, background=True)
+#stepvalues = gates.P1[0:10:.01]
+stepvalues = ivvi1.c1[0:10:.01]
+innerloop = qc.Loop(stepvalues, delay=0, progress_interval=2).run(background=False)
+dt=time.time()-t0
+print('dt %.2f'  % dt)
+
+steps=ivvi1.c1[0:50:.1]
+t0=time.time()
+data = qc.Loop(steps, 0.0).run(data_manager=False, background=False)
+dt=time.time()-t0
+print('dt %.2f'  % dt)
+
+    
+#%%
+
     
 #%%
 if __name__=='__main__':
@@ -246,15 +316,6 @@ if __name__=='__main__':
     stepvalues=gates.R[0:100:1]
     data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False)
 
-#%%
-from imp import reload
-if __name__=='__main__':
-    reload(qcodes.plots)
-    reload(qtt.scans)
-    
-    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -290, 'end': 160, 'step': 12.}), 'instrument': [keithley3.amplitude, keithley1.amplitude], 'delay': .01})
-    scanjob['stepdata']=dict({'gate': 'D1', 'start': -290, 'end': 120, 'step': 12.})
-    data = qtt.scans.scan2D(station, scanjob)
 
 
 #qc.active_children()

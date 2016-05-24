@@ -8,6 +8,9 @@ import sys, os
 import logging
 import qcodes
 
+# explicit import
+from qcodes.plots.pyqtgraph import QtPlot
+
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
@@ -240,8 +243,8 @@ def showDotGraph(dot, fig=10):
     
 #%%
 
-from qtt.qtt_toymodel import ParameterViewer
-from qtt.logviewer import LogViewer
+from qtt.parameterviewer import ParameterViewer
+from qtt.dataviewer import DataViewer
 
 def setupMeasurementWindows(station):
     ms=monitorSizes()
@@ -251,12 +254,13 @@ def setupMeasurementWindows(station):
     w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
     w.updatecallback()
 
-    plotQ = qcodes.QtPlot(windowTitle='Live plot', remote=False)
+    # FIXME: interval=0 because it only works in the notebook
+    plotQ = QtPlot(windowTitle='Live plot', remote=False, interval=0)
     plotQ.win.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
     plotQ.update()
 
 
-    logviewer = LogViewer()
+    logviewer = DataViewer()
     logviewer.setGeometry(vv[0]+vv[2]-400,vv[1],400,600)
     logviewer.qplot.win.setMaximumHeight(400)
     logviewer.show()

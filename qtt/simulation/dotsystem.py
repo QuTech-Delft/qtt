@@ -133,6 +133,7 @@ class DotSystem():
         self.basis = np.ndarray.astype(basis,int)
         self.nbasis = np.sum(self.basis,axis=1)
         self.Nt = len(self.nbasis)
+        self.H = np.zeros( (self.Nt, self.Nt), dtype=float)
 
 
         self.eigenstates=np.zeros( (self.Nt, self.Nt), dtype=float)
@@ -161,26 +162,68 @@ class DotSystem():
                         n2 = self.basis[i,dot% self.ndots ]
                         exec('self.MisC'+str(dot)+'['+str(i)+','+str(i)+'] ='+str(n*n2)) # next site charging energy?
                         for orb in range(1,n+1):
-                            exec('self.Meps'+str(dot)+str(orb)+'['+str(i)+','+str(i)+'] = 1') # orbital energy
+                            var='self.Meps'+str(dot)+str(orb)
+                            if hasattr(self, var):
+                                exec(var+'['+str(i)+','+str(i)+'] = 1') # orbital energy
                 else:
                     statediff = self.basis[i,:]-self.basis[j,:]
                     
                     for p in range(self.ndots-1):   
                         pn=p+1
                         if (statediff == mkb(p,p+1)).all():
-                            exec('self.Mtun%d[' % pn +str(i)+','+str(j)+'] = -1')
+                            if hasattr(self, 'self.Mtun%d' % pn):
+                                exec('self.Mtun%d[' % pn +str(i)+','+str(j)+'] = -1')
                         elif (statediff == mkb(p+1,p)).all():
-                            exec('self.Mtun%d[' % pn+str(i)+','+str(j)+'] = -1')
+                            if hasattr(self, 'self.Mtun%d' % pn):
+                                exec('self.Mtun%d[' % pn+str(i)+','+str(j)+'] = -1')
                         pass
+
+        self.initSparse()
+
+    def initSparse(self):
+        ''' Create sparse structures '''
+        self.H = np.zeros( (self.Nt, self.Nt), dtype=float)
+        #self.sH = smtype(self.H)
+    
+        for name in self.varnames:
+            A = getattr(self, 'M' + name) 
+            if 0:
+                sA = smtype(A)
+                setattr(self, 'sM' + name, sA) 
+                #ri = np.repeat(np.arange(sA.shape[0]),np.diff(sA.indptr))
+                setattr(self, 'srM' + name, ri) 
+                setattr(self, 'scM' + name, sA.indices) 
+                arr = np.array([ri, sA.indices])
+                ind=np.ravel_multi_index(arr, self.H.shape)
+            ind=A.flatten().nonzero()[0]
+            setattr(self, 'indM' + name, ind) 
+            setattr(self, 'sparseM' + name, A.flat[ind]) 
 
     def makeH(self):
         ''' Create a new Hamiltonian '''
-        self.H = np.zeros( (self.Nt, self.Nt), dtype=float)
+        self.H.fill(0) 
         for name in self.varnames:
-            self.H += getattr(self, 'M' + name) * getattr(self,  name)
+            val=getattr(self,  name)
+            if not val==0:
+                self.H += getattr(self, 'M' + name) * val
         self.solved=False
         return self.H
     
+    def makeHsparse(self, verbose=0):
+        ''' Create a new Hamiltonian '''
+        self.H.fill(0) 
+        for name in self.varnames:
+            if verbose:
+                print('set %s: %f'  % (name, getattr(self,  name)))
+            val=float(getattr(self,  name))
+            if not val==0:
+                a= getattr(self, 'sparseM' + name)
+                ind=getattr(self, 'indM' + name)
+                self.H.flat[ind] +=a * val
+                #self.H[ri, ci] +=a.data * val
+        self.solved=False
+        return self.H
+
     def solveH(self, usediag=False):
         ''' Solve the system '''
         if usediag:
@@ -226,6 +269,8 @@ class DotSystem():
             npointsy = np.shape(self.vals2D[paramnames[0]])[1]
             self.hcgs = np.empty((npointsx,npointsy,self.ndots))
             
+            self.initSparse()
+            
             if multiprocess and _have_mp:
                 pool = Pool(processes=4)
                 aa= [ (i, self, npointsy, usediag) for i in range(npointsx)]
@@ -240,7 +285,7 @@ class DotSystem():
                     for j in range(npointsy):
                         for name in paramnames:
                             setattr(self, name, self.vals2D[name][i][j])
-                        self.makeH()
+                        self.makeHsparse()
                         self.solveH(usediag=usediag)
                         self.hcgs[i,j] = self.OCC
             self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
@@ -418,15 +463,19 @@ class TripleDot(DotSystem):
 
 class FourDot(DotSystem):
     
-    def __init__(self, name='doubledot'):
-        super().__init__(name=name, ndots=4)
-        
+    def __init__(self, name='fourdot', use_tunneling=True, use_orbits=False, **kwargs):
+        super().__init__(name=name, ndots=4, **kwargs)
+
+        self.use_tunneling=use_tunneling        
+        self.use_orbits=use_orbits
         self.makebasis(ndots=self.ndots, maxelectrons=2)
         self.varnames = ['det%d' % (i+1) for i in range(self.ndots)]
         self.varnames += ['osC%d' % (i+1) for i in range(self.ndots)]
         self.varnames += ['isC%d' % (i+1) for i in range(self.ndots)]
-        self.varnames += ['tun%d' % (i+1) for i in range(self.ndots)]
-        self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
+        if self.use_tunneling:
+            self.varnames += ['tun%d' % (i+1) for i in range(self.ndots)]
+        if self.use_orbits:
+            self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
         self.makevars()        
         self.makevarMs()
         
