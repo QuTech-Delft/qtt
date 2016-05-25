@@ -224,7 +224,7 @@ print(tmp)
 #%%
 
 stepvalues=gates.R[0:100:1]
-data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False)
+data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False, quiet=True)
 
 #%%
 from imp import reload

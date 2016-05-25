@@ -220,8 +220,8 @@ except:
 # from qcodes.utils.validators import Validator
 class virtual_gates(Instrument):
 
-    def __init__(self, name, instruments, gate_map, model=None, **kwargs):
-        super().__init__(name, model=model, **kwargs)
+    def __init__(self, name, instruments, gate_map, **kwargs):
+        super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
         # Create all functions for the gates as defined in self._gate_map

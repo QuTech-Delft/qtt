@@ -193,7 +193,8 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     if liveplotwindow is not None:
         liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(alldata) )
 
-    alldata.complete()
+    if background is True:
+        alldata.complete()
     
     dt = time.time() - t0
 
