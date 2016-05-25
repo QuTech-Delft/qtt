@@ -65,6 +65,8 @@ class MockModelLocal:
         self.do_query(*query)            
         
     def do_query(self, *query):
+        fullquery=query
+        query=query[1:]
         query_args = query[1:]
         query = query[0].split(':')
 

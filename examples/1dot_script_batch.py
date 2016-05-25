@@ -39,6 +39,9 @@ def simulation():
     ''' Funny ... '''
     return False
 
+from qcodes.data.hdf5_format import HDF5Format
+qc.DataSet.default_formatter=HDF5Format()
+
 
 
 #%%
@@ -302,7 +305,9 @@ for ii, Tvalue in enumerate(Tvalues):
     
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
         alldata=scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+        FIXME: storage paths...
         STOP
+        
     for od in sddots:
         ki=od['instrument']
         for gate in od['gates']:
