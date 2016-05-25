@@ -17,8 +17,7 @@ import qtpy.QtWidgets as QtWidgets
 
 import matplotlib.pyplot as plt
 
-# should be removed later
-from pmatlab import tilefigs
+from qtt.tools import tilefigs
 
 from qtt.algorithms import analyseGateSweep
 import qtt.live
@@ -120,7 +119,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     delay = scanjob.get('delay', delay)
     logging.debug('delay: %f' % delay)
     print('scan1D: starting Loop (background %s)' % background)
-    data = qc.Loop(sweepvalues, delay=delay).run(location=location, overwrite=True, background=background)
+    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, overwrite=True, background=background)
     data.sync()
     
     if liveplotwindow is None:        
@@ -147,14 +146,14 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         minstrument = scanjob.get('keithleyidx', None)
         
     print('fixme: compensategates')
+    print('fixme: wait_time')
     #compensateGates = scanjob.get('compensateGates', [])
     #gate_values_corners = scanjob.get('gate_values_corners', [[]])
 
-    print('fixme: wait_time')
 #    if wait_time == None:
 #        wait_time = getwaittime(sweepdata['gates'][0])
 
-    delay=scanjob.get('delay', 0.05)
+    delay=scanjob.get('delay', 0.0)
         
     #readdevs = ['keithley%d' % x for x in keithleyidx]
 
@@ -174,6 +173,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
         
     logging.info('scan2D: %d %d'  % (len(stepvalues), len(sweepvalues)))
+    logging.info('scan2D: delay %f'  % delay)
     innerloop = qc.Loop(stepvalues, delay=delay, progress_interval=2)
         
 
@@ -186,7 +186,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     measurement=fullloop.each( *params )
     
-    alldata=measurement.run(background=background)
+    alldata=measurement.run(background=background, data_manager=False)
 
     if liveplotwindow is None:        
         liveplotwindow = qtt.live.livePlot()        

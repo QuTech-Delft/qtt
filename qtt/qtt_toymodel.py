@@ -14,6 +14,9 @@ import qcodes as qc
 from qcodes import Instrument, MockInstrument, MockModel # , Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
 
+#import sys
+#sys.stdout.write=logging.info  
+
 import pyqtgraph
 import pyqtgraph.Qt as Qt
 from pyqtgraph.Qt import QtGui # as QtGui
@@ -23,6 +26,8 @@ from functools import partial
 
 
 import qtt
+
+logger = logging.getLogger('qtt')
 
 #%%
 
@@ -43,7 +48,42 @@ class ModelError(Exception):
     pass
 
 
-class DummyModel(MockModel):
+import qtt.simulation.dotsystem
+from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransform
+    
+import traceback    
+
+class MockModelLocal:
+    ''' Same as MockModel, but without a server    '''
+    def __init__(self, name='Model-{:.7s}'):
+        pass
+
+    def ask(self, *query):
+        return self.do_query(*query)            
+    
+    def write(self, *query):
+        self.do_query(*query)            
+        
+    def do_query(self, *query):
+        fullquery=query
+        query=query[1:]
+        query_args = query[1:]
+        query = query[0].split(':')
+
+        instrument = query[0]
+
+        param = query[1]
+        if param[-1] == '?' and len(query) == 2:
+            getter = getattr(self, instrument + '_get')
+            return getter(param[:-1])
+        elif len(query) <= 3:
+            value = query[2] if len(query) == 3 else None
+            setter = getattr(self, instrument + '_set')
+            setter(param, value)
+        else:
+            raise ValueError
+            
+class DummyModel(MockModelLocal):
 
     ''' Dummy model for testing '''
     def __init__(self, name, gate_map, **kwargs):
@@ -51,7 +91,7 @@ class DummyModel(MockModel):
         #self.name = name
 
         self.gate_map=gate_map
-        for instr in [ 'ivvi1', 'ivvi2', 'keithley1', 'keithley2']:
+        for instr in [ 'ivvi1', 'ivvi2']: # , 'keithley1', 'keithley2']:
             if not instr in self._data:
                 self._data[instr] = dict()
             if 1:
@@ -60,10 +100,42 @@ class DummyModel(MockModel):
             else:
                 setattr(self, '%s_get' % instr, self._dummy_get )
                 setattr(self, '%s_set' % instr, self._dummy_set )
+
+        for instr in [ 'keithley1', 'keithley2']:
+            if not instr in self._data:
+                self._data[instr] = dict()
+            if 1:
+                setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
             
         #self._data['gates']=dict()
         self._data['keithley3']=dict()
         self._data['keithley3']['amplitude']=.5
+
+        # initialize a 4-dot system
+        if 0:
+            self.ds=FourDot(use_tunneling=False)
+                
+            self.targetnames=['det%d' % (i+1) for i in range(4)]
+            self.sourcenames=['P%d' % (i+1) for i in range(4)]
+            
+            self.sddist1 = [6,4,2,1]
+            self.sddist2 = [1,2,4,6]
+        else:
+            self.ds=TripleDot(maxelectrons=2)
+                
+            self.targetnames=['det%d' % (i+1) for i in range(3)]
+            self.sourcenames=['P%d' % (i+1) for i in range(3)]
+            
+            self.sddist1 = [6,4,2]
+            self.sddist2 = [2,4,6]
+
+        for ii in range(self.ds.ndots):
+            setattr(self.ds, 'osC%d' % ( ii+1), 55)
+        for ii in range(self.ds.ndots-1):
+            setattr(self.ds, 'isC%d' % (ii+1), 3)
+        
+        Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=self.ds.ndots)
+        self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
         
         super().__init__(name=name)
 
@@ -80,31 +152,58 @@ class DummyModel(MockModel):
         i, j = self.gate2ivvi(g)
         value= self._data[i][j]
         return value
+
+    def get_gate(self, g):
+        return self.gate2ivvi_value(g)
+        
+    def computeSD(self, usediag=True, verbose=0):
+        logger.debug('start SD computation')
+        gv=[self.get_gate(g) for g in self.sourcenames ] 
+        tv=self.gate_transform.transformGateScan(gv)
+        ds=self.ds        
+        for k, val in tv.items():
+            if verbose:
+                print('compudateSD: %d, %f'  % (k,val) )
+            setattr(ds, k, val)
+        ds.makeHsparse()
+        ds.solveH(usediag=usediag)
+        ret = ds.OCC
+    
+        sd1=(ret*self.sddist1).sum()
+        sd2=(ret*self.sddist2).sum()
+
+        return [sd1, sd2]
         
     def compute(self):
         ''' Compute output of the model '''
 
-        logging.debug('compute')
-        # current through keithley1, 2 and 3
-
-        #v = float(self._data['ivvi1']['c11'])
-        c = 1
-        if 1:
-            for jj, g in enumerate(['P1', 'P2', 'P3', 'P4']):
-                i, j = self.gate2ivvi(g)
-                v = float(self._data[i][j] )
-                c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
-            for jj, g in enumerate(['D1', 'D2', 'D3', 'L', 'R']):
-                i, j = self.gate2ivvi(g)
-                v = float(self._data[i][j] )
-                c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
-        instrument = 'keithley3'
-        if not instrument in self._data:
-            self._data[instrument] = dict()
-        val=c + (np.random.rand()-.5) / 20.
-        logging.debug('compute: value %f' % val)
-        self._data[instrument]['amplitude'] = val
-
+        try:
+            logger.debug('DummyModel: compute values')
+            # current through keithley1, 2 and 3
+    
+            #v = float(self._data['ivvi1']['c11'])
+            c = 1
+            if 1:
+                for jj, g in enumerate(['P1', 'P2', 'P3', 'P4']):
+                    i, j = self.gate2ivvi(g)
+                    v = float(self._data[i][j] )
+                    c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
+                for jj, g in enumerate(['D1', 'D2', 'D3', 'L', 'R']):
+                    i, j = self.gate2ivvi(g)
+                    v = float(self._data[i][j] )
+                    c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
+            instrument = 'keithley3'
+            if not instrument in self._data:
+                self._data[instrument] = dict()
+            val=c + (np.random.rand()-.5) / 20.
+            logging.debug('compute: value %f' % val)
+            
+            self._data[instrument]['amplitude'] = val
+            
+            
+        except Exception as ex:
+            msg = traceback.format_exception(ex)
+            logging.warning('compute failed! %s' % msg)
         return c
 
     def _generic_get(self, instrument, parameter):
@@ -116,6 +215,18 @@ class DummyModel(MockModel):
         logging.debug('_generic_set: param %s, val %s' % (parameter, value))
         self._data[instrument][parameter] = float(value)
 
+    def keithley1_get(self, param):
+        sd1, sd2 = self.computeSD()            
+        self._data['keithley1']['amplitude'] = sd1
+        self._data['keithley2']['amplitude'] = sd2
+        #print('keithley1_get: %f %f' % (sd1, sd2))
+        return  self._generic_get('keithley1', param)
+        
+    def keithley2_get(self, param):
+        sd1, sd2 = self.computeSD()            
+        self._data['keithley1']['amplitude'] = sd1
+        self._data['keithley2']['amplitude'] = sd2
+        return  self._generic_get('keithley2', param)
      
     def keithley3_get(self, param):
         logging.debug('keithley3_get: %s' % param)
@@ -123,7 +234,7 @@ class DummyModel(MockModel):
         return self._generic_get('keithley3', param)
 
     def keithley3_set(self, param, value):
-        self.compute()        
+        #self.compute()        
         pass
         print('huh?')
         #return self._generic_get('keithley3', param)
@@ -150,11 +261,11 @@ class VirtualIVVI(MockInstrument):
 
         self.add_function('reset', call_cmd='rst')
 
-        logging.debug('add gates function')
+        logger.debug('add gates function')
         for i, g in enumerate(gates):
             self.add_function(
                 'get_{}'.format(g), call_cmd=partial(self.get, g))
-            logging.debug('add gates function %s: %s' % (self.name, g) )
+            logger.debug('add gates function %s: %s' % (self.name, g) )
             #model.write('%s:%s %f' % (self.name, g, 0) )
 
         if not mydebug:
@@ -334,97 +445,3 @@ class virtual_gates(Instrument):
     
         return dot
 
-#%%
-
-import time
-import threading
-
-
-class QCodesTimer(threading.Thread):
-
-    def __init__(self, fn, dt=2, **kwargs):
-        super().__init__(**kwargs)
-        self.fn = fn
-        self.dt = dt
-
-    def run(self):
-        while 1:
-            logging.debug('QCodesTimer: start sleep')
-            time.sleep(self.dt)
-            # do something
-            logging.debug('QCodesTimer: run!')
-            self.fn()
-            
-class ParameterViewer(Qt.QtGui.QTreeWidget):
-
-    ''' Simple class to show qcodes parameters '''
-    def __init__(self, station, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
-        super().__init__(**kwargs)
-        w = self
-        w.setGeometry(1700, 50, 300, 600)
-        w.setColumnCount(3)
-        header = QtGui.QTreeWidgetItem(["Parameter", "Value"])
-        w.setHeaderItem(header)
-                        # Another alternative is
-                        # setHeaderLabels(["Tree","First",...])
-        w.setWindowTitle(name)
-
-        self._instrumentnames=instrumentnames
-        self._itemsdict = dict()
-        self._itemsdict['gates'] = dict()
-        self._timer = None
-        self._station = station
-        self.init()
-        self.show()
-
-        self.callbacklist=[]
-        
-    def init(self):
-        ''' Initialize parameter viewer '''
-        if self._station==None:
-            return
-        dd = self._station.snapshot()
-        #x = 
-        for iname in self._instrumentnames:
-            pp = dd['instruments'][iname]['parameters']
-            gatesroot = QtGui.QTreeWidgetItem(self, [iname])
-            for g in pp:
-                # ww=['gates', g]
-                value = pp[g]['value']
-                A = QtGui.QTreeWidgetItem(gatesroot, [g, str(value)])
-                self._itemsdict['gates'][g] = A
-        self.setSortingEnabled(True)
-        self.expandAll()
-
-    def updatecallback(self, start=True):
-        if self._timer is not None:
-            del self._timer
-            
-        if start:
-            self._timer = QCodesTimer(fn=self.updatedata)
-            self._timer.start()
-        else:
-            self._timer = None
-        
-        
-    def updatedata(self):
-        ''' Update data in viewer using station.snapshow '''
-        dd = self._station.snapshot()
-        gates = dd['instruments']['gates']
-        pp = gates['parameters']
-        # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
-        for g in pp:
-            #ww = ['gates', g]
-            value = pp[g]['value']
-            x = self._itemsdict['gates'][g]
-            logging.debug('update %s to %s' % (g, value))
-            x.setText(1, str(value))
-
-        for f in self.callbacklist:
-            try:
-                f()
-            except Exception as e:
-                logging.debug('update function failed')                  
-                logging.debug(str(e))
-                
-            
