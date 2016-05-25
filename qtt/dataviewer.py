@@ -41,10 +41,11 @@ class DataViewer(QtWidgets.QWidget):
         default_parameter : string
             name of default parameter to plot
     '''
-    def __init__(self, window_title='Log Viewer', default_parameter='amlitude', debugdict=dict()):
+    def __init__(self, window_title='Log Viewer', default_extension='hdf5', default_parameter='amplitude', debugdict=dict()):
         super(DataViewer, self).__init__()
 
         self.default_parameter = default_parameter
+        self.default_extension= default_extension
         
         # setup GUI
         self.text= QtWidgets.QLabel()
@@ -77,7 +78,7 @@ class DataViewer(QtWidgets.QWidget):
         self.updateLogs()
         
         
-    def updateLogs(self, extension='dat'):
+    def updateLogs(self):
         ''' Update list of data files 
 
         extension : string
@@ -86,7 +87,7 @@ class DataViewer(QtWidgets.QWidget):
         '''
 
         model=self._treemodel
-        dd=findfilesR(qcodes.DataSet.default_io.base_location, '.*' + extension)        
+        dd=findfilesR(qcodes.DataSet.default_io.base_location, '.*' + self.default_extension)        
         print(dd)
         
         logs=dict()        
@@ -125,8 +126,7 @@ class DataViewer(QtWidgets.QWidget):
             return None
             
     def logCallback(self, index):
-        print('logCallback!')
-        logging.debug('index %s'% str(index))
+        logging.debug('dataviewer callback: index %s'% str(index))
         self.__debug['last']=index
         pp=index.parent()
         row=index.row()
@@ -136,7 +136,7 @@ class DataViewer(QtWidgets.QWidget):
         
         # load data
         if tag is not None:
-            print('logCallback! tag %s' % tag)
+            logging.info('logCallback! tag %s' % tag)
             try:
                 logging.debug('load tag %s' % tag) 
                 data=qc.load_data(tag)
@@ -153,8 +153,7 @@ class DataViewer(QtWidgets.QWidget):
             except Exception as ex:
                 print('logCallback! error in index %s' % index )
                 raise ex
-                print(traceback.format_exception(ex))
-                logging.debug(ex)
+                logging.debug(traceback.format_exception(ex))
                 pass
         pass
 
