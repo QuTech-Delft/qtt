@@ -189,7 +189,7 @@ if 0:
 
 if __name__=='__main__':
     scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
-    data = scan1D(scanjob, station, location=None, background=True)
+    data = scan1D(scanjob, station, location=None, background=False)
 
 
     data.sync(); data.arrays
