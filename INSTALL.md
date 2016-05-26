@@ -7,7 +7,8 @@ For global installation install: git, github desktop, anaconda
 ** Install necessary packages
 
 > conda install numpy matplotlib scipy spyder jupyter pyqt
-> conda install coverage pyqtgraph nose scikit-image qtpy graphviz
+> conda install -c https://conda.binstar.org/nmearl pyqtgraph
+> conda install coverage nose scikit-image qtpy graphviz
 > pip install pyvisa
 > conda install -c https://conda.binstar.org/menpo opencv3
 
