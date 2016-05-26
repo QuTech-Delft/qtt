@@ -98,7 +98,7 @@ def getDefaultParameter(data):
         pass            
     return None
     
-def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=True, title_comment=None):
+def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None):
     ''' Simple 1D scan '''
     gates=station.gates
     sweepdata = scanjob['sweepdata']
@@ -128,7 +128,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(data) )
 
     # FIXME
-    complete(data) #
+    if background:
+        complete(data) #
 
     if not hasattr(data, 'metadata'):
         data.metadata=dict()

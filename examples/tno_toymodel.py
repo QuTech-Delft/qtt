@@ -25,10 +25,11 @@ from qcodes.utils.validators import Numbers
 
 #import matplotlib.pyplot
 
-l = logging.getLogger()
-l.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
-l.handlers[0].setFormatter(formatter)
+if __name__=='__main__':
+    l = logging.getLogger()
+    l.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
+    l.handlers[0].setFormatter(formatter)
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -38,7 +39,8 @@ matplotlib.pyplot.ion()
 import pyqtgraph
 import qtt
 
-[ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2', 'AMockInsts'] ]
+if __name__=='__main__':
+    [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2', 'AMockInsts'] ]
 
 import virtualV2; # reload(virtualV2)
 import qtt.qtt_toymodel
@@ -287,26 +289,28 @@ if __name__=='__main__':
     
 #%%  
 
-model._data = model.get_attribute('_data')
-#%timeit model.computeSD()
+if __name__=='__main__':
 
-#FIXME: check overhead of ivvi1.c1 
-#TEST: server_name=None, different instrument (not connected to model)
-
-t0=time.time()
-#scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
-#data = scan1D(scanjob, station, location=None, background=True)
-#stepvalues = gates.P1[0:10:.01]
-stepvalues = ivvi1.c1[0:10:.01]
-innerloop = qc.Loop(stepvalues, delay=0, progress_interval=2).run(background=False)
-dt=time.time()-t0
-print('dt %.2f'  % dt)
-
-steps=ivvi1.c1[0:50:.1]
-t0=time.time()
-data = qc.Loop(steps, 0.0).run(data_manager=False, background=False)
-dt=time.time()-t0
-print('dt %.2f'  % dt)
+    model._data = model.get_attribute('_data')
+    #%timeit model.computeSD()
+    
+    #FIXME: check overhead of ivvi1.c1 
+    #TEST: server_name=None, different instrument (not connected to model)
+    
+    t0=time.time()
+    #scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
+    #data = scan1D(scanjob, station, location=None, background=True)
+    #stepvalues = gates.P1[0:10:.01]
+    stepvalues = ivvi1.c1[0:10:.01]
+    innerloop = qc.Loop(stepvalues, delay=0, progress_interval=2).run(background=False)
+    dt=time.time()-t0
+    print('dt %.2f'  % dt)
+    
+    steps=ivvi1.c1[0:50:.1]
+    t0=time.time()
+    data = qc.Loop(steps, 0.0).run(data_manager=False, background=False)
+    dt=time.time()-t0
+    print('dt %.2f'  % dt)
 
     
 #%%
