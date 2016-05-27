@@ -235,6 +235,14 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
+def writeDataset(path, dataset):
+    ''' Wrapper function
+
+    :param path: filename without extension    
+    '''
+    dataset.write(path=path)
+    dataset.save_metadata(path=path)
+
 def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], cache=False, verbose=1, fig=10, full=0):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
@@ -243,7 +251,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], c
 
     if cache and os.path.exists(outputfile):
         print('  skipping pinch-off scans for gate %s' % (gate))
-        # print(outputfile)
+        print(outputfile)
         alldata = qcodes.load_data(outputfile)
         return alldata
 
@@ -272,7 +280,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], c
     alldata.metadata['adata']=adata
     #  alldata['adata'] = adata
     
-    print('FIXME: write to disk: %s' % outputfile)
+    writeDataset(outputfile, alldata)
     #alldata.write_to_disk(outputfile)
  #   pmatlab.save(outputfile, alldata)
     return alldata    
