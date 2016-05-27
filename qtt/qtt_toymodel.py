@@ -156,8 +156,23 @@ class DummyModel(MockModelLocal):
     def get_gate(self, g):
         return self.gate2ivvi_value(g)
         
+    def _calculate_pinchoff(self, gates):
+        c = 1
+        for jj, g in enumerate(['SD1b']):
+            i, j = self.gate2ivvi(g)
+            v = float(self._data[i][j] )
+            c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
+        val=c + (np.random.rand()-.5) / 20.
+        return val
+        
     def computeSD(self, usediag=True, verbose=0):
         logger.debug('start SD computation')
+        
+        # main contribution
+        val1 = self._calculate_pinchoff(['SD1b'])                
+        val2 = self._calculate_pinchoff(['SD2b'])            
+        
+        # contribution of charge from bottom dots
         gv=[self.get_gate(g) for g in self.sourcenames ] 
         tv=self.gate_transform.transformGateScan(gv)
         ds=self.ds        
@@ -172,7 +187,7 @@ class DummyModel(MockModelLocal):
         sd1=(ret*self.sddist1).sum()
         sd2=(ret*self.sddist2).sum()
 
-        return [sd1, sd2]
+        return [val1+sd1, val2+sd2]
         
     def compute(self):
         ''' Compute output of the model '''
