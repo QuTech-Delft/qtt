@@ -414,6 +414,33 @@ class virtual_gates(Instrument):
         # setattr(self, '_do_set_%s' %gate, func)
 
 
+    def resetgates(gates, activegates, basevalues=None, verbose=2):
+        """ Reset a set of gates to default values
+    
+        Arguments
+        ---------
+            activegates : list or dict 
+                list of gates to reset
+            basevalues: dict
+                new values for the gates
+            verbose : integer
+                output level
+        
+        """
+        if verbose:
+            print('resetgates: setting gates to default values')
+        for g in (activegates):
+            if basevalues == None:
+                val = 0
+            else:
+                if g in basevalues.keys():
+                    val = basevalues[g]
+                else:
+                    val = 0
+            if verbose >= 2:
+                print('  setting gate %s to %.1f [mV]' % (g, val))
+            gates.set(g, val)
+        
     def visualize(self, fig=1):
         ''' Create a graphical representation of the system (needs graphviz) '''
         gates=self    

@@ -9,8 +9,19 @@ from imp import reload
 import sys,os
 import logging
 import numpy as np
+
+
+os.environ['QT_API'] = 'pyqt'
+import PyQt4.QtGui
+import matplotlib
+matplotlib.use('Qt4Agg')
+
 import matplotlib.pyplot
 matplotlib.pyplot.ion()
+
+import qtpy
+#print(qtpy.QT_API)
+
 import pdb
 
 import webbrowser
@@ -21,13 +32,16 @@ import copy
 
 import qcodes
 import qcodes as qc
-import qtt; reload(qtt)
+import qtt; # reload(qtt)
 
 import logging
 l = logging.getLogger()
 l.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
-l.handlers[0].setFormatter(formatter)
+try:
+    l.handlers[0].setFormatter(formatter)
+except:
+    pass
 
 import matplotlib.pyplot as plt
 
@@ -217,21 +231,21 @@ else:
 
 #%% One-dot measurements
 
-def onedotScan(od, basevalues, outputdir, verbose=1):
+def onedotScan(station, od, basevalues, outputdir, verbose=1):
     if verbose:
         print('onedotScan: one-dot: %s' % od['name'] )
     gg=od['gates']
-    keithleyidx=[ od['keithley'] ]
+    keithleyidx=[ od['instrument'] ]
     
     #if od['keithley']==1:
     #    RFsiggen1.on()
 
-    set_gate( gg[1], basevalues[gg[1]]-0 )     # plunger        
+    gates.set( gg[1], float(basevalues[gg[1]]-0 ) )    # plunger        
      
     pv1=od['pinchvalues'][0]+0
     pv2=od['pinchvalues'][2]+0
-    stepstart=np.minimum( od['pinchvalues'][0]+400, 90)
-    sweepstart=np.minimum( od['pinchvalues'][2]+400, 90)
+    stepstart=float(np.minimum( od['pinchvalues'][0]+400, 90))
+    sweepstart=float(np.minimum( od['pinchvalues'][2]+400, 90) )
     stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -6})
     sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -6})
     
@@ -241,13 +255,16 @@ def onedotScan(od, basevalues, outputdir, verbose=1):
 
 
     scanjob=dict({'stepdata':stepdata, 'sweepdata':sweepdata, 'keithleyidx': keithleyidx}) 
-    alldata,data=scan2Djob(scanjob, TitleComment='2D scan', wait_time=.05)
+    alldata=qtt.scans.scan2D(station, scanjob, wait_time=.05, background=False)
 
-    od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=None)
+    od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=None)
                 
     #basename='%s-sweep-2d' % (od['name'])
-    alldata['od']=od
+    #alldata['od']=od
     return alldata, od
+
+#alldata, od = onedotScan(station,od, basevaluesS, outputdir, verbose=1)
+#od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=None)
 
 #%%
 def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbose=1):
@@ -307,8 +324,6 @@ for ii, Tvalue in enumerate(Tvalues):
     
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
         alldata=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
-        #FIXME: storage paths...
-        #lldata.write(path='/home/eendebakpt/tmp/xxx')
 
         
     for od in sddots:
@@ -324,42 +339,45 @@ for ii, Tvalue in enumerate(Tvalues):
         od = onedotScanPinchValues(od, basevalues, outputdir, cache=cache, full=full)
     
             #break
-    STOP
     
     #%% Re-calculate basevalues
     # todo: place this in function 
     basevaluesS=copy.deepcopy(basevalues)
     for g in ['L', 'D1', 'D2', 'D3', 'R']:
-            basename = pinchoffFilename(g, od=None)
-            pfile=os.path.join(outputdir, 'one_dot', basename +'.pickle')
-            alldata,=pmatlab.load(pfile);  # alldata=alldata[0]
-            adata=analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None, verbose=1)
+            basename = qtt.scans.pinchoffFilename(g, od=None)
+            pfile=os.path.join(outputdir, 'one_dot', basename )
+            
+            alldata=qtt.scans.loadDataset(pfile)
+            
+            adata=qtt.analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None, verbose=1)
             
             basevaluesS[g]=float(min(adata['pinchvalue']+500, 0))
     
     #%% Analyse the one-dots
     dotlist=one_dots
     for od in dotlist:
-        od = loadOneDotPinchvalues(od, outputdir, verbose=1)
+        od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
     
     # Make scans of the sensing dots
     
     for odii, od in enumerate(sddots):
         
-        resetgates(activegates, basevaluesS)        
+        gates.resetgates(activegates, basevaluesS)        
 
         basename='%s-sweep-2d' % (od['name'])
         basenameplunger='%s-sweep-plunger' % (od['name'])
-        efileplunger=experimentFile(outputdir, tag='one_dot', dstr=basenameplunger)
+        efileplunger=qtt.scans.experimentFile(outputdir, tag='one_dot', dstr=basenameplunger)
         if cache and os.path.exists(efileplunger) and 1:
             print('  skipping 2D and plunger scan of %s'  % od['name' ])
             #alldata=loadExperimentData(outputdir, tag='one_dot', dstr=basename)
             #d=alldata['od']
             continue
 
-        od = loadOneDotPinchvalues(od, outputdir, verbose=1)
-        alldata, od = onedotScan(od, basevaluesS, outputdir, verbose=1)
+        od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
+        alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
         
+        STOP
+
         alldatahi, od=onedotHiresScan(od, dv=70, verbose=1)
         saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
