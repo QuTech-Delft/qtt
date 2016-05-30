@@ -22,6 +22,53 @@ from qtt.tools import tilefigs
 from qtt.algorithms import analyseGateSweep
 import qtt.live
 
+#%%
+
+#%%
+
+def pix2scan(pt, dd2d):
+    """ Convert pixels coordinates to scan coordinates (mV)
+    Arguments
+    ---------
+    pt : array
+        points in pixel coordinates
+    dd2d : dictionary
+        contains scan data
+
+    """
+    extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(dd2d, array=None, verbose=0)
+    #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
+    nx = vsweep.size #  zdata.shape[0]
+    ny = vstep.size # zdata.shape[1]
+
+    xx = extent
+    x = pt
+    nn = pt.shape[1]
+    ptx = np.zeros((2, nn))
+    ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
+    ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
+    return ptx
+    
+def dataset2Dmetadata(alldata, array=None, verbose=1):    
+    if array is None:
+        array = 'amplitude'
+   
+    A = alldata.arrays[array]
+
+
+    g0=A.set_arrays[0].name
+    g1=A.set_arrays[1].name
+    vstep = np.array(A.set_arrays[0])
+    vsweep = np.array(A.set_arrays[1])[0]
+    extent = [vstep[0], vstep[-1], vsweep[0], vsweep[-1]]
+    
+    print('2D scan: gates %s %s' % (g0, g1))
+    return extent, g0, g1, vstep, vsweep, array
+
+   
+if __name__=='__main__':
+    extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(alldata, array=None)
+    _=pix2scan( np.zeros( (2,4) ), alldata )
     
 #%%
 
@@ -137,7 +184,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     return data
 
-def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=True):
+def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False):
     """ Make a 2D scan and create dictionary to store on disk """
 
     stepdata = scanjob['stepdata']
@@ -235,6 +282,14 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
+def loadDataset(path):
+    ''' Wrapper function
+
+    :param path: filename without extension    
+    '''
+    dataset = qcodes.load_data(path)
+    return dataset
+    
 def writeDataset(path, dataset):
     ''' Wrapper function
 
@@ -284,7 +339,90 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], c
     #alldata.write_to_disk(outputfile)
  #   pmatlab.save(outputfile, alldata)
     return alldata    
+
+#%%
+
+def getTimeString(t=None):
+    """ Return time string for datetime.datetime object """
+    if t == None:
+        t = datetime.datetime.now()
+    if type(t) == float:
+        t = datetime.datetime.fromtimestamp(t)
+    dstr = t.strftime('%H-%M-%S')
+    return dstr
     
+def getDateString(t=None, full=False):
+    """ Return date string 
+
+    Args:
+        t : datetime.datetime
+            time
+    """
+    if t is None:
+        t = datetime.datetime.now()
+    if type(t) == float:
+        t = datetime.datetime.fromtimestamp(t)
+    if full:
+        dstr = t.strftime('%Y-%m-%d-%H-%M-%S')
+    else:
+        dstr = t.strftime('%Y-%m-%d')
+    return dstr
+    
+def experimentFile(outputdir, tag=None, dstr=None, bname=None):
+    """ Save experiment data for later analysis """
+    if tag is None:
+        tag = getDateString()
+    if dstr is None:
+        dstr = getDateString()
+
+    basename = '%s' % (dstr,)
+    if bname is not None:
+        basename = '%s-' % bname + basename
+    qtt.tools.mkdirc(os.path.join(outputdir, tag))
+    pfile = os.path.join(outputdir, tag, basename + '.pickle')
+    return pfile
+    
+#%%
+def loadOneDotPinchvalues(od, outputdir, verbose=1):
+    """ Load the pinch-off values for a one-dot 
+
+    Arguments
+    ---------
+        od : dict
+            one-dot structure
+        outputdir : string
+            location of the data
+    
+    """
+    print('analyse data for 1-dot: %s' % od['name'] )
+    gg=od['gates']
+    pv=np.zeros( (3,1) )
+    for ii,g in enumerate(gg):
+        basename = pinchoffFilename(g, od=None)
+
+        pfile=os.path.join(outputdir, 'one_dot', basename )
+        alldata=loadDataset(pfile)
+        #alldata,=pmatlab.load(pfile);  # alldata=alldata[0]
+        if alldata is None:
+            raise Exception('could not load file %s'  % pfile)
+        adata=analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None, verbose=1)
+        if verbose:
+            print('loadOneDotPinchvalues: pinchvalue for gate %s: %.1f'  % (g, adata['pinchvalue'] ) )
+        pv[ii]=adata['pinchvalue']
+    od['pinchvalues']=pv    
+    return od
+    
+
+#%% Testing
+
+if __name__=='__main__':    
+    import qtt.scans
+    reload(qtt.scans)
+    od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
+
+
+#%%
+
     
 if __name__=='__main__':    
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
