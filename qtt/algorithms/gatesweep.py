@@ -284,8 +284,13 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     ny = vsweep.size
 
     im= np.array(dd.arrays[arrayname])
-    #im = im[::, ::-1]
+    
+    # FIXME: use transform from to pixel coordinates for this
+    im = im[::, ::-1]
+    #FIXME: this gives issues with the pix2scan function
+    #im = im[::-1, :]
 
+    
     #extentImage = [vstep.min(), vstep.max(), vsweep.min(), vsweep.max()]
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ] # matplotlib extent style
 
@@ -410,7 +415,8 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     return od, ptv, pt, ims, lv, wwarea
 
 if __name__=='__main__':
-    od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=10)
+    dd=alldata
+    od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=110)
     
 #%% Testing
 

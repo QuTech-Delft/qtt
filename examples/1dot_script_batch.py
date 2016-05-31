@@ -251,7 +251,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
     pv1=od['pinchvalues'][0]+0
     pv2=od['pinchvalues'][2]+0
     stepstart=float(np.minimum( od['pinchvalues'][0]+400, 90))
-    sweepstart=float(np.minimum( od['pinchvalues'][2]+400, 90) )
+    sweepstart=float(np.minimum( od['pinchvalues'][2]+300, 90) )
     stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -6})
     sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -6})
     
