@@ -6,5 +6,6 @@ import numpy as np
 import qtt.live
 import qtt.tools
 from qtt.tools import *
+from qtt.data import *
 
 from qtt.algorithms import *

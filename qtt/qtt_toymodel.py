@@ -156,12 +156,12 @@ class DummyModel(MockModelLocal):
     def get_gate(self, g):
         return self.gate2ivvi_value(g)
         
-    def _calculate_pinchoff(self, gates):
+    def _calculate_pinchoff(self, gates, offset=-200.):
         c = 1
-        for jj, g in enumerate(['SD1b']):
+        for jj, g in enumerate(gates):
             i, j = self.gate2ivvi(g)
             v = float(self._data[i][j] )
-            c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
+            c=c*qtt.logistic(v, offset+jj*5, 1 / 40.)
         val=c + (np.random.rand()-.5) / 20.
         return val
         
@@ -169,8 +169,8 @@ class DummyModel(MockModelLocal):
         logger.debug('start SD computation')
         
         # main contribution
-        val1 = self._calculate_pinchoff(['SD1b'])                
-        val2 = self._calculate_pinchoff(['SD2b'])            
+        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'])                
+        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'])            
         
         # contribution of charge from bottom dots
         gv=[self.get_gate(g) for g in self.sourcenames ] 
@@ -187,7 +187,11 @@ class DummyModel(MockModelLocal):
         sd1=(ret*self.sddist1).sum()
         sd2=(ret*self.sddist2).sum()
 
+        #c1=self._compute_pinchoff(['SD1b'], offset=-200.)
+        #c2=self._compute_pinchoff(['SD1b'], offset=-200.)
+
         return [val1+sd1, val2+sd2]
+
         
     def compute(self):
         ''' Compute output of the model '''
@@ -199,14 +203,8 @@ class DummyModel(MockModelLocal):
             #v = float(self._data['ivvi1']['c11'])
             c = 1
             if 1:
-                for jj, g in enumerate(['P1', 'P2', 'P3', 'P4']):
-                    i, j = self.gate2ivvi(g)
-                    v = float(self._data[i][j] )
-                    c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
-                for jj, g in enumerate(['D1', 'D2', 'D3', 'L', 'R']):
-                    i, j = self.gate2ivvi(g)
-                    v = float(self._data[i][j] )
-                    c=c*qtt.logistic(v, -200.+jj*5, 1 / 40.)
+                c*=self._calculate_pinchoff(['P1', 'P2', 'P3', 'P4'], offset=-200.)
+                c*=self._calculate_pinchoff(['D1', 'D2', 'D3', 'L', 'R'], offset=-150.)
             instrument = 'keithley3'
             if not instrument in self._data:
                 self._data[instrument] = dict()

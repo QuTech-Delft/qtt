@@ -5,6 +5,9 @@ import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
+from qtt.data import dataset2Dmetadata, pix2scan
+from qtt.tools import *
+
 #import qtt.scans # FIXME: circular
 
 def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=True, drawmidpoints=True):
@@ -269,11 +272,9 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
     #XX = dd['data_array']
-    extent, g0,g1,vstep, vsweep, arrayname=qtt.scans.dataset2Dmetadata(dd, array=None)
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, array=None)
     
     scanjob=dd.metadata['scanjob']
-    #vstep = np.unique(XX[:, 0])
-    #vsweep = np.unique(XX[:, 1])
     stepdata = scanjob['stepdata']
     #g0 = stepdata['gates'][0]
     sweepdata = scanjob['sweepdata']
@@ -285,7 +286,8 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     im= np.array(dd.arrays[arrayname])
     #im = im[::, ::-1]
 
-    extentImage = [vstep.min(), vstep.max(), vsweep.min(), vsweep.max()]
+    #extentImage = [vstep.min(), vstep.max(), vsweep.min(), vsweep.max()]
+    extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ] # matplotlib extent style
 
     ims = im.copy()
     kk = np.ones((3, 3)) / 9.
@@ -361,9 +363,9 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
             od['balancepoint'][0, 0], od['balancepoint'][1, 0]))
 
     if fig is not None:
-        plt.figure(fig)
-        plt.clf()
-        plt.imshow(im, extent=extentImage, interpolation='nearest')
+        
+        qtt.tools.showImage(im, extentImage, fig=fig)
+        
         plt.axis('image')
         if verbose >= 2 or drawpoly:
             pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth)
@@ -377,20 +379,17 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 
-        plt.figure(fig + 1)
-        plt.clf()
-        plt.imshow(ims, extent=None, interpolation='nearest')
+        qtt.tools.showImage(ims, extentImage, fig=fig+1)
         plt.axis('image')
         plt.title('Smoothed image')
         pmatlab.plotPoints(pt, '.m', markersize=16)
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 
-        plt.figure(fig + 2)
-        plt.clf()
-        plt.imshow(ims > lv, extent=None, interpolation='nearest')
-        pmatlab.plotPoints(balancefitpixel0, ':y', markersize=16)
-        pmatlab.plotPoints(od['balancefitpixel'], '--c', markersize=16)
+        qtt.tools.showImage(ims > lv, None, fig=fig+2)
+        #plt.imshow(ims > lv, extent=None, interpolation='nearest')
+        pmatlab.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
+        pmatlab.plotPoints(od['balancefitpixel'], '--c', markersize=16, label='balancefit')
         pmatlab.plotLabels(od['balancefitpixel'])
         plt.axis('image')
         plt.title('thresholded area')
