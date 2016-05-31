@@ -2,9 +2,12 @@
 
    Pieter Eendebak <pieter.eendebak@tno.nl>
 
-"""    
+"""
+
 #%% Import the modules used in this program:
 
+# https://github.com/gatsoulis/py2ipynb
+# 
 from imp import reload
 import sys,os
 import logging
@@ -20,15 +23,17 @@ import matplotlib.pyplot
 matplotlib.pyplot.ion()
 
 import qtpy
+
 #print(qtpy.QT_API)
 
 import pdb
 
+##
 import webbrowser
 import datetime
 import copy
 
-
+##
 
 import qcodes
 import qcodes as qc
@@ -59,6 +64,7 @@ try:
 except:
     pass
 
+from qtt.data import *
 
 #%%
 if 0:
@@ -67,7 +73,6 @@ if 0:
     
     model._data
     
-    #%%
     #gates.set_R(20*np.random.rand())
     ivvi1.c11.set(20*np.random.rand())
     keithley3.amplitude.get()
@@ -81,6 +86,7 @@ station = setup.getStation()
 
 keithley1 = station.keithley1
 keithley3 = station.keithley3
+
 gates = station.gates
 
 station.set_measurement(keithley3.amplitude)
@@ -137,7 +143,7 @@ for g in activegates:
     basevalues[g]=0
     
 
-basetag='batch-04032016'; Tvalues=np.array([-380])    
+basetag='batch-01062016'; Tvalues=np.array([-380])    
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])    
@@ -264,7 +270,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
     return alldata, od
 
 #alldata, od = onedotScan(station,od, basevaluesS, outputdir, verbose=1)
-#od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=None)
+#od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=10)
 
 #%%
 def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbose=1):
@@ -339,6 +345,8 @@ for ii, Tvalue in enumerate(Tvalues):
         od = onedotScanPinchValues(od, basevalues, outputdir, cache=cache, full=full)
     
             #break
+
+#scanPinchValue(station, outputdir, gate='SD2b', basevalues=basevalues, keithleyidx=[ki], cache=False, full=full, fig=10)
     
     #%% Re-calculate basevalues
     # todo: place this in function 
@@ -375,8 +383,9 @@ for ii, Tvalue in enumerate(Tvalues):
 
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
+        qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
         
-        STOP
+        xSTOP
 
         alldatahi, od=onedotHiresScan(od, dv=70, verbose=1)
         saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))

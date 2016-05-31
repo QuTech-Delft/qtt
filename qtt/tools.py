@@ -21,7 +21,15 @@ import qtpy.QtWidgets as QtWidgets
 
 #import pmatlab; pmatlab.qtmodules(verbose=1)
 
-
+#%%
+def showImage(im, extent=None, fig=None):
+            if fig is not None:
+                plt.figure(fig)
+                plt.clf()
+                plt.imshow(im, extent=extent, interpolation='nearest')
+                if extent is not None: 
+                    if extent[0]>extent[1]:
+                        plt.gca().invert_xaxis()
 
 
 #%% Measurement tools
