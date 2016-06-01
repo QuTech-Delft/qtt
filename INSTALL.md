@@ -1,10 +1,10 @@
-* Installation
+# Installation
 
 For global installation install: git, github desktop, anaconda
 
-** Create a user environment using anaconda
+## Create a user environment using anaconda
 
-** Install necessary packages
+## Install necessary packages
 
 > conda install numpy matplotlib scipy spyder jupyter pyqt
 > conda install -c https://conda.binstar.org/nmearl pyqtgraph
@@ -13,7 +13,7 @@ For global installation install: git, github desktop, anaconda
 > conda install -c https://conda.binstar.org/menpo opencv3
 
 
-** Clone the necessary GIT repositories
+## Clone the necessary GIT repositories
 
 1) QCodes
 2) QTT
@@ -27,15 +27,15 @@ https://github.com/VandersypenQutech/qtt.git
 https://github.com/VandersypenQutech/users.git
 https://github.com/VandersypenQutech/stations.git
 
-** Install packages
+## Install packages
 
 > cd [USERDIR]\Qcpdes; conda develop .\
 > cd [USERDIR]\qtt; conda develop .\
 
 Note: the following does NOT work with anaconda
-## > python setup.py develop --user
+ > python setup.py develop --user
 
-** Create startup shortcuts
+## Create startup shortcuts
 
 For Spyder one can use something like:
 
@@ -60,7 +60,7 @@ call activate eendebakpt
 d:
 
 
-** Git credentials
+## Git credentials
 
 ```
 git config credential.username [peendebak]
