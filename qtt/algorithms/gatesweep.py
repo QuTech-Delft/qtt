@@ -5,8 +5,9 @@ import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qtt.data import dataset2Dmetadata, pix2scan
+from qtt.data import dataset2Dmetadata, pix2scan, image_transform
 from qtt.tools import *
+import qtt.data
 
 #import qtt.scans # FIXME: circular
 
@@ -15,26 +16,26 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     Arguments
     ---------
-        dd : DataSet     
+        dd : DataSet
             structure containing the scan data
         minthr, maxthr : float
             parameters for the algorithm (default: None)
-    
+
     """
 
     goodgate = True
-   
+
     if isinstance(dd, qcodes.DataSet):
         data=dd
         XX=None
-        
+
         # should be made generic
         g=[x for x in list(data.arrays.keys()) if x!='amplitude'][0]
         value='amplitude'
-        
+
         x=data.arrays[g]
         value=data.arrays[value]
-        
+
         # detect direction of scan
         scandirection=np.sign(x[-1]-x[0])
         if scandirection<0 and 1:
@@ -60,8 +61,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         x = XX[:, 0]
         value = XX[:, 2]
         XX=None
-        
-    
+
+
     lowvalue = np.percentile(value, 1)
     highvalue = np.percentile(value, 90)
     # sometimes a channel is almost completely closed, then the percentile
@@ -95,7 +96,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][-1]
     mp=max(mp, 2) # fix for case with zero data signal
     midpoint2 = x[mp]
-    
+
     if verbose >= 2:
         print('analyseGateSweep: midpoint2 %.1f midpoint1 %.1f' %
               (midpoint2, midpoint1))
@@ -110,7 +111,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         goodgate = False
 
     # check for gates that are fully open or closed
-    if scandirection>0:    
+    if scandirection>0:
         xleft = x[0:mp]
         leftval = ww[0:mp]
         rightval = ww[mp]
@@ -177,7 +178,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             goodgate = False
             if verbose:
                 print('analyseGateSweep: gate not good: gate is not closed (or fully closed) (slope check)')
-            pass        
+            pass
 
     if np.sum(leftval - leftpred) > 0:
         midpoint1 = np.percentile(x, .5)
@@ -207,7 +208,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                 plot2Dline([-1, 0, midpoint1], '--g', linewidth=1)
             plot2Dline([-1, 0, midpoint2], '--m', linewidth=2)
 
-        if verbose>=2: 
+        if verbose>=2:
             #plt.plot(x[leftidx], leftval, '.r', markersize=15)
             plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1)
 
@@ -238,9 +239,9 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 #%%
 
 
-    
-   
-#%%    
+
+
+#%%
 import scipy
 import pmatlab
 import cv2
@@ -268,12 +269,17 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
         return cost, pts, imx
     else:
         return cost
-        
+
+
+
+
+
+
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
     #XX = dd['data_array']
     extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, array=None)
-    
+
     scanjob=dd.metadata['scanjob']
     stepdata = scanjob['stepdata']
     #g0 = stepdata['gates'][0]
@@ -284,17 +290,17 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     ny = vsweep.size
 
     im= np.array(dd.arrays[arrayname])
-    
-    # FIXME: use transform from to pixel coordinates for this
-    im = im[::, ::-1]
+
+    tr = qtt.data.image_transform(dd)
+    impixel = tr.transform(im)
     #FIXME: this gives issues with the pix2scan function
     #im = im[::-1, :]
 
-    
+
     #extentImage = [vstep.min(), vstep.max(), vsweep.min(), vsweep.max()]
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ] # matplotlib extent style
 
-    ims = im.copy()
+    ims = impixel.copy()
     kk = np.ones((3, 3)) / 9.
     for ii in range(2):
         ims = scipy.ndimage.convolve(ims, kk, mode='nearest', cval=0.0)
@@ -349,11 +355,11 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     pt = pts[1, :, :].transpose()
 
     od['balancepointpixel'] = pt
-    od['balancepointpolygon'] = pix2scan(pt, dd)
-    od['balancepoint'] = pix2scan(pt, dd)
+    od['balancepointpolygon'] = tr.pixel2scan(pt)
+    od['balancepoint'] = tr.pixel2scan(pt)
     od['balancefitpixel'] = pts.reshape((-1, 2)).T
-    od['balancefit'] = pix2scan(od['balancefitpixel'], dd)
-    od['balancefit1'] = pix2scan(balancefitpixel0, dd)
+    od['balancefit'] = tr.pixel2scan(od['balancefitpixel'])
+    od['balancefit1'] = tr.pixel2scan(balancefitpixel0)
     od['setpoint'] = od['balancepoint'] + 8
     od['x0'] = x0
     # od['xx']=dict(xx)
@@ -368,9 +374,9 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
             od['balancepoint'][0, 0], od['balancepoint'][1, 0]))
 
     if fig is not None:
-        
+
         qtt.tools.showImage(im, extentImage, fig=fig)
-        
+
         plt.axis('image')
         if verbose >= 2 or drawpoly:
             pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth)
@@ -384,10 +390,10 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 
-        qtt.tools.showImage(ims, extentImage, fig=fig+1)
+        qtt.tools.showImage(tr.itransform(ims), extentImage, fig=fig+1)
         plt.axis('image')
         plt.title('Smoothed image')
-        pmatlab.plotPoints(pt, '.m', markersize=16)
+        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16)
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 
@@ -415,12 +421,13 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     return od, ptv, pt, ims, lv, wwarea
 
 if __name__=='__main__':
+    reload(qtt.data)
     dd=alldata
     od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=110)
-    
+
 #%% Testing
 
 if __name__=='__main__':
      adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None)
-     
-    
+
+

@@ -12,7 +12,7 @@ from qcodes import Instrument
 from qcodes.utils.validators import Numbers as NumbersValidator
 
 
-    
+
 class KeithleyVirtual(Instrument):
     '''
     This is the qcodes driver for the Keithley_2700 Multimeter
@@ -30,12 +30,12 @@ class KeithleyVirtual(Instrument):
                            vals=NumbersValidator())
 
         self.add_function('readnext', call_cmd=self.readnext_function,  units='arb.unit')
-            
+
     def readnext_function(self, **kwargs):
         val=np.random.rand() - .5
         print('readnext_function: val %f: %s' % (val, str(kwargs)))
         return val
-    
+
     def get_dummy(self, **kwargs):
         val=np.random.rand() - .5
         print('get_dummy: %s' % (str(kwargs)))

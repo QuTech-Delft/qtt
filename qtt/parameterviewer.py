@@ -22,7 +22,7 @@ class QCodesTimer(threading.Thread):
             # do something
             logging.debug('QCodesTimer: run!')
             self.fn()
-            
+
 class ParameterViewer(Qt.QtGui.QTreeWidget):
 
     ''' Simple class to show qcodes parameters '''
@@ -46,13 +46,13 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
         self.show()
 
         self.callbacklist=[]
-        
+
     def init(self):
         ''' Initialize parameter viewer '''
         if self._station==None:
             return
         dd = self._station.snapshot()
-        #x = 
+        #x =
         for iname in self._instrumentnames:
             pp = dd['instruments'][iname]['parameters']
             gatesroot = QtGui.QTreeWidgetItem(self, [iname])
@@ -67,14 +67,14 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
     def updatecallback(self, start=True):
         if self._timer is not None:
             del self._timer
-            
+
         if start:
             self._timer = QCodesTimer(fn=self.updatedata)
             self._timer.start()
         else:
             self._timer = None
-        
-        
+
+
     def updatedata(self):
         ''' Update data in viewer using station.snapshow '''
         dd = self._station.snapshot()
@@ -92,7 +92,7 @@ class ParameterViewer(Qt.QtGui.QTreeWidget):
             try:
                 f()
             except Exception as e:
-                logging.debug('update function failed')                  
+                logging.debug('update function failed')
                 logging.debug(str(e))
-                
-            
+
+

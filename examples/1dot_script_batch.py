@@ -38,6 +38,8 @@ import copy
 import qcodes
 import qcodes as qc
 import qtt; # reload(qtt)
+#import qcodes.utils.reload_code
+#_=qcodes.utils.reload_code.reload_code()
 
 import logging
 l = logging.getLogger()
@@ -383,7 +385,8 @@ for ii, Tvalue in enumerate(Tvalues):
 
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
-        qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
+        #qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
+        qcodes.MatPlot(alldata.amplitude, interval=0)
         
         xSTOP
 
