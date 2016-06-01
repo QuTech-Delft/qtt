@@ -15,7 +15,7 @@ from qcodes import Instrument, MockInstrument, MockModel # , Parameter, Loop, Da
 from qcodes.utils.validators import Numbers
 
 #import sys
-#sys.stdout.write=logging.info  
+#sys.stdout.write=logging.info
 
 import pyqtgraph
 import pyqtgraph.Qt as Qt
@@ -50,8 +50,8 @@ class ModelError(Exception):
 
 import qtt.simulation.dotsystem
 from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransform
-    
-import traceback    
+
+import traceback
 
 class MockModelLocal:
     ''' Same as MockModel, but without a server    '''
@@ -59,11 +59,11 @@ class MockModelLocal:
         pass
 
     def ask(self, *query):
-        return self.do_query(*query)            
-    
+        return self.do_query(*query)
+
     def write(self, *query):
-        self.do_query(*query)            
-        
+        self.do_query(*query)
+
     def do_query(self, *query):
         fullquery=query
         query=query[1:]
@@ -82,7 +82,7 @@ class MockModelLocal:
             setter(param, value)
         else:
             raise ValueError
-            
+
 class DummyModel(MockModelLocal):
 
     ''' Dummy model for testing '''
@@ -106,7 +106,7 @@ class DummyModel(MockModelLocal):
                 self._data[instr] = dict()
             if 1:
                 setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
-            
+
         #self._data['gates']=dict()
         self._data['keithley3']=dict()
         self._data['keithley3']['amplitude']=.5
@@ -114,18 +114,18 @@ class DummyModel(MockModelLocal):
         # initialize a 4-dot system
         if 0:
             self.ds=FourDot(use_tunneling=False)
-                
+
             self.targetnames=['det%d' % (i+1) for i in range(4)]
             self.sourcenames=['P%d' % (i+1) for i in range(4)]
-            
+
             self.sddist1 = [6,4,2,1]
             self.sddist2 = [1,2,4,6]
         else:
             self.ds=TripleDot(maxelectrons=2)
-                
+
             self.targetnames=['det%d' % (i+1) for i in range(3)]
             self.sourcenames=['P%d' % (i+1) for i in range(3)]
-            
+
             self.sddist1 = [6,4,2]
             self.sddist2 = [2,4,6]
 
@@ -133,17 +133,17 @@ class DummyModel(MockModelLocal):
             setattr(self.ds, 'osC%d' % ( ii+1), 55)
         for ii in range(self.ds.ndots-1):
             setattr(self.ds, 'isC%d' % (ii+1), 3)
-        
+
         Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=self.ds.ndots)
         self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
-        
+
         super().__init__(name=name)
 
     def _dummy_get(self, param):
         return 0
     def _dummy_set(self, param, value):
         pass
-        
+
     def gate2ivvi(self,g):
         i, j = self.gate_map[g]
         return 'ivvi%d' % (i+1), 'c%d'  % j
@@ -155,7 +155,7 @@ class DummyModel(MockModelLocal):
 
     def get_gate(self, g):
         return self.gate2ivvi_value(g)
-        
+
     def _calculate_pinchoff(self, gates, offset=-200.):
         c = 1
         for jj, g in enumerate(gates):
@@ -164,18 +164,18 @@ class DummyModel(MockModelLocal):
             c=c*qtt.logistic(v, offset+jj*5, 1 / 40.)
         val=c + (np.random.rand()-.5) / 20.
         return val
-        
+
     def computeSD(self, usediag=True, verbose=0):
         logger.debug('start SD computation')
-        
+
         # main contribution
-        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'])                
-        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'])            
-        
+        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'])
+        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'])
+
         # contribution of charge from bottom dots
-        gv=[self.get_gate(g) for g in self.sourcenames ] 
+        gv=[self.get_gate(g) for g in self.sourcenames ]
         tv=self.gate_transform.transformGateScan(gv)
-        ds=self.ds        
+        ds=self.ds
         for k, val in tv.items():
             if verbose:
                 print('compudateSD: %d, %f'  % (k,val) )
@@ -183,7 +183,7 @@ class DummyModel(MockModelLocal):
         ds.makeHsparse()
         ds.solveH(usediag=usediag)
         ret = ds.OCC
-    
+
         sd1=(ret*self.sddist1).sum()
         sd2=(ret*self.sddist2).sum()
 
@@ -192,14 +192,14 @@ class DummyModel(MockModelLocal):
 
         return [val1+sd1, val2+sd2]
 
-        
+
     def compute(self):
         ''' Compute output of the model '''
 
         try:
             logger.debug('DummyModel: compute values')
             # current through keithley1, 2 and 3
-    
+
             #v = float(self._data['ivvi1']['c11'])
             c = 1
             if 1:
@@ -210,10 +210,10 @@ class DummyModel(MockModelLocal):
                 self._data[instrument] = dict()
             val=c + (np.random.rand()-.5) / 20.
             logging.debug('compute: value %f' % val)
-            
+
             self._data[instrument]['amplitude'] = val
-            
-            
+
+
         except Exception as ex:
             msg = traceback.format_exception(ex)
             logging.warning('compute failed! %s' % msg)
@@ -229,25 +229,25 @@ class DummyModel(MockModelLocal):
         self._data[instrument][parameter] = float(value)
 
     def keithley1_get(self, param):
-        sd1, sd2 = self.computeSD()            
+        sd1, sd2 = self.computeSD()
         self._data['keithley1']['amplitude'] = sd1
         self._data['keithley2']['amplitude'] = sd2
         #print('keithley1_get: %f %f' % (sd1, sd2))
         return  self._generic_get('keithley1', param)
-        
+
     def keithley2_get(self, param):
-        sd1, sd2 = self.computeSD()            
+        sd1, sd2 = self.computeSD()
         self._data['keithley1']['amplitude'] = sd1
         self._data['keithley2']['amplitude'] = sd2
         return  self._generic_get('keithley2', param)
-     
+
     def keithley3_get(self, param):
         logging.debug('keithley3_get: %s' % param)
-        self.compute()        
+        self.compute()
         return self._generic_get('keithley3', param)
 
     def keithley3_set(self, param, value):
-        #self.compute()        
+        #self.compute()
         pass
         print('huh?')
         #return self._generic_get('keithley3', param)
@@ -396,14 +396,14 @@ class virtual_gates(Instrument):
         return getattr(self._instrument_list[gatemap[0]], 'c%d' % gatemap[1] )
 
 
-    def set_boundaries(self, gate_boundaries):        
+    def set_boundaries(self, gate_boundaries):
         for g, bnds in gate_boundaries.items():
             logging.debug('gate %s: %s' % (g, bnds))
-            
+
             param = self.get_instrument_parameter(g)
             param._vals=Numbers(bnds[0], max_value=bnds[1])
 
-        
+
     def __repr__(self):
         s = 'virtual_gates: %s (%d gates)' % (self.name, len(self._gate_map))
 
@@ -414,16 +414,16 @@ class virtual_gates(Instrument):
 
     def resetgates(gates, activegates, basevalues=None, verbose=2):
         """ Reset a set of gates to default values
-    
+
         Arguments
         ---------
-            activegates : list or dict 
+            activegates : list or dict
                 list of gates to reset
             basevalues: dict
                 new values for the gates
             verbose : integer
                 output level
-        
+
         """
         if verbose:
             print('resetgates: setting gates to default values')
@@ -438,50 +438,50 @@ class virtual_gates(Instrument):
             if verbose >= 2:
                 print('  setting gate %s to %.1f [mV]' % (g, val))
             gates.set(g, val)
-        
+
     def visualize(self, fig=1):
         ''' Create a graphical representation of the system (needs graphviz) '''
-        gates=self    
+        gates=self
         dot=graphviz.Digraph(name=self.name)
-    
+
         inames = [x.name for x in gates._instrument_list]
-        
+
         cgates=graphviz.Digraph('cluster_gates')
         cgates.body.append('color=lightgrey')
         cgates.attr('node', style='filled', color='seagreen1')
-        cgates.body.append('label="%s"' % 'Virtual gates') 
-        
+        cgates.body.append('label="%s"' % 'Virtual gates')
+
         iclusters=[]
         for i, iname in enumerate(inames):
             c0=graphviz.Digraph(name='cluster_%d' % i)
             c0.body.append('style=filled')
             c0.body.append('color=grey80')
-    
+
             c0.node_attr.update(style='filled', color='white')
             #c0.attr('node', style='filled', color='lightblue')
             iclusters.append(c0)
-    
+
         for g in gates._gate_map:
             xx=gates._gate_map[g]
             cgates.node(str(g), label='%s' % g)
-            
+
             ix = inames[xx[0]] + '%d' % xx[1]
             ixlabel='c%d' % xx[1]
             icluster=iclusters[xx[0]]
             icluster.node(ix, label=ixlabel, color='lightskyblue')
-    
+
         for i, iname in enumerate(inames):
-            iclusters[i].body.append('label="%s"' % iname) 
-        
+            iclusters[i].body.append('label="%s"' % iname)
+
         dot.subgraph(cgates)
         for c0 in iclusters:
             dot.subgraph(c0)
         # group
-    
+
         for g in gates._gate_map:
             xx=gates._gate_map[g]
             ix = inames[xx[0]] + '%d' % xx[1]
             dot.edge(str(g), str(ix))
-    
+
         return dot
 

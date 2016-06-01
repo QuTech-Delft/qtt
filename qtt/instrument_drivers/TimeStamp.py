@@ -14,5 +14,5 @@ class TimeStampInstrument(Instrument):
         # we need this to be a parameter (a function does not work with measure)
         self.add_parameter('timestamp', units='s', get_cmd=time.time, docstring='Timestamp based on number of seconds since epoch.')
         _ = self.timestamp.get()
-        
-    
+
+

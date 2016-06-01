@@ -34,10 +34,10 @@ def findfilesR(p, patt):
 class DataViewer(QtWidgets.QWidget):
 
     ''' Simple viewer for Qcodes data
-    
+
     Arugments
     ---------
-    
+
         default_parameter : string
             name of default parameter to plot
     '''
@@ -46,7 +46,7 @@ class DataViewer(QtWidgets.QWidget):
 
         self.default_parameter = default_parameter
         self.default_extension= default_extension
-        
+
         # setup GUI
         self.text= QtWidgets.QLabel()
         self.text.setText('Log files at %s' %  qcodes.DataSet.default_io.base_location)
@@ -66,7 +66,7 @@ class DataViewer(QtWidgets.QWidget):
         self.setLayout(vertLayout)
 
         self._treemodel.setHorizontalHeaderLabels(['Log', 'Comments'])
-        self.setWindowTitle(window_title)        
+        self.setWindowTitle(window_title)
         self.logtree.header().resizeSection(0, 240)
 
 
@@ -74,23 +74,23 @@ class DataViewer(QtWidgets.QWidget):
         self.logtree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.logtree.doubleClicked.connect(self.logCallback)
 
-        # get logs from disk             
+        # get logs from disk
         self.updateLogs()
-        
-        
+
+
     def updateLogs(self):
-        ''' Update list of data files 
+        ''' Update list of data files
 
         extension : string
-            can be hdf5 or dat        
-            
+            can be hdf5 or dat
+
         '''
 
         model=self._treemodel
-        dd=findfilesR(qcodes.DataSet.default_io.base_location, '.*' + self.default_extension)        
+        dd=findfilesR(qcodes.DataSet.default_io.base_location, '.*' + self.default_extension)
         print(dd)
-        
-        logs=dict()        
+
+        logs=dict()
         for i, d in enumerate(dd):
             tag= os.path.basename(d)
             datetag, logtag=d.split('/')[-3:-1]
@@ -99,8 +99,8 @@ class DataViewer(QtWidgets.QWidget):
             logs[datetag][logtag]=d
 
         self.logs = logs
-        
-        for i, datetag in enumerate(sorted(logs.keys())[::-1]):             
+
+        for i, datetag in enumerate(sorted(logs.keys())[::-1]):
             parent1 = QtGui.QStandardItem(datetag)
             for j, logtag in enumerate(logs[datetag]):
                 child1 = QtGui.QStandardItem(logtag)
@@ -113,7 +113,7 @@ class DataViewer(QtWidgets.QWidget):
 
     ''' Return parameter to be plotted '''
     def plot_parameter(self, data):
-        
+
         if self.default_parameter in data.arrays.keys():
             return self.default_parameter
         if 'amplitude' in data.arrays.keys():
@@ -124,30 +124,30 @@ class DataViewer(QtWidgets.QWidget):
             return key
         except:
             return None
-            
+
     def logCallback(self, index):
         logging.debug('dataviewer callback: index %s'% str(index))
         self.__debug['last']=index
         pp=index.parent()
         row=index.row()
 
-        
+
         tag=pp.child(row,2).data()
-        
+
         # load data
         if tag is not None:
             logging.info('logCallback! tag %s' % tag)
             try:
-                logging.debug('load tag %s' % tag) 
+                logging.debug('load tag %s' % tag)
                 data=qc.load_data(tag)
-        
-                self.qplot.clear(); 
- 
+
+                self.qplot.clear();
+
                 param_name=self.plot_parameter(data)
-                
-                if param_name is not None:                    
+
+                if param_name is not None:
                     logging.info('using parameter %s for plotting' % param_name)
-                    self.qplot.add( getattr(data, param_name) ); 
+                    self.qplot.add( getattr(data, param_name) );
                 else:
                     logging.info('could not find parameter for DataSet')
             except Exception as ex:
