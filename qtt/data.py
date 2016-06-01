@@ -141,6 +141,31 @@ if __name__=='__main__':
 
 #%%
 
+import deepdish
+
+def loadQttData(path):
+    ''' Wrapper function
+
+    :param path: filename without extension
+    '''
+    mfile=path
+    if not mfile.endswith('hp5'):
+        mfile = mfile + '.hp5'
+    dataset=deepdish.io.load(mfile)
+    return dataset
+
+def writeQttData(dataset, path, metadata=None):
+    ''' Wrapper function
+
+    :param path: filename without extension
+    '''
+    mfile=path
+    if not mfile.endswith('hp5'):
+        mfile = mfile + '.hp5'
+    deepdish.io.save(mfile, dataset)
+
+
+
 
 def loadDataset(path):
     ''' Wrapper function
@@ -148,9 +173,12 @@ def loadDataset(path):
     :param path: filename without extension
     '''
     dataset = qcodes.load_data(path)
-    return dataset
 
-def writeDataset(path, dataset):
+    mfile=os.path.join(path, 'qtt.hp5' )
+    metadata=deepdish.io.load(mfile)
+    return dataset, metadata
+
+def writeDataset(path, dataset, metadata=None):
     ''' Wrapper function
 
     :param path: filename without extension
@@ -158,4 +186,21 @@ def writeDataset(path, dataset):
     dataset.write(path=path)
     dataset.save_metadata(path=path)
 
+    if metadata is None:
+        metadata=dataset.metadata
 
+    mfile=os.path.join(path, 'qtt.hp5' )
+    deepdish.io.save(mfile, metadata)
+
+
+
+#%%
+
+if __name__=='__main__':
+    import numpy as np
+    import qcodes.tests.data_mocks
+    alldata=qcodes.tests.data_mocks.DataSet2D()
+    X=alldata.z
+    print(np.array(X))
+    s=np.linalg.svd(X)
+    print(s)
