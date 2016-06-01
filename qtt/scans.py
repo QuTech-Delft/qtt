@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from qtt.tools import tilefigs
 import qtt.tools
 from qtt.algorithms import analyseGateSweep
+from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
 from qtt.data import *
@@ -55,6 +56,7 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 #%%
 
 def dataset2image(dataset):
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, verbose=0, array=None)
     tr = qtt.data.image_transform(dataset)
     im=None
     impixel  = None
@@ -84,7 +86,7 @@ def onedotHiresScan(od, dv=70, verbose=1, fig=4000, ptv=None):
     im, impixel, tr = dataset2image(alldatahi)
 
     #_,_,_, im = get2Ddata(alldatahi)
-    ptv, fimg, tmp= onedotGetBalanceFine(im, alldatahi, verbose=1, fig=fig)
+    ptv, fimg, tmp= onedotGetBalanceFine(impixel, alldatahi, verbose=1, fig=fig)
 
     ptx=tmp['ptpixel'].copy()
     step=scanjobhi['stepdata']['step']
@@ -94,12 +96,14 @@ def onedotHiresScan(od, dv=70, verbose=1, fig=4000, ptv=None):
     od['balancepointfine']=ptv
     od['setpoint']=ptv+10
 
-    alldatahi['od']=od
-    return alldatahi, od
+    alldatahi.metadata['od']=od
+
+    scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
+    return scandata, od
     #saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
 if __name__=='__main__':
-    alldatahi, od=onedotHiresScan(od, dv=70, verbose=1)
+    scandata, od=onedotHiresScan(od, dv=70, verbose=1)
 
 
 #%%
@@ -422,7 +426,7 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
         basename = pinchoffFilename(g, od=None)
 
         pfile=os.path.join(outputdir, 'one_dot', basename )
-        alldata=loadDataset(pfile)
+        alldata, mdata=loadDataset(pfile)
         #alldata,=pmatlab.load(pfile);  # alldata=alldata[0]
         if alldata is None:
             raise Exception('could not load file %s'  % pfile)

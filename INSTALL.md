@@ -58,6 +58,15 @@ echo "Starting Jupyter notebook"
 
 call activate eendebakpt
 d:
+
+
+** Git credentials
+
+```
+git config credential.username [peendebak]
+git config credential.useHttpPath true
+```
+
 cd d:\users\eendebakpt
 jupyter notebook
 call deactivate eendebakpt
