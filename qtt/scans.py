@@ -55,6 +55,8 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 
 #%%
 
+from qtt.algorithms.generic import *
+
 def dataset2image(dataset):
     extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, verbose=0, array=None)
     tr = qtt.data.image_transform(dataset)
@@ -66,7 +68,7 @@ def dataset2image(dataset):
 
     return im, impixel, tr
 
-def onedotHiresScan(od, dv=70, verbose=1, fig=4000, ptv=None):
+def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     """ Make high-resolution scan of a one-dot """
     if verbose:
         print('onedotHiresScan: one-dot: %s' % od['name'] )
@@ -103,7 +105,7 @@ def onedotHiresScan(od, dv=70, verbose=1, fig=4000, ptv=None):
     #saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
 if __name__=='__main__':
-    scandata, od=onedotHiresScan(od, dv=70, verbose=1)
+    scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
 
 
 #%%

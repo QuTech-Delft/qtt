@@ -78,6 +78,9 @@ def simulate_row(i, ds, npointsy, usediag):
 #%%
 # move into class?
 def defaultVmatrix(n):
+    """
+    >>> m=defaultVmatrix(2)
+    """
     Vmatrix=np.eye(n)
     vals=[1,.25,.05,.01,.001, 0, 0]
     for x in range(1, n):
@@ -85,10 +88,12 @@ def defaultVmatrix(n):
             Vmatrix[i, i+x]=vals[x]
             Vmatrix[i+x, i]=vals[x]
 
-    return Vmatrix
+    VmatrixF=np.eye(n+1)
+    VmatrixF[0:n,0:n]=Vmatrix
+    return VmatrixF
 
 #%% FIXME: move into other submodule
-
+import pmatlab # FIXME
 class GateTransform:
     ''' Class to describe virtual gate transformations '''
     def __init__(self, Vmatrix, sourcenames, targetnames):
@@ -109,7 +114,8 @@ class GateTransform:
             pass # xx= np.array(xx)
 
         v=np.vstack(xx)
-        vout = self.Vmatrix.dot(v)
+        vout=pmatlab.projectiveTransformation(self.Vmatrix, v)
+        #vout = self.Vmatrix.dot(v)
 
         for j, n in enumerate(self.targetnames):
             vals2Dout[n] = vout[j].reshape(nn).astype(np.float)
@@ -434,8 +440,37 @@ class DotSystem():
 
         showGraph(dot, fig=fig)
 
-#%% Two example dot systems
 
+def setDotSystem(ds, gate_transform, gv):
+        """ Set dot system values using gate transform """
+        tv=gate_transform.transformGateScan(gv)
+        for k, val in tv.items():
+            setattr(ds, k, val)
+
+
+def defaultDotValues(ds):
+        for ii in range(ds.ndots):
+            setattr(ds, 'osC%d' % ( ii+1), 55)
+        for ii in range(ds.ndots-1):
+            setattr(ds, 'isC%d' % (ii+1), 3)
+
+            
+#%% Example dot systems
+
+class OneDot(DotSystem):
+
+    def __init__(self, name='doubledot'):
+        super().__init__(name=name, ndots=1)
+        self.makebasis(ndots=self.ndots, maxelectrons=3)
+        self.varnames = ['det1', 'osC1', 'isC1']
+        self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
+        self.makevars()
+        self.makevarMs()
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
+        
 class DoubleDot(DotSystem):
 
     def __init__(self, name='doubledot'):
@@ -446,7 +481,11 @@ class DoubleDot(DotSystem):
         self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
         self.makevars()
         self.makevarMs()
-
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
+        
 class TripleDot(DotSystem):
 
     def __init__(self, name='tripledot', maxelectrons=3):
@@ -459,6 +498,10 @@ class TripleDot(DotSystem):
            'tun1','tun2']
         self.makevars()
         self.makevarMs()
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
 
 
 class FourDot(DotSystem):
@@ -478,4 +521,8 @@ class FourDot(DotSystem):
             self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
         self.makevars()
         self.makevarMs()
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
 
