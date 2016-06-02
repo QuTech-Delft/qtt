@@ -3,6 +3,12 @@
 
 import numpy as np
 
+import qtpy
+import matplotlib
+print(qtpy.API_NAME)
+if qtpy.API_NAME=='PyQt4 (API v2)':
+    matplotlib.use('Qt4Agg')
+
 import qtt.live
 import qtt.tools
 from qtt.tools import *

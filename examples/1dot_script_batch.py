@@ -40,6 +40,7 @@ import qcodes as qc
 from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt; # reload(qtt)
+import qtt.scans
 from qtt.scans import experimentFile
 #import qcodes.utils.reload_code
 #_=qcodes.utils.reload_code.reload_code()
@@ -70,6 +71,7 @@ except:
     pass
 
 from qtt.data import *
+from qtt.scans import *
 
 #%%
 if 0:
@@ -153,8 +155,7 @@ basetag='batch-11062016'; Tvalues=np.array([-280])
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
 
-#b=False
-b=True
+b=False
 
 if b:
     basetag=basetag + 'b'
@@ -389,15 +390,15 @@ for ii, Tvalue in enumerate(Tvalues):
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
         #qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
-        MatPlot(alldata.amplitude, interval=0)
+        plt.figure(10); plt.clf(); MatPlot(alldata.amplitude, interval=0, num=10)
+        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
 
-
-        scandata, od=onedotHiresScan(od, dv=70, verbose=1)
+        scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
 
         writeQttData(dataset=scandata, path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         _=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         xSTOP
-        FIXME: one_dot model in keithley1
+        #FIXME: one_dot model in keithley1
         #FIXME: dataset object: alldata a dict 'scandata', with subset 'dataset' and 'scanjob'
 
 

@@ -10,6 +10,7 @@ import qcodes
 
 # explicit import
 from qcodes.plots.pyqtgraph import QtPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
@@ -20,6 +21,36 @@ import qtpy.QtWidgets as QtWidgets
 
 
 #import pmatlab; pmatlab.qtmodules(verbose=1)
+
+#%%
+''' Return parameter to be plotted '''
+def plot_parameter(data, default_parameter='amplitude'):
+        if 'main_parameter'  in data.metadata.keys():
+            return data.metadata['main_parameter']
+        if default_parameter in data.arrays.keys():
+            return default_parameter
+        try:
+            key= next(iter (data.arrays.keys()))
+            return key
+        except:
+            return None
+            
+def plot1D(dataset, fig=1):
+    """ Simlpe plot function """
+    if isinstance(dataset, qcodes.DataArray):
+        array=dataset
+        dataset=None
+    else:
+        # assume we have a dataset
+        arrayname=plot_parameter(dataset)
+        array=getattr(dataset, arrayname)                
+        
+    if fig is not None and array is not None:
+        MatPlot(array, num=fig)
+
+if __name__=='__main__':
+    plot1D(dataset, fig=10)
+    plot1D(dataset.amplitude, fig=12)
 
 #%%
 def showImage(im, extent=None, fig=None):

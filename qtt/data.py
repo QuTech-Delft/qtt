@@ -78,7 +78,7 @@ class image_transform:
             points in pixel coordinates
 
         """
-        ptx= pmatlab.projectiveTransformation(self.Hi, pt)
+        ptx= pmatlab.projectiveTransformation(self.Hi, np.array(pt).astype(float) )
 
         extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, array=None, verbose=0)
         nx = vsweep.size #  zdata.shape[0]
@@ -190,7 +190,7 @@ def writeDataset(path, dataset, metadata=None):
         metadata=dataset.metadata
 
     mfile=os.path.join(path, 'qtt.hp5' )
-    deepdish.io.save(mfile, metadata)
+    _=deepdish.io.save(mfile, metadata)
 
 
 

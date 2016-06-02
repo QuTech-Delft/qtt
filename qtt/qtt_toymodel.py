@@ -83,6 +83,22 @@ class MockModelLocal:
         else:
             raise ValueError
 
+from qtt.simulation.dotsystem import *
+
+def dotConductance(self, index=0, verbose=0, T=6):
+    ''' Calculate conductance in dot due to Coulomb peak tunneling '''
+
+    cond=0
+    E0=self.energies[0]
+    for i, e in enumerate(self.energies):
+        fac=np.exp(-e/T)/np.exp(-E0/T)
+        if verbose:
+            print('energy: %f: factor %f'  % (e, fac))
+        v=self.stateoccs[i]-self.stateoccs[0]
+        v[index]
+        cond+=np.abs(v[index])*fac
+    return cond
+            
 class DummyModel(MockModelLocal):
 
     ''' Dummy model for testing '''
@@ -135,8 +151,15 @@ class DummyModel(MockModelLocal):
             setattr(self.ds, 'isC%d' % (ii+1), 3)
 
         Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=self.ds.ndots)
+        Vmatrix[0:3,-1]=[100,100,100]
         self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
 
+        # coulomb model for sd1
+        self.sd1ds=qtt.simulation.dotsystem.OneDot()
+        defaultDotValues(self.sd1ds)
+        Vmatrix=np.matrix([[.1, 1, .1, 300.],[0,0,0,1]])
+        self.gate_transform_sd1 = GateTransform(Vmatrix, ['SD1a','SD1b','SD1c'], ['det1'])
+        
         super().__init__(name=name)
 
     def _dummy_get(self, param):
@@ -156,21 +179,35 @@ class DummyModel(MockModelLocal):
     def get_gate(self, g):
         return self.gate2ivvi_value(g)
 
-    def _calculate_pinchoff(self, gates, offset=-200.):
+    def _calculate_pinchoff(self, gates, offset=-200., random=0):
         c = 1
         for jj, g in enumerate(gates):
             i, j = self.gate2ivvi(g)
             v = float(self._data[i][j] )
             c=c*qtt.logistic(v, offset+jj*5, 1 / 40.)
-        val=c + (np.random.rand()-.5) / 20.
+        val = c
+        if random:
+            val=c + (np.random.rand()-.5) * random
         return val
 
     def computeSD(self, usediag=True, verbose=0):
         logger.debug('start SD computation')
 
         # main contribution
-        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'])
-        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'])
+        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'], offset=-50, random=.1)
+        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'], offset=-50, random=.1)
+
+        # coulomb system for dot1
+        ds=self.sd1ds
+        gate_transform_sd1=self.gate_transform_sd1
+        gv=[float(self.get_gate(g)) for g in gate_transform_sd1.sourcenames ]
+        setDotSystem(ds, gate_transform_sd1, gv)        
+        ds.makeHsparse()
+        ds.solveH(usediag=True)        
+        _=ds.findcurrentoccupancy()
+        cond1=.75*dotConductance(ds, index=0, T=3)  
+        if verbose>=2:
+            print('k1 %f, cond %f' % (k1, cond) )
 
         # contribution of charge from bottom dots
         gv=[self.get_gate(g) for g in self.sourcenames ]
@@ -184,16 +221,16 @@ class DummyModel(MockModelLocal):
         ds.solveH(usediag=usediag)
         ret = ds.OCC
 
-        sd1=(ret*self.sddist1).sum()
-        sd2=(ret*self.sddist2).sum()
+        sd1=(1/np.sum(self.sddist1))*(ret*self.sddist1).sum()
+        sd2=(1/np.sum(self.sddist1))*(ret*self.sddist2).sum()
 
         #c1=self._compute_pinchoff(['SD1b'], offset=-200.)
         #c2=self._compute_pinchoff(['SD1b'], offset=-200.)
 
-        return [val1+sd1, val2+sd2]
+        return [val1+sd1+cond1, val2+sd2]
 
 
-    def compute(self):
+    def compute(self, random=0.02):
         ''' Compute output of the model '''
 
         try:
@@ -208,14 +245,16 @@ class DummyModel(MockModelLocal):
             instrument = 'keithley3'
             if not instrument in self._data:
                 self._data[instrument] = dict()
-            val=c + (np.random.rand()-.5) / 20.
+            val=c + random*(np.random.rand()-.5) 
             logging.debug('compute: value %f' % val)
 
             self._data[instrument]['amplitude'] = val
 
 
         except Exception as ex:
-            msg = traceback.format_exception(ex)
+            #print(ex)
+            #raise ex
+            msg = traceback.format_exc(ex)
             logging.warning('compute failed! %s' % msg)
         return c
 
