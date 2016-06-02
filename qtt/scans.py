@@ -395,7 +395,7 @@ def getDateString(t=None, full=False):
         dstr = t.strftime('%Y-%m-%d')
     return dstr
 
-def experimentFile(outputdir, tag=None, dstr=None, bname=None):
+def experimentFile(outputdir, tag=None, dstr=None, bname=None, ext='hf5'):
     """ Save experiment data for later analysis """
     if tag is None:
         tag = getDateString()
@@ -406,7 +406,7 @@ def experimentFile(outputdir, tag=None, dstr=None, bname=None):
     if bname is not None:
         basename = '%s-' % bname + basename
     qtt.tools.mkdirc(os.path.join(outputdir, tag))
-    pfile = os.path.join(outputdir, tag, basename + '.pickle')
+    pfile = os.path.join(outputdir, tag, basename + '.' + ext)
     return pfile
 
 #%%
