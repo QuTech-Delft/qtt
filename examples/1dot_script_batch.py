@@ -73,6 +73,8 @@ except:
 from qtt.data import *
 from qtt.scans import *
 
+from qtt.legacy import *
+
 #%%
 if 0:
     ivvi1=setup.ivvi1
@@ -150,7 +152,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-11062016'; Tvalues=np.array([-280])
+basetag='batch-1062016xx'; Tvalues=np.array([-280])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -239,7 +241,29 @@ if full:
 else:
     hiresstep=-4
 
+#%%
 
+def onedotPlungerScan(station, od, verbose=1):
+    """ Make a scan with the plunger of a one-dot """
+    # do sweep with plunger
+    gates=station.gates
+    gg=od['gates']
+    ptv=od['setpoint']
+              
+    gates.set(gg[2], ptv[0,0]+20)    # left gate = step gate in 2D plot =  y axis
+    gates.set(gg[0], ptv[1,0]+20)
+    
+    pv=od['pinchvalues'][1]
+
+    scanjob=dict({'keithleyidx': [od['instrument'] ]})
+    scanjob['sweepdata']=dict({'gates': [gg[1]], 'start': 50, 'end': pv,'step': -1})
+    
+    alldata=scan1D(scanjob, station, title_comment='sweep of plunger')            
+    alldata.metadata['od']=od
+    scandata=dict(dataset=alldata, od=od)
+    return scandata
+
+#alldataplunger=onedotPlungerScan(station, od, verbose=1)
 
 #%% One-dot measurements
 
@@ -295,6 +319,15 @@ def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbos
 #%%
 
 from qtt.scans import scanPinchValue
+
+def saveExperimentData(outputdir, dataset, tag, dstr):
+    path = experimentFile(outputdir, tag=tag, dstr=dstr)
+    writeQttData(dataset=scandata, path = path )
+
+def loadExperimentData(outputdir, tag, dstr):
+    path = experimentFile(outputdir, tag=tag, dstr=dstr )
+    dataset = loadQttData(path = path )
+    return dataset
 
 #%%
 
@@ -396,24 +429,22 @@ for ii, Tvalue in enumerate(Tvalues):
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
 
         writeQttData(dataset=scandata, path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
-        _=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
-        xSTOP
-        #FIXME: one_dot model in keithley1
-        #FIXME: dataset object: alldata a dict 'scandata', with subset 'dataset' and 'scanjob'
+        #_=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
+        
 
-
-        saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
         saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename)
 
-        alldataplunger=onedotPlungerScan(od, verbose=1)
+        alldataplunger=onedotPlungerScan(station, od, verbose=1)
+        
         saveExperimentData(outputdir, alldataplunger, tag='one_dot', dstr=basenameplunger)
 
         basenamedot='%s-dot' % (od['name'])
         saveExperimentData(outputdir, od, tag='one_dot', dstr=basenamedot)
 
-        resetgates(od['gates'], basevaluesS)
+        gates.resetgates( od['gates'], basevaluesS)
 
+        
     # update basevalues with settings for SD
 
     for odii, od in enumerate(sddots):
@@ -425,6 +456,8 @@ for ii, Tvalue in enumerate(Tvalues):
         ww=getODbalancepoint(od)
         basevaluesS[od['gates'][0]]=float(ww[1])
         basevaluesS[od['gates'][2]]=float(ww[0])
+
+        xSTOP
 
 
     #%%
