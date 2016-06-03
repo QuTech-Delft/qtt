@@ -24,6 +24,12 @@ matplotlib.pyplot.ion()
 
 import qtpy
 
+import multiprocessing
+if __name__=='__main__':
+    try:
+        multiprocessing.set_start_method('spawn')
+    except:
+        pass
 #print(qtpy.QT_API)
 
 import pdb
