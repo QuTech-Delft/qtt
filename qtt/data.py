@@ -140,9 +140,13 @@ if __name__=='__main__':
     _=pix2scan( np.zeros( (2,4) ), alldata )
 
 #%%
+import warnings
 
-import deepdish
-
+try:
+    import deepdish
+except:
+    warnings.warn('could not load deepdish...')
+    
 def loadQttData(path):
     ''' Wrapper function
 
