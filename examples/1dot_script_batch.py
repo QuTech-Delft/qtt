@@ -75,6 +75,9 @@ from qtt.scans import *
 
 from qtt.legacy import *
 
+from qtt.reports import *
+
+
 #%%
 if 0:
     ivvi1=setup.ivvi1
@@ -322,10 +325,12 @@ from qtt.scans import scanPinchValue
 
 def saveExperimentData(outputdir, dataset, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
-    writeQttData(dataset=scandata, path = path )
+    logging.warning('save %s'  % path)
+    writeQttData(dataset=dataset, path = path )
 
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr )
+    logging.warning('load %s'  % path )
     dataset = loadQttData(path = path )
     return dataset
 
@@ -457,8 +462,7 @@ for ii, Tvalue in enumerate(Tvalues):
         basevaluesS[od['gates'][0]]=float(ww[1])
         basevaluesS[od['gates'][2]]=float(ww[0])
 
-        xSTOP
-
+ 
 
     #%%
     print('Do main 2D-sweeps for one-dots')
@@ -467,7 +471,7 @@ for ii, Tvalue in enumerate(Tvalues):
     ww = one_dots
     for odii, od in enumerate(ww):
 
-        resetgates(activegates, basevaluesS)
+        gates.resetgates(activegates, basevaluesS)
 
         basename='%s-sweep-2d' % (od['name'])
         basenameplunger='%s-sweep-plunger' % (od['name'])
@@ -476,18 +480,18 @@ for ii, Tvalue in enumerate(Tvalues):
             print('  skipping 2D and plunger scan of %s'  % od['name' ])
             continue
 
-        alldata,od = onedotScan(od, basevaluesS, outputdir, verbose=1)
+        alldata,od = onedotScan(station, od, basevaluesS, outputdir,verbose=1)
         saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename)
 
 
         #%% Make high-resolution scans
         if dohires:
-            alldatahi, od=onedotHiresScan(od, dv=70, verbose=1)
+            alldatahi, od=onedotHiresScan(station, od, dv=70, verbose=1)
             saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
             #saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename) # needed?
 
-        alldataplunger=onedotPlungerScan(od, verbose=1)
+        alldataplunger=onedotPlungerScan(station, od, verbose=1)
         saveExperimentData(outputdir, alldataplunger, tag='one_dot', dstr=basenameplunger)
 
         #saveCoulombData(datadir, alldataplunger)
@@ -497,17 +501,20 @@ for ii, Tvalue in enumerate(Tvalues):
 
 #STOP
 
+#%%
+xSTOP
+
 
 #%% Reports for one-dots
 
-datadir=experimentdata.getDataDir()
+#datadir=experimentdata.getDataDir()
 #one_dots=get_one_dots(full=2)
 
 plt.close('all')
 for ii, Tvalue in enumerate(Tvalues):
     tag=basetag+'-T%d'  % Tvalue
 
-    resultsdir=mkdirc(os.path.join(datadir, tag) )
+    resultsdir=qtt.tools.mkdirc(os.path.join(datadir, tag) )
     xdir=os.path.join(resultsdir, 'one_dot')
 
     try:
