@@ -10,36 +10,102 @@ import logging
 import time
 import qcodes
 import qcodes as qc
+import datetime
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
 import matplotlib.pyplot as plt
 
-# should be removed later
-from pmatlab import tilefigs
-
+from qtt.tools import tilefigs
+import qtt.tools
 from qtt.algorithms import analyseGateSweep
+from qtt.algorithms.onedot import onedotGetBalanceFine
+import qtt.live
 
-#%% Static variables
+from qtt.data import *
 
-mwindows = None
-#liveplotwindow = None
+#%%
+def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
+    """ Create a scan job
 
-def livePlot():
-    global mwindows
-    if mwindows is not None:
-        return mwindows.get('plotwindow', None)
-    return None
-    
+    Arguments
+    ---------
+    g1 : string
+        Step gate
+    r1 : array, list
+        Range to step
+    g2 : string, optional
+        Sweep gate
+    r2 : array, list
+        Range to step
+    step : integer, optional
+        Step value
+
+    """
+    stepdata = dict(
+        {'gates': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
+    scanjob = dict({'stepdata': stepdata, 'keithleyidx': keithleyidx})
+    if not g2 is None:
+        sweepdata = dict(
+            {'gates': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
+        scanjob['sweepdata'] = sweepdata
+
+    return scanjob
+
+#%%
+
+from qtt.algorithms.generic import *
+
+
+def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
+    """ Make high-resolution scan of a one-dot """
+    if verbose:
+        print('onedotHiresScan: one-dot: %s' % od['name'] )
+
+    #od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=None)
+    if ptv is None:
+        ptv=od['balancepoint']
+    keithleyidx=[ od['instrument'] ]
+    scanjobhi=createScanJob(od['gates'][0],[float(ptv[1])+1.2*dv, float(ptv[1])-1.2*dv], g2=od['gates'][2], r2=[float(ptv[0])+1.2*dv, float(ptv[0])-1.2*dv], step=-4)
+    scanjobhi['keithleyidx']=keithleyidx
+    scanjobhi['stepdata']['end']=max(scanjobhi['stepdata']['end'], -780)
+    scanjobhi['sweepdata']['end']=max(scanjobhi['sweepdata']['end'], -780)
+
+    alldatahi=qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=.05)
+
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(alldatahi, verbose=0, array=None)
+    im, impixel, tr = dataset2image(alldatahi)
+
+    #_,_,_, im = get2Ddata(alldatahi)
+    ptv, fimg, tmp= onedotGetBalanceFine(impixel, alldatahi, verbose=1, fig=fig)
+
+    ptx=tmp['ptpixel'].copy()
+    step=scanjobhi['stepdata']['step']
+    val=findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1)
+    od['coulombdirection']=val
+
+    od['balancepointfine']=ptv
+    od['setpoint']=ptv+10
+
+    alldatahi.metadata['od']=od
+
+    scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
+    return scandata, od
+    #saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
+
+if __name__=='__main__':
+    scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
+
+
 #%%
 
 def plot1D(data, fig=100, mstyle='-b'):
     """ Show result of a 1D gate scan """
-    
-    
+
+
     kk=list(data.arrays.keys())
-    
+
     if 'amplitude' in kk:
         val = 'amplitude'
     else:
@@ -47,20 +113,20 @@ def plot1D(data, fig=100, mstyle='-b'):
             val = 'readnext'
         else:
             val=kk[0]
-        
+
 
     if fig is not None:
         plt.figure(fig)
         plt.clf()
-        qc.MatPlot(getattr(data, val))
+        qc.MatPlot(getattr(data, val), num=fig)
         #plt.show()
-        
+
 if __name__=='__main__':
     plot1D(alldata, fig=100)
-    
+
 #%%
-    
-import time    
+
+import time
 import pyqtgraph # FIXME
 def complete(self, delay=1.0, txt=''):
         logging.info('waiting for data to complete')
@@ -75,11 +141,11 @@ def complete(self, delay=1.0, txt=''):
                 try:
                     pyqtgraph.QtGui.QApplication.instance().processEvents()
                 except:
-                    print('error in processEvents...')                        
+                    print('error in processEvents...')
         except Exception as ex:
             return False
         return True
- 
+
 def getParams(station, keithleyidx):
     params=[]
     for x in keithleyidx:
@@ -90,9 +156,24 @@ def getParams(station, keithleyidx):
                 params+=[ getattr(station, x).amplitude ]
             else:
                 params+=[ x ]
-    return params    
-    
-def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=True, title_comment=None):
+    return params
+
+def getDefaultParameter(data):
+    if 'amplitude' in data.arrays.keys():
+        return data.amplitude
+    if 'amplitude_0' in data.arrays.keys():
+        return data.amplitude_0
+    if 'amplitude_1' in data.arrays.keys():
+        return data.amplitude_1
+
+    try:
+        name = next(iter(data.arrays.keys()))
+        return getattr(data, name)
+    except:
+        pass
+    return None
+
+def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None):
     ''' Simple 1D scan '''
     gates=station.gates
     sweepdata = scanjob['sweepdata']
@@ -107,22 +188,23 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     if minstrument is None:
         minstrument = scanjob.get('keithleyidx', None)
     params=getParams(station, minstrument)
-    
+
     station.set_measurement(*params)
 
     delay = scanjob.get('delay', delay)
     logging.debug('delay: %f' % delay)
     print('scan1D: starting Loop (background %s)' % background)
-    data = qc.Loop(sweepvalues, delay=delay).run(location=location, overwrite=True, background=background)
+    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=False, overwrite=True, background=background)
     data.sync()
-    
-    if liveplotwindow is None:        
-        liveplotwindow = livePlot()        
+
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
-        liveplotwindow.clear(); liveplotwindow.add(data.amplitude)
+        liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(data) )
 
     # FIXME
-    complete(data) #
+    if background:
+        complete(data) #
 
     if not hasattr(data, 'metadata'):
         data.metadata=dict()
@@ -130,29 +212,34 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     return data
 
-def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=True):
-    """ Make a 2D scan and create dictionary to store on disk """
+def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False):
+    """ Make a 2D scan and create dictionary to store on disk
+
+    Args:
+        station (object): contains all data on the measurement station
+        scanjob (dict): data for scan range
+    """
 
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
     minstrument = scanjob.get('instrument', None)
     if minstrument is None:
         minstrument = scanjob.get('keithleyidx', None)
-        
+
     print('fixme: compensategates')
+    print('fixme: wait_time')
     #compensateGates = scanjob.get('compensateGates', [])
     #gate_values_corners = scanjob.get('gate_values_corners', [[]])
 
-    print('fixme: wait_time')
 #    if wait_time == None:
 #        wait_time = getwaittime(sweepdata['gates'][0])
 
-    delay=scanjob.get('delay', 0.05)
-        
+    delay=scanjob.get('delay', 0.0)
+
     #readdevs = ['keithley%d' % x for x in keithleyidx]
 
     gates=station.gates
-    
+
     sweepgate=sweepdata.get('gate', None)
     if sweepgate is None:
         sweepgate=sweepdata.get('gates')[0]
@@ -165,29 +252,31 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
-        
+
     logging.info('scan2D: %d %d'  % (len(stepvalues), len(sweepvalues)))
-    innerloop = qc.Loop(stepvalues, delay=delay, showprogress=True)
-        
+    logging.info('scan2D: delay %f'  % delay)
+    innerloop = qc.Loop(stepvalues, delay=delay, progress_interval=2)
+
 
 
     t0=time.time()
     #alldata=innerloop.run(background=False)
     fullloop = innerloop.loop(sweepvalues, delay=delay)
-    
+
     params=getParams(station, minstrument)
 
     measurement=fullloop.each( *params )
-    
-    alldata=measurement.run(background=background)
 
-    if liveplotwindow is None:        
-        liveplotwindow = livePlot()        
+    alldata=measurement.run(background=background, data_manager=False)
+
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
-        liveplotwindow.clear(); liveplotwindow.add(data.amplitude)
+        liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(alldata) )
 
-    alldata.complete()
-    
+    if background is True:
+        alldata.complete()
+
     dt = time.time() - t0
 
 
@@ -195,7 +284,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         alldata.metadata=dict()
     alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['scanjob'] = scanjob
-        
+
     if 0:
         # FIXME...
         alldata = copy.copy(scanjob)
@@ -234,7 +323,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], c
 
     if cache and os.path.exists(outputfile):
         print('  skipping pinch-off scans for gate %s' % (gate))
-        # print(outputfile)
+        print(outputfile)
         alldata = qcodes.load_data(outputfile)
         return alldata
 
@@ -262,15 +351,97 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], c
     adata = analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None)
     alldata.metadata['adata']=adata
     #  alldata['adata'] = adata
-    
-    print('FIXME: write to disk: %s' % outputfile)
+
+    writeDataset(outputfile, alldata)
     #alldata.write_to_disk(outputfile)
  #   pmatlab.save(outputfile, alldata)
-    return alldata    
-    
-    
-if __name__=='__main__':    
+    return alldata
+
+#%%
+
+def getTimeString(t=None):
+    """ Return time string for datetime.datetime object """
+    if t == None:
+        t = datetime.datetime.now()
+    if type(t) == float:
+        t = datetime.datetime.fromtimestamp(t)
+    dstr = t.strftime('%H-%M-%S')
+    return dstr
+
+def getDateString(t=None, full=False):
+    """ Return date string
+
+    Args:
+        t : datetime.datetime
+            time
+    """
+    if t is None:
+        t = datetime.datetime.now()
+    if type(t) == float:
+        t = datetime.datetime.fromtimestamp(t)
+    if full:
+        dstr = t.strftime('%Y-%m-%d-%H-%M-%S')
+    else:
+        dstr = t.strftime('%Y-%m-%d')
+    return dstr
+
+def experimentFile(outputdir, tag=None, dstr=None, bname=None, ext='hf5'):
+    """ Save experiment data for later analysis """
+    if tag is None:
+        tag = getDateString()
+    if dstr is None:
+        dstr = getDateString()
+
+    basename = '%s' % (dstr,)
+    if bname is not None:
+        basename = '%s-' % bname + basename
+    qtt.tools.mkdirc(os.path.join(outputdir, tag))
+    pfile = os.path.join(outputdir, tag, basename + '.' + ext)
+    return pfile
+
+#%%
+def loadOneDotPinchvalues(od, outputdir, verbose=1):
+    """ Load the pinch-off values for a one-dot
+
+    Arguments
+    ---------
+        od : dict
+            one-dot structure
+        outputdir : string
+            location of the data
+
+    """
+    print('analyse data for 1-dot: %s' % od['name'] )
+    gg=od['gates']
+    pv=np.zeros( (3,1) )
+    for ii,g in enumerate(gg):
+        basename = pinchoffFilename(g, od=None)
+
+        pfile=os.path.join(outputdir, 'one_dot', basename )
+        alldata, mdata=loadDataset(pfile)
+        #alldata,=pmatlab.load(pfile);  # alldata=alldata[0]
+        if alldata is None:
+            raise Exception('could not load file %s'  % pfile)
+        adata=analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None, verbose=1)
+        if verbose:
+            print('loadOneDotPinchvalues: pinchvalue for gate %s: %.1f'  % (g, adata['pinchvalue'] ) )
+        pv[ii]=adata['pinchvalue']
+    od['pinchvalues']=pv
+    return od
+
+
+#%% Testing
+
+if __name__=='__main__':
+    import qtt.scans
+    reload(qtt.scans)
+    od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
+
+
+#%%
+
+
+if __name__=='__main__':
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
             alldata=scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
 
-    

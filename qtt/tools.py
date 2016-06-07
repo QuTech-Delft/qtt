@@ -3,20 +3,154 @@ import qtpy
 
 import numpy as np
 import scipy
-import sys
+import matplotlib
+import sys, os
 import logging
 import qcodes
+
+# explicit import
+from qcodes.plots.pyqtgraph import QtPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
 # should be removed later
-from pmatlab import tilefigs
-from pmatlab import mkdirc
+#from pmatlab import tilefigs
 
 
+#from qtt.data import *
+
+#from qtt.data import *
 
 #import pmatlab; pmatlab.qtmodules(verbose=1)
+
+#%%
+
+import scipy.ndimage as ndimage
+
+
+def diffImage(im, dy, size=None):
+    """ Simple differentiation of an image
+
+    Args:
+        im (numpy array): input image
+        dy (integer or string): method of differentiation
+    """
+    if dy == 0 or dy == 'x':
+        im = np.diff(im, n=1, axis=1)
+        if size == 'same':
+            im = np.hstack((im, im[:, -1:]))
+    if dy == 1 or dy == 'y':
+        im = np.diff(im, n=1, axis=0)
+        if size == 'same':
+            im = np.vstack((im, im[-1:, :]))
+    if dy == -1:
+        im = -np.diff(im, n=1, axis=0)
+        if size == 'same':
+            im = np.vstack((im, im[-1:, :]))
+    if dy == 2:
+        imx = np.diff(im, n=1, axis=1)
+        imy = np.diff(im, n=1, axis=0)
+        im = imx[0:-1, :] + imy[:, 0:-1]
+    return im
+
+
+def diffImageSmooth(im, dy='x', sigma=2., size=None):
+    """ Simple differentiation of an image
+
+    Input
+    -----
+    im : array
+        input image
+    dy : string or integer
+        direction of differentiation. can be 'x' (0) or 'y' (1) or 'xy' (2)
+    sigma : float
+        parameter for differentiation kernel
+
+    """
+    if sigma is None:
+        imx = diffImage(im, dy)
+        return imx
+
+    if dy is None:
+        imx=im.copy()
+    if dy == 0 or dy == 'x':
+        imx = ndimage.gaussian_filter1d(
+            im, axis=1, sigma=sigma, order=1, mode='nearest')
+    if dy == 1 or dy == 'y':
+        imx = ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
+    if dy == -1:
+        imx = -ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
+    if dy == 2 or dy == 3 or dy == 'xy' or dy=='xmy' or dy=='xmy2':
+        imx0 = ndimage.gaussian_filter1d(
+            im, axis=1, sigma=sigma, order=1, mode='nearest')
+        imx1 = ndimage.gaussian_filter1d(
+            im, axis=0, sigma=sigma, order=1, mode='nearest')
+        if dy == 2 or dy == 'xy':
+            imx = imx0 + imx1
+        if dy == 'xmy':
+            imx = imx0 - imx1
+        if dy == 3 or dy == 'g':
+            imx = np.sqrt(imx0**2 + imx1**2)
+        if dy == 'xmy2':
+            imx = np.sqrt(imx0**2 + imx1**2)
+
+    return imx
+
+#%%
+
+import dateutil
+def scanTime(dd):
+    w = dd.metadata.get('scantime', None)
+    if isinstance(w, str):
+        w = dateutil.parser.parse(w)
+    return w
+    
+    
+''' Return parameter to be plotted '''
+def plot_parameter(data, default_parameter='amplitude'):
+        if 'main_parameter'  in data.metadata.keys():
+            return data.metadata['main_parameter']
+        if default_parameter in data.arrays.keys():
+            return default_parameter
+        try:
+            key= next(iter (data.arrays.keys()))
+            return key
+        except:
+            return None
+            
+def plot1D(dataset, fig=1):
+    """ Simlpe plot function """
+    if isinstance(dataset, qcodes.DataArray):
+        array=dataset
+        dataset=None
+    else:
+        # assume we have a dataset
+        arrayname=plot_parameter(dataset)
+        array=getattr(dataset, arrayname)                
+        
+    if fig is not None and array is not None:
+        MatPlot(array, num=fig)
+
+import pmatlab
+
+        
+        
+if __name__=='__main__':
+    plot1D(dataset, fig=10)
+    plot1D(dataset.amplitude, fig=12)
+
+#%%
+def showImage(im, extent=None, fig=None):
+            if fig is not None:
+                plt.figure(fig)
+                plt.clf()
+                plt.imshow(im, extent=extent, interpolation='nearest')
+                if extent is not None:
+                    if extent[0]>extent[1]:
+                        plt.gca().invert_xaxis()
+
 
 #%% Measurement tools
 def resetgates(gates, activegates, basevalues=None, verbose=2):
@@ -24,13 +158,13 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
 
     Arguments
     ---------
-        activegates : list or dict 
+        activegates : list or dict
             list of gates to reset
         basevalues: dict
             new values for the gates
         verbose : integer
             output level
-    
+
     """
     if verbose:
         print('resetgates: setting gates to default values')
@@ -47,8 +181,47 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
         if verbose >= 2:
             print('  setting gate %s to %.1f [mV]' % (g, val))
         gates.set(g, val)
-    
-#%%
+
+#%% Tools from pmatlab
+
+def plot2Dline(line, *args, **kwargs):
+    """ Plot a 2D line in a matplotlib figure
+
+    line: 3x1 array
+
+    >>> plot2Dline([-1,1,0], 'b')
+    """
+    if np.abs(line[1]) > .001:
+        xx = plt.xlim()
+        xx = np.array(xx)
+        yy = (-line[2] - line[0] * xx) / line[1]
+        plt.plot(xx, yy, *args, **kwargs)
+    else:
+        yy = np.array(plt.ylim())
+        xx = (-line[2] - line[1] * yy) / line[0]
+        plt.plot(xx, yy, *args, **kwargs)
+
+def cfigure(*args, **kwargs):
+    """ Create Matplotlib figure with copy to clipboard functionality
+
+    By pressing the 'c' key figure is copied to the clipboard
+
+    """
+    if 'facecolor' in kwargs:
+        fig = plt.figure(*args, **kwargs)
+    else:
+        fig = plt.figure(*args, facecolor='w', **kwargs)
+    ff = lambda xx, figx=fig: mpl2clipboard(fig=figx)
+    fig.canvas.mpl_connect('key_press_event', ff) # mpl2clipboard)
+    return fig
+
+def static_var(varname, value):
+    """ Helper function to create a static variable """
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    return decorate
+
 
 try:
     def monitorSizes(verbose=0):
@@ -82,12 +255,84 @@ except:
         return [[0, 0, 1600, 1200]]
     pass
 
+@static_var('monitorindex', -1)
+def tilefigs(lst, geometry=[2,2], ww=None, raisewindows=False, tofront=False, verbose=0):
+    """ Tile figure windows on a specified area """
+    mngr = plt.get_current_fig_manager()
+    be = matplotlib.get_backend()
+    if ww is None:
+        ww = monitorSizes()[tilefigs.monitorindex]
+
+    w = ww[2] / geometry[0]
+    h = ww[3] / geometry[1]
+
+    # wm=plt.get_current_fig_manager()
+
+    if isinstance(lst, int):
+        lst = [lst]
+
+    if verbose:
+        print('tilefigs: ww %s, w %d h %d' % (str(ww), w, h))
+    for ii, f in enumerate(lst):
+        if type(f) == matplotlib.figure.Figure:
+            fignum = f.number
+        else:
+            fignum = f
+        if not plt.fignum_exists(fignum):
+            if verbose >= 2:
+                print('tilefigs: fignum: %s' % str(fignum))
+            continue
+        fig = plt.figure(fignum)
+        iim = ii % np.prod(geometry)
+        ix = iim % geometry[0]
+        iy = np.floor(float(iim) / geometry[0])
+        x = ww[0] + ix * w
+        y = ww[1] + iy * h
+        if verbose:
+            print('ii %d: %d %d: f %d: %d %d %d %d' %
+                  (ii, ix, iy, fignum, x, y, w, h))
+            if verbose >= 2:
+                print('  window %s' % mngr.get_window_title())
+        if be == 'WXAgg':
+            fig.canvas.manager.window.SetPosition((x, y))
+            fig.canvas.manager.window.SetSize((w, h))
+        if be == 'WX':
+            fig.canvas.manager.window.SetPosition((x, y))
+            fig.canvas.manager.window.SetSize((w, h))
+        if be == 'agg':
+            fig.canvas.manager.window.SetPosition((x, y))
+            fig.canvas.manager.window.resize(w, h)
+        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg':
+            # assume Qt canvas
+            try:
+                fig.canvas.manager.window.move(x, y)
+                fig.canvas.manager.window.resize(w, h)
+                fig.canvas.manager.window.setGeometry(x, y, w, h)
+                # mngr.window.setGeometry(x,y,w,h)
+            except Exception as e:
+                print('problem with window manager: ', )
+                print(be)
+                print(e)
+                pass
+        if raisewindows:
+            mngr.window.raise_()
+        if tofront:
+            plt.figure(f)
+
 
 #%% Helper tools
 
+def mkdirc(d):
+    """ Similar to mkdir, but no warnings if the directory already exists """
+    try:
+        os.mkdir(d)
+    except:
+        pass
+    return d
+
 def in_ipynb():
     try:
-        cfg = get_ipython().config 
+        cfg = get_ipython().config
         if cfg['IPKernelApp']['parent_appname'] == 'ipython-notebook':
             return True
         else:
@@ -96,14 +341,14 @@ def in_ipynb():
         return False
 
 
-def pythonVersion():   
-    try:        
+def pythonVersion():
+    try:
         import IPython
         ipversion='.'.join('%s' % x for x in IPython.version_info[:-1])
     except:
-        ipversion='None'        
-            
-            
+        ipversion='None'
+
+
     pversion='.'.join('%s' % x for x in sys.version_info[0:3])
     print('python %s, ipython %s, notebook %s' %( pversion, ipversion, in_ipynb() ))
 
@@ -117,20 +362,20 @@ import matplotlib.pyplot as plt
 
 def showDotGraph(dot, fig=10):
     dot.format='png'
-    outfile=dot.render('dot-dummy', view=False)    
+    outfile=dot.render('dot-dummy', view=False)
     print(outfile)
-    
+
     im=plt.imread(outfile)
     plt.figure(fig)
-    plt.clf()    
+    plt.clf()
     plt.imshow(im)
     plt.tight_layout()
     plt.axis('off')
-    
+
 #%%
 
-from qtt.qtt_toymodel import ParameterViewer
-from qtt.logviewer import LogViewer
+from qtt.parameterviewer import ParameterViewer
+from qtt.dataviewer import DataViewer
 
 def setupMeasurementWindows(station):
     ms=monitorSizes()
@@ -140,12 +385,13 @@ def setupMeasurementWindows(station):
     w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
     w.updatecallback()
 
-    plotQ = qcodes.QtPlot(windowTitle='Live plot', remote=False)
+    # FIXME: interval=0 because it only works in the notebook
+    plotQ = QtPlot(windowTitle='Live plot', remote=False, interval=0)
     plotQ.win.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
     plotQ.update()
 
 
-    logviewer = LogViewer()
+    logviewer = DataViewer()
     logviewer.setGeometry(vv[0]+vv[2]-400,vv[1],400,600)
     logviewer.qplot.win.setMaximumHeight(400)
     logviewer.show()
@@ -172,10 +418,10 @@ def timeProgress(data):
     fraction = ttx.size / tt.size[0]
     remaining = (t1 - t0) * (1 - fraction) / fraction
     return fraction, remaining
-    
+
 #%%
 
-def logistic(x, x0=0, alpha=1):    
+def logistic(x, x0=0, alpha=1):
     """ Logistic function
 
     Arguments:
@@ -183,12 +429,12 @@ def logistic(x, x0=0, alpha=1):
         values
     x0, alpha : float
         parameters of function
-        
+
     Example
     -------
 
-    >>> y=logistic(0, 1, alpha=1)        
-    """        
+    >>> y=logistic(0, 1, alpha=1)
+    """
     f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
     return f
 
@@ -201,57 +447,57 @@ def flatten(lst):
     [1, 2, 3, 4, 10]
     '''
     return list(chain(*lst))
-    
+
 #%%
 def cutoffFilter(x, thr, omega):
     """ Smooth cutoff filter
-    
+
     Filter definition from: http://paulbourke.net/miscellaneous/imagefilter/
-    
+
     Example
     -------
-    
+
     >>> plt.clf()
     >>> x=np.arange(0, 4, .01)
     >>> _=plt.plot(x, cutoffFilter(x, 2, .25), '-r')
-    
+
     """
     y=.5*(1-np.sin(np.pi*(x-thr)/(2*omega)))
     y[x<thr-omega]=1
     y[x>thr+omega]=0
     return y
 
-#%%    
+#%%
 def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
     """ Create smooth ND filter for Fourier high or low-pass filtering
 
-    >>> F=smoothFourierFilter([24,24], thr=6, omega=2)    
+    >>> F=smoothFourierFilter([24,24], thr=6, omega=2)
     >>> _=plt.figure(10); plt.clf(); _=plt.imshow(F, interpolation='nearest')
-    
+
     """
     rr=np.meshgrid(*[range(f) for f in fs])
-    
+
     x=np.dstack(rr)
     x=x-(np.array(fs)/2 - .5)
     x=np.linalg.norm(x, axis=2)
     #showIm(x);
-    
+
     F=cutoffFilter(x, thr, omega)
 
     if fig is not None:
         plt.figure(10); plt.clf();
         plt.imshow(F, interpolation='nearest')
-    
+
     return F#, rr
-F=smoothFourierFilter([36,36])    
+F=smoothFourierFilter([36,36])
 
 
 #%%
-    
+
 def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     """ Implement simple high pass filter using the Fourier transform """
     f = np.fft.fft2(imx, s=[fs,fs])                  #do the fourier transform
-    
+
     fx=np.fft.fftshift(f)
 
     if fig:
@@ -275,12 +521,12 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     else:
         # smooth filtering
 
-        F=1-smoothFourierFilter(fx.shape, thr=nc, omega=omega)    
+        F=1-smoothFourierFilter(fx.shape, thr=nc, omega=omega)
         fx=F*fx
         ff = np.fft.ifftshift(fx)  #inverse shift
         img_back = np.fft.ifft2(ff)     #inverse fourier transform
-        
+
     imf=img_back.real
     imf=imf[0:imx.shape[0], 0:imx.shape[1]]
     return imf
-    
+

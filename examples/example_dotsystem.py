@@ -125,16 +125,19 @@ print(ds.hcgs[0,0])
 
 pmatlab.tilefigs(10, [2,2])
 
-STOP
 
 #%%
 
 
-sweepdata=['P4', -50, 80, 1.5]
-stepdata=['P1', -40, 80, 1.5]
+sweepdata=['P4', -50, 80, 1.5]; stepdata=['P1', -40, 80, 1.5]
+sweepdata=['P4', -30, 60, 1.]; stepdata=['P1', -20, 60, 0.75]
+
+
+from qtt.simulation.dotsystem import GateTransform
 
 
 def make2Dscan(sweepdata, stepdata):
+        ''' Convert sweepdata and stepdata to a range of values to scan '''
         vals2D = {}
         
         sweepvalues=np.arange(sweepdata[1], sweepdata[2], sweepdata[3])
@@ -144,6 +147,8 @@ def make2Dscan(sweepdata, stepdata):
         vals2D[sweepdata[0]] = x
         vals2D[stepdata[0]] = y
         return vals2D
+
+
 vals2D = make2Dscan(sweepdata, stepdata)
 
 
@@ -151,17 +156,12 @@ vals2D = make2Dscan(sweepdata, stepdata)
     
 targetnames=['det%d' % (i+1) for i in range(4)]
 sourcenames=['P%d' % (i+1) for i in range(4)]
-Vmatrix=np.eye(4)
-for i in range(4-1):
-    pass
-    Vmatrix[i, i+1]=.25
-    Vmatrix[i+1, i]=.25
-for i in range(4-2):
-    pass
-    Vmatrix[i, i+2]=.03
-    Vmatrix[i+2, i]=.03
+
+Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=4)
+
 
 print(Vmatrix)
+
 
 if 0:
     targetnames=['det1', 'det4']
@@ -171,23 +171,12 @@ if 0:
     Vmatrix[0,1]=.2
 
 nn=vals2D['P1'].shape
-if 1:
-    def transformGateScan(vals2D, sourcenames, targetnames, Vmatrix, nn=None):
-        '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
-        to generate dictionary self.vals2D[name] = matrix of values'''
-        vals2Dout = {}
+
         
-        zz=np.zeros( nn, dtype=float )
-        xx= [ vals2D.get(s, zz) for s in sourcenames]
-        xx=[ x.flatten() for x in xx]
-        
-        v=np.vstack(xx)
-        vout = Vmatrix.dot(v)
-        
-        for j, n in enumerate(targetnames):
-            vals2Dout[n] = vout[j].reshape(nn).astype(np.float)
-        return vals2Dout
-out= transformGateScan(vals2D, sourcenames, targetnames, Vmatrix, nn=nn)
+
+gate_transform = GateTransform(Vmatrix, sourcenames, targetnames)
+
+out= gate_transform.transformGateScan(vals2D, nn=nn)
 
 self.vals2D=out
 
@@ -208,7 +197,7 @@ plt.colorbar()
 plt.axis('image')
 plt.show()
 
-val=5*ds.hcgs[:,:,0] + 2*ds.hcgs[:,:,1] + ds.hcgs[:,:,2] + .5*ds.hcgs[:,:,3]
+val=6*ds.hcgs[:,:,0] + 4*ds.hcgs[:,:,1] + 2*ds.hcgs[:,:,2] + 1.5*ds.hcgs[:,:,3]
 
 plt.figure(11); plt.clf()
 plt.pcolor(vals2D[ paramnames[0]],vals2D[ paramnames[1]],val,cmap='Blues')
@@ -216,9 +205,65 @@ plt.xlabel('Abcissa gate (mV)')
 plt.ylabel('Ordinate gate (mV)')
 plt.colorbar()
 plt.axis('image')
+plt.title('distance map')
 plt.show()
 
 pmatlab.tilefigs([10,11, 20,30],[2,2])
+
+#%% Apply qutechalgorithms....
+import qutechalgorithms
+from qutechalgorithms import *
+import qcodes as qc
+import qtt.scans
+import pmatlab
+
+im=10*val.copy()
+im=qutechalgorithms.smoothImage(im)
+
+imc=qutechalgorithms.cleanSensingImage(im, dy='xy', sigma=0.93, removeoutliers=True)
+
+qutechalgorithms.showIm(im, fig=130); plt.colorbar();     plt.gca().invert_yaxis()
+qutechalgorithms.showIm(imc, fig=131); plt.colorbar();     plt.gca().invert_yaxis()
+
+
+if 0:
+    
+    sigma = None
+    sigma=.93
+    dy='xy'
+    verbose=1
+    removeoutliers=True
+    #removeoutliers=False
+    if sigma is None:
+        imx = diffImage(im, dy=dy, size='same')
+    else:
+        imx = diffImageSmooth(im, dy=dy, sigma=sigma)
+    order=3
+    vv = fitBackground(imx, smooth=True, verbose=verbose, fig=400, order=int( order), removeoutliers=removeoutliers)
+    
+    pmatlab.tilefigs([130,131, 400])
+    
+    plt.figure(210); plt.clf()
+    plt.imshow(imx-vv); 
+    plt.colorbar()
+    
+    plt.figure(210); plt.clf()
+    plt.imshow(np.abs(imx-vv) > 1); 
+    plt.colorbar()
+    
+    plt.figure(210); plt.clf()
+    plt.imshow(vv); 
+    plt.colorbar()
+
+#%%
+    
+STOP
+#%%
+def showImage(data, im):
+    pl=qc.QtPlot(qtt.scans.getDefaultParameter(data))
+    return pl
+pl=showImage(data, imc)    
+#qutechalgorithms.showIm(imc)
 
 #%%
 plt.figure(11); plt.clf()
@@ -227,6 +272,8 @@ for ii in range(ds.ndots):
     val=ds.hcgs[:,:,ii]
 #    plt.pcolor(vals2D[ paramnames[0]],vals2D[ paramnames[1]],val,cmap='Blues')
     plt.imshow(val);
+    plt.gca().invert_yaxis()
+
     
     plt.xlabel('Abcissa gate (mV)')
     plt.ylabel('Ordinate gate (mV)')

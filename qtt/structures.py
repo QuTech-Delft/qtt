@@ -118,7 +118,7 @@ class sensingdot_t:
 
         alldata = scan2Djob(
             scanjob, TitleComment='2D', activegates=defaultactivegates(), wait_time=0.1)
-            
+
         if fig is not None:
             show2D(alldata, fig=fig)
         return alldata
@@ -213,7 +213,7 @@ class sensingdot_t:
         sdmiddle=sd.sdval[1]
         if 1:
             set_gate(cdata['gates'][0], (cdata['start']+cdata['end'])/2 )
-    
+
             sdmiddle=autotunePlunger(g, sd.sdval[1], readfunc, targetvalue=sd.targetvalue, fig=fig)
 
         set_gate(cdata['gates'][0], cdata['start'])  # set step to start value

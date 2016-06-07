@@ -26,12 +26,12 @@ except:
 #%% Helper functions
 def showGraph(dot, fig=10):
     dot.format='png'
-    outfile=dot.render('dot-dummy', view=False)    
+    outfile=dot.render('dot-dummy', view=False)
     print(outfile)
-    
+
     im=plt.imread(outfile)
     plt.figure(fig)
-    plt.clf()    
+    plt.clf()
     plt.imshow(im)
     plt.axis('off')
 
@@ -58,7 +58,7 @@ def tprint(string, dt=1, output=False):
             return False
         else:
             return
-            
+
 def isdiagonal(HH):
     return not(np.any(HH-np.diag(np.diagonal(HH))))
 
@@ -73,7 +73,53 @@ def simulate_row(i, ds, npointsy, usediag):
         dsx.solveH(usediag=usediag)
         dsx.hcgs[i,j] = dsx.OCC
     return dsx.hcgs[i]
-            
+
+
+#%%
+# move into class?
+def defaultVmatrix(n):
+    """
+    >>> m=defaultVmatrix(2)
+    """
+    Vmatrix=np.eye(n)
+    vals=[1,.25,.05,.01,.001, 0, 0]
+    for x in range(1, n):
+        for i in range(n-x):
+            Vmatrix[i, i+x]=vals[x]
+            Vmatrix[i+x, i]=vals[x]
+
+    VmatrixF=np.eye(n+1)
+    VmatrixF[0:n,0:n]=Vmatrix
+    return VmatrixF
+
+#%% FIXME: move into other submodule
+import pmatlab # FIXME
+class GateTransform:
+    ''' Class to describe virtual gate transformations '''
+    def __init__(self, Vmatrix, sourcenames, targetnames):
+        self.Vmatrix = Vmatrix
+        self.sourcenames = sourcenames
+        self.targetnames = targetnames
+    def transformGateScan(self, vals2D, nn=None):
+        '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
+        to generate dictionary self.vals2D[name] = matrix of values'''
+        vals2Dout = {}
+
+        zz=np.zeros( nn, dtype=float )
+        if isinstance(vals2D, dict):
+            xx= [ vals2D.get(s, zz) for s in self.sourcenames]
+            xx=[ x.flatten() for x in xx]
+        else:
+            xx=vals2D
+            pass # xx= np.array(xx)
+
+        v=np.vstack(xx)
+        vout=pmatlab.projectiveTransformation(self.Vmatrix, v)
+        #vout = self.Vmatrix.dot(v)
+
+        for j, n in enumerate(self.targetnames):
+            vals2Dout[n] = vout[j].reshape(nn).astype(np.float)
+        return vals2Dout
 #%%
 
 class DotSystem():
@@ -82,7 +128,7 @@ class DotSystem():
         self.name = name
         self.ndots=ndots
         self.temperature = 0
-        
+
     def makebasis(self, ndots=3, maxelectrons=2):
         ''' Define a basis of occupancy states with a specified number of dots and max occupancy '''
         self.maxelectrons=maxelectrons
@@ -93,6 +139,7 @@ class DotSystem():
         self.basis = np.ndarray.astype(basis,int)
         self.nbasis = np.sum(self.basis,axis=1)
         self.Nt = len(self.nbasis)
+        self.H = np.zeros( (self.Nt, self.Nt), dtype=float)
 
 
         self.eigenstates=np.zeros( (self.Nt, self.Nt), dtype=float)
@@ -110,7 +157,7 @@ class DotSystem():
             mx=m.copy()
             mx[i]=1; mx[j]=-1
             return mx
-            
+
         for i in range(self.Nt):
             for j in range(self.Nt):
                 if i == j:
@@ -121,26 +168,68 @@ class DotSystem():
                         n2 = self.basis[i,dot% self.ndots ]
                         exec('self.MisC'+str(dot)+'['+str(i)+','+str(i)+'] ='+str(n*n2)) # next site charging energy?
                         for orb in range(1,n+1):
-                            exec('self.Meps'+str(dot)+str(orb)+'['+str(i)+','+str(i)+'] = 1') # orbital energy
+                            var='self.Meps'+str(dot)+str(orb)
+                            if hasattr(self, var):
+                                exec(var+'['+str(i)+','+str(i)+'] = 1') # orbital energy
                 else:
                     statediff = self.basis[i,:]-self.basis[j,:]
-                    
-                    for p in range(self.ndots-1):   
+
+                    for p in range(self.ndots-1):
                         pn=p+1
                         if (statediff == mkb(p,p+1)).all():
-                            exec('self.Mtun%d[' % pn +str(i)+','+str(j)+'] = -1')
+                            if hasattr(self, 'self.Mtun%d' % pn):
+                                exec('self.Mtun%d[' % pn +str(i)+','+str(j)+'] = -1')
                         elif (statediff == mkb(p+1,p)).all():
-                            exec('self.Mtun%d[' % pn+str(i)+','+str(j)+'] = -1')
+                            if hasattr(self, 'self.Mtun%d' % pn):
+                                exec('self.Mtun%d[' % pn+str(i)+','+str(j)+'] = -1')
                         pass
+
+        self.initSparse()
+
+    def initSparse(self):
+        ''' Create sparse structures '''
+        self.H = np.zeros( (self.Nt, self.Nt), dtype=float)
+        #self.sH = smtype(self.H)
+
+        for name in self.varnames:
+            A = getattr(self, 'M' + name)
+            if 0:
+                sA = smtype(A)
+                setattr(self, 'sM' + name, sA)
+                #ri = np.repeat(np.arange(sA.shape[0]),np.diff(sA.indptr))
+                setattr(self, 'srM' + name, ri)
+                setattr(self, 'scM' + name, sA.indices)
+                arr = np.array([ri, sA.indices])
+                ind=np.ravel_multi_index(arr, self.H.shape)
+            ind=A.flatten().nonzero()[0]
+            setattr(self, 'indM' + name, ind)
+            setattr(self, 'sparseM' + name, A.flat[ind])
 
     def makeH(self):
         ''' Create a new Hamiltonian '''
-        self.H = np.zeros( (self.Nt, self.Nt), dtype=float)
+        self.H.fill(0)
         for name in self.varnames:
-            self.H += getattr(self, 'M' + name) * getattr(self,  name)
+            val=getattr(self,  name)
+            if not val==0:
+                self.H += getattr(self, 'M' + name) * val
         self.solved=False
         return self.H
-    
+
+    def makeHsparse(self, verbose=0):
+        ''' Create a new Hamiltonian '''
+        self.H.fill(0)
+        for name in self.varnames:
+            if verbose:
+                print('set %s: %f'  % (name, getattr(self,  name)))
+            val=float(getattr(self,  name))
+            if not val==0:
+                a= getattr(self, 'sparseM' + name)
+                ind=getattr(self, 'indM' + name)
+                self.H.flat[ind] +=a * val
+                #self.H[ri, ci] +=a.data * val
+        self.solved=False
+        return self.H
+
     def solveH(self, usediag=False):
         ''' Solve the system '''
         if usediag:
@@ -162,7 +251,7 @@ class DotSystem():
         return self.energies,self.eigenstates
 
     #%% Helper functions
-    
+
     def findtransitions(self,occs):
         transitions = np.full([np.shape(occs)[0],np.shape(occs)[1]],0,dtype=float)
         delocalizations = np.full([np.shape(occs)[0],np.shape(occs)[1]],0,dtype=float)
@@ -185,7 +274,9 @@ class DotSystem():
             npointsx = np.shape(self.vals2D[paramnames[0]])[0]
             npointsy = np.shape(self.vals2D[paramnames[0]])[1]
             self.hcgs = np.empty((npointsx,npointsy,self.ndots))
-            
+
+            self.initSparse()
+
             if multiprocess and _have_mp:
                 pool = Pool(processes=4)
                 aa= [ (i, self, npointsy, usediag) for i in range(npointsx)]
@@ -196,21 +287,21 @@ class DotSystem():
                 for i in range(npointsx):
                     if verbose:
                         tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
-                        
+
                     for j in range(npointsy):
                         for name in paramnames:
                             setattr(self, name, self.vals2D[name][i][j])
-                        self.makeH()
+                        self.makeHsparse()
                         self.solveH(usediag=usediag)
                         self.hcgs[i,j] = self.OCC
             self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
-    
+
             if verbose:
                 print('simulatehoneycomb: %.2f [s]' % (time.time()-t0))
-                
+
             sys.stdout.flush()
-    
-    
+
+
     def simulatehoneycomb_original(self, verbose=1, usediag=False):
         '''Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
         for each point, search for transitions and save in self.honeycomb'''
@@ -232,7 +323,7 @@ class DotSystem():
 
         if verbose:
             print('simulatehoneycomb: %.1f [s]' % (time.time()-t0))
-   
+
 
     def orderstatesbyN(self):
         sortinds = np.argsort(self.nstates)
@@ -241,7 +332,7 @@ class DotSystem():
         self.stateprobs = self.stateprobs[sortinds]
         self.stateoccs = self.stateoccs[sortinds]
         self.nstates = self.nstates[sortinds]
- 
+
     def orderstatesbyE(self):
         sortinds = np.argsort(self.energies)
         self.energies = self.energies[sortinds]
@@ -249,7 +340,7 @@ class DotSystem():
         self.stateprobs = self.stateprobs[sortinds]
         self.stateoccs = self.stateoccs[sortinds]
         self.nstates = self.nstates[sortinds]
-        
+
     def findcurrentoccupancy(self, exact=True):
         if self.solved == True:
             self.orderstatesbyE()
@@ -257,7 +348,7 @@ class DotSystem():
                     # almost exact...
                     idx=self.energies==self.energies[0]
                     self.OCC = np.around(np.mean(self.stateoccs[idx], axis=0),decimals=2)
-            else:                    
+            else:
                     self.OCC = np.around(self.stateoccs[0],decimals=2)
         else:
             self.solveH()
@@ -269,9 +360,9 @@ class DotSystem():
         self.vals1D = {}
         for i in range(len(paramnames)):
             name = paramnames[i]
-            self.vals1D[name] = np.linspace(startend[i][0],startend[i][1],num=npoints) 
-    
-    
+            self.vals1D[name] = np.linspace(startend[i][0],startend[i][1],num=npoints)
+
+
     def makeparamvalues2D(self,paramnames,cornervals,npointsx,npointsy):
         '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
         to generate dictionary self.vals2D[name] = matrix of values'''
@@ -285,7 +376,7 @@ class DotSystem():
             bottomrow = np.linspace(cornervals[i][0],cornervals[i][2],num=npointsx)
             toprow = np.linspace(cornervals[i][1],cornervals[i][3],num=npointsx)
             self.vals2D[name] = np.array([np.linspace(i,j,num=npointsy) for i,j in zip(bottomrow,toprow)])
-            
+
     def makeparamvalues2Dx(self,paramnames,bottomtop,rangex,npointsx,npointsy):
         '''Get a list of parameter names and [bottom top] values
         to generate dictionary self.vals2D[name] = matrix of values
@@ -310,10 +401,10 @@ class DotSystem():
 
     def showMmatrix(self, name='det1', fig=10):
         plt.figure(fig);
-        plt.clf();  
+        plt.clf();
         plt.imshow(getattr(self, 'M' + name), interpolation='nearest'); plt.title('M'+name)
         plt.grid('on')
-    
+
 
     def showvars(self):
         print('\nVariable list for %s:' % self.name)
@@ -321,11 +412,11 @@ class DotSystem():
         for name in self.varnames:
             print(name + ' = ' + str(eval('self.' + name)))
         print(' ')
-        
+
     def getHn(self,numberofelectrons):
         inds = np.where(self.nbasis==numberofelectrons)[0]
         return self.H[inds[0]:inds[-1]+1,inds[0]:inds[-1]+1]
-    
+
     def showstates(self,n):
         print('\nEnergies/states list for %s:' % self.name)
         print('-----------------------------------')
@@ -340,33 +431,66 @@ class DotSystem():
             print('no number of dots defined...')
             return
         dot=graphviz.Digraph(name=self.name)
-    
+
         for ii in range(self.ndots):
             #dot.node('%d'% ii)
             dot.node(str(ii), label='dot %d' % ii)
             dot.edge(str(ii), str(ii), label='det%d' % ii)
-    
-        
+
+
         showGraph(dot, fig=fig)
 
-#%% Two example dot systems
 
-class DoubleDot(DotSystem):
-    
+def setDotSystem(ds, gate_transform, gv):
+        """ Set dot system values using gate transform """
+        tv=gate_transform.transformGateScan(gv)
+        for k, val in tv.items():
+            setattr(ds, k, val)
+
+
+def defaultDotValues(ds):
+        for ii in range(ds.ndots):
+            setattr(ds, 'osC%d' % ( ii+1), 55)
+        for ii in range(ds.ndots-1):
+            setattr(ds, 'isC%d' % (ii+1), 3)
+
+            
+#%% Example dot systems
+
+class OneDot(DotSystem):
+
     def __init__(self, name='doubledot'):
-        super().__init__(name=name, ndots=2)        
+        super().__init__(name=name, ndots=1)
+        self.makebasis(ndots=self.ndots, maxelectrons=3)
+        self.varnames = ['det1', 'osC1', 'isC1']
+        self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
+        self.makevars()
+        self.makevarMs()
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
+        
+class DoubleDot(DotSystem):
+
+    def __init__(self, name='doubledot'):
+        super().__init__(name=name, ndots=2)
         self.makebasis(ndots=self.ndots, maxelectrons=3)
         self.varnames = ['det1','det2',
            'osC1','osC2', 'isC1','isC2', 'tun1','tun2']
         self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
-        self.makevars()        
+        self.makevars()
         self.makevarMs()
-
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
+        
 class TripleDot(DotSystem):
-    
-    def __init__(self, name='tripledot'):
+
+    def __init__(self, name='tripledot', maxelectrons=3):
         super().__init__(name=name, ndots=3)
-        self.makebasis(ndots=self.ndots, maxelectrons=3)
+        self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
         self.varnames = ['det1','det2','det3',
             'eps11','eps12','eps13','eps21','eps22','eps23','eps31','eps32','eps33',
            'osC1','osC2','osC3',
@@ -374,19 +498,31 @@ class TripleDot(DotSystem):
            'tun1','tun2']
         self.makevars()
         self.makevarMs()
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
 
 
 class FourDot(DotSystem):
-    
-    def __init__(self, name='doubledot'):
-        super().__init__(name=name, ndots=4)
-        
+
+    def __init__(self, name='fourdot', use_tunneling=True, use_orbits=False, **kwargs):
+        super().__init__(name=name, ndots=4, **kwargs)
+
+        self.use_tunneling=use_tunneling
+        self.use_orbits=use_orbits
         self.makebasis(ndots=self.ndots, maxelectrons=2)
         self.varnames = ['det%d' % (i+1) for i in range(self.ndots)]
         self.varnames += ['osC%d' % (i+1) for i in range(self.ndots)]
         self.varnames += ['isC%d' % (i+1) for i in range(self.ndots)]
-        self.varnames += ['tun%d' % (i+1) for i in range(self.ndots)]
-        self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
-        self.makevars()        
+        if self.use_tunneling:
+            self.varnames += ['tun%d' % (i+1) for i in range(self.ndots)]
+        if self.use_orbits:
+            self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
+        self.makevars()
         self.makevarMs()
-        
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
+
