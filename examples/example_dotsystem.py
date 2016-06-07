@@ -125,7 +125,6 @@ print(ds.hcgs[0,0])
 
 pmatlab.tilefigs(10, [2,2])
 
-STOP
 
 #%%
 
@@ -256,6 +255,9 @@ if 0:
     plt.imshow(vv); 
     plt.colorbar()
 
+#%%
+    
+STOP
 #%%
 def showImage(data, im):
     pl=qc.QtPlot(qtt.scans.getDefaultParameter(data))
