@@ -161,7 +161,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-1062016xx'; Tvalues=np.array([-280])
+basetag='batch-1062016xw'; Tvalues=np.array([-280])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -508,13 +508,17 @@ for ii, Tvalue in enumerate(Tvalues):
 #STOP
 
 #%%
-xSTOP
 
 
 #%% Reports for one-dots
 
 #datadir=experimentdata.getDataDir()
 #one_dots=get_one_dots(full=2)
+import traceback
+
+reload(qtt.data)
+reload(qtt.reports)
+from qtt.reports import *
 
 plt.close('all')
 for ii, Tvalue in enumerate(Tvalues):
@@ -527,13 +531,19 @@ for ii, Tvalue in enumerate(Tvalues):
         print('script: make report for %s' % tag )
         fname=generateOneDotReport(one_dots+sddots,xdir, resultsdir)
         webbrowser.open(fname, new=2)
-    except Exception as e:
+    except Exception as ex:
         print('failed to generate one-dot report')
-        print(e)
+        print(ex)
+        #print(traceback.format_exception(ex))
+        fname=generateOneDotReport(one_dots+sddots,xdir, resultsdir)
+
         pass
 
 if len(Tvalues)>1:
     raise Exception(' not supported...' )
+
+#%%
+xSTOP
 
 #%% Measurements for double-dots
 

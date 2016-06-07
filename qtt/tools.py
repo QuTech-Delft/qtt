@@ -19,10 +19,95 @@ import qtpy.QtWidgets as QtWidgets
 #from pmatlab import tilefigs
 
 
+#from qtt.data import *
+
+#from qtt.data import *
 
 #import pmatlab; pmatlab.qtmodules(verbose=1)
 
 #%%
+
+import scipy.ndimage as ndimage
+
+
+def diffImage(im, dy, size=None):
+    """ Simple differentiation of an image
+
+    Args:
+        im (numpy array): input image
+        dy (integer or string): method of differentiation
+    """
+    if dy == 0 or dy == 'x':
+        im = np.diff(im, n=1, axis=1)
+        if size == 'same':
+            im = np.hstack((im, im[:, -1:]))
+    if dy == 1 or dy == 'y':
+        im = np.diff(im, n=1, axis=0)
+        if size == 'same':
+            im = np.vstack((im, im[-1:, :]))
+    if dy == -1:
+        im = -np.diff(im, n=1, axis=0)
+        if size == 'same':
+            im = np.vstack((im, im[-1:, :]))
+    if dy == 2:
+        imx = np.diff(im, n=1, axis=1)
+        imy = np.diff(im, n=1, axis=0)
+        im = imx[0:-1, :] + imy[:, 0:-1]
+    return im
+
+
+def diffImageSmooth(im, dy='x', sigma=2., size=None):
+    """ Simple differentiation of an image
+
+    Input
+    -----
+    im : array
+        input image
+    dy : string or integer
+        direction of differentiation. can be 'x' (0) or 'y' (1) or 'xy' (2)
+    sigma : float
+        parameter for differentiation kernel
+
+    """
+    if sigma is None:
+        imx = diffImage(im, dy)
+        return imx
+
+    if dy is None:
+        imx=im.copy()
+    if dy == 0 or dy == 'x':
+        imx = ndimage.gaussian_filter1d(
+            im, axis=1, sigma=sigma, order=1, mode='nearest')
+    if dy == 1 or dy == 'y':
+        imx = ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
+    if dy == -1:
+        imx = -ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
+    if dy == 2 or dy == 3 or dy == 'xy' or dy=='xmy' or dy=='xmy2':
+        imx0 = ndimage.gaussian_filter1d(
+            im, axis=1, sigma=sigma, order=1, mode='nearest')
+        imx1 = ndimage.gaussian_filter1d(
+            im, axis=0, sigma=sigma, order=1, mode='nearest')
+        if dy == 2 or dy == 'xy':
+            imx = imx0 + imx1
+        if dy == 'xmy':
+            imx = imx0 - imx1
+        if dy == 3 or dy == 'g':
+            imx = np.sqrt(imx0**2 + imx1**2)
+        if dy == 'xmy2':
+            imx = np.sqrt(imx0**2 + imx1**2)
+
+    return imx
+
+#%%
+
+import dateutil
+def scanTime(dd):
+    w = dd.metadata.get('scantime', None)
+    if isinstance(w, str):
+        w = dateutil.parser.parse(w)
+    return w
+    
+    
 ''' Return parameter to be plotted '''
 def plot_parameter(data, default_parameter='amplitude'):
         if 'main_parameter'  in data.metadata.keys():
@@ -48,6 +133,10 @@ def plot1D(dataset, fig=1):
     if fig is not None and array is not None:
         MatPlot(array, num=fig)
 
+import pmatlab
+
+        
+        
 if __name__=='__main__':
     plot1D(dataset, fig=10)
     plot1D(dataset.amplitude, fig=12)

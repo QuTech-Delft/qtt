@@ -57,16 +57,6 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 
 from qtt.algorithms.generic import *
 
-def dataset2image(dataset):
-    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, verbose=0, array=None)
-    tr = qtt.data.image_transform(dataset)
-    im=None
-    impixel  = None
-    if arrayname is not None:
-        im = dataset.arrays[arrayname]
-        impixel = tr.transform(im)
-
-    return im, impixel, tr
 
 def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     """ Make high-resolution scan of a one-dot """

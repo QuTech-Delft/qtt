@@ -17,10 +17,98 @@ import qtpy.QtWidgets as QtWidgets
 
 import matplotlib.pyplot as plt
 
-from qtt.tools import tilefigs
-
+from .tools import tilefigs, diffImageSmooth
+#from .algorithms import *
 
 #%%
+def dataset2image(dataset):
+    """ Extract image from dataset """
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, verbose=0, array=None)
+    tr = image_transform(dataset)
+    im=None
+    impixel  = None
+    if arrayname is not None:
+        im = dataset.arrays[arrayname]
+        impixel = tr.transform(im)
+
+    return im, impixel, tr
+
+#%%
+def show2D(dd, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
+    """ Show result of a 2D scan """
+    if dd is None:
+        return None
+
+    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(dd)
+    #arrayname=plot_parameter(dataset)
+    array=getattr(dd, arrayname)       
+    if im is None:
+        im = array
+    else:
+        pass
+    XX = array # dd['data_array']
+    
+    xx=extent   
+    #vstep = np.unique(XX[:, 1])
+    #vsweep = np.unique(XX[:, 0])
+    #xx, xdata, ydata, im = get2Ddata(
+    #    dd, fastscan=False, verbose=0, midx=midx, fig=None)
+    ny = vstep.size
+    nx = vsweep.size
+
+    #im=diffImage(im, dy)
+    im = diffImageSmooth(im, dy=dy, sigma=sigma)
+
+    if verbose:
+        print('show2D: nx %d, ny %d, XX.shape %s' % (nx, ny, XX.shape))
+
+    # plt.clf()
+    # plt.hist(im.flatten(), 256, fc='k', ec='k') # range=(0.0,1.0)
+
+    if verbose >= 2:
+        print('extent: %s' % xx)
+    if units is None:
+        unitstr=''
+    else:
+        unitstr=' (%s)' % units
+    if fig is not None:
+        pmatlab.cfigure(fig)
+        plt.clf()
+        if verbose >= 2:
+            print('show2D: show image')
+        plt.imshow(im, extent=xx, interpolation='nearest')
+        if dd.metadata.get('sweepdata', None) is not None:
+            plt.xlabel('%s' % dd['sweepdata']['gates'][0] + unitstr)
+        else:
+            try:
+                plt.xlabel('%s' % dd2d['argsd']['sweep_gates'][0] + unitstr)
+            except:
+                pass
+
+        if dd.metadata.get('stepdata', None) is not None:
+            if units is None:
+                plt.ylabel('%s' % dd['stepdata']['gates'][0])
+            else:
+                plt.ylabel('%s (%s)' % (dd['stepdata']['gates'][0], units) )
+    
+        if not title is None:
+            plt.title(title)
+    # plt.axis('image')
+    # ax=plt.gca()
+    # ax.invert_yaxis()
+        if colorbar:
+            plt.colorbar()
+        if verbose >= 2:
+            print('show2D: at show')
+        try:
+            plt.show(block=False)
+        except:
+            # ipython backend does not know about block keyword...
+            plt.show()
+
+    return xx, vstep, vsweep
+
+       
 
 #%%
 import numpy.linalg
@@ -92,6 +180,47 @@ class image_transform:
         ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
         return ptx
 
+    def scan2pixel(self, pt):
+        """ Convert scan coordinates to pixel coordinates 
+        Arguments
+        ---------
+        pt : array
+            points in scan coordinates
+        Returns:
+            ptpixel (ndaray): points in pixel coordinates
+
+        """
+        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, array=None, verbose=0)
+        #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
+        nx = vsweep.size 
+        ny = vstep.size
+    
+        xx=extent
+        x=pt
+        nn = pt.shape[1]
+        ptpixel = np.zeros((2, nn))
+        ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
+        ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
+
+        ptpixel= pmatlab.projectiveTransformation(self.H, np.array(ptpixel).astype(float) )
+
+        return ptpixel
+
+
+        ptx= pmatlab.projectiveTransformation(self.Hi, np.array(pt).astype(float) )
+
+        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, array=None, verbose=0)
+        nx = vsweep.size #  zdata.shape[0]
+        ny = vstep.size # zdata.shape[1]
+
+        xx = extent
+        x = ptx
+        nn = pt.shape[1]
+        ptx = np.zeros((2, nn))
+        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
+        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
+        return ptx
+
 def pix2scan(pt, dd2d):
     """ Convert pixels coordinates to scan coordinates (mV)
     Arguments
@@ -147,10 +276,11 @@ try:
 except:
     warnings.warn('could not load deepdish...')
     
-def loadQttData(path):
+def loadQttData(path : str):
     ''' Wrapper function
 
     :param path: filename without extension
+    :returns dataset: The dataset
     '''
     mfile=path
     if not mfile.endswith('hp5'):
@@ -175,6 +305,7 @@ def loadDataset(path):
     ''' Wrapper function
 
     :param path: filename without extension
+    :returns dateset, metadata: 
     '''
     dataset = qcodes.load_data(path)
 
@@ -187,8 +318,10 @@ def writeDataset(path, dataset, metadata=None):
 
     :param path: filename without extension
     '''
-    dataset.write(path=path)
-    dataset.save_metadata(path=path)
+    dataset.write_copy(path=path)
+    
+    # already done in write_copy...
+    #dataset.save_metadata(path=path)
 
     if metadata is None:
         metadata=dataset.metadata
