@@ -24,8 +24,6 @@ class FPGA_ave(VisaInstrument):
         self.visa_handle.baud_rate = 57600
 
         # Add parameters
-        self.add_parameter('IDN', 
-                           get_cmd=self.do_get_IDN)
         self.add_parameter('mode',
                            set_cmd=functools.partial(self.write_to_serial, 130))
         self.add_parameter('ch1_cycle_num',
@@ -36,7 +34,7 @@ class FPGA_ave(VisaInstrument):
                            get_cmd=self.do_get_measurement_done)
         self.add_parameter('total_cycle_num',
                            get_cmd=self.do_get_total_cycle_num,
-                           set_cmd=functools.partial(self.write_to_serial, 131))
+                           set_cmd=self.set_total_cycle_num)
         self.add_parameter('ch1_datapoint_num',
                            get_cmd=self.do_get_ch1_datapoint_num)
         self.add_parameter('ch2_datapoint_num',
@@ -50,13 +48,15 @@ class FPGA_ave(VisaInstrument):
         self.add_parameter('sampling_frequency',
                            get_cmd=self.do_get_sampling_frequency,
                            set_cmd=self.do_set_sampling_frequency)
+                           
+    def get_idn(self):
+        IDN = {'vendor': None, 'model': 'FPGA',
+                    'serial': None, 'firmware': None}
+        return IDN
 
-    def do_get_IDN():
-        return 'name=%s, address=%s'%(name,address)
-
-    def get_all(self):
-        for cnt in self.get_parameter_names():
-            self.get(cnt)
+#    def get_all(self):
+#        for cnt in self.get_parameter_names():
+#            self.get(cnt)
 
     def serial(self,here):
         self.visa_handle.write_raw(here)
@@ -65,18 +65,18 @@ class FPGA_ave(VisaInstrument):
         self.write_to_serial(129,1)
 
     def write_to_serial(self,address,value):
-        register=chr(address)
-        first_byte=chr(value>>8)
-        last_byte=chr(value&255)
-        self.visa_handle.write_raw(register)
-        self.visa_handle.write_raw(first_byte)
-        self.visa_handle.write_raw(last_byte)
+#        register=chr(address)
+#        first_byte=chr(value>>8)
+#        last_byte=chr(value&255)
+        self.visa_handle.write_raw(bytes([address]))
+        self.visa_handle.write_raw(bytes([value>>8]))
+        self.visa_handle.write_raw(bytes([value&255]))
 
     def ask_from_serial(self,address,register=255):
         self.visa_handle.write_raw(bytes([register]))
         self.visa_handle.write_raw(bytes([0]))
         self.visa_handle.write_raw(bytes([address]))
-        readresult=self.read_raw_bytes(3)
+        readresult=self.read_raw_bytes(size=3)
         result=(int(readresult[1])<<8) | int(readresult[2])
 
         return result
@@ -86,7 +86,7 @@ class FPGA_ave(VisaInstrument):
         self.visa_handle.write_raw(chr(0))
         self.visa_handle.write_raw(chr(address))
 
-        readresult=self.read_raw_bytes(3)
+        readresult=self.read_raw_bytes(size=3)
 
         if int(readresult[0])==address:
             unsigned=(int(readresult[1])<<8) | int(readresult[2])
@@ -112,31 +112,31 @@ class FPGA_ave(VisaInstrument):
 
         return chunk
 
-    def do_set_(self,value):
+    def set_(self,value):
         '''
         Set the number of traces over which pulse events will be counted
         '''
         self.write_to_serial(129,value)
 
-    def do_get_total_cycle_num(self):
+    def get_total_cycle_num(self):
         '''
         Get the total number of cycles which are averaged in FPGA
         '''
         return self._total_cycle_num
 
-    def do_get_ch1_datapoint_num(self):
+    def get_ch1_datapoint_num(self):
         '''
         Get the total number of cycles which are averaged in FPGA
         '''
         return self.ask_from_serial(3)-1
 
-    def do_get_ch2_datapoint_num(self):
+    def get_ch2_datapoint_num(self):
         '''
         Get the total number of cycles which are averaged in FPGA
         '''
         return self.ask_from_serial(7)-1
 
-    def do_get_measurement_done(self,ch=[1,2]):
+    def get_measurement_done(self,ch=[1,2]):
         '''
         Returns one if the measurement is done, else returns zero
         '''
@@ -148,7 +148,7 @@ class FPGA_ave(VisaInstrument):
 
         return meas_done
 
-    def do_get_data(self,address=2):
+    def get_data(self,address=2):
         '''
         Read data ch1 , unsigned
         '''
@@ -163,14 +163,14 @@ class FPGA_ave(VisaInstrument):
 
         result=[]
         for x in range(0,1000,1):
-            readresult=self.read_raw_bytes(3)
+            readresult=self.read_raw_bytes(size=3)
             result.append((int(readresult[1])<<8) | int(readresult[2]))
 
         self._data=result
 
         return result
 
-    def do_get_ch1_data(self,address=2, checkdone=True, buf=True):
+    def get_ch1_data(self,address=2, checkdone=True, buf=True):
         '''
         Reads signed data out of the FPGA
         '''
@@ -180,9 +180,9 @@ class FPGA_ave(VisaInstrument):
             if not self.get_measurement_done(ch=[1]):
                 return False
 
-        self.visa_handle.write_raw(chr(255))
-        self.visa_handle.write_raw(chr(0))
-        self.visa_handle.write_raw(chr(address))
+        self.visa_handle.write_raw(bytes([255]))
+        self.visa_handle.write_raw(bytes([0]))
+        self.visa_handle.write_raw(bytes([address]))
 
         signed=[]
 
@@ -191,7 +191,10 @@ class FPGA_ave(VisaInstrument):
             raise ValueError('There if no fpga output, the number of data points recorded for ch1 is 0 ')
 
         if buf:
-            readresultbuf=self.read_raw_bytes(3*Npoint)
+#            readresultbuf=self.read_raw_bytes(3*Npoint)
+            readresultbuf=b''
+            for i in range(0,3*Npoint):
+                readresultbuf = readresultbuf + self.read_raw_bytes(1)
 
             if len(readresultbuf)!=3*Npoint:
                 print('Npoint %d'  % Npoint)
@@ -204,18 +207,18 @@ class FPGA_ave(VisaInstrument):
                     signed.append(signed_temp)
         else:
             for x in range(0,Npoint,1):
-                readresult=self.read_raw_bytes(3)
+                readresult=self.read_raw_bytes(size=3)
                 unsigned=(int(readresult[0])<<16) |(int(readresult[1])<<8) | int(readresult[2])
                 signed_temp=unsigned-16777215 if unsigned > 8388607 else unsigned
                 if x < index:
                     signed.append(signed_temp)
 
         self._data_signed=signed
-        self.visa_handle.flushInput()
+        self.visa_handle.flush(16)
 
         return signed
 
-    def do_get_ch2_data(self,address=6, checkdone=True):
+    def get_ch2_data(self,address=6, checkdone=True):
         '''
         Reads signed data out of the FPGA
         '''
@@ -225,9 +228,9 @@ class FPGA_ave(VisaInstrument):
             if not self.get_measurement_done(ch=[2]):
                 return False
 
-        self.visa_handle.write_raw(chr(255))
-        self.visa_handle.write_raw(chr(0))
-        self.visa_handle.write_raw(chr(address))
+        self.visa_handle.write_raw(bytes([255]))
+        self.visa_handle.write_raw(bytes([0]))
+        self.visa_handle.write_raw(bytes([address]))
 
         signed=[]
 
@@ -235,20 +238,24 @@ class FPGA_ave(VisaInstrument):
 
         if Npoint==0:
             raise ValueError('There if no fpga output, the number of data points recorded for ch2 is 0 ')
+            
+        readresultbuf=b''
+        for i in range(0,3*Npoint):
+            readresultbuf = readresultbuf + self.read_raw_bytes(1)
+            
         for x in range(0,Npoint,1):
-            readresult=self.read_raw_bytes(3)
-
+            readresult=readresultbuf[3*x:3*(x+1)]  
             unsigned=(int(readresult[0])<<16)|(int(readresult[1])<<8) | int(readresult[2])
             signed_temp=unsigned-16777215 if unsigned > 8388607 else unsigned
             if x < index:
                 signed.append(signed_temp)
 
         self._data_signed=signed
-        self.visa_handle.flushInput()
+        self.visa_handle.flush(16)
 
         return signed
 
-    def do_set_sampling_frequency(self,value):
+    def set_sampling_frequency(self,value):
         '''
         Set the total number of cycles which are averaged in FPGA, maximum freq=50e6 and minimum is freq=763
         '''
@@ -261,7 +268,7 @@ class FPGA_ave(VisaInstrument):
 
         return self.write_to_serial(132,int(Ndivision))
 
-    def do_get_sampling_frequency(self):
+    def get_sampling_frequency(self):
         '''
         Get the total number of cycles which are averaged in FPGA
         '''
