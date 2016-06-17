@@ -31,23 +31,23 @@ class FPGA_ave(VisaInstrument):
         self.add_parameter('ch2_cycle_num',
                            get_cmd=functools.partial(self.ask_from_serial, 5))
         self.add_parameter('measurement_done',
-                           get_cmd=self.do_get_measurement_done)
+                           get_cmd=self.get_measurement_done)
         self.add_parameter('total_cycle_num',
-                           get_cmd=self.do_get_total_cycle_num,
+                           get_cmd=self.get_total_cycle_num,
                            set_cmd=self.set_total_cycle_num)
         self.add_parameter('ch1_datapoint_num',
-                           get_cmd=self.do_get_ch1_datapoint_num)
+                           get_cmd=self.get_ch1_datapoint_num)
         self.add_parameter('ch2_datapoint_num',
-                           get_cmd=self.do_get_ch2_datapoint_num)
+                           get_cmd=self.get_ch2_datapoint_num)
         self.add_parameter('data',
-                           get_cmd=self.do_get_data)
+                           get_cmd=self.get_data)
         self.add_parameter('ch1_data',
-                           get_cmd=self.do_get_ch1_data)
+                           get_cmd=self.get_ch1_data)
         self.add_parameter('ch2_data',
-                           get_cmd=self.do_get_ch2_data)
+                           get_cmd=self.get_ch2_data)
         self.add_parameter('sampling_frequency',
-                           get_cmd=self.do_get_sampling_frequency,
-                           set_cmd=self.do_set_sampling_frequency)
+                           get_cmd=self.get_sampling_frequency,
+                           set_cmd=self.set_sampling_frequency)
                            
     def get_idn(self):
         IDN = {'vendor': None, 'model': 'FPGA',
@@ -123,6 +123,13 @@ class FPGA_ave(VisaInstrument):
         Get the total number of cycles which are averaged in FPGA
         '''
         return self._total_cycle_num
+        
+    def set_total_cycle_num(self,value):
+        '''
+        Set the total number of cycles which are averaged in FPGA
+        '''      
+        self._total_cycle_num = value
+        self.write_to_serial(131,value)
 
     def get_ch1_datapoint_num(self):
         '''
@@ -198,7 +205,7 @@ class FPGA_ave(VisaInstrument):
 
             if len(readresultbuf)!=3*Npoint:
                 print('Npoint %d'  % Npoint)
-                raise Exception('do_get_ch1_data: error reading data')
+                raise Exception('get_ch1_data: error reading data')
             for x in range(0,Npoint,1):
                 readresult=readresultbuf[3*x:3*(x+1)]
                 unsigned=(int(readresult[0])<<16) |(int(readresult[1])<<8) | int(readresult[2])
