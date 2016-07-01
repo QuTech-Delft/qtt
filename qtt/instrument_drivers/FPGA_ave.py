@@ -48,7 +48,7 @@ class FPGA_ave(VisaInstrument):
         self.add_parameter('sampling_frequency',
                            get_cmd=self.get_sampling_frequency,
                            set_cmd=self.set_sampling_frequency)
-                           
+
     def get_idn(self):
         IDN = {'vendor': None, 'model': 'FPGA',
                     'serial': None, 'firmware': None}
@@ -264,8 +264,10 @@ class FPGA_ave(VisaInstrument):
 
     def set_sampling_frequency(self,value):
         '''
-        Set the total number of cycles which are averaged in FPGA, maximum freq=50e6 and minimum is freq=763
+        Set the total number of cycles which are averaged in FPGA, maximum samp freq=1 MHz and minimum is freq=763.
         '''
+        if value > 1e6:
+            raise ValueError('The sampling frequency can not be set higher than 1 MHz.')
         internal_clock=50e6
         Ndivision=round(internal_clock*1.0/value)
 
