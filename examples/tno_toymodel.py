@@ -205,14 +205,14 @@ if __name__=='__main__':
 
     #plotQ = qc.MatPlot(data.amplitude)
     if plotQ is None:
-        plotQ = qc.QtPlot(data.amplitude, windowTitle='Live plot', remote=False)
+        plotQ = qc.QtPlot(qtt.scans.getDefaultParameter(data), windowTitle='Live plot', remote=False)
         #plotQ.win.setGeometry(1920+360, 100, 800, 600)
         data.sync()    
         plotQ.update()
         mwindows['parameterviewer'].callbacklist.append( plotQ.update )
     else:
         data.sync()    
-        plotQ.clear(); plotQ.add(data.amplitude)
+        plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
         
 
 #%%
@@ -227,7 +227,7 @@ if __name__=='__main__':
     scanjob['stepdata']=dict({'gate': 'P3', 'start': -190, 'end': 120, 'step': 6.})
     data = qtt.scans.scan2D(station, scanjob, background=False)
 
-    plotQ.clear(); plotQ.add(data.amplitude)
+    plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
 
 #%%
 

@@ -158,14 +158,15 @@ def getParams(station, keithleyidx):
                 params+=[ x ]
     return params
 
-def getDefaultParameter(data):
-    if 'amplitude' in data.arrays.keys():
-        return data.amplitude
-    if 'amplitude_0' in data.arrays.keys():
-        return data.amplitude_0
-    if 'amplitude_1' in data.arrays.keys():
-        return data.amplitude_1
+def getDefaultParameter(data, defname='amplitude'):
+    if defname in data.arrays.keys():
+        return getattr(data, defname)
+    if (defname+'_0') in data.arrays.keys():
+        return  getattr(data, defname+'_0')
 
+    vv=[v for v in data.arrays.keys() if v.endswith(defname)]
+    if (len(vv)>0):
+        return getattr(data, vv[0])
     try:
         name = next(iter(data.arrays.keys()))
         return getattr(data, name)
