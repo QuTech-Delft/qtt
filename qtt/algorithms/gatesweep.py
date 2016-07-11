@@ -294,11 +294,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     tr = qtt.data.image_transform(dd)
     impixel = tr.transform(im)
-    #FIXME: this gives issues with the pix2scan function
-    #im = im[::-1, :]
 
-
-    #extentImage = [vstep.min(), vstep.max(), vsweep.min(), vsweep.max()]
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ] # matplotlib extent style
 
     ims = impixel.copy()
@@ -380,12 +376,12 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
         plt.axis('image')
         if verbose >= 2 or drawpoly:
-            pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth)
+            pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth, legend='balancefit')
             if verbose >= 2:
-                pmatlab.plotPoints(od['balancefit0'], '--r')
+                pmatlab.plotPoints(od['balancefit0'], '--r', legend='balancefit0')
         if verbose>=2:
-            pmatlab.plotPoints(od['balancepoint0'], '.r', markersize=13)
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=17)
+            pmatlab.plotPoints(od['balancepoint0'], '.r', markersize=13, legend='balancepoint0')
+        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=17, legend='balancepoint')
 
         plt.title('image')
         plt.xlabel('%s (mV)' % g2)
@@ -394,7 +390,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         qtt.tools.showImage(tr.itransform(ims), extentImage, fig=fig+1)
         plt.axis('image')
         plt.title('Smoothed image')
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16)
+        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16, legend='balancepoint')
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 

@@ -19,6 +19,10 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 #%%
 
+def printGateValues(gv, verbose=1):
+    s = ', '.join(['%s: %.1f' % (x, gv[x]) for x in sorted(gv.keys())])
+    return s
+
 def getODbalancepoint(od):
     bp = od['balancepoint']
     if 'balancepointfine' in od:

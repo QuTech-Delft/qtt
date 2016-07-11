@@ -39,6 +39,9 @@ import webbrowser
 import datetime
 import copy
 
+import cgitb
+cgitb.enable(format='text')
+
 ##
 
 import qcodes
@@ -203,7 +206,7 @@ if 1:
 
 #%% Do measurements
 
-cache=1
+cache=0
 measureFirst=True    # measure 1-dots
 measureSecond=True   # measure 2-dots
 
@@ -254,6 +257,10 @@ if full:
 else:
     hiresstep=-4
 
+
+def stepDelay(gate, minstepdelay=0, maxstepdelay=10):
+    return 0
+    
 #%%
 
 def onedotPlungerScan(station, od, verbose=1):
@@ -378,18 +385,17 @@ for ii, Tvalue in enumerate(Tvalues):
     qtt.resetgates(gates, activegates, basevalues)
     qtt.resetgates(gates, sdgates, basevalues)
 
-
     #%% Perform sanity check on the channels
 
 
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
-        alldata=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+        alldata=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
 
 
     for od in sddots:
         ki=od['instrument']
         for gate in od['gates']:
-            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, full=full)
+            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, stepdelay=stepDelay(gate), full=full)
             qtt.resetgates(gates,activegates, basevalues, verbose=0)
 
     ww=one_dots
