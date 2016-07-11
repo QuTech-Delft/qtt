@@ -95,6 +95,9 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     # plt.clf()
     # plt.hist(im.flatten(), 256, fc='k', ec='k') # range=(0.0,1.0)
 
+    labels=[s.name for s in array.set_arrays]
+
+
     if verbose >= 2:
         print('extent: %s' % xx)
     if units is None:
@@ -102,24 +105,29 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     else:
         unitstr=' (%s)' % units
     if fig is not None:
+        scanjob=dd.metadata.get('scanjob', dict() )
         pmatlab.cfigure(fig)
         plt.clf()
         if verbose >= 2:
             print('show2D: show image')
         plt.imshow(impixel, extent=xx, interpolation='nearest')
-        if dd.metadata.get('sweepdata', None) is not None:
-            plt.xlabel('%s' % dd['sweepdata']['gates'][0] + unitstr)
+        labelx=labels[1]
+        labely=labels[0]
+        if scanjob.get('sweepdata', None) is not None:
+            labelx=scanjob['sweepdata']['gates'][0]
+            plt.xlabel('%s' % labelx + unitstr)
         else:
-            try:
-                plt.xlabel('%s' % dd2d['argsd']['sweep_gates'][0] + unitstr)
-            except:
-                pass
+            pass
+            #try:
+            #    plt.xlabel('%s' % dd2d['argsd']['sweep_gates'][0] + unitstr)
+            #except:
+            #    pass
 
-        if dd.metadata.get('stepdata', None) is not None:
+        if scanjob.get('stepdata', None) is not None:
             if units is None:
-                plt.ylabel('%s' % dd['stepdata']['gates'][0])
+                plt.ylabel('%s' % scanjob['stepdata']['gates'][0])
             else:
-                plt.ylabel('%s (%s)' % (dd['stepdata']['gates'][0], units) )
+                plt.ylabel('%s (%s)' % (scanjob['stepdata']['gates'][0], units) )
     
         if not title is None:
             plt.title(title)
