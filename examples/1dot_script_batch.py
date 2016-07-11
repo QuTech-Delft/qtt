@@ -48,6 +48,8 @@ from qcodes.plots.qcmatplotlib import MatPlot
 import qtt; # reload(qtt)
 import qtt.scans
 from qtt.scans import experimentFile
+import qtt.reports
+reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
 #import qcodes.utils.reload_code
 #_=qcodes.utils.reload_code.reload_code()
 
@@ -141,6 +143,8 @@ one_dots=setup.get_one_dots(sdidx=[])
 full=0
 
 sdindices=[1,2]
+sdindices=[1,]
+
 sddots=setup.get_one_dots(sdidx=sdindices)[-2:]
 
 #one_dots=[one_dots[0], one_dots[-1] ];
@@ -161,7 +165,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-1062016xw'; Tvalues=np.array([-280])
+basetag='batch-2016-07-20'; Tvalues=np.array([-280])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -291,8 +295,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
     pv2=od['pinchvalues'][2]+0
     stepstart=float(np.minimum( od['pinchvalues'][0]+400, 90))
     sweepstart=float(np.minimum( od['pinchvalues'][2]+300, 90) )
-    stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -6})
-    sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -6})
+    stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -3})
+    sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -3})
 
     if full==0:
         stepdata['step']=-12; sweepdata['step']=-12
@@ -434,11 +438,11 @@ for ii, Tvalue in enumerate(Tvalues):
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
         #qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
-        plt.figure(10); plt.clf(); MatPlot(alldata.amplitude, interval=0, num=10)
+        plt.figure(10); plt.clf(); MatPlot(alldata.arrays[alldata.default_array()], interval=0, num=10)
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
-
+        
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
-
+        
         writeQttData(dataset=scandata, path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         #_=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         
@@ -488,6 +492,8 @@ for ii, Tvalue in enumerate(Tvalues):
 
         alldata,od = onedotScan(station, od, basevaluesS, outputdir,verbose=1)
         saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename)
+        if odii>10:
+            STOP
 
 
         #%% Make high-resolution scans

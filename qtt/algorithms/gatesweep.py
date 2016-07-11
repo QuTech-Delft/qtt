@@ -9,6 +9,7 @@ from qtt.data import dataset2Dmetadata, pix2scan, image_transform
 from qtt.tools import *
 import qtt.data
 
+
 #import qtt.scans # FIXME: circular
 
 def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=True, drawmidpoints=True):
@@ -30,8 +31,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         XX=None
 
         # should be made generic
-        g=[x for x in list(data.arrays.keys()) if x!='amplitude'][0]
-        value='amplitude'
+        g=[x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data,x).is_setpoint ][0]
+        value=qtt.data.getDefaultParameterName(data) # 'amplitude'
 
         x=data.arrays[g]
         value=data.arrays[value]
@@ -278,7 +279,7 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
     #XX = dd['data_array']
-    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, array=None)
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, arrayname=None)
 
     scanjob=dd.metadata['scanjob']
     stepdata = scanjob['stepdata']

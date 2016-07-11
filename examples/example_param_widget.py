@@ -26,7 +26,7 @@ class paramUpdateWidget(QtWidgets.QWidget):
 
         self.gates=gates
         self.name = name
-        self.delta = 1
+        self.delta = 10
         self.label=QtWidgets.QLabel(name)
         val=gates.get(name)
         self.value=QtWidgets.QLabel(str(val))
@@ -75,9 +75,6 @@ class paramUpdateWidget(QtWidgets.QWidget):
 
 
 
-
-
-
 name='L'
 if 0:
     p = paramUpdateWidget(name, gates)    
@@ -86,15 +83,54 @@ if 0:
     self=p
 
 
-#%%
+#%% Local test
 
-w=QtWidgets.QWidget()
-w.show()
-w.setGeometry(1640,160,200,800)
+if __name__=='__main__':
+    w=QtWidgets.QWidget()
+    w.show()
+    w.setGeometry(1640,160,200,800)
+    
+    layout = QtWidgets.QGridLayout()
+    w.setLayout(layout)
+    
+    for ii, name in enumerate(['L', 'P1','P2','P3','P4','R','SD1a','SD1b','SD1c']):
+        pp = paramUpdateWidget(name, gates)    
+        layout.addWidget(pp)
+    
 
-layout = QtWidgets.QGridLayout()
-w.setLayout(layout)
+#%% Remote option
 
-for ii, name in enumerate(['L', 'P1','P2','P3','P4','R','SD1a','SD1b','SD1c']):
-    pp = paramUpdateWidget(name, gates)    
-    layout.addWidget(pp)
+
+def createUpdateWidget():
+    w=QtWidgets.QWidget()
+    w.show()
+    w.setGeometry(1640,160,200,800)
+    
+    layout = QtWidgets.QGridLayout()
+    w.setLayout(layout)
+    
+    for ii, name in enumerate(['L', 'P1','P2','P3','P4','R','SD1a','SD1b','SD1c']):
+        pp = paramUpdateWidget(name, gates)    
+        layout.addWidget(pp)
+
+    if gates.get('_server_name', None) is None:
+        print('createUpdateWidget: cannot be used for remote widget since gates not on server..')
+    print('created update widget...')
+    return w
+    
+#w = createUpdateWidget()
+
+import multiprocessing as mp
+
+if __name__=='__main__':
+    p=mp.Process(target=createUpdateWidget)
+    p.start()
+
+#%% 
+if 0: 
+  FIXME: all instruments on good server
+  FIXME: auto check on server
+  FIXME: show2D
+  FIXME: 1dot_script
+  
+  
