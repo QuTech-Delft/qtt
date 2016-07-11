@@ -96,7 +96,7 @@ def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi
 
     The position is determined by scanning with Gabor filters and then performing blob detection
     """
-    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, array=None)
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, arrayname=None)
     tr = qtt.data.image_transform(dd)
     if im is None:
         #_, _, _, im = get2Ddata(dd)

@@ -221,7 +221,7 @@ def show2Dimage(im, dd, fig=100, verbose=1, title=None, units=None, colorbar=Fal
         extentImage, xdata, ydata, imdummy = get2Ddata( dd, fastscan=False, verbose=0, fig=None, midx=midx)
         mdata=dd
     except:
-        extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, array=None)
+        extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, arrayname=None)
         extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ] # matplotlib extent style
         mdata=dd.metadata
 

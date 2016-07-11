@@ -87,6 +87,9 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
 
         dstr = '%s-sweep-2d' % (od['name'])
         dd2d = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
+        tag='one_dot'
+        pathdd2d = experimentFile(resultsdir, tag=tag, dstr=dstr )
+
         if dd2d is None:
             continue
 
@@ -100,9 +103,6 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
         picklefiles = []
         for jj, g in enumerate(gg):
             pp = pinchoffFilename(g, od=None)
-            #pfile=experimentFile(xdir, tag=None, dstr=dstrx, bname='pinchoff-sweep-1d')
-            #pp='%s-sweep-1d-%s.pickle' % (od['name'], g)
-            #pfile = os.path.join(xdir, pp + '.pickle'); dd = loadqt(pfile)
             pfile = os.path.join(xdir, pp )
             #dd = qtt.loadQttData(pfile)
             dd, mdata = qtt.loadDataset(pfile)
@@ -131,7 +131,8 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             page.a.close()
 
         dstr = '%s-sweep-plunger' % (od['name'])
-        ddplunger = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
+
+        ddplunger = loadExperimentData(resultsdir, tag=tag, dstr=dstr)
 
         #pp='%s-sweep-plunger-.pickle' % (od['name'])
         #pfile=os.path.join(xdir, pp)
@@ -163,9 +164,10 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
         except:
             page.p('One-dot scan: gatevalues: ???')
             
-        # dd2d['scantime']
+        page.a.open(href=pathdd2d, style='text-decoration: none;')
         page.img(src=imfile0, width='80%', alt="%s" % od['name'])
-
+        page.a.close()
+        
         dstrhi = '%s-sweep-2d-hires' % (od['name'])
         scandata = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
 
@@ -186,7 +188,7 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             if 1:
                 odhi = scandata['od']
                 
-                extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd2dhi, verbose=0, array=None)
+                extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd2dhi, verbose=0)
                 im, impixel, tr = dataset2image(dd2dhi)
                 ptv, fimg, tmp= onedotGetBalanceFine(impixel, dd2dhi, verbose=1, fig=None)
 

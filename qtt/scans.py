@@ -74,7 +74,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
 
     alldatahi=qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=.05)
 
-    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(alldatahi, verbose=0, array=None)
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(alldatahi, verbose=0, arrayname=None)
     im, impixel, tr = dataset2image(alldatahi)
 
     #_,_,_, im = get2Ddata(alldatahi)
@@ -158,22 +158,8 @@ def getParams(station, keithleyidx):
                 params+=[ x ]
     return params
 
-def getDefaultParameter(data, defname='amplitude'):
-    if defname in data.arrays.keys():
-        return getattr(data, defname)
-    if (defname+'_0') in data.arrays.keys():
-        return  getattr(data, defname+'_0')
 
-    vv=[v for v in data.arrays.keys() if v.endswith(defname)]
-    if (len(vv)>0):
-        return getattr(data, vv[0])
-    try:
-        name = next(iter(data.arrays.keys()))
-        return getattr(data, name)
-    except:
-        pass
-    return None
-
+    
 def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None):
     ''' Simple 1D scan '''
     gates=station.gates
@@ -357,6 +343,11 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], c
     #alldata.write_to_disk(outputfile)
  #   pmatlab.save(outputfile, alldata)
     return alldata
+
+if __name__=='__main__':
+    gate='L'
+    alldataX=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+    adata = analyseGateSweep(alldataX, fig=10, minthr=None, maxthr=None)
 
 #%%
 

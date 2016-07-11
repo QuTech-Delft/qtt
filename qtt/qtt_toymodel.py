@@ -194,8 +194,8 @@ class DummyModel(MockModelLocal):
         logger.debug('start SD computation')
 
         # main contribution
-        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'], offset=-50, random=.1)
-        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'], offset=-50, random=.1)
+        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'], offset=-150, random=.1)
+        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'], offset=-150, random=.1)
 
         # coulomb system for dot1
         ds=self.sd1ds
@@ -215,7 +215,7 @@ class DummyModel(MockModelLocal):
         ds=self.ds
         for k, val in tv.items():
             if verbose:
-                print('compudateSD: %d, %f'  % (k,val) )
+                print('computeSD: %d, %f'  % (k,val) )
             setattr(ds, k, val)
         ds.makeHsparse()
         ds.solveH(usediag=usediag)
