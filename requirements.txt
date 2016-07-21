@@ -1,0 +1,7 @@
+numpy
+qtpy
+PyQt4
+spyder
+scipy
+pyqtgraph
+

@@ -7,6 +7,7 @@ import matplotlib
 import sys, os
 import logging
 import qcodes
+import pickle
 
 # explicit import
 from qcodes.plots.pyqtgraph import QtPlot
@@ -24,6 +25,16 @@ import qtpy.QtWidgets as QtWidgets
 #from qtt.data import *
 
 #import pmatlab; pmatlab.qtmodules(verbose=1)
+
+#%%
+
+def checkPickle(obj):
+    try:
+        _=pickle.dumps(obj)
+    except:
+        return False
+    return True
+#checkPickle(ivvi1)
 
 #%%
 

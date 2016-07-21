@@ -39,6 +39,9 @@ import webbrowser
 import datetime
 import copy
 
+import cgitb
+cgitb.enable(format='text')
+
 ##
 
 import qcodes
@@ -48,6 +51,8 @@ from qcodes.plots.qcmatplotlib import MatPlot
 import qtt; # reload(qtt)
 import qtt.scans
 from qtt.scans import experimentFile
+import qtt.reports
+reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
 #import qcodes.utils.reload_code
 #_=qcodes.utils.reload_code.reload_code()
 
@@ -141,6 +146,8 @@ one_dots=setup.get_one_dots(sdidx=[])
 full=0
 
 sdindices=[1,2]
+sdindices=[1,]
+
 sddots=setup.get_one_dots(sdidx=sdindices)[-2:]
 
 #one_dots=[one_dots[0], one_dots[-1] ];
@@ -161,7 +168,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-1062016xw'; Tvalues=np.array([-280])
+basetag='batch-2016-07-20'; Tvalues=np.array([-280])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -199,7 +206,7 @@ if 1:
 
 #%% Do measurements
 
-cache=1
+cache=0
 measureFirst=True    # measure 1-dots
 measureSecond=True   # measure 2-dots
 
@@ -250,6 +257,10 @@ if full:
 else:
     hiresstep=-4
 
+
+def stepDelay(gate, minstepdelay=0, maxstepdelay=10):
+    return 0
+    
 #%%
 
 def onedotPlungerScan(station, od, verbose=1):
@@ -291,8 +302,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
     pv2=od['pinchvalues'][2]+0
     stepstart=float(np.minimum( od['pinchvalues'][0]+400, 90))
     sweepstart=float(np.minimum( od['pinchvalues'][2]+300, 90) )
-    stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -6})
-    sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -6})
+    stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -3})
+    sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -3})
 
     if full==0:
         stepdata['step']=-12; sweepdata['step']=-12
@@ -374,18 +385,17 @@ for ii, Tvalue in enumerate(Tvalues):
     qtt.resetgates(gates, activegates, basevalues)
     qtt.resetgates(gates, sdgates, basevalues)
 
-
     #%% Perform sanity check on the channels
 
 
     for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
-        alldata=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+        alldata=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
 
 
     for od in sddots:
         ki=od['instrument']
         for gate in od['gates']:
-            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, full=full)
+            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, stepdelay=stepDelay(gate), full=full)
             qtt.resetgates(gates,activegates, basevalues, verbose=0)
 
     ww=one_dots
@@ -434,11 +444,11 @@ for ii, Tvalue in enumerate(Tvalues):
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
         #qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
-        plt.figure(10); plt.clf(); MatPlot(alldata.amplitude, interval=0, num=10)
+        plt.figure(10); plt.clf(); MatPlot(alldata.arrays[alldata.default_array()], interval=0, num=10)
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
-
+        
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
-
+        
         writeQttData(dataset=scandata, path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         #_=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         
@@ -488,6 +498,8 @@ for ii, Tvalue in enumerate(Tvalues):
 
         alldata,od = onedotScan(station, od, basevaluesS, outputdir,verbose=1)
         saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename)
+        if odii>10:
+            STOP
 
 
         #%% Make high-resolution scans

@@ -55,7 +55,7 @@ if __name__=='__main__':
 
 
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
-    server_name=None
+   # server_name=None
     virtualV2.initialize(server_name=server_name)
     #virtualV2.initialize(server_name='virtualV2'+time.strftime("%H.%M.%S"))
     
@@ -205,14 +205,14 @@ if __name__=='__main__':
 
     #plotQ = qc.MatPlot(data.amplitude)
     if plotQ is None:
-        plotQ = qc.QtPlot(data.amplitude, windowTitle='Live plot', remote=False)
+        plotQ = qc.QtPlot(qtt.scans.getDefaultParameter(data), windowTitle='Live plot', remote=False)
         #plotQ.win.setGeometry(1920+360, 100, 800, 600)
         data.sync()    
         plotQ.update()
         mwindows['parameterviewer'].callbacklist.append( plotQ.update )
     else:
         data.sync()    
-        plotQ.clear(); plotQ.add(data.amplitude)
+        plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
         
 
 #%%
@@ -221,13 +221,13 @@ if __name__=='__main__':
     reload(qcodes.plots)
     reload(qtt.scans)
     
-    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [keithley1.amplitude, keithley3.amplitude], 'delay': 0.})
-    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [keithley1.amplitude], 'delay': 0.})
+    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 3.}), 'instrument': [keithley1.amplitude, keithley3.amplitude], 'delay': 0.})
+    scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 2.}), 'instrument': [keithley1.amplitude], 'delay': 0.})
     #scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [gates.L], 'delay': 0.})
-    scanjob['stepdata']=dict({'gate': 'P3', 'start': -190, 'end': 120, 'step': 6.})
+    scanjob['stepdata']=dict({'gate': 'P3', 'start': -190, 'end': 120, 'step': 2.})
     data = qtt.scans.scan2D(station, scanjob, background=False)
 
-    plotQ.clear(); plotQ.add(data.amplitude)
+    plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
 
 #%%
 
@@ -235,6 +235,10 @@ if __name__=='__main__':
     
     STOP
 
+
+#%% Check live plotting
+
+data = scan1D(scanjob, station, location=None, background=False)
 
 #%% Extend model
 
