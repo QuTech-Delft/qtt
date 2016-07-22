@@ -29,7 +29,7 @@ from qtt.data import *
 
 import webbrowser
 import dateutil
-import markup
+import qtt.markup
 import copy
 import traceback
 
