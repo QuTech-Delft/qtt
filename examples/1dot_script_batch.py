@@ -9,7 +9,7 @@
 # https://github.com/gatsoulis/py2ipynb
 #
 from imp import reload
-import sys,os
+import sys,os,platform
 import logging
 import numpy as np
 
@@ -67,7 +67,11 @@ except:
 
 import matplotlib.pyplot as plt
 
-import virtualV2 as setup
+if platform.node()=='TUD205521':
+    import stationV2 as setup
+else:
+    import virtualV2 as setup
+    
 #setup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
 setup.initialize(reinit=False, server_name=None )
 
