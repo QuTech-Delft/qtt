@@ -138,8 +138,6 @@ if __name__=='__main__':
 
 #%%
 if __name__=='__main__':
-
-
     print('value: %f'  % keithley3.readnext() )
     
     #%%
@@ -184,7 +182,10 @@ if 0:
     
     formatter.write(data)
 
+        
+
 #%%
+
 #FIXME: set everything under __name__
 
 if __name__=='__main__':
@@ -318,19 +319,16 @@ if __name__=='__main__':
 
     
 #%%
+
+    
+#%%
 if __name__=='__main__':
 
     stepvalues=gates.R[0:100:1]
-    data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False, quiet=True)
+    data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False)
 
 
 
-#qc.active_children()
-#qc.halt_bg()
-#plotQ.win.setGeometry(1920, 100, 800, 600)
-
-
-#%%
 
 if __name__=='__main__':
 
