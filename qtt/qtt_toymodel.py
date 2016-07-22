@@ -398,13 +398,15 @@ class virtual_gates(Instrument):
 
         self.get_all()
 
-    def get_all(self):
-        for gate in self._gate_map.keys():
+    def get_all(self, verbose=0):
+        for gate in sorted(self._gate_map.keys()):
             self.get(gate)
+            if verbose:
+                print('%s: %f' % (gate, self.get(gate)))
 
     def _get(self, gate):
         gatemap = self._gate_map[gate]
-        gate = 'c%d' % gatemap[1]
+        gate = 'dac%d' % gatemap[1]
         logging.debug('_get: %s %s'  % (gatemap[0], gate) )
         return self._instrument_list[gatemap[0]].get(gate)
 
@@ -412,7 +414,7 @@ class virtual_gates(Instrument):
         logging.debug('virtualgate._set: gate %s, value %s' % (gate, value))
         gatemap = self._gate_map[gate]
         i = self._instrument_list[gatemap[0]]
-        gate = 'c%d' % gatemap[1]
+        gate = 'dac%d' % gatemap[1]
         logging.debug('virtualgate._set: instrument %s, param %s: value %s' %
                       (i.name, gate, value))
         i.set(gate, value)
@@ -436,7 +438,7 @@ class virtual_gates(Instrument):
 
     def get_instrument_parameter(self, g):
         gatemap = self._gate_map[g]
-        return getattr(self._instrument_list[gatemap[0]], 'c%d' % gatemap[1] )
+        return getattr(self._instrument_list[gatemap[0]], 'dac%d' % gatemap[1] )
 
 
     def set_boundaries(self, gate_boundaries):
