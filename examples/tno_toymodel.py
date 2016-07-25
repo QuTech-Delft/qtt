@@ -201,6 +201,13 @@ if __name__=='__main__':
 
 #reload(qcodes); reload(qc); plotQ=None
 
+#%%
+
+p=qtt.scans.getDefaultParameter(data)
+print(p)
+
+#%%
+    
 if __name__=='__main__':
 
     #plotQ = qc.MatPlot(data.amplitude)

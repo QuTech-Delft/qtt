@@ -166,6 +166,11 @@ def getDefaultParameter(data):
     if 'amplitude_1' in data.arrays.keys():
         return data.amplitude_1
 
+    vv=[v for v in (data.arrays.keys()) if v.endswith('amplitude')]
+    if (len(vv)>0):
+        name = vv[0]
+        return name
+        
     try:
         name = next(iter(data.arrays.keys()))
         return getattr(data, name)
