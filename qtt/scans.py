@@ -159,6 +159,25 @@ def getParams(station, keithleyidx):
                 params+=[ x ]
     return params
 
+def getDefaultParameter(data):
+    if 'amplitude' in data.arrays.keys():
+        return data.amplitude
+    if 'amplitude_0' in data.arrays.keys():
+        return data.amplitude_0
+    if 'amplitude_1' in data.arrays.keys():
+        return data.amplitude_1
+
+    vv=[v for v in (data.arrays.keys()) if v.endswith('amplitude')]
+    if (len(vv)>0):
+        name = vv[0]
+        return name
+        
+    try:
+        name = next(iter(data.arrays.keys()))
+        return getattr(data, name)
+    except:
+        pass
+    return None
 
     
 def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None):
