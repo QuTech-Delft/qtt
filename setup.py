@@ -13,7 +13,9 @@ extras = {
     'SciPi': ('scipy', '0.15'),
     'qcodes': ('qcodes', '0.1'),
     'scikit-image': ('skimage', '0.11'),
-#    'pandas': ('pandas', '0.15'),
+    'pandas': ('pandas', '0.15'),
+    'Polygon3': ('Polygon', '3.0'),
+    'hickle': ('hickle', '3.0'),
     'Numpy': ('numpy', '1.9')
 }
 extras_require = {k: '>='.join(v) for k, v in extras.items()}
@@ -25,7 +27,7 @@ setup(name='qtt',
       author_email='pieter.eendebak@tno.nl',
       maintainer='Pieter Eendebak',
       maintainer_email='pieter.eendebak@tno.nl',
-      description='Python-based framework for analisys and tuning of quantum dots',
+      description='Python-based framework for analysis and tuning of quantum dots',
       long_description=readme(),
       url='http://qutech.nl',
       classifiers=[

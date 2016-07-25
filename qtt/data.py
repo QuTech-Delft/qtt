@@ -21,9 +21,34 @@ from .tools import tilefigs, diffImageSmooth
 #from .algorithms import *
 
 #%%
+
+def getDefaultParameterName(data, defname='amplitude'):
+    if defname in data.arrays.keys():
+        return defname
+    if (defname+'_0') in data.arrays.keys():
+        return  getattr(data, defname+'_0')
+
+    vv=[v for v in data.arrays.keys() if v.endswith(defname)]
+    if (len(vv)>0):
+        return vv[0]
+    try:
+        name = next(iter(data.arrays.keys()))
+        return name
+    except:
+        pass
+    return None
+    
+def getDefaultParameter(data, defname='amplitude'):
+    name = getDefaultParameterName(data)
+    if name is not None:
+        return getattr(data, name)
+    else:
+        return None
+        
+#%%
 def dataset2image(dataset):
     """ Extract image from dataset """
-    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, verbose=0, array=None)
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, verbose=0, arrayname=None)
     tr = image_transform(dataset)
     im=None
     impixel  = None
@@ -34,36 +59,44 @@ def dataset2image(dataset):
     return im, impixel, tr
 
 #%%
-def show2D(dd, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
+def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
     """ Show result of a 2D scan """
     if dd is None:
         return None
 
     extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(dd)
-    #arrayname=plot_parameter(dataset)
-    array=getattr(dd, arrayname)       
-    if im is None:
-        im = array
+    tr = image_transform(dd)
+    
+    if impixel is None:
+        if im is None:
+            array=getattr(dd, arrayname)       
+            if im is None:
+                im = array
+            else:
+                pass
+            impixel = tr.transform(im)
+        else:
+            impixel = tr.transform(im)
     else:
         pass
-    XX = array # dd['data_array']
+    #XX = array # dd['data_array']
     
     xx=extent   
-    #vstep = np.unique(XX[:, 1])
-    #vsweep = np.unique(XX[:, 0])
-    #xx, xdata, ydata, im = get2Ddata(
-    #    dd, fastscan=False, verbose=0, midx=midx, fig=None)
+    xx=tr.extent_image()
     ny = vstep.size
     nx = vsweep.size
 
     #im=diffImage(im, dy)
-    im = diffImageSmooth(im, dy=dy, sigma=sigma)
+    im = diffImageSmooth(impixel, dy=dy, sigma=sigma)
 
     if verbose:
-        print('show2D: nx %d, ny %d, XX.shape %s' % (nx, ny, XX.shape))
+        print('show2D: nx %d, ny %d' % (nx, ny,))
 
     # plt.clf()
     # plt.hist(im.flatten(), 256, fc='k', ec='k') # range=(0.0,1.0)
+
+    labels=[s.name for s in array.set_arrays]
+
 
     if verbose >= 2:
         print('extent: %s' % xx)
@@ -72,24 +105,29 @@ def show2D(dd, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False,
     else:
         unitstr=' (%s)' % units
     if fig is not None:
+        scanjob=dd.metadata.get('scanjob', dict() )
         pmatlab.cfigure(fig)
         plt.clf()
         if verbose >= 2:
             print('show2D: show image')
-        plt.imshow(im, extent=xx, interpolation='nearest')
-        if dd.metadata.get('sweepdata', None) is not None:
-            plt.xlabel('%s' % dd['sweepdata']['gates'][0] + unitstr)
+        plt.imshow(impixel, extent=xx, interpolation='nearest')
+        labelx=labels[1]
+        labely=labels[0]
+        if scanjob.get('sweepdata', None) is not None:
+            labelx=scanjob['sweepdata']['gates'][0]
+            plt.xlabel('%s' % labelx + unitstr)
         else:
-            try:
-                plt.xlabel('%s' % dd2d['argsd']['sweep_gates'][0] + unitstr)
-            except:
-                pass
+            pass
+            #try:
+            #    plt.xlabel('%s' % dd2d['argsd']['sweep_gates'][0] + unitstr)
+            #except:
+            #    pass
 
-        if dd.metadata.get('stepdata', None) is not None:
+        if scanjob.get('stepdata', None) is not None:
             if units is None:
-                plt.ylabel('%s' % dd['stepdata']['gates'][0])
+                plt.ylabel('%s' % scanjob['stepdata']['gates'][0])
             else:
-                plt.ylabel('%s (%s)' % (dd['stepdata']['gates'][0], units) )
+                plt.ylabel('%s (%s)' % (scanjob['stepdata']['gates'][0], units) )
     
         if not title is None:
             plt.title(title)
@@ -122,8 +160,9 @@ class image_transform:
         self.extent = [] # image extent in pixel
         self.verbose=1
         self.dataset=dataset
-        extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, array=None)
-
+        extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, arrayname=None)
+        self.vstep=vstep
+        self.vsweep=vsweep
         if upp is not None:
             raise NotImplemented
         nx = len(vsweep)
@@ -143,9 +182,20 @@ class image_transform:
         #return im
         self.Hi=numpy.linalg.inv(self.H)
 
+    def extent_image(self):
+        """ Return matplotlib style image extent """
+        vsweep=self.vsweep
+        vstep=self.vstep
+        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ]
+        if self.flipX:
+            extentImage = [extentImage[1],extentImage[0], extentImage[2], extentImage[3] ]
+        if self.flipY:
+            extentImage = [extentImage[0],extentImage[1], extentImage[3], extentImage[2] ]
+        return extentImage
 
 
     def transform(self, im):
+        """ Transform from scan to pixel coordinates """
         if self.flipX:
                 im = im[::, ::-1]
         #im=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
@@ -168,7 +218,7 @@ class image_transform:
         """
         ptx= pmatlab.projectiveTransformation(self.Hi, np.array(pt).astype(float) )
 
-        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, array=None, verbose=0)
+        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, arrayname=None, verbose=0)
         nx = vsweep.size #  zdata.shape[0]
         ny = vstep.size # zdata.shape[1]
 
@@ -190,7 +240,7 @@ class image_transform:
             ptpixel (ndaray): points in pixel coordinates
 
         """
-        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, array=None, verbose=0)
+        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, arrayname=None, verbose=0)
         #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
         nx = vsweep.size 
         ny = vstep.size
@@ -209,7 +259,7 @@ class image_transform:
 
         ptx= pmatlab.projectiveTransformation(self.Hi, np.array(pt).astype(float) )
 
-        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, array=None, verbose=0)
+        extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(self.dataset, verbose=0)
         nx = vsweep.size #  zdata.shape[0]
         ny = vstep.size # zdata.shape[1]
 
@@ -231,7 +281,7 @@ def pix2scan(pt, dd2d):
         contains scan data
 
     """
-    extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(dd2d, array=None, verbose=0)
+    extent, g0,g1,vstep, vsweep, arrayname=dataset2Dmetadata(dd2d, verbose=0)
     #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
     nx = vsweep.size #  zdata.shape[0]
     ny = vstep.size # zdata.shape[1]
@@ -244,24 +294,36 @@ def pix2scan(pt, dd2d):
     ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
     return ptx
 
-def dataset2Dmetadata(alldata, array=None, verbose=0):
-    if array is None:
-        array = 'amplitude'
-        if not array in alldata.arrays:
-            array=list(alldata.arrays.keys())[0]
+def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
+    """ Extract metadata from a 2D scan
 
-    A = alldata.arrays[array]
+    Returns:
+
+        extent (list): x1,x2,y1,y2
+        g0 (string): step gate
+        g1 (string): sweep gate
+        vstep (array): step values
+        vsweep (array): sweep values
+        arrayname (string): identifier of the main array 
+    
+    """
+    
+    if arrayname is None:
+        arrayname = alldata.default_array()
+
+    A = alldata.arrays[arrayname]
 
 
     g0=A.set_arrays[0].name
     g1=A.set_arrays[1].name
     vstep = np.array(A.set_arrays[0])
     vsweep = np.array(A.set_arrays[1])[0]
-    extent = [vstep[0], vstep[-1], vsweep[0], vsweep[-1]]
+    #extent = [vstep[0], vstep[-1], vsweep[0], vsweep[-1]] # change order?
+    extent = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]] # change order?
 
     if verbose:
         print('2D scan: gates %s %s' % (g0, g1))
-    return extent, g0, g1, vstep, vsweep, array
+    return extent, g0, g1, vstep, vsweep, arrayname
 
 
 if __name__=='__main__':

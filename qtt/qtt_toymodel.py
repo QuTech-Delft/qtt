@@ -157,7 +157,7 @@ class DummyModel(MockModelLocal):
         # coulomb model for sd1
         self.sd1ds=qtt.simulation.dotsystem.OneDot()
         defaultDotValues(self.sd1ds)
-        Vmatrix=np.matrix([[.1, 1, .1, 300.],[0,0,0,1]])
+        Vmatrix=np.matrix([[.23, 1, .23, 300.],[0,0,0,1]])
         self.gate_transform_sd1 = GateTransform(Vmatrix, ['SD1a','SD1b','SD1c'], ['det1'])
         
         super().__init__(name=name)
@@ -194,8 +194,10 @@ class DummyModel(MockModelLocal):
         logger.debug('start SD computation')
 
         # main contribution
-        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'], offset=-50, random=.1)
-        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'], offset=-50, random=.1)
+        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'], offset=-150, random=.1)
+        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'], offset=-150, random=.1)
+
+        val1x = self._calculate_pinchoff(['SD1a', 'SD1c'], offset=-50, random=0)
 
         # coulomb system for dot1
         ds=self.sd1ds
@@ -206,6 +208,8 @@ class DummyModel(MockModelLocal):
         ds.solveH(usediag=True)        
         _=ds.findcurrentoccupancy()
         cond1=.75*dotConductance(ds, index=0, T=3)  
+        
+        cond1=cond1*np.prod( (1-val1x) )
         if verbose>=2:
             print('k1 %f, cond %f' % (k1, cond) )
 
@@ -215,7 +219,7 @@ class DummyModel(MockModelLocal):
         ds=self.ds
         for k, val in tv.items():
             if verbose:
-                print('compudateSD: %d, %f'  % (k,val) )
+                print('computeSD: %d, %f'  % (k,val) )
             setattr(ds, k, val)
         ds.makeHsparse()
         ds.solveH(usediag=usediag)
@@ -383,8 +387,8 @@ except:
 # from qcodes.utils.validators import Validator
 class virtual_gates(Instrument):
 
-    def __init__(self, name, instruments, gate_map, **kwargs):
-        super().__init__(name, **kwargs)
+    def __init__(self, name, instruments, gate_map, model=None, **kwargs):
+        super().__init__(name, model=model, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
         # Create all functions for the gates as defined in self._gate_map
@@ -450,6 +454,10 @@ class virtual_gates(Instrument):
         # func = lambda voltage: self._do_set_gate(voltage, gate)
         # setattr(self, '_do_set_%s' %gate, func)
 
+    def allvalues(self):
+        """ Return all gate values in a simple dict """
+        vals = [ (gate, self.get(gate) ) for gate in self._gate_map ]
+        return dict(vals)
 
     def resetgates(gates, activegates, basevalues=None, verbose=2):
         """ Reset a set of gates to default values

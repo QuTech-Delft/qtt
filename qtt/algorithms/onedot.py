@@ -46,7 +46,7 @@ def onedotGetBlobs(fimg, fig=None):
         plt.axis('image')
         plt.colorbar()
         #ax = plt.gca()
-        pmatlab.plotPoints(xx.T, '.g', markersize=16)
+        pmatlab.plotPoints(xx.T, '.g', markersize=16, label='blob centres')
         plt.title('Reponse image with detected blobs')
 
         plt.figure(fig + 1)
@@ -55,8 +55,8 @@ def onedotGetBlobs(fimg, fig=None):
         plt.axis('image')
         plt.colorbar()
         #ax = plt.gca()
-        pmatlab.plotPoints(xxw.T, '.g', markersize=16)
-        pmatlab.plotPoints(xx.T, '.m', markersize=12)
+        pmatlab.plotPoints(xxw.T, '.g', markersize=16, label='blob centres')
+        pmatlab.plotPoints(xx.T, '.m', markersize=12, label='blob centres (alternative)')
         plt.title('Binary blobs')
 
         tilefigs([fig, fig + 1], [2, 2])
@@ -96,7 +96,7 @@ def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi
 
     The position is determined by scanning with Gabor filters and then performing blob detection
     """
-    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, array=None)
+    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, arrayname=None)
     tr = qtt.data.image_transform(dd)
     if im is None:
         #_, _, _, im = get2Ddata(dd)
@@ -120,13 +120,15 @@ def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi
     fimg = cv2.filter2D(im, -1, gfilter)
 
     bestvalue = highvalue *  gfilter[gfilter > 0].sum() + lowvalue * gfilter[gfilter < 0].sum()
-    if verbose:
-        print('onedotGetBalanceFine: best filter value: %.2f' % bestvalue)
 
     xxw, _ = onedotGetBlobs(fimg, fig=None)
     vv = onedotSelectBlob(im, xxw, fimg=None)
     ptpixel = np.array(vv).reshape((1, 2))
     pt = pix2scan(ptpixel.T, dd)
+    ptvalue = fimg[int(ptpixel[0,1]), int(ptpixel[0,0]) ]
+    
+    if verbose:
+        print('onedotGetBalanceFine: point/best filter value: %.2f/%.2f' % (ptvalue, bestvalue) )
 
     if fig is not None:
         #od = dd.get('od', None) FIXME
@@ -142,10 +144,15 @@ def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi
         if od is not None:
             pass
             #plotPoints(pt0, '.m', markersize=16)
-        plt.plot(pt[0], pt[1], '.', color=(0, .8, 0), markersize=16)
+        plt.plot(pt[0], pt[1], '.', color=(0, .8, 0), markersize=16, label='balance point fine')
         plt.axis('image')
 
-    return pt, fimg, dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel})
+    acc=1
+    
+    if (np.abs(ptvalue)/bestvalue<0.05):
+        acc=0
+        logging.debug('accuracy: %d: %.2f' % (acc,  (np.abs(ptvalue)/bestvalue ) ) )
+    return pt, fimg, dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel, 'accuracy': acc})
 
 # Testing
 if __name__=='__main__':

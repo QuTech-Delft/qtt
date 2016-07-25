@@ -29,14 +29,17 @@ from qtt.data import *
 
 import webbrowser
 import dateutil
-import markup
+import qtt.markup
 import copy
+import traceback
 
 from qtt.tools import diffImageSmooth, scanTime
 from qtt.scans import experimentFile, pinchoffFilename
 from qtt.data import *
 
 from qtt.algorithms.generic import *
+
+import qtt.legacy # should be removed in the future
 
 #%%
 
@@ -51,6 +54,8 @@ def reportTemplate(title):
     return page
        
 #%%
+import traceback
+import logging
 
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr )
@@ -89,6 +94,11 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
         dd2d = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
         if dd2d is None:
             continue
+        metadata2d=dd2d.metadata
+        
+        tag='one_dot'
+        pathdd2d = experimentFile(resultsdir, tag=tag, dstr=dstr )
+
 
         if verbose:
             print('### generateOneDotReport: one-dot: %s' % od['name'])
@@ -100,9 +110,6 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
         picklefiles = []
         for jj, g in enumerate(gg):
             pp = pinchoffFilename(g, od=None)
-            #pfile=experimentFile(xdir, tag=None, dstr=dstrx, bname='pinchoff-sweep-1d')
-            #pp='%s-sweep-1d-%s.pickle' % (od['name'], g)
-            #pfile = os.path.join(xdir, pp + '.pickle'); dd = loadqt(pfile)
             pfile = os.path.join(xdir, pp )
             #dd = qtt.loadQttData(pfile)
             dd, mdata = qtt.loadDataset(pfile)
@@ -131,7 +138,8 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             page.a.close()
 
         dstr = '%s-sweep-plunger' % (od['name'])
-        ddplunger = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
+
+        ddplunger = loadExperimentData(resultsdir, tag=tag, dstr=dstr)['dataset']
 
         #pp='%s-sweep-plunger-.pickle' % (od['name'])
         #pfile=os.path.join(xdir, pp)
@@ -159,13 +167,14 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
                dscan.strftime('%d-%m-%Y %H:%M:%S'))
         try:
             page.p('One-dot scan: gatevalues: %s' %
-                   qutechalgorithms.printGateValues(dd2d.get('allgatevalues', dict())))
-        except:
+                   qtt.legacy.printGateValues(metadata2d.get('allgatevalues', dict())))
+        except Exception as ex:
             page.p('One-dot scan: gatevalues: ???')
             
-        # dd2d['scantime']
+        page.a.open(href=pathdd2d, style='text-decoration: none;')
         page.img(src=imfile0, width='80%', alt="%s" % od['name'])
-
+        page.a.close()
+        
         dstrhi = '%s-sweep-2d-hires' % (od['name'])
         scandata = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
 
@@ -186,7 +195,7 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             if 1:
                 odhi = scandata['od']
                 
-                extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd2dhi, verbose=0, array=None)
+                extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd2dhi, verbose=0)
                 im, impixel, tr = dataset2image(dd2dhi)
                 ptv, fimg, tmp= onedotGetBalanceFine(impixel, dd2dhi, verbose=1, fig=None)
 
@@ -215,11 +224,12 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             if verbose:
                 print('# generateOneDotReport: make figure for plunger scan')
 
-            allgatevalues = ddplunger.get('allgatevalues', None)
+            ddplungermetadata=ddplunger.metadata
+            allgatevalues = ddplungermetadata.get('allgatevalues', None)
             if allgatevalues is None:   # legacy data files
                 allgatevalues = ddplunger['gatevalues']
 
-            plot1D(ddplunger, fig=400, mstyle='.-b')
+            qtt.scans.plot1D(ddplunger, fig=400, mstyle='.-b')
             plt.figure(400)
             #xx, vstep, vsweep= show2D(dd, fig=101)
             imfile0 = 'sweep-%s-%s.png' % (od['name'], '-plunger')
@@ -228,8 +238,8 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             page.p('1D sweep on plunger %s: %s=%.1f, %s=%.1f [mV]' % (
                 gg[1], gg[0], allgatevalues[gg[0]], gg[2], allgatevalues[gg[2]]))
             page.img(src=imfile0, width='80%', alt="%s" % od['name'])
-        except Exception as e:
-            print(e)
+        except Exception as ex:
+            logging.exception(ex)
             print('generateOneDotReport: error with plunger scan ')
             pass
 
@@ -366,7 +376,7 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
         imfilerel, imfile=saveImage(resultsdir, 'doubledot-%s' % td['name'], basefig+1)
 
         page.p('Double-dot scan: scan complete %s' % scanTime(dd2d).strftime('%d-%m-%Y %H:%M:%S')  )
-        page.p('Double-dot scan: gatevalues: %s' % qutechalgorithms.printGateValues(dd2d.get('allgatevalues', dict({}) ))  )
+        page.p('Double-dot scan: gatevalues: %s' % qtt.legacy.printGateValues(dd2d.get('allgatevalues', dict({}) ))  )
         page.a.open(href=pathname2url(pfile), style='text-decoration: none;' )
         page.img( src=pathname2url(imfilerel), width='80%', alt="sd %s" % td['name'] )
         page.a.close()
