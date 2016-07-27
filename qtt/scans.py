@@ -114,7 +114,7 @@ def plot1D(data, fig=100, mstyle='-b'):
 
     #kk=list(data.arrays.keys())
 
-    val = data.default_array()
+    val = data.default_parameter_name()
 
     if fig is not None:
         plt.figure(fig)
