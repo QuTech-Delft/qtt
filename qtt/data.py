@@ -11,6 +11,13 @@ import time
 import qcodes
 import qcodes as qc
 import datetime
+import warnings
+import pickle
+
+try:
+    import hickle
+except:
+    pass
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
@@ -309,7 +316,7 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     """
     
     if arrayname is None:
-        arrayname = alldata.default_array()
+        arrayname = alldata.default_parameter_name()
 
     A = alldata.arrays[arrayname]
 
@@ -331,12 +338,24 @@ if __name__=='__main__':
     _=pix2scan( np.zeros( (2,4) ), alldata )
 
 #%%
-import warnings
 
 try:
     import deepdish
 except:
-    warnings.warn('could not load deepdish...')
+    pass
+#    warnings.warn('could not load deepdish...')
+    
+def load_data(mfile):
+    #return hickle.load(mfile)
+    with open(mfile, 'rb') as fid:
+        return pickle.load(fid)
+    
+def write_data(mfile, data):
+    with open(mfile, 'wb') as fid:
+        pickle.dump(data, fid)
+    #hickle.dump(metadata, mfile)
+    #_=deepdish.io.save(mfile, data)
+
     
 def loadQttData(path : str):
     ''' Wrapper function
@@ -347,7 +366,8 @@ def loadQttData(path : str):
     mfile=path
     if not mfile.endswith('hp5'):
         mfile = mfile + '.hp5'
-    dataset=deepdish.io.load(mfile)
+    #dataset=deepdish.io.load(mfile)
+    dataset=load_data(mfile)
     return dataset
 
 def writeQttData(dataset, path, metadata=None):
@@ -358,8 +378,8 @@ def writeQttData(dataset, path, metadata=None):
     mfile=path
     if not mfile.endswith('hp5'):
         mfile = mfile + '.hp5'
-    deepdish.io.save(mfile, dataset)
-
+    #deepdish.io.save(mfile, dataset)
+        write_data(mfile, dataset)
 
 
 
@@ -372,7 +392,8 @@ def loadDataset(path):
     dataset = qcodes.load_data(path)
 
     mfile=os.path.join(path, 'qtt.hp5' )
-    metadata=deepdish.io.load(mfile)
+    #metadata=deepdish.io.load(mfile)
+    metadata=load_data(mfile)
     return dataset, metadata
 
 def writeDataset(path, dataset, metadata=None):
@@ -389,7 +410,7 @@ def writeDataset(path, dataset, metadata=None):
         metadata=dataset.metadata
 
     mfile=os.path.join(path, 'qtt.hp5' )
-    _=deepdish.io.save(mfile, metadata)
+    write_data(mfile, metadata)
 
 
 
