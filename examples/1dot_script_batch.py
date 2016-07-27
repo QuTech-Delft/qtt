@@ -172,7 +172,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-2016-07-20'; Tvalues=np.array([-280])
+basetag='batch-2016-07-27'; Tvalues=np.array([-280])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -448,7 +448,7 @@ for ii, Tvalue in enumerate(Tvalues):
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
         #qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
-        plt.figure(10); plt.clf(); MatPlot(alldata.arrays[alldata.default_array()], interval=0, num=10)
+        plt.figure(10); plt.clf(); MatPlot(alldata.arrays[alldata.default_parameter_name()], interval=0, num=10)
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
         
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
