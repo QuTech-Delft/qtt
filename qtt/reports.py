@@ -17,6 +17,7 @@ import qtpy.QtWidgets as QtWidgetss
 
 import matplotlib.pyplot as plt
 
+
 from qtt.tools import tilefigs
 import qtt.tools
 from qtt.algorithms import analyseGateSweep
@@ -29,7 +30,7 @@ from qtt.data import *
 
 import webbrowser
 import dateutil
-import qtt.markup
+import qtt.markup as markup
 import copy
 import traceback
 
