@@ -15,7 +15,7 @@ extras = {
     'scikit-image': ('skimage', '0.11'),
     'pandas': ('pandas', '0.15'),
     'Polygon3': ('Polygon', '3.0'),
-    'hickle': ('hickle', '3.0'),
+    'hickle': ('hickle', '2.0'),
     'Numpy': ('numpy', '1.9')
 }
 extras_require = {k: '>='.join(v) for k, v in extras.items()}
