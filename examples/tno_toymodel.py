@@ -13,7 +13,12 @@ import numpy as np
 import time
 import pdb
 import multiprocessing as mp
-
+if __name__=='__main__':
+    try:
+        mp.set_start_method('spawn')
+    except:
+        pass
+    
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s: %(message)s  (%(filename)s:%(lineno)d)', )
@@ -72,8 +77,8 @@ if __name__=='__main__':
     
     #%%
     logging.warning('test IVVI...')
-    virtualV2.ivvi1.c1.set(300)
-    print('get P1: %f'  % (virtualV2.ivvi1.c1.get(), ) )
+    virtualV2.ivvi1.dac1.set(300)
+    print('get P1: %f'  % (virtualV2.ivvi1.dac1.get(), ) )
     
 #%%
     try:
@@ -87,14 +92,6 @@ if __name__=='__main__':
     #%%
     
     gate_boundaries=virtualV2.V2boundaries()
-    
-    #%%
-    #l.setLevel(logging.DEBUG)
-    
-    for v in [-20, 0, 20, 40, 60]:
-        gates.set_R(v)
-        w = keithley3.readnext()
-        print('v %f: w %f' % (v, w))
     
 
 #%%
@@ -190,10 +187,10 @@ if 0:
 
 if __name__=='__main__':
     scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
-    data = scan1D(scanjob, station, location=None, background=False)
+    data = qtt.scans.scan1D(scanjob, station, location=None, background=False)
 
 
-    data.sync(); data.arrays
+    data.sync(); # data.arrays
 
 
 #data = scan1D(scanjob, station, location='testsweep3', background=True)

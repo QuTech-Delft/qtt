@@ -69,3 +69,5 @@ examples/dummy.*
 examples/dot-dummy.*
 examples/2016*
 testing
+test*.bin
+test*.pickle

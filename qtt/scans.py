@@ -129,7 +129,9 @@ if __name__=='__main__':
 
 import time
 import pyqtgraph # FIXME
+"""
 def complete(self, delay=1.0, txt=''):
+        ''' Block untill dataset had completed '''
         logging.info('waiting for data to complete')
         try:
             nloops=0
@@ -146,6 +148,7 @@ def complete(self, delay=1.0, txt=''):
         except Exception as ex:
             return False
         return True
+"""
 
 def getParams(station, keithleyidx):
     params=[]
@@ -170,7 +173,7 @@ def getDefaultParameter(data):
     vv=[v for v in (data.arrays.keys()) if v.endswith('amplitude')]
     if (len(vv)>0):
         name = vv[0]
-        return name
+        return getattr(data, name)
         
     try:
         name = next(iter(data.arrays.keys()))
@@ -208,12 +211,14 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
+        
     if liveplotwindow is not None:
+        time.sleep(.1); data.sync(); # wait for at least 1 data point
         liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(data) )
 
     # FIXME
     if background:
-        complete(data) #
+        data.complete(delay=.25) #
         dt=-1
     else:
         dt=time.time()-t0
@@ -382,45 +387,7 @@ if __name__=='__main__':
 
 #%%
 
-def getTimeString(t=None):
-    """ Return time string for datetime.datetime object """
-    if t == None:
-        t = datetime.datetime.now()
-    if type(t) == float:
-        t = datetime.datetime.fromtimestamp(t)
-    dstr = t.strftime('%H-%M-%S')
-    return dstr
 
-def getDateString(t=None, full=False):
-    """ Return date string
-
-    Args:
-        t : datetime.datetime
-            time
-    """
-    if t is None:
-        t = datetime.datetime.now()
-    if type(t) == float:
-        t = datetime.datetime.fromtimestamp(t)
-    if full:
-        dstr = t.strftime('%Y-%m-%d-%H-%M-%S')
-    else:
-        dstr = t.strftime('%Y-%m-%d')
-    return dstr
-
-def experimentFile(outputdir, tag=None, dstr=None, bname=None, ext='hf5'):
-    """ Save experiment data for later analysis """
-    if tag is None:
-        tag = getDateString()
-    if dstr is None:
-        dstr = getDateString()
-
-    basename = '%s' % (dstr,)
-    if bname is not None:
-        basename = '%s-' % bname + basename
-    qtt.tools.mkdirc(os.path.join(outputdir, tag))
-    pfile = os.path.join(outputdir, tag, basename + '.' + ext)
-    return pfile
 
 #%%
 def loadOneDotPinchvalues(od, outputdir, verbose=1):

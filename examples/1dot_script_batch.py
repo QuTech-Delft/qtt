@@ -69,8 +69,11 @@ import matplotlib.pyplot as plt
 
 if platform.node()=='TUD205521':
     import stationV2 as setup
+    awg1=None
+    virtualAWG=None
 else:
     import virtualV2 as setup
+    awg1=None
     
 #setup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
 setup.initialize(reinit=False, server_name=None )
@@ -92,17 +95,6 @@ from qtt.legacy import *
 
 from qtt.reports import *
 
-
-#%%
-if 0:
-    ivvi1=setup.ivvi1
-    model = setup.model
-
-    model._data
-
-    #gates.set_R(20*np.random.rand())
-    ivvi1.c11.set(20*np.random.rand())
-    keithley3.amplitude.get()
 
 #%% Make instances available
 
@@ -172,7 +164,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-2016-07-27'; Tvalues=np.array([-280])
+basetag='batch-2016-07-28x'; Tvalues=np.array([-280])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -344,16 +336,8 @@ def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbos
 
 from qtt.scans import scanPinchValue
 
-def saveExperimentData(outputdir, dataset, tag, dstr):
-    path = experimentFile(outputdir, tag=tag, dstr=dstr)
-    logging.warning('save %s'  % path)
-    writeQttData(dataset=dataset, path = path )
-
-def loadExperimentData(outputdir, tag, dstr):
-    path = experimentFile(outputdir, tag=tag, dstr=dstr )
-    logging.warning('load %s'  % path )
-    dataset = loadQttData(path = path )
-    return dataset
+    
+from qtt.data import saveExperimentData, loadExperimentData     
 
 #%%
 
@@ -453,7 +437,7 @@ for ii, Tvalue in enumerate(Tvalues):
         
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
         
-        writeQttData(dataset=scandata, path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
+        write_data(experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) , scandata)
         #_=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         
 
@@ -558,8 +542,6 @@ for ii, Tvalue in enumerate(Tvalues):
 if len(Tvalues)>1:
     raise Exception(' not supported...' )
 
-#%%
-xSTOP
 
 #%% Measurements for double-dots
 
@@ -577,6 +559,9 @@ sd=sensingdot_t(ggsd, sdval, index=sdid  )
 #end()
 #measureSecond=False
 
+#%%
+
+xSTOP
 
 for ii, Tvalue in enumerate(Tvalues):
     if not measureSecond:
@@ -588,25 +573,27 @@ for ii, Tvalue in enumerate(Tvalues):
 
     gates.set_T(Tvalue)       # set T value
 
-    outputdir=mkdirc(os.path.join(datadir, tag))
-    outputdir2d=mkdirc(os.path.join(datadir, tag2d))
+    outputdir=qtt.mkdirc(os.path.join(datadir, tag))
+    outputdir2d=qtt.mkdirc(os.path.join(datadir, tag2d))
 
-    experimentdata.initExperimentTwo(topgate=Tvalue)
+    gates.set_T(Tvalue)       # set T value
+
+
     #RFsiggen1.set_frequency(RFfreq)   # SD2
-    stop_AWG()
+    qtt.legacy.stop_AWG(awg1)
     #RFsiggen1.off()
-    measurementfunctions.stopbias()
+    qtt.legacy.stopbias(gates)
     #RFsiggen1.on()  # for sensing dot
 
-    instrumentStatus()
+    #instrumentStatus()
 
     #readfunc=lambda: keithley1.readnext()*(1e12/(Amp*10e6) )
 
-    two_dots=get_two_dots(full=1)
-    one_dots=get_one_dots(full=1)
+    two_dots=qtt.legacy.get_two_dots(full=1)
+    one_dots=setup.get_one_dots(full=1)
 
     # make two-dots (code from optimize_one)
-    jobs = createDoubleDotJobs(two_dots, one_dots, basevalues=basevalues0, resultsdir=outputdir, fig=None)
+    jobs = qtt.legacy.createDoubleDotJobs(two_dots, one_dots, basevalues=basevalues0, resultsdir=outputdir, fig=None)
     saveExperimentData(outputdir2d, jobs, tag='doubledot', dstr='jobs')
     #jobs = loadExperimentData(outputdir2d, tag='doubledot', dstr='jobs')
 

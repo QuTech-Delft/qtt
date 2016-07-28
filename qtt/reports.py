@@ -58,11 +58,7 @@ def reportTemplate(title):
 import traceback
 import logging
 
-def loadExperimentData(outputdir, tag, dstr):
-    path = experimentFile(outputdir, tag=tag, dstr=dstr )
-    logging.warning('load %s'  % path )
-    dataset = loadQttData(path = path )
-    return dataset
+from qtt.data import loadExperimentData
 
 def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
     """ Generate a report on scanned one-dots

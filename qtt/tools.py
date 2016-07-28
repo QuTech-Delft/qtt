@@ -16,15 +16,8 @@ from qcodes.plots.qcmatplotlib import MatPlot
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
-# should be removed later
-#from pmatlab import tilefigs
+# do NOT load any other qtt submodules here
 
-
-#from qtt.data import *
-
-#from qtt.data import *
-
-#import pmatlab; pmatlab.qtmodules(verbose=1)
 
 #%%
 
@@ -407,6 +400,9 @@ def setupMeasurementWindows(station):
     logviewer.qplot.win.setMaximumHeight(400)
     logviewer.show()
 
+    app=QtWidgets.QApplication.instance()
+    app.processEvents()
+    
     return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': logviewer} )
 
 import time

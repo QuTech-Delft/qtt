@@ -19,6 +19,8 @@ try:
 except:
     pass
 
+import qtt.tools
+
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
@@ -344,13 +346,26 @@ try:
 except:
     pass
 #    warnings.warn('could not load deepdish...')
+
+def data_extension():
+    return 'pickle'
     
-def load_data(mfile):
+def load_data(mfile : str):
+    ''' Load data from specified file '''
     #return hickle.load(mfile)
+    ext=data_extension()
+    if ext is not None:
+        if not mfile.endswith(ext):
+            mfile = mfile + '.' + ext
     with open(mfile, 'rb') as fid:
         return pickle.load(fid)
     
-def write_data(mfile, data):
+def write_data(mfile : str, data):
+    ''' Write data to specified file '''
+    ext=data_extension()
+    if ext is not None:
+        if not mfile.endswith(ext):
+            mfile = mfile + '.' + ext
     with open(mfile, 'wb') as fid:
         pickle.dump(data, fid)
     #hickle.dump(metadata, mfile)
@@ -363,9 +378,11 @@ def loadQttData(path : str):
     :param path: filename without extension
     :returns dataset: The dataset
     '''
+    warnings.warn('please use load_data instead')
     mfile=path
-    if not mfile.endswith('hp5'):
-        mfile = mfile + '.hp5'
+    ext=data_extension()
+    if not mfile.endswith(ext):
+        mfile = mfile + '.' + ext
     #dataset=deepdish.io.load(mfile)
     dataset=load_data(mfile)
     return dataset
@@ -375,11 +392,13 @@ def writeQttData(dataset, path, metadata=None):
 
     :param path: filename without extension
     '''
+    warnings.warn('please use write_data instead')
     mfile=path
-    if not mfile.endswith('hp5'):
-        mfile = mfile + '.hp5'
+    ext=data_extension()
+    if not mfile.endswith(ext):
+        mfile = mfile + ext
     #deepdish.io.save(mfile, dataset)
-        write_data(mfile, dataset)
+    write_data(mfile, dataset)
 
 
 
@@ -391,8 +410,7 @@ def loadDataset(path):
     '''
     dataset = qcodes.load_data(path)
 
-    mfile=os.path.join(path, 'qtt.hp5' )
-    #metadata=deepdish.io.load(mfile)
+    mfile=os.path.join(path, 'qtt-metadata' )
     metadata=load_data(mfile)
     return dataset, metadata
 
@@ -409,11 +427,64 @@ def writeDataset(path, dataset, metadata=None):
     if metadata is None:
         metadata=dataset.metadata
 
-    mfile=os.path.join(path, 'qtt.hp5' )
+    mfile=os.path.join(path, 'qtt-metadata' )
     write_data(mfile, metadata)
 
 
+def getTimeString(t=None):
+    """ Return time string for datetime.datetime object """
+    if t == None:
+        t = datetime.datetime.now()
+    if type(t) == float:
+        t = datetime.datetime.fromtimestamp(t)
+    dstr = t.strftime('%H-%M-%S')
+    return dstr
 
+def getDateString(t=None, full=False):
+    """ Return date string
+
+    Args:
+        t : datetime.datetime
+            time
+    """
+    if t is None:
+        t = datetime.datetime.now()
+    if type(t) == float:
+        t = datetime.datetime.fromtimestamp(t)
+    if full:
+        dstr = t.strftime('%Y-%m-%d-%H-%M-%S')
+    else:
+        dstr = t.strftime('%Y-%m-%d')
+    return dstr
+
+def experimentFile(outputdir : str, tag=None, dstr=None, bname=None):
+    """ Format experiment data file for later analysis """
+    if tag is None:
+        tag = getDateString()
+    if dstr is None:
+        dstr = getDateString()
+
+    ext=data_extension()
+    basename = '%s' % (dstr,)
+    if bname is not None:
+        basename = '%s-' % bname + basename
+    qtt.tools.mkdirc(os.path.join(outputdir, tag))
+    pfile = os.path.join(outputdir, tag, basename + '.' + ext)
+    return pfile
+    
+def loadExperimentData(outputdir, tag, dstr):
+    path = experimentFile(outputdir, tag=tag, dstr=dstr )
+    logging.info('load %s'  % path )
+    dataset = load_data( path )
+    return dataset
+    
+def saveExperimentData(outputdir, dataset, tag, dstr):
+    path = experimentFile(outputdir, tag=tag, dstr=dstr)
+    logging.warning('save %s'  % path)
+    write_data(path, dataset)
+    
+
+    
 #%%
 
 if __name__=='__main__':
