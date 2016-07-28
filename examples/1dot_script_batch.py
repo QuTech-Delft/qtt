@@ -32,6 +32,9 @@ if __name__=='__main__':
         pass
 #print(qtpy.QT_API)
 
+# make sure drivers are disconnected...
+#os.system("taskkill /im python.exe")
+
 import pdb
 
 ##
