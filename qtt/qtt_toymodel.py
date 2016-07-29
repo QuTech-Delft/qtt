@@ -668,9 +668,11 @@ class virtual_gates(Instrument):
 
         self.get_all()
 
-    def get_all(self):
-        for gate in self._gate_map.keys():
+    def get_all(self, verbose=0):
+        for gate in sorted(self._gate_map.keys()):
             self.get(gate)
+            if verbose:
+                print('%s: %f' % (gate, self.get(gate)))
 
     def _get(self, gate):
         gatemap = self._gate_map[gate]
