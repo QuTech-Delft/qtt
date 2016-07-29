@@ -32,7 +32,7 @@ git clone https://github.com/VandersypenQutech/stations.git
 ```
 > conda install numpy scipy matplotlib pandas scikit-image
 > conda install spyder pyqtgraph
-> pip install pyvisa
+> pip install pyvisa hickle
 ```
 For other systems
 ```
