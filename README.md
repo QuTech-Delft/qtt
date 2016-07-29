@@ -32,13 +32,13 @@ git clone https://github.com/VandersypenQutech/stations.git
 ```
 > conda install numpy scipy matplotlib pandas scikit-image
 > conda install spyder pyqtgraph
-> pip install pyvisa
+> pip install pyvisa hickle
 ```
 For other systems
 ```
 > pip install numpy scipy matplotlib pandas scikit-image
 > pip install numpy spyder pyqtgraph
-> pip install pyvisa
+> pip install pyvisa hickle
 ```
 - Register the repositories it with Python. For each of the repositories run this from the root directory:
 ```
