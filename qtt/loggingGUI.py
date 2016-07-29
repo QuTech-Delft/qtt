@@ -178,7 +178,7 @@ class HorseLoggingGUI(QtWidgets.QDialog):
     def __init__( self, parent = None ):
         super(HorseLoggingGUI, self).__init__(parent)
 
-        self.setWindowTitle('HorseAR logger')
+        self.setWindowTitle('ZMQ logger')
 
         self.imap=dict((v, k) for k, v in self.LOG_LEVELS.items())
 
@@ -190,7 +190,7 @@ class HorseLoggingGUI(QtWidgets.QDialog):
         self._button.setText('Clear')
         self._levelBox  = QtWidgets.QComboBox(self)
         for k in sorted(self.LOG_LEVELS.keys()):
-            print('item %s' % k)
+            #print('item %s' % k)
             val=self.LOG_LEVELS[k]            
             self._levelBox.insertItem(k, val)
 
@@ -207,7 +207,7 @@ class HorseLoggingGUI(QtWidgets.QDialog):
         layout.addLayout(blayout)
         self.setLayout(layout)
 
-        self.addMessage('logging started...')
+        self.addMessage('logging started...\n')
         
         self._levelBox.setCurrentIndex(1)
 
@@ -235,12 +235,6 @@ class HorseLoggingGUI(QtWidgets.QDialog):
         dlg._console.clear()
         self.addMessage('cleared messages...\n')
 
-    def test( self ):
-        logger.debug('debug message')
-        logger.info('info message')
-        logger.warning('warning message')
-        logger.error('error message')
-        print( 'Old school hand made print message')
 
 def qt_logger(port, dlg, level=logging.INFO, verbose=1):
     ctx = zmq.Context()
@@ -254,8 +248,10 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
     app.processEvents()
 
     print('connected to port %s' % port)
+    loop=0
     while True:
         tprint('ZMQ logger: logging...', dt=5)
+        loop=loop+1
         try:
             level, message  = sub.recv_multipart(zmq.NOBLOCK)      
             #level, message = sub.recv_multipart()
@@ -265,9 +261,10 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
                 message = message[:-1]
             level=level.lower().decode('ascii')
             log = getattr(logging, level)
+            lvlvalue=dlg.imap.get(level, None)
             
             log(message)
-            dlg.addMessage(message+'\n', level)
+            dlg.addMessage(message+'\n', lvlvalue)
             
             app.processEvents()
             
@@ -280,6 +277,12 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
             message=''
             level=None
             pass
+            if dlg.isHidden():
+                # break if window is closed
+                break
+            if loop>100:
+                pass
+                #break
         
 #%%
 if __name__ == '__main__':
@@ -292,9 +295,9 @@ if __name__ == '__main__':
         app = QtWidgets.QApplication([])
     dlg = HorseLoggingGUI()
     dlg.resize( 800, 400)
-    dlg.show()
-    if ( app ):
-        app.exec_()
+    #dlg.setGeometry(10,110,800,400)
+    dlg.setGeometry(-1900,40,800,500); app.processEvents() # V2
+    dlg.show();  app.processEvents()
 
     # start the log watcher
     try:
@@ -302,13 +305,17 @@ if __name__ == '__main__':
         qt_logger(port, level=args.level, verbose=verbose, dlg=dlg)
         pass
     except KeyboardInterrupt:
+        print('keyboard interrupt' )
         pass
 
-    if ( app ):
-        app.exec_()
+    #if ( app ):
+    #    app.exec_()
 
 #%% Send message to logger
 if 0:
-    installZMQlogger(port=port, level=None)
+    port=5800
+    import logging
+    from qtt.loggingGUI import installZMQlogger
+    installZMQlogger(port=port, level=logging.INFO)
     logging.warning('test')
     #log_worker(port=5700, interval=1)

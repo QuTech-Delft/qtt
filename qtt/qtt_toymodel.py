@@ -668,6 +668,12 @@ class virtual_gates(Instrument):
 
         self.get_all()
 
+    def get_idn(self):
+        ''' Overrule because the default VISA command does not work '''
+        IDN = {'vendor': 'QuTech', 'model': 'virtual_gates',
+                    'serial': None, 'firmware': None}
+        return IDN
+
     def get_all(self, verbose=0):
         for gate in sorted(self._gate_map.keys()):
             self.get(gate)
@@ -720,11 +726,10 @@ class virtual_gates(Instrument):
 
 
     def __repr__(self):
-        s = 'virtual_gates: %s (%d gates)' % (self.name, len(self._gate_map))
+        gm=getattr(self, '_gate_map', [])
+        s = 'virtual_gates: %s (%d gates)' % (self.name, len(gm) )
 
         return s
-        # func = lambda voltage: self._do_set_gate(voltage, gate)
-        # setattr(self, '_do_set_%s' %gate, func)
 
     def allvalues(self):
         """ Return all gate values in a simple dict """

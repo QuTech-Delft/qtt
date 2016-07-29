@@ -51,10 +51,14 @@ class FPGA_ave(VisaInstrument):
 
         v=self.visa_handle
         # make sure term characters are ignored
+        logging.debug(__name__ + ' : set termchar settings')
         v.set_visa_attribute(visa.constants.VI_ATTR_TERMCHAR_EN, 0)
         v.set_visa_attribute(visa.constants.VI_ATTR_ASRL_END_IN, 0)
+        logging.debug(__name__ + ' : completed initialization')
+
 
     def get_idn(self):
+        logging.debug(__name__ + ' : FPGA_ave: get_idn')
         IDN = {'vendor': None, 'model': 'FPGA',
                     'serial': None, 'firmware': None}
         return IDN

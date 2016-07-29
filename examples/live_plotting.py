@@ -10,6 +10,8 @@ Created on Thu Sep 10 15:55:21 2015
 import os,sys, copy, math
 import warnings
 import qcodes
+import logging
+
 if __name__=='__main__':
     try:
         multiprocessing.set_start_method('spawn')
@@ -136,6 +138,9 @@ class livePlot:
         pass
     
     def updatebg(self, verbose=0):
+        if self.idx%10==0:
+            logging.debug('livePlot: updatebg %d' % self.idx)
+        self.idx=self.idx+1
         if self.datafunction is not None:
             try:
                 dd=self.datafunction()
@@ -166,6 +171,7 @@ class livePlot:
         self.timer.stop()
         
 #%% Some default callbacks
+import time
    
 class fpgaCallback:
     def __init__(self, Naverage=4, risetime=2e-3, FPGA_mode=0):   

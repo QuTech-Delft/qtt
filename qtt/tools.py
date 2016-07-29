@@ -21,6 +21,18 @@ import qtpy.QtWidgets as QtWidgets
 
 #%%
 
+from qcodes.process.heartbeat import *
+import time
+
+def pauseHeartBeat():
+    m=initHeartBeat(bfile, reinit=False)
+    setHeartBeat(m, 0)
+    for ii in range(5):
+        print('pause %d: ...' % ii)
+        time.sleep(1)
+    setHeartBeat(m, 1)
+#%%
+
 def checkPickle(obj):
     try:
         _=pickle.dumps(obj)

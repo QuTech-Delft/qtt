@@ -62,7 +62,7 @@ class paramUpdateWidget(QtWidgets.QWidget):
     def updateLabel(self, value=None):
                 if value is None:
                     value=self.gates.get(self.name)
-                self.value.setText( str(value) )
+                self.value.setText( '%.3f' % value )
                             
     def addValue(self ):
                 v=self.gates.get(self.name)+self.delta
@@ -120,6 +120,7 @@ def createUpdateWidget():
     
 #w = createUpdateWidget()
 
+#%%
 import multiprocessing as mp
 
 if __name__=='__main__':
