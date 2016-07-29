@@ -58,6 +58,7 @@ import qtt.reports
 reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
 #import qcodes.utils.reload_code
 #_=qcodes.utils.reload_code.reload_code()
+from qcodes.utils.validators import Numbers
 
 import logging
 l = logging.getLogger()
@@ -113,7 +114,10 @@ gates = station.gates
 
 station.set_measurement(keithley3.amplitude)
 
-datadir = '/home/eendebakpt/data/qdata'
+if platform.node()=='TUD205521':
+    datadir =  r'p:\data\qcodes'   
+else:
+    datadir = '/home/eendebakpt/data/qdata'
 
 qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
 mwindows=qtt.setupMeasurementWindows(station)
@@ -130,16 +134,17 @@ qtt.scans.mwindows=mwindows
 liveplotwindow=mwindows['plotwindow']
 
 
-model = setup.model
+#model = setup.model
 
 #model.compute()
 
 #%% Define 1-dot combinations
+from stationV2.sample import get_one_dots
 
 verbose=2   # set output level of the different functions
 
 full=1      # for full=0 the resolution of the scans is reduced, this is usefull for quick testing
-one_dots=setup.get_one_dots(sdidx=[])
+one_dots=get_one_dots(sdidx=[])
 #one_dots=one_dots[0:1]; full=0
 #one_dots=one_dots[1:3]; full=0
 full=0
@@ -147,7 +152,8 @@ full=0
 sdindices=[1,2]
 sdindices=[1,]
 
-sddots=setup.get_one_dots(sdidx=sdindices)[-2:]
+
+sddots=get_one_dots(sdidx=sdindices)[-2:]
 
 #one_dots=[one_dots[0], one_dots[-1] ];
 full=0
@@ -167,7 +173,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-2016-07-28x'; Tvalues=np.array([-280])
+basetag='batch-2016-07-28y'; Tvalues=np.array([-280])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -341,6 +347,7 @@ from qtt.scans import scanPinchValue
 
     
 from qtt.data import saveExperimentData, loadExperimentData     
+app=pyqtgraph.mkQApp()
 
 #%%
 
