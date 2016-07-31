@@ -9,7 +9,6 @@ from imp import reload
 import math
 import sys,os
 import numpy as np
-#import dill
 import time
 import pdb
 import multiprocessing as mp
@@ -27,7 +26,7 @@ import qcodes
 import qcodes as qc
 from qcodes import Instrument, MockInstrument, Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
-
+import pickle
 #import matplotlib.pyplot
 
 if __name__=='__main__':
@@ -48,8 +47,8 @@ if __name__=='__main__':
     [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2', 'AMockInsts'] ]
 
 import virtualV2; # reload(virtualV2)
-import qtt.qtt_toymodel
-from qtt.qtt_toymodel import DummyModel, VirtualIVVI, MockMeter, MockSource, logTest
+import qtt.qtt_toymodel; reload(qtt.qtt_toymodel)
+from qtt.qtt_toymodel import FourdotModel, VirtualIVVI, VirtualMeter, logTest
 
 #%% Create a virtual model for testing
 #
@@ -60,7 +59,7 @@ if __name__=='__main__':
 
 
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
-   # server_name=None
+    server_name=None
     virtualV2.initialize(server_name=server_name)
     #virtualV2.initialize(server_name='virtualV2'+time.strftime("%H.%M.%S"))
     
@@ -201,8 +200,9 @@ if __name__=='__main__':
 
 #%%
 
-p=qtt.scans.getDefaultParameter(data)
-print(p)
+if __name__=='__main__':
+    p=qtt.scans.getDefaultParameter(data)
+    print(p)
 
 #%%
     
@@ -242,8 +242,9 @@ if __name__=='__main__':
 
 
 #%% Check live plotting
+if __name__=='__main__':
 
-data = scan1D(scanjob, station, location=None, background=False)
+    data = scan1D(scanjob, station, location=None, background=False)
 
 #%% Extend model
 

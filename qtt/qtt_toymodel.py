@@ -11,18 +11,13 @@ import logging
 import numpy as np
 
 import qcodes as qc
-from qcodes import Instrument, MockInstrument, MockModel # , Parameter, Loop, DataArray
+from qcodes import Instrument   # , Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
-
-#import sys
-#sys.stdout.write=logging.info
 
 import pyqtgraph
 import pyqtgraph.Qt as Qt
-from pyqtgraph.Qt import QtGui # as QtGui
+from pyqtgraph.Qt import QtGui 
 from functools import partial
-
-#import PyQt4 as Qt; import PyQt4.QtGui as QtGui
 
 
 import qtt
@@ -307,8 +302,10 @@ class FourdotModel(Instrument):
         #self.name = name
 
         # make parameters for all the gates...
-        for i, idx in set(gate_map.values()):
-            g='ivvi%d_dac%d' % (i,idx)
+        gateset= set(gate_map.values())
+        gateset= [ (i, a) for a in range(1,17) for i in range(2)]
+        for i, idx in gateset:
+            g='ivvi%d_dac%d' % (i+1,idx)
             logging.debug('add gate %s' % g )
             self.add_parameter(g,
                                label='Gate {} (mV)'.format(g),
@@ -325,15 +322,23 @@ class FourdotModel(Instrument):
             setattr(self, '%s_get' % instr, self._dummy_get )
             setattr(self, '%s_set' % instr, self._dummy_set )
 
-        for instr in [ 'keithley1', 'keithley2']:
+        for instr in [ 'keithley1', 'keithley2', 'keithley3']:
             if not instr in self._data:
                 self._data[instr] = dict()
-            if 1:
+            if 0:
                 setattr(self, '%s_set' % instr, partial( self._generic_set, instr) )
+            g=instr+'_amplitude'
+            self.add_parameter(g,
+                               #label='Gate {} (mV)'.format(g),
+                               #get_cmd=getattr(self, instr+'_get' ),
+                               get_cmd=partial(getattr(self, instr+'_get' ),'amplitude'),
+                               #set_cmd=partial(self._data_set, g),
+                               get_parser=float,
+                               )
 
         #self._data['gates']=dict()
-        self._data['keithley3']=dict()
-        self._data['keithley3']['amplitude']=.5
+        #self._data['keithley3']=dict()
+        #self._data['keithley3']['amplitude']=.5
 
         # initialize a 4-dot system
         if 0:
@@ -377,9 +382,9 @@ class FourdotModel(Instrument):
         pass
 
     def _data_get(self, param):
-        return self._dict[param]
+        return self._data.get(param, 0)
     def _data_set(self, param, value):
-        self._dict[param]=value
+        self._data[param]=value
         return
 
     def gate2ivvi(self,g):
@@ -388,7 +393,7 @@ class FourdotModel(Instrument):
 
     def gate2ivvi_value(self,g):
         i, j = self.gate2ivvi(g)
-        value= self._data[i][j]
+        value= self._data[i].get(j, 0)
         return value
 
     def get_gate(self, g):
@@ -398,7 +403,7 @@ class FourdotModel(Instrument):
         c = 1
         for jj, g in enumerate(gates):
             i, j = self.gate2ivvi(g)
-            v = float(self._data[i][j] )
+            v = float( self._data[i].get(j, 0) )
             c=c*qtt.logistic(v, offset+jj*5, 1 / 40.)
         val = c
         if random:
@@ -510,7 +515,7 @@ class FourdotModel(Instrument):
         print('huh?')
         #return self._generic_get('keithley3', param)
         
-class VirtualIVVI2(Instrument):
+class VirtualIVVI(Instrument):
 
     shared_args = ['model']
     
@@ -518,7 +523,7 @@ class VirtualIVVI2(Instrument):
     def __init__(self, name, model=None, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
         super().__init__(name, **kwargs)
 
-        self._model = model
+        self.model = model
         self._gates = gates
         logging.debug('add gates')
         for i, g in enumerate(gates):
@@ -544,11 +549,13 @@ class VirtualIVVI2(Instrument):
             self.get_all()
 
     def get_gate(self, gate):
-        print('get_gate %s' % gate)
-        return 0
+        value = self.model.get(self.name+'_'+gate)
+        logging.info('%s: get_gate %s' % (self.name,gate) )
+        return value
 
     def set_gate(self, gate, value):
-        print('set_gate %s: %s' % (gate, value))
+        self.model.set(self.name+'_'+gate, value)
+        logging.info('set_gate %s: %s' % (gate, value))
         return
         
     def get_all(self):
@@ -560,8 +567,9 @@ class VirtualIVVI2(Instrument):
     def __repr__(self):
         ''' Return string description instance '''
         return 'VirtualIVVI: %s' % self.name
-        
-class VirtualIVVI(MockInstrument):
+
+"""        
+class VirtualIVVI2(MockInstrument):
 
     ''' Virtual instrument representing an IVVI '''
 
@@ -602,9 +610,10 @@ class VirtualIVVI(MockInstrument):
         ''' Return string description instance '''
         return 'VirtualIVVI: %s' % self.name
 
-
+"""
 #%%
 
+"""
 
 class MockSource(MockInstrument):
 
@@ -621,22 +630,39 @@ class MockSource(MockInstrument):
                            vals=Numbers(0, 10),
                            sweep_step=0.1,
                            sweep_delay=0.05)
+"""
 
+class VirtualMeter(Instrument):
 
-class MockMeter(MockInstrument):
+    shared_args = ['model']
 
-    def __init__(self, name, model, **kwargs):
-        super().__init__(name, model=model, **kwargs)
-
-        self.add_parameter('amplitude',
-                           label='%s Current (nA)' % name,
-                           get_cmd='amplitude?',
-                           get_parser=float)
+    def __init__(self, name, model = None, **kwargs):
+        super().__init__(name, **kwargs)
+        self.model = model
+        
+        g='amplitude'
+        self.add_parameter(g,
+                        label='%s Current (nA)' % name,
+                        get_cmd=partial(self.get_gate, g),
+                        #set_cmd=partial(self.set_gate, g),
+                        get_parser=float)
 
         #self.add_function('readnext', call_cmd=partial(self.get, 'amplitude'))
         self.add_parameter('readnext', get_cmd=partial(self.get, 'amplitude'), label=name)
 
+    def get_gate(self, gate):
+        # need a remote get...
+        self.model.get(self.name+'_'+gate)
+        #self.name+'_'+gate
+        
+        logging.info('%s: get_gate %s' % (self.name,gate) )
+        return 0
 
+    def set_gate(self, gate, value):
+        self.model.set(self.name+'_'+gate, value)
+        logging.info('set_gate %s: %s' % (gate, value))
+        return
+        
 #%%
 
 class MyInstrument(Instrument):
