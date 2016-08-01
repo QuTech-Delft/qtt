@@ -246,9 +246,9 @@ if __name__=='__main__':
 
     data = scan1D(scanjob, station, location=None, background=False)
 
-#%% Extend model
+#%% Extend model (testing area)
 
-if __name__=='__main__':
+if __name__=='__main__' and 0:
 
     model=virtualV2.model
     
@@ -295,32 +295,9 @@ if __name__=='__main__':
     tmp=computeSD(self)
     print(tmp)
 
-    model._data=model.get_attribute('_data')
+    #model._data=model.get_attribute('_data')
     
 #%%  
-
-if __name__=='__main__':
-
-    model._data = model.get_attribute('_data')
-    #%timeit model.computeSD()
-    
-    #FIXME: check overhead of ivvi1.c1 
-    #TEST: server_name=None, different instrument (not connected to model)
-    
-    t0=time.time()
-    #scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
-    #data = scan1D(scanjob, station, location=None, background=True)
-    #stepvalues = gates.P1[0:10:.01]
-    stepvalues = ivvi1.c1[0:10:.01]
-    innerloop = qc.Loop(stepvalues, delay=0, progress_interval=2).run(background=False)
-    dt=time.time()-t0
-    print('dt %.2f'  % dt)
-    
-    steps=ivvi1.c1[0:50:.1]
-    t0=time.time()
-    data = qc.Loop(steps, 0.0).run(data_manager=False, background=False)
-    dt=time.time()-t0
-    print('dt %.2f'  % dt)
 
     
 #%%

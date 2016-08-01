@@ -317,8 +317,8 @@ class FourdotModel(Instrument):
 
         self.gate_map=gate_map
         for instr in [ 'ivvi1', 'ivvi2']: # , 'keithley1', 'keithley2']:
-            if not instr in self._data:
-                self._data[instr] = dict()
+            #if not instr in self._data:
+            #    self._data[instr] = dict()
             setattr(self, '%s_get' % instr, self._dummy_get )
             setattr(self, '%s_set' % instr, self._dummy_set )
 
@@ -393,7 +393,8 @@ class FourdotModel(Instrument):
 
     def gate2ivvi_value(self,g):
         i, j = self.gate2ivvi(g)
-        value= self._data[i].get(j, 0)
+        #value= self._data[i].get(j, 0)
+        value = self._data.get(i+'_'+j, 0)
         return value
 
     def get_gate(self, g):
@@ -402,8 +403,9 @@ class FourdotModel(Instrument):
     def _calculate_pinchoff(self, gates, offset=-200., random=0):
         c = 1
         for jj, g in enumerate(gates):
-            i, j = self.gate2ivvi(g)
-            v = float( self._data[i].get(j, 0) )
+            v = self.gate2ivvi_value(g)
+            #i, j = self.gate2ivvi(g)
+            #v = float( self._data[i].get(j, 0) )
             c=c*qtt.logistic(v, offset+jj*5, 1 / 40.)
         val = c
         if random:
@@ -476,10 +478,11 @@ class FourdotModel(Instrument):
 
 
         except Exception as ex:
-            #print(ex)
+            print(ex)
+            logging.warning(ex)
             #raise ex
-            msg = traceback.format_exc(ex)
-            logging.warning('compute failed! %s' % msg)
+            #msg = traceback.format_exc(ex)
+            #logging.warning('compute failed! %s' % msg)
         return c
 
     def _generic_get(self, instrument, parameter):
@@ -527,7 +530,6 @@ class VirtualIVVI(Instrument):
         self._gates = gates
         logging.debug('add gates')
         for i, g in enumerate(gates):
-            cmdbase = g  # 'c{}'.format(i)
             logging.debug('add gate %s' % g )
             self.add_parameter(g,
                                label='Gate {} (mV)'.format(g),
@@ -550,12 +552,12 @@ class VirtualIVVI(Instrument):
 
     def get_gate(self, gate):
         value = self.model.get(self.name+'_'+gate)
-        logging.info('%s: get_gate %s' % (self.name,gate) )
+        logging.debug('%s: get_gate %s' % (self.name,gate) )
         return value
 
     def set_gate(self, gate, value):
         self.model.set(self.name+'_'+gate, value)
-        logging.info('set_gate %s: %s' % (gate, value))
+        logging.debug('set_gate %s: %s' % (gate, value))
         return
         
     def get_all(self):
@@ -652,15 +654,15 @@ class VirtualMeter(Instrument):
 
     def get_gate(self, gate):
         # need a remote get...
-        self.model.get(self.name+'_'+gate)
+        return self.model.get(self.name+'_'+gate)
         #self.name+'_'+gate
         
-        logging.info('%s: get_gate %s' % (self.name,gate) )
-        return 0
+        #logging.debug('%s: get_gate %s' % (self.name,gate) )
+       # return 0
 
     def set_gate(self, gate, value):
         self.model.set(self.name+'_'+gate, value)
-        logging.info('set_gate %s: %s' % (gate, value))
+        #logging.info('set_gate %s: %s' % (gate, value))
         return
         
 #%%
