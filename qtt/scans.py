@@ -128,7 +128,6 @@ if __name__=='__main__':
 #%%
 
 import time
-import pyqtgraph # FIXME
 """
 def complete(self, delay=1.0, txt=''):
         ''' Block untill dataset had completed '''
@@ -249,8 +248,8 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     if minstrument is None:
         minstrument = scanjob.get('keithleyidx', None)
 
-    print('fixme: compensategates')
-    print('fixme: wait_time')
+    logging.info('scan2D: todo: implement compensategates')
+    logging.info('scan2D: todo: implement wait_time')
     #compensateGates = scanjob.get('compensateGates', [])
     #gate_values_corners = scanjob.get('gate_values_corners', [[]])
 

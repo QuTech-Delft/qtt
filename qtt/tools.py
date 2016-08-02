@@ -401,8 +401,7 @@ def setupMeasurementWindows(station):
     w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
     w.updatecallback()
 
-    # FIXME: interval=0 because it only works in the notebook
-    plotQ = QtPlot(windowTitle='Live plot', remote=False, interval=0)
+    plotQ = QtPlot(windowTitle='Live plot', interval=.5)
     plotQ.win.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
     plotQ.update()
 

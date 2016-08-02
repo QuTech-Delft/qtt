@@ -9,7 +9,6 @@ from imp import reload
 import math
 import sys,os
 import numpy as np
-#import dill
 import time
 import pdb
 import multiprocessing as mp
@@ -27,7 +26,7 @@ import qcodes
 import qcodes as qc
 from qcodes import Instrument, MockInstrument, Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
-
+import pickle
 #import matplotlib.pyplot
 
 if __name__=='__main__':
@@ -48,8 +47,8 @@ if __name__=='__main__':
     [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2', 'AMockInsts'] ]
 
 import virtualV2; # reload(virtualV2)
-import qtt.qtt_toymodel
-from qtt.qtt_toymodel import DummyModel, VirtualIVVI, MockMeter, MockSource, logTest
+import qtt.qtt_toymodel; reload(qtt.qtt_toymodel)
+from qtt.qtt_toymodel import FourdotModel, VirtualIVVI, VirtualMeter, logTest
 
 #%% Create a virtual model for testing
 #
@@ -60,7 +59,7 @@ if __name__=='__main__':
 
 
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
-   # server_name=None
+    server_name=None
     virtualV2.initialize(server_name=server_name)
     #virtualV2.initialize(server_name='virtualV2'+time.strftime("%H.%M.%S"))
     
@@ -201,8 +200,9 @@ if __name__=='__main__':
 
 #%%
 
-p=qtt.scans.getDefaultParameter(data)
-print(p)
+if __name__=='__main__':
+    p=qtt.scans.getDefaultParameter(data)
+    print(p)
 
 #%%
     
@@ -242,12 +242,13 @@ if __name__=='__main__':
 
 
 #%% Check live plotting
-
-data = scan1D(scanjob, station, location=None, background=False)
-
-#%% Extend model
-
 if __name__=='__main__':
+
+    data = scan1D(scanjob, station, location=None, background=False)
+
+#%% Extend model (testing area)
+
+if __name__=='__main__' and 0:
 
     model=virtualV2.model
     
@@ -294,32 +295,9 @@ if __name__=='__main__':
     tmp=computeSD(self)
     print(tmp)
 
-    model._data=model.get_attribute('_data')
+    #model._data=model.get_attribute('_data')
     
 #%%  
-
-if __name__=='__main__':
-
-    model._data = model.get_attribute('_data')
-    #%timeit model.computeSD()
-    
-    #FIXME: check overhead of ivvi1.c1 
-    #TEST: server_name=None, different instrument (not connected to model)
-    
-    t0=time.time()
-    #scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
-    #data = scan1D(scanjob, station, location=None, background=True)
-    #stepvalues = gates.P1[0:10:.01]
-    stepvalues = ivvi1.c1[0:10:.01]
-    innerloop = qc.Loop(stepvalues, delay=0, progress_interval=2).run(background=False)
-    dt=time.time()-t0
-    print('dt %.2f'  % dt)
-    
-    steps=ivvi1.c1[0:50:.1]
-    t0=time.time()
-    data = qc.Loop(steps, 0.0).run(data_manager=False, background=False)
-    dt=time.time()-t0
-    print('dt %.2f'  % dt)
 
     
 #%%
