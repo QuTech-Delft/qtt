@@ -48,6 +48,7 @@ if __name__=='__main__':
 
 import virtualV2; # reload(virtualV2)
 import qtt.qtt_toymodel; reload(qtt.qtt_toymodel)
+import qtt.live
 from qtt.qtt_toymodel import FourdotModel, VirtualIVVI, VirtualMeter, logTest
 
 #%% Create a virtual model for testing
