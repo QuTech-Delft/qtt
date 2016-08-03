@@ -55,6 +55,9 @@ If you registered Qcodes with Python via `setup.py develop`, all you need to do 
 
 See the [docs](docs) directory (to be constructed)
 
+For a general introduction also see
+* [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
+
 ## Contributing
 
 See [Contributing](CONTRIBUTING.md) for information about bug/issue reports, contributing code, style, and testing
