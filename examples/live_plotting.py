@@ -28,12 +28,13 @@ import qtpy.QtGui as QtGui
 import qtpy.QtCore as QtCore
 
 _qtapp=pg.mkQApp()
+
+import virtualV2
+virtualV2.initialize(server_name='test2')
+gates=virtualV2.gates
     
 #%% Liveplot object
 #    
-# TODO: automatic scaling?
-# TODO: implement FPGA callback in qcodes    
-# TODO: implement 2 function plot (for 2 sensing dots)
 #
 class livePlot:
     """ Class to enable live plotting of data """
@@ -43,6 +44,9 @@ class livePlot:
         win.move(-900,10)
         win.setWindowTitle('Live view')
         
+        # TODO: automatic scaling?
+        # TODO: implement FPGA callback in qcodes    
+        # TODO: implement 2 function plot (for 2 sensing dots)
         pg.setConfigOptions(antialias=True)
         self.win = win
         self.mode=mode
@@ -194,15 +198,20 @@ class fpgaCallback:
         return np.array(ww)    
 
 
-gates=[0,1]
+gates.L.set(0)
+gates.R.set(1)
 class dummyCallback:
     def __init__(self, npoints=200):   
         self.npoints=npoints
         self.makeCurve()
-    def makeCurve(self):
+    def makeCurve(self, verbose=0):
+        v1=gates.L.get()
+        v2=gates.R.get()
+        if verbose:
+            print('param: %f %f' % (v1, v2) )
         npoints=self.npoints
-        self.curve=((np.arange(npoints)-npoints/2+gates[0])/30)**3
-        self.curve+=((np.arange(npoints)-npoints/2+gates[0])/30)**2*gates[1]
+        self.curve=((np.arange(npoints)-npoints/2+v1)/30)**3
+        self.curve+=((np.arange(npoints)-npoints/2+v1)/30)**2*v2
     def __call__(self, verbose=0):
         """ Callback function to read a single line of data """
         self.makeCurve()
@@ -219,6 +228,7 @@ if __name__=='__main__':
     _qtapp.closeAllWindows()
     
     lp = livePlot(mode='1d')
+    lp.win.setGeometry(10,100,500,400)
     lp.sweepdata=np.arange(200)
     lp.setHighLow([-200,800])
     self=lp

@@ -408,12 +408,6 @@ def setupMeasurementWindows(station):
     plotQ.win.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
     plotQ.update()
 
-
-    logviewer = DataViewer()
-    logviewer.setGeometry(vv[0]+vv[2]-400,vv[1],400,600)
-    logviewer.qplot.win.setMaximumHeight(400)
-    logviewer.show()
-
     app=QtWidgets.QApplication.instance()
     app.processEvents()
     

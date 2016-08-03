@@ -11,6 +11,9 @@ import sys,os
 import numpy as np
 import time
 import pdb
+import qtt.scans
+import platform
+
 import multiprocessing as mp
 if __name__=='__main__':
     try:
@@ -24,10 +27,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s: %(m
 
 import qcodes
 import qcodes as qc
-from qcodes import Instrument, MockInstrument, Parameter, Loop, DataArray
-from qcodes.utils.validators import Numbers
-import pickle
-#import matplotlib.pyplot
+from qcodes import Instrument, Parameter, Loop, DataArray
 
 if __name__=='__main__':
     l = logging.getLogger()
@@ -44,12 +44,19 @@ import pyqtgraph
 import qtt
 
 if __name__=='__main__':
-    [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2', 'AMockInsts'] ]
+    [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2'] ]
 
 import virtualV2; # reload(virtualV2)
 import qtt.qtt_toymodel; reload(qtt.qtt_toymodel)
 import qtt.live
-from qtt.qtt_toymodel import FourdotModel, VirtualIVVI, VirtualMeter, logTest
+from qtt.qtt_toymodel import FourdotModel
+from qtt.scans import scan1D
+
+import tempfile
+
+datadir = os.path.join(tempfile.tempdir, 'qdata')
+qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+
 
 #%% Create a virtual model for testing
 #
@@ -58,12 +65,9 @@ from qtt.qtt_toymodel import FourdotModel, VirtualIVVI, VirtualMeter, logTest
 
 if __name__=='__main__':
 
-
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
     server_name=None
-    virtualV2.initialize(server_name=server_name)
-    #virtualV2.initialize(server_name='virtualV2'+time.strftime("%H.%M.%S"))
-    
+    virtualV2.initialize(server_name=server_name)    
     
     keithley1 = virtualV2.keithley1
     keithley2 = virtualV2.keithley2
@@ -71,14 +75,12 @@ if __name__=='__main__':
     ivvi1 = virtualV2.ivvi1
     
     # virtual gates for the model
-    gates=virtualV2.gates
-    
+    gates=virtualV2.gates    
     model=virtualV2.model
+    gate_boundaries=virtualV2.V2boundaries()
     
-    #%%
-    logging.warning('test IVVI...')
-    virtualV2.ivvi1.dac1.set(300)
-    print('get P1: %f'  % (virtualV2.ivvi1.dac1.get(), ) )
+    station = virtualV2.getStation()
+    station.set_measurement(keithley3.amplitude)
     
 #%%
     try:
@@ -88,35 +90,11 @@ if __name__=='__main__':
         qtt.tilefigs(12, [1,2])
     except:
         pass
-    
-    #%%
-    
-    gate_boundaries=virtualV2.V2boundaries()
+        
     
 
-#%%
-#import qcodes.instrument_drivers.QuTech.TimeStamp
-from qtt.instrument_drivers.TimeStamp import TimeStampInstrument
-if __name__=='__main__':
+#%% Setup measurement windows
 
-    ts = TimeStampInstrument(name='TimeStamp')
-    
-    
-    station = virtualV2.getStation()
-    station.set_measurement(keithley3.amplitude, ts.timestamp)
-
-
-
-#%%
-if __name__=='__main__':
-
-    dd = station.snapshot()
-    print(dd)
-
-#%%
-
-import qtt.scans
-import platform
 
 if __name__=='__main__':
     import pyqtgraph as pg
@@ -126,64 +104,27 @@ if __name__=='__main__':
     
     qdatadir = os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')
     qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
-    #qcodes.DataSet.default_io = qcodes.DiskIO('/home/eendebakpt/tmp/qdata')
     mwindows=qtt.setupMeasurementWindows(station)
     mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
     plotQ=mwindows['plotwindow']
     
+
     qtt.live.mwindows=mwindows
+
+    import qcodes.tools.dataviewer
+    logviewer = qcodes.tools.dataviewer.DataViewer()
+    logviewer.show()
+
 
 #%%
 if __name__=='__main__':
     print('value: %f'  % keithley3.readnext() )
-    
-    #%%
     snapshotdata = station.snapshot()
-
-
-#%%
-
-import inspect
-
-def showCaller(offset=1):
-    st=inspect.stack()
-    print('function %s: caller: %s:%s name: %s' % (st[offset][3], st[offset+1][1], st[offset+1][2], st[offset+1][3] ) )
 
 
 
 #%% Simple 1D scan loop
 
-
-from qtt.scans import scan1D
-
-
-
-        
-#%%
-if 0:
-    import h5py
-    
-    qcodes.DataSet.default_io
-    
-    import qcodes.tests
-    import qcodes.tests.data_mocks
-    data=qcodes.tests.data_mocks.DataSet1D()
-    
-    data.formatter
-    
-    from qcodes.data.hdf5_format import HDF5Format
-    from qcodes.data.gnuplot_format import GNUPlotFormat
-    
-    formatter = HDF5Format()
-    formatter = GNUPlotFormat()
-    
-    formatter.write(data)
-
-        
-
-#%%
-
-#FIXME: set everything under __name__
 
 if __name__=='__main__':
     scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .5}), 'instrument': [keithley3.amplitude], 'delay': .000})
@@ -194,10 +135,6 @@ if __name__=='__main__':
 
 
 #data = scan1D(scanjob, station, location='testsweep3', background=True)
-
-#%
-
-#reload(qcodes); reload(qc); plotQ=None
 
 #%%
 
@@ -311,16 +248,6 @@ if __name__=='__main__':
     data = qc.Loop(stepvalues, delay=.01, progress_interval=1).run(background=False)
 
 
-
-
-if __name__=='__main__':
-
-    plotQ=qc.QtPlot(data.amplitude_0)
-    plotQ.win.setGeometry(1920, 10, 800,600)
-    plotQ=qc.QtPlot(data.amplitude_1)
-    plotQ.win.setGeometry(1920+800, 10, 800,600)
-
-
 #%% Go!
 if __name__=='__main__':
 
@@ -351,27 +278,6 @@ if 0:
     pmatlab.tilefigs([fig.fig], [2, 2])
 
 
-#%%
-
-
-if __name__=='__main__':
-
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -220, 'end': 220, 'step': 2.5}), 'delay': .01})
-    #scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': 220, 'end': -220, 'step': -2.5}), 'delay': .01})
-
-#%% Log file viewer
-if __name__=='__main__':
-
-    dd=os.listdir(qcodes.DataSet.default_io.base_location)
-
-    
-    
-
-
-#%%
-
-if __name__=='__main__':
-    STOP
 
 #%%
 if __name__=='__main__':
@@ -391,27 +297,6 @@ if __name__=='__main__':
 
 #%% ########################################################################
 
-#%% Load and analyse data
 
-if 0:
-    def load_data(location=None, **kwargs):
-           if isinstance(location, int):
-               dd=os.listdir(qcodes.DataSet.default_io.base_location)
-               lastdate=sorted(dd)[-1]
-               dd=sorted(os.listdir(os.path.join(qcodes.DataSet.default_io.base_location, lastdate) ))[::-1]
-               location=os.path.join(lastdate, dd[location])
-               #location=location.replace('.dat', '')
-               logging.info('location: %s' % location)
-           return qc.load_data(location, **kwargs)
-           
-           
-    data=load_data(location=0)
-    
-    #qc.MatPlot(data.amplitude, fig=10)
-    
-    import pmatlab
-    
-    qc.MatPlot(data.amplitude, subplots=dict({'num':10}) )
-    pmatlab.tilefigs(10,[2,2])
 
 

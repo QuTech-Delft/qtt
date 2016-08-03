@@ -7,12 +7,14 @@
 #%% Load packages
 # pylint: disable=invalid-name
 
+import os
 import logging
 import numpy as np
 
 import qcodes as qc
 from qcodes import Instrument   # , Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
+from qcodes.instrument.parameter import ManualParameter
 
 import pyqtgraph
 import pyqtgraph.Qt as Qt
@@ -520,18 +522,25 @@ class FourdotModel(Instrument):
         
 class VirtualIVVI(Instrument):
 
-    shared_args = ['model']
+    shared_kwargs = ['model']
     
     ''' Virtual instrument representing an IVVI '''
-    def __init__(self, name, model=None, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
+    def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
         super().__init__(name, **kwargs)
 
         self.model = model
         self._gates = gates
         logging.debug('add gates')
         for i, g in enumerate(gates):
-            logging.debug('add gate %s' % g )
-            self.add_parameter(g,
+            logging.debug('VirtualIVVI: add gate %s' % g )
+            if model is None:
+                self.add_parameter(g,
+                               parameter_class=ManualParameter,
+                               initial_value=0,
+                               label='Gate {} (arb. units)'.format(g),
+                               vals=Numbers(-800, 400))
+            else:
+                self.add_parameter(g,
                                label='Gate {} (mV)'.format(g),
                                get_cmd=partial(self.get_gate, g),
                                set_cmd=partial(self.set_gate, g),
@@ -540,22 +549,25 @@ class VirtualIVVI(Instrument):
 
         self.add_function('reset', call_cmd='rst')
 
-        logger.debug('add gates function')
+        logger.debug('add legacy gates to VirtualIVVI')
         for i, g in enumerate(gates):
             self.add_function(
                 'get_{}'.format(g), call_cmd=partial(self.get, g))
             logger.debug('add gates function %s: %s' % (self.name, g) )
-            #model.write('%s:%s %f' % (self.name, g, 0) )
 
         if not mydebug:
             self.get_all()
 
     def get_gate(self, gate):
+        if self.model is None:
+            return 0
         value = self.model.get(self.name+'_'+gate)
         logging.debug('%s: get_gate %s' % (self.name,gate) )
         return value
 
     def set_gate(self, gate, value):
+        if self.model is None:
+            return
         self.model.set(self.name+'_'+gate, value)
         logging.debug('set_gate %s: %s' % (gate, value))
         return
@@ -615,28 +627,10 @@ class VirtualIVVI2(MockInstrument):
 """
 #%%
 
-"""
-
-class MockSource(MockInstrument):
-
-    def __init__(self, name, model, **kwargs):
-        ''' Dummy source object '''
-        super().__init__(name, model=model, **kwargs)
-
-        # this parameter uses built-in sweeping to change slowly
-        self.add_parameter('amplitude',
-                           label='Source Amplitude (\u03bcV)',
-                           get_cmd='amplitude?',
-                           set_cmd='amplitude {:.4f}',
-                           get_parser=float,
-                           vals=Numbers(0, 10),
-                           sweep_step=0.1,
-                           sweep_delay=0.05)
-"""
 
 class VirtualMeter(Instrument):
 
-    shared_args = ['model']
+    shared_kwargs = ['model']
 
     def __init__(self, name, model = None, **kwargs):
         super().__init__(name, **kwargs)
@@ -694,6 +688,12 @@ class virtual_gates(Instrument):
             logging.debug('virtual_gates: make gate %s' % gate)
             self._make_gate(gate)
 
+        print('pid %d: add to q.txt' % os.getpid())
+        with open('/home/eendebakpt/tmp/q.txt', 'at') as fid:
+            l=logging.getLogger()
+            fid.write('virtual_gates on pid %d\n' % os.getpid() )
+            fid.write('  handlers: %s\n' % (str(l.handlers)) )
+            logging.info('hello from %d ' % os.getpid() )
         self.get_all()
 
     def get_idn(self):
