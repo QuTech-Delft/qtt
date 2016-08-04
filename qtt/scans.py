@@ -337,7 +337,7 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
-def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=0.005, cache=False, verbose=1, fig=10, full=0):
+def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=0.005, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
@@ -361,7 +361,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
 
     scanjob = dict({'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'delay': stepdelay})
 
-    alldata = scan1D(scanjob, station, title_comment='scan gate %s' % gate)
+    alldata = scan1D(scanjob, station, title_comment='scan gate %s' % gate, background=background)
 
     station.gates.set(gate, basevalues[gate])  # reset gate to base value
 

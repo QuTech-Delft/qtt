@@ -79,10 +79,11 @@ class paramUpdateWidget(QtWidgets.QWidget):
 
 
 
-
+import os
+import tempfile
 
 def dumpstring(txt):
-    with open('/home/eendebakpt/tmp/q.txt', 'at') as fid:
+    with open(os.path.join(tempfile.tempdir, 'qutechdump.txt'), 'at') as fid:
         fid.write('%s\n' % txt)
         
 def createUpdateWidget(gates, doexec=True):
@@ -105,7 +106,7 @@ def createUpdateWidget(gates, doexec=True):
     #if not hasattr(p, '_server_name'):
     #    print('createUpdateWidget: cannot be used for remote widget since gates not on server..')
     print('created update widget...')
-    dumpstring('createUpdateWidget: exec')
+    #dumpstring('createUpdateWidget: exec')
     
     if doexec:
         app.exec()

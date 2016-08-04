@@ -688,12 +688,14 @@ class virtual_gates(Instrument):
             logging.debug('virtual_gates: make gate %s' % gate)
             self._make_gate(gate)
 
-        print('pid %d: add to q.txt' % os.getpid())
-        with open('/home/eendebakpt/tmp/q.txt', 'at') as fid:
-            l=logging.getLogger()
-            fid.write('virtual_gates on pid %d\n' % os.getpid() )
-            fid.write('  handlers: %s\n' % (str(l.handlers)) )
-            logging.info('hello from %d ' % os.getpid() )
+        if 0:
+            # debugging
+            print('pid %d: add to q.txt' % os.getpid())
+            with open('/home/eendebakpt/tmp/q.txt', 'at') as fid:
+                l=logging.getLogger()
+                fid.write('virtual_gates on pid %d\n' % os.getpid() )
+                fid.write('  handlers: %s\n' % (str(l.handlers)) )
+                logging.info('hello from %d ' % os.getpid() )
         self.get_all()
 
     def get_idn(self):

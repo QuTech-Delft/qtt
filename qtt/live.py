@@ -3,10 +3,10 @@ import qcodes
 #%% Static variables
 
 mwindows = None
-#liveplotwindow = None
+liveplotwindow = None
 
 def livePlot():
-    global mwindows
-    if mwindows is not None:
-        return mwindows.get('plotwindow', None)
+    global liveplotwindow
+    if liveplotwindow is not None:
+        return liveplotwindow
     return None

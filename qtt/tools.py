@@ -411,7 +411,7 @@ def setupMeasurementWindows(station):
     app=QtWidgets.QApplication.instance()
     app.processEvents()
     
-    return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': logviewer} )
+    return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
 
 import time
 def updatePlotTitle(qplot, basetxt='Live plot'):

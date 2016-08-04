@@ -27,11 +27,12 @@ import qtpy.QtWidgets as QtWidgets
 import qtpy.QtGui as QtGui
 import qtpy.QtCore as QtCore
 
-_qtapp=pg.mkQApp()
-
-import virtualV2
-virtualV2.initialize(server_name='test2')
-gates=virtualV2.gates
+if __name__=='__main__':
+    _qtapp=pg.mkQApp()
+    
+    import virtualV2
+    virtualV2.initialize(server_name='test2')
+    gates=virtualV2.gates
     
 #%% Liveplot object
 #    
@@ -198,8 +199,8 @@ class fpgaCallback:
         return np.array(ww)    
 
 
-gates.L.set(0)
-gates.R.set(1)
+#gates.L.set(0)
+#gates.R.set(1)
 class dummyCallback:
     def __init__(self, npoints=200):   
         self.npoints=npoints

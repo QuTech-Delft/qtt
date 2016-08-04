@@ -132,6 +132,7 @@ mwindows['parameterviewer'].callbacklist.append( partial(qtt.updatePlotTitle, mw
 import qtt.scans
 qtt.scans.mwindows=mwindows
 liveplotwindow=mwindows['plotwindow']
+qtt.live.liveplotwindow=liveplotwindow
 
 
 #model = setup.model
@@ -173,7 +174,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-2016-07-28y'; Tvalues=np.array([-280])
+basetag='batch-2016-08-03'; Tvalues=np.array([-380])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -268,6 +269,7 @@ def stepDelay(gate, minstepdelay=0, maxstepdelay=10):
     
 #%%
 
+  
 def onedotPlungerScan(station, od, verbose=1):
     """ Make a scan with the plunger of a one-dot """
     # do sweep with plunger
@@ -342,7 +344,7 @@ def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbos
 
     return od
 #%%
-
+import pyqtgraph
 from qtt.scans import scanPinchValue
 
     
@@ -359,6 +361,7 @@ for ii, Tvalue in enumerate(Tvalues):
         continue;
 
     gates.set_T(float(Tvalue))       # set T value
+    basevalues['T']=Tvalue
 
     gates.set_bias_2(-500)   # bias through O7, keithley 3
 
@@ -386,7 +389,7 @@ for ii, Tvalue in enumerate(Tvalues):
     #%% Perform sanity check on the channels
 
 
-    for gate in ['L', 'D1', 'D2', 'D3', 'R']+['P1','P2','P3','P4']: # ,'SD1a', 'SD1b', ''SD2a','SD]:
+    for gate in qtt.flatten([o['gates'] for o in one_dots]):
         alldata=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
 
 
@@ -464,7 +467,7 @@ for ii, Tvalue in enumerate(Tvalues):
         gates.resetgates( od['gates'], basevaluesS)
 
         
-    # update basevalues with settings for SD
+    #%% update basevalues with settings for SD
 
     for odii, od in enumerate(sddots):
         basename='%s-sweep-2d' % (od['name'])
