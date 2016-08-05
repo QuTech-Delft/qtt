@@ -17,3 +17,5 @@ from qtt.tools import *
 from qtt.data import *
 
 from qtt.algorithms import *
+
+from qcodes.plots.pyqtgraph import QtPlot

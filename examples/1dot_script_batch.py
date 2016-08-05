@@ -72,15 +72,18 @@ except:
 import matplotlib.pyplot as plt
 
 if platform.node()=='TUD205521':
-    import stationV2 as setup
+    import stationV2 as msetup
+    from stationV2 import sample
     awg1=None
     virtualAWG=None
 else:
-    import virtualV2 as setup
+    import virtualV2 as msetup
+    from virtualV2 import sample
     awg1=None
     
-#setup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
-setup.initialize(reinit=False, server_name=None )
+#msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+msetup.initialize(reinit=False, server_name=None )
+
 
 def simulation():
     ''' Funny ... '''
@@ -94,9 +97,7 @@ except:
 
 from qtt.data import *
 from qtt.scans import *
-
 from qtt.legacy import *
-
 from qtt.reports import *
 
 
@@ -105,7 +106,9 @@ from qtt.reports import *
 #Amp = 10    # some magic factor 5
 #datadir=experimentdata.getDataDir()
 
-station = setup.getStation()
+station = msetup.getStation()
+
+station.gate_settle=sample.gate_settle
 
 keithley1 = station.keithley1
 keithley3 = station.keithley3
@@ -154,7 +157,7 @@ sdindices=[1,2]
 sdindices=[1,]
 
 
-sddots=get_one_dots(sdidx=sdindices)[-2:]
+sddots=get_one_dots(sdidx=sdindices)[-len(sdindices):]
 
 #one_dots=[one_dots[0], one_dots[-1] ];
 full=0
@@ -174,7 +177,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-2016-08-03'; Tvalues=np.array([-380])
+basetag='batch-2016-08-05'; Tvalues=np.array([-375])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -285,7 +288,9 @@ def onedotPlungerScan(station, od, verbose=1):
     scanjob=dict({'keithleyidx': [od['instrument'] ]})
     scanjob['sweepdata']=dict({'gates': [gg[1]], 'start': 50, 'end': pv,'step': -1})
     
-    alldata=scan1D(scanjob, station, title_comment='sweep of plunger')            
+    wait_time = qtt.scans.waitTime(gg[1], gate_settle=getattr(station, 'gate_settle', None))
+
+    alldata=scan1D(scanjob, station, wait_time=wait_time, title_comment='sweep of plunger')            
     alldata.metadata['od']=od
     scandata=dict(dataset=alldata, od=od)
     return scandata
@@ -317,8 +322,9 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
         #stepdata['step']=-6; sweepdata['step']=-6
 
 
+    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
     scanjob=dict({'stepdata':stepdata, 'sweepdata':sweepdata, 'keithleyidx': keithleyidx})
-    alldata=qtt.scans.scan2D(station, scanjob, wait_time=.05, background=False)
+    alldata=qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
 
     od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=None)
 
@@ -503,7 +509,7 @@ for ii, Tvalue in enumerate(Tvalues):
             STOP
 
 
-        #%% Make high-resolution scans
+        #% Make high-resolution scans
         if dohires:
             alldatahi, od=onedotHiresScan(station, od, dv=70, verbose=1)
             saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
@@ -603,7 +609,7 @@ for ii, Tvalue in enumerate(Tvalues):
     #readfunc=lambda: keithley1.readnext()*(1e12/(Amp*10e6) )
 
     two_dots=qtt.legacy.get_two_dots(full=1)
-    one_dots=setup.get_one_dots(full=1)
+    one_dots=sample.get_one_dots(full=1)
 
     # make two-dots (code from optimize_one)
     jobs = qtt.legacy.createDoubleDotJobs(two_dots, one_dots, basevalues=basevalues0, resultsdir=outputdir, fig=None)

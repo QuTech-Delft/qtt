@@ -36,6 +36,11 @@ except:
     pass            
 #%%
 
+def negfloat(x):
+    ''' Helper function '''
+    return -float(x)    
+
+
 def checkPickle(obj):
     try:
         _=pickle.dumps(obj)
@@ -390,6 +395,64 @@ def showDotGraph(dot, fig=10):
     plt.imshow(im)
     plt.tight_layout()
     plt.axis('off')
+
+#%%
+
+try:
+    import win32com
+    import win32com.client
+    import tempfile
+    import cv2    
+    import numpy as np    
+    
+    def addPPTslide(txt=None, im=None, show=False):
+        ''' Add slide to current active Powerpoint presentation '''
+        Application = win32com.client.Dispatch("PowerPoint.Application") 
+        if show:
+            Application.Visible = True # shows what's happening, not required, but helpful for now 
+        
+        # https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
+        print('num of open PPTs: %d' % Application.presentations.Count)
+        
+        #ppt = Application.Presentations.Add() # adds a new presentation 
+        ppt=Application.ActivePresentation
+        print('name: %s'  % ppt.Name)
+        
+        ppLayoutBlank=12
+        ppLayoutTitle=0
+        ppLayoutTitleOnly=11
+        layout=ppLayoutTitleOnly
+        
+        Slide1 = ppt.Slides.Add(ppt.Slides.Count+1, layout) # new slide, at end 
+        titles=[s for s in Slide1.Shapes if s.type==14]
+        
+        if len(titles)>0:
+            title=titles[0]
+            #tmp = Slide1.Shapes.AddTitle()
+            title.TextFrame.TextRange.Text='QCoDeS measurement'
+        else:
+            title = Slide1.Shapes.AddTitle()
+            title.TextFrame.TextRange.Text='QCoDeS measurement'
+            
+        txtbox = Slide1.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
+        txtbox.Name='text' 
+        
+        if txt is not None:
+            txtbox.TextFrame.TextRange.Text=txt
+    
+        if im is not None:
+            fname=tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
+            cv2.imwrite(fname, im)
+            Pict1 = Slide1.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350) 
+    
+        #ActivePresentation.Slides(ActiveWindow.View.Slide. SlideNumber).
+        #s=Application.ActiveWindow.Selection
+        
+        return ppt, Slide1
+except:
+       def addPPTslide(txt=None, im=None, show=False):
+           ''' Dummy implementation '''
+           pass
 
 #%%
 

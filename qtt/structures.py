@@ -6,7 +6,7 @@ class sensingdot_t:
     """ Class representing a sensing dot """
 
 
-    def __init__(self, ggv, sdvalv, RFfreq=None, index=0):
+    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=0):
         self.verbose = 1
         self.gg = ggv
         self.sdval = sdvalv
@@ -16,25 +16,28 @@ class sensingdot_t:
         self.targetvalue = 800
         self.goodpeaks = None
 
+        self.station=station
         # values for measurement
         #RFfreq = None
         #valuefunc = None
 
     def __repr__(self):
+        gates=self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
-            self.gg[1], str(self.sdval), get_gate(self.gg[1]), self.value(), self.targetvalue)
+            self.gg[1], str(self.sdval), gates.get(self.gg[1]), self.value(), self.targetvalue)
         #s='sensingdot_t: %s: %.1f '  % (self.gg[1], self.value() )
         return s
 
     def initialize(self, sdval=None, setPlunger=False):
+        gates=self.station.gates
         if not sdval is None:
             self.sdval = sdval
         gg = self.gg
         for ii in [0, 2]:
-            set_gate(gg[ii], self.sdval[ii], verbose=0)
+            gates.set(gg[ii], self.sdval[ii], verbose=0)
         if setPlunger:
             ii = 1
-            set_gate(gg[ii], self.sdval[ii], verbose=0)
+            gates.set(gg[ii], self.sdval[ii], verbose=0)
 
     def tunegate(self):
         """ Return the gate used for tuning """

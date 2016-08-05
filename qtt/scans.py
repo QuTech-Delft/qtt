@@ -72,7 +72,10 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     scanjobhi['stepdata']['end']=max(scanjobhi['stepdata']['end'], -780)
     scanjobhi['sweepdata']['end']=max(scanjobhi['sweepdata']['end'], -780)
 
-    alldatahi=qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=.05)
+
+    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
+
+    alldatahi=qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time)
 
     extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(alldatahi, verbose=0, arrayname=None)
     im, impixel, tr = dataset2image(alldatahi)
@@ -326,6 +329,13 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
 #%% Measurement tools
 
+def waitTime(gate, station=None, gate_settle=None):
+    if gate_settle is not None:
+        return gate_settle(gate)
+    if station is not None:
+        if hasattr(station, 'gate_settle'):
+            return station.gate_settle(gate)
+    return 0.001
 
 def pinchoffFilename(g, od=None):
     ''' Return default filename of pinch-off scan '''
@@ -337,7 +347,7 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
-def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=0.005, cache=False, verbose=1, fig=10, full=0, background=False):
+def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
@@ -348,6 +358,9 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
         print(outputfile)
         alldata = qcodes.load_data(outputfile)
         return alldata
+
+    if stepdelay is None:
+        stepdelay = waitTime(gate, gate_settle=getattr(station, 'gate_settle', None))
 
 
     if basevalues is None:
