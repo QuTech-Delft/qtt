@@ -312,14 +312,14 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     if verbose:
         print('onedotGetBalance: threshold for low value %.1f' % lv)
 
-    # balance point: method 1
+    # balance point: method 1 (first point above threshold of 45 degree line)
     try:
         ww = np.nonzero(ims > lv)
         # ww[0]+ww[1]
         zz = -ww[0] + ww[1]
         idx = zz.argmin()
         pt = np.array([[ww[1][idx]], [ww[0][idx]]])
-        ptv = np.array([[vstep[pt[0, 0]]], [vsweep[-pt[1, 0]]]])
+        ptv = np.array([[vsweep[pt[0, 0]]], [vstep[-pt[1, 0]]]])
     except:
         print('qutechtnotools: error in onedotGetBalance: please debug')
         idx = 0
@@ -328,7 +328,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         pass
     od['balancepoint0'] = ptv
 
-    # balance point: method 2
+    # balance point: method 2 (fit quadrilateral)
     wwarea = ims > lv
 
     #x0=np.array( [pt[0],im.shape[0]+.1,pt[0], pt[1] ] )
@@ -376,12 +376,10 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
         plt.axis('image')
         if verbose >= 2 or drawpoly:
-            pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth, legend='balancefit')
-            if verbose >= 2:
-                pmatlab.plotPoints(od['balancefit0'], '--r', legend='balancefit0')
+            pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
         if verbose>=2:
-            pmatlab.plotPoints(od['balancepoint0'], '.r', markersize=13, legend='balancepoint0')
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=17, legend='balancepoint')
+            pmatlab.plotPoints(od['balancepoint0'], '.r', markersize=13, label='balancepoint0')
+        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=17, label='balancepoint')
 
         plt.title('image')
         plt.xlabel('%s (mV)' % g2)
@@ -390,7 +388,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         qtt.tools.showImage(tr.itransform(ims), extentImage, fig=fig+1)
         plt.axis('image')
         plt.title('Smoothed image')
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16, legend='balancepoint')
+        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16, label='balancepoint')
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 

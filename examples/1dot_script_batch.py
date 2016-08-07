@@ -6,12 +6,11 @@
 
 #%% Import the modules used in this program:
 
-# https://github.com/gatsoulis/py2ipynb
-#
 from imp import reload
-import sys,os,platform
+import sys,os,platform, pdb
 import logging
 import numpy as np
+import qtpy
 
 
 os.environ['QT_API'] = 'pyqt'
@@ -22,7 +21,6 @@ matplotlib.use('Qt4Agg')
 import matplotlib.pyplot
 matplotlib.pyplot.ion()
 
-import qtpy
 
 import multiprocessing
 if __name__=='__main__':
@@ -37,15 +35,13 @@ if __name__=='__main__':
 
 import pdb
 
-##
 import webbrowser
 import datetime
 import copy
+import matplotlib.pyplot as plt
 
 import cgitb
 cgitb.enable(format='text')
-
-##
 
 import qcodes
 import qcodes as qc
@@ -60,6 +56,12 @@ reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload
 #_=qcodes.utils.reload_code.reload_code()
 from qcodes.utils.validators import Numbers
 
+from qtt.data import *
+from qtt.scans import *
+from qtt.legacy import *
+from qtt.reports import *
+
+#%% Load configuration
 import logging
 l = logging.getLogger()
 l.setLevel(logging.INFO)
@@ -69,36 +71,32 @@ try:
 except:
     pass
 
-import matplotlib.pyplot as plt
-
 if platform.node()=='TUD205521':
     import stationV2 as msetup
     from stationV2 import sample
     awg1=None
     virtualAWG=None
+    def simulation():
+        ''' Funny ... '''
+        return False
 else:
     import virtualV2 as msetup
     from virtualV2 import sample
     awg1=None
+    def simulation():
+        ''' Funny ... '''
+        return True
     
 #msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
 msetup.initialize(reinit=False, server_name=None )
 
 
-def simulation():
-    ''' Funny ... '''
-    return False
-
 try:
     from qcodes.data.hdf5_format import HDF5Format
-    qc.DataSet.default_formatter=HDF5Format()
+    #qc.DataSet.default_formatter=HDF5Format()
 except:
     pass
 
-from qtt.data import *
-from qtt.scans import *
-from qtt.legacy import *
-from qtt.reports import *
 
 
 #%% Make instances available
@@ -177,7 +175,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-2016-08-05'; Tvalues=np.array([-375])
+basetag='batch-2016-08-03'; Tvalues=np.array([-380])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -328,6 +326,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
 
     od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=None)
 
+    alldata.metadata['od']=od
+    
     #basename='%s-sweep-2d' % (od['name'])
     #alldata['od']=od
     return alldata, od
