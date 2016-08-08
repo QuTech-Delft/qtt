@@ -32,13 +32,15 @@ git clone https://github.com/VandersypenQutech/stations.git
 ```
 > conda install numpy scipy matplotlib pandas scikit-image
 > conda install spyder pyqtgraph
-> pip install pyvisa hickle
+> conda install -c menpo opencv3
+> pip install pyvisa 
 ```
 For other systems
 ```
 > pip install numpy scipy matplotlib pandas scikit-image
 > pip install numpy spyder pyqtgraph
-> pip install pyvisa hickle
+> pip install pyvisa 
+> # install opencv according to platform instructions
 ```
 - Register the repositories it with Python. For each of the repositories run this from the root directory:
 ```
