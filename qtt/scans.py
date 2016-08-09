@@ -313,7 +313,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     if background is True:
         alldata.background_functions=dict({'qt': pg.mkQApp().processEvents})
-        alldata.complete()
+        alldata.complete(delay=.5)
 
     dt = time.time() - t0
 

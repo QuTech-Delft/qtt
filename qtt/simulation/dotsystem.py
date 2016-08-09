@@ -97,7 +97,7 @@ import pmatlab # FIXME
 class GateTransform:
     ''' Class to describe virtual gate transformations '''
     def __init__(self, Vmatrix, sourcenames, targetnames):
-        self.Vmatrix = Vmatrix
+        self.Vmatrix = np.array(Vmatrix).astype(np.float32)
         self.sourcenames = sourcenames
         self.targetnames = targetnames
     def transformGateScan(self, vals2D, nn=None):
@@ -113,7 +113,7 @@ class GateTransform:
             xx=vals2D
             pass # xx= np.array(xx)
 
-        v=np.vstack(xx)
+        v=np.vstack(xx).astype(np.float32)
         vout=pmatlab.projectiveTransformation(self.Vmatrix, v)
         #vout = self.Vmatrix.dot(v)
 

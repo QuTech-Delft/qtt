@@ -490,6 +490,7 @@ class virtual_gates(Instrument):
 
     def _set(self, value, gate):
         logging.debug('virtualgate._set: gate %s, value %s' % (gate, value))
+        value=float(value)
         gatemap = self._gate_map[gate]
         i = self._instrument_list[gatemap[0]]
         gate = 'dac%d' % gatemap[1]
