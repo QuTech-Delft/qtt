@@ -47,7 +47,7 @@ if __name__=='__main__':
     [ x.terminate() for x in qc.active_children() if x.name in ['dummymodel', 'ivvi1', 'ivvi2'] ]
 
 import virtualV2; # reload(virtualV2)
-import qtt.qtt_toymodel; reload(qtt.qtt_toymodel)
+import qtt.qtt_toymodel; #reload(qtt.qtt_toymodel)
 import qtt.live
 from qtt.qtt_toymodel import FourdotModel
 from qtt.scans import scan1D
