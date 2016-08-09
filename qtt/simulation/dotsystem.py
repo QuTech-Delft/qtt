@@ -459,9 +459,9 @@ def defaultDotValues(ds):
 
 class OneDot(DotSystem):
 
-    def __init__(self, name='doubledot'):
+    def __init__(self, name='doubledot', maxelectrons=3):
         super().__init__(name=name, ndots=1)
-        self.makebasis(ndots=self.ndots, maxelectrons=3)
+        self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
         self.varnames = ['det1', 'osC1', 'isC1']
         self.varnames += itertools.chain( * [ ['eps%d%d' % (d+1,orb+1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons) ])
         self.makevars()

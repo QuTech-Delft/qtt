@@ -17,10 +17,15 @@ import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
 # do NOT load any other qtt submodules here
+import tempfile
 
+#%% Debugging
+
+def dumpstring(txt):
+    with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
+        fid.write(txt + '\n')
 
 #%%
-
 try:
     from qcodes.process.heartbeat import *
     import time
@@ -463,12 +468,12 @@ def setupMeasurementWindows(station):
     ms=monitorSizes()
     vv=ms[-1]
     # create custom viewer which gathers data from a station object
-    w = ParameterViewer(station)
+    w = ParameterViewer([station.gates])
     w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
     w.updatecallback()
 
-    plotQ = QtPlot(windowTitle='Live plot', interval=.5)
-    plotQ.win.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
+    plotQ = QtPlot(windowtitle='Live plot', interval=.5)
+    plotQ.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
     plotQ.update()
 
     app=QtWidgets.QApplication.instance()

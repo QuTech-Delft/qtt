@@ -237,7 +237,9 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     return data
 
-def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False):
+import pyqtgraph as pg
+
+def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=None):
     """ Make a 2D scan and create dictionary to store on disk
 
     Args:
@@ -280,24 +282,37 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     logging.info('scan2D: %d %d'  % (len(stepvalues), len(sweepvalues)))
     logging.info('scan2D: delay %f'  % delay)
-    innerloop = qc.Loop(stepvalues, delay=delay, progress_interval=2)
+    steploop = qc.Loop(stepvalues, delay=delay, progress_interval=2)
 
     t0=time.time()
-    #alldata=innerloop.run(background=False)
-    fullloop = innerloop.loop(sweepvalues, delay=delay)
+    fullloop = steploop.loop(sweepvalues, delay=delay)
 
     params=getParams(station, minstrument)
 
     measurement=fullloop.each( *params )
 
-    alldata=measurement.run(background=background, data_manager=False)
+    if background is None:
+        try:
+            R._server_name
+            background = True
+        except:
+            background = False
 
+    if background:            
+        data_manager=None
+    else:
+        data_manager=False
+        
+
+    alldata=measurement.run(background=background, data_manager=data_manager)
+    
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear(); liveplotwindow.add( getDefaultParameter(alldata) )
 
     if background is True:
+        alldata.background_functions=dict({'qt': pg.mkQApp().processEvents})
         alldata.complete()
 
     dt = time.time() - t0

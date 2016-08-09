@@ -18,13 +18,13 @@ if __name__=='__main__':
     except:
         pass
 
-from qtt.param_widget import *
+from qtt.parameterviewer import *
 
 
 #name='L'
 if 0:
-    p = paramUpdateWidget(name, gates)    
-    
+    p=ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
+
     p.setGeometry(1700,110,200,40); p.show()
     self=p
 
@@ -35,7 +35,7 @@ if __name__=='__main__':
     server_name='s2'
     #server_name=None
     from qtt.qtt_toymodel import FourdotModel, VirtualIVVI, VirtualMeter
-    gates = VirtualIVVI(name='gatestest', model=None, server_name=server_name)
+    gates = VirtualIVVI(name='ivvi', model=None, server_name=server_name)
     #gates=None
 
 
@@ -43,7 +43,7 @@ if __name__=='__main__':
 #%% Local option
 
 if __name__=='__main__' and 0:
-    w=createUpdateWidget(gates, doexec=False)
+    w=createUpdateWidget([gates], doexec=False)
     
 
 #%% Remote option
@@ -56,7 +56,7 @@ if __name__=='__main__':
     #p=mp.Process(target=createUpdateWidget)
     #p.start()
 
-    p=mp.Process(target=createUpdateWidget, args=(gates,))
+    p=mp.Process(target=createUpdateWidget, args=([gates],))
     p.start()
 
 #%% 

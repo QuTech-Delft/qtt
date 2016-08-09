@@ -66,7 +66,7 @@ qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
 if __name__=='__main__':
 
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
-    server_name=None
+    #server_name=None
     virtualV2.initialize(server_name=server_name)    
     
     keithley1 = virtualV2.keithley1
