@@ -355,7 +355,8 @@ class VirtualIVVI(Instrument):
     def set_gate(self, gate, value):
         if self.model is None:
             return
-        self.model.set(self.name+'_'+gate, float(value) )
+        value=float(value)
+        self.model.set(self.name+'_'+gate, value)
         logging.debug('set_gate %s: %s' % (gate, value))
         return
         
