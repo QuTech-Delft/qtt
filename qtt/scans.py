@@ -73,12 +73,12 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     scanjobhi['sweepdata']['end']=max(scanjobhi['sweepdata']['end'], -780)
 
 
-    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
+    wait_time = qtt.scans.waitTime(od['gates'][2], gate_settle=getattr(station, 'gate_settle', None))
 
     alldatahi=qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time)
 
     extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(alldatahi, verbose=0, arrayname=None)
-    im, impixel, tr = dataset2image(alldatahi)
+    impixel, tr = dataset2image(alldatahi, mode='pixel')
 
     #_,_,_, im = get2Ddata(alldatahi)
     ptv, fimg, tmp= onedotGetBalanceFine(impixel, alldatahi, verbose=1, fig=fig)
@@ -92,7 +92,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     else:
         ptx=tmp['ptpixel'].copy()
     step=scanjobhi['stepdata']['step']
-    val=findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1)
+    val=findCoulombDirection(impixel, ptx, step, widthmv=8, fig=None, verbose=1)
     od['coulombdirection']=val
 
     od['balancepointfine']=ptv
@@ -122,7 +122,7 @@ def plot1D(data, fig=100, mstyle='-b'):
     if fig is not None:
         plt.figure(fig)
         plt.clf()
-        MatPlot(getattr(data, val), num=fig)
+        MatPlot(getattr(data, val), interval=None, num=fig)
         #plt.show()
 
 if __name__=='__main__':
@@ -184,8 +184,9 @@ def getDefaultParameter(data):
         pass
     return None
 
+
     
-def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None):
+def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, wait_time=None):
     ''' Simple 1D scan '''
     gates=station.gates
     sweepdata = scanjob['sweepdata']
@@ -195,6 +196,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     param = getattr(gates, gate)
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
+    if wait_time is not None:
+        delay=wait_time
     t0=time.time()
 
     # legacy code...

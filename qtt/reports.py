@@ -12,8 +12,8 @@ import qcodes
 import qcodes as qc
 import datetime
 
-import qtpy.QtGui as QtGui
-import qtpy.QtWidgets as QtWidgetss
+#import qtpy.QtGui as QtGui
+#import qtpy.QtWidgets as QtWidgets
 
 import matplotlib.pyplot as plt
 
@@ -172,7 +172,9 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
         page.img(src=imfile0, width='80%', alt="%s" % od['name'])
         page.a.close()
         
+
         dstrhi = '%s-sweep-2d-hires' % (od['name'])
+        pathdd2dhi = experimentFile(resultsdir, tag=tag, dstr=dstrhi )
         scandata = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
 
         scanjob=scandata['scanjob']
@@ -193,7 +195,7 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
                 odhi = scandata['od']
                 
                 extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd2dhi, verbose=0)
-                im, impixel, tr = dataset2image(dd2dhi)
+                impixel, tr = dataset2image(dd2dhi, mode='pixel')
                 ptv, fimg, tmp= onedotGetBalanceFine(impixel, dd2dhi, verbose=1, fig=None)
 
                 #_, _, _, imhi = get2Ddata(dd2dhi)
@@ -211,8 +213,10 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             plt.axis('image')
             plt.savefig(imfilehires, dpi=200, quality=88)
 
+            page.a.open(href=pathdd2dhi, style='text-decoration: none;')
             page.img(src=imfile0hires, width='80%', alt="%s" % od['name'])
-
+            page.a.close()
+            
        # STOP
         # alldata=dd
 

@@ -1,6 +1,8 @@
 import numpy as np
 import qcodes
 
+from qtt.scans import scan1D
+import qtt.data
 
 class sensingdot_t:
     """ Class representing a sensing dot """
@@ -19,7 +21,8 @@ class sensingdot_t:
         self.station=station
         # values for measurement
         #RFfreq = None
-        #valuefunc = None
+        if index is not None:
+            self.valuefunc = station.components['keithley%d' % index].amplitude.get
 
     def __repr__(self):
         gates=self.station.gates
@@ -34,10 +37,10 @@ class sensingdot_t:
             self.sdval = sdval
         gg = self.gg
         for ii in [0, 2]:
-            gates.set(gg[ii], self.sdval[ii], verbose=0)
+            gates.set(gg[ii], self.sdval[ii])
         if setPlunger:
             ii = 1
-            gates.set(gg[ii], self.sdval[ii], verbose=0)
+            gates.set(gg[ii], self.sdval[ii])
 
     def tunegate(self):
         """ Return the gate used for tuning """
@@ -70,12 +73,13 @@ class sensingdot_t:
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
         """ Make 1D-scan of the sensing dot """
         print('### sensing dot scan')
-        keithleyidx = sd.keithleyidx
+        keithleyidx = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
-
+        gates=sd.station.gates
+        
         for ii in [0, 2]:
-            set_gate(gg[ii], sdval[ii])
+            gates.set(gg[ii], sdval[ii])
 
         startval = sdval[1] + scanrange
         startval = np.minimum(startval, 100)
@@ -89,16 +93,16 @@ class sensingdot_t:
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
-        wait_time = getwaittime(gg[1])
+        wait_time = sd.station.gate_settle(gg[1])
         wait_time = np.minimum(wait_time, max_wait_time)
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
-        alldata, data = scan1D(
-            scanjob1, TitleComment='plunger', activegates=defaultactivegates(), wait_time=wait_time)
+        alldata = scan1D(
+            scanjob1, sd.station, title_comment='plunger', wait_time=wait_time)
 
-        if not outputdir == None:
-            saveCoulombData(outputdir, alldata)
+        #if not outputdir == None:
+        #    saveCoulombData(outputdir, alldata)
 
         return alldata
 
@@ -131,7 +135,8 @@ class sensingdot_t:
             sd.autoTuneInit(scanjob)
         alldata = sd.scan1D(outputdir=outputdir, step=step, scanrange=scanrange, max_wait_time=max_wait_time)
 
-        x = alldata['data_array'][:, 0];  y = alldata['data_array'][:, 2]
+        x,y = qtt.data.dataset1Ddata(alldata)
+
         istep=float(np.abs(alldata['sweepdata']['step']))
         x, y = peakdataOrientation(x, y)
 

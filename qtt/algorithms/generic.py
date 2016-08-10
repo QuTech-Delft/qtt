@@ -134,9 +134,11 @@ def showCoulombDirection(ptx, ww, im=None, dd=None, fig=100):
     else:
         ptx = ptx.reshape((1, 2))
         ww = ww.reshape((1, 2))
-        pp = pix2scan(ptx.T, dd).T
+        tr = qtt.data.image_transform(dd)
 
-        pp2 = pix2scan((ptx + ww).T, dd).T
+        pp = tr.pixel2scan(ptx.T).T
+
+        pp2 = tr.pixel2scan((ptx + ww).T).T
         ww = (pp2 - pp).flatten()
         ww = 40 * ww / np.linalg.norm(ww)
         sigma = 5 * 3
@@ -189,7 +191,7 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
         print('findCoulombDirection: final: %s' % str(val))
 
     if fig is not None:
-        showCoulombDirection(ptx, val, im=im, dd=None, fig=100)
+        showCoulombDirection(ptx, val, im=im, dd=None, fig=fig)
     return val
 
 
@@ -206,7 +208,7 @@ def extent2fullextent(extent0, im):
     extent=[extent0[0]-dx/2, extent0[1]+dx/2,extent0[2]-dy/2,extent0[3]+dy/2 ]
     return extent
 
-def show2Dimage(im, dd, fig=100, verbose=1, title=None, units=None, colorbar=False, midx=2, facecolor=None):
+def show2Dimage(im, dd, **kwargs):
     """ Show image in window
 
     Arguments
@@ -217,6 +219,9 @@ def show2Dimage(im, dd, fig=100, verbose=1, title=None, units=None, colorbar=Fal
         data is used to scale the image to measurement resolution
 
     """
+    _=show2D(dd, im=im, **kwargs)
+    return None
+    
     try:
         extentImage, xdata, ydata, imdummy = get2Ddata( dd, fastscan=False, verbose=0, fig=None, midx=midx)
         mdata=dd

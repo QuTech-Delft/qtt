@@ -7,7 +7,7 @@ import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qtt.data import dataset2Dmetadata, pix2scan, image_transform
+from qtt.data import dataset2Dmetadata, image_transform
 from qtt.tools import *
 import qtt.data
 
@@ -91,19 +91,22 @@ def onedotSelectBlob(im, xx, fimg=None, verbose=0):
     pt = xx[idx]
     return pt
 
-def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi / 4, units=None):
+def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-np.pi / 4, units=None):
     """ Determine central position of Coulomb peak in 2D scan
 
     The position is determined by scanning with Gabor filters and then performing blob detection
+    
+    image should be in pixel coordinates
+    
     """
     extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, arrayname=None)
     tr = qtt.data.image_transform(dd)
-    if im is None:
-        #_, _, _, im = get2Ddata(dd)
-        raise NotImplemented
-        #impixel = tr.transform(im)
-
-    im=np.array(im)
+    if impixel is None:
+        impixel, tr=dataset2image(dd, mode='pixel')
+        im=np.array(impixel)
+    else:
+    
+        im=np.array(impixel)
 
     theta0 = baseangle  # np.deg2rad(-45)
 #    step = dd['sweepdata']['step']
@@ -124,7 +127,7 @@ def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi
     xxw, _ = onedotGetBlobs(fimg, fig=None)
     vv = onedotSelectBlob(im, xxw, fimg=None)
     ptpixel = np.array(vv).reshape((1, 2))
-    pt = pix2scan(ptpixel.T, dd)
+    pt = tr.pixel2scan(ptpixel.T)
     ptvalue = fimg[int(ptpixel[0,1]), int(ptpixel[0,0]) ]
     
     if verbose:
@@ -133,14 +136,14 @@ def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi
     if fig is not None:
         #od = dd.get('od', None) FIXME
         od = None
-        xx = show2Dimage(im, dd, fig=fig, verbose=1, title='input image for gabor', units=units)
+        xx = show2D(dd, impixel=im, fig=fig, verbose=1, title='input image for gabor', units=units)
         if od is not None:
             pt0 = od['balancepoint'].reshape( (2,1))
             pmatlab.plotPoints(pt0, '.m', markersize=12)
         plt.plot(pt[0], pt[1], '.', color=(0, .8, 0), markersize=16)
         plt.axis('image')
 
-        xx = show2Dimage( fimg, dd, fig=fig + 1, verbose=1, title='response image for gabor', units=units)
+        xx = show2D(dd, impixel=fimg, fig=fig + 1, verbose=1, title='response image for gabor', units=units)
         if od is not None:
             pass
             #plotPoints(pt0, '.m', markersize=16)
@@ -152,7 +155,7 @@ def onedotGetBalanceFine(im=None, dd=None, verbose=1, fig=None, baseangle=-np.pi
     if (np.abs(ptvalue)/bestvalue<0.05):
         acc=0
         logging.debug('accuracy: %d: %.2f' % (acc,  (np.abs(ptvalue)/bestvalue ) ) )
-    return pt, fimg, dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel, 'accuracy': acc})
+    return pt, fimg, dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel, 'accuracy': acc, 'gfilter': gfilter})
 
 # Testing
 if __name__=='__main__':

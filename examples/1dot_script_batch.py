@@ -175,7 +175,7 @@ for g in activegates:
     basevalues[g]=0
 
 
-basetag='batch-2016-08-03'; Tvalues=np.array([-380])
+basetag='batch-2016-08-10'; Tvalues=np.array([-380])
 
 
 #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -213,7 +213,7 @@ if 1:
 
 #%% Do measurements
 
-cache=0
+cache=1
 measureFirst=True    # measure 1-dots
 measureSecond=True   # measure 2-dots
 
@@ -221,7 +221,7 @@ measureSecond=True   # measure 2-dots
 #measureSecond=0
 
 # if we are working offline we cannot measure, but only process results
-if simulation():
+if simulation() and 0:
     measureFirst=0; measureSecond=0
 
 
@@ -288,7 +288,7 @@ def onedotPlungerScan(station, od, verbose=1):
     
     wait_time = qtt.scans.waitTime(gg[1], gate_settle=getattr(station, 'gate_settle', None))
 
-    alldata=scan1D(scanjob, station, wait_time=wait_time, title_comment='sweep of plunger')            
+    alldata=scan1D(scanjob, station, delay=wait_time, title_comment='sweep of plunger')            
     alldata.metadata['od']=od
     scandata=dict(dataset=alldata, od=od)
     return scandata
@@ -633,13 +633,13 @@ for ii, Tvalue in enumerate(Tvalues):
 
 
         dstr='doubledot-%s' % scanjob['td']['name']
-        xfile=experimentFile(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+        xfile=experimentFile(outputdir2d, tag='doubledot', dstr=dstr)
         if cache and os.path.exists(xfile):
             pass
             continue
 
         basevaluesTD=copy.copy(scanjob['basevalues'])
-        resetgates(activegates, basevaluesTD)
+        gates.resetgates(activegates, basevaluesTD)
         for c in ['a','b','c']:
             basevalues.pop('SD%d%s' % (sdid,c), None)
 

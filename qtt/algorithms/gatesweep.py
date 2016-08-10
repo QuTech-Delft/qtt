@@ -5,7 +5,7 @@ import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qtt.data import dataset2Dmetadata, pix2scan, image_transform
+from qtt.data import dataset2Dmetadata, pix2scan, image_transform, dataset2image, dataset2image2
 from qtt.tools import *
 import qtt.data
 
@@ -290,10 +290,11 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     nx = vstep.size
     ny = vsweep.size
 
-    im= np.array(dd.arrays[arrayname])
+    im, impixel, tr = dataset2image2(dd)
 
-    tr = qtt.data.image_transform(dd)
-    impixel = tr.transform(im)
+    #im= np.array(dd.arrays[arrayname])
+    #tr = qtt.data.image_transform(dd)
+    #impixel = tr.transform(im)
 
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ] # matplotlib extent style
 
@@ -319,7 +320,10 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         zz = -ww[0] + ww[1]
         idx = zz.argmin()
         pt = np.array([[ww[1][idx]], [ww[0][idx]]])
-        ptv = np.array([[vsweep[pt[0, 0]]], [vstep[-pt[1, 0]]]])
+        ptv=tr.pixel2scan(pt)
+        #print(pt); print(ptv)
+        #print(vsweep)
+        
     except:
         print('qutechtnotools: error in onedotGetBalance: please debug')
         idx = 0
@@ -327,6 +331,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         ptv = np.array([[vstep[pt[0, 0]]], [vsweep[-pt[1, 0]]]])
         pass
     od['balancepoint0'] = ptv
+    #od['balancepoint0'] = ptv
 
     # balance point: method 2 (fit quadrilateral)
     wwarea = ims > lv
@@ -399,8 +404,8 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         pmatlab.plotLabels(od['balancefitpixel'])
         plt.axis('image')
         plt.title('thresholded area')
-        plt.xlabel('%s (mV)' % g2)
-        plt.ylabel('%s (mV)' % g0)
+        plt.xlabel('%s' % g2)
+        plt.ylabel('%s' % g0)
         pmatlab.tilefigs([fig, fig + 1, fig + 2], [2, 2])
 
         if verbose >= 2:
@@ -412,6 +417,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
             plot2Dline([-1, 0, np.percentile(ims, 2)], '--m')
             plot2Dline([-1, 0, np.percentile(ims, 99)], '--m')
             plot2Dline([-1, 0, lv], '--r', linewidth=2)
+            plt.xlabel('Image (smoothed) values')
 
     return od, ptv, pt, ims, lv, wwarea
 
