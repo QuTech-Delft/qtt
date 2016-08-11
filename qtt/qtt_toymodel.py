@@ -20,7 +20,7 @@ import pyqtgraph
 import pyqtgraph.Qt as Qt
 from pyqtgraph.Qt import QtGui 
 from functools import partial
-
+import threading
 
 import qtt
 
@@ -78,6 +78,7 @@ class FourdotModel(Instrument):
 
         self._data = dict()
         #self.name = name
+        self.lock = threading.Lock() # lock to be able to use the simulation with threading
 
         # make parameters for all the gates...
         gateset= set(gate_map.values())
@@ -93,6 +94,9 @@ class FourdotModel(Instrument):
                                )
 
 
+        self.sdrandom = .001 # random noise in SD
+        self.biasrandom = .01 # random noise in bias current
+        
         self.gate_map=gate_map
         for instr in [ 'ivvi1', 'ivvi2']: # , 'keithley1', 'keithley2']:
             #if not instr in self._data:
@@ -190,8 +194,8 @@ class FourdotModel(Instrument):
         logger.debug('start SD computation')
 
         # main contribution
-        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'], offset=-150, random=.1)
-        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'], offset=-150, random=.1)
+        val1 = self._calculate_pinchoff(['SD1a', 'SD1b', 'SD1c'], offset=-150, random= self.sdrandom)
+        val2 = self._calculate_pinchoff(['SD2a','SD2b', 'SD2c'], offset=-150, random= self.sdrandom)
 
         val1x = self._calculate_pinchoff(['SD1a', 'SD1c'], offset=-50, random=0)
 
@@ -230,9 +234,11 @@ class FourdotModel(Instrument):
         return [val1+sd1+cond1, val2+sd2]
 
 
-    def compute(self, random=0.02):
+    def compute(self, biasrandom=None):
         ''' Compute output of the model '''
 
+        if biasrandom is None:
+            biasrandom = self.biasrandom
         try:
             logger.debug('DummyModel: compute values')
             # current through keithley1, 2 and 3
@@ -245,7 +251,7 @@ class FourdotModel(Instrument):
             instrument = 'keithley3'
             if not instrument in self._data:
                 self._data[instrument] = dict()
-            val=c + random*(np.random.rand()-.5) 
+            val=c + self.biasrandom*(np.random.rand()-.5) 
             logging.debug('compute: value %f' % val)
 
             self._data[instrument]['amplitude'] = val
@@ -269,11 +275,16 @@ class FourdotModel(Instrument):
         self._data[instrument][parameter] = float(value)
 
     def keithley1_get(self, param):
+        lock=threading.Lock()
+        lock.acquire()
+
         sd1, sd2 = self.computeSD()
         self._data['keithley1']['amplitude'] = sd1
         self._data['keithley2']['amplitude'] = sd2
         #print('keithley1_get: %f %f' % (sd1, sd2))
-        return  self._generic_get('keithley1', param)
+        val= self._generic_get('keithley1', param)
+        lock.release()
+        return val
 
     def keithley2_get(self, param):
         sd1, sd2 = self.computeSD()
@@ -282,9 +293,13 @@ class FourdotModel(Instrument):
         return  self._generic_get('keithley2', param)
 
     def keithley3_get(self, param):
+        lock=threading.Lock()
+        lock.acquire()
         logging.debug('keithley3_get: %s' % param)
         self.compute()
-        return self._generic_get('keithley3', param)
+        val= self._generic_get('keithley3', param)
+        lock.release()
+        return val
 
     def keithley3_set(self, param, value):
         #self.compute()
