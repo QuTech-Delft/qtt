@@ -84,10 +84,10 @@ class livePlot:
         else:
             p1 = win.addPlot(title='2d scan')
             self.p1=p1
-            p1.setLabel('left',sweepdata['horz_gate'], units='mV')
-            p1.setLabel('bottom', sweepdata['vert_gate'], units='mV')
-            p1.invertX()
-            p1.invertY()
+            p1.setLabel('left','horizontal gate', units='mV')
+            p1.setLabel('bottom', 'vertical gate', units='mV')
+#            p1.invertX()
+#            p1.invertY()
             # Item for displaying image data
             self.img = pg.ImageItem()
             p1.addItem(self.img)
