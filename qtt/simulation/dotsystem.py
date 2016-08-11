@@ -82,7 +82,7 @@ def defaultVmatrix(n):
     >>> m=defaultVmatrix(2)
     """
     Vmatrix=np.eye(n)
-    vals=[1,.25,.05,.01,.001, 0, 0]
+    vals=[1,.25,.07,.02,.001, 0, 0]
     for x in range(1, n):
         for i in range(n-x):
             Vmatrix[i, i+x]=vals[x]

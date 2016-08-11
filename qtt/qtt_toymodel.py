@@ -275,37 +275,35 @@ class FourdotModel(Instrument):
         self._data[instrument][parameter] = float(value)
 
     def keithley1_get(self, param):
-        lock=threading.Lock()
-        lock.acquire()
+        self.lock.acquire()
 
         sd1, sd2 = self.computeSD()
         self._data['keithley1']['amplitude'] = sd1
         self._data['keithley2']['amplitude'] = sd2
         #print('keithley1_get: %f %f' % (sd1, sd2))
         val= self._generic_get('keithley1', param)
-        lock.release()
+        self.lock.release()
         return val
 
     def keithley2_get(self, param):
+        self.lock.acquire()
         sd1, sd2 = self.computeSD()
         self._data['keithley1']['amplitude'] = sd1
         self._data['keithley2']['amplitude'] = sd2
-        return  self._generic_get('keithley2', param)
+        val = self._generic_get('keithley2', param)
+        self.lock.release()
+        return val
 
     def keithley3_get(self, param):
-        lock=threading.Lock()
-        lock.acquire()
+        self.lock.acquire()
         logging.debug('keithley3_get: %s' % param)
         self.compute()
         val= self._generic_get('keithley3', param)
-        lock.release()
+        self.lock.release()
         return val
 
-    def keithley3_set(self, param, value):
-        #self.compute()
-        pass
-        print('huh?')
-        #return self._generic_get('keithley3', param)
+#    def keithley3_set(self, param, value):
+#        print('huh?')
         
 class VirtualIVVI(Instrument):
 

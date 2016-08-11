@@ -702,102 +702,104 @@ for ii, Tvalue in enumerate(Tvalues):
         gates.set(sweepdata['gates'][0], sweepdata['start'])
 
 
-        #%% Scan in fast mode...
-        scanjob['Naverage']=160
-        gstep, gsweep, center, d,voltages_step = fastScan(stepdata, sweepdata)
-        wait_time=None
-        wait_time=0 # try
-
 
         if 1:
             # slow scan
             print('slow scan without compensation!')
             sd.initialize(setPlunger=True)
             defaultactivegates=[]
-            xSTOP
             alldata = scan2D(station, scanjob, title_comment='scan double-dot', wait_time=None, background=False)
             dstr='doubledot-%s-gc' % scanjob['td']['name']
             alldata.metadata['sd']=str(sd)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 
-            pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
-            if 1:
-                scanjobc=positionScanjob(scanjob, resultsfine['ptmv'])
-                alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
-                dstr='doubledot-center-%s' % scanjob['td']['name']
-                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
-
-                ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
-
-        if 0:
-            print('fast scan with compensation!')
-            sd.initialize(setPlunger=True)
-            alldata, data = scan2Dfastjob(scanjob, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
-            dstr='doubledot-%s-gc' % scanjob['td']['name']
-            alldata['sd']=str(sd)
-            saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
-
-            pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
-            if 1:
-                scanjobc=positionScanjob(scanjob, resultsfine['ptmv'])
-                alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
-                dstr='doubledot-center-%s' % scanjob['td']['name']
-                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
-
-                ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
-
-            #_=show2D(alldata, fig=200)
-
-            dv=20
-            dx=resultsfineI['ptmv'].flatten()-np.array( [(scanjob['sweepdata']['start']+scanjob['sweepdata']['end'])/2, (scanjob['stepdata']['start']+scanjob['stepdata']['end'])/2 ] )-np.array([[dv],[dv]]).flatten()
-            dx=np.linalg.norm(dx)
-            dthr=10
-            nitermax=4; niter=0
-            if dx>dthr and niter<nitermax:
-                targetpos =  resultsfineI['ptmv']-np.array([[dv],[dv]])
-                # iterate untill good
-                # FIXME: reposition SD?
-                scanjobc=positionScanjob(scanjob,targetpos)
-                alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
-                dstr='doubledot-center-%s' % scanjob['td']['name']
-                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
-
-                ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
-
-                # re-calc position
-                dx=resultsfineI['ptmv'].flatten()-np.array( [(scanjob['sweepdata']['start']+scanjob['sweepdata']['end'])/2, (scanjob['stepdata']['start']+scanjob['stepdata']['end'])/2 ] )
-                dx=np.linalg.norm(dx)
-                niter=niter+1
-
-        if 0:
-            print('fast scan without compensation!')
-
-            # initialize sensing dot to centre
-            #sd.sdval[1]=(sdstart+sdend)/2
-            #scanjobx=copy.copy(scanjob)
-            sd.initialize(setPlunger=True)
-
-            scanjob['compensateGates']=[]
-            #STOP
-            alldata, data = scan2Dfastjob(scanjob, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
-            alldata['sd']=str(sd)
-
+            #pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
+            print('WARNING: skipping analysis')
+            print('WARNING: skipping hires scan')
             if 0:
-                alldataslow, data = scan2Djob(scanjob, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
-                dstr='doubledot-slow-%s' % scanjob['td']['name']
-                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
-
-            pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
-
-            if 1:
                 scanjobc=positionScanjob(scanjob, resultsfine['ptmv'])
                 alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
                 dstr='doubledot-center-%s' % scanjob['td']['name']
                 saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 
-            dstr='doubledot-%s' % scanjob['td']['name']
-            saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
-            #saveExperimentData(datadir, alldata, tag='doubledotscans')  # save generic double-dot scans
+                ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+
+        #%% Scan in fast mode...
+        if 0:
+            scanjob['Naverage']=160
+            gstep, gsweep, center, d,voltages_step = fastScan(stepdata, sweepdata)
+            wait_time=None
+            wait_time=0 # try
+    
+            if 0:
+                print('fast scan with compensation!')
+                sd.initialize(setPlunger=True)
+                alldata, data = scan2Dfastjob(scanjob, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                dstr='doubledot-%s-gc' % scanjob['td']['name']
+                alldata['sd']=str(sd)
+                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+    
+                pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
+                if 1:
+                    scanjobc=positionScanjob(scanjob, resultsfine['ptmv'])
+                    alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                    dstr='doubledot-center-%s' % scanjob['td']['name']
+                    saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+    
+                    ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+    
+                #_=show2D(alldata, fig=200)
+    
+                dv=20
+                dx=resultsfineI['ptmv'].flatten()-np.array( [(scanjob['sweepdata']['start']+scanjob['sweepdata']['end'])/2, (scanjob['stepdata']['start']+scanjob['stepdata']['end'])/2 ] )-np.array([[dv],[dv]]).flatten()
+                dx=np.linalg.norm(dx)
+                dthr=10
+                nitermax=4; niter=0
+                if dx>dthr and niter<nitermax:
+                    targetpos =  resultsfineI['ptmv']-np.array([[dv],[dv]])
+                    # iterate untill good
+                    # FIXME: reposition SD?
+                    scanjobc=positionScanjob(scanjob,targetpos)
+                    alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                    dstr='doubledot-center-%s' % scanjob['td']['name']
+                    saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+    
+                    ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+    
+                    # re-calc position
+                    dx=resultsfineI['ptmv'].flatten()-np.array( [(scanjob['sweepdata']['start']+scanjob['sweepdata']['end'])/2, (scanjob['stepdata']['start']+scanjob['stepdata']['end'])/2 ] )
+                    dx=np.linalg.norm(dx)
+                    niter=niter+1
+    
+            if 0:
+                print('fast scan without compensation!')
+    
+                # initialize sensing dot to centre
+                #sd.sdval[1]=(sdstart+sdend)/2
+                #scanjobx=copy.copy(scanjob)
+                sd.initialize(setPlunger=True)
+    
+                scanjob['compensateGates']=[]
+                #STOP
+                alldata, data = scan2Dfastjob(scanjob, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                alldata['sd']=str(sd)
+    
+                if 0:
+                    alldataslow, data = scan2Djob(scanjob, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                    dstr='doubledot-slow-%s' % scanjob['td']['name']
+                    saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+    
+                pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
+    
+                if 1:
+                    scanjobc=positionScanjob(scanjob, resultsfine['ptmv'])
+                    alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                    dstr='doubledot-center-%s' % scanjob['td']['name']
+                    saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+    
+                dstr='doubledot-%s' % scanjob['td']['name']
+                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+                #saveExperimentData(datadir, alldata, tag='doubledotscans')  # save generic double-dot scans
 
 
 #%%
