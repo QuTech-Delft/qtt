@@ -209,7 +209,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     station.set_measurement(*params)
 
     delay = scanjob.get('delay', delay)
-    logging.debug('delay: %f' % delay)
+    logging.debug('delay: %s' % str(delay) )
     print('scan1D: starting Loop (background %s)' % background)
     data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=data_manager, overwrite=True, background=background)
     data.sync()
@@ -297,7 +297,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     if background is None:
         try:
-            R._server_name
+            gates._server_name
             background = True
         except:
             background = False
