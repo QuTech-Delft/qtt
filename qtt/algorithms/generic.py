@@ -90,6 +90,27 @@ def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
     return flow, ll
 #%%
 
+def signedmin(val, w):
+    """ Signed minimum value function """
+    val = min(val, abs(w))
+    val = max(val, -abs(w))
+    return val
+
+
+def signedabsX(val, w):
+    """ Signed absolute value function """
+    val = min(val, abs(w))
+    val = max(val, -abs(w))
+    return val
+
+
+def issorted(l):
+    """ Return True if the argument list is sorted """
+    for i, el in enumerate(l[1:]):
+        if el >= l[i - 1]:
+            return False
+    return True
+    
 
 def showFlowField(im, flow, ll=None, ff=None, d=12, fig=-1):
     """ Show flow field

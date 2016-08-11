@@ -3,6 +3,7 @@ import qcodes
 
 from qtt.scans import scan1D
 import qtt.data
+from qtt.algorithms.coulomb import *
 
 class sensingdot_t:
     """ Class representing a sensing dot """
@@ -137,7 +138,7 @@ class sensingdot_t:
 
         x,y = qtt.data.dataset1Ddata(alldata)
 
-        istep=float(np.abs(alldata['sweepdata']['step']))
+        istep=float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = peakdataOrientation(x, y)
 
         goodpeaks = coulombPeaks(x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
@@ -169,18 +170,19 @@ class sensingdot_t:
         stepdata = scanjob.get('stepdata', None)
         sweepdata = scanjob['sweepdata']
         # set sweep to center
-        set_gate(
+        gates=sd.station.gates        
+        gates.set(
             sweepdata['gates'][0], (sweepdata['start'] + sweepdata['end']) / 2)
         if not stepdata is None:
             if mode == 'end':
                 # set sweep to center
-                set_gate(stepdata['gates'][0], (stepdata['end']))
+                gates.set(stepdata['gates'][0], (stepdata['end']))
             elif mode == 'start':
                 # set sweep to center
-                set_gate(stepdata['gates'][0], (stepdata['start']))
+                gates.set(stepdata['gates'][0], (stepdata['start']))
             else:
                 # set sweep to center
-                set_gate(
+                gates.set(
                     stepdata['gates'][0], (stepdata['start'] + stepdata['end']) / 2)
 
     def fineTune(sd, fig=300, stephalfmv=8):

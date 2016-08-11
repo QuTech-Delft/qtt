@@ -186,7 +186,7 @@ def getDefaultParameter(data):
 
 
     
-def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, wait_time=None):
+def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, data_manager=False, wait_time=None):
     ''' Simple 1D scan '''
     gates=station.gates
     sweepdata = scanjob['sweepdata']
@@ -211,7 +211,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     delay = scanjob.get('delay', delay)
     logging.debug('delay: %f' % delay)
     print('scan1D: starting Loop (background %s)' % background)
-    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=False, overwrite=True, background=background)
+    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=data_manager, overwrite=True, background=background)
     data.sync()
 
     if liveplotwindow is None:
@@ -235,6 +235,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         metadata['allgatevalues'] = gates.allvalues()
         metadata['scantime'] = str(datetime.datetime.now())
         metadata['dt'] = dt
+        metadata['scanjob'] = scanjob
         
     sys.stdout.flush()
 

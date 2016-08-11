@@ -249,7 +249,7 @@ from qtt.structures import sensingdot_t
 
 # define sensing dot
 sdval=getSDval(Tvalues[0], ggsd)
-sd=sensingdot_t(ggsd, sdval, index=sdid  )
+sd=sensingdot_t(ggsd, sdval, station=station, index=sdid  )
 
 
 sd2=None
@@ -570,7 +570,7 @@ basevalues0=copy.copy(basevaluesS)
 #sdid=1
 ggsd=['SD%d%s' % (sdid,c) for c in ['a','b','c']];
 sdval=[ basevaluesS[g] for g in ggsd]
-sd=sensingdot_t(ggsd, sdval, index=sdid  )
+sd=sensingdot_t(ggsd, sdval, station=station, index=sdid  )
 
 
 #cache=0
@@ -580,7 +580,6 @@ sd=sensingdot_t(ggsd, sdval, index=sdid  )
 
 #%%
 
-xSTOP
 
 for ii, Tvalue in enumerate(Tvalues):
     if not measureSecond:
@@ -686,7 +685,7 @@ for ii, Tvalue in enumerate(Tvalues):
         #STOP
         #plot1D(alldata, fig=100)
 
-        if 1:
+        if 0:
             # calculate settings for gate compensation
             g=sd.tunegate()
             (sdstart, sdend, sdmiddle)=sd.autoTuneFine(scanjob=scanjob, fig=300)
@@ -695,10 +694,12 @@ for ii, Tvalue in enumerate(Tvalues):
             compensateGates=[g]
             gate_values_corners=[[sdstart, sdstart, sdend, sdend]]
             sd.sdval[1]=(sdstart+sdend)/2
+        else:
+            print('WARNING: fine tuning not enabled implemented!')
 
         scanjob['compensateGates']=compensateGates
         scanjob['gate_values_corners']=gate_values_corners
-        set_gate(sweepdata['gates'][0], sweepdata['start'])
+        gates.set(sweepdata['gates'][0], sweepdata['start'])
 
 
         #%% Scan in fast mode...
@@ -709,6 +710,26 @@ for ii, Tvalue in enumerate(Tvalues):
 
 
         if 1:
+            # slow scan
+            print('slow scan without compensation!')
+            sd.initialize(setPlunger=True)
+            defaultactivegates=[]
+            xSTOP
+            alldata = scan2D(station, scanjob, title_comment='scan double-dot', wait_time=None, background=False)
+            dstr='doubledot-%s-gc' % scanjob['td']['name']
+            alldata.metadata['sd']=str(sd)
+            saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+
+            pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
+            if 1:
+                scanjobc=positionScanjob(scanjob, resultsfine['ptmv'])
+                alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                dstr='doubledot-center-%s' % scanjob['td']['name']
+                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+
+                ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+
+        if 0:
             print('fast scan with compensation!')
             sd.initialize(setPlunger=True)
             alldata, data = scan2Dfastjob(scanjob, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
