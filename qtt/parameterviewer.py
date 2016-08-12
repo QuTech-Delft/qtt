@@ -8,8 +8,7 @@ from qtpy.QtCore import Qt
 from qtpy import QtWidgets
 from qtpy import QtGui
 import pyqtgraph
-#import pyqtgraph.Qt as Qt
-
+import math
 
 class QCodesTimer(threading.Thread):
 
@@ -131,6 +130,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         #gates = dd['instruments']['gates']
         #pp = gates['parameters']
         # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
+        logging.debug('ParameterViewer: update values')
         for iname in self._instrumentnames:
             instr = self._instruments[self._instrumentnames.index(iname)]
             
@@ -140,13 +140,17 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             for g in ppnames:
                 value=pp[g].get()
                 #value = pp[g]['value']
-                x = self._itemsdict[iname][g]
-                logging.debug('update %s to %s' % (g, value))
-                try:
-                    x.setValue( value )
-                except Exception as e:
-                    pass
-                #    x.setText(1, str(value))
+                sb = self._itemsdict[iname][g]
+                if math.abs(sb.value()-value)>1e-9:
+                
+                    logging.debug('update %s to %s' % (g, value))
+                    try:
+                        
+                        oldstate=sb.blockSignals(True)
+                        sb.setValue( value )
+                        sb.blockSignals(oldstate)
+                    except Exception as e:
+                        pass
 
         for f in self.callbacklist:
             try:
