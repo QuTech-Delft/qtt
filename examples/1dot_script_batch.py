@@ -10,13 +10,12 @@ from imp import reload
 import sys,os,platform, pdb
 import logging
 import numpy as np
-import qtpy
-
-
 os.environ['QT_API'] = 'pyqt'
-import PyQt4.QtGui
+import pdb
+import qtpy
+import logging
 import matplotlib
-matplotlib.use('Qt4Agg')
+#matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot
 matplotlib.pyplot.ion()
@@ -30,28 +29,21 @@ if __name__=='__main__':
         pass
 #print(qtpy.QT_API)
 
-# make sure drivers are disconnected...
-#os.system("taskkill /F /im python.exe")
-
-import pdb
-
-import webbrowser
-import datetime
-import copy
+import webbrowser, datetime, copy
 import matplotlib.pyplot as plt
-
-import cgitb
-cgitb.enable(format='text')
 
 import qcodes
 import qcodes as qc
 from qcodes.plots.qcmatplotlib import MatPlot
 
+from functools import partial
+import qtt.scans
+
 import qtt; # reload(qtt)
 import qtt.scans
 from qtt.scans import experimentFile
 import qtt.reports
-reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
+#reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
 #import qcodes.utils.reload_code
 #_=qcodes.utils.reload_code.reload_code()
 from qcodes.utils.validators import Numbers
@@ -62,211 +54,186 @@ from qtt.legacy import *
 from qtt.reports import *
 
 #%% Load configuration
-import logging
-l = logging.getLogger()
-l.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s %(levelname)-8s: %(message)s (%(filename)s:%(lineno)d)')
-try:
-    l.handlers[0].setFormatter(formatter)
-except:
-    pass
 
-if platform.node()=='TUD205521':
-    import stationV2 as msetup
-    from stationV2 import sample
-    awg1=None
-    virtualAWG=None
-    def simulation():
-        ''' Funny ... '''
-        return False
-else:
-    import virtualV2 as msetup
-    from virtualV2 import sample
-    awg1=None
-    def simulation():
-        ''' Funny ... '''
-        return True
+if __name__=='__main__':
+
+    if platform.node()=='TUD205521':
+        import stationV2 as msetup
+        from stationV2 import sample
+        awg1=None
+        virtualAWG=None
+        def simulation():
+            ''' Funny ... '''
+            return False
+    else:
+        import virtualV2 as msetup
+        from virtualV2 import sample
+        awg1=None
+        def simulation():
+            ''' Funny ... '''
+            return True
+        
+    #msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+    msetup.initialize(reinit=False, server_name=None )
     
-#msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
-msetup.initialize(reinit=False, server_name=None )
-
-
-try:
-    from qcodes.data.hdf5_format import HDF5Format
-    #qc.DataSet.default_formatter=HDF5Format()
-except:
-    pass
 
 
 
 #%% Make instances available
 
-#Amp = 10    # some magic factor 5
-#datadir=experimentdata.getDataDir()
-
-station = msetup.getStation()
-
-station.gate_settle=sample.gate_settle
-
-keithley1 = station.keithley1
-keithley3 = station.keithley3
-
-gates = station.gates
-
-station.set_measurement(keithley3.amplitude)
-
-if platform.node()=='TUD205521':
-    datadir =  r'p:\data\qcodes'   
-else:
-    datadir = '/home/eendebakpt/data/qdata'
-
-qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
-mwindows=qtt.setupMeasurementWindows(station)
-mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
-
-
-from functools import partial
-mwindows['parameterviewer'].callbacklist.append( partial(qtt.updatePlotTitle, mwindows['plotwindow']) )
-
-#liveplotwindow.win.setWindowTitle('sfs')
-
-import qtt.scans
-qtt.scans.mwindows=mwindows
-liveplotwindow=mwindows['plotwindow']
-qtt.live.liveplotwindow=liveplotwindow
-
-
-#model = setup.model
-
-#model.compute()
+if __name__=='__main__':
+    station = msetup.getStation()
+    
+    station.gate_settle=sample.gate_settle
+    
+    keithley1 = station.keithley1
+    keithley3 = station.keithley3
+    
+    gates = station.gates
+    
+    station.set_measurement(keithley3.amplitude)
+    
+    if platform.node()=='TUD205521':
+        datadir =  r'p:\data\qcodes'   
+    else:
+        datadir = '/home/eendebakpt/data/qdata'
+    
+    qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+    mwindows=qtt.setupMeasurementWindows(station)
+    mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
+    
+    
+    mwindows['parameterviewer'].callbacklist.append( partial(qtt.updatePlotTitle, mwindows['plotwindow']) )
+    
+    #liveplotwindow.win.setWindowTitle('sfs')
+    
+    qtt.scans.mwindows=mwindows
+    liveplotwindow=mwindows['plotwindow']
+    qtt.live.liveplotwindow=liveplotwindow
+    
 
 #%% Define 1-dot combinations
 from stationV2.sample import get_one_dots
 
-verbose=2   # set output level of the different functions
+if __name__=='__main__':
 
-full=1      # for full=0 the resolution of the scans is reduced, this is usefull for quick testing
-one_dots=get_one_dots(sdidx=[])
-#one_dots=one_dots[0:1]; full=0
-#one_dots=one_dots[1:3]; full=0
-full=0
-
-sdindices=[1,2]
-sdindices=[1,]
-
-
-sddots=get_one_dots(sdidx=sdindices)[-len(sdindices):]
-
-#one_dots=[one_dots[0], one_dots[-1] ];
-full=0
-dohires=1
-
-logging.info('## 1dot_script_batch: scan mode: full %d, scanning %d one-dots' % (full, len(one_dots)) )
-
-timestart=str(datetime.datetime.now())
+    
+    verbose=2   # set output level of the different functions
+    
+    full=1      # for full=0 the resolution of the scans is reduced, this is usefull for quick testing
+    one_dots=get_one_dots(sdidx=[])
+    full=0
+    
+    sdindices=[1,2]
+    sdindices=[1,]
+    
+    
+    sddots=get_one_dots(sdidx=sdindices)[-len(sdindices):]
+    
+    #one_dots=[one_dots[0], one_dots[-1] ];
+    full=0
+    dohires=1
+    
+    logging.info('## 1dot_script_batch: scan mode: full %d, scanning %d one-dots' % (full, len(one_dots)) )
+    
+    timestart=str(datetime.datetime.now())
 
 #%%
+Tvalues=[]
+if __name__=='__main__':
 
-sdgates = qtt.flatten([s['gates'] for s in sddots])
-activegates=['T'] + list(qtt.flatten([s['gates'] for s in one_dots])) + sdgates
-
-basevalues=dict()
-for g in activegates:
-    basevalues[g]=0
-
-
-basetag='batch-2016-08-10'; Tvalues=np.array([-380])
-
-
-#basetag='batch-16102015'; Tvalues=np.array([-390])
-
-b=False
-
-if b:
-    basetag=basetag + 'b'
-    # we set the sensing dots to some biased values, otherwise we cannot close them
-    basevalues['SD1a']=-150
-    basevalues['SD1b']=-150
-    basevalues['SD1c']=-150
-
-    basevalues['SD2a']=-150
-    basevalues['SD2b']=-150
-    basevalues['SD2c']=-150
-else:
-    basevalues['SD1a']=0
-    basevalues['SD1b']=0
-    basevalues['SD1c']=0
-
-    basevalues['SD2a']=0
-    basevalues['SD2b']=0
-    basevalues['SD2c']=0
-
-
-if 1:
-    Pbias=-80
-    basevalues['P1']=Pbias
-    basevalues['P2']=Pbias
-    basevalues['P3']=Pbias
-    basevalues['P4']=Pbias
-
-#one_dots=one_dots[-1:]; Tvalues=np.array([-350])
+    sdgates = qtt.flatten([s['gates'] for s in sddots])
+    activegates=['T'] + list(qtt.flatten([s['gates'] for s in one_dots])) + sdgates
+    
+    basevalues=dict()
+    for g in activegates:
+        basevalues[g]=0
+    
+    
+    basetag='batch-2016-08-10'; Tvalues=np.array([-380])
+    
+    
+    #basetag='batch-16102015'; Tvalues=np.array([-390])
+    
+    b=False
+    
+    if b:
+        basetag=basetag + 'b'
+        # we set the sensing dots to some biased values, otherwise we cannot close them
+        basevalues['SD1a']=-150
+        basevalues['SD1b']=-150
+        basevalues['SD1c']=-150
+    
+        basevalues['SD2a']=-150
+        basevalues['SD2b']=-150
+        basevalues['SD2c']=-150
+    else:
+        basevalues['SD1a']=0; basevalues['SD1b']=0; basevalues['SD1c']=0
+        basevalues['SD2a']=0; basevalues['SD2b']=0; basevalues['SD2c']=0
+    
+    
+    if 1:
+        Pbias=-80
+        basevalues['P1']=Pbias
+        basevalues['P2']=Pbias
+        basevalues['P3']=Pbias
+        basevalues['P4']=Pbias
+    
+    #one_dots=one_dots[-1:]; Tvalues=np.array([-350])
 
 #%% Do measurements
+if __name__=='__main__':
 
-cache=1
-measureFirst=True    # measure 1-dots
-measureSecond=True   # measure 2-dots
-
-#measureFirst=0;
-#measureSecond=0
-
-# if we are working offline we cannot measure, but only process results
-if simulation() and 0:
-    measureFirst=0; measureSecond=0
-
-
-# new januari sample
-def getSDval(T, gg=None):
-    if not gg is None:
-        if gg[1]=='SD2b':
-            sdval=[-324,-450,-290]  # T ??
-        else:
-              sdval=[-330,-170,-380]  # ...
-              sdval=[-160,-430,-480]  # T-350, from scan
-              sdval=[-320,-500,-500]  # from T=-375 SD scan
+    cache=1
+    measureFirst=True    # measure 1-dots
+    measureSecond=True   # measure 2-dots
+    
+    #measureFirst=0;
+    #measureSecond=0
+    
+    # if we are working offline we cannot measure, but only process results
+    if simulation() and 0:
+        measureFirst=0; measureSecond=0
+    
+    
+    # new januari sample
+    def getSDval(T, gg=None):
+        if not gg is None:
+            if gg[1]=='SD2b':
+                sdval=[-324,-450,-290]  # T ??
+            else:
+                  sdval=[-330,-170,-380]  # ...
+                  sdval=[-160,-430,-480]  # T-350, from scan
+                  sdval=[-320,-500,-500]  # from T=-375 SD scan
+            return sdval
+        #sdval=[-330,-500,-370]  # T-350, natasja
         return sdval
-    #sdval=[-330,-500,-370]  # T-350, natasja
-    return sdval
-
-# define the index of the sensing dot to use for double-dot scans
-sdid=1
-#sdid=2
-
-ggsd=['SD%d%s' % (sdid,c) for c in ['a','b','c']];
-
-import qtt.structures
-from qtt.structures import sensingdot_t
-
-# define sensing dot
-sdval=getSDval(Tvalues[0], ggsd)
-sd=sensingdot_t(ggsd, sdval, station=station, index=sdid  )
-
-
-sd2=None
-
-#gg=['SD2%s' % c for c in ['a','b','c']]; RFfreq=86.4e6; # SD2
-
-#print('FIXME: refactor code to extract scan of single-dot' )
-
-
-if full:
-    hiresstep=-2
-else:
-    hiresstep=-4
-
-
-def stepDelay(gate, minstepdelay=0, maxstepdelay=10):
-    return 0
+    
+    # define the index of the sensing dot to use for double-dot scans
+    sdid=1
+    #sdid=2
+    
+    ggsd=['SD%d%s' % (sdid,c) for c in ['a','b','c']];
+    
+    import qtt.structures
+    from qtt.structures import sensingdot_t
+    
+    # define sensing dot
+    sdval=getSDval(Tvalues[0], ggsd)
+    sd=sensingdot_t(ggsd, sdval, station=station, index=sdid  )
+    
+    
+    sd2=None
+    
+    
+    if full:
+        hiresstep=-2
+    else:
+        hiresstep=-4
+    
+    
+    def stepDelay(gate, minstepdelay=0, maxstepdelay=10):
+        return 0
     
 #%%
 
@@ -361,6 +328,8 @@ app=pyqtgraph.mkQApp()
 
 
 for ii, Tvalue in enumerate(Tvalues):
+    if not __name__=='__main__':
+        break
     tag=basetag+'-T%d'  % Tvalue
     outputdir=qtt.mkdirc(os.path.join(datadir, tag))
     if not measureFirst:
@@ -533,55 +502,52 @@ for ii, Tvalue in enumerate(Tvalues):
 
 #datadir=experimentdata.getDataDir()
 #one_dots=get_one_dots(full=2)
-import traceback
+if __name__=='__main__':
 
-reload(qtt.data)
-reload(qtt.reports)
-from qtt.reports import *
-
-plt.close('all')
-for ii, Tvalue in enumerate(Tvalues):
-    tag=basetag+'-T%d'  % Tvalue
-
-    resultsdir=qtt.tools.mkdirc(os.path.join(datadir, tag) )
-    xdir=os.path.join(resultsdir, 'one_dot')
-
-    try:
-        print('script: make report for %s' % tag )
-        fname=generateOneDotReport(one_dots+sddots,xdir, resultsdir)
-        webbrowser.open(fname, new=2)
-    except Exception as ex:
-        print('failed to generate one-dot report')
-        print(ex)
-        #print(traceback.format_exception(ex))
-        fname=generateOneDotReport(one_dots+sddots,xdir, resultsdir)
-
-        pass
-
-if len(Tvalues)>1:
-    raise Exception(' not supported...' )
-
+    #reload(qtt.data); reload(qtt.reports); from qtt.reports import *
+    
+    plt.close('all')
+    for ii, Tvalue in enumerate(Tvalues):
+        tag=basetag+'-T%d'  % Tvalue
+    
+        resultsdir=qtt.tools.mkdirc(os.path.join(datadir, tag) )
+        xdir=os.path.join(resultsdir, 'one_dot')
+    
+        try:
+            print('script: make report for %s' % tag )
+            fname=generateOneDotReport(one_dots+sddots,xdir, resultsdir)
+            webbrowser.open(fname, new=2)
+        except Exception as ex:
+            print('failed to generate one-dot report')
+            print(ex)
+            #print(traceback.format_exception(ex))
+            fname=generateOneDotReport(one_dots+sddots,xdir, resultsdir)
+    
+            pass
+    
+    if len(Tvalues)>1:
+        raise Exception(' not supported...' )
+    
 
 #%% Measurements for double-dots
 
-basevaluesS=loadExperimentData(outputdir, tag='one_dot', dstr='basevaluesS')
-basevalues0=copy.copy(basevaluesS)
+if __name__=='__main__':
 
-#sdid=1
-ggsd=['SD%d%s' % (sdid,c) for c in ['a','b','c']];
-sdval=[ basevaluesS[g] for g in ggsd]
-sd=sensingdot_t(ggsd, sdval, station=station, index=sdid  )
+    basevaluesS=loadExperimentData(outputdir, tag='one_dot', dstr='basevaluesS')
+    basevalues0=copy.copy(basevaluesS)
+    
+    #sdid=1
+    ggsd=['SD%d%s' % (sdid,c) for c in ['a','b','c']];
+    sdval=[ basevaluesS[g] for g in ggsd]
+    sd=sensingdot_t(ggsd, sdval, station=station, index=sdid  )
 
-
-#cache=0
-
-#end()
-#measureSecond=False
 
 #%%
 
 
 for ii, Tvalue in enumerate(Tvalues):
+    if not __name__=='__main__':
+        break
     if not measureSecond:
         break;
     print('### 1dot_script_batch: double-dot scans for T=%.1f' % Tvalue)
@@ -803,43 +769,51 @@ for ii, Tvalue in enumerate(Tvalues):
 
 
 #%%
-timecomplete=str(datetime.datetime.now())
-measurementfunctions.writeBatchData(outputdir, tag, timestart, timecomplete)
+if __name__=='__main__':
+
+    timecomplete=str(datetime.datetime.now())
+    measurementfunctions.writeBatchData(outputdir, tag, timestart, timecomplete)
 
 #%%
 
 #%% Done
-print('##### 1dot_script_batch: measurements done...')
 
-experimentdata.closeExperiment()
-gates.get_all()
+if __name__=='__main__':
+
+    print('##### 1dot_script_batch: measurements done...')
+    
+    experimentdata.closeExperiment()
+    gates.get_all()
 
 #%% Make reports
 import experimentdata
 import webbrowser
 
-datadir=experimentdata.getDataDir()
-one_dots=get_one_dots(full=2)
-two_dots=get_two_dots(full=1)
+if __name__=='__main__':
 
-for ii, Tvalue in enumerate(Tvalues):
-    tag=basetag+'-T%d'  % Tvalue
-    tag2d=basetag+'-T%d-sd%d'  % (Tvalue, sdid)
-
-    resultsdir=mkdirc(os.path.join(datadir, tag) )
-    resultsdir2d=mkdirc(os.path.join(datadir, tag2d) )
-
-    try:
-        # generate report
-        fname,_= generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
-        webbrowser.open(fname,new=2)
-    except Exception as e:
-        print(e)
-        pass
-
-
-print('##### 1dot_script_batch: generation of double-dot report complete...')
+    datadir=experimentdata.getDataDir()
+    one_dots=get_one_dots(full=2)
+    two_dots=get_two_dots(full=1)
+    
+    for ii, Tvalue in enumerate(Tvalues):
+        tag=basetag+'-T%d'  % Tvalue
+        tag2d=basetag+'-T%d-sd%d'  % (Tvalue, sdid)
+    
+        resultsdir=mkdirc(os.path.join(datadir, tag) )
+        resultsdir2d=mkdirc(os.path.join(datadir, tag2d) )
+    
+        try:
+            # generate report
+            fname,_= generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
+            webbrowser.open(fname,new=2)
+        except Exception as e:
+            print(e)
+            pass
+    
+    
+    print('##### 1dot_script_batch: generation of double-dot report complete...')
 
 #%%
+if __name__=='__main__':
 
-end(noerror=True)
+    end(noerror=True)
