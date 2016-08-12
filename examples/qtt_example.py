@@ -134,7 +134,7 @@ if __name__=='__main__':
     scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -530, 'end': 160, 'step': 12.}), 'instrument': [keithley1.amplitude], 'delay': 0.})
     #scanjob = dict( {'sweepdata': dict({'gate': 'P1', 'start': -230, 'end': 160, 'step': 6.}), 'instrument': [gates.L], 'delay': 0.})
     scanjob['stepdata']=dict({'gate': 'L', 'start': -390, 'end': 220, 'step': 6.})
-    data = qtt.scans.scan2D(station, scanjob, background=True, liveplotwindow=plotQ)
+    data = qtt.scans.scan2D(station, scanjob, background=None, liveplotwindow=plotQ)
 
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
 
@@ -150,7 +150,7 @@ if __name__=='__main__':
     
     gates.L.set(300); gates.R.set(300)
     print( model.keithley1_get('amplitude') )
-    gates.L.set(-300); gates.R.set(-300)
+    gates.L.set(-300.); gates.R.set(-300.)
     print( model.keithley1_get('amplitude') )
     print(model.my_get())
     
