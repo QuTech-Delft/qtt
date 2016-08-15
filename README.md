@@ -22,31 +22,35 @@ As the project is still private, install it directly from this repository:
 
 - Clone this repositories somewhere on your hard drive. If you're using command line git, open a terminal window in the directory where you'd like to put qcodes and type:
 ```
-git clone https://github.com/qdev-dk/Qcodes.git
-git clone https://github.com/VandersypenQutech/qtt.git
-git clone https://github.com/VandersypenQutech/users.git
-git clone https://github.com/VandersypenQutech/stations.git
+> git clone https://github.com/qdev-dk/Qcodes.git
+> git clone https://github.com/VandersypenQutech/qtt.git
+> git clone https://github.com/VandersypenQutech/users.git
+> git clone https://github.com/VandersypenQutech/stations.git
 ```
 
 - Install python dependencies. For windows with anaconda:
 ```
 > conda install numpy scipy matplotlib pandas scikit-image
-> conda install spyder pyqtgraph
+> conda install spyder pyqtgraph qtpy
 > conda install -c menpo opencv3
-> pip install pyvisa 
+> pip install pyvisa
 ```
 For other systems
 ```
 > pip install numpy scipy matplotlib pandas scikit-image
-> pip install numpy spyder pyqtgraph
+> pip install numpy spyder pyqtgraph qtpy
 > pip install pyvisa 
 > # install opencv according to platform instructions
 ```
+(For Mac OS, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
+
 - Register the repositories it with Python. For each of the repositories run this from the root directory:
 ```
 > conda develop ./  (for Anaconda)
 > python setup.py develop --user  (for other systems)
 ```
+
+- Download `pmatlab` (provided by [Pieter Eendebak](mailto:pieter.eendebak@gmail.com)) and copy it to the site-packages directory of your Python environment.
 
 
 ### Updating QTT
@@ -59,6 +63,8 @@ See the [docs](docs) directory (to be constructed)
 
 For a general introduction also see
 * [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
+
+Use a `IPhyton` console and set the IPhyton backend graphics option to `QT`. This ensures correctly displaying the `Paramter viewer` and `Dataviewer`
 
 ## Contributing
 
