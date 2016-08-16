@@ -18,6 +18,17 @@ User defines:
 
 import itertools
 import numpy as np
+import operator as op
+import functools
+
+
+def ncr(n, r):
+    """ Calculating number of possible combinations: nCr"""
+    r = min(r, n - r)
+    if r == 0: return 1
+    numer = functools.reduce(op.mul, range(n, n - r, -1))
+    denom = functools.reduce(op.mul, range(1, r + 1))
+    return numer // denom
 
 
 class ClassicalDotSystem:
@@ -33,6 +44,13 @@ class ClassicalDotSystem:
         self.nbasis = None  # corresponding total occupancy (for each charge state)
         self.Nt = None      # total number of charge states
 
+        # initialize characterizing dot variables
+        self.varnames = ['mu0', 'Eadd', 'W', 'alpha']
+        self.mu0 = np.zeros((ndots,))               # chemical potential at zero gate voltage
+        self.Eadd = np.zeros((ndots,))              # addition energy
+        self.W = np.zeros((ncr(2, self.ndots),))    # coulomb repulsion
+        self.alpha = np.zeros(ndots, ngates)        # virtual gate matrix, mapping gates to chemical potentials
+
     def makebasis(self):
         """ Define a basis of occupancy states """
         basis = list(itertools.product(range(self.maxelectrons + 1), repeat=self.ndots))
@@ -41,11 +59,21 @@ class ClassicalDotSystem:
         self.nbasis = np.sum(self.basis, axis=1)
         self.Nt = len(self.nbasis)
 
-    def makevars(self, varnames):
-        """ Create the variables that characterize the dot system """
-        self.varnames = varnames
-        for name in self.varnames:
-            exec('self.' + name + ' = np.zeros((self.ndots,))')
+    def calculate_energies(self, gatevalues):
+        """ Calculate the energies of all dot states, given a set of gate values. Returns array of energies. """
+        energies = np.zeros((self.Nt,))
+        for i in range(self.Nt):
+            energy = 0
+            energy += -(self.mu0 + np.dot(self.alpha, gatevalues))*self.basis[i]
+            energy += np.dot([np.dot(*v) for v in itertools.combinations(self.basis[i], 2)], self.W)
+            energy += np.dot((1/2 * np.multiply(self.basis[i], self.basis[i]+1)), self.Eadd)
+            energies[i] = energy
+        return energies
+
+    def calculate_ground_state(self, gatevalues):
+        """ Calculate the ground state of the dot system, given a set of gate values. Returns a state array. """
+        energies = self.calculate_energies(gatevalues)
+        return self.basis(np.argmin(energies))
 
 
 class TripleDot(ClassicalDotSystem):
@@ -55,20 +83,13 @@ class TripleDot(ClassicalDotSystem):
 
         self.makebasis()
 
-        varnames = ['mu0', 'Eadd', 'W']
-        varnames += ['alpha%d' % (i+1) for i in range(self.ndots)]
-        self.makevars(varnames)
-
-        mu0_values = np.array([-27.0, -20.0, -25.0])
-        Eadd_values = np.array([54.0, 52.8, 54.0])
-        W_values = np.array([6.0, 5.0, 1.0])
-        alpha1_values = np.array([1.0, 0.25, 0.1])
-        alpha2_values = np.array([0.25, 1.0, 0.25])
-        alpha3_values = np.array([0.1, 0.25, 1.0])
+        mu0_values = np.array([-27.0, -20.0, -25.0])    # chemical potential at zero gate voltage
+        Eadd_values = np.array([54.0, 52.8, 54.0])      # addition energy
+        W_values = np.array([6.0, 1.0, 5.0])            # coulomb repulsion (!order is important: (1,2), (1,3), (2,3))
+                                                        # (lexicographic ordering)
+        alpha_values = np.array([[1.0, 0.25, 0.1],
+                                 [0.25, 1.0, 0.25],
+                                 [0.1, 0.25, 1.0]])
 
         for name in self.varnames:
             exec('self.' + name + ' = ' + name + '_values')
-
-        
-
-
