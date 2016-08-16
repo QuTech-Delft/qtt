@@ -402,15 +402,12 @@ def showDotGraph(dot, fig=10):
     plt.axis('off')
 
 #%%
-
 try:
     import win32com
     import win32com.client
-    import tempfile
-    import cv2    
-    import numpy as np    
-    
-    def addPPTslide(txt=None, im=None, show=False):
+    import tempfile  
+
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False):
         ''' Add slide to current active Powerpoint presentation '''
         Application = win32com.client.Dispatch("PowerPoint.Application") 
         if show:
@@ -419,41 +416,42 @@ try:
         # https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
         print('num of open PPTs: %d' % Application.presentations.Count)
         
-        #ppt = Application.Presentations.Add() # adds a new presentation 
+#        ppt = Application.Presentations.Add() # adds a new presentation 
         ppt=Application.ActivePresentation
         print('name: %s'  % ppt.Name)
         
-        ppLayoutBlank=12
-        ppLayoutTitle=0
+#        ppLayoutBlank=12
+#        ppLayoutTitle=0
         ppLayoutTitleOnly=11
         layout=ppLayoutTitleOnly
         
-        Slide1 = ppt.Slides.Add(ppt.Slides.Count+1, layout) # new slide, at end 
-        titles=[s for s in Slide1.Shapes if s.type==14]
+        slide = ppt.Slides.Add(ppt.Slides.Count+1, layout) # new slide, at end
+        title = slide.shapes.title.textframe.textrange
         
-        if len(titles)>0:
-            title=titles[0]
-            #tmp = Slide1.Shapes.AddTitle()
-            title.TextFrame.TextRange.Text='QCoDeS measurement'
+        if title is not None:
+            slide.shapes.title.textframe.textrange.text = title
         else:
-            title = Slide1.Shapes.AddTitle()
-            title.TextFrame.TextRange.Text='QCoDeS measurement'
+            slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
             
-        txtbox = Slide1.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
+        if fig is not None:
+            fname=tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
+            fig.savefig(fname)
+            slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350) 
+        
+        txtbox = slide.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
         txtbox.Name='text' 
         
         if txt is not None:
             txtbox.TextFrame.TextRange.Text=txt
-    
-        if im is not None:
-            fname=tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
-            cv2.imwrite(fname, im)
-            Pict1 = Slide1.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350) 
-    
+
+        if notes is not None:
+            slide.notespage.shapes.placeholders[2].textframe.textrange.insertafter(notes)
+            
         #ActivePresentation.Slides(ActiveWindow.View.Slide. SlideNumber).
         #s=Application.ActiveWindow.Selection
         
-        return ppt, Slide1
+        return ppt, slide
+        
 except:
        def addPPTslide(txt=None, im=None, show=False):
            ''' Dummy implementation '''
