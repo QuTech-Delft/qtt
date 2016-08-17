@@ -186,7 +186,7 @@ def getDefaultParameter(data):
 
 
     
-def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, data_manager=False, wait_time=None):
+def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, wait_time=None):
     ''' Simple 1D scan '''
     gates=station.gates
     sweepdata = scanjob['sweepdata']
@@ -208,10 +208,15 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     station.set_measurement(*params)
 
+    if background:            
+        data_manager=None
+    else:
+        data_manager=False
+
     delay = scanjob.get('delay', delay)
     logging.debug('delay: %s' % str(delay) )
     print('scan1D: starting Loop (background %s)' % background)
-    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=data_manager, overwrite=True, background=background)
+    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=data_manager, background=background)
     data.sync()
 
     if liveplotwindow is None:
@@ -223,8 +228,11 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     # FIXME
     if background:
+        data.background_functions=dict({'qt': pg.mkQApp().processEvents})
         data.complete(delay=.25) #
+        data.sync()
         dt=-1
+        logging.info('scan1D: completed %s' % (str(data.location),))
     else:
         dt=time.time()-t0
     if not hasattr(data, 'metadata'):
@@ -236,9 +244,9 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         metadata['scantime'] = str(datetime.datetime.now())
         metadata['dt'] = dt
         metadata['scanjob'] = scanjob
-        
-    sys.stdout.flush()
-
+     
+    logging.info('scan1D: done %s' % (str(data.location),))
+    
     return data
 
 import pyqtgraph as pg

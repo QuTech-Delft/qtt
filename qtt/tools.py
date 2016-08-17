@@ -230,6 +230,8 @@ def plot2Dline(line, *args, **kwargs):
         xx = (-line[2] - line[1] * yy) / line[0]
         plt.plot(xx, yy, *args, **kwargs)
 
+from qtt.pmatlab import mpl2clipboard
+
 def cfigure(*args, **kwargs):
     """ Create Matplotlib figure with copy to clipboard functionality
 
@@ -464,11 +466,13 @@ except:
 from qtt.parameterviewer import ParameterViewer
 from qtt.dataviewer import DataViewer
 
-def setupMeasurementWindows(station):
+def setupMeasurementWindows(station, ilist=None):
     ms=monitorSizes()
     vv=ms[-1]
     # create custom viewer which gathers data from a station object
-    w = ParameterViewer([station.gates])
+    if ilist is None:
+        ilist=[station.gates]
+    w = ParameterViewer(ilist)
     w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
     w.updatecallback()
 
