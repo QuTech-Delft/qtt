@@ -1,5 +1,5 @@
 import qtpy
-#print(qtpy.API_NAME)
+# print(qtpy.API_NAME)
 
 import numpy as np
 import scipy
@@ -29,30 +29,30 @@ def dumpstring(txt):
 try:
     from qcodes.process.heartbeat import *
     import time
-    
+
     def pauseHeartBeat():
-        m=initHeartBeat(bfile, reinit=False)
+        m = initHeartBeat(bfile, reinit=False)
         setHeartBeat(m, 0)
         for ii in range(5):
             print('pause %d: ...' % ii)
             time.sleep(1)
         setHeartBeat(m, 1)
 except:
-    pass            
+    pass
 #%%
 
 def negfloat(x):
     ''' Helper function '''
-    return -float(x)    
+    return -float(x)
 
 
 def checkPickle(obj):
     try:
-        _=pickle.dumps(obj)
+        _ = pickle.dumps(obj)
     except:
         return False
     return True
-#checkPickle(ivvi1)
+# checkPickle(ivvi1)
 
 #%%
 
@@ -73,15 +73,15 @@ def diffImage(im, dy, size=None):
     if dy == 1 or dy == 'y':
         im = np.diff(im, n=1, axis=0)
         if size == 'same':
-            im = np.vstack((im, im[-1:, :]))
+            im = np.vstack((im, im[-1:,:]))
     if dy == -1:
         im = -np.diff(im, n=1, axis=0)
         if size == 'same':
-            im = np.vstack((im, im[-1:, :]))
+            im = np.vstack((im, im[-1:,:]))
     if dy == 2:
         imx = np.diff(im, n=1, axis=1)
         imy = np.diff(im, n=1, axis=0)
-        im = imx[0:-1, :] + imy[:, 0:-1]
+        im = imx[0:-1,:] + imy[:, 0:-1]
     return im
 
 
@@ -103,7 +103,7 @@ def diffImageSmooth(im, dy='x', sigma=2., size=None):
         return imx
 
     if dy is None:
-        imx=im.copy()
+        imx = im.copy()
     if dy == 0 or dy == 'x':
         imx = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
@@ -111,7 +111,7 @@ def diffImageSmooth(im, dy='x', sigma=2., size=None):
         imx = ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
     if dy == -1:
         imx = -ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
-    if dy == 2 or dy == 3 or dy == 'xy' or dy=='xmy' or dy=='xmy2':
+    if dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2':
         imx0 = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
         imx1 = ndimage.gaussian_filter1d(
@@ -135,50 +135,50 @@ def scanTime(dd):
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
     return w
-    
-    
+
+
 ''' Return parameter to be plotted '''
 def plot_parameter(data, default_parameter='amplitude'):
-        if 'main_parameter'  in data.metadata.keys():
-            return data.metadata['main_parameter']
-        if default_parameter in data.arrays.keys():
-            return default_parameter
-        try:
-            key= next(iter (data.arrays.keys()))
-            return key
-        except:
-            return None
-            
+    if 'main_parameter'  in data.metadata.keys():
+        return data.metadata['main_parameter']
+    if default_parameter in data.arrays.keys():
+        return default_parameter
+    try:
+        key = next(iter (data.arrays.keys()))
+        return key
+    except:
+        return None
+
 def plot1D(dataset, fig=1):
     """ Simlpe plot function """
     if isinstance(dataset, qcodes.DataArray):
-        array=dataset
-        dataset=None
+        array = dataset
+        dataset = None
     else:
         # assume we have a dataset
-        arrayname=plot_parameter(dataset)
-        array=getattr(dataset, arrayname)                
-        
+        arrayname = plot_parameter(dataset)
+        array = getattr(dataset, arrayname)
+
     if fig is not None and array is not None:
         MatPlot(array, num=fig)
 
-#import pmatlab
+# import pmatlab
 
-        
-        
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
     plot1D(dataset, fig=10)
     plot1D(dataset.amplitude, fig=12)
 
 #%%
 def showImage(im, extent=None, fig=None):
-            if fig is not None:
-                plt.figure(fig)
-                plt.clf()
-                plt.imshow(im, extent=extent, interpolation='nearest')
-                if extent is not None:
-                    if extent[0]>extent[1]:
-                        plt.gca().invert_xaxis()
+    if fig is not None:
+        plt.figure(fig)
+        plt.clf()
+        plt.imshow(im, extent=extent, interpolation='nearest')
+        if extent is not None:
+            if extent[0] > extent[1]:
+                plt.gca().invert_xaxis()
 
 
 #%% Measurement tools
@@ -254,14 +254,14 @@ def static_var(varname, value):
 
 try:
     def monitorSizes(verbose=0):
-    	""" Return monitor sizes """
-    	_qd = QtWidgets.QDesktopWidget()
-    	if sys.platform == 'win32' and _qd is None:
+        """ Return monitor sizes """
+        _qd = QtWidgets.QDesktopWidget()
+        if sys.platform == 'win32' and _qd is None:
             import ctypes
             user32 = ctypes.windll.user32
             wa = [
                 [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
-    	else:
+        else:
             _applocalqt = QtWidgets.QApplication.instance()
 
             if _applocalqt is None:
@@ -277,7 +277,7 @@ try:
             if verbose:
                 for ii, w in enumerate(wa):
                     print('monitor %d: %s' % (ii, str(w)))
-    	return wa
+        return wa
 except:
     def monitorSizes(verbose=0):
         """ Dummy function for monitor sizes """
@@ -285,7 +285,7 @@ except:
     pass
 
 @static_var('monitorindex', -1)
-def tilefigs(lst, geometry=[2,2], ww=None, raisewindows=False, tofront=False, verbose=0):
+def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, verbose=0):
     """ Tile figure windows on a specified area """
     mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
@@ -373,13 +373,13 @@ def in_ipynb():
 def pythonVersion():
     try:
         import IPython
-        ipversion='.'.join('%s' % x for x in IPython.version_info[:-1])
+        ipversion = '.'.join('%s' % x for x in IPython.version_info[:-1])
     except:
-        ipversion='None'
+        ipversion = 'None'
 
 
-    pversion='.'.join('%s' % x for x in sys.version_info[0:3])
-    print('python %s, ipython %s, notebook %s' %( pversion, ipversion, in_ipynb() ))
+    pversion = '.'.join('%s' % x for x in sys.version_info[0:3])
+    print('python %s, ipython %s, notebook %s' % ( pversion, ipversion, in_ipynb() ))
 
 #%%
 
@@ -390,11 +390,11 @@ except:
 import matplotlib.pyplot as plt
 
 def showDotGraph(dot, fig=10):
-    dot.format='png'
-    outfile=dot.render('dot-dummy', view=False)
+    dot.format = 'png'
+    outfile = dot.render('dot-dummy', view=False)
     print(outfile)
 
-    im=plt.imread(outfile)
+    im = plt.imread(outfile)
     plt.figure(fig)
     plt.clf()
     plt.imshow(im)
@@ -405,13 +405,13 @@ def showDotGraph(dot, fig=10):
 try:
     import win32com
     import win32com.client
-    import tempfile  
+    import tempfile
     from qcodes.plots.pyqtgraph import QtPlot
 
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
         ''' Add slide to current active Powerpoint presentation
-        
+
 
         Arguments:
             title (string): title added to slide
@@ -419,63 +419,63 @@ try:
             ....
         Returns:
             ...
-            
+
         The interface to Powerpoint used in described here:
             https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
-        
+
         '''
-        Application = win32com.client.Dispatch("PowerPoint.Application") 
+        Application = win32com.client.Dispatch("PowerPoint.Application")
         if show:
-            Application.Visible = True # shows what's happening, not required, but helpful for now 
-        
+            Application.Visible = True # shows what's happening, not required, but helpful for now
+
         if verbose:
             print('num of open PPTs: %d' % Application.presentations.Count)
-        
-#        ppt = Application.Presentations.Add() # adds a new presentation 
-        ppt=Application.ActivePresentation
+
+# ppt = Application.Presentations.Add() # adds a new presentation
+        ppt = Application.ActivePresentation
         if verbose:
             print('name: %s'  % ppt.Name)
-        
-        ppLayoutTitleOnly=11
-        layout=ppLayoutTitleOnly
-        
+
+        ppLayoutTitleOnly = 11
+        layout = ppLayoutTitleOnly
+
         slide = ppt.Slides.Add(ppt.Slides.Count+1, layout) # new slide, at end
         title = slide.shapes.title.textframe.textrange
-        
+
         if title is not None:
             slide.shapes.title.textframe.textrange.text = title
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
-            
+
         if fig is not None:
             if isinstance(fig, int):
                 plt.figure(fig)
-                fname=tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
+                fname = tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
                 fig.savefig(fname)
-                slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350) 
+                slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
             else:
                 if isinstance(fig, QtPlot):
                     # use something similar to QtPlot.copyToClipboard to get a copy of the figure
                     print('not implemented...')
-                    
+
         txtbox = slide.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
-        txtbox.Name='text' 
-        
+        txtbox.Name = 'text'
+
         if txt is not None:
-            txtbox.TextFrame.TextRange.Text=txt
+            txtbox.TextFrame.TextRange.Text = txt
 
         if notes is not None:
             slide.notespage.shapes.placeholders[2].textframe.textrange.insertafter(notes)
-            
-        #ActivePresentation.Slides(ActiveWindow.View.Slide. SlideNumber).
-        #s=Application.ActiveWindow.Selection
-        
+
+        # ActivePresentation.Slides(ActiveWindow.View.Slide. SlideNumber).
+        # s=Application.ActiveWindow.Selection
+
         return ppt, slide
-        
+
 except:
-       def addPPTslide(txt=None, im=None, show=False):
-           ''' Dummy implementation '''
-           pass
+    def addPPTslide(txt=None, im=None, show=False):
+        ''' Dummy implementation '''
+        pass
 
 #%%
 
@@ -483,20 +483,20 @@ from qtt.parameterviewer import ParameterViewer
 from qtt.dataviewer import DataViewer
 
 def setupMeasurementWindows(station):
-    ms=monitorSizes()
-    vv=ms[-1]
+    ms = monitorSizes()
+    vv = ms[-1]
     # create custom viewer which gathers data from a station object
     w = ParameterViewer([station.gates])
-    w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
+    w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
     w.updatecallback()
 
     plotQ = QtPlot(windowtitle='Live plot', interval=.5)
-    plotQ.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
+    plotQ.setGeometry(vv[0]+vv[2]-300, vv[1]+vv[3]-400, 600, 400)
     plotQ.update()
 
-    app=QtWidgets.QApplication.instance()
+    app = QtWidgets.QApplication.instance()
     app.processEvents()
-    
+
     return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
 
 import time
@@ -563,9 +563,9 @@ def cutoffFilter(x, thr, omega):
     >>> _=plt.plot(x, cutoffFilter(x, 2, .25), '-r')
 
     """
-    y=.5*(1-np.sin(np.pi*(x-thr)/(2*omega)))
-    y[x<thr-omega]=1
-    y[x>thr+omega]=0
+    y = .5*(1-np.sin(np.pi*(x-thr)/(2*omega)))
+    y[x < thr-omega] = 1
+    y[x > thr+omega] = 0
     return y
 
 #%%
@@ -576,58 +576,60 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
     >>> _=plt.figure(10); plt.clf(); _=plt.imshow(F, interpolation='nearest')
 
     """
-    rr=np.meshgrid(*[range(f) for f in fs])
+    rr = np.meshgrid(*[range(f) for f in fs])
 
-    x=np.dstack(rr)
-    x=x-(np.array(fs)/2 - .5)
-    x=np.linalg.norm(x, axis=2)
-    #showIm(x);
+    x = np.dstack(rr)
+    x = x-(np.array(fs)/2 - .5)
+    x = np.linalg.norm(x, axis=2)
+    # showIm(x);
 
-    F=cutoffFilter(x, thr, omega)
+    F = cutoffFilter(x, thr, omega)
 
     if fig is not None:
-        plt.figure(10); plt.clf();
+        plt.figure(10)
+        plt.clf()
         plt.imshow(F, interpolation='nearest')
 
     return F#, rr
-F=smoothFourierFilter([36,36])
+F = smoothFourierFilter([36, 36])
 
 
 #%%
 
 def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     """ Implement simple high pass filter using the Fourier transform """
-    f = np.fft.fft2(imx, s=[fs,fs])                  #do the fourier transform
+    f = np.fft.fft2(imx, s=[fs, fs])                  #do the fourier transform
 
-    fx=np.fft.fftshift(f)
+    fx = np.fft.fftshift(f)
 
     if fig:
-        plt.figure(fig); plt.clf()
+        plt.figure(fig)
+        plt.clf()
         plt.imshow(np.log(np.abs(f)+1), interpolation='nearest')
-        #plt.imshow(f.real, interpolation='nearest')
+        # plt.imshow(f.real, interpolation='nearest')
         plt.title('Fourier spectrum (real part)' )
-        plt.figure(fig+1); plt.clf()
-        #plt.imshow(fx.real, interpolation='nearest')
-        #plt.imshow(np.sign(np.real(fx))*np.log(np.abs(fx)+1), interpolation='nearest')
+        plt.figure(fig+1)
+        plt.clf()
+        # plt.imshow(fx.real, interpolation='nearest')
+        # plt.imshow(np.sign(np.real(fx))*np.log(np.abs(fx)+1), interpolation='nearest')
         plt.imshow(np.log(np.abs(fx)+1), interpolation='nearest')
         plt.title('Fourier spectrum (real part)' )
 
-    if nc>0 and omega==0:
-        f[0:nc,0:nc]=0
-        f[-nc:,-nc:]=0
-        f[-nc:,0:nc]=0
-        f[0:nc,-nc:]=0
+    if nc > 0 and omega == 0:
+        f[0:nc, 0:nc] = 0
+        f[-nc:, -nc:] = 0
+        f[-nc:, 0:nc] = 0
+        f[0:nc, -nc:] = 0
         img_back = np.fft.ifft2(f)     #inverse fourier transform
 
     else:
         # smooth filtering
 
-        F=1-smoothFourierFilter(fx.shape, thr=nc, omega=omega)
-        fx=F*fx
+        F = 1-smoothFourierFilter(fx.shape, thr=nc, omega=omega)
+        fx = F*fx
         ff = np.fft.ifftshift(fx)  #inverse shift
         img_back = np.fft.ifft2(ff)     #inverse fourier transform
 
-    imf=img_back.real
-    imf=imf[0:imx.shape[0], 0:imx.shape[1]]
+    imf = img_back.real
+    imf = imf[0:imx.shape[0], 0:imx.shape[1]]
     return imf
-
