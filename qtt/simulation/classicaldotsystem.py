@@ -76,8 +76,8 @@ class ClassicalDotSystem:
         self.varnames = ['mu0', 'Eadd', 'W', 'alpha']
         self.mu0 = np.zeros((ndots,))  # chemical potential at zero gate voltage
         self.Eadd = np.zeros((ndots,))  # addition energy
-        self.W = np.zeros((ncr(2, self.ndots),))  # coulomb repulsion
-        self.alpha = np.zeros(ndots, ngates)  # virtual gate matrix, mapping gates to chemical potentials
+        self.W = np.zeros((ncr(ndots, 2),))  # coulomb repulsion
+        self.alpha = np.zeros((ndots, ngates))  # virtual gate matrix, mapping gates to chemical potentials
 
     def makebasis(self):
         """ Define a basis of occupancy states """
@@ -92,7 +92,7 @@ class ClassicalDotSystem:
         energies = np.zeros((self.Nt,))
         for i in range(self.Nt):
             energy = 0
-            energy += -(self.mu0 + np.dot(self.alpha, gatevalues)) * self.basis[i]
+            energy += np.dot(-(self.mu0 + np.dot(self.alpha, gatevalues)), self.basis[i])
             energy += np.dot([np.dot(*v) for v in itertools.combinations(self.basis[i], 2)], self.W)
             energy += np.dot((1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1)), self.Eadd)
             energies[i] = energy
@@ -101,7 +101,7 @@ class ClassicalDotSystem:
     def calculate_ground_state(self, gatevalues):
         """ Calculate the ground state of the dot system, given a set of gate values. Returns a state array. """
         energies = self.calculate_energies(gatevalues)
-        return self.basis(np.argmin(energies))
+        return self.basis[np.argmin(energies)]
 
     def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
         """ Simulating a honeycomb by looping over a 2D array of parameter values (paramvalues2D),
