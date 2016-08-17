@@ -20,6 +20,7 @@ import itertools
 import numpy as np
 import operator as op
 import functools
+
 import time
 
 
@@ -34,9 +35,11 @@ def ncr(n, r):
 
 def static_var(varname, value):
     """ Helper function to create a static variable """
+
     def decorate(func):
         setattr(func, varname, value)
         return func
+
     return decorate
 
 
@@ -58,7 +61,6 @@ def tprint(string, dt=1, output=False):
 
 
 class ClassicalDotSystem:
-
     def __init__(self, name='dotsystem', ndots=3, ngates=3, maxelectrons=3, **kwargs):
         self.name = name
         self.ndots = ndots
@@ -66,16 +68,16 @@ class ClassicalDotSystem:
         self.maxelectrons = maxelectrons
 
         # initialize attributes that are set later on
-        self.basis = None   # basis of charge states
+        self.basis = None  # basis of charge states
         self.nbasis = None  # corresponding total occupancy (for each charge state)
-        self.Nt = None      # total number of charge states
+        self.Nt = None  # total number of charge states
 
         # initialize characterizing dot variables
         self.varnames = ['mu0', 'Eadd', 'W', 'alpha']
-        self.mu0 = np.zeros((ndots,))               # chemical potential at zero gate voltage
-        self.Eadd = np.zeros((ndots,))              # addition energy
-        self.W = np.zeros((ncr(2, self.ndots),))    # coulomb repulsion
-        self.alpha = np.zeros(ndots, ngates)        # virtual gate matrix, mapping gates to chemical potentials
+        self.mu0 = np.zeros((ndots,))  # chemical potential at zero gate voltage
+        self.Eadd = np.zeros((ndots,))  # addition energy
+        self.W = np.zeros((ncr(2, self.ndots),))  # coulomb repulsion
+        self.alpha = np.zeros(ndots, ngates)  # virtual gate matrix, mapping gates to chemical potentials
 
     def makebasis(self):
         """ Define a basis of occupancy states """
@@ -90,9 +92,9 @@ class ClassicalDotSystem:
         energies = np.zeros((self.Nt,))
         for i in range(self.Nt):
             energy = 0
-            energy += -(self.mu0 + np.dot(self.alpha, gatevalues))*self.basis[i]
+            energy += -(self.mu0 + np.dot(self.alpha, gatevalues)) * self.basis[i]
             energy += np.dot([np.dot(*v) for v in itertools.combinations(self.basis[i], 2)], self.W)
-            energy += np.dot((1/2 * np.multiply(self.basis[i], self.basis[i]+1)), self.Eadd)
+            energy += np.dot((1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1)), self.Eadd)
             energies[i] = energy
         return energies
 
@@ -142,19 +144,19 @@ class ClassicalDotSystem:
 
 
 class TripleDot(ClassicalDotSystem):
-
     def __init__(self, name='tripledot', **kwargs):
         super().__init__(name=name, ndots=3, ngates=3, **kwargs)
 
         self.makebasis()
 
-        mu0_values = np.array([-27.0, -20.0, -25.0])    # chemical potential at zero gate voltage
-        Eadd_values = np.array([54.0, 52.8, 54.0])      # addition energy
-        W_values = np.array([6.0, 1.0, 5.0])            # coulomb repulsion (!order is important: (1,2), (1,3), (2,3))
-                                                        # (lexicographic ordering)
-        alpha_values = np.array([[1.0, 0.25, 0.1],
+        vardict = {}
+
+        vardict["mu0_values"] = np.array([-27.0, -20.0, -25.0])  # chemical potential at zero gate voltage
+        vardict["Eadd_values"] = np.array([54.0, 52.8, 54.0])  # addition energy
+        vardict["W_values"] = np.array([6.0, 1.0, 5.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        vardict["alpha_values"] = np.array([[1.0, 0.25, 0.1],
                                  [0.25, 1.0, 0.25],
                                  [0.1, 0.25, 1.0]])
 
         for name in self.varnames:
-            exec('self.' + name + ' = ' + name + '_values')
+            setattr(self, name, vardict[name+'_values'])
