@@ -136,9 +136,8 @@ def scanTime(dd):
         w = dateutil.parser.parse(w)
     return w
 
-
-''' Return parameter to be plotted '''
 def plot_parameter(data, default_parameter='amplitude'):
+    ''' Return parameter to be plotted '''
     if 'main_parameter'  in data.metadata.keys():
         return data.metadata['main_parameter']
     if default_parameter in data.arrays.keys():
@@ -405,24 +404,32 @@ def showDotGraph(dot, fig=10):
 try:
     import win32com
     import win32com.client
-    import tempfile
-    from qcodes.plots.pyqtgraph import QtPlot
-
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
         ''' Add slide to current active Powerpoint presentation
 
-
         Arguments:
             title (string): title added to slide
-            fig (....): ...
-            ....
+            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot): 
+                figure added to slide
+            txt (string): text in textbox added to slide
+            notes (string): notes added to slide
+            show (boolean): shows the powerpoint
+            verbose (int): print additional information
         Returns:
-            ...
+            ppt: PowerPoint presentation
+            slide: PowerPoint slide
 
-        The interface to Powerpoint used in described here:
+        The interface to Powerpoint used is described here:
             https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
-
+            
+        Example
+        -------
+        >>> title = 'An example title'
+        >>> fig = plt.figure(10)
+        >>> txt = 'Some comments on the figure'
+        >>> notes = 'some additional information' 
+        >>> addPPTslide(title,fig,txt,notes)
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
         if show:
@@ -431,7 +438,7 @@ try:
         if verbose:
             print('num of open PPTs: %d' % Application.presentations.Count)
 
-# ppt = Application.Presentations.Add() # adds a new presentation
+        # ppt = Application.Presentations.Add()
         ppt = Application.ActivePresentation
         if verbose:
             print('name: %s'  % ppt.Name)
@@ -439,8 +446,7 @@ try:
         ppLayoutTitleOnly = 11
         layout = ppLayoutTitleOnly
 
-        slide = ppt.Slides.Add(ppt.Slides.Count+1, layout) # new slide, at end
-        title = slide.shapes.title.textframe.textrange
+        slide = ppt.Slides.Add(ppt.Slides.Count+1, layout)
 
         if title is not None:
             slide.shapes.title.textframe.textrange.text = title
@@ -448,15 +454,15 @@ try:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
         if fig is not None:
-            if isinstance(fig, int):
-                plt.figure(fig)
-                fname = tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
+            fname = tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
+            if isinstance(fig, matplotlib.figure.Figure):
                 fig.savefig(fname)
-                slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
+            elif isinstance(fig, QtWidgets.QWidget):
+                figtemp = QtGui.QPixmap.grabWidget(fig)
+                figtemp.save(fname)
             else:
-                if isinstance(fig, QtPlot):
-                    # use something similar to QtPlot.copyToClipboard to get a copy of the figure
-                    print('not implemented...')
+                print('figure is of an unknown type')
+            slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
 
         txtbox = slide.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
         txtbox.Name = 'text'
@@ -467,7 +473,7 @@ try:
         if notes is not None:
             slide.notespage.shapes.placeholders[2].textframe.textrange.insertafter(notes)
 
-        # ActivePresentation.Slides(ActiveWindow.View.Slide. SlideNumber).
+        # ActivePresentation.Slides(ActiveWindow.View.Slide.SlideNumber).
         # s=Application.ActiveWindow.Selection
 
         return ppt, slide
@@ -557,7 +563,6 @@ def cutoffFilter(x, thr, omega):
 
     Example
     -------
-
     >>> plt.clf()
     >>> x=np.arange(0, 4, .01)
     >>> _=plt.plot(x, cutoffFilter(x, 2, .25), '-r')
@@ -572,9 +577,10 @@ def cutoffFilter(x, thr, omega):
 def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
     """ Create smooth ND filter for Fourier high or low-pass filtering
 
+    Example
+    -------
     >>> F=smoothFourierFilter([24,24], thr=6, omega=2)
     >>> _=plt.figure(10); plt.clf(); _=plt.imshow(F, interpolation='nearest')
-
     """
     rr = np.meshgrid(*[range(f) for f in fs])
 
