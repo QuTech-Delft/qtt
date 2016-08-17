@@ -17,11 +17,22 @@ User defines:
 """
 
 import itertools
+import os
+
 import numpy as np
 import operator as op
 import functools
 
 import time
+
+try:
+    import multiprocessing
+    import multiprocessing as mp
+    from multiprocessing import Pool
+    _have_mp = True
+except:
+    _have_mp = False
+    pass
 
 
 def ncr(n, r):
@@ -118,11 +129,17 @@ class ClassicalDotSystem:
 
         self.hcgs = np.empty((npointsx, npointsy, self.ndots))
 
-        for i in range(npointsx):
-            if verbose:
-                tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
-            for j in range(npointsy):
-                self.hcgs[i, j] = self.calculate_ground_state(paramvalues2D[:, i, j])
+        if multiprocess and _have_mp:
+            pool = Pool(processes = os.cpu_count())
+            param_iter = [(paramvalues2D[:, i, j]) for i in range(npointsx) for j in range(npointsy)]
+            result = pool.map(self.calculate_ground_state, param_iter)
+            self.hcgs = np.reshape(np.array(result),(npointsx,npointsy,self.ndots))
+        else:
+            for i in range(npointsx):
+                if verbose:
+                    tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
+                for j in range(npointsy):
+                    self.hcgs[i, j] = self.calculate_ground_state(paramvalues2D[:, i, j])
         self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
 
         if verbose:
