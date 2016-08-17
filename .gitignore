@@ -71,3 +71,4 @@ examples/2016*
 testing
 test*.bin
 test*.pickle
+*.profile

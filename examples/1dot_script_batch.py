@@ -262,6 +262,25 @@ def onedotPlungerScan(station, od, verbose=1):
 
 #alldataplunger=onedotPlungerScan(station, od, verbose=1)
 
+def stop_AWG(station):
+    print('this is a dummy function!')
+    
+def closeExperiment(station, eid=None):
+    gates=station.gates
+    print('set bias to zero to save energy')
+    gates.set_bias_1(0)   # bias through O1, keithley 1
+    gates.set_bias_2(0)   # bias through O7, keithley 2
+    gates.set_bias_3(0)   # bias through O?, keithley 3
+
+    #if not RFsiggen1 is None:
+    #    print(' stop Microwave source()')
+    #    RFsiggen1.off()
+
+    print(' stop AWG')
+    stop_AWG(station)
+
+    print('closed experiment: %s' % getDateString())
+    
 #%% One-dot measurements
 
 def onedotScan(station, od, basevalues, outputdir, verbose=1):
@@ -772,7 +791,7 @@ for ii, Tvalue in enumerate(Tvalues):
 if __name__=='__main__':
 
     timecomplete=str(datetime.datetime.now())
-    measurementfunctions.writeBatchData(outputdir, tag, timestart, timecomplete)
+    qtt.legacy.writeBatchData(outputdir, tag, timestart, timecomplete)
 
 #%%
 
@@ -782,33 +801,31 @@ if __name__=='__main__':
 
     print('##### 1dot_script_batch: measurements done...')
     
-    experimentdata.closeExperiment()
+    closeExperiment(station)
     gates.get_all()
 
 #%% Make reports
-import experimentdata
 import webbrowser
 
 if __name__=='__main__':
 
-    datadir=experimentdata.getDataDir()
     one_dots=get_one_dots(full=2)
     two_dots=get_two_dots(full=1)
     
-    for ii, Tvalue in enumerate(Tvalues):
-        tag=basetag+'-T%d'  % Tvalue
-        tag2d=basetag+'-T%d-sd%d'  % (Tvalue, sdid)
-    
-        resultsdir=mkdirc(os.path.join(datadir, tag) )
-        resultsdir2d=mkdirc(os.path.join(datadir, tag2d) )
-    
-        try:
-            # generate report
-            fname,_= generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
-            webbrowser.open(fname,new=2)
-        except Exception as e:
-            print(e)
-            pass
+    Tvalue=Tvalues[0]
+    tag=basetag+'-T%d'  % Tvalue
+    tag2d=basetag+'-T%d-sd%d'  % (Tvalue, sdid)
+
+    resultsdir=qtt.mkdirc(os.path.join(datadir, tag) )
+    resultsdir2d=qtt.mkdirc(os.path.join(datadir, tag2d) )
+
+    try:
+        # generate report
+        fname,_= generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
+        webbrowser.open(fname,new=2)
+    except Exception as e:
+        print(e)
+        pass
     
     
     print('##### 1dot_script_batch: generation of double-dot report complete...')

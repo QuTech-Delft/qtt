@@ -21,6 +21,38 @@ except:
 
 #%%
 
+import scipy.ndimage.filters as filters
+import scipy.ndimage
+
+def nonmaxsuppts(v, d, minval=None):
+    """ Calculate maximum points in data """
+    #input = np.sin(np.linspace(0, 4*np.pi, 20))
+    # x = (input * 10).astype(np.int) # Makes it easier to read
+    w = scipy.ndimage.maximum_filter1d(v, d, axis=0)
+    pt = (w == v).nonzero()[0]
+    if minval:
+        pt = pt[v[pt] >= minval]
+    return pt, w
+    
+def disk(radius):
+    """ Create disk of specified radius """
+    radius=int(radius)    
+    nn=2*radius+1
+    x,y=np.meshgrid(range(nn), range(nn))
+    d=((x-radius)**2+(y-radius)**2<0.01+radius**2).astype(int)
+    return d
+    
+
+def localMaxima(arr, radius=1, thr=None):
+    ''' Calculate local maxima in a 2D array '''
+    strel=disk(radius) # skimage.morphology.disk(radius)
+    local_max = (filters.maximum_filter(arr, footprint=strel)==arr)
+
+    if thr is not None:
+        local_max[arr<thr]=0
+    return np.where(local_max)  
+
+
 #%%
 
 def scaleImage(image, display_min=None, display_max=None):

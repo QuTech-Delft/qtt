@@ -118,8 +118,8 @@ class FourdotModel(Instrument):
                                get_parser=float,
                                )
 
-        # initialize a 4-dot system
-        if 0:
+        if 1:
+            # initialize a 4-dot system
             self.ds=FourDot(use_tunneling=False)
 
             self.targetnames=['det%d' % (i+1) for i in range(4)]
@@ -128,6 +128,8 @@ class FourdotModel(Instrument):
             self.sddist1 = [6,4,2,1]
             self.sddist2 = [1,2,4,6]
         else:
+            # altenative: 3-dot (faster calculations...)
+
             self.ds=TripleDot(maxelectrons=2)
 
             self.targetnames=['det%d' % (i+1) for i in range(3)]

@@ -93,7 +93,9 @@ def defaultVmatrix(n):
     return VmatrixF
 
 #%% FIXME: move into other submodule
-import pmatlab # FIXME
+#import pmatlab # FIXME
+from qtt import pmatlab
+
 class GateTransform:
     ''' Class to describe virtual gate transformations '''
     def __init__(self, Vmatrix, sourcenames, targetnames):

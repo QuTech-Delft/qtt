@@ -88,11 +88,27 @@ def dataset2image2(dataset):
 
 #%%
 
+def dataset_get_istep(alldata, mode=None):    
+    istep=np.abs(alldata.metadata['scanjob']['sweepdata']['step'])
+    return istep
+    
 def dataset1Ddata(alldata):
     ''' Parse a dataset into the x and y scan values '''
     y = alldata.default_parameter_array()
     x=y.set_arrays[0]
     return x,y
+    
+def dataset_labels(alldata, tag=None):
+    if tag=='x': 
+        d=alldata.default_parameter_array()
+        return d.set_arrays[0].label
+    if tag=='y': 
+        d=alldata.default_parameter_array()
+        return d.set_arrays[1].label
+    if tag is None: 
+        d=alldata.default_parameter_array()
+        return d.label
+    return '?'
     
 def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
     """ Show result of a 2D scan """
@@ -512,7 +528,7 @@ def getDateString(t=None, full=False):
         dstr = t.strftime('%Y-%m-%d')
     return dstr
 
-def experimentFile(outputdir : str, tag=None, dstr=None, bname=None):
+def experimentFile(outputdir : str = '', tag=None, dstr=None, bname=None):
     """ Format experiment data file for later analysis """
     if tag is None:
         tag = getDateString()
@@ -523,19 +539,20 @@ def experimentFile(outputdir : str, tag=None, dstr=None, bname=None):
     basename = '%s' % (dstr,)
     if bname is not None:
         basename = '%s-' % bname + basename
-    qtt.tools.mkdirc(os.path.join(outputdir, tag))
+    if not outputdir is None:
+        qtt.tools.mkdirc(os.path.join(outputdir, tag))
     pfile = os.path.join(outputdir, tag, basename + '.' + ext)
     return pfile
     
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr )
-    logging.info('load %s'  % path )
+    logging.info('loadExperimentdata %s'  % path )
     dataset = load_data( path )
     return dataset
     
 def saveExperimentData(outputdir, dataset, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
-    logging.warning('save %s'  % path)
+    logging.info('saveExperimentData %s'  % path)
     write_data(path, dataset)
     
 

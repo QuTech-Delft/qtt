@@ -29,6 +29,638 @@ import matplotlib.pyplot as plt
 
 #%%
 
+def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
+    """ Save matplotlib figure to disk
+
+    Arguments
+    ---------
+        name : str
+            name of file to save
+    Returns
+    -------
+        imfilerel, imfile : string
+            filenames 
+    """
+    imfile0 = '%s.%s' % (name, ext)
+    imfile = os.path.join(resultsdir, 'pictures', imfile0)
+    qtt.mkdirc( os.path.join(resultsdir, 'pictures'))
+    imfilerel = os.path.join('pictures', imfile0)
+    
+    if fig is not None:
+        plt.figure(fig)
+    if tight:
+        plt.savefig(imfile, dpi=dpi, bbox_inches='tight', pad_inches=tight)
+    else:
+        plt.savefig(imfile, dpi=dpi)
+    return imfilerel, imfile
+    
+
+import datetime
+
+def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3):
+    c2=plt.Circle(pt,radius,color=color,fill=False, linewidth=3, alpha=alpha)
+    plt.gca().add_artist(c2)
+    return c2 
+    
+def scaleCmap(imx, setclim=True, verbose=0):
+    """ Scale colormap of sensing dot image """
+    p99 = np.percentile(imx, 99.9)
+    mx = imx.max()
+
+    mval = p99
+
+    # 0 <-> alpha
+    # mval <->1
+
+    w = np.array([0, 1])
+
+    # cl=(1./mval)*(w)+.2)
+    alpha = .23
+    cl = (mval / (1 - alpha)) * (w - alpha)
+
+    if verbose:
+        print('scaleCmap to %.1f %.1f' % (cl[0], cl[1]))
+    if setclim:
+        plt.clim(cl)
+    return cl
+    
+def writeBatchData(outputdir, tag, timestart, timecomplete):
+    tt=datetime.datetime.now().strftime('%d%m%Y-%H%m%S')
+    with open(os.path.join(outputdir, '%s-%s.txt' % (tag, tt)), 'wt' ) as fid:
+        fid.write('Tag: %s\n' % tag)
+        fid.write('Time start: %s\n' % timestart)
+        fid.write('Time complete: %s\n' % timecomplete)
+        fid.close()
+        print('writeBatchData: %s' % fid.name)
+
+#%%
+
+def filterBG(imx, ksize, sigma=None):
+    """ Filter away background using Gaussian filter """
+    #imq = cv2.bilateralFilter(imx.astype(np.float32),9,75,75)
+    #imq=cv2.medianBlur(imx.astype(np.uint8), 33)
+    
+    if ksize%2==0:
+        ksize=ksize+1
+    if sigma is None:
+        sigma=0.3*((ksize-1)*0.5 - 1) + 0.8
+    #sigma=.8
+    imq=imx.copy()
+    imq=cv2.GaussianBlur(imq, (int(ksize),int(ksize)), sigma)
+    imq = imx-imq
+    return imq
+
+def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1, cut=None, verbose=0, fig=None):
+    """
+    Filter image with Gabor
+
+    step is in pixel/mV
+
+    Input
+    -----
+
+    im : array
+        input image
+    theta0 : float
+        angle of Gabor filter (in radians)
+
+    """
+    cwidth = 2. * widthmv * np.abs(istep)
+    clength = .5 * lengthmv * np.abs(istep)
+
+    # odd number, at least twice the length
+    ksize = 2 * int(np.ceil(clength)) + 1
+
+    if verbose:
+        print('filterGabor: kernel size %d %d' % (ksize, ksize))
+        print('filterGabor: width %.1f pixel (%.1f mV)' % (cwidth, widthmv))
+        print('filterGabor: length %.1f pixel (%.1f mV)' % (clength, lengthmv))
+    sigmax = cwidth / 2 * gammax
+    sigmay = clength / 2
+
+    gfilter = pmatlab.gaborFilter( ksize, sigma=sigmax, theta=theta0, Lambda=cwidth, psi=0, gamma=sigmax / sigmay, cut=cut)
+    #gfilter=cv2.getGaborKernel( (ksize,ksize), sigma=sigmax, theta=theta0, lambd=cwidth, gamma=sigmax/sigmay, psi=0*np.pi/2)
+    gfilter -= gfilter.sum() / gfilter.size
+    imf = cv2.filter2D(im, -1, gfilter)
+
+    if fig is not None:
+        plt.figure(fig + 1)
+        plt.clf()
+        plt.imshow(r[0], interpolation='nearest')
+        plt.colorbar()
+        plt.clim([-1, 1])
+    return imf, (gfilter, )
+
+
+
+#%%
+
+import math
+def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(10) ):
+    """ Determine region where we have no electrons
+
+    The output region is in pixel coordinates.
+
+    Arguments
+    ---------
+        pt : array
+            position of (0,0) point
+        imx : array
+            input image
+        istep : float
+            scale factor
+    
+    """
+    pt0=pt+np.array([-distmv,distmv])/istep
+    dd=widthmv/istep # [mV]
+
+    phi1=np.deg2rad(np.pi+phi)
+    phi2=np.deg2rad(np.pi/2-phi)
+    rr0=np.zeros( (4,2))
+    rr0[0]=pt0
+
+    if 1:
+	    rr0[1]=pt0+(np.array([ -dd,0]) )
+	    rr0[3]=pt0+(np.array([ 0,dd]) )     
+	    rr0[1][1]+=(rr0[1][0]-rr0[0][0])*math.sin(phi)
+	    rr0[3][0]+=(rr0[3][1]-rr0[0][1])*math.sin(phi)
+    else:
+	    rr0[1]=pt0+pmatlab.rot2D(phi1).dot(np.array([ dd,0]) )
+	    rr0[3]=pt0+pmatlab.rot2D(phi2).dot(np.array([ dd,0]) )
+    rr0[2]=np.array([rr0[1][0], rr0[3][1] ] )
+    # make sure we are inside scan region. we add 1.0 to fix differentiaion issues at the border
+    rr0[[1,2],0]=np.maximum(rr0[[1,2],0], 1.0) 
+    
+    rr=np.vstack( (rr0, rr0[0:1, :]))
+    #print(rr0)
+    
+    if fig is not None:
+        showIm(imx, fig=fig)
+        plt.plot(pt[0], pt[1], '.m', markersize=20)    
+        
+        plt.plot(rr[:,0], rr[:,1], '.-g', markersize=14)    
+    return rr0
+
+from qtt.algorithms.generic import scaleImage
+
+def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
+    """ Check whether we are in the single-electron regime 
+
+    Arguments
+    ---------
+        pt : array
+            zero-zero point    
+        imx : array
+            2D scan image
+        istep : float
+            parameter
+        
+    Returns
+    -------
+        check : integer
+            0: false, 1: undetermined, 2: good
+    """
+    rr0=singleRegion(pt, imx, istep, fig=None)
+    rr=np.vstack( (rr0, rr0[0:1, :]))
+
+
+    imtmp=imx.copy()
+    pts=rr.reshape( (-1,1,2) ).astype(int)
+
+    mask=0*imtmp.copy().astype(np.uint8)    
+    cv2.fillConvexPoly(mask, pts,color=[1] )
+    
+    if 0:
+        vvbg = fitBackground(imx, smooth=True, verbose=verbose, fig=None, order=int(3), removeoutliers=True)
+    else:
+        vvx=imx+filterBG(imx, ksize=math.ceil(45./istep) )
+        vvbg=imx-filterBG(imx, ksize=math.ceil(45./istep) )
+        #vv=vvbg
+        if 0:
+            showIm(imx, fig=123)
+            showIm(imx-vvbg, fig=124, title='imx-vvbg')
+            showIm(vvbg, fig=125,title='vvbg')
+            showIm(imx-vvx, fig=126, title='imx-vvx')
+        #imf=fourierHighPass(imx, nc=30)
+
+    qq0=cv2.meanStdDev(imx-vvbg)
+    qq=cv2.meanStdDev(imx-vvbg, mask=mask)
+    if verbose>=2:
+        print('qq0 %s'%  (str(qq0) ) )
+        print('qq %s'%  (str(qq) ) )
+        #print(qq)
+    
+    thr=3.*qq[1]
+    #thr=3.5*qq[1]
+    imf=imx-vvbg
+    #imf=smoothImage(imf)
+    #imf=anisodiff(imf,niter=25,kappa=50)
+
+    for ii in range(1):
+        imf = smoothImage(imf)
+    
+    res=(np.abs(imf)>thr).astype(np.uint8)
+    kernel=np.ones((3,1)).astype(np.uint8)
+    for ii in range(0):
+        res = cv2.morphologyEx(res, cv2.MORPH_OPEN, kernel)
+    
+    if fig is not None:
+        
+        showIm(mask, fig=fig, title='mask')
+        plt.plot(rr[:,0], rr[:,1], '.-g', markersize=14)    
+        if verbose>=2:
+            showIm(imf, fig=fig+1); plt.colorbar()
+            plt.title('filtered image' )
+            img = cv2.cvtColor(scaleImage(imx-vvbg), cv2.COLOR_GRAY2RGB)
+            img = scaleImage(imx-vvbg)
+            imq=np.hstack( (img, scaleImage(res)))
+            showIm(imq, fig=fig+10);
+            plt.title('filtered image + thresholded' )
+
+            plt.plot(rr[:,0], rr[:,1], '.-g', markersize=12)    
+            rr2=rr+np.array([imx.shape[1],0])
+            plt.plot(rr2[:,0], rr2[:,1], '.-g', markersize=12)    
+            
+            showIm(res, fig=fig+11);
+            #showIm(imf, fig=fig+11);            
+            plt.plot(rr[:,0], rr[:,1], '.-g', markersize=14)    
+
+    pixthr=(2.5/istep)**2
+    if (np.sum(res*mask)<=pixthr ):
+        if np.abs(pmatlab.polyarea(rr))< ((40/istep)**2):
+                check=1
+        else:
+            check=2
+    else:
+        check=0
+    if verbose>=2:
+        print('singleElectronCheck: area of region: %.1f/%.1f [mv]^2'  % ( np.abs( pmatlab.polyarea(rr)), (40/istep)**2) )
+    if verbose>=2:
+        print('singleElectronCheck: np.sum(res*mask) %d/%d '  % (np.sum(res*mask), pixthr) )
+    checks = dict({0: 'false', 1: 'undetermined', 2: 'good'})
+        
+    if verbose:
+        print('singleElectronCheck: check %s: %s' % (check, checks[check]) )
+    return check, rr0, res, thr
+    
+
+#%%
+
+import matplotlib
+
+def cmap_map(function, cmap):
+    """ Applies function (which should operate on vectors of shape 3:
+    [r, g, b], on colormap cmap. This routine will break any discontinuous     points in a colormap.
+    """
+    cdict = cmap._segmentdata
+    step_dict = {}
+    # Firt get the list of points where the segments start or end
+    for key in ('red', 'green', 'blue'):
+        step_dict[key] = map(lambda x: x[0], cdict[key])
+    step_list = sum(step_dict.values(), [])
+    step_list = np.array(list(set(step_list)))
+    # Then compute the LUT, and apply the function to the LUT
+    reduced_cmap = lambda step: np.array(cmap(step)[0:3])
+    old_LUT = np.array(map(reduced_cmap, step_list))
+    new_LUT = np.array(map(function, old_LUT))
+    # Now try to make a minimal segment definition of the new LUT
+    cdict = {}
+    for i, key in enumerate(('red', 'green', 'blue')):
+        this_cdict = {}
+        for j, step in enumerate(step_list):
+            if step in step_dict[key]:
+                this_cdict[step] = new_LUT[j, i]
+            elif new_LUT[j, i] != old_LUT[j, i]:
+                this_cdict[step] = new_LUT[j, i]
+        colorvector = map(lambda x: x + (x[1], ), this_cdict.items())
+        colorvector.sort()
+        cdict[key] = colorvector
+
+    return matplotlib.colors.LinearSegmentedColormap('colormap', cdict, 1024)
+
+
+def cmap_discretize(cmap, N, m=1024):
+    """Return a discrete colormap from the continuous colormap cmap.
+
+        cmap: colormap instance, eg. cm.jet. 
+        N: number of colors.
+
+    Example
+        x = resize(arange(100), (5,100))
+        djet = cmap_discretize(cm.jet, 5)
+        imshow(x, cmap=djet)
+    """
+
+    if type(cmap) == str:
+        cmap = get_cmap(cmap)
+    colors_i = np.concatenate((np.linspace(0, 1., N), (0., 0., 0., 0.)))
+    colors_rgba = cmap(colors_i)
+    indices = np.linspace(0, 1., N + 1)
+    cdict = {}
+    for ki, key in enumerate(('red', 'green', 'blue')):
+        cdict[key] = [
+            (indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki]) for i in xrange(N + 1)]
+    # Return colormap object.
+    return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d" % m, cdict, m)
+
+#%%
+import cv2
+
+def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.INTER_AREA):
+    """ Scale image to make square pixels
+
+    Arguments
+    ---------
+    im: array
+        input image
+    imextend: list
+        coordinates of image region
+    mvx, mvy : float
+        number of mV per pixel requested
+        
+    Returns
+    -------
+     ims, (fw, fh, mvx, mvy, H) : data
+         H is the homogeneous transform from original to straightened image
+     
+    """
+    dxmv = imextent[1] - imextent[0]
+    dymv = imextent[3] - imextent[2]
+
+    dx = im.shape[1]
+    dy = im.shape[0]
+    mvx0 = dxmv / float(dx - 1)     # mv/pixel
+    mvy0 = dymv / float(dy - 1)
+
+    if mvy is None:
+        mvy = mvx
+
+    fw = (float(mvx0) / mvx)
+    fh = (float(mvy0) / mvy)
+    if verbose:
+        print('straightenImage: fx %.4f fy %.4f' % (fw, fh))
+        print('straightenImage: result mvx %.4f mvy %.4f' % (mvx, mvy))
+
+    if fw < .5 and 1:
+        fwx = fw
+        fac = 1
+        ims = im
+        while (fwx < .5):
+            ims = cv2.resize(
+                ims, None, fx=.5, fy=1, interpolation=cv2.INTER_LINEAR)
+            fwx *= 2
+            fac *= 2
+        #print('fw %f, fwx %f, fac %f' % (fw, fwx, fac))
+        ims = cv2.resize(
+            ims, None, fx=fac * fw, fy=fh, interpolation=interpolation)
+    else:
+        ims = cv2.resize(im, None, fx=fw, fy=fh, interpolation=interpolation)
+
+    H = pmatlab.pg_transl2H([-.5, -.5]) .dot(np.diag([fw, fh, 1]).dot(pmatlab.pg_transl2H([.5, .5])))
+
+    return ims, (fw, fh, mvx, mvy, H)
+
+
+#%%
+
+import itertools
+
+def polyfit2d(x, y, z, order=3):
+    """ Fit a polynomial on 2D data """
+    ncols = (order + 1)**2
+    G = np.zeros((x.size, ncols))
+    ij = itertools.product(range(order + 1), range(order + 1))
+    for k, (i, j) in enumerate(ij):
+        G[:, k] = x**i * y**j
+    m, _, _, _ = np.linalg.lstsq(G, z)
+    return m
+
+
+def polyval2d(x, y, m):
+    """ Evaluate a 2D polynomial """
+    order = int(np.sqrt(len(m))) - 1
+    ij = itertools.product(range(order + 1), range(order + 1))
+    z = np.zeros_like(x)
+    for a, (i, j) in zip(m, ij):
+        z += a * x**i * y**j
+    return z
+
+
+from qtt.algorithms.generic import smoothImage
+
+def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=False, returndict=None):
+    """ Fit smooth background to 1D or 2D image """
+
+    kk = len(im.shape)
+    im = np.array(im)
+    ny = im.shape[0]
+    ydata0 = np.arange(0., ny)
+
+    is1d = kk == 1
+    if kk > 1:
+        # 2d signal
+        nx = im.shape[1]
+        xdata0 = np.arange(0., nx)
+    else:
+        # 1D signal
+        xdata0 = [0.]
+    xx, yy = np.meshgrid(xdata0, ydata0)
+
+    if smooth:
+        ims = smoothImage(im)
+    else:
+        ims = im
+
+    if 0:
+        s2d = scipy.interpolate.RectBivariateSpline(ydata0, xdata0, im)
+        vv = s2d.ev(xx, yy)
+
+    if verbose:
+        print('fitBackground: is1d %d, order %d' % (is1d, order))
+
+    xxf = xx.flatten()
+    yyf = yy.flatten()
+    imsf = ims.flatten()
+    s2d = polyfit2d(xxf, yyf, imsf, order=order)
+    vv = polyval2d(xx, yy, s2d)
+
+    if removeoutliers:
+        ww = im - vv
+        gidx = np.abs(ims.flatten() - vv.flatten()) < ww.std()
+        # gidx=gidx.flatten()
+        if verbose:
+            print('fitBackGround: inliers %d/%d (std %.2f)' %
+                  (gidx.sum(), gidx.size, ww.std()))
+        s2d = polyfit2d(xxf[gidx], yyf[gidx], imsf[gidx], order=order)
+        vv = polyval2d(xx, yy, s2d)
+
+    if not fig is None:
+        if kk == 1:
+            plt.figure(fig)
+            plt.clf()
+            plt.subplot(2, 1, 1)
+            plt.plot(im, '.b', label='signal')
+            plt.plot(ims, 'og')
+            #plt.plot(ims, '.c', label='signal');
+
+            plt.plot(vv, '.-r', label='background')
+            # plt.axis('image')
+            plt.legend()
+            plt.title('fitBackground: image')
+
+            plt.subplot(2, 1, 2)
+            plt.plot(ww, '.m')
+            plt.title('Diff plot')
+        else:
+            plt.figure(fig)
+            plt.clf()
+            plt.subplot(3, 1, 1)
+            plt.imshow(im, interpolation='nearest')
+            plt.axis('image')
+            plt.title('fitBackground: image')
+            plt.subplot(3, 1, 2)
+            plt.imshow(vv, interpolation='nearest')
+            plt.axis('image')
+            # plt.colorbar()
+            plt.title('fitBackground: interpolation')
+            plt.subplot(3, 1, 3)
+            plt.imshow(im - vv, interpolation='nearest')
+            plt.axis('image')
+            plt.title('fitBackground: difference')
+
+    if not returndict is None:
+        #returndict['ww'] = ww
+        returndict['xx'] = xx
+        returndict['yy'] = yy
+        returndict['ims'] = ims
+    return vv
+
+
+from qtt.algorithms import diffImage, diffImageSmooth
+
+def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
+    """ Clean up image from sensing dot """
+    verbose = int(verbose)
+    removeoutliers = bool(removeoutliers)
+    im = np.array(im)
+    if sigma is None:
+        imx = diffImage(im, dy=dy, size='same')
+    else:
+        imx = diffImageSmooth(im, dy=dy, sigma=sigma)
+    if order>=0:
+        vv = fitBackground(imx, smooth=True, verbose=verbose, fig=None, order=int( order), removeoutliers=removeoutliers)
+        ww = (imx - vv).copy()
+    else:
+        ww=imx.copy()
+    if fixreversal:
+        ww = fixReversal(ww, verbose=verbose)
+    return ww
+    
+import skimage
+import skimage.filters
+
+
+def fixReversal(im0, verbose=0):
+    """ Fix orientation of image
+
+    Needed when the keithley (or some other measurement device) has been reversed
+    """
+    thr = skimage.filters.threshold_otsu(im0)
+    mval = np.mean(im0)
+
+    #meanopen = np.mean(im0[:,:])
+    # fr=thr<mval
+    fr = thr < 0
+    if verbose:
+        print(' fixReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
+    if fr:
+        im0 = -im0
+    return im0
+
+
+#%%
+
+from qtt.deprecated import linetools
+from qtt.legacy import scaleCmap, plotCircle
+from qtt.data import dataset2Dmetadata, dataset2image
+
+def showIm(ims, fig=1, title='', showz=False):
+    """ Show image with nearest neighbor interpolation and axis scaling """
+    plt.figure(fig)
+    plt.clf()
+    if showz:
+        pmatlab.imshowz(ims, interpolation='nearest')
+    else:
+        plt.imshow(ims, interpolation='nearest')
+    plt.axis('image')
+    plt.title(title)
+    
+def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
+    """ Analyse a 2-dot scan 
+
+    Arguments
+    ---------
+        alldata : dict
+            data of 2D scan
+        fig : integer or None
+            if not None plot results in figure
+        istep: float
+            conversion parameter
+    Output
+    ------
+        pt : array
+            point of zero-zero crossing
+        results : dict
+            results of the analysis
+            
+    """
+    #imextent, xdata, ydata, im = get2Ddata(alldata, fastscan=None, verbose=0, fig=None, midx=2)
+    extent, g0, g1, xdata, ydata, arrayname = dataset2Dmetadata(alldata)
+    im, tr=dataset2image(alldata)
+    imextent=tr.extent_image()
+    
+    im=fixReversal(im, verbose=0)
+    imc=cleanSensingImage(im, sigma=.93, verbose=0)
+    imtmp, (fw,fh, mvx, mvy, H) = straightenImage(imc, imextent, mvx=istep, verbose=verbose>=2, interpolation=cv2.INTER_AREA)  # cv2.INTER_NEAREST
+    imx=imtmp.astype(np.float64)
+    
+    ksize0=int(math.ceil(31./istep)); ksize0+= (ksize0-1)%2
+    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=2.25);
+        
+    # Select best point
+    bestidx=np.argsort(pts[0]-pts[1])[0]
+    pt=pts[:, bestidx]
+    
+    
+    ptq = pmatlab.projectiveTransformation((H.I), pt)
+    ptmv= tr.pixel2scan(ptq)
+    ims=imc
+    #ims= scaleRatio(imc, imextent, verbose=1)
+
+    check, rr0, res, thr=singleElectronCheck(pt, imx, istep, fig=None, verbose=1)
+    se=dict({'rr0': rr0, 'res': res, 'check': check, 'thr': thr})
+    
+    #pmatlab.tilefigs([200,50, 60, 61])
+
+    if fig is not None:
+        ims, (fw,fh, mvx, mvy,_) = straightenImage(imc, imextent, mvx=1, verbose=0)
+        show2D(alldata, ims, fig=fig); scaleCmap(ims)
+        plt.title('zero-zero point (zoom)')
+        
+        #plotPoints(ptmv, '.m', markersize=22)
+        c2=plotCircle(ptmv,radius=11.5,color='r', linewidth=3, alpha=.5)
+
+        plt.axis('image')
+        
+        region=int(70/mvx)*np.array([[-1, 1],[-1, 1]])+ptmv.reshape(2,1)
+        region[0,0]=max(region[0,0],imextent[0]); region[1,0]=max(region[1,0],imextent[2])
+        region[0,1]=min(region[0,1],imextent[1]); region[1,1]=min(region[1,1],imextent[3])
+        plt.xlim(region[0]); plt.ylim(region[1][::])
+    results=dict({'ptmv': ptmv, 'pt': pt, 'imc': imc, 'imx': imx, 'singleelectron': se, 'istep': istep})
+    return pt, results
+    
+
+
 def getTwoDotValues(td, ods, basevaluestd=dict({}), verbose=1):
     """ Return settings for a 2-dot, based on one-dot settings """
     # basevalues=dict()

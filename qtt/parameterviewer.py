@@ -3,6 +3,7 @@
 import time
 import threading
 import logging
+import numpy as np
 
 from qtpy.QtCore import Qt
 from qtpy import QtWidgets
@@ -141,16 +142,21 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 value=pp[g].get()
                 #value = pp[g]['value']
                 sb = self._itemsdict[iname][g]
-                if math.abs(sb.value()-value)>1e-9:
                 
-                    logging.debug('update %s to %s' % (g, value))
-                    try:
-                        
-                        oldstate=sb.blockSignals(True)
-                        sb.setValue( value )
-                        sb.blockSignals(oldstate)
-                    except Exception as e:
-                        pass
+                if isinstance(sb, QtWidgets.QTreeWidgetItem):
+                    sb.setText( 1, str(value ) )
+                else:
+                    # update a float value
+                    if np.abs(sb.value()-value)>1e-9:
+                    
+                        logging.debug('update %s to %s' % (g, value))
+                        try:
+                            
+                            oldstate=sb.blockSignals(True)
+                            sb.setValue( value )
+                            sb.blockSignals(oldstate)
+                        except Exception as e:
+                            pass
 
         for f in self.callbacklist:
             try:

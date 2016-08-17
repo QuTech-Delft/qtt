@@ -17,6 +17,10 @@ import datetime
 
 import matplotlib.pyplot as plt
 
+try:
+    from urllib import pathname2url as pathname2url
+except:
+    from urllib.request import pathname2url as pathname2url
 
 from qtt.tools import tilefigs
 import qtt.tools
@@ -26,13 +30,17 @@ from qtt.algorithms import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
-from qtt.data import *
+from qtt.data import experimentFile
+from qtt.algorithms.coulomb import coulombPeaks
+from qtt.legacy import saveImage, analyse2dot
 
 import webbrowser
 import dateutil
 import qtt.markup as markup
 import copy
 import traceback
+
+from qtt.legacy import analyse2dot
 
 from qtt.tools import diffImageSmooth, scanTime
 from qtt.scans import experimentFile, pinchoffFilename
@@ -258,6 +266,9 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
 
 
 #%%
+
+from qtt.legacy import singleElectronCheck, singleRegion
+
        
 def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
     """ Generate a report on scanned one-dots
@@ -268,7 +279,7 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
     lst=pmatlab.findfiles(dxdir,'scandata-doubledot.*pickle')
     print('found %d data files'  % len(lst) )
 
-    _=mkdirc(join(resultsdir, 'pictures'));
+    _=qtt.mkdirc(os.path.join(resultsdir, 'pictures'));
     
     #full=2
     xdata=dict()
@@ -295,11 +306,11 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
     
     for idx, td in enumerate(two_dots):
         basefig=1000+100*idx
-        pp='scandata-doubledot-%s.pickle' % (td['name'])
+        pp='doubledot-%s.pickle' % (td['name'])
         pfile=os.path.join(dxdir, pp)
         if not os.path.isfile(pfile):
             # try with gate compensation
-            pp='scandata-doubledot-%s-gc.pickle' % (td['name'])
+            pp='doubledot-%s-gc.pickle' % (td['name'])
             pfile=os.path.join(dxdir, pp)
     
             if not os.path.isfile(pfile):
@@ -343,25 +354,29 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
         
         #pp='scandata-tunesd-%s.pickle' % (td['name'])
         
-        pp='scandata-tunesd-%s-sd%d.pickle' % (td['name'], sdidx)
-        
+        dstrplunger='tunesd-%s-sd%d' % (td['name'], sdidx)        
+        pp = experimentFile( tag='', dstr=dstrplunger)
+
+
         pfileplunger=os.path.join(dxdir, pp)
 
-        ddplunger=loadPickle(pfileplunger)
-        if type(ddplunger)==tuple:
+        ddplunger=qtt.load_data(pfileplunger)
+        if isinstance(ddplunger, tuple):
                 ddplunger=ddplunger[0]
 
         if ddplunger is None:
             print('could not load file %s' % pfileplunger)
             
-        x=ddplunger['data_array'][:,0]; y=ddplunger['data_array'][:,2]; istep=np.abs(ddplunger['sweepdata']['step'])
+        #x=ddplunger['data_array'][:,0]; y=ddplunger['data_array'][:,2];
+        x,y = qtt.data.dataset1Ddata(ddplunger)
+        istep=qtt.data.dataset_get_istep(ddplunger)
         
         goodpeaks=coulombPeaks(x,y, verbose=1, fig=basefig, plothalf=True, istep=istep)
         if not basefig is None:
             plt.figure(basefig)
-            plt.xlabel('%s' % ddplunger['sweepdata' ]['gates'][0])
+            plt.xlabel( qtt.data.dataset_labels(ddplunger, 'x') )
         
-        imfilerel, imfile=saveImage(resultsdir, 'sdtune-%s' % td['name'], basefig)
+        imfilerel, imfile=qtt.legacy.saveImage(resultsdir, 'sdtune-%s' % td['name'], basefig)
 
         page.p('Tuning of sensing dot: scan complete %s' % scanTime(ddplunger).strftime('%d-%m-%Y %H:%M:%S')  )
         #dd2d['scantime']
@@ -377,7 +392,7 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
         imfilerel, imfile=saveImage(resultsdir, 'doubledot-%s' % td['name'], basefig+1)
 
         page.p('Double-dot scan: scan complete %s' % scanTime(dd2d).strftime('%d-%m-%Y %H:%M:%S')  )
-        page.p('Double-dot scan: gatevalues: %s' % qtt.legacy.printGateValues(dd2d.get('allgatevalues', dict({}) ))  )
+        page.p('Double-dot scan: gatevalues: %s' % qtt.legacy.printGateValues(dd2d.metadata.get('allgatevalues', dict({}) ))  )
         page.a.open(href=pathname2url(pfile), style='text-decoration: none;' )
         page.img( src=pathname2url(imfilerel), width='80%', alt="sd %s" % td['name'] )
         page.a.close()
