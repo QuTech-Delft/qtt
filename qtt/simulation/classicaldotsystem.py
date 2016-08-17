@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Classical Quantum Dot Honeycomb Calculator
+""" Classical Quantum Dot Simulator
 
 This class aims to be a generic classical simulator for calculating energy levels and occupancy of quantum dots.
 Note: interaction between the dots is treated completely classically (no tunnel coupling) resulting in faster simulations.
@@ -20,6 +20,7 @@ import itertools
 import numpy as np
 import operator as op
 import functools
+import time
 
 
 def ncr(n, r):
@@ -29,6 +30,31 @@ def ncr(n, r):
     numer = functools.reduce(op.mul, range(n, n - r, -1))
     denom = functools.reduce(op.mul, range(1, r + 1))
     return numer // denom
+
+
+def static_var(varname, value):
+    """ Helper function to create a static variable """
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    return decorate
+
+
+@static_var("time", 0)
+def tprint(string, dt=1, output=False):
+    """ Print progress of a loop every dt seconds """
+    if (time.time() - tprint.time) > dt:
+        print(string)
+        tprint.time = time.time()
+        if output:
+            return True
+        else:
+            return
+    else:
+        if output:
+            return False
+        else:
+            return
 
 
 class ClassicalDotSystem:
@@ -74,6 +100,45 @@ class ClassicalDotSystem:
         """ Calculate the ground state of the dot system, given a set of gate values. Returns a state array. """
         energies = self.calculate_energies(gatevalues)
         return self.basis(np.argmin(energies))
+
+    def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
+        """ Simulating a honeycomb by looping over a 2D array of parameter values (paramvalues2D),
+         resulting honeycomb is stored in self.honeycomb """
+        t0 = time.time()
+
+        nparams = np.shape(paramvalues2D)[0]
+        npointsx = np.shape(paramvalues2D)[1]
+        npointsy = np.shape(paramvalues2D)[2]
+
+        if nparams != self.ngates:
+            print('Number of parameters does not equal number of gates...')
+            return
+
+        self.hcgs = np.empty((npointsx, npointsy, self.ndots))
+
+        for i in range(npointsx):
+            if verbose:
+                tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
+            for j in range(npointsy):
+                self.hcgs[i, j] = self.calculate_ground_state(paramvalues2D[:, i, j])
+        self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
+
+        if verbose:
+            print('simulatehoneycomb: %.1f [s]' % (time.time() - t0))
+
+    def findtransitions(self, occs):
+        transitions = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
+        delocalizations = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
+        for i in range(1, np.shape(occs)[0] - 1):
+            for j in range(1, np.shape(occs)[1] - 1):
+                diff1 = np.sum(np.absolute(occs[i, j] - occs[i - 1, j - 1]))
+                diff2 = np.sum(np.absolute(occs[i, j] - occs[i - 1, j + 1]))
+                diff3 = np.sum(np.absolute(occs[i, j] - occs[i + 1, j - 1]))
+                diff4 = np.sum(np.absolute(occs[i, j] - occs[i + 1, j + 1]))
+                transitions[i, j] = diff1 + diff2 + diff3 + diff4
+                delocalizations[i, j] = min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1)) + min(occs[i, j, 0] % 1, abs(
+                    1 - occs[i, j, 0] % 1)) + min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1))
+        return transitions, delocalizations
 
 
 class TripleDot(ClassicalDotSystem):
