@@ -473,7 +473,7 @@ try:
         return ppt, slide
 
 except:
-    def addPPTslide(txt=None, im=None, show=False):
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
         ''' Dummy implementation '''
         pass
 
