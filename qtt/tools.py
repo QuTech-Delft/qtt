@@ -162,7 +162,7 @@ def plot1D(dataset, fig=1):
     if fig is not None and array is not None:
         MatPlot(array, num=fig)
 
-import pmatlab
+#import pmatlab
 
         
         
@@ -406,22 +406,36 @@ try:
     import win32com
     import win32com.client
     import tempfile  
+    from qcodes.plots.pyqtgraph import QtPlot
 
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False):
-        ''' Add slide to current active Powerpoint presentation '''
+
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
+        ''' Add slide to current active Powerpoint presentation
+        
+
+        Arguments:
+            title (string): title added to slide
+            fig (....): ...
+            ....
+        Returns:
+            ...
+            
+        The interface to Powerpoint used in described here:
+            https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
+        
+        '''
         Application = win32com.client.Dispatch("PowerPoint.Application") 
         if show:
             Application.Visible = True # shows what's happening, not required, but helpful for now 
         
-        # https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
-        print('num of open PPTs: %d' % Application.presentations.Count)
+        if verbose:
+            print('num of open PPTs: %d' % Application.presentations.Count)
         
 #        ppt = Application.Presentations.Add() # adds a new presentation 
         ppt=Application.ActivePresentation
-        print('name: %s'  % ppt.Name)
+        if verbose:
+            print('name: %s'  % ppt.Name)
         
-#        ppLayoutBlank=12
-#        ppLayoutTitle=0
         ppLayoutTitleOnly=11
         layout=ppLayoutTitleOnly
         
@@ -434,10 +448,16 @@ try:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
             
         if fig is not None:
-            fname=tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
-            fig.savefig(fname)
-            slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350) 
-        
+            if isinstance(fig, int):
+                plt.figure(fig)
+                fname=tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
+                fig.savefig(fname)
+                slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350) 
+            else:
+                if isinstance(fig, QtPlot):
+                    # use something similar to QtPlot.copyToClipboard to get a copy of the figure
+                    print('not implemented...')
+                    
         txtbox = slide.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
         txtbox.Name='text' 
         
