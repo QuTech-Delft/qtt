@@ -489,21 +489,23 @@ except:
 from qtt.parameterviewer import ParameterViewer
 from qtt.dataviewer import DataViewer
 
-def setupMeasurementWindows(station):
-    ms = monitorSizes()
-    vv = ms[-1]
+def setupMeasurementWindows(station, ilist=None):
+    ms=monitorSizes()
+    vv=ms[-1]
     # create custom viewer which gathers data from a station object
-    w = ParameterViewer([station.gates])
-    w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
+    if ilist is None:
+        ilist=[station.gates]
+    w = ParameterViewer(ilist)
+    w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
     w.updatecallback()
 
     plotQ = QtPlot(windowtitle='Live plot', interval=.5)
-    plotQ.setGeometry(vv[0]+vv[2]-300, vv[1]+vv[3]-400, 600, 400)
+    plotQ.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
     plotQ.update()
 
-    app = QtWidgets.QApplication.instance()
+    app=QtWidgets.QApplication.instance()
     app.processEvents()
-
+    
     return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
 
 import time
