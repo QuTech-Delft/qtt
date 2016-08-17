@@ -461,7 +461,8 @@ try:
                 figtemp = QtGui.QPixmap.grabWidget(fig)
                 figtemp.save(fname)
             else:
-                print('figure is of an unknown type')
+                if verbose:                
+                    print('figure is of an unknown type')
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
 
         txtbox = slide.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
