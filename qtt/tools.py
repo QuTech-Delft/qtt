@@ -507,6 +507,9 @@ def addPPT_dataset(dataset, notes=None, show=False, verbose=1):
     if len(dataset.arrays)<2:
         raise Exception('The dataset contains less than two data arrays')
         
+    if len(dataset.arrays)>3:
+        raise Exception('The dataset contains more than three data arrays')
+        
     temp_fig = plt.figure('temp_fig')
     
     if len(dataset.arrays)==2:
@@ -514,8 +517,8 @@ def addPPT_dataset(dataset, notes=None, show=False, verbose=1):
         plt.xlabel(list(dataset.arrays)[1])
         plt.ylabel(list(dataset.arrays)[0])
     elif len(dataset.arrays)==3:
-        plt.pcolormesh(dataset.arrays[list(dataset.arrays)[0]])
-        plt.xlabel(list(dataset.arrays)[1])
+        plt.pcolormesh(dataset.arrays[list(dataset.arrays)[1]])
+        plt.xlabel(list(dataset.arrays)[0])
         plt.ylabel(list(dataset.arrays)[2])
         
     text = 'Dataset location: %s' % dataset.location
