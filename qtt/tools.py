@@ -490,28 +490,40 @@ except:
 def addPPT_dataset(dataset, notes=None, show=False, verbose=1):
     ''' Add slide based on dataset to current active Powerpoint presentation
 
-        Arguments:
-            dataset (DataSet): data and metadata from DataSet added to slide
-            notes (string): notes added to slide
-            show (boolean): shows the powerpoint
-            verbose (int): print additional information
-        Returns:
-            ppt: PowerPoint presentation
-            slide: PowerPoint slide
-            
-        Example
-        -------
-        >>> notes = 'some additional information' 
-        >>> addPPT_dataset(dataset,notes)
+    Arguments:
+        dataset (DataSet): data and metadata from DataSet added to slide
+        notes (string): notes added to slide
+        show (boolean): shows the powerpoint and figure
+        verbose (int): print additional information
+    Returns:
+        ppt: PowerPoint presentation
+        slide: PowerPoint slide
+        
+    Example
+    -------
+    >>> notes = 'some additional information' 
+    >>> addPPT_dataset(dataset,notes)
     '''
+    if len(dataset.arrays)<2:
+        raise Exception('The dataset contains less than two data arrays')
+        
     temp_fig = plt.figure('temp_fig')
     
-    if len(dataset.arrays)>0:
-        plt.plot(dataset.arrays[list(dataset.arrays)[0]])
-    
+    if len(dataset.arrays)==2:
+        plt.plot(dataset.arrays[list(dataset.arrays)[1]],dataset.arrays[list(dataset.arrays)[0]])
+        plt.xlabel(list(dataset.arrays)[1])
+        plt.ylabel(list(dataset.arrays)[0])
+    elif len(dataset.arrays)==3:
+        plt.pcolormesh(dataset.arrays[list(dataset.arrays)[0]])
+        plt.xlabel(list(dataset.arrays)[1])
+        plt.ylabel(list(dataset.arrays)[2])
+        
     text = 'Dataset location: %s' % dataset.location
     ppt, slide = addPPTslide(title=None,fig=temp_fig,txt=text,notes=None,show=show,verbose=verbose)
     
+    if not show:
+        plt.close('temp_fig')
+        
     return ppt, slide
 
 #%%
