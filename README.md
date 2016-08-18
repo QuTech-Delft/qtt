@@ -31,8 +31,9 @@ As the project is still private, install it directly from this repository:
 - Install python dependencies. For windows with anaconda:
 ```
 > conda install numpy scipy matplotlib pandas scikit-image
-> conda install spyder pyqtgraph qtpy
+> conda install spyder qtpy
 > conda install -c menpo opencv3
+> conda install -c nmearl pyqtgraph
 > pip install pyvisa
 ```
 For other systems
