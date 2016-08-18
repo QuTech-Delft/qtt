@@ -416,7 +416,7 @@ try:
                 figure added to slide
             txt (string): text in textbox added to slide
             notes (string): notes added to slide
-            show (boolean): shows the powerpoint
+            show (boolean): shows the powerpoint application
             verbose (int): print additional information
         Returns:
             ppt: PowerPoint presentation
@@ -487,13 +487,13 @@ except:
         pass
 
 #%%
-def addPPT_dataset(dataset, notes=None, show=False, verbose=1):
+def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
     ''' Add slide based on dataset to current active Powerpoint presentation
 
     Arguments:
         dataset (DataSet): data and metadata from DataSet added to slide
         notes (string): notes added to slide
-        show (boolean): shows the powerpoint and figure
+        show (boolean): shows the powerpoint application
         verbose (int): print additional information
     Returns:
         ppt: PowerPoint presentation
@@ -509,24 +509,16 @@ def addPPT_dataset(dataset, notes=None, show=False, verbose=1):
         
     if len(dataset.arrays)>3:
         raise Exception('The dataset contains more than three data arrays')
-        
-    temp_fig = plt.figure('temp_fig')
     
-    if len(dataset.arrays)==2:
-        plt.plot(dataset.arrays[list(dataset.arrays)[1]],dataset.arrays[list(dataset.arrays)[0]])
-        plt.xlabel(list(dataset.arrays)[1])
-        plt.ylabel(list(dataset.arrays)[0])
-    elif len(dataset.arrays)==3:
-        plt.pcolormesh(dataset.arrays[list(dataset.arrays)[1]])
-        plt.xlabel(list(dataset.arrays)[0])
-        plt.ylabel(list(dataset.arrays)[2])
-        
+    temp_fig = QtPlot(dataset.default_parameter_array())
+    
     text = 'Dataset location: %s' % dataset.location
-    ppt, slide = addPPTslide(title=None,fig=temp_fig,txt=text,notes=None,show=show,verbose=verbose)
+
+    if notes==None:
+        notes= 'Dataset metadata: %s' % str(dataset.metadata)
     
-    if not show:
-        plt.close('temp_fig')
-        
+    ppt, slide = addPPTslide(title=title,fig=temp_fig,txt=text,notes=notes,show=show,verbose=verbose)
+
     return ppt, slide
 
 #%%
