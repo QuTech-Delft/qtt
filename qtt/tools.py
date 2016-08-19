@@ -514,7 +514,7 @@ try:
         text = 'Dataset location: %s' % dataset.location
     
         if notes is None:
-            notes= 'Dataset metadata: %s' % str(dataset.metadata)
+            notes = 'Dataset metadata: %s' % str(dataset.metadata)
         
         ppt, slide = addPPTslide(title=title,fig=temp_fig,txt=text,notes=notes,show=show,verbose=verbose)
     
@@ -528,6 +528,35 @@ except:
         ''' Dummy implementation '''
         pass
 
+from collections import OrderedDict
+    
+def reshape_metadata(dataset):
+    '''Reshape the metadata of a DataSet
+    
+    Arguments:
+        dataset (DataSet): a dataset of which the metadata will be reshaped
+    Returns:
+        metadata (string): the reshaped metadata
+    '''
+    all_md = dataset.metadata['station']['instruments']
+    metadata = dict()
+    
+    for x in all_md.keys():
+        metadata[x]=OrderedDict()
+        if 'IDN' in all_md[x]['parameters']:
+            metadata[x]['IDN']=dict()
+            metadata[x]['IDN']=all_md[x]['parameters']['IDN']['value']
+        for y in all_md[x]['parameters'].keys():
+            if y != 'IDN':
+                metadata[x][y]=OrderedDict()
+                param_md = all_md[x]['parameters'][y]
+                if isinstance(param_md['value'],float):
+                    metadata[x][y]['value']=float(format(param_md['value'],'.3f')) # 3 decimals or scientific notation
+                metadata[x][y]['units']=param_md['units']
+    
+    metadata = str(metadata).replace('(','').replace(')','').replace('OrderedDict','')
+    
+    return metadata
 
 #%%
 from qtt.parameterviewer import ParameterViewer
