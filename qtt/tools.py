@@ -514,7 +514,7 @@ try:
         text = 'Dataset location: %s' % dataset.location
     
         if notes is None:
-            notes = 'Dataset metadata: %s' % str(dataset.metadata)
+            notes = 'Dataset metadata: %s' % reshape_metadata(dataset)
         
         ppt, slide = addPPTslide(title=title,fig=temp_fig,txt=text,notes=notes,show=show,verbose=verbose)
     
