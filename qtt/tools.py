@@ -485,7 +485,6 @@ try:
 
         return ppt, slide
 
-    #%%
     def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
         ''' Add slide based on dataset to current active Powerpoint presentation
     
@@ -551,7 +550,7 @@ def reshape_metadata(dataset):
                 metadata[x][y]=OrderedDict()
                 param_md = all_md[x]['parameters'][y]
                 if isinstance(param_md['value'],float):
-                    metadata[x][y]['value']=float(format(param_md['value'],'.3f')) # 3 decimals or scientific notation
+                    metadata[x][y]['value']=float(format(param_md['value'],'.3f'))
                 metadata[x][y]['units']=param_md['units']
     
     metadata = str(metadata).replace('(','').replace(')','').replace('OrderedDict','')
