@@ -416,7 +416,7 @@ try:
                 figure added to slide
             txt (string): text in textbox added to slide
             notes (string): notes added to slide
-            show (boolean): shows the powerpoint
+            show (boolean): shows the powerpoint application
             verbose (int): print additional information
         Returns:
             ppt: PowerPoint presentation
@@ -441,7 +441,11 @@ try:
             print('num of open PPTs: %d' % Application.presentations.Count)
 
         # ppt = Application.Presentations.Add()
-        ppt = Application.ActivePresentation
+        try:
+            ppt = Application.ActivePresentation
+        except Exception:
+            print('could not open active Powerpoint presentation')
+            return                 
         if verbose:
             print('name: %s'  % ppt.Name)
 
@@ -481,13 +485,79 @@ try:
 
         return ppt, slide
 
+    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
+        ''' Add slide based on dataset to current active Powerpoint presentation
+    
+        Arguments:
+            dataset (DataSet): data and metadata from DataSet added to slide
+            notes (string): notes added to slide
+            show (boolean): shows the powerpoint application
+            verbose (int): print additional information
+        Returns:
+            ppt: PowerPoint presentation
+            slide: PowerPoint slide
+            
+        Example
+        -------
+        >>> notes = 'some additional information' 
+        >>> addPPT_dataset(dataset,notes)
+        '''
+        if len(dataset.arrays)<2:
+            raise Exception('The dataset contains less than two data arrays')
+            
+        if len(dataset.arrays)>3:
+            raise Exception('The dataset contains more than three data arrays')
+        
+        temp_fig = QtPlot(dataset.default_parameter_array())
+        
+        text = 'Dataset location: %s' % dataset.location
+    
+        if notes is None:
+            notes = 'Dataset metadata: %s' % reshape_metadata(dataset)
+        
+        ppt, slide = addPPTslide(title=title,fig=temp_fig,txt=text,notes=notes,show=show,verbose=verbose)
+    
+        return ppt, slide
+
 except:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
         ''' Dummy implementation '''
         pass
+    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
+        ''' Dummy implementation '''
+        pass
+
+from collections import OrderedDict
+    
+def reshape_metadata(dataset):
+    '''Reshape the metadata of a DataSet
+    
+    Arguments:
+        dataset (DataSet): a dataset of which the metadata will be reshaped
+    Returns:
+        metadata (string): the reshaped metadata
+    '''
+    all_md = dataset.metadata['station']['instruments']
+    metadata = dict()
+    
+    for x in all_md.keys():
+        metadata[x]=OrderedDict()
+        if 'IDN' in all_md[x]['parameters']:
+            metadata[x]['IDN']=dict()
+            metadata[x]['IDN']=all_md[x]['parameters']['IDN']['value']
+        for y in all_md[x]['parameters'].keys():
+            if y != 'IDN':
+                metadata[x][y]=OrderedDict()
+                param_md = all_md[x]['parameters'][y]
+                if isinstance(param_md['value'],float):
+                    metadata[x][y]['value']=float(format(param_md['value'],'.3f'))
+                metadata[x][y]['units']=param_md['units']
+    
+    metadata = str(metadata).replace('(','').replace(')','').replace('OrderedDict','')
+    
+    return metadata
 
 #%%
-
 from qtt.parameterviewer import ParameterViewer
 from qtt.dataviewer import DataViewer
 
