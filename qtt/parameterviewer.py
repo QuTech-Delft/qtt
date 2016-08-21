@@ -34,9 +34,11 @@ class QCodesTimer(threading.Thread):
 
 class ParameterViewer(QtWidgets.QTreeWidget):
 
-    shared_kwargs = ['station', 'instrumentnames']
 
-    def __init__(self, instruments, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
+    shared_kwargs=['station', 'instrumentnames']
+    
+    ''' Simple class to show qcodes parameters '''
+    def __init__(self, instruments, instrumentnames=None, name='QuTech Parameter Viewer', **kwargs):
         ''' Simple class to show qcodes parameters
 
         Arguments:
@@ -52,8 +54,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         w.setHeaderItem(header)
         w.setWindowTitle(name)
 
-        self._instruments = instruments
-        self._instrumentnames = instrumentnames
+        if instrumentnames is None:
+            instrumentnames = [i.name for i in instruments]
+        self._instruments=instruments
+        self._instrumentnames=instrumentnames
         self._itemsdict = dict()
         for i in instrumentnames:
             self._itemsdict[i] = dict()
