@@ -98,14 +98,22 @@ class ClassicalDotSystem:
         self.nbasis = np.sum(self.basis, axis=1)
         self.Nt = len(self.nbasis)
 
+        # make addition energy basis
+        self.add_basis=self.basis.copy()
+        self.xxx_energy=self.basis.copy()
+        for i in range(self.Nt):
+            self.add_basis[i]= (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
+            self.coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
+
     def calculate_energies(self, gatevalues):
         """ Calculate the energies of all dot states, given a set of gate values. Returns array of energies. """
         energies = np.zeros((self.Nt,))
+        tmp1=-(self.mu0 + np.dot(self.alpha, gatevalues))
         for i in range(self.Nt):
             energy = 0
-            energy += np.dot(-(self.mu0 + np.dot(self.alpha, gatevalues)), self.basis[i])
-            energy += np.dot([np.dot(*v) for v in itertools.combinations(self.basis[i], 2)], self.W)
-            energy += np.dot((1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1)), self.Eadd)
+            energy += np.dot(tmp1, self.basis[i])
+            energy += np.dot(self.coulomb_energy[i], self.W)
+            energy += np.dot(self.add_basis[i], self.Eadd)
             energies[i] = energy
         return energies
 
@@ -143,7 +151,7 @@ class ClassicalDotSystem:
         self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
 
         if verbose:
-            print('simulatehoneycomb: %.1f [s]' % (time.time() - t0))
+            print('simulatehoneycomb: %.2f [s]' % (time.time() - t0))
 
     def findtransitions(self, occs):
         transitions = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
