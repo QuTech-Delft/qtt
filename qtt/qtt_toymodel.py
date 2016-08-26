@@ -331,7 +331,7 @@ class VirtualIVVI(Instrument):
                                label='Gate {} (mV)'.format(g),
                                get_cmd=partial(self.get_gate, g),
                                set_cmd=partial(self.set_gate, g),
-                               get_parser=float,
+                               #get_parser=float,
                                vals=Numbers(-800, 400))
 
         self.add_function('reset', call_cmd='rst')
