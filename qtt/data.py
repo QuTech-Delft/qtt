@@ -207,7 +207,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
 #%%
 import numpy.linalg
-import pmatlab
+from qtt import pmatlab
 
 ''' Class to convert scan coordinate to image coordinates '''
 class image_transform:

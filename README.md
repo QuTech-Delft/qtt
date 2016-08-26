@@ -1,6 +1,6 @@
 # QuTech Tuning
 
-Qcodes is a Python-based framework developed by QuTech (TU Delft/TNO) for automated tuning of qubits.
+QTT is a Python-based framework developed by QuTech (TU Delft/TNO) for automated tuning of qubits.
 
 Also see
 - [QuTech](https://http://qutech.nl/)
@@ -14,7 +14,9 @@ QTT depends on Qcodes. Other repositories are the user scripts and measurement s
 
 ## Installation
 
-We recommend [Anaconda](https://www.continuum.io/downloads) as an easy way to get most of the dependencies out-of-the-box.
+For more detailed instructions read the file [INSTALL.md](install.md).
+
+Make sure you have a working Python distribution. We recommend [Anaconda](https://www.continuum.io/downloads) as an easy way to get most of the dependencies out-of-the-box.
 
 As the project is still private, install it directly from this repository:
 
@@ -22,13 +24,14 @@ As the project is still private, install it directly from this repository:
 
 - Clone this repositories somewhere on your hard drive. If you're using command line git, open a terminal window in the directory where you'd like to put qcodes and type:
 ```
+> cd [MYLOCALDIR]
 > git clone https://github.com/qdev-dk/Qcodes.git
 > git clone https://github.com/VandersypenQutech/qtt.git
 > git clone https://github.com/VandersypenQutech/users.git
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-- Install python dependencies. For windows with anaconda:
+- Install python dependencies. For windows with anaconda type from the command line:
 ```
 > conda install numpy scipy matplotlib pandas scikit-image
 > conda install spyder qtpy
@@ -50,9 +53,6 @@ For other systems
 > conda develop ./  (for Anaconda)
 > python setup.py develop --user  (for other systems)
 ```
-
-- Download `pmatlab` (provided by [Pieter Eendebak](mailto:pieter.eendebak@gmail.com)) and copy it to the site-packages directory of your Python environment.
-
 
 ### Updating QTT
 

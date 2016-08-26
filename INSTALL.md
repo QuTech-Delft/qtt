@@ -1,8 +1,22 @@
 # Installation
 
-For global installation install: git, github desktop, anaconda
+## Install GIT
 
-## Create a user environment using anaconda
+For the code we use git as the version control system. For Unix systems (Ubuntu) git can be installed with
+
+> sudo apt-get install git
+
+For windows we recommend the command line tools from https://git-scm.com/download/win
+
+If you want a GUI you can use either
+* https://tortoisegit.org/
+* https://desktop.github.com/
+
+
+## Create a working Python environment
+
+You need 3.4+, but we recommand Python 3.5. For Unix python is installed by default, for windows we recommend using Anaconda.
+The installer can be found here
 
 ## Install necessary packages
 
@@ -27,10 +41,21 @@ https://github.com/VandersypenQutech/qtt.git
 https://github.com/VandersypenQutech/users.git
 https://github.com/VandersypenQutech/stations.git
 
+```
+> cd [MYLOCALDIR]
+> git clone https://github.com/qdev-dk/Qcodes.git
+> git clone https://github.com/VandersypenQutech/qtt.git
+> git clone https://github.com/VandersypenQutech/users.git
+> git clone https://github.com/VandersypenQutech/stations.git
+```
+
 ## Install packages
 
-> cd [USERDIR]\Qcpdes; conda develop .\
-> cd [USERDIR]\qtt; conda develop .\
+- Register the repositories it with Python. For each of the repositories run this from the root directory:
+```
+> conda develop ./  (for Anaconda)
+> python setup.py develop --user  (for other systems)
+```
 
 Note: the following does NOT work with anaconda
  > python setup.py develop --user
@@ -58,6 +83,10 @@ echo "Starting Jupyter notebook"
 
 call activate eendebakpt
 d:
+cd d:\users\eendebakpt
+jupyter notebook
+call deactivate eendebakpt
+```
 
 
 ## Git credentials
@@ -65,10 +94,8 @@ d:
 ```
 git config credential.username [peendebak]
 git config credential.useHttpPath true
+git config credential.helper cache
+git config credential.helper store	# stores passwords in plain text!
 ```
 
-cd d:\users\eendebakpt
-jupyter notebook
-call deactivate eendebakpt
-```
 

@@ -13,6 +13,9 @@ import pickle
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
 
+from qtt import pmatlab
+from qtt.pmatlab import mpl2clipboard
+
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 
@@ -161,7 +164,6 @@ def plot1D(dataset, fig=1):
     if fig is not None and array is not None:
         MatPlot(array, num=fig)
 
-# import pmatlab
 
 
 
@@ -229,7 +231,6 @@ def plot2Dline(line, *args, **kwargs):
         xx = (-line[2] - line[1] * yy) / line[0]
         plt.plot(xx, yy, *args, **kwargs)
 
-from qtt.pmatlab import mpl2clipboard
 
 def cfigure(*args, **kwargs):
     """ Create Matplotlib figure with copy to clipboard functionality
