@@ -28,6 +28,8 @@ def load_instrument_json(instr, ifile, verbose=1):
 		p.set(val)
 	return jdict
 
+import configparser
+
 def save_instrument_configparser(instr, ifile, verbose=1):
 	jdict=configparser.ConfigParser()
 	jdict.read(ifile)
@@ -54,12 +56,17 @@ def load_instrument_configparser(instr, ifile, verbose=1):
 		if verbose: 
 			print('%s: load %s' % (instr.name, pname) )
 		#dd='%s/%s' % (instr.name, pname )
-		val=jdict[instr.name][pname]
-		v=p.get()
-		if isinstance(v, numbers.Number):
-			p.set(float(val))
-		else:
-			p.set(val)
+		try:
+			val=jdict[instr.name][pname]
+			v=p.get()
+			if isinstance(v, numbers.Number):
+				p.set(float(val))
+			else:
+				p.set(val)
+		except:
+			if verbose:
+				print('%s: load %s: no entry?' % (instr.name, pname) )
+			pass
 	return jdict
 
 load_instrument=load_instrument_configparser
@@ -68,7 +75,7 @@ save_instrument=save_instrument_configparser
 #%% Testing
 
 if __name__=='__main__':
-	
+	import os
 	from stationV2.tools import V2hardware
 	v2hardware = V2hardware(name='v2hardware', server_name=None)
 
