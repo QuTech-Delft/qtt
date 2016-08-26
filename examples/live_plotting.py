@@ -12,6 +12,7 @@ import warnings
 import qcodes
 import logging
 import develop_fasttuning_functions as ftf
+import time
 
 if __name__=='__main__':
     try:
@@ -21,6 +22,8 @@ if __name__=='__main__':
 
 import qtt
 import qtt.legacy
+
+from qtt import pmatlab
 
 import numpy as np
 import pyqtgraph as pg
@@ -59,6 +62,7 @@ class livePlot:
         self.sweepdata=sweepdata
         
         self.plotrange=plotrange
+        self.fps = pmatlab.fps_t(nn=6)
         
         if self.mode=='1d':
 
@@ -151,6 +155,7 @@ class livePlot:
         if self.idx%10==0:
             logging.debug('livePlot: updatebg %d' % self.idx)
         self.idx=self.idx+1
+        self.fps.addtime(time.time())
         if self.datafunction is not None:
             try:
                 dd=self.datafunction()
@@ -208,8 +213,8 @@ class fpgaCallback:
         return np.array(ww)    
 
 class fpgaCallback_sd:
-    def __init__(self, fpga, Naverage=4, fpga_ch=1):   
-        self.fpga = fpga
+    def __init__(self, station, Naverage=4, fpga_ch=1):   
+        self.fpga = station.fpga
         self.Naverage=Naverage
         self.FPGA_mode=0
         self.fpga_ch=fpga_ch
@@ -217,7 +222,7 @@ class fpgaCallback_sd:
     def __call__(self, verbose=0):
         """ Callback function to read a single line of data from the FPGA """
         t0=time.time()
-        totalpoints, DataRead_ch1, DataRead_ch2  = ftf.readFPGA(self.fpga, self.FPGA_mode, ReadDevice=['FPGA_ch1','FPGA_ch2'], Naverage=self.Naverage, risetime=0, verbose=0, etime=0)
+        totalpoints, DataRead_ch1, DataRead_ch2  = self.fpga.readFPGA(Naverage=self.Naverage)
         dt=time.time()-t0
         if verbose:
             print('liveCallback: dt %.1f [ms] (raw measurement %.1f [ms], risetime %.2f [ms])'  % (dt*1e3, 2 * self.risetime * self.Naverage *1e3, self.risetime*1e3))   
@@ -261,31 +266,37 @@ class MockCallback_2d:
         data=np.random.rand(self.npoints)
         data_reshaped=data.reshape(80,80)
         return data_reshaped
-        
+
+import scipy.ndimage as ndimage        
+import qtt.algorithms.generic
+
 class fpgaCallback_hc:
-    def __init__(self, fpga, Naverage=4, fpga_ch=1):
-        self.fpga=fpga        
-        self.FPGA_mode=0
+    def __init__(self,station,ReadDevice,Naverage,resolution,waittime=0):
+        self.fpga=station.fpga
         self.Naverage=Naverage
-        self.fpga_ch=fpga_ch
+        self.resolution=resolution
+        self.ReadDevice=ReadDevice
+        self.waittime=waittime
+        self.diffsigma=1
+        self.dosmoothing=False
         
     def __call__(self):
-        resolution = [90,90]        
-        totalpoints, DataRead_ch1, DataRead_ch2  = ftf.readFPGA(self.fpga, self.FPGA_mode, ReadDevice=['FPGA_ch1','FPGA_ch2'], Naverage=self.Naverage, risetime=0, verbose=0, etime=0)
+        totalpoints,DataRead_ch1,DataRead_ch2=self.fpga.readFPGA(ReadDevice=self.ReadDevice,Naverage=self.Naverage,waittime=self.waittime)
         
-        if self.fpga_ch==1:
+        if 'FPGA_ch1' in self.ReadDevice:
             datr=DataRead_ch1
-        elif self.fpga_ch==2:
+        elif 'FPGA_ch2' in self.ReadDevice:
             datr=DataRead_ch2
         else:
             raise Exception('FPGA channel not well specified')
         
-        datr=[x/self.Naverage for x in datr[1:]]        
-        chunks = [datr[x:x+resolution[0]] for x in range(0, len(datr), resolution[0])]
-        chunks = [chunks[i][8:-8] for i in range(0,len(chunks))]
-        Z = chunks[:-1]
-        
-        return np.array(Z)
+        chunks_ch1 = [datr[x:x+self.resolution[0]] for x in range(0, len(datr), self.resolution[0])]
+        chunks_ch1 = [chunks_ch1[i][1:-7] for i in range(0,len(chunks_ch1))]
+        Z = chunks_ch1[:-10]
+        im_diff = ndimage.gaussian_filter1d(Z, axis=1, sigma=self.diffsigma, order=1, mode='nearest')
+        if self.dosmoothing:
+            im_diff=qtt.algorithms.generic.smoothImage(im_diff)
+        return np.array(im_diff)
         
 #%%
 if __name__=='__main__':
