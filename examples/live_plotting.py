@@ -11,6 +11,7 @@ import os,sys, copy, math
 import warnings
 import qcodes
 import logging
+import develop_fasttuning_functions as ftf
 
 if __name__=='__main__':
     try:
@@ -35,8 +36,6 @@ if __name__=='__main__':
     gates=virtualV2.gates
     
 #%% Liveplot object
-#    
-#
 class livePlot:
     """ Class to enable live plotting of data """
     def __init__(self, sweepgate='sweepgate', mode='1d', plotrange=[None, None], sweepdata=None):
@@ -57,7 +56,7 @@ class livePlot:
         self.maxidx=1e9
         self.data=None
         
-        self.sweepdata=None
+        self.sweepdata=sweepdata
         
         self.plotrange=plotrange
         
@@ -83,10 +82,12 @@ class livePlot:
             self.setHighLow(self.plotrange)
         
         else:
-            p1 = win.addPlot(title='2d')
+            p1 = win.addPlot(title='2d scan')
             self.p1=p1
-            p1.invertX()
-            p1.invertY()
+            p1.setLabel('left','horizontal gate', units='mV')
+            p1.setLabel('bottom', 'vertical gate', units='mV')
+#            p1.invertX()
+#            p1.invertY()
             # Item for displaying image data
             self.img = pg.ImageItem()
             p1.addItem(self.img)
@@ -105,6 +106,7 @@ class livePlot:
     def resetdata(self):
         self.idx=0
         self.data=None
+        
     def update(self, data=None, processevents=True):
         if self.verbose>=2:
             print('livePlot: update' )
@@ -126,6 +128,9 @@ class livePlot:
                 self.h.setData(self.data)
             if data is not None:
                 pass
+        elif self.mode=='2d':
+            if data is not None:
+                self.img.setImage(data)
         else:
             if self.data is None:
                 self.data=np.array(data).reshape( (1,-1))
@@ -150,6 +155,8 @@ class livePlot:
             try:
                 dd=self.datafunction()
                 self.update(data=dd)
+#                ddp=self.processfunction()
+#                self.update(data=ddp)
             except Exception as e:
                 print(e)
                 dd=None
@@ -160,6 +167,8 @@ class livePlot:
             dd=None
         pass
         return dd
+#        return ddp
+        
     def startreadout(self, callback=None, rate=10., maxidx=None):
         self.verbose=min(self.verbose, 1)
         if maxidx is not None:
@@ -177,7 +186,7 @@ class livePlot:
         
 #%% Some default callbacks
 import time
-   
+
 class fpgaCallback:
     def __init__(self, Naverage=4, risetime=2e-3, FPGA_mode=0):   
         self.Naverage=Naverage
@@ -198,9 +207,34 @@ class fpgaCallback:
     
         return np.array(ww)    
 
+class fpgaCallback_sd:
+    def __init__(self, fpga, Naverage=4, fpga_ch=1):   
+        self.fpga = fpga
+        self.Naverage=Naverage
+        self.FPGA_mode=0
+        self.fpga_ch=fpga_ch
+        
+    def __call__(self, verbose=0):
+        """ Callback function to read a single line of data from the FPGA """
+        t0=time.time()
+        totalpoints, DataRead_ch1, DataRead_ch2  = ftf.readFPGA(self.fpga, self.FPGA_mode, ReadDevice=['FPGA_ch1','FPGA_ch2'], Naverage=self.Naverage, risetime=0, verbose=0, etime=0)
+        dt=time.time()-t0
+        if verbose:
+            print('liveCallback: dt %.1f [ms] (raw measurement %.1f [ms], risetime %.2f [ms])'  % (dt*1e3, 2 * self.risetime * self.Naverage *1e3, self.risetime*1e3))   
+        
+        if self.fpga_ch==1:
+            datr=DataRead_ch1[1:-1]
+        elif self.fpga_ch==2:
+            datr=DataRead_ch2[1:-1]
+        else:
+            raise Exception('FPGA channel not well specified')
+            
+        datr=[x / self.Naverage for x in datr]
+#        datr_ch1[:]=[x*mirrorfactor for x in datr_ch1] # minus sign?
+        datr_half = datr[:len(datr)//2+1] 
 
-#gates.L.set(0)
-#gates.R.set(1)
+        return np.array(datr_half)
+
 class dummyCallback:
     def __init__(self, npoints=200):   
         self.npoints=npoints
@@ -219,10 +253,42 @@ class dummyCallback:
         ww=self.curve + 10*np.random.rand(self.npoints)
         return np.array(ww)    
 
+class MockCallback_2d:
+    def __init__(self,npoints=6400):
+        self.npoints=npoints
+        
+    def __call__(self):
+        data=np.random.rand(self.npoints)
+        data_reshaped=data.reshape(80,80)
+        return data_reshaped
+        
+class fpgaCallback_hc:
+    def __init__(self, fpga, Naverage=4, fpga_ch=1):
+        self.fpga=fpga        
+        self.FPGA_mode=0
+        self.Naverage=Naverage
+        self.fpga_ch=fpga_ch
+        
+    def __call__(self):
+        resolution = [90,90]        
+        totalpoints, DataRead_ch1, DataRead_ch2  = ftf.readFPGA(self.fpga, self.FPGA_mode, ReadDevice=['FPGA_ch1','FPGA_ch2'], Naverage=self.Naverage, risetime=0, verbose=0, etime=0)
+        
+        if self.fpga_ch==1:
+            datr=DataRead_ch1
+        elif self.fpga_ch==2:
+            datr=DataRead_ch2
+        else:
+            raise Exception('FPGA channel not well specified')
+        
+        datr=[x/self.Naverage for x in datr[1:]]        
+        chunks = [datr[x:x+resolution[0]] for x in range(0, len(datr), resolution[0])]
+        chunks = [chunks[i][8:-8] for i in range(0,len(chunks))]
+        Z = chunks[:-1]
+        
+        return np.array(Z)
+        
 #%%
-
 if __name__=='__main__':
-    
     
   #  dd=im[0,:]
 ##    
@@ -236,7 +302,6 @@ if __name__=='__main__':
     lp.verbose=2
 
 #%% Start readout
-
 if __name__=='__main__':
     lp.sweepdata=np.arange(200)
     lp.datafunction=dummyCallback(200)

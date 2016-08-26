@@ -1,6 +1,6 @@
-import qcodes
 import logging
 import functools
+import time
 from qcodes.instrument.visa import VisaInstrument
 from qcodes.instrument.visa import visa
 
@@ -166,10 +166,8 @@ class FPGA_ave(VisaInstrument):
 
     def get_data(self,address=2):
         '''
-        Read data ch1 , unsigned
+        Read data ch1, unsigned
         '''
-        index=self.get_ch1_datapoint_num()
-
         if not self.get_measurement_done():
             return False
 
@@ -190,7 +188,7 @@ class FPGA_ave(VisaInstrument):
         '''
         Reads signed data out of the FPGA
         '''
-        index=self.get_ch1_datapoint_num()
+        Npoint=self.get_ch1_datapoint_num()
 
         if checkdone:
             if not self.get_measurement_done(ch=[1]):
@@ -202,15 +200,11 @@ class FPGA_ave(VisaInstrument):
 
         signed=[]
 
-        Npoint=index
         if Npoint==0:
-            raise ValueError('There if no fpga output, the number of data points recorded for ch1 is 0 ')
+            raise ValueError('There is no fpga output, the number of data points recorded for ch1 is 0 ')
 
         if buf:
-#            readresultbuf=self.read_raw_bytes(3*Npoint)
-            readresultbuf=b''
-            for i in range(0,3*Npoint):
-                readresultbuf = readresultbuf + self.read_raw_bytes(1)
+            readresultbuf = self.read_raw_bytes(3*Npoint)
 
             if len(readresultbuf)!=3*Npoint:
                 print('Npoint %d'  % Npoint)
@@ -219,14 +213,14 @@ class FPGA_ave(VisaInstrument):
                 readresult=readresultbuf[3*x:3*(x+1)]
                 unsigned=(int(readresult[0])<<16) |(int(readresult[1])<<8) | int(readresult[2])
                 signed_temp=unsigned-16777215 if unsigned > 8388607 else unsigned
-                if x < index:
+                if x < Npoint:
                     signed.append(signed_temp)
         else:
             for x in range(0,Npoint,1):
                 readresult=self.read_raw_bytes(size=3)
                 unsigned=(int(readresult[0])<<16) |(int(readresult[1])<<8) | int(readresult[2])
                 signed_temp=unsigned-16777215 if unsigned > 8388607 else unsigned
-                if x < index:
+                if x < Npoint:
                     signed.append(signed_temp)
 
         self._data_signed=signed
@@ -238,7 +232,7 @@ class FPGA_ave(VisaInstrument):
         '''
         Reads signed data out of the FPGA
         '''
-        index=self.get_ch2_datapoint_num()
+        Npoint=self.get_ch2_datapoint_num()
 
         if checkdone:
             if not self.get_measurement_done(ch=[2]):
@@ -250,20 +244,16 @@ class FPGA_ave(VisaInstrument):
 
         signed=[]
 
-        Npoint=index
-
         if Npoint==0:
-            raise ValueError('There if no fpga output, the number of data points recorded for ch2 is 0 ')
+            raise ValueError('There is no fpga output, the number of data points recorded for ch2 is 0 ')
             
-        readresultbuf=b''
-        for i in range(0,3*Npoint):
-            readresultbuf = readresultbuf + self.read_raw_bytes(1)
+        readresultbuf=self.read_raw_bytes(3*Npoint)
             
         for x in range(0,Npoint,1):
             readresult=readresultbuf[3*x:3*(x+1)]  
             unsigned=(int(readresult[0])<<16)|(int(readresult[1])<<8) | int(readresult[2])
             signed_temp=unsigned-16777215 if unsigned > 8388607 else unsigned
-            if x < index:
+            if x < Npoint:
                 signed.append(signed_temp)
 
         self._data_signed=signed
@@ -297,6 +287,62 @@ class FPGA_ave(VisaInstrument):
         Get the total number of cycles which are averaged in FPGA
         '''
         return self.ask_from_serial(132)
+        
+    def readFPGA(self, FPGA_mode=0, ReadDevice=['FPGA_ch1','FPGA_ch2'], Naverage=1, verbose=1, waittime=0):
+        '''
+        Basic function to read the data from the FPGA memory.
+        '''
+        t0=time.clock()
+        
+        self.set('mode',FPGA_mode)
+        self.set('total_cycle_num',Naverage)
+        self.start()
+        
+        if verbose>=2:
+            print('  readFPGA: dt %.3f [ms], after start'  % (1e3*(time.clock()-t0)))
+            
+        time.sleep(waittime)
+        
+        if verbose>=2:
+            print('  readFPGA: dt %.3f [ms], after wait'  % (1e3*(time.clock()-t0)))
+            
+        cc=[]
+        if 'FPGA_ch1' in ReadDevice:
+            cc += [1]
+        if 'FPGA_ch2' in ReadDevice:
+            cc += [2]
+            
+        for c in cc:
+            loop=0
+            while not self.get_measurement_done(ch=[c]):
+                if verbose>=2:
+                    print('readFPGA: waiting for FPGA for 7.5 ms longer time (channel %d)' % c)
+                time.sleep(0.0075)
+                loop=loop+1
+                if loop*.0075>1:
+                    pass
+                    raise Exception('readFPGA: error')
+                    
+        if verbose>=2:
+            print('  readFPGA: dt %.3f [ms], after dynamic wait'  % (1e3*(time.clock()-t0)))
+        
+        DataRead_ch1=[]
+        if 'FPGA_ch1' in ReadDevice:
+            DataRead_ch1 = self.get_ch1_data(checkdone=False, buf=True)
+
+        DataRead_ch2=[]
+        if 'FPGA_ch2' in ReadDevice:
+            DataRead_ch2 = self.get_ch2_data(checkdone=False)
+
+        if verbose>=2:
+            print('  readFPGA: dt %.3f [ms]'  % (1e3*(time.clock()-t0)))
+
+        if verbose>=2:
+            print('  readFPGA: DataRead_ch1 %d, DataRead_ch2 %d'  % (len(DataRead_ch1), len(DataRead_ch2)))
+        
+        totalpoints = max(len(DataRead_ch1),len(DataRead_ch2))
+        
+        return totalpoints, DataRead_ch1, DataRead_ch2
 
 #%% Testing driver functionality
 if __name__=='__main__':
