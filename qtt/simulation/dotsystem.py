@@ -364,14 +364,15 @@ class DotSystem(BaseDotSystem):
 
     def calculate_energies(self, gatevalues):
         for i, val in enumerate(gatevalues):
-            setattr(self, 'det%d' % i, val)
+            setattr(self, 'det%d' % (i+1), val)
         self.makeHsparse()
         self.solveH()
+        return self.energies
 
     def calculate_ground_state(self, gatevalues):
         """ Calculate the ground state of the dot system, given a set of gate values. Returns a state array. """
         energies = self.calculate_energies(gatevalues)
-        return self.basis[np.argmin(energies)]
+        return self.stateoccs[0] # self.basis[np.argmin(energies)]
 
     def findcurrentoccupancy(self, exact=True):
         if self.solved == True:

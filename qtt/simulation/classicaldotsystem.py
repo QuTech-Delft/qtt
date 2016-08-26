@@ -76,7 +76,7 @@ class ClassicalDotSystem(BaseDotSystem):
 
         # make addition energy basis
         self.add_basis=self.basis.copy()
-        self.coulomb_energy=self.basis.copy()
+        self.coulomb_energy=np.zeros( (self.basis.shape[0], self.W.size) )
         for i in range(self.Nt):
             self.add_basis[i]= (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
             self.coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
@@ -148,3 +148,21 @@ class TripleDot(ClassicalDotSystem):
 
         for name in self.varnames:
             setattr(self, name, vardict[name+'_values'])
+
+class DoubleDot(ClassicalDotSystem):
+    def __init__(self, name='doubledot', **kwargs):
+        super().__init__(name=name, ndots=2, ngates=5, **kwargs)
+
+        self.makebasis()
+
+        vardict = {}
+
+        vardict["mu0_values"] = np.array([-27.0, -25.0])  # chemical potential at zero gate voltage
+        vardict["Eadd_values"] = np.array([54.0, 52.8])  # addition energy
+        vardict["W_values"] = np.array([6.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        vardict["alpha_values"] = np.array([[1.0, 0.25],
+                                 [0.25, 1.0] ])
+
+        for name in self.varnames:
+            setattr(self, name, vardict[name+'_values'])
+            
