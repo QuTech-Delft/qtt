@@ -63,9 +63,12 @@ If you registered Qcodes with Python via `setup.py develop`, all you need to do 
 See the [docs](docs) directory (to be constructed)
 
 For a general introduction also see
+* [Introductionto Github](https://guides.github.com/activities/hello-world/)
 * [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
 
-Use a `IPhyton` console and set the IPhyton backend graphics option to `QT`. This ensures correctly displaying the `Paramter viewer` and `Dataviewer`
+* If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following settings:
+- Use a `IPhyton` console and set the IPhyton backend graphics option to `QT`. This ensures correctly displaying the `Paramater viewer` and `DataBrowser`
+- In Tools->Preferences->Console->Advanced settings uncheck the box `Enable UMR`
 
 ## Contributing
 
