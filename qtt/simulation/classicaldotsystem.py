@@ -100,7 +100,7 @@ class ClassicalDotSystem:
 
         # make addition energy basis
         self.add_basis=self.basis.copy()
-        self.xxx_energy=self.basis.copy()
+        self.coulomb_energy=self.basis.copy()
         for i in range(self.Nt):
             self.add_basis[i]= (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
             self.coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
