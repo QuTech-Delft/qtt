@@ -164,6 +164,7 @@ def plot1D(dataset, fig=1):
     if fig is not None and array is not None:
         MatPlot(array, num=fig)
 
+from qtt import pmatlab
 
 
 
