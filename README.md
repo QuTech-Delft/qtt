@@ -65,7 +65,7 @@ See the [docs](docs) directory (to be constructed)
 For a general introduction also see
 * [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
 
-Use a `IPhyton` console and set the IPhython backend graphics option to `QT`. This ensures correctly displaying the `Parameter viewer` and `Dataviewer`
+Use a `IPhyton` console and set the IPhyton backend graphics option to `QT`. This ensures correctly displaying the `Paramter viewer` and `Dataviewer`
 
 ## Contributing
 
