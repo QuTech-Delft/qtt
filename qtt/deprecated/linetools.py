@@ -39,7 +39,7 @@ try:
     from descartes.patch import PolygonPatch
 except:
     if not _linetoolswarn:
-        warnings.warn('module descartes not found')
+        #warnings.warn('module descartes not found')
         _linetoolswarn=True
 
 import pmatlab
