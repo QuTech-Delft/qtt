@@ -41,6 +41,7 @@ qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
 # keithley, IVVI racks and a virtual gates object
 
 import virtualDot; 
+#model = virtualDot.DotModel(name='dummymodel', server_name=None)
 
 if __name__=='__main__':
 

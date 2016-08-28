@@ -574,7 +574,7 @@ def setupMeasurementWindows(station, ilist=None):
     w.updatecallback()
 
     plotQ = QtPlot(windowtitle='Live plot', interval=.5)
-    plotQ.setGeometry(vv[0]+vv[2]-300,vv[1]+vv[3]-400,600,400)
+    plotQ.setGeometry(vv[0]+vv[2]-600,vv[1]+vv[3]-400,600,400)
     plotQ.update()
 
     app=QtWidgets.QApplication.instance()

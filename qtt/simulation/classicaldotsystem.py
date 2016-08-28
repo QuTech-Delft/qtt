@@ -108,7 +108,7 @@ class ClassicalDotSystem(BaseDotSystem):
         npointsy = np.shape(paramvalues2D)[2]
 
         if nparams != self.ngates:
-            print('Number of parameters does not equal number of gates...')
+            print('simulate_honeycomb: number of parameters (%d) does not equal number of gates (%d)...' % (nparams, self.ngates) )
             return
 
         self.hcgs = np.empty((npointsx, npointsy, self.ndots))
@@ -151,17 +151,16 @@ class TripleDot(ClassicalDotSystem):
 
 class DoubleDot(ClassicalDotSystem):
     def __init__(self, name='doubledot', **kwargs):
-        super().__init__(name=name, ndots=2, ngates=5, **kwargs)
+        super().__init__(name=name, ndots=2, ngates=2, **kwargs)
 
         self.makebasis()
 
         vardict = {}
 
-        vardict["mu0_values"] = np.array([-27.0, -25.0])  # chemical potential at zero gate voltage
+        vardict["mu0_values"] = np.array([120.0, 100.0])  # chemical potential at zero gate voltage
         vardict["Eadd_values"] = np.array([54.0, 52.8])  # addition energy
         vardict["W_values"] = np.array([6.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
-        vardict["alpha_values"] = np.array([[1.0, 0.25],
-                                 [0.25, 1.0] ])
+        vardict["alpha_values"] = np.array([[1.0, 0.25], [0.25, 1.0] ])
 
         for name in self.varnames:
             setattr(self, name, vardict[name+'_values'])

@@ -11,7 +11,7 @@ import os,sys, copy, math
 import warnings
 import qcodes
 import logging
-import develop_fasttuning_functions as ftf
+#import develop_fasttuning_functions as ftf
 import time
 
 if __name__=='__main__':
@@ -31,13 +31,7 @@ import qtpy.QtWidgets as QtWidgets
 import qtpy.QtGui as QtGui
 import qtpy.QtCore as QtCore
 
-if __name__=='__main__':
-    _qtapp=pg.mkQApp()
-    
-    import virtualV2
-    virtualV2.initialize(server_name='test2')
-    gates=virtualV2.gates
-    
+
 #%% Liveplot object
 class livePlot:
     """ Class to enable live plotting of data """
@@ -299,6 +293,14 @@ class fpgaCallback_hc:
         return np.array(im_diff)
         
 #%%
+        
+if __name__=='__main__':
+    _qtapp=pg.mkQApp()
+    
+    import virtualV2
+    virtualV2.initialize(server_name='test2')
+    gates=virtualV2.gates
+    
 if __name__=='__main__':
     
   #  dd=im[0,:]
