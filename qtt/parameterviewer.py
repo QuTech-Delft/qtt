@@ -75,6 +75,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 # ww=['gates', g]
                 value = pp[g].get()
                 box=QtWidgets.QDoubleSpinBox()
+                box.setKeyboardTracking(False) # do not emit signals when still editing
                 box.setMinimum(-1000)
                 box.setMaximum(1000)
                 
