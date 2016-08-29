@@ -136,14 +136,30 @@ class BaseDotSystem():
         """ Find transitions in occupancy image """
         transitions = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
         delocalizations = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
-        for i in range(1, np.shape(occs)[0]-1):
-            for j in range(1, np.shape(occs)[1]-1):
-                diff1 = np.sum(np.absolute(occs[i, j]-occs[i-1, j-1]))
-                diff2 = np.sum(np.absolute(occs[i, j]-occs[i-1, j+1]))
-                diff3 = np.sum(np.absolute(occs[i, j]-occs[i+1, j-1]))
-                diff4 = np.sum(np.absolute(occs[i, j]-occs[i+1, j+1]))
-                transitions[i, j] = diff1 + diff2 + diff3 + diff4
-                delocalizations[i, j] = min(occs[i, j, 0]%1, abs(1-occs[i, j, 0]%1)) + min(occs[i, j, 0]%1, abs(1-occs[i, j, 0]%1)) + min(occs[i, j, 0]%1, abs(1-occs[i, j, 0]%1))
+        
+        if 1:
+            d1=np.sum(np.absolute(occs-np.roll(occs, 1, axis=0)), axis=2)
+            d2=np.sum(np.absolute(occs-np.roll(occs, -1, axis=0)), axis=2)
+            d3=np.sum(np.absolute(occs-np.roll(occs, 1, axis=1)), axis=2)
+            d4=np.sum(np.absolute(occs-np.roll(occs, -1, axis=1)), axis=2)
+            transitions = d1+d2+d3+d4
+            # fix borders
+            transitions[0,:]=0; transitions[-1,:]=0;transitions[:,0]=0; transitions[:,-1]=0
+
+            occs1=occs%1
+            for i in range(1, np.shape(occs)[0]-1):
+                for j in range(1, np.shape(occs)[1]-1):
+                    delocalizations[i, j] = min(occs1[i, j, 0], abs(1-occs1[i, j, 0])) + min(occs1[i, j, 0], abs(1-occs1[i, j, 0])) + min(occs1[i, j, 0], abs(1-occs1[i, j, 0]))
+        
+        else:        
+            for i in range(1, np.shape(occs)[0]-1):
+                for j in range(1, np.shape(occs)[1]-1):
+                    diff1 = np.sum(np.absolute(occs[i, j]-occs[i-1, j-1]))
+                    diff2 = np.sum(np.absolute(occs[i, j]-occs[i-1, j+1]))
+                    diff3 = np.sum(np.absolute(occs[i, j]-occs[i+1, j-1]))
+                    diff4 = np.sum(np.absolute(occs[i, j]-occs[i+1, j+1]))
+                    transitions[i, j] = diff1 + diff2 + diff3 + diff4
+                    delocalizations[i, j] = min(occs[i, j, 0]%1, abs(1-occs[i, j, 0]%1)) + min(occs[i, j, 0]%1, abs(1-occs[i, j, 0]%1)) + min(occs[i, j, 0]%1, abs(1-occs[i, j, 0]%1))
         return transitions, delocalizations
 	
 #%%
