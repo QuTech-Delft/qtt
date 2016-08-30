@@ -8,6 +8,7 @@ def readme():
         return f.read()
 
 extras = {
+    'Numpy': ('numpy', '1.9')
     'MatPlot': ('matplotlib', '1.5'),
 #    'QtPlot': ('pyqtgraph', '0.9.10'),
     'SciPi': ('scipy', '0.15'),
@@ -16,7 +17,7 @@ extras = {
     'pandas': ('pandas', '0.15'),
     'Polygon3': ('Polygon', '3.0'),
     'hickle': ('hickle', '2.0'),
-    'Numpy': ('numpy', '1.9')
+    'h5py': ('h5py', '0.1'),
 }
 extras_require = {k: '>='.join(v) for k, v in extras.items()}
 

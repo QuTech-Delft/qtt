@@ -15,6 +15,9 @@ import warnings
 import pickle
 import scipy
 
+import numpy.linalg
+from qtt import pmatlab
+
 try:
     import hickle
 except:
@@ -206,8 +209,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
        
 
 #%%
-import numpy.linalg
-from qtt import pmatlab
 
 ''' Class to convert scan coordinate to image coordinates '''
 class image_transform:

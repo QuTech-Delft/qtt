@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import cv2
 import scipy
 
-import pmatlab # FIXME
+from qtt import pmatlab 
 
 from qtt.data import *
 

@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from qtt.data import dataset2Dmetadata, image_transform
 from qtt.tools import *
 import qtt.data
+from qtt import pmatlab
 
 from qtt.algorithms.generic import *
 import cv2

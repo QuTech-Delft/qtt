@@ -35,6 +35,12 @@ datadir = os.path.join(tempfile.tempdir, 'qdata')
 qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
 
 
+try:
+    from qcodes.data.hdf5_format import HDF5Format
+    #qcodes.DataSet.default_formatter=HDF5Format()
+except:
+    pass
+
 #%% Create a virtual model for testing
 #
 # The model resembles the spin-qubit dot setup. The hardware consists of a virtual
@@ -46,7 +52,7 @@ import virtualDot;
 if __name__=='__main__':
 
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
-    #server_name=None
+    server_name=None
     station = virtualDot.initialize(server_name=server_name)    
     
     keithley1 = station.keithley1
@@ -90,7 +96,7 @@ if __name__=='__main__':
 
 if __name__=='__main__':
     scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .2}), 'instrument': [keithley3.amplitude], 'delay': .000})
-    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=True)
+    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=None)
 
     data1d.sync(); # data.arrays
 

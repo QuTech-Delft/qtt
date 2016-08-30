@@ -1,3 +1,5 @@
+#%% Load packages
+
 import scipy
 import scipy.ndimage
 from qtt import cfigure, plot2Dline
@@ -8,7 +10,11 @@ import matplotlib.pyplot as plt
 from qtt.data import dataset2Dmetadata, pix2scan, image_transform, dataset2image, dataset2image2
 from qtt.tools import *
 import qtt.data
+import scipy
+from qtt import pmatlab
+import cv2
 
+#%%
 
 #import qtt.scans # FIXME: circular
 
@@ -243,9 +249,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
 
 #%%
-import scipy
-import pmatlab
-import cv2
 
 def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     """ Cost function for simple fit of one-dot open area """
