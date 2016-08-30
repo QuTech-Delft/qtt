@@ -100,7 +100,6 @@ class DataViewer(QtWidgets.QWidget):
 
         self.setLayout(vertLayout)
 
-        self._treemodel.setHorizontalHeaderLabels(['Log', 'Comments'])
         self.setWindowTitle(window_title)
         self.logtree.header().resizeSection(0, 240)
 
@@ -133,6 +132,9 @@ class DataViewer(QtWidgets.QWidget):
             dd += findfilesR(self.datadir, '.*%s' % e)
         print('found %d files' % (len(dd)))
         # print(dd)
+
+        model.clear()
+        model.setHorizontalHeaderLabels(['Log', 'Comments'])
 
         logs = dict()
         for i, d in enumerate(dd):
