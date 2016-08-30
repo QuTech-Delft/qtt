@@ -64,6 +64,7 @@ target/
 *~
 
 # Misc
+tools/*.asv
 dot-dummy.*
 examples/dummy.*
 examples/dot-dummy.*
