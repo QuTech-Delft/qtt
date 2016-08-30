@@ -12,6 +12,8 @@ import argparse
 import qcodes
 from qcodes.plots.pyqtgraph import QtPlot
 
+import qtt
+
 #%% Helper functions
 
 
@@ -60,6 +62,8 @@ class DataViewer(QtWidgets.QWidget):
 
         # setup GUI
 
+
+        self.dataset=None
         
         self.text = QtWidgets.QLabel()
         self.text.setText('Log files at %s' %
@@ -84,6 +88,16 @@ class DataViewer(QtWidgets.QWidget):
         vertLayout.addItem(topLayout)
         vertLayout.addWidget(self.logtree)
         vertLayout.addWidget(self.plotwindow)
+
+        self.pptbutton = QtWidgets.QPushButton()
+        self.pptbutton.setText('Send data to powerpoint')
+        self.clipboardbutton = QtWidgets.QPushButton()
+        self.clipboardbutton.setText('Copy image to clipboard')
+        bLayout = QtWidgets.QHBoxLayout()
+        bLayout.addWidget(self.pptbutton)
+        bLayout.addWidget(self.clipboardbutton)
+        vertLayout.addItem(bLayout)
+
         self.setLayout(vertLayout)
 
         self._treemodel.setHorizontalHeaderLabels(['Log', 'Comments'])
@@ -96,10 +110,20 @@ class DataViewer(QtWidgets.QWidget):
         self.logtree.doubleClicked.connect(self.logCallback)
 
         self.reloadbutton.clicked.connect(self.updateLogs)
+        self.pptbutton.clicked.connect(self.pptCallback)
+        self.clipboardbutton.clicked.connect(self.clipboardCallback)
 
         # get logs from disk
         self.updateLogs()
 
+    def pptCallback(self):
+        if self.dataset is None:
+            print('no data selected')
+            return
+        qtt.tools.addPPT_dataset(self.dataset)
+    def clipboardCallback(self):
+        dataviewer.plotwindow.copyToClipboard()
+        
     def updateLogs(self):
         ''' Update the list of measurements '''
         model = self._treemodel
@@ -171,6 +195,8 @@ class DataViewer(QtWidgets.QWidget):
                 logging.debug('load tag %s' % tag)
                 data = qcodes.load_data(tag)
 
+                self.dataset=data
+                
                 self.qplot.clear()
 
                 infotxt = 'arrays: ' + ', '.join(list(data.arrays.keys()))

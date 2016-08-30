@@ -409,7 +409,7 @@ try:
     import win32com
     import win32com.client
 
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1, activate_slide=True):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
@@ -436,8 +436,6 @@ try:
         >>> addPPTslide(title,fig,txt,notes)
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
-        if show:
-            Application.Visible = True # shows what's happening, not required, but helpful for now
 
         if verbose:
             print('num of open PPTs: %d' % Application.presentations.Count)
@@ -447,7 +445,11 @@ try:
             ppt = Application.ActivePresentation
         except Exception:
             print('could not open active Powerpoint presentation')
-            return                 
+            return None, None              
+
+        if show:
+            Application.Visible = True # shows what's happening, not required, but helpful for now
+
         if verbose:
             print('name: %s'  % ppt.Name)
 
@@ -485,9 +487,15 @@ try:
         # ActivePresentation.Slides(ActiveWindow.View.Slide.SlideNumber).
         # s=Application.ActiveWindow.Selection
 
+        #slide.SetName('qcodes measurement')
+
+        if activate_slide:
+            idx=int(slide.SlideIndex)
+            print('goto slide %d' % idx)
+            Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
-    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
+    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1, printformat='fancy', **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
     
         Arguments:
@@ -495,6 +503,7 @@ try:
             notes (string): notes added to slide
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
+            printformat (string): 'fancy' for nice formatting or 'dict' for easy copy to python
         Returns:
             ppt: PowerPoint presentation
             slide: PowerPoint slide
@@ -510,14 +519,14 @@ try:
         if len(dataset.arrays)>3:
             raise Exception('The dataset contains more than three data arrays')
         
-        temp_fig = QtPlot(dataset.default_parameter_array())
+        temp_fig = QtPlot(dataset.default_parameter_array(), show_window=False)
         
         text = 'Dataset location: %s' % dataset.location
     
         if notes is None:
-            notes = 'Dataset metadata: %s' % reshape_metadata(dataset)
+            notes = 'Dataset metadata: %s' % reshape_metadata(dataset, printformat=printformat)
         
-        ppt, slide = addPPTslide(title=title,fig=temp_fig,txt=text,notes=notes,show=show,verbose=verbose)
+        ppt, slide = addPPTslide(title=title,fig=temp_fig,txt=text,notes=notes,show=show,verbose=verbose, **kwargs)
     
         return ppt, slide
 
@@ -529,9 +538,10 @@ except:
         ''' Dummy implementation '''
         pass
 
+#%%    
 from collections import OrderedDict
-    
-def reshape_metadata(dataset):
+
+def reshape_metadata(dataset, printformat='dict'):
     '''Reshape the metadata of a DataSet
     
     Arguments:
@@ -542,22 +552,44 @@ def reshape_metadata(dataset):
     all_md = dataset.metadata['station']['instruments']
     metadata = dict()
     
-    for x in all_md.keys():
+    for x in sorted(all_md.keys()):
         metadata[x]=OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
-            metadata[x]['IDN']=dict()
-            metadata[x]['IDN']=all_md[x]['parameters']['IDN']['value']
+            metadata[x]['IDN']=dict({'name': 'IDN', 'value': all_md[x]['parameters']['IDN']['value']})
+            metadata[x]['IDN']['units']=''
         for y in all_md[x]['parameters'].keys():
             if y != 'IDN':
                 metadata[x][y]=OrderedDict()
                 param_md = all_md[x]['parameters'][y]
+                metadata[x][y]['name']=y
                 if isinstance(param_md['value'],float):
                     metadata[x][y]['value']=float(format(param_md['value'],'.3f'))
                 metadata[x][y]['units']=param_md['units']
+                metadata[x][y]['label']=param_md['label']
     
-    metadata = str(metadata).replace('(','').replace(')','').replace('OrderedDict','')
-    
-    return metadata
+
+    if printformat=='dict':
+        ss = str(metadata).replace('(','').replace(')','').replace('OrderedDict','')
+    else:
+        ss=''
+        for k in metadata:
+            print('--- %s'  % k)
+            s=metadata[k]
+            ss+='\n## %s:\n'  % k
+            for p in s:
+                pp=s[p]
+                print('  --- %s'  % p)
+                ss+='%s: %s %s' % ( pp['name'], pp['value'], pp.get('units', '') )
+                ss+='\n'            
+            #ss+=str(s)
+        
+    return ss
+
+if __name__=='__main__' and 0:
+    x=reshape_metadata(data, printformat='fancy')
+    print(x)
+    x=reshape_metadata(data, printformat='dict')
+    print(x)
 
 #%%
 from qtt.parameterviewer import ParameterViewer
