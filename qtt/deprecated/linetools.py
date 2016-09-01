@@ -33,7 +33,7 @@ try:
     from shapely.geometry import LineString
 except:
     if not _linetoolswarn:
-        warnings.warn('module shapely not found')
+        #warnings.warn('module shapely not found')
         _linetoolswarn=True
 try:
     from descartes.patch import PolygonPatch
@@ -42,7 +42,7 @@ except:
         #warnings.warn('module descartes not found')
         _linetoolswarn=True
 
-import pmatlab
+from qtt import pmatlab
 from pmatlab import *
 import cv2
 
