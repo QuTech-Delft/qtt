@@ -218,9 +218,14 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
                     pid = int(m.group(1))
                     print('killing pid %d' % pid)
                     mysignal = getattr(signal, 'SIGKILL', signal.SIGTERM)
-                    os.kill(pid, mysignal)  # or signal.SIGKILL
-                    dlg.addMessage(
+                    try:
+                       os.kill(pid, mysignal)  # or signal.SIGKILL
+                       dlg.addMessage(
                         'send kill signal to pid %d\n' % pid, logging.CRITICAL)
+                    except Exception:
+                       dlg.addMessage(
+                        'kill signal to pid %d failed\n' % pid, logging.CRITICAL)
+                        pass		
             app.processEvents()
 
             if verbose >= 2:
