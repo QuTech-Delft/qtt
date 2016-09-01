@@ -593,7 +593,8 @@ if __name__=='__main__' and 0:
 
 #%%
 from qtt.parameterviewer import ParameterViewer
-from qtt.dataviewer import DataViewer
+import qtt.gui
+from qtt.gui.dataviewer import DataViewer
 
 def setupMeasurementWindows(station, ilist=None):
     ms=monitorSizes()

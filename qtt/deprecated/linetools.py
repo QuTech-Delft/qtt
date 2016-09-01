@@ -43,7 +43,7 @@ except:
         _linetoolswarn=True
 
 from qtt import pmatlab
-from pmatlab import *
+from qtt.pmatlab import *
 import cv2
 
 try:

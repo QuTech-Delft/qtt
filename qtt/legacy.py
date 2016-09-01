@@ -26,6 +26,7 @@ from qtt.data import load_data, show2D
 from qtt import pmatlab
 from qtt.pmatlab import plotPoints, tilefigs
 import matplotlib.pyplot as plt
+import datetime
 
 #%%
 
@@ -55,7 +56,6 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     return imfilerel, imfile
     
 
-import datetime
 
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3):
     c2=plt.Circle(pt,radius,color=color,fill=False, linewidth=3, alpha=alpha)
@@ -201,7 +201,9 @@ def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(
         plt.plot(rr[:,0], rr[:,1], '.-g', markersize=14)    
     return rr0
 
+
 from qtt.algorithms.generic import scaleImage
+
 
 def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
     """ Check whether we are in the single-electron regime 
@@ -581,7 +583,7 @@ def fixReversal(im0, verbose=0):
 #%%
 
 from qtt.deprecated import linetools
-from qtt.legacy import scaleCmap, plotCircle
+#from qtt.legacy import scaleCmap, plotCircle
 from qtt.data import dataset2Dmetadata, dataset2image
 
 def showIm(ims, fig=1, title='', showz=False):
@@ -798,6 +800,7 @@ def point_in_poly(x, y, poly):
 
     return inside
 
+
 def points_in_poly(points, poly_verts):
     ''' Determine whether points are contained in a polygon or not
     '''
@@ -981,6 +984,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), fig=N
 
     return jobs
 
+
 if __name__=='__main__':
     jobs=createDoubleDotJobs(two_dots, one_dots, basevalues=basevalues0, resultsdir=outputdir, fig=None)
 
@@ -1029,6 +1033,7 @@ def getODbalancepoint(od):
 
 import pickle
 
+
 def loadpickle(pkl_file):
     """ Load objects from file """
     try:    
@@ -1052,3 +1057,5 @@ def load_qt(fname):
     if isinstance(alldata, tuple):
         alldata = alldata[0]
     return alldata
+
+

@@ -80,8 +80,9 @@ if __name__=='__main__':
     qtt.live.liveplotwindow=plotQ
     qtt.live.mwindows=mwindows
 
-    import qcodes.tools.dataviewer
-    logviewer = qcodes.tools.dataviewer.DataViewer()
+    import qtt.gui
+    import qtt.gui.dataviewer
+    logviewer = qtt.gui.dataviewer.DataViewer()
     logviewer.show()
 
 

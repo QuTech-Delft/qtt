@@ -13,19 +13,24 @@ Created on Wed Aug 31 13:04:09 2016
 
 #%%
 import numpy as np
+import qcodes
 from qcodes import Instrument
 import scipy
+import logging
 
 #%%
 class virtual_awg(Instrument):
+    shared_kwargs = ['instruments', 'hardware']
+    
     def __init__(self, name, instruments, awg_map, hardware, verbose=1, **kwargs):
-        shared_kwargs = ['instruments']
         super().__init__(name, **kwargs)
         self._awgs=instruments
         self.awg_map = awg_map
         self.hardware = hardware
         self.verbose = verbose
+        qcodes.installZMQlogger()
         
+        logging.info('virtual_awg: setup')
         if 'awg_mk' in self.awg_map.keys():
             awg_cont = self._awgs[self.awg_map['awg_mk'][0]]
             awg_cont.set('run_mode','CONT')
@@ -46,6 +51,7 @@ class virtual_awg(Instrument):
             awg.delete_all_waveforms_from_list()
             for i in range(1,5):
                 awg.set('ch%s_amp'% i, ch_amp)
+        logging.info('virtual_awg: done')
         
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
