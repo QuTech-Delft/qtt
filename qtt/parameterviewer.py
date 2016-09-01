@@ -5,11 +5,14 @@ import threading
 import logging
 import numpy as np
 
+import multiprocessing as mp
+
 from qtpy.QtCore import Qt
 from qtpy import QtWidgets
 from qtpy import QtGui
 import pyqtgraph
 import math
+from qtt import pmatlab
 
 class QCodesTimer(threading.Thread):
 
@@ -167,17 +170,22 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 logging.debug(str(e))
 
 
-def createUpdateWidget(instruments, doexec=True):
+def createParameterWidgetRemote(instruments, doexec=True):
+    p=mp.Process(target=createParameterWidget, args=(instruments,))
+    p.start()
+    return p
+    
+def createParameterWidget(instruments, doexec=True):
     instrumentnames=[i.name for i in instruments]
     #qtt.tools.dumpstring('createUpdateWidget: start')
     app=pyqtgraph.mkQApp()
     
+    ms=pmatlab.monitorSizes()[-1]
     p=ParameterViewer(instruments=instruments, instrumentnames=instrumentnames)
-    p.setGeometry(1640,60,240,600)
+    p.setGeometry(ms[0]+ms[2]-280,20,260,600)
     p.show()
     p.updatecallback()
     
-
 
     logging.info('created update widget...')
     
