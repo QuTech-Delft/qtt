@@ -53,6 +53,7 @@ class virtual_awg(Instrument):
         return IDN
         
     def stop(self,verbose=0):
+        ''' Stops all AWGs and turns of all channels '''
         for awg in self._instruments:
             awg.stop()
             awg.set('ch1_state',0)
@@ -63,6 +64,21 @@ class virtual_awg(Instrument):
             print('Stopped AWGs')
             
     def sweep_gate(self, gate, sweeprange, risetime):
+        '''Send a triangular signal with the AWG to a gate to sweep. Also 
+        send a marker to the FPGA.
+        
+        Arguments:
+            gate (string): the name of the gate to sweep
+            sweeprange (float): the range of voltages to sweep over
+            risetime (float): the risetime of the triangular signal
+        
+        Returns:
+            wave (array): The wave being send with the AWG.
+        
+        Example:
+        -------
+        >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
+        '''
         awg=self.awg_map[gate][0]
         wave_ch=self.awg_map[gate][1]
         awg_fpga=self.awg_map['fpga_mk'][0]
@@ -75,14 +91,14 @@ class virtual_awg(Instrument):
         v_wave=v_wave/awg_to_plunger
         samplerate = 1./self.AWG_clock
         tt = np.arange(0,2*risetime+samplerate,samplerate)
-        v=(v_wave/2)*scipy.signal.sawtooth(np.pi*tt/risetime, width=.5)
-        awg.send_waveform_to_list(v,np.zeros(len(v)),np.zeros(len(v)),tri_wave)
+        wave=(v_wave/2)*scipy.signal.sawtooth(np.pi*tt/risetime, width=.5)
+        awg.send_waveform_to_list(wave,np.zeros(len(wave)),np.zeros(len(wave)),tri_wave)
         
         delay_FPGA=25e-6
-        marker2 = np.zeros(len(v))
+        marker2 = np.zeros(len(wave))
         marker2[int(delay_FPGA/samplerate):int((delay_FPGA+0.40*risetime)/samplerate)]=1.0
         fpga_marker='fpga_marker'
-        awg.send_waveform_to_list(np.zeros(len(v)),np.zeros(len(v)),marker2,fpga_marker)
+        awg.send_waveform_to_list(np.zeros(len(wave)),np.zeros(len(wave)),marker2,fpga_marker)
         
         awg.set('ch%i_waveform' %wave_ch,tri_wave)
         awg.set('ch%i_state' %wave_ch,1)
