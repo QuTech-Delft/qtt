@@ -41,10 +41,10 @@ class virtual_awg(Instrument):
 
         self.AWG_clock = 1e7
         ch_amp = 4.0
-        for awg in self._instruments:
+        for awg in self._awgs:
             awg.set('clock_freq',self.AWG_clock)
             awg.delete_all_waveforms_from_list()
-            for i in range(5):
+            for i in range(1,5):
                 awg.set('ch%s_amp'% i, ch_amp)
         
     def get_idn(self):
@@ -55,7 +55,7 @@ class virtual_awg(Instrument):
         
     def stop(self,verbose=0):
         ''' Stops all AWGs and turns of all channels '''
-        for awg in self._instruments:
+        for awg in self._awgs:
             awg.stop()
             awg.set('ch1_state',0)
             awg.set('ch2_state',0)
@@ -80,15 +80,15 @@ class virtual_awg(Instrument):
         -------
         >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
         '''
-        awg=self.awg_map[gate][0]
+        awg=self._awgs[self.awg_map[gate][0]]
         wave_ch=self.awg_map[gate][1]
-        awg_fpga=self.awg_map['fpga_mk'][0]
+        awg_fpga=self._awgs[self.awg_map['fpga_mk'][0]]
         fpga_ch=self.awg_map['fpga_mk'][1]
         fpga_ch_mk=self.awg_map['fpga_mk'][2]
         
         tri_wave='tri_wave'
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
-        v_wave=float(sweeprange[0]/((awg.get('ch%d_amp' % wave_ch)/2.0)))
+        v_wave=float(sweeprange/((awg.get('ch%d_amp' % wave_ch)/2.0)))
         v_wave=v_wave/awg_to_plunger
         samplerate = 1./self.AWG_clock
         tt = np.arange(0,2*risetime+samplerate,samplerate)
@@ -99,7 +99,7 @@ class virtual_awg(Instrument):
         marker2 = np.zeros(len(wave))
         marker2[int(delay_FPGA/samplerate):int((delay_FPGA+0.40*risetime)/samplerate)]=1.0
         fpga_marker='fpga_marker'
-        awg.send_waveform_to_list(np.zeros(len(wave)),np.zeros(len(wave)),marker2,fpga_marker)
+        awg_fpga.send_waveform_to_list(np.zeros(len(wave)),np.zeros(len(wave)),marker2,fpga_marker)
         
         awg.set('ch%i_waveform' %wave_ch,tri_wave)
         awg.set('ch%i_state' %wave_ch,1)
