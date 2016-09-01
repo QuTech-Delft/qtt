@@ -18,7 +18,7 @@ if __name__=='__main__':
     except:
         pass
 
-from qtt.parameterviewer import *
+from qtt.parameterviewer import ParameterViewer, createParameterWidget
 
 
 #name='L'
@@ -43,7 +43,7 @@ if __name__=='__main__':
 #%% Local option
 
 if __name__=='__main__' and 0:
-    w=createUpdateWidget([gates], doexec=False)
+    w=createParameterWidget([gates], doexec=False)
     
 
 #%% Remote option
@@ -56,7 +56,7 @@ if __name__=='__main__':
     #p=mp.Process(target=createUpdateWidget)
     #p.start()
 
-    p=mp.Process(target=createUpdateWidget, args=([gates],))
+    p=mp.Process(target=createParameterWidget, args=([gates],))
     p.start()
 
 #%% 
