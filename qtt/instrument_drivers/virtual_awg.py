@@ -14,6 +14,7 @@ Created on Wed Aug 31 13:04:09 2016
 #%%
 import numpy as np
 from qcodes import Instrument
+import scipy.signal
 
 #%%
 class virtual_awg(Instrument):
@@ -149,3 +150,49 @@ class virtual_awg(Instrument):
         awgs = [sweep[0] for sweep in sweep_info]
         for awg in np.unique(awgs):
             awg.run()
+
+    def sweep_gate(self, gate, sweeprange, risetime):
+        '''Send a triangular signal with the AWG to a gate to sweep. Also 
+        send a marker to the FPGA.
+        
+        Arguments:
+            gate (string): the name of the gate to sweep
+            sweeprange (float): the range of voltages to sweep over
+            risetime (float): the risetime of the triangular signal
+        
+        Returns:
+            wave (array): The wave being send with the AWG.
+        
+        Example:
+        -------
+        >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
+        '''
+        awg=self._awgs[self.awg_map[gate][0]]
+        wave_ch=self.awg_map[gate][1]
+        awg_fpga=self._awgs[self.awg_map['fpga_mk'][0]]
+        fpga_ch=self.awg_map['fpga_mk'][1]
+        fpga_ch_mk=self.awg_map['fpga_mk'][2]
+        
+        tri_wave='tri_wave'
+        awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
+        v_wave=float(sweeprange/((awg.get('ch%d_amp' % wave_ch)/2.0)))
+        v_wave=v_wave/awg_to_plunger
+        samplerate = 1./self.AWG_clock
+        tt = np.arange(0,2*risetime+samplerate,samplerate)
+        wave=(v_wave/2)*scipy.signal.sawtooth(np.pi*tt/risetime, width=.5)
+        awg.send_waveform_to_list(wave,np.zeros(len(wave)),np.zeros(len(wave)),tri_wave)
+        
+        delay_FPGA=25e-6
+        marker2 = np.zeros(len(wave))
+        marker2[int(delay_FPGA/samplerate):int((delay_FPGA+0.40*risetime)/samplerate)]=1.0
+        fpga_marker='fpga_marker'
+        awg_fpga.send_waveform_to_list(np.zeros(len(wave)),np.zeros(len(wave)),marker2,fpga_marker)
+        
+        awg.set('ch%i_waveform' %wave_ch,tri_wave)
+        awg.set('ch%i_state' %wave_ch,1)
+        awg_fpga.set('ch%i_waveform' %fpga_ch,fpga_marker)
+        awg_fpga.set('ch%i_m%i_low' % (fpga_ch, fpga_ch_mk),0)
+        awg_fpga.set('ch%i_m%i_high' % (fpga_ch, fpga_ch_mk),2.6)
+        awg_fpga.set('ch%i_state' %fpga_ch,1)
+        awg.run()
+        awg_fpga.run()
