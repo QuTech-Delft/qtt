@@ -12,7 +12,8 @@ For additional options also see
 
 .. doctest::
 
-  >>> choose(6,2)
+  >>> import pmatlab
+  >>> pmatlab.choose(6,2)
   15
 
 Original code:
@@ -30,12 +31,15 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from imp import reload
 
-__version__ = '0.2'
+version = 1.2
 
 #%% Load necessary packages
 import os
 import sys
 import tempfile
+
+# import pdb
+# import cPickle as pickle
 
 # print('pmatlab: start Py modules %s' % str(([x for x in sys.modules.keys() if x.startswith('Py')])) )
 
@@ -48,6 +52,8 @@ def qtModules(verbose=0):
         print('qt modules: %s' % str(qq))
     return qq
 
+# qtModules(1)
+
 import math
 import numpy as np
 import time
@@ -55,7 +61,6 @@ import platform
 import warnings
 import pickle
 import re
-import logging
 import pkgutil
 
 #%% Load pyqside or pyqt4
@@ -64,60 +69,40 @@ import pkgutil
 _ll = sys.modules.keys()
 _pyside = len([_x for _x in _ll if _x.startswith('PySide.QtGui')]) > 0
 _pyqt4 = len([_x for _x in _ll if _x.startswith('PyQt4.QtGui')]) > 0
-_pyqt5 = len([_x for _x in _ll if _x.startswith('PyQt5.QtGui')]) > 0
 
 try:
     _applocalqt = None
     # print('pmatlab: Py modules %s' % str(([x for x in sys.modules.keys() if x.startswith('Py')])) )
 
     if _pyside:
-        import PySide.QtCore as QtCore
         import PySide.QtGui as QtGui
-        import PySide.QtGui as QtWidgets
+        import PySide.QtCore as QtCore
         from PySide.QtCore import Slot as Slot
         from PySide.QtCore import QObject
         from PySide.QtCore import Signal
     else:
         if _pyqt4:
-            import PyQt4.QtCore as QtCore
             import PyQt4.QtGui as QtGui
-            import PyQt4.QtGui as QtWidgets
+            import PyQt4.QtCore as QtCore
             from PyQt4.QtCore import pyqtSlot as Slot
             from PyQt4.QtCore import QObject
             from PyQt4.QtCore import pyqtSignal as Signal
             # print('pmatlab: using PyQt4')
-        elif _pyqt5:            
-            import PyQt5.QtCore as QtCore
-            import PyQt5.QtGui as QtGui
-            import PyQt5.QtWidgets as QtWidgets
-            from PyQt5.QtCore import pyqtSlot as Slot
-            from PyQt5.QtCore import QObject
-            from PyQt5.QtCore import pyqtSignal as Signal
-            logging.debug('pmatlab: using PyQt5')            
         else:
-            if 1:
-                import PyQt4.QtCore as QtCore
-                import PyQt4.QtGui as QtGui
-                import PyQt4.QtGui as QtWidgets
-                from PyQt4.QtCore import pyqtSlot as Slot
-                from PyQt4.QtCore import QObject
-                from PyQt4.QtCore import pyqtSignal as Signal
-            else:
-                import PySide.QtCore as QtCore
-                import PySide.QtGui as QtGui
-                import PySide.QtGui as QtWidgets
-                from PySide.QtCore import Slot as Slot
-                from PySide.QtCore import QObject
-                from PySide.QtCore import Signal
+            import PySide.QtGui as QtGui
+            import PySide.QtCore as QtCore
+            from PySide.QtCore import Slot as Slot
+            from PySide.QtCore import QObject
+            from PySide.QtCore import Signal
             # print('pmatlab: using PySide')
 
-    _applocalqt = QtWidgets.QApplication.instance()
+    _applocalqt = QtGui.QApplication.instance()
     #print('pmatlab: _applocalqt %s' % _applocalqt )
     if _applocalqt is None:
-        _applocalqt = QtWidgets.QApplication([])
+        _applocalqt = QtGui.QApplication([])
+        #print('pmatlab: created _applocalqt %s' % _applocalqt )
             
     def slotTest(txt):
-        """ Helper function for Qt slots """
         class slotObject(QtCore.QObject):
             def __init__(self, txt):
                 QObject.__init__(self)
@@ -133,7 +118,6 @@ try:
         
     
     class signalTest(QObject):
-        """ Helper function for Qt signals """
         s = Signal()
         
         def __init__(self):
@@ -142,9 +126,7 @@ try:
         def go(self):
             self.s.emit()
             
-except Exception as ex:
-    logging.info('pmatlab: load qt: %s'  % ex)
-    print(ex)
+except:
     print('pmatlab: no Qt found')
 
 #%% Load other modules
@@ -162,6 +144,7 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib
     from mpl_toolkits.mplot3d import Axes3D  # needed for 3d plot points, do not remove!
+
 except Exception as inst:
     #print(inst)
     warnings.warn('could not import matplotlib, not all functionality available...')
@@ -173,7 +156,6 @@ try:
 except Exception as inst:
     warnings.warn('pmatlab: could not load skimage.filters, not all functionality is available')
     pass
-
 
 try:
     import cv2
@@ -225,12 +207,32 @@ def tprint(string, dt=1, output=False):
         else:
             return
 
-def partiala(method, **kwargs):
-  ''' Function to perform functools.partial on named arguments '''
-  def t(x):
-    return method(x, **kwargs)
-  return t
-  
+
+def createCheckerboard(wh, outfile=None, fac=100, fig=None):
+    """ Create a checkerboard image of specific size
+    Example:
+        >>> B,Br=createCheckerboard( [4,6], fac=1, fig=100)
+
+    """
+    B = 225 * np.ones((wh[0] + 2, wh[1] + 2))
+    B[1:-1, 1:-1] = 0
+    for ii in range(B.shape[0]):
+        for jj in range(B.shape[1]):
+            if ((ii + jj) % 2 == 0) and B[ii, jj] == 0:
+                B[ii, jj] = 255
+
+    if fig:
+        plt.figure(10)
+        plt.clf()
+        plt.gray()
+        plt.imshow(B, interpolation='nearest')
+
+    Br = cv2.resize(B, (B.shape[1] * fac, B.shape[0] * fac), interpolation=0)
+
+    if not outfile is None:
+        #        cv2.imwrite('/home/eendebakpt/tmp/cb.png', B);
+        cv2.imwrite(outfile, Br)
+    return B, Br
 
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
     """ Update font sizes for a plot """
@@ -252,6 +254,12 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
 
     plt.draw()
     
+def modulepath(m):
+    package= pkgutil.get_loader(m)
+    if package is None:
+        return None
+    return package.get_filename()
+
 def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
     """
 
@@ -294,7 +302,12 @@ class fps_t:
     ...       fps.addtime( .2*kk )
     >>> fps.show()
     framerate: 5.000
-    """
+     """
+    #n = None
+    #ii = 0
+    #tt = None
+    #x = None
+
     def __init__(self, nn=40):
         self.n = nn
         self.tt = np.zeros(self.n)
@@ -345,7 +358,6 @@ class fps_t:
                 '%s: loop %d: framerate: %.1f [fps]' % (s, self.ii, fps), dt=dt)
 
     def show(self):
-        ''' Print the current framerate '''
         fps = self.framerate()
         print('framerate: %.3f' % fps)
 
@@ -364,16 +376,23 @@ def projectiveTransformation(H, x):
 
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))    
     """
+    # xx=np.array([x.transpose()]
     k = x.shape[0]
-    kout = H.shape[0]-1
+    kout=H.shape[0]-1
     xx = x.transpose().reshape((-1, 1, k))
-    
     if (xx.dtype is np.integer or xx.dtype=='int64'):
         xx=xx.astype(np.float32)
     if xx.size > 0:
-        ww = cv2.perspectiveTransform(xx, H)
+        try:
+            ww = cv2.perspectiveTransform(xx, H)
+        except:
+            print(xx)
+            print(H)
+            raise
+                
         # ww=cv2.transform(xx, H)
         ww = ww.reshape((-1, kout)).transpose()
+        # ww.shape
         return ww
     else:
         # fixme
@@ -401,16 +420,429 @@ def breakLoop(wk=None, dt=0.001, verbose=0):
         return True
     return False
 
+#%% Camera functions
 
+
+def camera2opengl(mtx, far=100, near=1):
+    """ Convert intrinsic camera calibration to opengl projection matrix
+    
+    See http://kgeorge.github.io/2014/03/08/calculating-opengl-perspective-matrix-from-opencv-intrinsic-matrix/
+    http://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
+    
+    """
+    
+    alpha=mtx[0,0]
+    beta=mtx[1,1]
+    cx=mtx[0,2]
+    cy=mtx[1,2]
+    f=far
+    n=near
+    s=1
+    M=np.array( [[alpha/cx,0,0,0], [0,beta/cy,0,0], [0,0,-(f+n)/(f-n), -2*f*n/(f-n)],[0,0,-1,0]] )
+    return M
+
+#%%
 
 import scipy.io
 import numpy
 
 
+class camera_t():
+
+    """ Class representating a camera """
+
+    def __init__(self, T=np.matrix(np.eye(4)), mtx=None, distcoeff=None, imsize=None, matlabcalibfile=None, im=None, fc=None):
+        """ Create a camera structure 
+
+        .T : world-to-camera matrix
+        
+        Arguments
+        ---------
+            distcoeff : array
+                distortion coefficients
+            mtx : array
+                matrix with internal calibration
+            imsize : array, optional
+                size of image
+                
+                
+                
+        """
+        self.T = T # world-to-camera matrix
+        self.mtx = None
+        self.distcoeff = distcoeff
+        self.imsize = imsize
+
+        if not matlabcalibfile is None:
+            self.loadMatlabCalibration(matlabcalibfile)
+            return
+
+        if im is not None:
+            self.idealCamera(im, fc)
+            self.im=im
+            return
+
+        if T is None:
+            raise Exception('T matrix should be 4x4 numpy matrix')
+        self.T = np.matrix(T)
+        if mtx is None:
+            self.mtx = np.matrix(np.eye(3))
+        else:
+            self.mtx = np.matrix(mtx)
+        if distcoeff is None:
+            self.distcoeff = np.zeros(5,)
+        else:
+            self.distcoeff = distcoeff
+        if imsize is None:
+            self.imsize = np.array([0, 0])
+        else:
+            self.imsize = imsize
+
+    def resizeCamera(self, factor):
+        """ Resize a camera to desired size """
+        newimsize = (factor * self.imsize).astype(int)
+        newmtx = self.mtx.copy()
+
+        newmtx[0, 0] *= factor  # rescale mtx
+        newmtx[1, 1] *= factor
+
+        cc = self.mtx[0:2, -1]
+        ccnew = (cc - 0.5) * factor
+        newmtx[0:2, -1] = ccnew
+
+        newcam = camera_t(self.T, newmtx, self.distcoeff, newimsize)
+        return newcam
+
+    def idealCamera(self, im, fc=None):
+        """ Set the camera to an ideal camera for the specified image """
+        self.imsize = np.array([im.shape[1], im.shape[0]])
+        cc1 = float(self.imsize[0]) / 2 - .5
+        cc2 = float(self.imsize[1]) / 2 - .5
+        if fc is None:
+            fc = self.imsize[0]
+        self.mtx = np.matrix([[fc, 0, cc1], [0, fc, cc2], [0, 0, 1]])
+        self.T = np.matrix(np.eye(4))
+        self.distcoeff = np.zeros(5,)
+
+    def undistortImage(self, im):
+        if im is None:
+            return None
+        if self.mtx is None:
+            imu = im.copy()
+            return imu
+        else:
+            # w,h=self.imsize[0], self.imsize[1]
+            # mapx,mapy = cv2.initUndistortRectifyMap(self.mtx,self.distcoeff,None,self.mtx,(w,h),5)
+            # imu = cv2.remap(im,mapx,mapy,cv2.INTER_LINEAR)
+            imu = cv2.undistort(im, self.mtx, self.distcoeff, None, self.mtx)
+            return imu
+
+    def writeCalibration(self, filename, verbose=1):
+        with open(filename, 'wt') as fid:
+            for m in self.mtx:
+                mm = ' '.join(
+                    ['%f' % x for x in (np.array(m).flatten()).tolist()])
+                fid.write('%s\n' % mm)
+
+            fid.write('%s\n' % ' '.join(['%f' % float(x) for x in np.array(self.distcoeff).flatten() ]))
+            fid.write('%d %d\n' % (self.imsize[0], self.imsize[1]))
+            fid.write('-1 -1\n')
+
+    def loadMatlabCalibration(self, matlabcalibfile, verbose=1):
+        """ Load Matlab calibration generated by the Camera Calibration toolbox (Bougueut) """
+        m = scipy.io.loadmat(matlabcalibfile)
+
+        if ('cam' in m) and not ('fc' in m):
+            try:
+                # print('here')
+                m = m['cam']
+                fc = m['fc'][0, 0]
+                cc = m['cc'][0, 0]
+                distc = np.array(m['kc'][0, 0])
+                imsize = np.array([m['nx'][0, 0], m['ny'][0, 0]]).flatten()
+            except:
+                raise Exception('error loading calibration file')
+                pass
+        else:
+            # normal calibration file
+            fc = m['fc']
+            cc = m['cc']
+            distc = np.array(m['kc'])
+            imsize = np.array([m['nx'], m['ny']]).flatten()
+        mtx = np.matrix(np.eye(3))
+        mtx[0, 0] = fc[0]
+        mtx[1, 1] = fc[1]
+        mtx[0:2, -1] = cc
+
+        self.T = np.matrix(np.eye(4))
+        self.mtx = np.matrix(mtx)
+        self.distcoeff = distc
+        self.imsize = imsize
+        if verbose:
+            print('camera_t: loaded Matlab calibration fc %.3f' %
+                  self.focallength())
+
+    def cameraCentre(self):
+        """ Returns the centre of the camera in world coordinates """
+        return np.array(self.T.I[0:3, 3])
+
+    def Twc(self):
+        """ Return world-to-camera matrix """
+        return self.T
+
+    def heading(self):
+        """ Return heading of the camera """
+        vd = self.viewDirection()
+        heading = np.arctan2(vd[0], vd[1])[0, 0]
+        return heading
+
+    def fieldOfView(self, imsize, verbose=1):
+        """ Return field of view for a camera """
+        imsize = np.array(imsize)
+        fov = 2 * np.arctan(((imsize / 2.) / self.focallength()))
+        if verbose:
+            print('camera: horizontal field of view = %.2f degrees\n' % np.rad2deg(fov[0]))
+
+        return fov
+
+    def rpy(self):
+        return RBE2euler(self.T[0:3, 0:3])
+
+
+    def drawHorizon(self, img, height=0, color=(255,0,0), thickness=3):
+        """ Draw camera horizon on image """
+        mtx = self.mtx
+        dist = self.distcoeff
+        rvecs, tvecs = self.rvectvec()
+        
+        vd=self.viewDirection()
+        up=self.upDirection()
+        side=np.cross(vd.flat, up.flat)
+        cc=self.cameraCentre()
+        xx=10000;
+        gside=np.cross(vd.flat, [0,0,1])
+        
+        vv2=np.linspace(-xx, xx, 100)*gside.reshape( (3,1) )
+        vv1=cc+vd*xx
+        Xhor=vv1+vv2
+        Xhor[2,:]+=height
+        xhor=self.projectPoints(Xhor)
+        #hidx=pointsinrect(xhor, [[1;1] [1600;1200]]);
+        #xhor=xhor(:, hidx);
+
+        imgpts=xhor.astype(int)
+        img = img.copy()
+        corner = tuple(imgpts[0].ravel())
+        for ii,x in enumerate(imgpts):
+            xx=tuple(x.ravel())
+            r = cv2.line(img, corner, xx, color=color, thickness=thickness)
+            corner = xx
+        return img
+        
+    def drawAxis(self, img, scale=0.23):
+        """ Draw coordinate axis on image
+
+        Arguments
+        ---------
+            img : array
+                input image
+            scale: float
+                scale of axis to plot
+        """
+        mtx = self.mtx
+        dist = self.distcoeff
+        rvecs, tvecs = self.rvectvec()
+        cc = scale * \
+            np.array([[0, 0, 0.], [1, 0, 0], [0, 1, 0], [0, 0, 1]]).astype(
+                np.float32)
+        imgpts = cv2.projectPoints(cc, rvecs, tvecs, mtx, dist)[0]
+        img = img.copy()
+        corner = tuple(imgpts[0].ravel())
+        r = cv2.line(img, corner, tuple(imgpts[1].ravel()), (255, 0, 0), 5)
+        r = cv2.line(img, corner, tuple(imgpts[2].ravel()), (0, 255, 0), 5)
+        r = cv2.line(img, corner, tuple(imgpts[3].ravel()), (0, 0, 255), 5)
+        return img
+
+    def upDirection(self):
+        """ Return the current up direction """
+        vd = self.T[0:3, 0:3].I * np.array([[0], [-1], [0]])
+        return vd / np.linalg.norm(vd)
+
+    def viewDirection(self):
+        """ Return the current viewing direction """
+        vd = self.T[0:3, 0:3].I * numpy.array([[0], [0], [1]])
+        return vd / np.linalg.norm(vd)
+
+    def viewYDirection(self):
+        """ Return the current y-image direction """
+        vd = self.T[0:3, 0:3].I * np.array([[0], [1], [0]])
+        return vd / np.linalg.norm(vd)
+
+    def viewXDirection(self):
+        """ Return the current x-image direction """
+        vd = self.T[0:3, 0:3].I * np.array([[1], [0], [0]])
+        return vd / np.linalg.norm(vd)
+
+    def focallength(self):
+        """ return focal length of the camera """
+        return (self.mtx[0, 0] + self.mtx[1, 1]) / 2
+
+    def rvectvec(self):
+        """ Return OpenCV pose """
+        rvec, tvec = T2opencv(self.T)
+        return rvec, tvec
+
+    def __repr__(self):
+        try:
+            cc = self.cameraCentre()
+            vd = self.viewDirection()
+            return 'camera_t object: center %s, viewdir %s' % (cc.ravel(), vd.ravel())
+        except:
+            return 'camera_t object: '
+
+    def projectPoints(ecam, X):
+        """ Project a set of points to image coordinates
+            The 3D points X should be an Nx3 array.
+
+        """
+        rvec, tvec = T2opencv(ecam.T)
+        if X.shape[0] == 3 and X.shape[1] != 3:
+            # legacy mode
+            if X.size >0:
+                xim = cv2.projectPoints( X.transpose(), rvec, tvec, ecam.mtx, ecam.distcoeff)[0]
+            else:
+                xim=np.zeros( (0,1,2))
+        else:
+            xim = cv2.projectPoints(X, rvec, tvec, ecam.mtx, ecam.distcoeff)[0]
+
+        return xim
+
+    def reprojectionError(ecam, X, xim):
+        xxl = ecam.projectPoints(X).squeeze().transpose()
+        dd = xxl - xim
+        err = np.linalg.norm(dd, axis=0)
+        cost = np.mean(err)
+        return cost, err
+
+    def upCamera(self):
+        """ Return camera with same position and viewing direction but with camera y-axis aligned to world z-axis """
+        cc = self.cameraCentre()
+        vd = self.viewDirection()
+        side = np.cross(vd.T, np.array([0, 0, 1])).T
+        if np.linalg.norm(side) < 1e-6:
+            # side=np.array([[1,0,0]]).T
+            side = np.cross(vd.T, np.array([0, -1, 0])).T
+        side = side / np.linalg.norm(side)
+        side = side / np.linalg.norm(side)
+        down = np.cross(vd.T, side.T).T
+        down = down / np.linalg.norm(down)
+        Tnew = pg_rotation2H(np.hstack((side, down, vd)))
+        Tnew[0:3, 3] = cc
+
+        upcam = camera_t(Tnew.I, self.mtx, self.distcoeff)
+        return upcam
+
+    def frontFilterFast(ecam, X, verbose=0, rect=None, neardist=0.01):
+        """ Select points which are in front of the camera (and in a certain region)
+            Points in a Nx3 np.array and rect is a 2x5 np.array.float32
+        """
+        mtx = ecam.mtx
+        distcoeff = ecam.distcoeff
+        rvec, tvec = ecam.rvectvec()
+        Twc = ecam.T
+        Tcw = Twc.I
+        # apply to all points
+        xx = projectiveTransformation(Twc, X.T)
+        # valid and invalid indices
+        ind = (xx[2, :] >= neardist).nonzero()[0]
+
+        # notind = (bools==False).nonzero()[0]
+        if ind.size == 0:
+            xim = np.zeros((0, 1, 2))
+        else:
+            xim = cv2.projectPoints(X[ind, :], rvec, tvec, mtx, distcoeff)[0]
+
+        if verbose >= 2:
+            plt.figure(100)
+            plt.clf()
+            plotPoints(rect, '-m')
+            plotPoints(xim.T, '.b')
+            if verbose >= 3:
+                plotPoints(ximu.T, 'or')
+            plt.axis('image')
+
+        return xim, ind
+
+    def frontFilter(ecam, X, verbose=0, rect=None, neardist=0.01):
+        """ Select points which are in front of the camera (and in a certain region)
+            Points in a 3xN np.array.float32 and rect with in a 2x5 np.array.float32
+        """
+
+        mtx = ecam.mtx
+        distcoeff = ecam.distcoeff
+        rvec, tvec = ecam.rvectvec()
+        Twc = ecam.T
+        Tcw = Twc.I
+        # apply to all points
+        xx = projectiveTransformation(Twc, X)
+        ximall = cv2.projectPoints(X.transpose(), rvec, tvec, mtx, distcoeff)[0]
+        ximuall = cv2.projectPoints(X.transpose(), rvec, tvec, mtx, None)[0]
+
+        # do the z buffer test
+        bools = xx[2, :] > neardist
+        # do the 2d projection test
+        if not rect is None:
+            for ii, pt in enumerate(ximuall):
+                ptx = tuple(pt.flatten())
+                v = cv2.pointPolygonTest(rect.T, ptx, False)
+                bools[ii] = bools[ii] and v > 0
+
+        # valid and invalid indices
+        ind = (bools == True).nonzero()[0]
+        notind = (bools == False).nonzero()[0]
+        if ind.size == 0:
+            ximu = np.zeros((0, 1, 2))
+            xim = np.zeros((0, 1, 2))
+            ximall = -np.ones((xx.shape[1], 1, 2))
+        else:
+            ximu = cv2.projectPoints(
+                X[:, ind].transpose(), rvec, tvec, mtx, None)[0]
+            xim = cv2.projectPoints(
+                X[:, ind].transpose(), rvec, tvec, mtx, distcoeff)[0]
+            ximall[notind, :, :] = -1
+
+        if verbose >= 2:
+            plt.figure(100)
+            plt.clf()
+            plotPoints(rect, '-m')
+            plotPoints(xim.T, '.b')
+            if verbose >= 3:
+                plotPoints(ximu.T, 'or')
+            plt.axis('image')
+
+        return xim, ind, ximall
+
+    def estimatePose(ecam, XX, xim):
+        try:
+            pnpmode = cv2.EPNP # opencv3 dev
+            #pnpmode = cv2.CV_ITERATIVE # opencv3 dev
+            pnpmodeiter = cv2.CV_ITERATIVE # opencv3 dev
+        except:
+            pnpmode = cv2.SOLVEPNP_EPNP # opencv2?
+            pnpmodeiter = cv2.SOLVEPNP_ITERATIVE # opencv3 dev
+            pass
+#        pnpmode= cv2.SOLVEPNP_ITERATIVE
+
+        mtx=ecam.mtx
+        distcoeff=ecam.distcoeff
+        found, rvec, tvec = cv2.solvePnP(XX, xim.reshape( (-1,1,2)), mtx, distcoeff, None, None, False, pnpmode) # tvec=init_tvec, rvec=init_rvec, useExtrinsicGuess=1 )
+        Tgood=opencv2T(rvec, tvec)  # world-to-camera
+        ecamx=camera_t(Tgood, mtx, distcoeff)
+        return ecamx
+
 #%%
 import subprocess
 def runcmd(cmd, verbose=0):
-    """ Run command and return output """
     output = subprocess.check_output(cmd, shell=True)
     return output
     
@@ -435,7 +867,121 @@ def angleDiffOri(x,y):
     """
     return np.abs( ( (x-y+np.pi/2) % ( np.pi ) ) - np.pi/2 )
 
-   
+    
+def opencvpose2attpos(rvecs, tvecs):
+    tvec = np.array(tvecs).flatten()
+    rvec = np.array(rvecs).flatten()
+    R, tmp = cv2.Rodrigues(rvec)
+    att = RBE2euler(R)
+    pos = -R.transpose().dot( np.matrix(tvec.reshape((3, 1))) )
+    return att, pos
+
+
+def opencv2TX(rvecs, tvecs):
+    """ Convert OpenCV pose to homogenous transform """
+    T = np.matrix(np.eye(4))
+    R = cv2.Rodrigues(rvecs)[0]
+    T[0:3, 0:3] = R
+    T[0:3, 3:4] = tvecs
+    return T
+
+
+def opencv2T(rvec, tvec):
+    """ Convert OpenCV pose to homogenous transform """
+    T = np.matrix(np.eye(4))
+    T[0:3, 0:3] = cv2.Rodrigues(rvec)[0]
+    T[0:3, 3] = tvec
+    return T
+
+
+def T2opencv(T):
+    """ Convert transformation to OpenCV rvec, tvec pair 
+
+    Example
+    -------
+    >>> rvec, tvec = T2opencv(np.eye(4))    
+
+    """
+    rvec = cv2.Rodrigues(T[0:3, 0:3])[0]
+    tvec = T[0:3, 3]
+    return rvec, tvec
+
+
+def frame2T(f):
+    """ Convert frame into 4x4 transformation matrix """
+    T = np.matrix(np.eye(4))
+    T[0:3, 0:3] = euler2RBE(f[3:7])
+    T[0:3, 3] = f[0:3].reshape(3, 1)
+    return T
+
+
+def euler2RBE(theta):
+    """ Convert Euler angles to rotation matrix
+      Example:
+      >>> np.set_printoptions(precision=4, suppress=True)
+      >>> euler2RBE( [0,0,np.pi/2] )
+      matrix([[ 0., -1.,  0.],
+              [ 1.,  0.,  0.],
+              [-0.,  0.,  1.]])
+    """
+    cr = math.cos(theta[0])
+    sr = math.sin(theta[0])
+    cp = math.cos(theta[1])
+    sp = math.sin(theta[1])
+    cy = math.cos(theta[2])
+    sy = math.sin(theta[2])
+
+    out = np.matrix([cp * cy, sr * sp * cy - cr * sy, cr * sp * cy + sr * sy,
+                     cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - sr * cy, -sp, sr * cp, cr * cp])
+    return out.reshape((3, 3))
+
+
+def RBE2euler(Rbe):
+    """ Convert rotation matrix to Euler angles """
+    out = np.zeros([3, 1])
+    out[0, 0] = math.atan2(Rbe[2, 1], Rbe[2, 2])
+    out[1, 0] = -math.asin(Rbe[2, 0])
+    out[2, 0] = math.atan2(Rbe[1, 0], Rbe[0, 0])
+    return out
+
+#%% Helper functions
+
+
+def pg_rotation2H(R):
+    """ Convert rotation matrix to homogenous transform matrix """
+    X = np.matrix(np.eye((R.shape[0] + 1)))
+    X[0:-1, 0:-1] = R
+    return X
+
+def directionMean(vec):
+    """ Calculate the mean of a set of directions 
+
+    The initial direction is determined using the oriented direction. Then a non-linear optimization is done.
+
+    >>> vv=np.array( [[1,0],[1,0.1], [-1,.1]])
+    >>> a=directionMean(vv)
+    
+    """
+    def dist(a, vec):
+        phi=np.arctan2( vec[:,0], vec[:,1])
+        x=a-phi
+        x=np.mod(x+np.pi/2, np.pi)-np.pi/2
+        cost=np.linalg.norm(x)
+        return cost
+    Nfeval = 1
+    def callbackF(Xi):
+        global Nfeval
+        print(Xi)
+        print( '{0:4d}   {1: 3.6f}'.format(Nfeval, Xi[0], dist(Xi[0], vec) ) )
+        Nfeval += 1
+    
+    m=vec.mean(axis=0)
+    a0=np.arctan2(m[0], m[1])
+    ff = lambda a: dist(a, vec)
+    
+    r=scipy.optimize.minimize(ff,a0, callback=None, options=dict({'disp': False}))
+    a = r.x  
+    return a
     
 def circular_mean(weights, angles):
     """ Calculate circular mean of a set of 2D vectors """
@@ -503,7 +1049,52 @@ def pg_rotx(phi):
     R[2, 1] = s
     R[1, 2] = -s
     R[2, 2] = c
-    return np.matrix(R)    
+    return np.matrix(R)
+    
+if platform.node()=='marmot':   
+    # transition code to convert all elements to np.array type (and use python 3.5 @ operator)
+
+    def frame2T(f):
+	    """ Convert frame into 4x4 transformation matrix """
+	    T = np.array(np.eye(4))
+	    T[0:3, 0:3] = euler2RBE(f[3:7])
+	    T[0:3, 3] = f[0:3].reshape(3, 1)
+	    return T
+
+    @static_var("b", np.array(np.zeros( (2,2))))
+    def rot2D(phi):
+        """ Return 2x2 rotation matrix from angle
+    
+        Arguments
+        ---------
+        phi : float
+            Angle in radians
+        Returns
+        -------
+            R : array
+                The 2x2 rotation matrix
+    
+        Examples
+        --------
+        >>> R = rot2D(np.pi)
+    
+        """
+        r=rot2D.b.copy()
+        c=math.cos(phi); s= math.sin(phi)
+        r.itemset(0, c)
+        r.itemset(1, -s)
+        r.itemset(2, s)
+        r.itemset(3, c)
+        return r    
+    
+    def pg_rotx(phi):
+        """ Rotate around the x-axis with angle """
+        c = math.cos(phi)
+        s = math.sin(phi)
+        R=np.zeros( (3,3))
+        R.flat = [1,0,0, 0,c,-s, 0,s,c] 
+        return R
+    
 
 
 def imshowz(im,  *args, **kwargs):
@@ -569,22 +1160,64 @@ def pg_transl2H(tr):
 
 
 def setregion(im, subim, pos):
-    """ Set region in Numpy image 
-    
-    Arguments
-    ---------    
-        im : Numpy array
-            image to fill region in
-        subim : Numpy array
-            subimage
-        pos: array
-            position to place image
-    """
+    """ Set region in Numpy image """
     # TODO: error checking
     h = subim.shape[0]
     w = subim.shape[1]
     im[pos[0]:(pos[0] + h), pos[1]:(pos[1] + w), ...] = subim
     return im
+
+def frontFilter(X, rvec, tvec, mtx, verbose=0, distcoeff=None, rect=None, neardist=0.01, returnall=False):
+    """ Select points which are in front of the camera (and in a certain region)
+        Points in a 3xN np.array.float32 and rect with in a 2x5 np.array.float32
+    """
+    T = opencv2T(rvec, tvec)
+
+    # apply to all points
+    xx = projectiveTransformation(T, X)
+    ximuall = cv2.projectPoints(X.transpose(), rvec, tvec, mtx, None)[0]
+
+    # do the z buffer test
+    bools = xx[2, :] > neardist
+    # do the 2d projection test
+    if not rect is None:
+        for ii, pt in enumerate(ximuall):
+            ptx = tuple(pt.flatten())
+            v = cv2.pointPolygonTest(rect.T, ptx, False)
+            bools[ii] = bools[ii] and v > 0
+
+    # valid and invalid indices
+    ind = (bools == True).nonzero()[0]
+    notind = (bools == False).nonzero()[0]
+    if ind.size == 0:
+        ximu = np.zeros((0, 1, 2))
+        xim = np.zeros((0, 1, 2))
+    else:
+        ximu = cv2.projectPoints(
+            X[:, ind].transpose(), rvec, tvec, mtx, None)[0]
+        xim = cv2.projectPoints(
+            X[:, ind].transpose(), rvec, tvec, mtx, distcoeff)[0]
+
+    if verbose >= 2:
+        plt.figure(100)
+        plt.clf()
+        plt.imshow(rgb)
+        plotPoints(xim.T, '.b')
+        plotPoints(ximu.T, 'or')
+
+    if returnall:
+        if ind.size == 0:
+            ximall = -np.ones((xx.shape[1], 1, 2))
+        else:
+            ximall = cv2.projectPoints(
+                X.transpose(), rvec, tvec, mtx, distcoeff)[0]
+            ximall[notind, :, :] = -1
+        return xim, ind, ximall
+    else:
+        return xim, ind
+
+# import matplotlib
+# matplotlib.use('TkAgg')
 
 
 def region2poly(rr):
@@ -711,6 +1344,13 @@ def plotPoints(xx, *args, **kwargs):
         h = None
     return h
 
+# from mpl_toolkits.mplot3d import axes3d as p3
+
+
+# matplotlib.projections.get_projection_names()
+
+# import numpy
+# from mpl_toolkits.mplot3d import proj3d
 
 def orthogonal_proj(zfront, zback):
     """ see http://stackoverflow.com/questions/23840756/how-to-disable-perspective-in-mplot3d """
@@ -798,7 +1438,6 @@ def polyarea(p):
 	    return val
 
     def polysegments(p):
-        """ Helper functions """
         if isinstance(p, list):
             return zip(p, p[1:] + [p[0]])
         else:
@@ -827,24 +1466,38 @@ try:
         p=p1 & p2
         x=np.array(p)
         return x
-except:
-	pass    
+except:    
+    try:
+        import shapely
+        import shapely.geometry
+    except Exception as inst:
+        #warnings.warn('pmatlab: could not load shapely, not all functionality is available')
+        pass
     
-
+    def polyintersect(x1,x2):
+        """ Intersection of two polygons
+    
+        >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
+        >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+        >>> x=polyintersect(x1, x2)
+        >>> _=plt.figure(10); plt.clf()
+        >>> plotPoints(x1.T, '.-r' )
+        >>> plotPoints(x2.T, '.-b' )
+    
+        """
+        
+        p1 = shapely.geometry.Polygon(x1)
+        p2 = shapely.geometry.Polygon(x2)
+        p=p1.intersection(p2)
+        if p.is_empty: # len(p)==0:
+            return np.zeros( (0,2))
+        x=np.array(list(p.exterior.coords))
+        return x
     
 #%%
 
 def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0), thickness=-1, copyimage=True):
-    """ Draw points on image
-    
-    Arguments
-    ---------
-        bgr : numpy array
-            image to draw points into
-        impts : array
-            locations of points to plot
-            
-    """
+    """ Draw points on opencv image """
     if copyimage:
         out = bgr.copy()
     else:
@@ -864,7 +1517,6 @@ def enlargelims(factor=1.05):
     """ Enlarge the limits of a plot
     Example:
       >>> enlargelims(1.1)
-      
     """
     xl = plt.xlim()
     d = (factor - 1) * (xl[1] - xl[0]) / 2
@@ -899,6 +1551,9 @@ def findfilesR(p, patt):
     rr = re.compile(patt)
     for root, dirs, files in os.walk(p, topdown=False):
         lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
+        # for name in files:
+        #    lst += [name]
+    # lst = [l for l in lst if re.match(rr, l)]
     return lst
 
 def signedsqrt(val):    
@@ -1160,7 +1815,8 @@ def choose(n, k):
         The bionomial coefficient n choose k
 
     Example:
-      >>> choose(6,2)
+      >>> import pmatlab
+      >>> pmatlab.choose(6,2)
       15
 
     """
@@ -1171,7 +1827,6 @@ def choose(n, k):
 
 
 def closefn():
-    """ Destructor function for the module """
     return
     #print('pmatlab: closefn()')
     #global _applocalqt
@@ -1333,7 +1988,6 @@ try:
         return np.array(im1)
 except:
     def writeTxt(*args, **kwargs):
-        """ Dummy function """
         warnings.warn('writeTxt: could not find PIL')
         return None
     pass
@@ -1347,6 +2001,8 @@ try:
     _usegtk = 0
     try:
         import matplotlib.pyplot
+        #fig = matplotlib.pyplot.figure(85410, frameon=False)
+        #matplotlib.pyplot.close(fig)
         _usegtk = 0
     except:
         import pygtk
@@ -1381,16 +2037,16 @@ try:
             clipboard.set_image(image)
             clipboard.store()
         else:
-            cb = QtWidgets.QApplication.clipboard()
+            cb = QtGui.QApplication.clipboard()
             r, tmpfile = tempfile.mkstemp(suffix='.bmp')
             cv2.imwrite(tmpfile, im)
-            qim = QtWidgets.QPixmap(tmpfile)
+            qim = QtGui.QPixmap(tmpfile)
             cb.setPixmap(qim)
 
             if 0:
                 im = im[:, :, 0:3].copy()
-                qim = QtWidgets.QImage(
-                    im.data, im.shape[0], im.shape[1], QtWidgets.QImage.Format_RGB888)
+                qim = QtGui.QImage(
+                    im.data, im.shape[0], im.shape[1], QtGui.QImage.Format_RGB888)
                 cb.setImage(qim)
 
 
@@ -1436,25 +2092,32 @@ def cfigure(*args, **kwargs):
 
 #%%
 
+# qtModules(1)
+
+
 try:
+    _qd = QtGui.QDesktopWidget()
     def monitorSizes(verbose=0):
     	""" Return monitor sizes """
-    	_qd = QtWidgets.QDesktopWidget()
+    	_qd = QtGui.QDesktopWidget()
     	if sys.platform == 'win32' and _qd is None:
             import ctypes
             user32 = ctypes.windll.user32
             wa = [
                 [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
     	else:
-            # tmp=QtWidgets.QApplication.startingUp()
-            #logging.debug('starting QApplication: startingUp %d' % tmp)
-            _applocalqt = QtWidgets.QApplication.instance()
+            # tmp=QtGui.QApplication.startingUp()
+            _applocalqt = QtGui.QApplication.instance()
 
+            if 0:
+                print('starting QApplication: startingUp %d' % tmp)
             if _applocalqt is None:
-                _applocalqt = QtWidgets.QApplication([])
-                _qd = QtWidgets.QDesktopWidget()
+                _applocalqt = QtGui.QApplication([])
+                _qd = QtGui.QDesktopWidget()
             else:
-                _qd = QtWidgets.QDesktopWidget()
+                if 0:
+                    print('get QDesktopWidget()')
+                _qd = QtGui.QDesktopWidget()
 
             nmon = _qd.screenCount()
             wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
@@ -1475,8 +2138,8 @@ try:
     	return wa
 except:
     def monitorSizes(verbose=0):
-        """ Dummy function for monitor sizes """
-        return [[0, 0, 1600, 1200]]
+        """ Dummy function """
+        return [[0, 0, 1280, 720]]
     pass
 
 #%%
@@ -1556,16 +2219,7 @@ def ca():
 #%%        
 @static_var('monitorindex', -1)
 def tilefigs(lst, geometry=[2,2], ww=None, raisewindows=False, tofront=False, verbose=0):
-    """ Tile figure windows on a specified area
-
-    Arguments
-    ---------
-        lst : list
-                list of figure handles or integers
-        geometry : 2x1 array
-                layout of windows
-                
-    """
+    """ Tile figure windows on a specified area """
     mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
     if ww is None:
@@ -1634,9 +2288,6 @@ def robustCost(x, thr, method='L1'):
     
     method : string
         method to be used. use 'show' to show the options
-        
-    Example
-    -------
     >>> robustCost([2,3,4],thr=2.5)
     array([ 2. ,  2.5,  2.5])
     >>> robustCost(2, thr=1)
@@ -1644,47 +2295,32 @@ def robustCost(x, thr, method='L1'):
     >>> methods=robustCost(np.arange(-5,5,.2), thr=2, method='show')
     """
     if method=='L1':
-         y=np.minimum(np.abs(x), thr)
+         x=np.minimum(np.abs(x), thr)
     elif method=='L2' or method=='square':
-         y=np.minimum(x*x, thr)
+         x=np.minimum(x*x, thr)
     elif method=='BZ':
         alpha= thr*thr
         epsilon=np.exp(-alpha)
-        y=-np.log( np.exp(-x*x ) + epsilon ) 
-    elif method=='BZ0':
-        #print('BZ0')
-        alpha= thr*thr
-        epsilon=np.exp(-alpha)
-        y=-np.log( np.exp(-x*x ) + epsilon )  + np.log(1+epsilon)
+        x=-np.log( np.exp(-x*x ) + epsilon )
     elif method=='cauchy':
         b2= thr*thr
         d2=x*x
-        y=np.log ( 1+d2/b2 )
-    elif method=='cg':
-        delta=x
-        delta2=delta*delta
-        w=1/thr # ratio of std.dev
-        w2=w*w
-        A=.1 # fraction of outliers
-        y= -np.log(A*np.exp(-delta2)+ (1-A)*np.exp(-delta2/w2)/w )
-        y = y + np.log(A+ (1-A)*1/w )
+        x=np.log ( 1+d2/b2 )
     elif method=='huber':
         d2=x*x
         d=2*thr*np.abs(x)-thr*thr
-        y=d2
-        idx=np.abs(y)>=thr*thr
-        y[idx]=d[idx]
+        x=d2
+        idx=np.abs(x)>=thr*thr
+        x[idx]=d[idx]
     elif method=='show':
              plt.figure(10); plt.clf()
-             mm=['L1', 'L2', 'BZ', 'cauchy', 'huber', 'cg']
+             mm=['L1', 'L2', 'BZ', 'cauchy', 'huber']
              for m in mm:
                  plt.plot(x, robustCost(x, thr, m), label=m)
              plt.legend()
              #print('robustCost: %s'  % mm)
-             y=mm
-    else:
-        raise Exception('no such method' )
-    return y
+             x=mm
+    return x
 
 #robustCost(np.arange(-5,5,.1), 2, 'show')
 
@@ -1784,6 +2420,208 @@ def testTimeconverter():
 
 # testTimeconverter()
 
+#%% Camera control
+
+
+class uvccamera:
+
+    """ Class representing a UVC camera
+
+    Implementation is Linux only...
+    """
+    camid = None
+    verbose = 0
+
+    def __init__(self, camid):
+        self.camid = camid
+
+    def command(self, cmd):
+        if platform.os.name == 'posix':
+            r = os.system(cmd)
+        else:
+            print('uvc camera setting not supported on your OS')
+
+    def devicename(self):
+        return '/dev/video%d' % self.camid
+
+    def __repr__(self):
+        s = 'uvccamera: device %s' % self.devicename()
+        return s
+
+    def editControls(self):
+        cmd = 'guvcview -o -d %s &' % self.devicename()
+        self.command(cmd)
+
+    def ledOff(self):
+        cmd = 'uvcdynctrl -d %s --set="LED1 Mode" 0' % self.devicename()
+        self.command(cmd)
+
+    def setFocus(self, fc=None):
+        camname = self.devicename()
+        if fc is None:
+            cmd = 'uvcdynctrl -d %s --set="Focus, Auto" 1' % camname
+            return
+        cmd = 'uvcdynctrl -d %s --set="Focus, Auto" 0' % camname
+        self.command(cmd)
+        fcx = fc + 130
+        cmd = 'uvcdynctrl -d %s --set="Focus (absolute)" %d' % (camname, fcx)
+        if self.verbose:
+            print('  ' + cmd)
+        self.command(cmd)
+        time.sleep(.35)
+        cmd = 'uvcdynctrl -d %s --set="Focus (absolute)" %d' % (camname, fc)
+        if self.verbose:
+            print('  ' + cmd)
+        self.command(cmd)
+
+    def getProperty(self, prop):
+        camname = self.devicename()
+        cmd = 'uvcdynctrl -d %s --get="%s"' % (camname, prop)
+        self.command(cmd)
+        return None
+
+    def setProperty(self, prop, value):
+        camname = self.devicename()
+        cmd = 'uvcdynctrl -d %s --set="%s" %s' % (camname, prop, value)
+        if self.verbose:
+            print('uvccamera: set property:  ' + cmd)
+        self.command(cmd)
+
+    def ledBlink(self, freq=10):
+        camname = self.devicename()
+        cmd = 'uvcdynctrl -d %s --set="LED1 Mode" 2' % camname
+        if self.verbose:
+            print('ledBlink: ' + cmd)
+        r = os.system(cmd)
+        cmd = 'uvcdynctrl -d %s --set="LED1 Frequency" %d' % (camname, freq)
+        # print('  ' + cmd)
+        self.command(cmd)
+
+    def listControls(self):
+        cmd = 'uvcdynctrl -c -d %s' % self.devicename()
+        self.command(cmd)
+
+    @staticmethod
+    def listCameras():
+        cmd = 'uvcdynctrl -l'
+        if platform.os.name == 'posix':
+            r = os.system(cmd)
+        else:
+            print('uvc camera setting not supported on your OS')
+
+
+#%%
+
+def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
+    """ Search for specific type of object in Matplotlib figure """
+    cc=fig.get_children()
+    if verbose:
+        print('findImageHandle: %s: %d children' % (str(fig), len(cc)) ) 
+    for c in cc:
+        if type(c)==otype:
+            return c            
+        p=findImageHandle(c, verbose=verbose, otype=otype)
+        if p is not None:
+            return p
+        if verbose>=2:
+            print(type(c))
+        #return p
+    return None
+    
+
+#%% Make nice plots
+# 
+
+def niceplot(ax, fig=None, despine=True, verbose=0, figurebg=True, tightlayout=True, legend=None, almost_black='#222222', tickdirection='out', debug=0, figpad=1.0):
+    """ Create a good looking plot
+
+    The code
+        - removes spines
+        - makes legend and spines lighter
+        - makes legend lighter
+
+    See also: http://blog.olgabotvinnik.com/prettyplotlib/
+    
+    Arguments
+    ---------
+        ax : axis handle
+            Handle for axis to process
+        fig : integer
+            Figure handle to use
+
+
+    """
+
+    if debug>16:
+        plt.pause(0.001); plt.draw(); plt.show()
+        return
+
+    if isinstance(fig, int):
+        fig = plt.figure(fig)
+        
+    # Remove top and right axes lines ("spines")
+    if verbose>=2:
+        print('niceplot: ax %s, fig %s' % ( str(ax), str(fig)))
+    if verbose:
+        print('niceplot: remove spines')
+
+    spines_to_keep = ['bottom', 'left']
+    if despine:
+        spines_to_remove = ['top', 'right']
+        for spine in spines_to_remove:
+            ax.spines[spine].set_visible(False)
+    else:
+        spines_to_keep += ['top', 'right']
+    if debug>10:
+        plt.pause(0.001); plt.draw(); plt.show()
+        return
+
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+      
+    if verbose:
+        print('niceplot: reduce spine intensity')
+
+    for spine in spines_to_keep:
+        ax.spines[spine].set_linewidth(0.5)
+        ax.spines[spine].set_color(almost_black)
+
+    ax.tick_params(axis='both', direction=tickdirection)
+
+    if debug>6:
+        return
+        
+    if legend is not None:
+        if verbose:
+            print('niceplot: adjust legend')
+
+        # Remove the line around the legend box, and instead fill it with a light grey
+        # Also only use one point for the scatterplot legend because the user will
+        # get the idea after just one, they don't need three.
+        light_grey = np.array([float(241) / float(255)] * 3)
+        rect = legend.get_frame()
+        rect.set_facecolor(light_grey)
+        middle_grey = np.array([float(151) / float(255)] * 3)
+        rect.set_edgecolor(middle_grey)
+        # rect.set_linewidth(0.0)
+
+        # Change the legend label colors to almost black, too
+        texts = legend.texts
+        for t in texts:
+            t.set_color(almost_black)
+
+        # ttx=legend.get_texts()
+        #[v.set_color(almost_black) for v in ttx]
+
+    # fig.tight_layout(pad=0.1)
+    if fig is not None and tightlayout:
+        fig.tight_layout(pad=figpad)
+
+    if figurebg and (fig is not None):
+        fig.set_facecolor('w')
+
+    plt.draw()
+    plt.show()
 
 
 def otsu(im, fig=None):
@@ -1857,7 +2695,7 @@ def decomposeProjectiveTransformation(H, verbose=0):
 
  For more information see "Multiple View Geometry", paragraph 1.4.6.
 
-    >>> Ha, Hs, Hp, rest = decomposeProjectiveTransformation( np.eye(3) )
+    >>> Ha, Hs, Hp, rest =decomposeProjectiveTransformation( np.eye(3) )
     """
     H=np.matrix(H)
     k=H.shape[0]
@@ -1901,30 +2739,9 @@ def decomposeProjectiveTransformation(H, verbose=0):
     return Ha, Hs, Hp, rest
     
 
-#%% Debugging
+def test_nose():
+	return
 
-def modulepath(m):
-    package= pkgutil.get_loader(m)
-    if package is None:
-        return None
-    return package.get_filename()
-
-def checkmodule(mname):
-    import imp
-    q=imp.find_module(mname)
-    import importlib
-    q = importlib.util.find_spec(mname)
-    print(q)
-    return q
-
-def unittest(verbose=1):
-    """ Unittest function for module """
-    import doctest
-    if verbose>=2:
-	    print('pmatlab: running unittest')
-    _=euler2RBE([0,1,2])
-    doctest.testmod()
-    
 #%% Run tests from documentation
 if __name__ == "__main__":
     """ Dummy main for doctest

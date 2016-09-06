@@ -234,7 +234,7 @@ if __name__ == '__main__':
 
     app = pg.mkQApp()
 
-    dataviewer = DataViewer(datadir=datadir, extensions=['hdf5'])
+    dataviewer = DataViewer(datadir=datadir, extensions=['hdf5', 'dat'])
     dataviewer.setGeometry(1280, 60, 700, 800)
     dataviewer.qplot.setMaximumHeight(400)
     dataviewer.show()

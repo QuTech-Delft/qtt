@@ -73,8 +73,8 @@ if __name__=='__main__':
             ''' Funny ... '''
             return True
         
-    #msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
-    msetup.initialize(reinit=False, server_name=None )
+    msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+    #msetup.initialize(reinit=False, server_name=None )
     
 
 
@@ -150,7 +150,7 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-08-10'; Tvalues=np.array([-380])
+    basetag='batch-2016-09-06'; Tvalues=np.array([-380])
     
     
     #basetag='batch-16102015'; Tvalues=np.array([-390])
@@ -338,7 +338,6 @@ def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbos
 #%%
 import pyqtgraph
 from qtt.scans import scanPinchValue
-
     
 from qtt.data import saveExperimentData, loadExperimentData     
 app=pyqtgraph.mkQApp()
@@ -444,6 +443,7 @@ for ii, Tvalue in enumerate(Tvalues):
         
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
         
+        alldata.data_manager=None
         write_data(experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) , scandata)
         #_=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         

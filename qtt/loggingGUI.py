@@ -175,6 +175,7 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         ''' Clear the messages in the logging window '''
         self._console.clear()
         self.addMessage('cleared messages...\n')
+        self.nkill=0
 
     def killPID(self):
         ''' Clear the messages in the logging window '''
@@ -225,7 +226,7 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
                     except Exception:
                        dlg.addMessage(
                         'kill signal to pid %d failed\n' % pid, logging.CRITICAL)
-                        pass		
+                       pass		
             app.processEvents()
 
             if verbose >= 2:
