@@ -32,10 +32,10 @@ class virtual_awg(Instrument):
         elif len(self._awgs) == 1:
             self.awg_cont = self._awgs[0]
             self.awg_cont.set('run_mode','CONT')
-        elif len(self._awgs == 2) and 'awg_mk' in self.awg_map.keys():
+        elif len(self._awgs) == 2 and 'awg_mk' in self.awg_map.keys():
             self.awg_cont = self._awgs[self.awg_map['awg_mk'][0]]
             self.awg_cont.set('run_mode','CONT')
-            self.awg_seq = self._awgs[(self.awg_map['awg_mk'[0]]+1) % 2]
+            self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0]+1) % 2]
             self.awg_seq.set('run_mode','SEQ')
             self.awg_seq.set_sq_length(1)
         else:
@@ -79,7 +79,7 @@ class virtual_awg(Instrument):
         -------
         >>> sweep_info = sweep_init(waveforms) 
         '''
-        sweepgates = [g[1] for g in waveforms]
+        sweepgates = [g for g in waveforms]
         
         for awg in self._awgs:
             awg.delete_all_waveforms_from_list()
@@ -99,7 +99,7 @@ class virtual_awg(Instrument):
         
         # fpga marker
         delay_FPGA = 25.0e-6 # should depend on filterboxes
-        fpga_marker = wave_zero
+        fpga_marker = np.zeros(len(wave_zero))
         fpga_marker[int(delay_FPGA*self.AWG_clock):(int(delay_FPGA*self.AWG_clock)+len(wave_zero)//20)]=1.0
         
         if fpga_info[:2] not in sweep_info:
@@ -125,7 +125,7 @@ class virtual_awg(Instrument):
                 sweep_info[awg_info[:2]]['name'] = 'awg_mk'
             
             delay_AWG=22.0e-6
-            awg_marker = wave_zero
+            awg_marker = np.zeros(len(wave_zero))
             awg_marker[0:len(wave_zero)//20]=1
             awg_marker=np.roll(awg_marker,len(wave_zero)-int(delay_AWG*self.AWG_clock))
             sweep_info[awg_info[:2]]['marker%d' % self.awg_map['awg_mk'][2]] = awg_marker
@@ -134,13 +134,13 @@ class virtual_awg(Instrument):
         
         # send waveforms
         for sweep in sweep_info:
+            self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'],sweep_info[sweep]['marker1'],sweep_info[sweep]['marker2'],sweep_info[sweep]['name'])
             if self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(sweep_info[sweep]['name'],sweep[1],1)
                 self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
                 self._awgs[sweep[0]].set_sqel_event_jump_target_index(sweep[1],1)
                 self._awgs[sweep[0]].set_sqel_event_jump_type(1,'IND')
             else:
-                self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'],sweep_info[sweep]['marker1'],sweep_info[sweep]['marker2'],sweep_info['name'])
                 self._awgs[sweep[0]].set('ch%i_waveform' % sweep[1], sweep_info[sweep]['name'])
         
         return sweep_info
@@ -148,11 +148,11 @@ class virtual_awg(Instrument):
     def sweep_run(self,sweep_info):
         ''' Activate AWG(s) and channel(s) for the sweep(s) '''
         for sweep in sweep_info:
-            sweep[0].set('ch%i_state' %sweep[1],1)
+            self._awgs[sweep[0]].set('ch%i_state' %sweep[1],1)
             
-        awgs = [sweep[0] for sweep in sweep_info]
-        for awg in np.unique(awgs):
-            awg.run()
+        awgnrs = set([sweep[0] for sweep in sweep_info])
+        for nr in awgnrs:
+            self._awgs[nr].run()
             
     def make_sawtooth(self,sweeprange,risetime):
         '''Make a sawtooth with a short decline time. Not yet scaled with 
@@ -184,7 +184,7 @@ class virtual_awg(Instrument):
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange,risetime)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
-        wave = [x/awg_to_plunger for x in wave_raw]
+        wave = np.array([x/awg_to_plunger for x in wave_raw])
         waveform[gate]=wave
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
