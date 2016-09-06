@@ -15,10 +15,11 @@ Created on Wed Aug 31 13:04:09 2016
 import numpy as np
 from qcodes import Instrument
 import scipy.signal
+from qcodes import QtPlot, DataArray
 
 #%%
 class virtual_awg(Instrument):
-    def __init__(self, name, instruments, awg_map, hardware, verbose=1, **kwargs):
+    def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
 #        shared_kwargs = ['instruments']
         super().__init__(name, **kwargs)
         self._awgs=instruments
@@ -26,7 +27,9 @@ class virtual_awg(Instrument):
         self.hardware = hardware
         self.verbose = verbose
         
-        if len(self._awgs) == 1:
+        if len(self._awgs)==0 and verbose:
+            print('no physical AWGs connected')
+        elif len(self._awgs) == 1:
             self.awg_cont = self._awgs[0]
             self.awg_cont.set('run_mode','CONT')
         elif len(self._awgs == 2) and 'awg_mk' in self.awg_map.keys():
@@ -39,12 +42,12 @@ class virtual_awg(Instrument):
             raise Exception('Configuration of AWGs not supported by virtual_awg instrument')
 
         self.AWG_clock = 1e7
-        ch_amp = 4.0
+        self.ch_amp = 4.0
         for awg in self._awgs:
             awg.set('clock_freq',self.AWG_clock)
             awg.delete_all_waveforms_from_list()
             for i in range(1,5):
-                awg.set('ch%s_amp'% i, ch_amp)
+                awg.set('ch%s_amp'% i, self.ch_amp)
         
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
@@ -150,9 +153,20 @@ class virtual_awg(Instrument):
         awgs = [sweep[0] for sweep in sweep_info]
         for awg in np.unique(awgs):
             awg.run()
+            
+    def make_sawtooth(self,sweeprange,risetime):
+        '''Make a sawtooth with a short decline time. Not yet scaled with 
+        awg_to_plunger value.
+        '''
+        samplerate = 1./self.AWG_clock
+        tt = np.arange(0,2*risetime+samplerate,samplerate)
+        v_wave = float(sweeprange/((self.ch_amp/2.0)))
+        wave=(v_wave/2)*scipy.signal.sawtooth(np.pi*tt/risetime, width=.95)
+        
+        return wave
 
     def sweep_gate(self, gate, sweeprange, risetime):
-        '''Send a triangular signal with the AWG to a gate to sweep. Also 
+        ''' Send a triangular signal with the AWG to a gate to sweep. Also 
         send a marker to the FPGA.
         
         Arguments:
@@ -161,38 +175,27 @@ class virtual_awg(Instrument):
             risetime (float): the risetime of the triangular signal
         
         Returns:
-            wave (array): The wave being send with the AWG.
+            waveform (dictionary): The waveform being send with the AWG.
         
         Example:
         -------
         >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
         '''
-        awg=self._awgs[self.awg_map[gate][0]]
-        wave_ch=self.awg_map[gate][1]
-        awg_fpga=self._awgs[self.awg_map['fpga_mk'][0]]
-        fpga_ch=self.awg_map['fpga_mk'][1]
-        fpga_ch_mk=self.awg_map['fpga_mk'][2]
-        
-        tri_wave='tri_wave'
+        waveform = dict()
+        wave_raw = self.make_sawtooth(sweeprange,risetime)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
-        v_wave=float(sweeprange/((awg.get('ch%d_amp' % wave_ch)/2.0)))
-        v_wave=v_wave/awg_to_plunger
-        samplerate = 1./self.AWG_clock
-        tt = np.arange(0,2*risetime+samplerate,samplerate)
-        wave=(v_wave/2)*scipy.signal.sawtooth(np.pi*tt/risetime, width=.5)
-        awg.send_waveform_to_list(wave,np.zeros(len(wave)),np.zeros(len(wave)),tri_wave)
+        wave = [x/awg_to_plunger for x in wave_raw]
+        waveform[gate]=wave
+        sweep_info = self.sweep_init(waveform)
+        self.sweep_run(sweep_info)
         
-        delay_FPGA=25e-6
-        marker2 = np.zeros(len(wave))
-        marker2[int(delay_FPGA/samplerate):int((delay_FPGA+0.40*risetime)/samplerate)]=1.0
-        fpga_marker='fpga_marker'
-        awg_fpga.send_waveform_to_list(np.zeros(len(wave)),np.zeros(len(wave)),marker2,fpga_marker)
+        return waveform
         
-        awg.set('ch%i_waveform' %wave_ch,tri_wave)
-        awg.set('ch%i_state' %wave_ch,1)
-        awg_fpga.set('ch%i_waveform' %fpga_ch,fpga_marker)
-        awg_fpga.set('ch%i_m%i_low' % (fpga_ch, fpga_ch_mk),0)
-        awg_fpga.set('ch%i_m%i_high' % (fpga_ch, fpga_ch_mk),2.6)
-        awg_fpga.set('ch%i_state' %fpga_ch,1)
-        awg.run()
-        awg_fpga.run()
+    def plot_wave(self,wave):
+        ''' Plot the wave '''
+        horz_var = np.arange(0,len(wave)/self.AWG_clock,1/self.AWG_clock)
+        x = DataArray(name='time(s)', label= 'time (s)', preset_data=horz_var, is_setpoint=True)
+        y = DataArray(label='sweep value (mV)',preset_data=wave, set_arrays=(x,))        
+        plot = QtPlot(x,y)
+
+        return plot
