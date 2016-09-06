@@ -165,7 +165,7 @@ class virtual_awg(Instrument):
         
         return wave
 
-    def sweep_gate(self, gate, sweeprange, risetime):
+    def sweep_gate(self, gate, sweeprange, risetime, width=.95):
         ''' Send a triangular signal with the AWG to a gate to sweep. Also 
         send a marker to the FPGA.
         
@@ -182,7 +182,7 @@ class virtual_awg(Instrument):
         >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
         '''
         waveform = dict()
-        wave_raw = self.make_sawtooth(sweeprange,risetime)
+        wave_raw = self.make_sawtooth(sweeprange,risetime,width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
         wave = np.array([x/awg_to_plunger for x in wave_raw])
         waveform[gate]=wave
