@@ -1,7 +1,9 @@
-numpy
-qtpy
-PyQt4
-spyder
+numpy >= 1.11
 scipy
-pyqtgraph
+coverage
+pandas
+scikit-image
+pyqt
+qtpy
+spyder
 
