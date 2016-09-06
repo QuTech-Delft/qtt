@@ -10,7 +10,6 @@ from imp import reload
 import sys,os,platform, pdb
 import logging
 import numpy as np
-os.environ['QT_API'] = 'pyqt'
 import pdb
 import qtpy
 import logging
@@ -27,19 +26,17 @@ if __name__=='__main__':
         multiprocessing.set_start_method('spawn')
     except:
         pass
-#print(qtpy.QT_API)
 
 import webbrowser, datetime, copy
 import matplotlib.pyplot as plt
 
 import qcodes
-import qcodes as qc
 from qcodes.plots.qcmatplotlib import MatPlot
 
 from functools import partial
 import qtt.scans
 
-import qtt; # reload(qtt)
+import qtt; 
 import qtt.scans
 from qtt.scans import experimentFile
 import qtt.reports
@@ -50,8 +47,14 @@ from qcodes.utils.validators import Numbers
 
 from qtt.data import *
 from qtt.scans import *
-from qtt.legacy import *
-from qtt.reports import *
+from qtt.legacy import getODbalancepoint
+from qtt.reports import generateOneDotReport
+
+import pyqtgraph
+from qtt.scans import scanPinchValue
+from qtt.data import saveExperimentData, loadExperimentData     
+app=pyqtgraph.mkQApp()
+
 
 #%% Load configuration
 
@@ -66,8 +69,10 @@ if __name__=='__main__':
             ''' Funny ... '''
             return False
     else:
-        import virtualV2 as msetup
-        from virtualV2 import sample
+        import virtualV2 as msetup; from virtualV2 import sample
+        import virtualDot as msetup; from virtualDot import sample; 
+
+        
         awg1=None
         def simulation():
             ''' Funny ... '''
@@ -76,9 +81,8 @@ if __name__=='__main__':
     msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
     #msetup.initialize(reinit=False, server_name=None )
     
-
-
-
+    bottomgates = sample.bottomGates()
+    
 #%% Make instances available
 
 if __name__=='__main__':
@@ -113,7 +117,6 @@ if __name__=='__main__':
     
 
 #%% Define 1-dot combinations
-from stationV2.sample import get_one_dots
 
 if __name__=='__main__':
 
@@ -121,14 +124,14 @@ if __name__=='__main__':
     verbose=2   # set output level of the different functions
     
     full=1      # for full=0 the resolution of the scans is reduced, this is usefull for quick testing
-    one_dots=get_one_dots(sdidx=[])
+    one_dots=sample.get_one_dots(sdidx=[])
     full=0
     
     sdindices=[1,2]
     sdindices=[1,]
     
     
-    sddots=get_one_dots(sdidx=sdindices)[-len(sdindices):]
+    sddots=sample.get_one_dots(sdidx=sdindices)[-len(sdindices):]
     
     #one_dots=[one_dots[0], one_dots[-1] ];
     full=0
@@ -150,11 +153,8 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-09-06'; Tvalues=np.array([-380])
-    
-    
-    #basetag='batch-16102015'; Tvalues=np.array([-390])
-    
+    basetag='batch-2016-09-06z'; Tvalues=np.array([-380])
+            
     b=False
     
     if b:
@@ -191,11 +191,6 @@ if __name__=='__main__':
     #measureFirst=0;
     #measureSecond=0
     
-    # if we are working offline we cannot measure, but only process results
-    if simulation() and 0:
-        measureFirst=0; measureSecond=0
-    
-    
     # new januari sample
     def getSDval(T, gg=None):
         if not gg is None:
@@ -224,8 +219,7 @@ if __name__=='__main__':
     
     
     sd2=None
-    
-    
+        
     if full:
         hiresstep=-2
     else:
@@ -237,28 +231,8 @@ if __name__=='__main__':
     
 #%%
 
+from qtt.legacy import onedotPlungerScan
   
-def onedotPlungerScan(station, od, verbose=1):
-    """ Make a scan with the plunger of a one-dot """
-    # do sweep with plunger
-    gates=station.gates
-    gg=od['gates']
-    ptv=od['setpoint']
-              
-    gates.set(gg[2], ptv[0,0]+20)    # left gate = step gate in 2D plot =  y axis
-    gates.set(gg[0], ptv[1,0]+20)
-    
-    pv=od['pinchvalues'][1]
-
-    scanjob=dict({'keithleyidx': [od['instrument'] ]})
-    scanjob['sweepdata']=dict({'gates': [gg[1]], 'start': 50, 'end': pv,'step': -1})
-    
-    wait_time = qtt.scans.waitTime(gg[1], gate_settle=getattr(station, 'gate_settle', None))
-
-    alldata=scan1D(scanjob, station, delay=wait_time, title_comment='sweep of plunger')            
-    alldata.metadata['od']=od
-    scandata=dict(dataset=alldata, od=od)
-    return scandata
 
 #alldataplunger=onedotPlungerScan(station, od, verbose=1)
 
@@ -270,7 +244,7 @@ def closeExperiment(station, eid=None):
     print('set bias to zero to save energy')
     gates.set_bias_1(0)   # bias through O1, keithley 1
     gates.set_bias_2(0)   # bias through O7, keithley 2
-    gates.set_bias_3(0)   # bias through O?, keithley 3
+    #gates.set_bias_3(0)   # bias through O?, keithley 3
 
     #if not RFsiggen1 is None:
     #    print(' stop Microwave source()')
@@ -284,6 +258,16 @@ def closeExperiment(station, eid=None):
 #%% One-dot measurements
 
 def onedotScan(station, od, basevalues, outputdir, verbose=1):
+    """ Scan a one-dot
+
+    Arguments
+        station (qcodes station):
+        od (dict)
+        basevalues (list)
+        outputdir (str)
+        verbose (int): verbosity level
+        
+    """
     if verbose:
         print('onedotScan: one-dot: %s' % od['name'] )
     gg=od['gates']
@@ -303,8 +287,6 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
 
     if full==0:
         stepdata['step']=-12; sweepdata['step']=-12
-        #stepdata['step']=-6; sweepdata['step']=-6
-
 
     wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
     scanjob=dict({'stepdata':stepdata, 'sweepdata':sweepdata, 'keithleyidx': keithleyidx})
@@ -314,8 +296,6 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1):
 
     alldata.metadata['od']=od
     
-    #basename='%s-sweep-2d' % (od['name'])
-    #alldata['od']=od
     return alldata, od
 
 #alldata, od = onedotScan(station,od, basevaluesS, outputdir, verbose=1)
@@ -328,21 +308,15 @@ def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbos
     keithleyidx = [od['instrument']]
 
     for jj, g in enumerate(od['gates']):
-                #basename='%s-sweep-1d-%s' % (od['name'], g)
         alldata=scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, keithleyidx=keithleyidx,cache=cache, full=full)
 
         adata = alldata.metadata['adata']
         od['pinchvalue'][jj] = adata['pinchvalue']
 
     return od
-#%%
-import pyqtgraph
-from qtt.scans import scanPinchValue
     
-from qtt.data import saveExperimentData, loadExperimentData     
-app=pyqtgraph.mkQApp()
-
 #%%
+
 
 
 for ii, Tvalue in enumerate(Tvalues):
@@ -400,12 +374,12 @@ for ii, Tvalue in enumerate(Tvalues):
 
             #break
 
-#scanPinchValue(station, outputdir, gate='SD2b', basevalues=basevalues, keithleyidx=[ki], cache=False, full=full, fig=10)
+#scanPinchValue(station, outputdir, gate='L', basevalues=basevalues, keithleyidx=[ki], cache=False, full=full, fig=10)
 
     #%% Re-calculate basevalues
     # todo: place this in function
     basevaluesS=copy.deepcopy(basevalues)
-    for g in ['L', 'D1', 'D2', 'D3', 'R']:
+    for g in sample.bottomBarrierGates():
             basename = qtt.scans.pinchoffFilename(g, od=None)
             pfile=os.path.join(outputdir, 'one_dot', basename )
 
@@ -502,6 +476,8 @@ for ii, Tvalue in enumerate(Tvalues):
         #% Make high-resolution scans
         if dohires:
             alldatahi, od=onedotHiresScan(station, od, dv=70, verbose=1)
+            alldatahi['dataset'].sync()
+            alldatahi['dataset'].data_manager=None
             saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
             #saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename) # needed?

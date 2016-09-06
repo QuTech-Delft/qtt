@@ -30,6 +30,32 @@ import datetime
 
 #%%
 
+from qtt.scans import scan2D, scan1D
+
+def onedotPlungerScan(station, od, verbose=1):
+    """ Make a scan with the plunger of a one-dot """
+    # do sweep with plunger
+    gates=station.gates
+    gg=od['gates']
+    ptv=od['setpoint']
+              
+    gates.set(gg[2], ptv[0,0]+20)    # left gate = step gate in 2D plot =  y axis
+    gates.set(gg[0], ptv[1,0]+20)
+    
+    pv=od['pinchvalues'][1]
+
+    scanjob=dict({'keithleyidx': [od['instrument'] ]})
+    scanjob['sweepdata']=dict({'gates': [gg[1]], 'start': 50, 'end': pv,'step': -1})
+    
+    wait_time = qtt.scans.waitTime(gg[1], gate_settle=getattr(station, 'gate_settle', None))
+
+    alldata=scan1D(scanjob, station, delay=wait_time, title_comment='sweep of plunger')            
+    alldata.metadata['od']=od
+    scandata=dict(dataset=alldata, od=od)
+    return scandata
+
+#%%
+
 def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """ Save matplotlib figure to disk
 

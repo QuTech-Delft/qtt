@@ -12,8 +12,7 @@ For additional options also see
 
 .. doctest::
 
-  >>> import pmatlab
-  >>> pmatlab.choose(6,2)
+  >>> choose(6,2)
   15
 
 Original code:
@@ -31,15 +30,12 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from imp import reload
 
-version = 1.2
+__version__ = '0.2'
 
 #%% Load necessary packages
 import os
 import sys
 import tempfile
-
-# import pdb
-# import cPickle as pickle
 
 # print('pmatlab: start Py modules %s' % str(([x for x in sys.modules.keys() if x.startswith('Py')])) )
 
@@ -52,8 +48,6 @@ def qtModules(verbose=0):
         print('qt modules: %s' % str(qq))
     return qq
 
-# qtModules(1)
-
 import math
 import numpy as np
 import time
@@ -61,6 +55,7 @@ import platform
 import warnings
 import pickle
 import re
+import logging
 import pkgutil
 
 #%% Load pyqside or pyqt4
@@ -69,40 +64,60 @@ import pkgutil
 _ll = sys.modules.keys()
 _pyside = len([_x for _x in _ll if _x.startswith('PySide.QtGui')]) > 0
 _pyqt4 = len([_x for _x in _ll if _x.startswith('PyQt4.QtGui')]) > 0
+_pyqt5 = len([_x for _x in _ll if _x.startswith('PyQt5.QtGui')]) > 0
 
 try:
     _applocalqt = None
     # print('pmatlab: Py modules %s' % str(([x for x in sys.modules.keys() if x.startswith('Py')])) )
 
     if _pyside:
-        import PySide.QtGui as QtGui
         import PySide.QtCore as QtCore
+        import PySide.QtGui as QtGui
+        import PySide.QtGui as QtWidgets
         from PySide.QtCore import Slot as Slot
         from PySide.QtCore import QObject
         from PySide.QtCore import Signal
     else:
         if _pyqt4:
-            import PyQt4.QtGui as QtGui
             import PyQt4.QtCore as QtCore
+            import PyQt4.QtGui as QtGui
+            import PyQt4.QtGui as QtWidgets
             from PyQt4.QtCore import pyqtSlot as Slot
             from PyQt4.QtCore import QObject
             from PyQt4.QtCore import pyqtSignal as Signal
             # print('pmatlab: using PyQt4')
+        elif _pyqt5:            
+            import PyQt5.QtCore as QtCore
+            import PyQt5.QtGui as QtGui
+            import PyQt5.QtWidgets as QtWidgets
+            from PyQt5.QtCore import pyqtSlot as Slot
+            from PyQt5.QtCore import QObject
+            from PyQt5.QtCore import pyqtSignal as Signal
+            logging.debug('pmatlab: using PyQt5')            
         else:
-            import PySide.QtGui as QtGui
-            import PySide.QtCore as QtCore
-            from PySide.QtCore import Slot as Slot
-            from PySide.QtCore import QObject
-            from PySide.QtCore import Signal
+            if 1:
+                import PyQt4.QtCore as QtCore
+                import PyQt4.QtGui as QtGui
+                import PyQt4.QtGui as QtWidgets
+                from PyQt4.QtCore import pyqtSlot as Slot
+                from PyQt4.QtCore import QObject
+                from PyQt4.QtCore import pyqtSignal as Signal
+            else:
+                import PySide.QtCore as QtCore
+                import PySide.QtGui as QtGui
+                import PySide.QtGui as QtWidgets
+                from PySide.QtCore import Slot as Slot
+                from PySide.QtCore import QObject
+                from PySide.QtCore import Signal
             # print('pmatlab: using PySide')
 
-    _applocalqt = QtGui.QApplication.instance()
+    _applocalqt = QtWidgets.QApplication.instance()
     #print('pmatlab: _applocalqt %s' % _applocalqt )
     if _applocalqt is None:
-        _applocalqt = QtGui.QApplication([])
-        #print('pmatlab: created _applocalqt %s' % _applocalqt )
+        _applocalqt = QtWidgets.QApplication([])
             
     def slotTest(txt):
+        """ Helper function for Qt slots """
         class slotObject(QtCore.QObject):
             def __init__(self, txt):
                 QObject.__init__(self)
@@ -118,6 +133,7 @@ try:
         
     
     class signalTest(QObject):
+        """ Helper function for Qt signals """
         s = Signal()
         
         def __init__(self):
@@ -126,7 +142,9 @@ try:
         def go(self):
             self.s.emit()
             
-except:
+except Exception as ex:
+    logging.info('pmatlab: load qt: %s'  % ex)
+    print(ex)
     print('pmatlab: no Qt found')
 
 #%% Load other modules
@@ -144,7 +162,6 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib
     from mpl_toolkits.mplot3d import Axes3D  # needed for 3d plot points, do not remove!
-
 except Exception as inst:
     #print(inst)
     warnings.warn('could not import matplotlib, not all functionality available...')
@@ -156,6 +173,7 @@ try:
 except Exception as inst:
     warnings.warn('pmatlab: could not load skimage.filters, not all functionality is available')
     pass
+
 
 try:
     import cv2
@@ -207,6 +225,12 @@ def tprint(string, dt=1, output=False):
         else:
             return
 
+def partiala(method, **kwargs):
+  ''' Function to perform functools.partial on named arguments '''
+  def t(x):
+    return method(x, **kwargs)
+  return t
+  
 
 def createCheckerboard(wh, outfile=None, fac=100, fig=None):
     """ Create a checkerboard image of specific size
@@ -254,12 +278,6 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
 
     plt.draw()
     
-def modulepath(m):
-    package= pkgutil.get_loader(m)
-    if package is None:
-        return None
-    return package.get_filename()
-
 def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
     """
 
@@ -302,12 +320,7 @@ class fps_t:
     ...       fps.addtime( .2*kk )
     >>> fps.show()
     framerate: 5.000
-     """
-    #n = None
-    #ii = 0
-    #tt = None
-    #x = None
-
+    """
     def __init__(self, nn=40):
         self.n = nn
         self.tt = np.zeros(self.n)
@@ -358,6 +371,7 @@ class fps_t:
                 '%s: loop %d: framerate: %.1f [fps]' % (s, self.ii, fps), dt=dt)
 
     def show(self):
+        ''' Print the current framerate '''
         fps = self.framerate()
         print('framerate: %.3f' % fps)
 
@@ -376,23 +390,16 @@ def projectiveTransformation(H, x):
 
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))    
     """
-    # xx=np.array([x.transpose()]
     k = x.shape[0]
-    kout=H.shape[0]-1
+    kout = H.shape[0]-1
     xx = x.transpose().reshape((-1, 1, k))
+    
     if (xx.dtype is np.integer or xx.dtype=='int64'):
         xx=xx.astype(np.float32)
     if xx.size > 0:
-        try:
-            ww = cv2.perspectiveTransform(xx, H)
-        except:
-            print(xx)
-            print(H)
-            raise
-                
+        ww = cv2.perspectiveTransform(xx, H)
         # ww=cv2.transform(xx, H)
         ww = ww.reshape((-1, kout)).transpose()
-        # ww.shape
         return ww
     else:
         # fixme
@@ -718,6 +725,15 @@ class camera_t():
         return xim
 
     def reprojectionError(ecam, X, xim):
+        """ Calculate reprojection error for a set of 3D and 2D points
+
+        The error calculated is:
+        
+        .. math::
+            E = \sqrt{ \sum_j ||PX_j-y_j ||^2 }
+        
+        """
+        
         xxl = ecam.projectPoints(X).squeeze().transpose()
         dd = xxl - xim
         err = np.linalg.norm(dd, axis=0)
@@ -843,6 +859,7 @@ class camera_t():
 #%%
 import subprocess
 def runcmd(cmd, verbose=0):
+    """ Run command and return output """
     output = subprocess.check_output(cmd, shell=True)
     return output
     
@@ -917,12 +934,15 @@ def frame2T(f):
 
 def euler2RBE(theta):
     """ Convert Euler angles to rotation matrix
-      Example:
+    
+      Example
+      -------
       >>> np.set_printoptions(precision=4, suppress=True)
       >>> euler2RBE( [0,0,np.pi/2] )
       matrix([[ 0., -1.,  0.],
               [ 1.,  0.,  0.],
               [-0.,  0.,  1.]])
+
     """
     cr = math.cos(theta[0])
     sr = math.sin(theta[0])
@@ -1053,7 +1073,8 @@ def pg_rotx(phi):
     
 if platform.node()=='marmot':   
     # transition code to convert all elements to np.array type (and use python 3.5 @ operator)
-
+    # np.array is faster, and with the @ operator we get cleaner code
+    
     def frame2T(f):
 	    """ Convert frame into 4x4 transformation matrix """
 	    T = np.array(np.eye(4))
@@ -1160,7 +1181,17 @@ def pg_transl2H(tr):
 
 
 def setregion(im, subim, pos):
-    """ Set region in Numpy image """
+    """ Set region in Numpy image 
+    
+    Arguments
+    ---------    
+        im : Numpy array
+            image to fill region in
+        subim : Numpy array
+            subimage
+        pos: array
+            position to place image
+    """
     # TODO: error checking
     h = subim.shape[0]
     w = subim.shape[1]
@@ -1344,13 +1375,6 @@ def plotPoints(xx, *args, **kwargs):
         h = None
     return h
 
-# from mpl_toolkits.mplot3d import axes3d as p3
-
-
-# matplotlib.projections.get_projection_names()
-
-# import numpy
-# from mpl_toolkits.mplot3d import proj3d
 
 def orthogonal_proj(zfront, zback):
     """ see http://stackoverflow.com/questions/23840756/how-to-disable-perspective-in-mplot3d """
@@ -1438,6 +1462,7 @@ def polyarea(p):
 	    return val
 
     def polysegments(p):
+        """ Helper functions """
         if isinstance(p, list):
             return zip(p, p[1:] + [p[0]])
         else:
@@ -1471,9 +1496,10 @@ except:
         import shapely
         import shapely.geometry
     except Exception as inst:
-        #warnings.warn('pmatlab: could not load shapely, not all functionality is available')
-        pass
-    
+	    warnings.warn('pmatlab: could not load shapely, not all functionality is available')
+	    pass
+
+
     def polyintersect(x1,x2):
         """ Intersection of two polygons
     
@@ -1497,7 +1523,16 @@ except:
 #%%
 
 def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0), thickness=-1, copyimage=True):
-    """ Draw points on opencv image """
+    """ Draw points on image
+    
+    Arguments
+    ---------
+        bgr : numpy array
+            image to draw points into
+        impts : array
+            locations of points to plot
+            
+    """
     if copyimage:
         out = bgr.copy()
     else:
@@ -1517,6 +1552,7 @@ def enlargelims(factor=1.05):
     """ Enlarge the limits of a plot
     Example:
       >>> enlargelims(1.1)
+      
     """
     xl = plt.xlim()
     d = (factor - 1) * (xl[1] - xl[0]) / 2
@@ -1551,9 +1587,6 @@ def findfilesR(p, patt):
     rr = re.compile(patt)
     for root, dirs, files in os.walk(p, topdown=False):
         lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
-        # for name in files:
-        #    lst += [name]
-    # lst = [l for l in lst if re.match(rr, l)]
     return lst
 
 def signedsqrt(val):    
@@ -1815,8 +1848,7 @@ def choose(n, k):
         The bionomial coefficient n choose k
 
     Example:
-      >>> import pmatlab
-      >>> pmatlab.choose(6,2)
+      >>> choose(6,2)
       15
 
     """
@@ -1827,6 +1859,7 @@ def choose(n, k):
 
 
 def closefn():
+    """ Destructor function for the module """
     return
     #print('pmatlab: closefn()')
     #global _applocalqt
@@ -1988,6 +2021,7 @@ try:
         return np.array(im1)
 except:
     def writeTxt(*args, **kwargs):
+        """ Dummy function """
         warnings.warn('writeTxt: could not find PIL')
         return None
     pass
@@ -2001,8 +2035,6 @@ try:
     _usegtk = 0
     try:
         import matplotlib.pyplot
-        #fig = matplotlib.pyplot.figure(85410, frameon=False)
-        #matplotlib.pyplot.close(fig)
         _usegtk = 0
     except:
         import pygtk
@@ -2037,16 +2069,16 @@ try:
             clipboard.set_image(image)
             clipboard.store()
         else:
-            cb = QtGui.QApplication.clipboard()
+            cb = QtWidgets.QApplication.clipboard()
             r, tmpfile = tempfile.mkstemp(suffix='.bmp')
             cv2.imwrite(tmpfile, im)
-            qim = QtGui.QPixmap(tmpfile)
+            qim = QtWidgets.QPixmap(tmpfile)
             cb.setPixmap(qim)
 
             if 0:
                 im = im[:, :, 0:3].copy()
-                qim = QtGui.QImage(
-                    im.data, im.shape[0], im.shape[1], QtGui.QImage.Format_RGB888)
+                qim = QtWidgets.QImage(
+                    im.data, im.shape[0], im.shape[1], QtWidgets.QImage.Format_RGB888)
                 cb.setImage(qim)
 
 
@@ -2092,32 +2124,25 @@ def cfigure(*args, **kwargs):
 
 #%%
 
-# qtModules(1)
-
-
 try:
-    _qd = QtGui.QDesktopWidget()
     def monitorSizes(verbose=0):
     	""" Return monitor sizes """
-    	_qd = QtGui.QDesktopWidget()
+    	_qd = QtWidgets.QDesktopWidget()
     	if sys.platform == 'win32' and _qd is None:
             import ctypes
             user32 = ctypes.windll.user32
             wa = [
                 [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
     	else:
-            # tmp=QtGui.QApplication.startingUp()
-            _applocalqt = QtGui.QApplication.instance()
+            # tmp=QtWidgets.QApplication.startingUp()
+            #logging.debug('starting QApplication: startingUp %d' % tmp)
+            _applocalqt = QtWidgets.QApplication.instance()
 
-            if 0:
-                print('starting QApplication: startingUp %d' % tmp)
             if _applocalqt is None:
-                _applocalqt = QtGui.QApplication([])
-                _qd = QtGui.QDesktopWidget()
+                _applocalqt = QtWidgets.QApplication([])
+                _qd = QtWidgets.QDesktopWidget()
             else:
-                if 0:
-                    print('get QDesktopWidget()')
-                _qd = QtGui.QDesktopWidget()
+                _qd = QtWidgets.QDesktopWidget()
 
             nmon = _qd.screenCount()
             wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
@@ -2138,8 +2163,8 @@ try:
     	return wa
 except:
     def monitorSizes(verbose=0):
-        """ Dummy function """
-        return [[0, 0, 1280, 720]]
+        """ Dummy function for monitor sizes """
+        return [[0, 0, 1600, 1200]]
     pass
 
 #%%
@@ -2219,7 +2244,16 @@ def ca():
 #%%        
 @static_var('monitorindex', -1)
 def tilefigs(lst, geometry=[2,2], ww=None, raisewindows=False, tofront=False, verbose=0):
-    """ Tile figure windows on a specified area """
+    """ Tile figure windows on a specified area
+
+    Arguments
+    ---------
+        lst : list
+                list of figure handles or integers
+        geometry : 2x1 array
+                layout of windows
+                
+    """
     mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
     if ww is None:
@@ -2288,6 +2322,9 @@ def robustCost(x, thr, method='L1'):
     
     method : string
         method to be used. use 'show' to show the options
+        
+    Example
+    -------
     >>> robustCost([2,3,4],thr=2.5)
     array([ 2. ,  2.5,  2.5])
     >>> robustCost(2, thr=1)
@@ -2295,32 +2332,47 @@ def robustCost(x, thr, method='L1'):
     >>> methods=robustCost(np.arange(-5,5,.2), thr=2, method='show')
     """
     if method=='L1':
-         x=np.minimum(np.abs(x), thr)
+         y=np.minimum(np.abs(x), thr)
     elif method=='L2' or method=='square':
-         x=np.minimum(x*x, thr)
+         y=np.minimum(x*x, thr)
     elif method=='BZ':
         alpha= thr*thr
         epsilon=np.exp(-alpha)
-        x=-np.log( np.exp(-x*x ) + epsilon )
+        y=-np.log( np.exp(-x*x ) + epsilon ) 
+    elif method=='BZ0':
+        #print('BZ0')
+        alpha= thr*thr
+        epsilon=np.exp(-alpha)
+        y=-np.log( np.exp(-x*x ) + epsilon )  + np.log(1+epsilon)
     elif method=='cauchy':
         b2= thr*thr
         d2=x*x
-        x=np.log ( 1+d2/b2 )
+        y=np.log ( 1+d2/b2 )
+    elif method=='cg':
+        delta=x
+        delta2=delta*delta
+        w=1/thr # ratio of std.dev
+        w2=w*w
+        A=.1 # fraction of outliers
+        y= -np.log(A*np.exp(-delta2)+ (1-A)*np.exp(-delta2/w2)/w )
+        y = y + np.log(A+ (1-A)*1/w )
     elif method=='huber':
         d2=x*x
         d=2*thr*np.abs(x)-thr*thr
-        x=d2
-        idx=np.abs(x)>=thr*thr
-        x[idx]=d[idx]
+        y=d2
+        idx=np.abs(y)>=thr*thr
+        y[idx]=d[idx]
     elif method=='show':
              plt.figure(10); plt.clf()
-             mm=['L1', 'L2', 'BZ', 'cauchy', 'huber']
+             mm=['L1', 'L2', 'BZ', 'cauchy', 'huber', 'cg']
              for m in mm:
                  plt.plot(x, robustCost(x, thr, m), label=m)
              plt.legend()
              #print('robustCost: %s'  % mm)
-             x=mm
-    return x
+             y=mm
+    else:
+        raise Exception('no such method' )
+    return y
 
 #robustCost(np.arange(-5,5,.1), 2, 'show')
 
@@ -2695,7 +2747,7 @@ def decomposeProjectiveTransformation(H, verbose=0):
 
  For more information see "Multiple View Geometry", paragraph 1.4.6.
 
-    >>> Ha, Hs, Hp, rest =decomposeProjectiveTransformation( np.eye(3) )
+    >>> Ha, Hs, Hp, rest = decomposeProjectiveTransformation( np.eye(3) )
     """
     H=np.matrix(H)
     k=H.shape[0]
@@ -2739,9 +2791,30 @@ def decomposeProjectiveTransformation(H, verbose=0):
     return Ha, Hs, Hp, rest
     
 
-def test_nose():
-	return
+#%% Debugging
 
+def modulepath(m):
+    package= pkgutil.get_loader(m)
+    if package is None:
+        return None
+    return package.get_filename()
+
+def checkmodule(mname):
+    import imp
+    q=imp.find_module(mname)
+    import importlib
+    q = importlib.util.find_spec(mname)
+    print(q)
+    return q
+
+def unittest(verbose=1):
+    """ Unittest function for module """
+    import doctest
+    if verbose>=2:
+	    print('pmatlab: running unittest')
+    _=euler2RBE([0,1,2])
+    doctest.testmod()
+    
 #%% Run tests from documentation
 if __name__ == "__main__":
     """ Dummy main for doctest

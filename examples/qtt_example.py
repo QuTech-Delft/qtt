@@ -52,7 +52,7 @@ import virtualDot;
 if __name__=='__main__':
 
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
-    server_name=None
+    #server_name=None
     station = virtualDot.initialize(server_name=server_name)    
     
     keithley1 = station.keithley1
@@ -76,6 +76,8 @@ if __name__=='__main__':
     qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
     mwindows=qtt.setupMeasurementWindows(station)
     mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
+    from qtt.parameterviewer import createParameterWidgetRemote
+    createParameterWidgetRemote([gates,])
     plotQ=mwindows['plotwindow']
     qtt.live.liveplotwindow=plotQ
     qtt.live.mwindows=mwindows

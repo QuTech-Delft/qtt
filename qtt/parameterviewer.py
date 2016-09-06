@@ -150,17 +150,16 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 if isinstance(sb, QtWidgets.QTreeWidgetItem):
                     sb.setText( 1, str(value ) )
                 else:
-                    # update a float value
+                    # update a float value                
                     if np.abs(sb.value()-value)>1e-9:
-                    
-                        logging.debug('update %s to %s' % (g, value))
-                        try:
-                            
-                            oldstate=sb.blockSignals(True)
-                            sb.setValue( value )
-                            sb.blockSignals(oldstate)
-                        except Exception as e:
-                            pass
+                        if not sb.hasFocus(): # do not update when editing
+                            logging.debug('update %s to %s' % (g, value))
+                            try:                                
+                                oldstate=sb.blockSignals(True)
+                                sb.setValue( value )
+                                sb.blockSignals(oldstate)
+                            except Exception as e:
+                                pass
 
         for f in self.callbacklist:
             try:
