@@ -154,14 +154,14 @@ class virtual_awg(Instrument):
         for nr in awgnrs:
             self._awgs[nr].run()
             
-    def make_sawtooth(self,sweeprange,risetime):
-        '''Make a sawtooth with a short decline time. Not yet scaled with 
+    def make_sawtooth(self,sweeprange,risetime,width=.95):
+        '''Make a sawtooth with a decline width determined by width. Not yet scaled with 
         awg_to_plunger value.
         '''
         samplerate = 1./self.AWG_clock
         tt = np.arange(0,2*risetime+samplerate,samplerate)
         v_wave = float(sweeprange/((self.ch_amp/2.0)))
-        wave=(v_wave/2)*scipy.signal.sawtooth(np.pi*tt/risetime, width=.95)
+        wave=(v_wave/2)*scipy.signal.sawtooth(np.pi*tt/risetime, width=width)
         
         return wave
 
