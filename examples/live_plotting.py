@@ -73,7 +73,7 @@ class livePlot:
                 pass
         elif len(self.sweepgates) == 2:
             if data is not None:
-                self.img.setImage(data)
+                self.img.setImage(data.T)
                 self.horz_low=self.gates.get(self.sweepgates[0])-self.sweepranges[0]/2
                 self.horz_range=self.sweepranges[0]
                 self.vert_low=self.gates.get(self.sweepgates[1])-self.sweepranges[1]/2
