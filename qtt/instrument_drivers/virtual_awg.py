@@ -15,6 +15,8 @@ Created on Wed Aug 31 13:04:09 2016
 import numpy as np
 from qcodes import Instrument
 import scipy.signal
+import qcodes
+import logging
 from qcodes import QtPlot, DataArray
 
 #%%
@@ -26,6 +28,9 @@ class virtual_awg(Instrument):
         self.awg_map = awg_map
         self.hardware = hardware
         self.verbose = verbose
+        self.delay_FPGA = 25.0e-6 # should depend on filterboxes
+        qcodes.installZMQlogger()
+        logging.info('virtual_awg: setup')
         
         if len(self._awgs)==0 and verbose:
             print('no physical AWGs connected')
@@ -38,6 +43,7 @@ class virtual_awg(Instrument):
             self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0]+1) % 2]
             self.awg_seq.set('run_mode','SEQ')
             self.awg_seq.set_sq_length(1)
+            self.delay_AWG = self.hardware.parameters['delay_AWG'].get()
         else:
             raise Exception('Configuration of AWGs not supported by virtual_awg instrument')
 
@@ -98,9 +104,8 @@ class virtual_awg(Instrument):
             sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
         
         # fpga marker
-        delay_FPGA = 25.0e-6 # should depend on filterboxes
         fpga_marker = np.zeros(len(wave_zero))
-        fpga_marker[int(delay_FPGA*self.AWG_clock):(int(delay_FPGA*self.AWG_clock)+len(wave_zero)//20)]=1.0
+        fpga_marker[int(self.delay_FPGA*self.AWG_clock):(int(self.delay_FPGA*self.AWG_clock)+len(wave_zero)//20)]=1.0
         
         if fpga_info[:2] not in sweep_info:
             sweep_info[fpga_info[:2]] = dict()
@@ -124,10 +129,9 @@ class virtual_awg(Instrument):
                 sweep_info[awg_info[:2]]['marker2'] = wave_zero
                 sweep_info[awg_info[:2]]['name'] = 'awg_mk'
             
-            delay_AWG=22.0e-6
             awg_marker = np.zeros(len(wave_zero))
             awg_marker[0:len(wave_zero)//20]=1
-            awg_marker=np.roll(awg_marker,len(wave_zero)-int(delay_AWG*self.AWG_clock))
+            awg_marker=np.roll(awg_marker,len(wave_zero)-int(self.delay_AWG*self.AWG_clock))
             sweep_info[awg_info[:2]]['marker%d' % self.awg_map['awg_mk'][2]] = awg_marker
             self._awgs[awg_info[0]].set('ch%i_m%i_low' % (awg_info[1], awg_info[2]),0)
             self._awgs[awg_info[0]].set('ch%i_m%i_low' % (awg_info[1], awg_info[2]),2.6)
