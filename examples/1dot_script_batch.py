@@ -444,6 +444,8 @@ for ii, Tvalue in enumerate(Tvalues):
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
         
         alldata.data_manager=None
+        scandata['dataset'].data_manager=None
+        
         write_data(experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) , scandata)
         #_=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         
