@@ -29,6 +29,13 @@ def dumpstring(txt):
         fid.write(txt + '\n')
 
 #%%
+
+def stripDataset(dataset):
+    dataset.sync()
+    dataset.data_manager = None
+    dataset.background_functions={}
+    
+#%%
 try:
     from qcodes.process.heartbeat import *
     import time

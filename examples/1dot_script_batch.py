@@ -49,6 +49,7 @@ from qtt.data import *
 from qtt.scans import *
 from qtt.legacy import getODbalancepoint
 from qtt.reports import generateOneDotReport
+from qtt.tools import stripDataset
 
 import pyqtgraph
 from qtt.scans import scanPinchValue
@@ -72,14 +73,13 @@ if __name__=='__main__':
         import virtualV2 as msetup; from virtualV2 import sample
         import virtualDot as msetup; from virtualDot import sample; 
 
-        
         awg1=None
         def simulation():
             ''' Funny ... '''
             return True
         
-    msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
-    #msetup.initialize(reinit=False, server_name=None )
+    #msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+    msetup.initialize(reinit=False, server_name=None )
     
     bottomgates = sample.bottomGates()
     
@@ -153,7 +153,7 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-09-06z'; Tvalues=np.array([-380])
+    basetag='batch-2016-09-07y'; Tvalues=np.array([-380])
             
     b=False
     
@@ -394,6 +394,7 @@ for ii, Tvalue in enumerate(Tvalues):
     for od in dotlist:
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
 
+    
     # Make scans of the sensing dots
 
     for odii, od in enumerate(sddots):
@@ -417,10 +418,12 @@ for ii, Tvalue in enumerate(Tvalues):
         
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
         
-        alldata.data_manager=None
-        scandata['dataset'].data_manager=None
+        stripDataset(alldata)
+        stripDataset(scandata['dataset'])
         
-        write_data(experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) , scandata)
+        hfile=experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
+        write_data(hfile , scandata)
+        #x=load_data(hfile)
         #_=loadQttData(path = experimentFile(outputdir, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name'])) )
         
 
@@ -428,6 +431,7 @@ for ii, Tvalue in enumerate(Tvalues):
         saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename)
 
         alldataplunger=onedotPlungerScan(station, od, verbose=1)
+        stripDataset(alldataplunger['dataset'])
         
         saveExperimentData(outputdir, alldataplunger, tag='one_dot', dstr=basenameplunger)
 
@@ -468,16 +472,16 @@ for ii, Tvalue in enumerate(Tvalues):
             continue
 
         alldata,od = onedotScan(station, od, basevaluesS, outputdir,verbose=1)
+        stripDataset(alldata)
+
         saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename)
-        if odii>10:
-            STOP
 
 
         #% Make high-resolution scans
         if dohires:
             alldatahi, od=onedotHiresScan(station, od, dv=70, verbose=1)
-            alldatahi['dataset'].sync()
-            alldatahi['dataset'].data_manager=None
+            stripDataset(alldatahi['dataset'])
+
             saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
             #saveExperimentData(outputdir, alldata, tag='one_dot', dstr=basename) # needed?
@@ -540,7 +544,9 @@ if __name__=='__main__':
 
 
 #%%
-
+sdinstruments=[sd.instrument]
+if sd2 is not None:
+    sdinstruments+=[sd2.instrument]
 
 for ii, Tvalue in enumerate(Tvalues):
     if not __name__=='__main__':
@@ -570,11 +576,11 @@ for ii, Tvalue in enumerate(Tvalues):
 
     #readfunc=lambda: keithley1.readnext()*(1e12/(Amp*10e6) )
 
-    two_dots=qtt.legacy.get_two_dots(full=1)
+    two_dots=sample.get_two_dots(full=1)
     one_dots=sample.get_one_dots(full=1)
 
     # make two-dots (code from optimize_one)
-    jobs = qtt.legacy.createDoubleDotJobs(two_dots, one_dots, basevalues=basevalues0, resultsdir=outputdir, fig=None)
+    jobs = qtt.legacy.createDoubleDotJobs(two_dots, one_dots, basevalues=basevalues0, resultsdir=outputdir, sdinstruments=sdinstruments, fig=None)
     saveExperimentData(outputdir2d, jobs, tag='doubledot', dstr='jobs')
     #jobs = loadExperimentData(outputdir2d, tag='doubledot', dstr='jobs')
 
@@ -787,8 +793,8 @@ import webbrowser
 
 if __name__=='__main__':
 
-    one_dots=get_one_dots(full=2)
-    two_dots=get_two_dots(full=1)
+    one_dots=sample.get_one_dots(full=2)
+    two_dots=sample.get_two_dots(full=1)
     
     Tvalue=Tvalues[0]
     tag=basetag+'-T%d'  % Tvalue
@@ -799,7 +805,7 @@ if __name__=='__main__':
 
     try:
         # generate report
-        fname,_= generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
+        fname,_= qtt.reports.generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
         webbrowser.open(fname,new=2)
     except Exception as e:
         print(e)

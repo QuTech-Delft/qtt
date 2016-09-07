@@ -31,6 +31,7 @@ import datetime
 #%%
 
 from qtt.scans import scan2D, scan1D
+from qtt.tools import stripDataset
 
 def onedotPlungerScan(station, od, verbose=1):
     """ Make a scan with the plunger of a one-dot """
@@ -51,6 +52,7 @@ def onedotPlungerScan(station, od, verbose=1):
 
     alldata=scan1D(scanjob, station, delay=wait_time, title_comment='sweep of plunger')            
     alldata.metadata['od']=od
+    stripDataset(alldata)
     scandata=dict(dataset=alldata, od=od)
     return scandata
 
@@ -895,7 +897,7 @@ def getPinchvalues(od, xdir):
         od['pinchvalues'][jj] = adata['pinchvalue']
     return od
 
-def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), fig=None, verbose=1):
+def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
     # one_dots=get_one_dots(full=1)
     xdir = os.path.join(resultsdir, 'one_dot')
@@ -994,7 +996,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), fig=N
             scanjob['stepdata'] = dict( {'gates': [p1], 'start': s1, 'end': e1, 'step': -2})
             scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -2})
 
-            scanjob['keithleyidx'] = [1, 2]
+            scanjob['keithleyidx'] = sdinstruments
             scanjob['basename'] = 'doubledot-2d'
             scanjob['basevalues'] = basevaluesTD
             scanjob['td'] = td
@@ -1016,24 +1018,14 @@ if __name__=='__main__':
 
 
 #%%
-def get_two_dots(full=1):
-    """ return all posible simple two-dots """
-    two_dots = []
-    two_dots += [dict({'gates': ['L', 'P1', 'D1', 'D1', 'P2', 'D2']})]
-    if full:
-        two_dots += [dict({'gates': ['D1', 'P2', 'D2', 'D2', 'P3', 'D3']})]
-        two_dots += [dict({'gates': ['D2', 'P3', 'D3', 'D3', 'P4', 'R']})]
-        #two_dots += [dict({'gates': [ 'L', 'P1', 'D1', 'SD4a', 'SD4b', 'SD4c']})]
-
-    for td in two_dots:
-        td['name'] = '-'.join(td['gates'])
-    return two_dots
     
 def stopbias(gates):
     """ Stop the bias currents in the sample """
     gates.set_bias_1(0)
     gates.set_bias_2(0)
-    gates.set_bias_3(0)
+    for ii in [3]:
+        if hasattr(gates, 'set_bias_%d' % ii):
+            gates.set('bias_%d' % ii, 0)
     
 def stop_AWG(awg1):
     """ Stop the AWG """
