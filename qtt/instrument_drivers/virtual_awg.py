@@ -192,14 +192,32 @@ class virtual_awg(Instrument):
         waveform[gate]=wave
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
+        waveform['width']=width        
         
         return waveform
         
-    def sweep_process(self,data,sweep_info):
-        '''Process the data from the FPGA based on the waveform send with 
-        the AWG.
+    def sweep_process(self, data, waveform, direction='forwards'):
+        '''Process the data returned by reading out based on the shape of 
+        the sawtooth send with the AWG. 
+        
+        Arguments:
+            data (array): the data 
+            waveform (dictionary): contains the wave and the sawtooth width
+            direction (string): option to use backwards signal i.o. forwards
+        
+        Returns:
+            data_processed (array): The data after dropping part of it.
+        
+        Example:
+        -------
+        >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
         '''
-                
+        width = waveform['width'] 
+        
+        if direction == 'forwards':
+            data_processed = data[1:np.floor(width*len(data)-1)]
+        elif direction == 'backwards':
+            data_processed = data[np.ceil((1-width)*len(data)):]
         
         return data_processed
         
