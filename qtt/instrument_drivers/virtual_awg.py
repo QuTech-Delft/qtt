@@ -32,7 +32,7 @@ class virtual_awg(Instrument):
         qcodes.installZMQlogger()
         logging.info('virtual_awg: setup')
         
-        if len(self._awgs)==0 and verbose:
+        if len(self._awgs)==0 and self.verbose:
             print('no physical AWGs connected')
         elif len(self._awgs) == 1:
             self.awg_cont = self._awgs[0]
