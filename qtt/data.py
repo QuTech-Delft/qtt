@@ -30,7 +30,7 @@ import qtt.tools
 
 import matplotlib.pyplot as plt
 
-from .tools import diffImageSmooth
+from qtt.tools import diffImageSmooth
 
 #%%
 
@@ -213,12 +213,12 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 ''' Class to convert scan coordinate to image coordinates '''
 class image_transform:
 
-    def __init__(self, dataset=None, mode='pixel', verbose = 0):
+    def __init__(self, dataset=None, arrayname=None, mode='pixel', verbose = 0):
         self.H=np.eye(3) # raw image to pixel image transformation
         self.extent = [] # image extent in pixel
         self.verbose=verbose
         self.dataset=dataset
-        extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, arrayname=None)
+        extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dataset, arrayname=arrayname)
         self.vstep=vstep
         self.vsweep=vsweep
         nx = len(vsweep)
@@ -375,6 +375,7 @@ def pix2scan(pt, dd2d):
     ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
     return ptx
 
+#%%
 def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan
 

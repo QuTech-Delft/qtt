@@ -64,19 +64,19 @@ def tprint(string, dt=1, output=False):
 import zmq.log.handlers
 
 
-def removeZMQlogger(name=None):
+def removeZMQlogger(name=None, verbose=0):
     logger = logging.getLogger(name)
 
     for h in logger.handlers:
         if isinstance(h, zmq.log.handlers.PUBHandler):
-            print('removing handler %s' % h)
+            if verbose:
+                print('removeZMQlogger: removing handler %s' % h)
             logger.removeHandler(h)
 
 
 def installZMQlogger(port=5800, name=None, clear=True, level=logging.INFO):
     if clear:
         removeZMQlogger(name)
-
     ctx = zmq.Context()
     pub = ctx.socket(zmq.PUB)
     pub.setsockopt(zmq.RCVHWM, 10)
