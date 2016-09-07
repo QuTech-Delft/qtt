@@ -13,15 +13,17 @@ class FPGA_ave(VisaInstrument):
     <name> = instruments.create('name', 'FPGA_AVE', address='<COM PORT>')
     <COM PORT> = COM5 e.g.
     '''
-    def __init__(self, name, address, **kwargs):
+    def __init__(self, name, address, verbose=1, **kwargs):
         logging.debug(__name__ + ' : Initializing instrument')
         super().__init__(name, address, **kwargs)
 
         self._address = address
         self._values = {}
+        self.verbose = verbose
         self._total_cycle_num=100
-        self._sampling_frequency=200e3
+        self._sampling_frequency=1000e3
         self.visa_handle.baud_rate = 57600
+        self.set_sampling_frequency(self._sampling_frequency)
 
         # Add parameters
         self.add_parameter('mode',
@@ -272,7 +274,8 @@ class FPGA_ave(VisaInstrument):
 
         fs=internal_clock/Ndivision
         self._sampling_frequency=fs
-        print('internal clock is 50MS/s, we divide the internal clock by ',Ndivision)
+        if self.verbose:
+            print('FPGA internal clock is 50MHz, dividing it by %d, yields samp. freq. is %d Hz' % (Ndivision, self._sampling_frequency))
 
         return self.write_to_serial(132,int(Ndivision))
 
