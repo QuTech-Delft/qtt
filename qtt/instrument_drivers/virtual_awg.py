@@ -170,7 +170,7 @@ class virtual_awg(Instrument):
         return wave
 
     def sweep_gate(self, gate, sweeprange, risetime, width=.95):
-        ''' Send a triangular signal with the AWG to a gate to sweep. Also 
+        ''' Send a sawtooth signal with the AWG to a gate to sweep. Also 
         send a marker to the FPGA.
         
         Arguments:
@@ -194,6 +194,14 @@ class virtual_awg(Instrument):
         self.sweep_run(sweep_info)
         
         return waveform
+        
+    def sweep_process(self,data,sweep_info):
+        '''Process the data from the FPGA based on the waveform send with 
+        the AWG.
+        '''
+                
+        
+        return data_processed
         
     def plot_wave(self,wave):
         ''' Plot the wave '''
