@@ -123,7 +123,7 @@ class virtual_awg(Instrument):
         self._awgs[fpga_info[0]].set(
             'ch%i_m%i_low' % (fpga_info[1], fpga_info[2]), 0)
         self._awgs[fpga_info[0]].set(
-            'ch%i_m%i_low' % (fpga_info[1], fpga_info[2]), 2.6)
+            'ch%i_m%i_high' % (fpga_info[1], fpga_info[2]), 2.6)
 
         # awg marker
         if self.awg_seq in awgs:
@@ -145,7 +145,7 @@ class virtual_awg(Instrument):
             self._awgs[awg_info[0]].set(
                 'ch%i_m%i_low' % (awg_info[1], awg_info[2]), 0)
             self._awgs[awg_info[0]].set(
-                'ch%i_m%i_low' % (awg_info[1], awg_info[2]), 2.6)
+                'ch%i_m%i_high' % (awg_info[1], awg_info[2]), 2.6)
 
         # send waveforms
         for sweep in sweep_info:
@@ -231,9 +231,10 @@ class virtual_awg(Instrument):
         width = waveform['width']
 
         if direction == 'forwards':
-            data_processed = data[1:np.floor(width * len(data) - 1)]
+            end = int(np.floor(width * len(data) - 1))
+            data_processed = data[1:end]
         elif direction == 'backwards':
-            data_processed = data[np.ceil((1 - width) * len(data)):]
+            data_processed = data[int(np.ceil((1 - width) * len(data))):]
 
         return data_processed
 
