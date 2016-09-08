@@ -22,7 +22,7 @@ class livePlot:
     def __init__(self,gates,sweepgates,sweepranges,verbose=1):
         win = pg.GraphicsWindow(title="Live view")
         win.resize(800, 600)
-        win.move(-900,10)
+        win.move(-900, 10)
 
         # TODO: automatic scaling?
         # TODO: implement FPGA callback in qcodes    
@@ -141,10 +141,11 @@ class fpgaCallback_sd:
         self.Naverage=Naverage
         self.FPGA_mode=0
         self.fpga_ch=fpga_ch
+        self.ReadDevice = 'FPGA_ch%d' % self.fpga_ch
         
     def __call__(self, verbose=0):
         """ Callback function to read a single line of data from the FPGA """
-        totalpoints, DataRead_ch1, DataRead_ch2  = self.fpga.readFPGA(Naverage=self.Naverage)
+        totalpoints, DataRead_ch1, DataRead_ch2  = self.fpga.readFPGA(Naverage=self.Naverage,ReadDevice=[self.ReadDevice])
 
         if self.fpga_ch==1:
             datr=DataRead_ch1[1:-1]
