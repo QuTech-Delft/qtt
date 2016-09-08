@@ -78,8 +78,8 @@ if __name__=='__main__':
             ''' Funny ... '''
             return True
         
-    #msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
-    msetup.initialize(reinit=False, server_name=None )
+    msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+    #msetup.initialize(reinit=False, server_name=None )
     
     bottomgates = sample.bottomGates()
     
@@ -153,7 +153,7 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-09-07y'; Tvalues=np.array([-380])
+    basetag='batch-2016-09-07q'; Tvalues=np.array([-380])
             
     b=False
     
@@ -544,9 +544,11 @@ if __name__=='__main__':
 
 
 #%%
-sdinstruments=[sd.instrument]
-if sd2 is not None:
-    sdinstruments+=[sd2.instrument]
+if __name__=='__main__':
+
+    sdinstruments=[sd.instrument]
+    if sd2 is not None:
+        sdinstruments+=[sd2.instrument]
 
 for ii, Tvalue in enumerate(Tvalues):
     if not __name__=='__main__':

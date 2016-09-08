@@ -251,7 +251,13 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 #%%
 
 def costscoreOD(a, b, pt, ww, verbose=0, output=False):
-    """ Cost function for simple fit of one-dot open area """
+    """ Cost function for simple fit of one-dot open area
+
+    Arguments:
+        a,b (float): position along axis (a: x-axis)
+        pt (numpy array): point in image
+    
+    """
     pts = np.array(
         [[a, 0], pt, [ww.shape[1] - 1, b], [ww.shape[1] - 1, 0], [a, 0]])
     pts = pts.reshape((5, 1, 2)).astype(int)
@@ -262,8 +268,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     cost = -(imx == ww).sum()
 
     # add penalty for moving out of range
-    cost += (.025 * ww.size) * np.maximum(b - ww.shape[0], 0) / ww.shape[0]
-    cost += (.025 * ww.size) * np.maximum(a, 0) / ww.shape[1]
+    cost += (.025 * ww.size) * np.maximum(b - ww.shape[0]-1, 0) / ww.shape[0]
+    cost += (.025 * ww.size) * np.maximum(-a, 0) / ww.shape[1]
 
     cost += (.025 * ww.size) * 2 * (pts[2, 0, 1] < 0)
 
@@ -278,20 +284,20 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 
 
 
-
+#%%
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
     #XX = dd['data_array']
     extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, arrayname=None)
 
-    scanjob=dd.metadata['scanjob']
-    stepdata = scanjob['stepdata']
+    #scanjob=dd.metadata['scanjob']
+    #stepdata = scanjob['stepdata']
     #g0 = stepdata['gates'][0]
-    sweepdata = scanjob['sweepdata']
+    #sweepdata = scanjob['sweepdata']
     #g2 = sweepdata['gates'][0]
 
-    nx = vstep.size
-    ny = vsweep.size
+    #nx = vstep.size
+    #ny = vsweep.size
 
     im, impixel, tr = dataset2image2(dd)
 

@@ -17,15 +17,16 @@ from qcodes import Instrument
 import scipy.signal
 import qcodes
 import logging
-from qcodes import QtPlot, DataArray
+from qcodes import DataArray
+from qcodes.plots.pyqtgraph import QtPlot
 
 #%%
 
 
 class virtual_awg(Instrument):
+    shared_kwargs = ['instruments', 'hardware']
 
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
-#        shared_kwargs = ['instruments']
         super().__init__(name, **kwargs)
         self._awgs = instruments
         self.awg_map = awg_map

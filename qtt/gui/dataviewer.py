@@ -114,6 +114,7 @@ class DataViewer(QtWidgets.QWidget):
 
         # get logs from disk
         self.updateLogs()
+        self.datatag=None
 
     def pptCallback(self):
         if self.dataset is None:
@@ -133,6 +134,9 @@ class DataViewer(QtWidgets.QWidget):
         print('found %d files' % (len(dd)))
         # print(dd)
 
+        self.datafiles = sorted(dd)
+        self.datafiles = [os.path.join(self.datadir, d) for d in self.datafiles]
+        
         model.clear()
         model.setHorizontalHeaderLabels(['Log', 'Comments'])
 
@@ -180,6 +184,9 @@ class DataViewer(QtWidgets.QWidget):
         except Exception:
             return None
 
+    def selectedDatafile(self):
+        return self.datatag
+        
     def logCallback(self, index):
         ''' Function called when a log entry is selected '''
         logging.info('logCallback!')
@@ -189,7 +196,8 @@ class DataViewer(QtWidgets.QWidget):
         row = index.row()
 
         tag = pp.child(row, 2).data()
-
+        self.datatag=tag
+        
         # load data
         if tag is not None:
             print('logCallback! tag %s' % tag)

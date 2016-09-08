@@ -1496,7 +1496,7 @@ except:
         import shapely
         import shapely.geometry
     except Exception as inst:
-	    warnings.warn('pmatlab: could not load shapely, not all functionality is available')
+	    #warnings.warn('pmatlab: could not load shapely, not all functionality is available')
 	    pass
 
 
