@@ -234,7 +234,8 @@ class virtual_awg(Instrument):
             end = int(np.floor(width * len(data) - 1))
             data_processed = data[1:end]
         elif direction == 'backwards':
-            data_processed = data[int(np.ceil((1 - width) * len(data))):]
+            begin = int(np.ceil((1 - width) * len(data)))
+            data_processed = data[begin:]
 
         return data_processed
 
