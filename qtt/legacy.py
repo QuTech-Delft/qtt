@@ -33,6 +33,45 @@ import datetime
 from qtt.scans import scan2D, scan1D
 from qtt.tools import stripDataset
 
+def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
+    """ Scan a one-dot
+
+    Arguments
+        station (qcodes station):
+        od (dict)
+        basevalues (list)
+        outputdir (str)
+        verbose (int): verbosity level
+        
+    """
+    if verbose:
+        print('onedotScan: one-dot: %s' % od['name'] )
+    gg=od['gates']
+    keithleyidx=[ od['instrument'] ]
+
+    gates=station.gates
+    gates.set( gg[1], float(basevalues[gg[1]]-0 ) )    # plunger
+
+    pv1=od['pinchvalues'][0]+0
+    pv2=od['pinchvalues'][2]+0
+    stepstart=float(np.minimum( od['pinchvalues'][0]+400, 90))
+    sweepstart=float(np.minimum( od['pinchvalues'][2]+300, 90) )
+    stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -3})
+    sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -3})
+
+    if full==0:
+        stepdata['step']=-12; sweepdata['step']=-12
+
+    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
+    scanjob=dict({'stepdata':stepdata, 'sweepdata':sweepdata, 'keithleyidx': keithleyidx})
+    alldata=qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
+
+    od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=None)
+
+    alldata.metadata['od']=od
+    
+    return alldata, od
+
 def onedotPlungerScan(station, od, verbose=1):
     """ Make a scan with the plunger of a one-dot """
     # do sweep with plunger

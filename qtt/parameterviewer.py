@@ -4,6 +4,7 @@ import time
 import threading
 import logging
 import numpy as np
+import sys
 
 import multiprocessing as mp
 
@@ -76,7 +77,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             gatesroot = QtWidgets.QTreeWidgetItem(self, [iname])
             for g in ppnames:
                 # ww=['gates', g]
+                si=min(sys.getswitchinterval(), 0.1) # hack to make this semi thread-safe
+                sys.setswitchinterval(100) # hack to make this semi thread-safe
                 value = pp[g].get()
+                sys.setswitchinterval(si) # hack to make this semi thread-safe
                 box=QtWidgets.QDoubleSpinBox()
                 box.setKeyboardTracking(False) # do not emit signals when still editing
                 box.setMinimum(-1000)
@@ -100,9 +104,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.expandAll()
 
         #self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
-        #self.value.setStyleSheet("QLabel { background-color : #cadaca; margin: 2px; padding: 2px; }");
-        #self.plus.setStyleSheet("QPushButton { margin: 0px; padding: 0px; }");
-        #self.minus.setStyleSheet("QPushButton { margin: 0px; padding: 0px; }");
 
     def valueChanged(self, iname, param, value, *args, **kwargs):
         #print([iname, param, value])
@@ -113,8 +114,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         logging.info('set %s.%s to %s' % (iname, param, value))
         instr.set(param, value)
         #v=self.gates.get(self.name)+self.delta
-        #self.gates.set(self.name, v)
-
         
     def updatecallback(self, start=True):
         if self._timer is not None:
@@ -142,8 +141,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             pp=instr.parameters
             ppnames=sorted(instr.parameters.keys())
 
+            si=sys.getswitchinterval()
+
             for g in ppnames:
+                sys.setswitchinterval(100) # hack to make this semi thread-safe
                 value=pp[g].get()
+                sys.setswitchinterval(si)
                 #value = pp[g]['value']
                 sb = self._itemsdict[iname][g]
                 
@@ -196,9 +199,9 @@ def createParameterWidget(instruments, doexec=True):
 
 if __name__=='__main__':
     import qcodes
-    station=qcodes.station.Station()
-    station.add_component(gates)
-    station.gates=gates
+    #station=qcodes.station.Station()
+    #station.add_component(gates)
+    #station.gates=gates
     p=ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
     p.show()
     self=p    

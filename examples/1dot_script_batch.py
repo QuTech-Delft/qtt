@@ -46,7 +46,7 @@ import qtt.reports
 from qcodes.utils.validators import Numbers
 
 from qtt.data import *
-from qtt.scans import *
+from qtt.scans import scan2D, scan1D,onedotHiresScan
 from qtt.legacy import getODbalancepoint
 from qtt.reports import generateOneDotReport
 from qtt.tools import stripDataset
@@ -153,7 +153,7 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-09-07y'; Tvalues=np.array([-380])
+    basetag='batch-2016-09-07y2'; Tvalues=np.array([-380])
             
     b=False
     
@@ -257,46 +257,8 @@ def closeExperiment(station, eid=None):
     
 #%% One-dot measurements
 
-def onedotScan(station, od, basevalues, outputdir, verbose=1):
-    """ Scan a one-dot
+from qtt.legacy import onedotScan
 
-    Arguments
-        station (qcodes station):
-        od (dict)
-        basevalues (list)
-        outputdir (str)
-        verbose (int): verbosity level
-        
-    """
-    if verbose:
-        print('onedotScan: one-dot: %s' % od['name'] )
-    gg=od['gates']
-    keithleyidx=[ od['instrument'] ]
-
-    #if od['keithley']==1:
-    #    RFsiggen1.on()
-
-    gates.set( gg[1], float(basevalues[gg[1]]-0 ) )    # plunger
-
-    pv1=od['pinchvalues'][0]+0
-    pv2=od['pinchvalues'][2]+0
-    stepstart=float(np.minimum( od['pinchvalues'][0]+400, 90))
-    sweepstart=float(np.minimum( od['pinchvalues'][2]+300, 90) )
-    stepdata=dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -3})
-    sweepdata=dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -3})
-
-    if full==0:
-        stepdata['step']=-12; sweepdata['step']=-12
-
-    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
-    scanjob=dict({'stepdata':stepdata, 'sweepdata':sweepdata, 'keithleyidx': keithleyidx})
-    alldata=qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
-
-    od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=None)
-
-    alldata.metadata['od']=od
-    
-    return alldata, od
 
 #alldata, od = onedotScan(station,od, basevaluesS, outputdir, verbose=1)
 #od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=10)
