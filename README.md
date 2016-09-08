@@ -34,7 +34,7 @@ As the project is still private, install it directly from this repository:
 - Install python dependencies. For windows with anaconda type from the command line:
 ```
 > cd [MYLOCALDIR]/qtt
-> conda install --file requiremets.txt
+> conda install --file requirements.txt
 > conda install -c menpo opencv3
 > conda install -c nmearl pyqtgraph
 > pip install pyvisa
