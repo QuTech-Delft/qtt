@@ -6,4 +6,5 @@ scikit-image
 pyqt
 qtpy
 spyder
+h5py
 

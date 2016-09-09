@@ -4,13 +4,19 @@ QTT is a Python-based framework developed by QuTech (TU Delft/TNO) for automated
 
 Also see
 - [QuTech](https://http://qutech.nl/)
+- [Qcodes](https://github.com/qdev-dk/Qcodes)
 - [TNO](https://tno.nl)
 
-QTT is compatible with Python 3.4+.
+QTT is compatible with Python 3.5+.
 
 ## Structure
 
-QTT depends on Qcodes. Other repositories are the user scripts and measurement setups.
+QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` (measurement setups).
+
+* Qcodes: the basic framework
+* (qtt)[https://github.com/VandersypenQutech/qtt]: contains additional functionality and algorithms
+* (stations)[https://github.com/VandersypenQutech/stations]: Contains hardware descriptions for experimential setups. There should be only one version of this repository and it should always match the current hardware.
+* (users)[https://github.com/VandersypenQutech/users]: contains scripts and functions written by individual users
 
 ## Installation
 
@@ -50,10 +56,21 @@ For other systems
 ```
 (For Mac OS, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
 
+If necessary install the drivers for your hardware. Some links:
+* (Virtual COM port driver)[http://www.ftdichip.com/Drivers/VCP.htm]
+* (GPIB USB interface)[http://www.ni.com/download/ni-488.2-16.0.0/6132/en/]
+
+
 - Register the repositories with Python. For each of the repositories run this from the root directory:
 ```
 > conda develop ./  (for Anaconda)
 > python setup.py develop --user  (for other systems)
+```
+
+(temporary) Goto the qtt directory and checkout the branch `spinqubits3`
+```
+> cd [MYLOCALDIR]/qtt
+> git checkout spinqubits3
 ```
 
 ### Updating QTT
@@ -65,11 +82,11 @@ If you registered Qcodes with Python via `setup.py develop`, all you need to do 
 See the [docs](docs) directory (to be constructed)
 
 For a general introduction also see
-* [Introductionto Github](https://guides.github.com/activities/hello-world/)
+* [Introduction to Github](https://guides.github.com/activities/hello-world/)
 * [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
 
 * If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following settings:
-- Use a `IPhyton` console and set the IPhyton backend graphics option to `QT`. This ensures correctly displaying the `Paramater viewer` and `DataBrowser`
+- Use a `IPython` console and set the IPhyton backend graphics option to `QT`. This ensures correctly displaying the `Paramater viewer` and `DataBrowser`
 - In Tools->Preferences->Console->Advanced settings uncheck the box `Enable UMR`
 
 ## Contributing
