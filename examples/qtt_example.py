@@ -22,7 +22,8 @@ if __name__=='__main__':
 import qcodes
 import qcodes as qc
 import matplotlib
-matplotlib.use('Qt4Agg')
+if __name__=='__main__':
+    matplotlib.use('Qt4Agg')
 
 import qtt
 import qtt.scans
@@ -131,8 +132,12 @@ if __name__=='__main__':
 
 
 #%% Send data to powerpoint
-
-
+if __name__=='__main__':
+    print('add copy data to Powerpoint use the following:')
+    print('   qtt.tools.addPPT_dataset(data);')
+    if 0:
+        qtt.tools.addPPT_dataset(data)
+    
 #%% DEBUGGING AND TESTING
 
 #%%
