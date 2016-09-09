@@ -15,6 +15,7 @@ import pyqtgraph
 import math
 from qtt import pmatlab
 
+
 class QCodesTimer(threading.Thread):
 
     def __init__(self, fn, dt=2, **kwargs):
@@ -32,11 +33,13 @@ class QCodesTimer(threading.Thread):
 
 from functools import partial
 
+
 class ParameterViewer(QtWidgets.QTreeWidget):
 
-    shared_kwargs=['station', 'instrumentnames']
-    
+    shared_kwargs = ['station', 'instrumentnames']
+
     ''' Simple class to show qcodes parameters '''
+
     def __init__(self, instruments, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
         super().__init__(**kwargs)
         w = self
@@ -48,118 +51,116 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                         # setHeaderLabels(["Tree","First",...])
         w.setWindowTitle(name)
 
-        self._instruments=instruments
-        self._instrumentnames=instrumentnames
+        self._instruments = instruments
+        self._instrumentnames = instrumentnames
         self._itemsdict = dict()
         for i in instrumentnames:
             self._itemsdict[i] = dict()
         self._timer = None
-        #self._station = station
+        # self._station = station
         self.init()
         self.show()
 
-        self.callbacklist=[]
+        self.callbacklist = []
 
     def init(self):
         ''' Initialize parameter viewer '''
-        #if self._station==None:
+        # if self._station==None:
         #    return
-        #dd = self._station.snapshot()
-        #x =
-        for ii,iname in enumerate(self._instrumentnames):
+        # dd = self._station.snapshot()
+        # x =
+        for ii, iname in enumerate(self._instrumentnames):
             instr = self._instruments[ii]
-            #pp=instr.parameters.keys()
-            pp=instr.parameters
-            ppnames=sorted(instr.parameters.keys())
-            
-            ppnames=[p for p in ppnames if instr.parameters[p].has_get]
-            #pp = dd['instruments'][iname]['parameters']
+            # pp=instr.parameters.keys()
+            pp = instr.parameters
+            ppnames = sorted(instr.parameters.keys())
+
+            ppnames = [p for p in ppnames if instr.parameters[p].has_get]
+            # pp = dd['instruments'][iname]['parameters']
             gatesroot = QtWidgets.QTreeWidgetItem(self, [iname])
             for g in ppnames:
                 # ww=['gates', g]
-                si=min(sys.getswitchinterval(), 0.1) # hack to make this semi thread-safe
-                sys.setswitchinterval(100) # hack to make this semi thread-safe
+                si = min(sys.getswitchinterval(), 0.1)  # hack to make this semi thread-safe
+                sys.setswitchinterval(100)  # hack to make this semi thread-safe
                 value = pp[g].get()
-                sys.setswitchinterval(si) # hack to make this semi thread-safe
-                box=QtWidgets.QDoubleSpinBox()
-                box.setKeyboardTracking(False) # do not emit signals when still editing
+                sys.setswitchinterval(si)  # hack to make this semi thread-safe
+                box = QtWidgets.QDoubleSpinBox()
+                box.setKeyboardTracking(False)  # do not emit signals when still editing
                 box.setMinimum(-1000)
                 box.setMaximum(1000)
-                
 
-                #A = QtGui.QTreeWidgetItem(gatesroot, [g, box])
+                # A = QtGui.QTreeWidgetItem(gatesroot, [g, box])
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, str(value)])
-                ##qq=self.topLevelItem(0).child(2)
-                ##qq=self.topLevelItem(0).child(2)
+                # qq=self.topLevelItem(0).child(2)
+                # qq=self.topLevelItem(0).child(2)
                 self._itemsdict[iname][g] = A
-                
+
                 if pp[g].has_set:
-                    qq=A
+                    qq = A
                     self.setItemWidget(qq, 1, box)
                     self._itemsdict[iname][g] = box
-                
-                box.valueChanged.connect(partial(self.valueChanged, iname, g) )
-                
+
+                box.valueChanged.connect(partial(self.valueChanged, iname, g))
+
         self.setSortingEnabled(True)
         self.expandAll()
 
-        #self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
+        # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
     def valueChanged(self, iname, param, value, *args, **kwargs):
-        #print([iname, param, value])
-        #print(args)
-        #print(kwargs)
+        # print([iname, param, value])
+        # print(args)
+        # print(kwargs)
 
         instr = self._instruments[self._instrumentnames.index(iname)]
         logging.info('set %s.%s to %s' % (iname, param, value))
         instr.set(param, value)
-        #v=self.gates.get(self.name)+self.delta
-        
+        # v=self.gates.get(self.name)+self.delta
+
     def updatecallback(self, start=True):
         if self._timer is not None:
             del self._timer
 
         self.updatedata()
-        
+
         if start:
             self._timer = QCodesTimer(fn=self.updatedata, dt=4)
             self._timer.start()
         else:
             self._timer = None
 
-
     def updatedata(self):
         ''' Update data in viewer using station.snapshow '''
-        #dd = self._station.snapshot()
-        #gates = dd['instruments']['gates']
-        #pp = gates['parameters']
+        # dd = self._station.snapshot()
+        # gates = dd['instruments']['gates']
+        # pp = gates['parameters']
         # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
         logging.debug('ParameterViewer: update values')
         for iname in self._instrumentnames:
             instr = self._instruments[self._instrumentnames.index(iname)]
-            
-            pp=instr.parameters
-            ppnames=sorted(instr.parameters.keys())
 
-            si=sys.getswitchinterval()
+            pp = instr.parameters
+            ppnames = sorted(instr.parameters.keys())
+
+            si = sys.getswitchinterval()
 
             for g in ppnames:
-                sys.setswitchinterval(100) # hack to make this semi thread-safe
-                value=pp[g].get()
+                sys.setswitchinterval(100)  # hack to make this semi thread-safe
+                value = pp[g].get()
                 sys.setswitchinterval(si)
-                #value = pp[g]['value']
+                # value = pp[g]['value']
                 sb = self._itemsdict[iname][g]
-                
+
                 if isinstance(sb, QtWidgets.QTreeWidgetItem):
-                    sb.setText( 1, str(value ) )
+                    sb.setText(1, str(value))
                 else:
-                    # update a float value                
-                    if np.abs(sb.value()-value)>1e-9:
-                        if not sb.hasFocus(): # do not update when editing
+                    # update a float value
+                    if np.abs(sb.value() - value) > 1e-9:
+                        if not sb.hasFocus():  # do not update when editing
                             logging.debug('update %s to %s' % (g, value))
-                            try:                                
-                                oldstate=sb.blockSignals(True)
-                                sb.setValue( value )
+                            try:
+                                oldstate = sb.blockSignals(True)
+                                sb.setValue(value)
                                 sb.blockSignals(oldstate)
                             except Exception as e:
                                 pass
@@ -173,50 +174,47 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
 
 def createParameterWidgetRemote(instruments, doexec=True):
-    p=mp.Process(target=createParameterWidget, args=(instruments,))
+    p = mp.Process(target=createParameterWidget, args=(instruments,))
     p.start()
     return p
-    
+
+
 def createParameterWidget(instruments, doexec=True):
-    instrumentnames=[i.name for i in instruments]
-    #qtt.tools.dumpstring('createUpdateWidget: start')
-    app=pyqtgraph.mkQApp()
-    
-    ms=pmatlab.monitorSizes()[-1]
-    p=ParameterViewer(instruments=instruments, instrumentnames=instrumentnames)
-    p.setGeometry(ms[0]+ms[2]-280,20,260,600)
+    instrumentnames = [i.name for i in instruments]
+    # qtt.tools.dumpstring('createUpdateWidget: start')
+    app = pyqtgraph.mkQApp()
+
+    ms = pmatlab.monitorSizes()[-1]
+    p = ParameterViewer(instruments=instruments, instrumentnames=instrumentnames)
+    p.setGeometry(ms[0] + ms[2] - 280, 20, 260, 600)
     p.show()
     p.updatecallback()
-    
 
     logging.info('created update widget...')
-    
+
     if doexec:
         app.exec()
     return p
-    
+
 #%%
 
-if __name__=='__main__':
+if __name__ == '__main__':
     import qcodes
-    #station=qcodes.station.Station()
-    #station.add_component(gates)
-    #station.gates=gates
-    p=ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
+    # station=qcodes.station.Station()
+    # station.add_component(gates)
+    # station.gates=gates
+    p = ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
     p.show()
-    self=p    
+    self = p
     p.updatecallback()
-    
-    p.setGeometry(1640,60,240,600)
 
-    
+    p.setGeometry(1640, 60, 240, 600)
+
+
 #%%
-if __name__=='__main__':
-    box=QtWidgets.QDoubleSpinBox()
+if __name__ == '__main__':
+    box = QtWidgets.QDoubleSpinBox()
     box.setMaximum(10)
-    qq=self.topLevelItem(0).child(2)
+    qq = self.topLevelItem(0).child(2)
     self.setItemWidget(qq, 1, box)
-     #ui->treeWidget->setItemWidget(ui->treeWidget->topLevelItem(2)->child(0) , 1 , _spin_angle);
-
-    
-    
+     # ui->treeWidget->setItemWidget(ui->treeWidget->topLevelItem(2)->child(0) , 1 , _spin_angle);

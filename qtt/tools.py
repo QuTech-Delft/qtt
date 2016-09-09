@@ -33,7 +33,7 @@ def dumpstring(txt):
 def stripDataset(dataset):
     dataset.sync()
     dataset.data_manager = None
-    dataset.background_functions={}
+    dataset.background_functions = {}
     
 #%%
 try:
@@ -313,7 +313,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, v
     if verbose:
         print('tilefigs: ww %s, w %d h %d' % (str(ww), w, h))
     for ii, f in enumerate(lst):
-        if type(f) == matplotlib.figure.Figure:
+        if isinstance(f, matplotlib.figure.Figure):
             fignum = f.number
         else:
             fignum = f
@@ -494,10 +494,10 @@ try:
         # ActivePresentation.Slides(ActiveWindow.View.Slide.SlideNumber).
         # s=Application.ActiveWindow.Selection
 
-        #slide.SetName('qcodes measurement')
+        # slide.SetName('qcodes measurement')
 
         if activate_slide:
-            idx=int(slide.SlideIndex)
+            idx = int(slide.SlideIndex)
             print('goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
@@ -520,10 +520,10 @@ try:
         >>> notes = 'some additional information' 
         >>> addPPT_dataset(dataset,notes)
         '''
-        if len(dataset.arrays)<2:
+        if len(dataset.arrays) < 2:
             raise Exception('The dataset contains less than two data arrays')
             
-        if len(dataset.arrays)>3:
+        if len(dataset.arrays) > 3:
             raise Exception('The dataset contains more than three data arrays')
         
         temp_fig = QtPlot(dataset.default_parameter_array(), show_window=False)
@@ -560,42 +560,42 @@ def reshape_metadata(dataset, printformat='dict'):
     metadata = dict()
     
     for x in sorted(all_md.keys()):
-        metadata[x]=OrderedDict()
+        metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
-            metadata[x]['IDN']=dict({'name': 'IDN', 'value': all_md[x]['parameters']['IDN']['value']})
-            metadata[x]['IDN']['units']=''
+            metadata[x]['IDN'] = dict({'name': 'IDN', 'value': all_md[x]['parameters']['IDN']['value']})
+            metadata[x]['IDN']['units'] = ''
         for y in all_md[x]['parameters'].keys():
             if y != 'IDN':
-                metadata[x][y]=OrderedDict()
+                metadata[x][y] = OrderedDict()
                 param_md = all_md[x]['parameters'][y]
-                metadata[x][y]['name']=y
-                if isinstance(param_md['value'],float):
-                    metadata[x][y]['value']=float(format(param_md['value'],'.3f'))
-                metadata[x][y]['units']=param_md['units']
-                metadata[x][y]['label']=param_md['label']
+                metadata[x][y]['name'] = y
+                if isinstance(param_md['value'], float):
+                    metadata[x][y]['value'] = float(format(param_md['value'], '.3f'))
+                metadata[x][y]['units'] = param_md['units']
+                metadata[x][y]['label'] = param_md['label']
     
 
-    if printformat=='dict':
-        ss = str(metadata).replace('(','').replace(')','').replace('OrderedDict','')
+    if printformat == 'dict':
+        ss = str(metadata).replace('(', '').replace(')', '').replace('OrderedDict', '')
     else:
-        ss=''
+        ss = ''
         for k in metadata:
             print('--- %s'  % k)
-            s=metadata[k]
-            ss+='\n## %s:\n'  % k
+            s = metadata[k]
+            ss += '\n## %s:\n'  % k
             for p in s:
-                pp=s[p]
+                pp = s[p]
                 print('  --- %s'  % p)
-                ss+='%s: %s %s' % ( pp['name'], pp['value'], pp.get('units', '') )
-                ss+='\n'            
-            #ss+=str(s)
+                ss += '%s: %s %s' % ( pp['name'], pp['value'], pp.get('units', '') )
+                ss += '\n'            
+            # ss+=str(s)
         
     return ss
 
-if __name__=='__main__' and 0:
-    x=reshape_metadata(data, printformat='fancy')
+if __name__ == '__main__' and 0:
+    x = reshape_metadata(data, printformat='fancy')
     print(x)
-    x=reshape_metadata(data, printformat='dict')
+    x = reshape_metadata(data, printformat='dict')
     print(x)
 
 #%%
@@ -604,20 +604,20 @@ import qtt.gui
 from qtt.gui.dataviewer import DataViewer
 
 def setupMeasurementWindows(station, ilist=None):
-    ms=monitorSizes()
-    vv=ms[-1]
+    ms = monitorSizes()
+    vv = ms[-1]
     # create custom viewer which gathers data from a station object
     if ilist is None:
-        ilist=[station.gates]
+        ilist = [station.gates]
     w = ParameterViewer(ilist)
-    w.setGeometry(vv[0]+vv[2]-400-300,vv[1],300,600)
+    w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
     w.updatecallback()
 
     plotQ = QtPlot(windowtitle='Live plot', interval=.5)
-    plotQ.setGeometry(vv[0]+vv[2]-600,vv[1]+vv[3]-400,600,400)
+    plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
     plotQ.update()
 
-    app=QtWidgets.QApplication.instance()
+    app = QtWidgets.QApplication.instance()
     app.processEvents()
     
     return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )

@@ -1,5 +1,5 @@
 import qtpy
-#print(qtpy.API_NAME)
+# print(qtpy.API_NAME)
 
 import numpy as np
 import scipy
@@ -12,8 +12,8 @@ import qcodes
 import qcodes as qc
 import datetime
 
-#import qtpy.QtGui as QtGui
-#import qtpy.QtWidgets as QtWidgets
+# import qtpy.QtGui as QtGui
+# import qtpy.QtWidgets as QtWidgets
 
 import matplotlib.pyplot as plt
 
@@ -48,25 +48,27 @@ from qtt.data import *
 
 from qtt.algorithms.generic import *
 
-import qtt.legacy # should be removed in the future
+import qtt.legacy  # should be removed in the future
 
 #%%
 
+
 def reportTemplate(title):
     """ Create a markup object for a HTML page """
-    page=markup.page()
-    page.init( title=title, 
-               css=( ), lang='en', bodyattrs =dict({'style': 'padding-left: 3px;'}),
-               header="<h1>%s</h1><br/><span><a href=\"mailto:pieter.eendebak@tno.nl\">pieter.eendebak@tno.nl</a></span>" % title ,  metainfo=( {'keywords': 'qutech, quantum dot, tuning, TNO'}),
-               footer="<!-- End of page >" )
-    #page.h1(title)
+    page = markup.page()
+    page.init(title=title,
+              css=(), lang='en', bodyattrs=dict({'style': 'padding-left: 3px;'}),
+              header="<h1>%s</h1><br/><span><a href=\"mailto:pieter.eendebak@tno.nl\">pieter.eendebak@tno.nl</a></span>" % title, metainfo=({'keywords': 'qutech, quantum dot, tuning, TNO'}),
+              footer="<!-- End of page >")
+    # page.h1(title)
     return page
-       
+
 #%%
 import traceback
 import logging
 
 from qtt.data import loadExperimentData
+
 
 def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
     """ Generate a report on scanned one-dots
@@ -76,14 +78,14 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
     lst = pmatlab.findfiles(xdir, '.*sweep-2d.*pickle')
     print('found %d 2d data files' % len(lst))
 
-    if verbose>=2:
-        lst1=findfiles(xdir,'.*sweep-1d.*pickle')
-        print('found %d 1D data files'  % len(lst1) )
+    if verbose >= 2:
+        lst1 = findfiles(xdir, '.*sweep-1d.*pickle')
+        print('found %d 1D data files' % len(lst1))
 
     page = markup.page()
     page.init(title="Results for one-dots",
               css=(), lang='en', bodyattrs=dict({'style': 'padding-left: 3px;'}),
-              header="<h1>Qutech: one-dots</h1>",  metainfo=({'keywords': 'qutech, 1-dot, tno'}),
+              header="<h1>Qutech: one-dots</h1>", metainfo=({'keywords': 'qutech, 1-dot, tno'}),
               footer="<!-- End of page >")
 
     for idx, od in enumerate(one_dots):
@@ -99,11 +101,10 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
         dd2d = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
         if dd2d is None:
             continue
-        metadata2d=dd2d.metadata
-        
-        tag='one_dot'
-        pathdd2d = experimentFile(resultsdir, tag=tag, dstr=dstr )
+        metadata2d = dd2d.metadata
 
+        tag = 'one_dot'
+        pathdd2d = experimentFile(resultsdir, tag=tag, dstr=dstr)
 
         if verbose:
             print('### generateOneDotReport: one-dot: %s' % od['name'])
@@ -115,10 +116,10 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
         picklefiles = []
         for jj, g in enumerate(gg):
             pp = pinchoffFilename(g, od=None)
-            pfile = os.path.join(xdir, pp )
-            #dd = qtt.loadQttData(pfile)
+            pfile = os.path.join(xdir, pp)
+            # dd = qtt.loadQttData(pfile)
             dd, mdata = qtt.loadDataset(pfile)
-            
+
             # print(dd.keys())
 
             picklefiles += [pfile]
@@ -132,7 +133,7 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
 
             # print(dd['od'])
             pv = adata['pinchvalue']  # dd['od']['pinchvalue'][jj]
-            #print('pv gate %s: %s' % (g, pv))
+            # print('pv gate %s: %s' % (g, pv))
 
             page.span(
                 'Gates: %s, sweep %s from pinch value %.1f to %.1f' % (od['gates'], g, pv, 0))
@@ -146,14 +147,14 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
 
         ddplunger = loadExperimentData(resultsdir, tag=tag, dstr=dstr)['dataset']
 
-        #pp='%s-sweep-plunger-.pickle' % (od['name'])
-        #pfile=os.path.join(xdir, pp)
-        #ddplunger=pickle.load(open(pfile, 'rb') )
+        # pp='%s-sweep-plunger-.pickle' % (od['name'])
+        # pfile=os.path.join(xdir, pp)
+        # ddplunger=pickle.load(open(pfile, 'rb') )
         # if type(ddplunger)==tuple:
         #        ddplunger=ddplunger[0]
         od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=0, fig=None)
 
-        #showODresults(od, dd2d, fig=101)
+        # showODresults(od, dd2d, fig=101)
         xx, vstep, vsweep = show2D(dd2d, fig=101, verbose=1)
         plt.figure(101)
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=14)
@@ -175,19 +176,18 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
                    qtt.legacy.printGateValues(metadata2d.get('allgatevalues', dict())))
         except Exception as ex:
             page.p('One-dot scan: gatevalues: ???')
-            
+
         page.a.open(href=pathdd2d, style='text-decoration: none;')
         page.img(src=imfile0, width='80%', alt="%s" % od['name'])
         page.a.close()
-        
 
         dstrhi = '%s-sweep-2d-hires' % (od['name'])
-        pathdd2dhi = experimentFile(resultsdir, tag=tag, dstr=dstrhi )
+        pathdd2dhi = experimentFile(resultsdir, tag=tag, dstr=dstrhi)
         scandata = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
 
-        scanjob=scandata['scanjob']
-        dd2dhi=scandata['dataset']
-        
+        scanjob = scandata['scanjob']
+        dd2dhi = scandata['dataset']
+
         if dd2dhi is not None:
             if verbose:
                 print('# generateOneDotReport: make figure for hi-res')
@@ -196,24 +196,24 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             imfilehires = os.path.join(resultsdir, imfile0hires)
             xx, vstep, vsweep = show2D(dd2dhi, fig=101, verbose=1)
 
-            if verbose>=2:
-                pmatlab.plotPoints( od['balancepoint'], '.m', color=(.7, 0, .7), markersize=10, label='balancepoint')
+            if verbose >= 2:
+                pmatlab.plotPoints(od['balancepoint'], '.m', color=(.7, 0, .7), markersize=10, label='balancepoint')
 
             if 1:
                 odhi = scandata['od']
-                
-                extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd2dhi, verbose=0)
+
+                extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd2dhi, verbose=0)
                 impixel, tr = dataset2image(dd2dhi, mode='pixel')
-                ptv, fimg, tmp= onedotGetBalanceFine(impixel, dd2dhi, verbose=1, fig=None)
+                ptv, fimg, tmp = onedotGetBalanceFine(impixel, dd2dhi, verbose=1, fig=None)
 
                 #_, _, _, imhi = get2Ddata(dd2dhi)
-                #ptv, fimg, _ = onedotGetBalanceFine( imhi, dd2dhi, verbose=0, fig=None)
+                # ptv, fimg, _ = onedotGetBalanceFine( imhi, dd2dhi, verbose=0, fig=None)
                 odhi['balancepointfine'] = ptv
             else:
                 odhi = scandata['od']
 
             if 'balancepointfine' in odhi:
-                pmatlab.plotPoints( odhi['balancepointfine'], '.m', markersize=14, label='balancepointfine')
+                pmatlab.plotPoints(odhi['balancepointfine'], '.m', markersize=14, label='balancepointfine')
             if 'coulombdirection' in odhi:
                 ptx = tr.scan2pixel(odhi['balancepointfine'])
                 showCoulombDirection(ptx, odhi['coulombdirection'], im=None, fig=101, dd=dd2dhi)
@@ -224,7 +224,7 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             page.a.open(href=pathdd2dhi, style='text-decoration: none;')
             page.img(src=imfile0hires, width='80%', alt="%s" % od['name'])
             page.a.close()
-            
+
        # STOP
         # alldata=dd
 
@@ -233,14 +233,14 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             if verbose:
                 print('# generateOneDotReport: make figure for plunger scan')
 
-            ddplungermetadata=ddplunger.metadata
+            ddplungermetadata = ddplunger.metadata
             allgatevalues = ddplungermetadata.get('allgatevalues', None)
             if allgatevalues is None:   # legacy data files
                 allgatevalues = ddplunger['gatevalues']
 
             qtt.scans.plot1D(ddplunger, fig=400, mstyle='.-b')
             plt.figure(400)
-            #xx, vstep, vsweep= show2D(dd, fig=101)
+            # xx, vstep, vsweep= show2D(dd, fig=101)
             imfile0 = 'sweep-%s-%s.png' % (od['name'], '-plunger')
             imfile = os.path.join(resultsdir, imfile0)
             plt.savefig(imfile)
@@ -264,185 +264,183 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
     return fname
 
 
-
 #%%
 
 from qtt.legacy import singleElectronCheck, singleRegion
 
-       
+
 def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
     """ Generate a report on scanned one-dots
     The data are generated by 1dot_scripy.py
-    """    
-    #%%    
-    dxdir=os.path.join(resultsdir, 'doubledot')
-    lst=pmatlab.findfiles(dxdir,'scandata-doubledot.*pickle')
-    print('found %d data files'  % len(lst) )
+    """
+    #%%
+    dxdir = os.path.join(resultsdir, 'doubledot')
+    lst = pmatlab.findfiles(dxdir, 'scandata-doubledot.*pickle')
+    print('found %d data files' % len(lst))
 
-    _=qtt.mkdirc(os.path.join(resultsdir, 'pictures'));
-    
-    #full=2
-    xdata=dict()
-    
+    _ = qtt.mkdirc(os.path.join(resultsdir, 'pictures'))
 
-    htag=tag    
-    page = markup.page( )
-    page.init( title="Results for double-dots", 
-               css=( ), lang='en', bodyattrs =dict({'style': 'padding-left: 3px;'}),
-               header="<h1>Qutech: double-dots: %s</h1><br/><span><a href=\"mailto:pieter.eendebak@tno.nl\">pieter.eendebak@tno.nl</a></span>" % htag ,  metainfo=( {'keywords': 'qutech, quantum dot, tuning, tno'}),
-               footer="<!-- End of page >" )
-    
+    # full=2
+    xdata = dict()
+
+    htag = tag
+    page = markup.page()
+    page.init(title="Results for double-dots",
+              css=(), lang='en', bodyattrs=dict({'style': 'padding-left: 3px;'}),
+              header="<h1>Qutech: double-dots: %s</h1><br/><span><a href=\"mailto:pieter.eendebak@tno.nl\">pieter.eendebak@tno.nl</a></span>" % htag, metainfo=({'keywords': 'qutech, quantum dot, tuning, tno'}),
+              footer="<!-- End of page >")
+
     page.p('<p>Experiment tag: %s</p>' % tag)
 
-    try:       
-        jobs=loadExperimentData(resultsdir, tag='doubledot', dstr='jobs')
-        q=[j['td']['name'] for j in jobs]
+    try:
+        jobs = loadExperimentData(resultsdir, tag='doubledot', dstr='jobs')
+        q = [j['td']['name'] for j in jobs]
     except Exception as e:
-            jobs=[]
-            q=None
+            jobs = []
+            q = None
             print(resultsdir)
             raise e
             pass
-    
+
     for idx, td in enumerate(two_dots):
-        basefig=1000+100*idx
-        pp='doubledot-%s.pickle' % (td['name'])
-        pfile=os.path.join(dxdir, pp)
+        basefig = 1000 + 100 * idx
+        pp = 'doubledot-%s.pickle' % (td['name'])
+        pfile = os.path.join(dxdir, pp)
         if not os.path.isfile(pfile):
             # try with gate compensation
-            pp='doubledot-%s-gc.pickle' % (td['name'])
-            pfile=os.path.join(dxdir, pp)
-    
+            pp = 'doubledot-%s-gc.pickle' % (td['name'])
+            pfile = os.path.join(dxdir, pp)
+
             if not os.path.isfile(pfile):
                 print('could not find data for double-dot %s' % td['name'])
                 print('   file %s' % pfile)
                 continue
 
-        
-        dd2d=pmatlab.load(pfile )
-        if type(dd2d)==tuple:
-                dd2d=dd2d[0]
-        name=td['name']
-        xdata[name]=dd2d
+        dd2d = pmatlab.load(pfile)
+        if isinstance(dd2d, tuple):
+                dd2d = dd2d[0]
+        name = td['name']
+        xdata[name] = dd2d
 
-        print('### two-dot: %s'  % td['name'])
-        page.h2('Two-dot: %s'  % td['name'])
-        gg=td['gates']
+        print('### two-dot: %s' % td['name'])
+        page.h2('Two-dot: %s' % td['name'])
+        gg = td['gates']
         if 0:
-            imfile0=[None]*3
-            imfile=[None]*3
+            imfile0 = [None] * 3
+            imfile = [None] * 3
             for jj, g in enumerate(gg):
-                pp='%s-sweep-1d-%s.pickle' % (od['name'], g)
-                pfile=os.path.join(xdir, pp)
-                dd=loadqt(pfile)
-                #print(dd.keys())
-                
-                adata=analyseGateSweep(dd, fig=100+idx, minthr=100, maxthr=800, verbose=2)
-                #plt.show()
-                imfile0[jj]=os.path.join( 'sweep-%s-%s.png'  % (od['name'], g) )
-                imfile[jj]=os.path.join(resultsdir, 'sweep-%s-%s.png'  % (od['name'], g) )
-                plt.savefig( imfile[jj] )
-        
-                #print(dd['od'])
-                pv=adata['pinchvalue'] # dd['od']['pinchvalue'][jj]
-                #print('pv gate %s: %s' % (g,pv ) )
-                
-                page.span('Gates: %s, sweep %s from pinch value %.1f to %.1f'  % (od['gates'], g, pv, 0) )
+                pp = '%s-sweep-1d-%s.pickle' % (od['name'], g)
+                pfile = os.path.join(xdir, pp)
+                dd = loadqt(pfile)
+                # print(dd.keys())
+
+                adata = analyseGateSweep(dd, fig=100 + idx, minthr=100, maxthr=800, verbose=2)
+                # plt.show()
+                imfile0[jj] = os.path.join('sweep-%s-%s.png' % (od['name'], g))
+                imfile[jj] = os.path.join(resultsdir, 'sweep-%s-%s.png' % (od['name'], g))
+                plt.savefig(imfile[jj])
+
+                # print(dd['od'])
+                pv = adata['pinchvalue']  # dd['od']['pinchvalue'][jj]
+                # print('pv gate %s: %s' % (g,pv ) )
+
+                page.span('Gates: %s, sweep %s from pinch value %.1f to %.1f' % (od['gates'], g, pv, 0))
                 page.br()
             for jj, g in enumerate(gg):
-                page.img( src=imfile0[jj], width='30%', alt="%s" % od['name'] )
-        
-        #pp='scandata-tunesd-%s.pickle' % (td['name'])
-        
-        dstrplunger='tunesd-%s-sd%d' % (td['name'], sdidx)        
-        pp = experimentFile( tag='', dstr=dstrplunger)
+                page.img(src=imfile0[jj], width='30%', alt="%s" % od['name'])
 
+        # pp='scandata-tunesd-%s.pickle' % (td['name'])
 
-        pfileplunger=os.path.join(dxdir, pp)
+        dstrplunger = 'tunesd-%s-sd%d' % (td['name'], sdidx)
+        pp = experimentFile(tag='', dstr=dstrplunger)
 
-        ddplunger=qtt.load_data(pfileplunger)
+        pfileplunger = os.path.join(dxdir, pp)
+
+        ddplunger = qtt.load_data(pfileplunger)
         if isinstance(ddplunger, tuple):
-                ddplunger=ddplunger[0]
+                ddplunger = ddplunger[0]
 
         if ddplunger is None:
             print('could not load file %s' % pfileplunger)
-            
-        #x=ddplunger['data_array'][:,0]; y=ddplunger['data_array'][:,2];
-        x,y = qtt.data.dataset1Ddata(ddplunger)
-        istep=qtt.data.dataset_get_istep(ddplunger)
-        
-        goodpeaks=coulombPeaks(x,y, verbose=1, fig=basefig, plothalf=True, istep=istep)
+
+        # x=ddplunger['data_array'][:,0]; y=ddplunger['data_array'][:,2];
+        x, y = qtt.data.dataset1Ddata(ddplunger)
+        istep = qtt.data.dataset_get_istep(ddplunger)
+
+        goodpeaks = coulombPeaks(x, y, verbose=1, fig=basefig, plothalf=True, istep=istep)
         if not basefig is None:
             plt.figure(basefig)
-            plt.xlabel( qtt.data.dataset_labels(ddplunger, 'x') )
-        
-        imfilerel, imfile=qtt.legacy.saveImage(resultsdir, 'sdtune-%s' % td['name'], basefig)
+            plt.xlabel(qtt.data.dataset_labels(ddplunger, 'x'))
 
-        page.p('Tuning of sensing dot: scan complete %s' % scanTime(ddplunger).strftime('%d-%m-%Y %H:%M:%S')  )
-        #dd2d['scantime']
-        page.a.open(href=pfileplunger, style='text-decoration: none;' )
-        page.img( src=imfilerel, width='80%', alt="sd %s" % td['name'] )
+        imfilerel, imfile = qtt.legacy.saveImage(resultsdir, 'sdtune-%s' % td['name'], basefig)
+
+        page.p('Tuning of sensing dot: scan complete %s' % scanTime(ddplunger).strftime('%d-%m-%Y %H:%M:%S'))
+        # dd2d['scantime']
+        page.a.open(href=pfileplunger, style='text-decoration: none;')
+        page.img(src=imfilerel, width='80%', alt="sd %s" % td['name'])
         page.a.close()
-        
-        #xx, vstep, vsweep= show2D(dd2d, fig=101, verbose=1)
-        xx, vstep, vsweep= show2D(dd2d, fig=basefig+1, verbose=1, dy=0, sigma=.8)
 
-        #import posixpath
+        # xx, vstep, vsweep= show2D(dd2d, fig=101, verbose=1)
+        xx, vstep, vsweep = show2D(dd2d, fig=basefig + 1, verbose=1, dy=0, sigma=.8)
 
-        imfilerel, imfile=saveImage(resultsdir, 'doubledot-%s' % td['name'], basefig+1)
+        # import posixpath
 
-        page.p('Double-dot scan: scan complete %s' % scanTime(dd2d).strftime('%d-%m-%Y %H:%M:%S')  )
-        page.p('Double-dot scan: gatevalues: %s' % qtt.legacy.printGateValues(dd2d.metadata.get('allgatevalues', dict({}) ))  )
-        page.a.open(href=pathname2url(pfile), style='text-decoration: none;' )
-        page.img( src=pathname2url(imfilerel), width='80%', alt="sd %s" % td['name'] )
+        imfilerel, imfile = saveImage(resultsdir, 'doubledot-%s' % td['name'], basefig + 1)
+
+        page.p('Double-dot scan: scan complete %s' % scanTime(dd2d).strftime('%d-%m-%Y %H:%M:%S'))
+        page.p('Double-dot scan: gatevalues: %s' % qtt.legacy.printGateValues(dd2d.metadata.get('allgatevalues', dict({}))))
+        page.a.open(href=pathname2url(pfile), style='text-decoration: none;')
+        page.img(src=pathname2url(imfilerel), width='80%', alt="sd %s" % td['name'])
         page.a.close()
 
         try:
-            jindex=q.index(td['name'])
-            #jobs[jindex]
-            tddata=jobs[jindex]['td']['tddata']
+            jindex = q.index(td['name'])
+            # jobs[jindex]
+            tddata = jobs[jindex]['td']['tddata']
             page.p()
-            page.add('Two-dot shared gate: %s' % (str(tddata['v']) ))
+            page.add('Two-dot shared gate: %s' % (str(tddata['v'])))
             page.br()
-            page.add('Two-dot gatecorrection: %s' % (str(tddata['gatecorrection']) ))
+            page.add('Two-dot gatecorrection: %s' % (str(tddata['gatecorrection'])))
             page.p.close()
         except Exception as e:
             print(e)
             pass
 
-        # analyse two-dot scan                
-        pt, res=analyse2dot(dd2d, fig=basefig+10)
-        imfilerel, imfile=saveImage(resultsdir, 'doubledot-zerozero-%s' % td['name'], basefig+10, tight=.1)
+        # analyse two-dot scan
+        pt, res = analyse2dot(dd2d, fig=basefig + 10)
+        imfilerel, imfile = saveImage(resultsdir, 'doubledot-zerozero-%s' % td['name'], basefig + 10, tight=.1)
 
-        #rr0=singleRegion(pt, imx, istep)
-        imx2=res['imx']; istep=res['istep']
-        check, rr0, resSE, thr=singleElectronCheck(pt, imx2, istep, fig=basefig+800, verbose=2)
+        # rr0=singleRegion(pt, imx, istep)
+        imx2 = res['imx']
+        istep = res['istep']
+        check, rr0, resSE, thr = singleElectronCheck(pt, imx2, istep, fig=basefig + 800, verbose=2)
         plt.gray()
-        plt.figure(basefig+810); plt.axis('off'); plt.title('Single electron check', fontsize=14)
-        imfilerelSE, imfileSE=saveImage(resultsdir, 'doubledot-single-electron-%s' % td['name'], basefig+810, tight=.1)
+        plt.figure(basefig + 810)
+        plt.axis('off')
+        plt.title('Single electron check', fontsize=14)
+        imfilerelSE, imfileSE = saveImage(resultsdir, 'doubledot-single-electron-%s' % td['name'], basefig + 810, tight=.1)
         plt.jet()
-        if idx>=20:
-            xdata['imx2']=imx2
-            xdata['pt']=pt
+        if idx >= 20:
+            xdata['imx2'] = imx2
+            xdata['pt'] = pt
             return _, xdata
             pdb.set_trace()
-        
+
         page.p()
-        page.add('Double-dot scan: zero-zero %s' % ( str(res['ptmv'] ), ) )
+        page.add('Double-dot scan: zero-zero %s' % (str(res['ptmv']), ))
         page.br()
-        page.add('Double-dot scan:single electron regime check <b>%s</b> (0: bad, 1: undetermined, 2: good)' % ( check, ) )
-        page.p.close( )
-        page.img( src=pathname2url(imfilerel), width='50%', style='float: left;', alt="sd %s" % td['name'] )
-        page.img( src=pathname2url(imfilerelSE), width='40%', style='margin-top: 30px; float: left;', alt="sd %s" % td['name'] )
+        page.add('Double-dot scan:single electron regime check <b>%s</b> (0: bad, 1: undetermined, 2: good)' % (check, ))
+        page.p.close()
+        page.img(src=pathname2url(imfilerel), width='50%', style='float: left;', alt="sd %s" % td['name'])
+        page.img(src=pathname2url(imfilerelSE), width='40%', style='margin-top: 30px; float: left;', alt="sd %s" % td['name'])
         page.br(clear='both')
 
-    plt.show()    
-    page.br(clear='all')    
+    plt.show()
+    page.br(clear='all')
     page.p('End of results')
-        
+
     with open(os.path.join(resultsdir, 'results-doubledot.html'), 'wt') as f:
         f.write(str(page))
         print('generateDoubleDotReport: written file %s' % f.name)
-    
-    return f.name, xdata
 
+    return f.name, xdata

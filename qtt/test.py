@@ -2,7 +2,7 @@
 
 import sys
 import qtpy
-#print(qtpy.QT_API)
+# print(qtpy.QT_API)
 
 
 def _test_core(test_pattern='test*.py', **kwargs):
@@ -16,7 +16,7 @@ def _test_core(test_pattern='test*.py', **kwargs):
         pattern=test_pattern)
     if suite.countTestCases() == 0:
         print('found no tests')
-        print('dirs: %s %s'% (qctest.__path__[0], qtt.__path__[0]))
+        print('dirs: %s %s' % (qctest.__path__[0], qtt.__path__[0]))
         sys.exit(1)
     print('testing %d cases' % suite.countTestCases())
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     try:
         import coverage
-        _=coverage.Coverage
+        _ = coverage.Coverage
         coverage_missing = False
     except (ImportError, AttributeError):
         coverage_missing = True
