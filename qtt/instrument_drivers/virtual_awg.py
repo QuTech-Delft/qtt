@@ -176,11 +176,11 @@ class virtual_awg(Instrument):
         awg_to_plunger value.
         '''
         samplerate = 1. / self.AWG_clock
-        tt = np.arange(0, risetime * repetitionnr + samplerate, samplerate)
+        tt = np.arange(0, 2 * risetime * repetitionnr + samplerate, samplerate)
         v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
-        wave = (v_wave / 2) * scipy.signal.sawtooth(2 *
-                                                    np.pi * tt / risetime, width=width)
-
+        wave = (v_wave / 2) * scipy.signal.sawtooth(
+            np.pi * tt / risetime, width=width)
+    
         return wave
 
     def sweep_gate(self, gate, sweeprange, risetime, width=.95):
