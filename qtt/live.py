@@ -5,6 +5,7 @@ import qcodes
 mwindows = None
 liveplotwindow = None
 
+
 def livePlot():
     global liveplotwindow
     if liveplotwindow is not None:

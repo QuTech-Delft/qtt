@@ -4,7 +4,7 @@
 import qtpy
 import matplotlib
 try:
-    if qtpy.API_NAME=='PyQt4 (API v2)':
+    if qtpy.API_NAME == 'PyQt4 (API v2)':
         matplotlib.use('Qt4Agg')
 except:
     pass
@@ -22,11 +22,12 @@ from qcodes.plots.pyqtgraph import QtPlot
 
 from qtpy.QtCore import Qt
 
+
 def keyPressEvent(self, e):
     ''' Patch to add a callback to the QtPlot figure window '''
     if e.key() == Qt.Key_P:
         print('key P pressed: copy figure window to powerpoint')
         qtt.tools.addPPTslide(txt='', fig=self)
     super(QtPlot, self).keyPressEvent(e)
-        
-QtPlot.keyPressEvent=keyPressEvent # update the keypress callback function
+
+QtPlot.keyPressEvent = keyPressEvent  # update the keypress callback function

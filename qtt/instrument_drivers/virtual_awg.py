@@ -124,10 +124,10 @@ class virtual_awg(Instrument):
         self._awgs[fpga_info[0]].set(
             'ch%i_m%i_low' % (fpga_info[1], fpga_info[2]), 0)
         self._awgs[fpga_info[0]].set(
-            'ch%i_m%i_low' % (fpga_info[1], fpga_info[2]), 2.6)
+            'ch%i_m%i_high' % (fpga_info[1], fpga_info[2]), 2.6)
 
         # awg marker
-        if self.awg_seq in awgs:
+        if hasattr(self,'awg_seq'):
             awg_info = self.awg_map['awg_mk']
             if awg_info[:2] not in sweep_info:
                 awgs.append(self._awgs[awg_info[0]])
@@ -146,13 +146,14 @@ class virtual_awg(Instrument):
             self._awgs[awg_info[0]].set(
                 'ch%i_m%i_low' % (awg_info[1], awg_info[2]), 0)
             self._awgs[awg_info[0]].set(
-                'ch%i_m%i_low' % (awg_info[1], awg_info[2]), 2.6)
+                'ch%i_m%i_high' % (awg_info[1], awg_info[2]), 2.6)
 
         # send waveforms
         for sweep in sweep_info:
             self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
                                                        sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
-            if self._awgs[sweep[0]] == self.awg_seq:
+            
+            if hasattr(self,'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
                     sweep_info[sweep]['name'], sweep[1], 1)
                 self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
@@ -232,9 +233,11 @@ class virtual_awg(Instrument):
         width = waveform['width']
 
         if direction == 'forwards':
-            data_processed = data[1:np.floor(width * len(data) - 1)]
+            end = int(np.floor(width * len(data) - 1))
+            data_processed = data[1:end]
         elif direction == 'backwards':
-            data_processed = data[np.ceil((1 - width) * len(data)):]
+            begin = int(np.ceil((1 - width) * len(data)))
+            data_processed = data[begin:]
 
         return data_processed
 

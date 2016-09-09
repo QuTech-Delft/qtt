@@ -5,9 +5,10 @@ from qtt.scans import scan1D
 import qtt.data
 from qtt.algorithms.coulomb import *
 
-class sensingdot_t:
-    """ Class representing a sensing dot """
 
+class sensingdot_t:
+
+    """ Class representing a sensing dot """
 
     def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=0):
         self.verbose = 1
@@ -19,21 +20,21 @@ class sensingdot_t:
         self.targetvalue = 800
         self.goodpeaks = None
 
-        self.station=station
+        self.station = station
         # values for measurement
-        #RFfreq = None
+        # RFfreq = None
         if index is not None:
             self.valuefunc = station.components['keithley%d' % index].amplitude.get
 
     def __repr__(self):
-        gates=self.station.gates
+        gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
             self.gg[1], str(self.sdval), gates.get(self.gg[1]), self.value(), self.targetvalue)
-        #s='sensingdot_t: %s: %.1f '  % (self.gg[1], self.value() )
+        # s='sensingdot_t: %s: %.1f '  % (self.gg[1], self.value() )
         return s
 
     def initialize(self, sdval=None, setPlunger=False):
-        gates=self.station.gates
+        gates = self.station.gates
         if not sdval is None:
             self.sdval = sdval
         gg = self.gg
@@ -60,13 +61,13 @@ class sensingdot_t:
             keithley = keithley2
             kfactor = keithleyFactor(['keithley2'])[0]
         if keithley is None:
-            #raise Exception('sensingdot_t: keithley is None!')
+            # raise Exception('sensingdot_t: keithley is None!')
             warnings.warn('keithley is None')
             return None
         Amp = 10
-        readval=keithley.readnext()
+        readval = keithley.readnext()
         if readval is None:
-            val=0
+            val = 0
         else:
             val = kfactor * readval * (1e12 / (Amp * 10e6))
         return val
@@ -77,8 +78,8 @@ class sensingdot_t:
         keithleyidx = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
-        gates=sd.station.gates
-        
+        gates = sd.station.gates
+
         for ii in [0, 2]:
             gates.set(gg[ii], sdval[ii])
 
@@ -102,7 +103,7 @@ class sensingdot_t:
         alldata = scan1D(
             scanjob1, sd.station, title_comment='plunger', wait_time=wait_time)
 
-        #if not outputdir == None:
+        # if not outputdir == None:
         #    saveCoulombData(outputdir, alldata)
 
         return alldata
@@ -119,7 +120,7 @@ class sensingdot_t:
         scanjob['stepdata'] = dict(
             {'gates': [gg[0]], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
         scanjob['sweepdata'] = dict(
-            {'gates': [gg[2]], 'start': sdval[2] + ds, 'end':  sdval[2] - ds, 'step': stepsize})
+            {'gates': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
         scanjob['keithleyidx'] = keithleyidx
         scanjob['compensateGates'] = []
         scanjob['gate_values_corners'] = [[]]
@@ -136,9 +137,9 @@ class sensingdot_t:
             sd.autoTuneInit(scanjob)
         alldata = sd.scan1D(outputdir=outputdir, step=step, scanrange=scanrange, max_wait_time=max_wait_time)
 
-        x,y = qtt.data.dataset1Ddata(alldata)
+        x, y = qtt.data.dataset1Ddata(alldata)
 
-        istep=float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
+        istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = peakdataOrientation(x, y)
 
         goodpeaks = coulombPeaks(x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
@@ -170,7 +171,7 @@ class sensingdot_t:
         stepdata = scanjob.get('stepdata', None)
         sweepdata = scanjob['sweepdata']
         # set sweep to center
-        gates=sd.station.gates        
+        gates = sd.station.gates
         gates.set(
             sweepdata['gates'][0], (sweepdata['start'] + sweepdata['end']) / 2)
         if not stepdata is None:
@@ -218,13 +219,13 @@ class sensingdot_t:
             print('autoTuneFine: factor %.2f, delta %.1f' % (factor, d))
 
         # set sweep to center
-        set_gate( sweepdata['gates'][0], (sweepdata['start'] + sweepdata['end']) / 2)
+        set_gate(sweepdata['gates'][0], (sweepdata['start'] + sweepdata['end']) / 2)
 
-        sdmiddle=sd.sdval[1]
+        sdmiddle = sd.sdval[1]
         if 1:
-            set_gate(cdata['gates'][0], (cdata['start']+cdata['end'])/2 )
+            set_gate(cdata['gates'][0], (cdata['start'] + cdata['end']) / 2)
 
-            sdmiddle=autotunePlunger(g, sd.sdval[1], readfunc, targetvalue=sd.targetvalue, fig=fig)
+            sdmiddle = autotunePlunger(g, sd.sdval[1], readfunc, targetvalue=sd.targetvalue, fig=fig)
 
         set_gate(cdata['gates'][0], cdata['start'])  # set step to start value
         cvalstart = sdmiddle - d / 2
@@ -233,7 +234,7 @@ class sensingdot_t:
             print(' autoTuneFine: cvalstart %.1f, sdstart %.1f' % (cvalstart, sdstart))
 
         set_gate(cdata['gates'][0], cdata['end'])  # set step to end value
-        #cvalstart2=((sdstart+d) + (sd.sdval[1]+d/2) )/2
+        # cvalstart2=((sdstart+d) + (sd.sdval[1]+d/2) )/2
         cvalstart2 = sdmiddle + (sdmiddle - sdstart)
         if sd.verbose >= 2:
             print(' autoTuneFine: cvalstart2 %.1f = %.1f + %.1f (d %.1f)' % (cvalstart2, sdmiddle, (sdmiddle - sdstart), d))
@@ -241,4 +242,3 @@ class sensingdot_t:
             g, cvalstart2, readfunc, targetvalue=sd.targetvalue, fig=fig + 2)
 
         return (sdstart, sdend, sdmiddle)
-
