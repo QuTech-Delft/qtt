@@ -69,7 +69,6 @@ If necessary install the drivers for your hardware. Some links:
 * (Virtual COM port driver)[http://www.ftdichip.com/Drivers/VCP.htm]
 * (GPIB USB interface)[http://www.ni.com/download/ni-488.2-16.0.0/6132/en/]
 
-
 - Register the repositories with Python. For each of the repositories run this from the root directory:
 ```
 > conda develop ./  (for Anaconda)
