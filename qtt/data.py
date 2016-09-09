@@ -31,6 +31,7 @@ import qtt.tools
 import matplotlib.pyplot as plt
 
 from qtt.tools import diffImageSmooth
+from qcodes import DataArray, new_data
 
 #%%
 
@@ -558,7 +559,21 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('saveExperimentData %s'  % path)
     write_data(path, dataset)
-    
+
+def makeDataSet2D(p1, p2, mname='measured', location=None):
+    ''' Make DataSet with one 2D array and two setpoint arrays '''
+    xx = np.array(p1)
+    yy0 = np.array(p2)
+    yy = np.tile(yy0, [xx.size, 1])
+    zz = np.NaN*np.ones((xx.size, yy0.size))
+    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=p2.name,  array_id=p2.name, label=p2.parameter.label, preset_data=yy, set_arrays=(x,), is_setpoint=True)
+    z = DataArray(name=mname, array_id=mname, label=mname, preset_data=zz, set_arrays=(x, y))
+    dd = new_data(arrays=(), location=location)
+    dd.add_array(z)
+    dd.add_array(x)
+    dd.add_array(y)
+    return dd
 
     
 #%%
