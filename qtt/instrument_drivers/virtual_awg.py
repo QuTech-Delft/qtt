@@ -22,6 +22,7 @@ from qcodes import DataArray
 from qcodes import QtPlot, DataArray
 >>>>>>> Add makeDataSet2D in data and add plotting of 2d sweeps in virtual_awg
 import qtt
+from qtt.data import makeDataSet2D
 
 #%%
 
