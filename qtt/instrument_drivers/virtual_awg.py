@@ -251,3 +251,55 @@ class virtual_awg(Instrument):
         plot = QtPlot(x, y)
 
         return plot
+        
+    def sweep_2D(self, fpga, sweepgates, sweepranges, resolution, widths=[.95,.95]):
+        ''' Send sawtooth signals to the sweepgates which effectively do a 2D
+        scan.
+        '''
+        if resolution[0]*resolution[1]>8189:
+            raise Exception('resolution is set higher than FPGA memory allows')
+    
+        if station is not None:
+            samp_freq = fpga.sampling_frequency.get()
+        else:
+            raise Exception('No station given as argument for virtual_awg')
+    
+        error_corr = resolution[0]*.02e-6
+        risetime_horz = resolution[0]/samp_freq+error_corr
+        risetime_vert = resolution[1]*risetime_horz
+        
+        waveform = dict()
+        # horizontal waveform
+        wave_horz_raw = self.make_sawtooth(sweepranges[0], risetime_horz, width=widths[0], repetitionnr = resolution[0])
+        awg_to_plunger_horz = self.hardware.parameters['awg_to_%s' % sweepgates[0]].get()
+        wave_horz = np.array([x / awg_to_plunger_horz for x in wave_horz_raw])
+        waveform[sweepgates[0]] = wave_horz
+        waveform['width_horz'] = widths[0]
+        waveform['sweeprange_horz'] = sweepranges[0]
+        
+        # vertical waveform
+        wave_vert_raw = self.make_sawtooth(sweepranges[0], risetime_vert, width=widths[1])
+        awg_to_plunger_vert = self.hardware.parameters['awg_to_%s' % sweepgates[1]].get()
+        wave_vert = np.array([x / awg_to_plunger_vert for x in wave_vert_raw])
+        waveform[sweepgates[1]] = wave_vert
+        waveform['width_vert'] = widths[1]
+        waveform['sweeprange_vert'] = sweepranges[1]
+        waveform['resolution'] = resolution
+        
+        sweep_info = self.sweep_init(waveform)
+        self.sweep_run(sweep_info)
+        
+        return waveform # add widths as in sweep_gate for the sweep_2d_process? Also add resolution
+        
+    def sweep_2D_process(self,data, waveform):
+        ''' Process data from sweep_2D '''
+        width_horz = waveform['width_horz']
+        width_vert = waveform['width_vert']
+        resolution = waveform['resolution']    
+        
+        # split up the fpga data in chunks of horizontal sweeps        
+        chunks_ch1 = [data[x:x+resolution[0]] for x in range(0, len(data), resolution[0])]
+        chunks_ch1 = [chunks_ch1[i][1:width_horz*len(chunks_ch1[i])] for i in range(0,len(chunks_ch1))]
+        Z = chunks_ch1[:width_vert*len(chunks_ch1)]
+        
+        return Z
