@@ -19,6 +19,7 @@ import qcodes
 import logging
 from qcodes import QtPlot, DataArray
 import qtt
+from qtt.data import makeDataSet2D
 
 #%%
 
