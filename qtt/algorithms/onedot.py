@@ -85,6 +85,9 @@ def onedotSelectBlob(im, xx, fimg=None, verbose=0):
     if verbose:
 	    print('onedotSelectBlob: good %s' % goodidx)
 
+    if xx.size==0:
+        print( 'FIXME: better return value... ')
+        return np.array([1,1])
     score = xx[:, 0] - xx[:, 1]
     score[goodidx == 0] += 10000
     idx = np.argmin(score)

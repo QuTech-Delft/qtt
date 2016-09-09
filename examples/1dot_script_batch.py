@@ -17,7 +17,8 @@ import matplotlib
 #matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot
-matplotlib.pyplot.ion()
+if __name__=='__main__':
+    matplotlib.pyplot.ion()
 
 
 import multiprocessing
@@ -54,7 +55,8 @@ from qtt.tools import stripDataset
 import pyqtgraph
 from qtt.scans import scanPinchValue
 from qtt.data import saveExperimentData, loadExperimentData     
-app=pyqtgraph.mkQApp()
+if __name__=='__main__':
+    app=pyqtgraph.mkQApp()
 
 
 #%% Load configuration
@@ -94,6 +96,7 @@ if __name__=='__main__':
     keithley3 = station.keithley3
     
     gates = station.gates
+    time.sleep(0.05); gates.L.get(); gates.R.get();
     
     station.set_measurement(keithley3.amplitude)
     
@@ -379,7 +382,7 @@ for ii, Tvalue in enumerate(Tvalues):
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
         
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
-        
+                
         stripDataset(alldata)
         stripDataset(scandata['dataset'])
         
