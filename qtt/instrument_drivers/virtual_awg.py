@@ -32,7 +32,7 @@ class virtual_awg(Instrument):
         self.awg_map = awg_map
         self.hardware = hardware
         self.verbose = verbose
-        self.delay_FPGA = 25.0e-6  # should depend on filterboxes
+        self.delay_FPGA = 2.0e-6  # should depend on filterboxes
         qcodes.installZMQlogger()
         logging.info('virtual_awg: setup')
 
@@ -175,16 +175,16 @@ class virtual_awg(Instrument):
         for nr in awgnrs:
             self._awgs[nr].run()
 
-    def make_sawtooth(self, sweeprange, risetime, width=.95):
+    def make_sawtooth(self, sweeprange, risetime, width=.95, repetitionnr=1):
         '''Make a sawtooth with a decline width determined by width. Not yet scaled with
         awg_to_plunger value.
         '''
         samplerate = 1. / self.AWG_clock
-        tt = np.arange(0, 2 * risetime + samplerate, samplerate)
+        tt = np.arange(0, 2 * risetime * repetitionnr + samplerate, samplerate)
         v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
         wave = (v_wave / 2) * scipy.signal.sawtooth(
             np.pi * tt / risetime, width=width)
-
+    
         return wave
 
     def sweep_gate(self, gate, sweeprange, risetime, width=.95):
@@ -211,6 +211,7 @@ class virtual_awg(Instrument):
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
         waveform['width'] = width
+        waveform['sweeprange'] = sweeprange
 
         return waveform
 
