@@ -17,7 +17,8 @@ import matplotlib
 #matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot
-matplotlib.pyplot.ion()
+if __name__=='__main__':
+    matplotlib.pyplot.ion()
 
 
 import multiprocessing

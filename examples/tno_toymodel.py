@@ -23,7 +23,8 @@ if __name__=='__main__':
     
 
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s: %(message)s  (%(filename)s:%(lineno)d)', )
+if __name__=='__main__':
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s: %(message)s  (%(filename)s:%(lineno)d)', )
 
 import qcodes
 import qcodes as qc
@@ -36,9 +37,10 @@ if __name__=='__main__':
     l.handlers[0].setFormatter(formatter)
 
 import matplotlib
-matplotlib.use('Qt4Agg')
 import matplotlib.pyplot
-matplotlib.pyplot.ion()
+if __name__=='__main__':
+    matplotlib.use('Qt4Agg')
+    matplotlib.pyplot.ion()
 
 import pyqtgraph
 import qtt
@@ -54,8 +56,11 @@ from qtt.scans import scan1D
 
 import tempfile
 
-datadir = os.path.join(tempfile.tempdir, 'qdata')
-qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+import matplotlib.pyplot
+if __name__=='__main__':
+
+    datadir = os.path.join(tempfile.tempdir, 'qdata')
+    qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
 
 
 #%% Create a virtual model for testing
