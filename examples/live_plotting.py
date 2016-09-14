@@ -73,6 +73,9 @@ class livePlot:
             if data is not None:
                 self.data = np.array(data)
                 self.plot.setData(self.data)
+                self.horz_low = self.gates.get(
+                    self.sweepgates[0]) - self.sweepranges[0] / 2
+                self.horz_range = self.sweepranges[0]
             else:
                 pass
         elif len(self.sweepgates) == 2:
