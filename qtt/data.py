@@ -64,7 +64,8 @@ def getDefaultParameter(data, defname='amplitude'):
 
 
 def dataset2image(dataset, mode='pixel'):
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dataset, verbose=0, arrayname=None)
+    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+        dataset, verbose=0, arrayname=None)
     tr = image_transform(dataset, mode=mode)
     im = None
     if arrayname is not None:
@@ -83,11 +84,11 @@ def dataset2image2(dataset):
         impixel (array): image in pixel coordinates
         tr (transformation): transformation object
     """
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dataset, verbose=0, arrayname=None)
+    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+        dataset, verbose=0, arrayname=None)
     tr = image_transform(dataset, mode='pixel')
     im = None
-    impixel  = None
-
+    impixel = None
     if arrayname is not None:
         im = dataset.arrays[arrayname]
         impixel = tr.transform(im)
@@ -222,12 +223,13 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
 class image_transform:
 
-    def __init__(self, dataset=None, arrayname=None, mode='pixel', verbose = 0):
-        self.H = np.eye(3) # raw image to pixel image transformation
-        self.extent = [] # image extent in pixel
+    def __init__(self, dataset=None, arrayname=None, mode='pixel', verbose=0):
+        self.H = np.eye(3)  # raw image to pixel image transformation
+        self.extent = []  # image extent in pixel
         self.verbose = verbose
         self.dataset = dataset
-        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dataset, arrayname=arrayname)
+        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+            dataset, arrayname=arrayname)
         self.vstep = vstep
         self.vsweep = vsweep
         nx = len(vsweep)
@@ -257,11 +259,13 @@ class image_transform:
         """ Return matplotlib style image extent """
         vsweep = self.vsweep
         vstep = self.vstep
-        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ]
+        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]
         if self.flipX:
-            extentImage = [extentImage[1], extentImage[0], extentImage[2], extentImage[3] ]
+            extentImage = [extentImage[1], extentImage[
+                0], extentImage[2], extentImage[3]]
         if self.flipY:
-            extentImage = [extentImage[0], extentImage[1], extentImage[3], extentImage[2] ]
+            extentImage = [extentImage[0], extentImage[
+                1], extentImage[3], extentImage[2]]
         return extentImage
 
     def transform(self, im):
@@ -297,11 +301,13 @@ class image_transform:
           ptx (array): point in scan coordinates (sweep, step)
 
         """
-        ptx = pmatlab.projectiveTransformation(self.Hi, np.array(pt).astype(float) )
+        ptx = pmatlab.projectiveTransformation(
+            self.Hi, np.array(pt).astype(float))
 
-        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(self.dataset, arrayname=None, verbose=0)
-        nx = vsweep.size #  zdata.shape[0]
-        ny = vstep.size # zdata.shape[1]
+        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
+            self.dataset, arrayname=None, verbose=0)
+        nx = vsweep.size  # zdata.shape[0]
+        ny = vstep.size  # zdata.shape[1]
 
         xx = extent
         x = ptx
@@ -327,34 +333,37 @@ class image_transform:
             ptpixel (ndaray): points in pixel coordinates
 
         """
-        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(self.dataset, arrayname=None, verbose=0)
-        # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
-        nx = vsweep.size 
+        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
+            self.dataset, arrayname=None, verbose=0)
+        #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
+        nx = vsweep.size
         ny = vstep.size
-    
+
         xx = extent
         x = pt
         nn = pt.shape[1]
         ptpixel = np.zeros((2, nn))
-        f = scipy.interpolate.interp1d([xx[2], xx[3]], [0, ny - 1], assume_sorted = False)
-        ptpixel[1,:] = f(x[1,:])
-        f = scipy.interpolate.interp1d([xx[0], xx[1]], [0, nx - 1], assume_sorted = False)
-        ptpixel[0,:] = f(x[0,:]) # sweep to pixel x
-        # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
-        # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
+        f = scipy.interpolate.interp1d(
+            [xx[2], xx[3]], [0, ny - 1], assume_sorted=False)
+        ptpixel[1, :] = f(x[1, :])
+        f = scipy.interpolate.interp1d(
+            [xx[0], xx[1]], [0, nx - 1], assume_sorted=False)
+        ptpixel[0, :] = f(x[0, :])  # sweep to pixel x
+        #ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
+        #ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
 
-        ptpixel = pmatlab.projectiveTransformation(self.H, np.array(ptpixel).astype(float) )
+        ptpixel = pmatlab.projectiveTransformation(
+            self.H, np.array(ptpixel).astype(float))
 
         return ptpixel
 
         ptx = pmatlab.projectiveTransformation(
             self.Hi, np.array(pt).astype(float))
 
-        ptx = pmatlab.projectiveTransformation(self.Hi, np.array(pt).astype(float) )
-
-        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(self.dataset, verbose=0)
-        nx = vsweep.size #  zdata.shape[0]
-        ny = vstep.size # zdata.shape[1]
+        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
+            self.dataset, verbose=0)
+        nx = vsweep.size  # zdata.shape[0]
+        ny = vstep.size  # zdata.shape[1]
 
         xx = extent
         x = ptx
@@ -376,10 +385,11 @@ def pix2scan(pt, dd2d):
 
     """
     warnings.warn('use transformation object instead')
-    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(dd2d, verbose=0)
-    # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
-    nx = vsweep.size #  zdata.shape[0]
-    ny = vstep.size # zdata.shape[1]
+    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
+        dd2d, verbose=0)
+    #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
+    nx = vsweep.size  # zdata.shape[0]
+    ny = vstep.size  # zdata.shape[1]
 
     xx = extent
     x = pt
@@ -424,8 +434,9 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
 
 
 if __name__ == '__main__':
-    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, array=None)
-    _ = pix2scan( np.zeros( (2, 4) ), alldata )
+    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
+        alldata, array=None)
+    _ = pix2scan(np.zeros((2, 4)), alldata)
 
 #%%
 
