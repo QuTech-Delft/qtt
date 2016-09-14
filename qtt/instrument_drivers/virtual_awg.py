@@ -4,20 +4,16 @@ Created on Wed Aug 31 13:04:09 2016
 
 @author: diepencjv
 """
-#%%
-''' Desired functionality
-- Sweep a gate with a triangular signal
-- Veryfast honeycombs
-- Compensate gate sweep
-'''
 
 #%%
 import numpy as np
-from qcodes import Instrument, MatPlot
 import scipy.signal
-import qcodes
 import logging
-from qcodes import QtPlot, DataArray
+import qcodes
+from qcodes import Instrument
+from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes.plots.pyqtgraph import QtPlot
+from qcodes import DataArray
 import qtt
 from qtt.data import makeDataSet2D
 
@@ -26,8 +22,9 @@ from qtt.data import makeDataSet2D
 
 class virtual_awg(Instrument):
 
+    shared_kwargs = ['instruments']
+
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
-#        shared_kwargs = ['instruments']
         super().__init__(name, **kwargs)
         self._awgs = instruments
         self.awg_map = awg_map
@@ -71,7 +68,7 @@ class virtual_awg(Instrument):
         ''' Stops all AWGs and turns of all channels '''
         for awg in self._awgs:
             awg.stop()
-            for i in range(1,5):
+            for i in range(1, 5):
                 awg.set('ch%d_state' % i, 0)
 
         if verbose:
@@ -127,7 +124,7 @@ class virtual_awg(Instrument):
             'ch%i_m%i_high' % (fpga_info[1], fpga_info[2]), 2.6)
 
         # awg marker
-        if hasattr(self,'awg_seq'):
+        if hasattr(self, 'awg_seq'):
             awg_info = self.awg_map['awg_mk']
             if awg_info[:2] not in sweep_info:
                 awgs.append(self._awgs[awg_info[0]])
@@ -152,8 +149,8 @@ class virtual_awg(Instrument):
         for sweep in sweep_info:
             self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
                                                        sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
-            
-            if hasattr(self,'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
+
+            if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
                     sweep_info[sweep]['name'], sweep[1], 1)
                 self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
@@ -182,9 +179,9 @@ class virtual_awg(Instrument):
         samplerate = 1. / self.AWG_clock
         tt = np.arange(0, risetime * repetitionnr + samplerate, samplerate)
         v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
-        wave = (v_wave / 2) * scipy.signal.sawtooth(2*
-            np.pi * tt / risetime, width=width)
-    
+        wave = (v_wave / 2) * scipy.signal.sawtooth(2 *
+                                                    np.pi * tt / risetime, width=width)
+
         return wave
 
     def sweep_gate(self, gate, sweeprange, risetime, width=.95):
@@ -252,73 +249,81 @@ class virtual_awg(Instrument):
         plot = QtPlot(x, y)
 
         return plot
-        
+
     def sweep_2D(self, fpga, sweepgates, sweepranges, resolution):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
         '''
-        if resolution[0]*resolution[1]>8189:
+        if resolution[0] * resolution[1] > 8189:
             raise Exception('resolution is set higher than FPGA memory allows')
 
         samp_freq = fpga.sampling_frequency.get()
 
-        error_corr = resolution[0]*.02e-6
-        risetime_horz = resolution[0]/samp_freq+error_corr
-        risetime_vert = resolution[1]*risetime_horz
-        
+        error_corr = resolution[0] * .02e-6
+        risetime_horz = resolution[0] / samp_freq + error_corr
+        risetime_vert = resolution[1] * risetime_horz
+
         waveform = dict()
         # horizontal waveform
-        wave_horz_raw = self.make_sawtooth(sweepranges[0], risetime_horz, repetitionnr = resolution[0])
-        awg_to_plunger_horz = self.hardware.parameters['awg_to_%s' % sweepgates[0]].get()
+        wave_horz_raw = self.make_sawtooth(
+            sweepranges[0], risetime_horz, repetitionnr=resolution[0])
+        awg_to_plunger_horz = self.hardware.parameters[
+            'awg_to_%s' % sweepgates[0]].get()
         wave_horz = np.array([x / awg_to_plunger_horz for x in wave_horz_raw])
         waveform[sweepgates[0]] = wave_horz
-        
+
         # vertical waveform
         wave_vert_raw = self.make_sawtooth(sweepranges[0], risetime_vert)
-        awg_to_plunger_vert = self.hardware.parameters['awg_to_%s' % sweepgates[1]].get()
+        awg_to_plunger_vert = self.hardware.parameters[
+            'awg_to_%s' % sweepgates[1]].get()
         wave_vert = np.array([x / awg_to_plunger_vert for x in wave_vert_raw])
         waveform[sweepgates[1]] = wave_vert
-        
+
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
-        
+
         waveform['width_horz'] = .95
-        waveform['sweeprange_horz'] = sweepranges[0]    
+        waveform['sweeprange_horz'] = sweepranges[0]
         waveform['width_vert'] = .95
         waveform['sweeprange_vert'] = sweepranges[1]
         waveform['resolution'] = resolution
-        
-        return waveform # add widths as in sweep_gate for the sweep_2d_process? Also add resolution
-        
+
+        return waveform
+
     def sweep_2D_process(self, data, waveform, diff_dir=None):
         ''' Process data from sweep_2D '''
         width_horz = waveform['width_horz']
         width_vert = waveform['width_vert']
-        resolution = waveform['resolution']    
-        
-        # split up the fpga data in chunks of horizontal sweeps        
-        chunks_ch1 = [data[x:x+resolution[0]] for x in range(0, len(data), resolution[0])]
-        chunks_ch1 = [chunks_ch1[i][1:int(width_horz*len(chunks_ch1[i]))] for i in range(0,len(chunks_ch1))]
-        data_processed = chunks_ch1[:int(width_vert*len(chunks_ch1))]
-        
+        resolution = waveform['resolution']
+
+        # split up the fpga data in chunks of horizontal sweeps
+        chunks_ch1 = [data[x:x + resolution[0]]
+                      for x in range(0, len(data), resolution[0])]
+        chunks_ch1 = [chunks_ch1[i][
+            1:int(width_horz * len(chunks_ch1[i]))] for i in range(0, len(chunks_ch1))]
+        data_processed = chunks_ch1[:int(width_vert * len(chunks_ch1))]
+
         if diff_dir is not None:
-            data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
-        
+            data_processed = qtt.diffImageSmooth(
+                data_processed, dy=diff_dir, sigma=1)
+
         return data_processed
-        
+
     def plot_sweep_2D(self, data, gates, sweepgates, sweepranges):
-        ''' Plot the data of a 2D sweep '''    
+        ''' Plot the data of a 2D sweep '''
         initval_horz = gates.get(sweepgates[0])
         initval_vert = gates.get(sweepgates[1])
-        
+
         param_horz = getattr(gates, sweepgates[0])
         param_vert = getattr(gates, sweepgates[1])
-        
-        sweep_horz = param_horz[initval_horz-sweepranges[0]/2:sweepranges[0]/2+initval_horz:sweepranges[0]/len(data[0])]
-        sweep_vert = param_vert[initval_vert-sweepranges[1]/2:sweepranges[1]/2+initval_vert:sweepranges[1]/len(data)]
-        
+
+        sweep_horz = param_horz[initval_horz - sweepranges[0] /
+                                2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data[0])]
+        sweep_vert = param_vert[initval_vert - sweepranges[1] /
+                                2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
+
         dataset = makeDataSet2D(sweep_vert, sweep_horz)
         dataset.measured.ndarray = data
-        plot = MatPlot(dataset.measured, interval = 0)
-        
+        plot = MatPlot(dataset.measured, interval=0)
+
         return plot
