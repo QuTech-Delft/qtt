@@ -213,7 +213,7 @@ class virtual_awg(Instrument):
 
         return waveform
 
-    def sweep_process(self, data, waveform, direction='forwards'):
+    def sweep_process(self, data, waveform, Naverage, direction='forwards'):
         '''Process the data returned by reading out based on the shape of
         the sawtooth send with the AWG.
 
@@ -238,23 +238,25 @@ class virtual_awg(Instrument):
             begin = int(np.ceil((1 - width) * len(data)))
             data_processed = data[begin:]
 
+        data_processed = [x / Naverage for x in data_processed]
+
         return data_processed
-        
-    def plot_sweep(self,data, gates, sweepgate, sweeprange):
+
+    def plot_sweep(self, data, gates, sweepgate, sweeprange):
         ''' Plot the data of a 1D sweep '''
-        
+
         initval = gates.get(sweepgate)
 
         param = getattr(gates, sweepgate)
 
         sweepvalues = param[initval - sweeprange /
-                                2:sweeprange / 2 + initval:sweeprange / len(data)]
+                            2:sweeprange / 2 + initval:sweeprange / len(data)]
 
         dataset = makeDataSet1D(sweepvalues)
         dataset.measured.ndarray = data
         plot = MatPlot(dataset.measured, interval=0)
 
-        return plot        
+        return plot
 
     def plot_wave(self, wave):
         ''' Plot the wave '''
