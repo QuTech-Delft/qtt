@@ -595,6 +595,21 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
     write_data(path, dataset)
 
 
+def makeDataSet1D(p, mname='measured', location=None):
+    ''' Make DataSet with one 1D array and one setpoint array '''
+    xx = np.array(p)
+    yy = np.ones(xx.size)
+    x = DataArray(name=p.name, array_id=p.name,
+                  label=p.parameter.label, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=mname, array_id=mname, label=mname,
+                  preset_data=yy, set_arrays=(x,))
+    dd = new_data(arrays=(), location=location)
+    dd.add_array(x)
+    dd.add_array(y)
+
+    return dd
+
+
 def makeDataSet2D(p1, p2, mname='measured', location=None):
     ''' Make DataSet with one 2D array and two setpoint arrays '''
     xx = np.array(p1)
