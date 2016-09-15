@@ -15,6 +15,8 @@ import pyqtgraph as pg
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
 import logging
+import scipy.ndimage as ndimage
+import qtt.algorithms.generic
 
 #%% Liveplot object
 
@@ -73,7 +75,8 @@ class livePlot:
             if data is not None:
                 self.data = np.array(data)
                 gateval = self.gates.get(self.sweepgates[0])
-                sweepvalues =  np.arange(gateval - self.sweepranges[0] / 2 , self.sweepranges[0] / 2 + gateval, self.sweepranges[0] / len(data))
+                sweepvalues = np.arange(gateval - self.sweepranges[0] / 2, self.sweepranges[
+                                        0] / 2 + gateval, self.sweepranges[0] / len(data))
                 self.plot.setData(sweepvalues, self.data)
             else:
                 pass
@@ -148,38 +151,35 @@ class MockCallback_2d:
         return data_reshaped
 
 
-class fpgaCallback_sd:
+class fpgaCallback_1d:
 
-    def __init__(self, station, Naverage=4, fpga_ch=1):
-        self.fpga = station.fpga
+    def __init__(self, station, waveform, Naverage=4, fpga_ch=1):
+        self.station = station
+        self.waveform = waveform
         self.Naverage = Naverage
         self.FPGA_mode = 0
         self.fpga_ch = fpga_ch
-        self.ReadDevice = 'FPGA_ch%d' % self.fpga_ch
 
     def __call__(self, verbose=0):
         """ Callback function to read a single line of data from the FPGA """
-        totalpoints, DataRead_ch1, DataRead_ch2 = self.fpga.readFPGA(
-            Naverage=self.Naverage, ReadDevice=[self.ReadDevice])
+        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
+        totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
+            Naverage=self.Naverage, ReadDevice=ReadDevice)
 
         if self.fpga_ch == 1:
-            datr = DataRead_ch1[1:-1]
+            data = DataRead_ch1[1:-1]
         elif self.fpga_ch == 2:
-            datr = DataRead_ch2[1:-1]
+            data = DataRead_ch2[1:-1]
         else:
             raise Exception('FPGA channel not well specified')
 
-        datr = [x / self.Naverage for x in datr]
-#        datr_ch1[:]=[x*mirrorfactor for x in datr_ch1] # minus sign?
-        datr_half = datr[:len(datr) // 2 + 1]
+        data_processed = self.station.awg.sweep_process(
+            data, self.waveform, self.Naverage)
 
-        return np.array(datr_half)
-
-import scipy.ndimage as ndimage
-import qtt.algorithms.generic
+        return data_processed
 
 
-class fpgaCallback_hc:
+class fpgaCallback_2d:
 
     def __init__(self, station, ReadDevice, Naverage, resolution, waittime=0):
         self.fpga = station.fpga
