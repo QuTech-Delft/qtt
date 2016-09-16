@@ -69,20 +69,23 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     if ptv is None:
         ptv = od['balancepoint']
     keithleyidx = [od['instrument']]
-    scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od['gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
+    scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
+                              'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
     scanjobhi['keithleyidx'] = keithleyidx
     scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], -780)
     scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
 
-    wait_time = qtt.scans.waitTime(od['gates'][2], gate_settle=getattr(station, 'gate_settle', None))
+    wait_time = qtt.scans.waitTime(
+        od['gates'][2], gate_settle=getattr(station, 'gate_settle', None))
 
     alldatahi = qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time, background=False)
-
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldatahi, verbose=0, arrayname=None)
+    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+        alldatahi, verbose=0, arrayname=None)
     impixel, tr = dataset2image(alldatahi, mode='pixel')
 
     #_,_,_, im = get2Ddata(alldatahi)
-    ptv, fimg, tmp = onedotGetBalanceFine(impixel, alldatahi, verbose=1, fig=fig)
+    ptv, fimg, tmp = onedotGetBalanceFine(
+        impixel, alldatahi, verbose=1, fig=fig)
 
     if tmp['accuracy'] < .2:
         logging.info('use old data point!')
@@ -92,7 +95,8 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     else:
         ptx = tmp['ptpixel'].copy()
     step = scanjobhi['stepdata']['step']
-    val = findCoulombDirection(impixel, ptx, step, widthmv=8, fig=None, verbose=1)
+    val = findCoulombDirection(
+        impixel, ptx, step, widthmv=8, fig=None, verbose=1)
     od['coulombdirection'] = val
 
     od['balancepointfine'] = ptv
@@ -416,7 +420,8 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
         return alldata
 
     if stepdelay is None:
-        stepdelay = waitTime(gate, gate_settle=getattr(station, 'gate_settle', None))
+        stepdelay = waitTime(gate, gate_settle=getattr(
+            station, 'gate_settle', None))
 
     if basevalues is None:
         b = 0
@@ -451,7 +456,8 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
 
 if __name__ == '__main__':
     gate = 'L'
-    alldataX = qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+    alldataX = qtt.scans.scanPinchValue(
+        station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
     adata = analyseGateSweep(alldataX, fig=10, minthr=None, maxthr=None)
 
 #%%
@@ -469,6 +475,27 @@ def plot_sweep(data, gates, sweepgate, sweeprange):
                             2:sweeprange / 2 + initval:sweeprange / len(data)]
 
     dataset = makeDataSet1D(sweepvalues)
+    dataset.measured.ndarray = data
+    plot = MatPlot(dataset.measured, interval=0)
+
+    return plot, dataset
+
+
+def plot_sweep_2D(data, gates, sweepgates, sweepranges):
+    ''' Plot the data of a 2D sweep '''
+
+    gate_horz = getattr(gates, sweepgates[0])
+    gate_vert = getattr(gates, sweepgates[1])
+
+    initval_horz = gate_horz.get()
+    initval_vert = gate_vert.get()
+
+    sweep_horz = gate_horz[initval_horz - sweepranges[0] /
+                           2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data[0])]
+    sweep_vert = gate_vert[initval_vert - sweepranges[1] /
+                           2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
+
+    dataset = makeDataSet2D(sweep_vert, sweep_horz)
     dataset.measured.ndarray = data
     plot = MatPlot(dataset.measured, interval=0)
 
@@ -520,14 +547,14 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
         # alldata,=pmatlab.load(pfile);  # alldata=alldata[0]
         if alldata is None:
             raise Exception('could not load file %s' % pfile)
-        adata = analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None, verbose=1)
+        adata = analyseGateSweep(
+            alldata, fig=None, minthr=None, maxthr=None, verbose=1)
         if verbose:
-            print('loadOneDotPinchvalues: pinchvalue for gate %s: %.1f' % (g, adata['pinchvalue']))
+            print('loadOneDotPinchvalues: pinchvalue for gate %s: %.1f' %
+                  (g, adata['pinchvalue']))
         pv[ii] = adata['pinchvalue']
     od['pinchvalues'] = pv
     return od
-
-#%%
 
 
 #%% Testing
@@ -542,5 +569,7 @@ if __name__ == '__main__':
 
 
 if __name__ == '__main__':
-    for gate in ['L', 'D1', 'D2', 'D3', 'R'] + ['P1', 'P2', 'P3', 'P4']:  # ,'SD1a', 'SD1b', ''SD2a','SD]:
-            alldata = scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
+    # ,'SD1a', 'SD1b', ''SD2a','SD]:
+    for gate in ['L', 'D1', 'D2', 'D3', 'R'] + ['P1', 'P2', 'P3', 'P4']:
+        alldata = scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[
+                                 3], cache=cache, full=full)

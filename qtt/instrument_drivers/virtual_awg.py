@@ -22,7 +22,6 @@ from qcodes import DataArray
 from qcodes import QtPlot, DataArray
 >>>>>>> Add makeDataSet2D in data and add plotting of 2d sweeps in virtual_awg
 import qtt
-from qtt.data import makeDataSet1D, makeDataSet2D
 
 #%%
 
@@ -253,22 +252,6 @@ class virtual_awg(Instrument):
 
         return data_processed
 
-    def plot_sweep(self, data, gates, sweepgate, sweeprange):
-        ''' Plot the data of a 1D sweep '''
-
-        initval = gates.get(sweepgate)
-
-        param = getattr(gates, sweepgate)
-
-        sweepvalues = param[initval - sweeprange /
-                            2:sweeprange / 2 + initval:sweeprange / len(data)]
-
-        dataset = makeDataSet1D(sweepvalues)
-        dataset.measured.ndarray = data
-        plot = MatPlot(dataset.measured, interval=0)
-
-        return plot
-
     def plot_wave(self, wave):
         ''' Plot the wave '''
         horz_var = np.arange(0, len(wave) / self.AWG_clock, 1 / self.AWG_clock)
@@ -280,15 +263,19 @@ class virtual_awg(Instrument):
 
         return plot
 
+<<<<<<< a5ef509ee3e6cdffa2c61bb5d5a62e49690f05d1
         
     def sweep_2D(self, fpga, sweepgates, sweepranges, resolution):
+=======
+    def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None):
+>>>>>>> Add sweep plotting functions to scans and make virtual_awg fully compatible with remote instruments and fix and move live_plotting
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
         '''
         if resolution[0]*resolution[1]>8189:
             raise Exception('resolution is set higher than FPGA memory allows')
 
-        samp_freq = fpga.sampling_frequency.get()
+        samp_freq = fpga_samp_freq
 
         error_corr = resolution[0]*.02e-6
         risetime_horz = resolution[0]/samp_freq+error_corr
@@ -306,7 +293,19 @@ class virtual_awg(Instrument):
         awg_to_plunger_vert = self.hardware.parameters['awg_to_%s' % sweepgates[1]].get()
         wave_vert = np.array([x / awg_to_plunger_vert for x in wave_vert_raw])
         waveform[sweepgates[1]] = wave_vert
+<<<<<<< a5ef509ee3e6cdffa2c61bb5d5a62e49690f05d1
         
+=======
+
+        if comp is not None:
+            for g in comp.keys():
+                if g not in sweepgates:
+                    waveform[g] = comp[g]['vert'] * \
+                        wave_vert + comp[g]['horz'] * wave_horz
+                else:
+                    raise Exception('Can not compensate a sweepgate')
+
+>>>>>>> Add sweep plotting functions to scans and make virtual_awg fully compatible with remote instruments and fix and move live_plotting
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
         
@@ -315,9 +314,15 @@ class virtual_awg(Instrument):
         waveform['width_vert'] = .95
         waveform['sweeprange_vert'] = sweepranges[1]
         waveform['resolution'] = resolution
+<<<<<<< a5ef509ee3e6cdffa2c61bb5d5a62e49690f05d1
         
         return waveform # add widths as in sweep_gate for the sweep_2d_process? Also add resolution
         
+=======
+
+        return waveform, sweep_info
+
+>>>>>>> Add sweep plotting functions to scans and make virtual_awg fully compatible with remote instruments and fix and move live_plotting
     def sweep_2D_process(self, data, waveform, diff_dir=None):
         ''' Process data from sweep_2D '''
         width_horz = waveform['width_horz']
@@ -333,6 +338,7 @@ class virtual_awg(Instrument):
             data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
         
         return data_processed
+<<<<<<< a5ef509ee3e6cdffa2c61bb5d5a62e49690f05d1
         
     def plot_sweep_2D(self, data, gates, sweepgates, sweepranges):
         ''' Plot the data of a 2D sweep '''    
@@ -354,3 +360,5 @@ class virtual_awg(Instrument):
 =======
         return plot
 >>>>>>> Add makeDataSet2D in data and add plotting of 2d sweeps in virtual_awg
+=======
+>>>>>>> Add sweep plotting functions to scans and make virtual_awg fully compatible with remote instruments and fix and move live_plotting
