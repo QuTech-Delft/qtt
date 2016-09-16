@@ -252,13 +252,13 @@ class sensingdot_t:
 
         return (sdstart, sdend, sdmiddle)
 
-    def fastTune(sd, Naverage=50, sweeprange=79, period=.5e-3, fig=201, mirrorfactor=1.):
+    def fastTune(sd, Naverage=50, sweeprange=79, period=.5e-3, fig=201, mirrorfactor=1., sleeptime=2):
         ''' Fast tuning of the sensing dot plunger '''
 
         waveform, sweep_info = sd.station.awg.sweep_gate(
             sd.gg[1], sweeprange, period)
 
-        qtt.time.sleep(2)
+        qtt.time.sleep(sleeptime)
 
         fpga_ch = int(sd.gg[1][2])
         ReadDevice = ['FPGA_ch%d' % fpga_ch]
