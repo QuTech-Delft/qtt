@@ -157,11 +157,10 @@ class fpgaCallback_1d:
         self.station = station
         self.waveform = waveform
         self.Naverage = Naverage
-        self.FPGA_mode = 0
         self.fpga_ch = fpga_ch
 
     def __call__(self, verbose=0):
-        """ Callback function to read a single line of data from the FPGA """
+        ''' Callback function to read a single line of data from the FPGA '''
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
         totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
             Naverage=self.Naverage, ReadDevice=ReadDevice)
@@ -181,41 +180,34 @@ class fpgaCallback_1d:
 
 class fpgaCallback_2d:
 
-    def __init__(self, station, ReadDevice, Naverage, resolution, waittime=0):
-        self.fpga = station.fpga
+    def __init__(self, station, waveform, Naverage, fpga_ch, resolution, diff_dir=None, waittime=0):
+        self.station = station
+        self.waveform = waveform
         self.Naverage = Naverage
+        self.fpga_ch = fpga_ch
         self.resolution = resolution
-        self.ReadDevice = ReadDevice
         self.waittime = waittime
         self.diffsigma = 1
         self.diff = True
-        self.diffaxis = 1
+        self.diff_dir = diff_dir
         self.smoothing = False
         self.laplace = False
 
     def __call__(self):
-        totalpoints, DataRead_ch1, DataRead_ch2 = self.fpga.readFPGA(
-            ReadDevice=self.ReadDevice, Naverage=self.Naverage, waittime=self.waittime)
+        ''' Callback function to read a 2d scan of data from the FPGA '''
+        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
+        totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
+            ReadDevice=ReadDevice, Naverage=self.Naverage, waittime=self.waittime)
 
-        if 'FPGA_ch1' in self.ReadDevice:
-            datr = DataRead_ch1
-        elif 'FPGA_ch2' in self.ReadDevice:
-            datr = DataRead_ch2
+        if 'FPGA_ch1' in ReadDevice:
+            data = DataRead_ch1
+        elif 'FPGA_ch2' in ReadDevice:
+            data = DataRead_ch2
         else:
             raise Exception('FPGA channel not well specified')
 
-        chunks_ch1 = [datr[x:x + self.resolution[0]]
-                      for x in range(0, len(datr), self.resolution[0])]
-        chunks_ch1 = [chunks_ch1[i][1:-7] for i in range(0, len(chunks_ch1))]
-        Z = chunks_ch1[:-10]
-
-        if self.diff:
-            order = 1
-        else:
-            order = 0
-
-        im_diff = ndimage.gaussian_filter1d(
-            Z, axis=self.diffaxis, sigma=self.diffsigma, order=order, mode='nearest')
+        im_diff = self.station.awg.sweep_2D_process(
+            data, self.waveform, self.diff_dir)
 
         if self.smoothing:
             im_diff = qtt.algorithms.generic.smoothImage(im_diff)
