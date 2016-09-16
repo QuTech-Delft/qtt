@@ -220,7 +220,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
        delay=0
     logging.debug('delay: %s' % str(delay))
     print('scan1D: starting Loop (background %s)' % background)
-    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=data_manager, background=background)
+    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(
+        location=location, data_manager=data_manager, background=background)
     data.sync()
 
     if liveplotwindow is None:
@@ -228,8 +229,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     if liveplotwindow is not None:
         time.sleep(.1)
-        data.sync()
-        # wait for at least 1 data point
+        data.sync()  # wait for at least 1 data point
         liveplotwindow.clear()
         liveplotwindow.add(getDefaultParameter(data))
 
@@ -427,9 +427,11 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
     if full == 0:
         sweepdata['step'] = -6
 
-    scanjob = dict({'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'delay': stepdelay})
+    scanjob = dict(
+        {'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'delay': stepdelay})
 
-    alldata = scan1D(scanjob, station, title_comment='scan gate %s' % gate, background=background)
+    alldata = scan1D(scanjob, station, title_comment='scan gate %s' %
+                     gate, background=background)
 
     station.gates.set(gate, basevalues[gate])  # reset gate to base value
 
@@ -453,9 +455,49 @@ if __name__ == '__main__':
     adata = analyseGateSweep(alldataX, fig=10, minthr=None, maxthr=None)
 
 #%%
-
+from qtt.data import makeDataSet1D, makeDataSet2D
 
 #%%
+
+
+def plot_sweep(data, gates, sweepgate, sweeprange):
+    ''' Plot the data of a 1D sweep '''
+
+    sweepgate = getattr(gates, sweepgate)
+    initval = sweepgate.get()
+    sweepvalues = sweepgate[initval - sweeprange /
+                            2:sweeprange / 2 + initval:sweeprange / len(data)]
+
+    dataset = makeDataSet1D(sweepvalues)
+    dataset.measured.ndarray = data
+    plot = MatPlot(dataset.measured, interval=0)
+
+    return plot, dataset
+
+
+def plot_sweep_2D(data, gates, sweepgates, sweepranges):
+    ''' Plot the data of a 2D sweep '''
+
+    gate_horz = getattr(gates, sweepgates[0])
+    gate_vert = getattr(gates, sweepgates[1])
+
+    initval_horz = gate_horz.get()
+    initval_vert = gate_vert.get()
+
+    sweep_horz = gate_horz[initval_horz - sweepranges[0] /
+                           2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data[0])]
+    sweep_vert = gate_vert[initval_vert - sweepranges[1] /
+                           2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
+
+    dataset = makeDataSet2D(sweep_vert, sweep_horz)
+    dataset.measured.ndarray = data
+    plot = MatPlot(dataset.measured, interval=0)
+
+    return plot, dataset
+
+#%%
+
+
 def loadOneDotPinchvalues(od, outputdir, verbose=1):
     """ Load the pinch-off values for a one-dot
 
@@ -484,6 +526,8 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
         pv[ii] = adata['pinchvalue']
     od['pinchvalues'] = pv
     return od
+
+#%%
 
 
 #%% Testing

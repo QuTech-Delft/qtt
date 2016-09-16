@@ -11,11 +11,9 @@ import scipy.signal
 import logging
 import qcodes
 from qcodes import Instrument
-from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes import DataArray
 import qtt
-from qtt.data import makeDataSet1D, makeDataSet2D
 
 #%%
 
@@ -23,7 +21,7 @@ from qtt.data import makeDataSet1D, makeDataSet2D
 class virtual_awg(Instrument):
     shared_kwargs = ['instruments', 'hardware']
 
-    shared_kwargs = ['instruments']
+    shared_kwargs = ['instruments', 'hardware']
 
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
         super().__init__(name, **kwargs)
@@ -51,7 +49,7 @@ class virtual_awg(Instrument):
             raise Exception(
                 'Configuration of AWGs not supported by virtual_awg instrument')
 
-        self.AWG_clock = 1e7
+        self.AWG_clock = 1e8
         self.ch_amp = 4.0
         for awg in self._awgs:
             awg.set('clock_freq', self.AWG_clock)
@@ -211,7 +209,7 @@ class virtual_awg(Instrument):
         waveform['width'] = width
         waveform['sweeprange'] = sweeprange
 
-        return waveform
+        return waveform, sweep_info
 
     def sweep_process(self, data, waveform, Naverage, direction='forwards'):
         '''Process the data returned by reading out based on the shape of
@@ -242,22 +240,6 @@ class virtual_awg(Instrument):
 
         return data_processed
 
-    def plot_sweep(self, data, gates, sweepgate, sweeprange):
-        ''' Plot the data of a 1D sweep '''
-
-        initval = gates.get(sweepgate)
-
-        param = getattr(gates, sweepgate)
-
-        sweepvalues = param[initval - sweeprange /
-                            2:sweeprange / 2 + initval:sweeprange / len(data)]
-
-        dataset = makeDataSet1D(sweepvalues)
-        dataset.measured.ndarray = data
-        plot = MatPlot(dataset.measured, interval=0)
-
-        return plot
-
     def plot_wave(self, wave):
         ''' Plot the wave '''
         horz_var = np.arange(0, len(wave) / self.AWG_clock, 1 / self.AWG_clock)
@@ -269,14 +251,14 @@ class virtual_awg(Instrument):
 
         return plot
 
-    def sweep_2D(self, fpga, sweepgates, sweepranges, resolution):
+    def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
         '''
         if resolution[0] * resolution[1] > 8189:
             raise Exception('resolution is set higher than FPGA memory allows')
 
-        samp_freq = fpga.sampling_frequency.get()
+        samp_freq = fpga_samp_freq
 
         error_corr = resolution[0] * .02e-6
         risetime_horz = resolution[0] / samp_freq + error_corr
@@ -298,6 +280,14 @@ class virtual_awg(Instrument):
         wave_vert = np.array([x / awg_to_plunger_vert for x in wave_vert_raw])
         waveform[sweepgates[1]] = wave_vert
 
+        if comp is not None:
+            for g in comp.keys():
+                if g not in sweepgates:
+                    waveform[g] = comp[g]['vert'] * \
+                        wave_vert + comp[g]['horz'] * wave_horz
+                else:
+                    raise Exception('Can not compensate a sweepgate')
+
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
 
@@ -307,7 +297,7 @@ class virtual_awg(Instrument):
         waveform['sweeprange_vert'] = sweepranges[1]
         waveform['resolution'] = resolution
 
-        return waveform
+        return waveform, sweep_info
 
     def sweep_2D_process(self, data, waveform, diff_dir=None):
         ''' Process data from sweep_2D '''
@@ -327,22 +317,3 @@ class virtual_awg(Instrument):
                 data_processed, dy=diff_dir, sigma=1)
 
         return data_processed
-
-    def plot_sweep_2D(self, data, gates, sweepgates, sweepranges):
-        ''' Plot the data of a 2D sweep '''
-        initval_horz = gates.get(sweepgates[0])
-        initval_vert = gates.get(sweepgates[1])
-
-        param_horz = getattr(gates, sweepgates[0])
-        param_vert = getattr(gates, sweepgates[1])
-
-        sweep_horz = param_horz[initval_horz - sweepranges[0] /
-                                2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data[0])]
-        sweep_vert = param_vert[initval_vert - sweepranges[1] /
-                                2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
-
-        dataset = makeDataSet2D(sweep_vert, sweep_horz)
-        dataset.measured.ndarray = data
-        plot = MatPlot(dataset.measured, interval=0)
-
-        return plot
