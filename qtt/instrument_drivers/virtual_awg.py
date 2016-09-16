@@ -95,24 +95,24 @@ class virtual_awg(Instrument):
         awgs.append(self._awgs[fpga_info[0]])
 
         sweep_info = dict()
-        wave_zero = np.zeros(len(waveforms[sweepgates[0]]))
+        wave_len = len(waveforms[sweepgates[0]])
         for g in sweepgates:
             sweep_info[self.awg_map[g]] = dict()
             sweep_info[self.awg_map[g]]['waveform'] = waveforms[g]
-            sweep_info[self.awg_map[g]]['marker1'] = wave_zero
-            sweep_info[self.awg_map[g]]['marker2'] = wave_zero
+            sweep_info[self.awg_map[g]]['marker1'] = np.zeros(wave_len)
+            sweep_info[self.awg_map[g]]['marker2'] = np.zeros(wave_len)
             sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
 
         # fpga marker
-        fpga_marker = np.zeros(len(wave_zero))
+        fpga_marker = np.zeros(wave_len)
         fpga_marker[int(self.delay_FPGA * self.AWG_clock):(
-            int(self.delay_FPGA * self.AWG_clock) + len(wave_zero) // 20)] = 1.0
+            int(self.delay_FPGA * self.AWG_clock) + wave_len // 20)] = 1.0
 
         if fpga_info[:2] not in sweep_info:
             sweep_info[fpga_info[:2]] = dict()
-            sweep_info[fpga_info[:2]]['waveform'] = wave_zero
-            sweep_info[fpga_info[:2]]['marker1'] = wave_zero
-            sweep_info[fpga_info[:2]]['marker2'] = wave_zero
+            sweep_info[fpga_info[:2]]['waveform'] = np.zeros(wave_len)
+            sweep_info[fpga_info[:2]]['marker1'] = np.zeros(wave_len)
+            sweep_info[fpga_info[:2]]['marker2'] = np.zeros(wave_len)
             sweep_info[fpga_info[:2]]['name'] = 'fpga_mk'
 
         sweep_info[fpga_info[:2]]['marker%d' % fpga_info[2]] = fpga_marker
@@ -127,15 +127,15 @@ class virtual_awg(Instrument):
             if awg_info[:2] not in sweep_info:
                 awgs.append(self._awgs[awg_info[0]])
                 sweep_info[awg_info[:2]] = dict()
-                sweep_info[awg_info[:2]]['waveform'] = wave_zero
-                sweep_info[awg_info[:2]]['marker1'] = wave_zero
-                sweep_info[awg_info[:2]]['marker2'] = wave_zero
+                sweep_info[awg_info[:2]]['waveform'] = np.zeros(wave_len)
+                sweep_info[awg_info[:2]]['marker1'] = np.zeros(wave_len)
+                sweep_info[awg_info[:2]]['marker2'] = np.zeros(wave_len)
                 sweep_info[awg_info[:2]]['name'] = 'awg_mk'
 
-            awg_marker = np.zeros(len(wave_zero))
-            awg_marker[0:len(wave_zero) // 20] = 1
+            awg_marker = np.zeros(wave_len)
+            awg_marker[0:wave_len // 20] = 1
             awg_marker = np.roll(
-                awg_marker, len(wave_zero) - int(self.delay_AWG * self.AWG_clock))
+                awg_marker, wave_len - int(self.delay_AWG * self.AWG_clock))
             sweep_info[awg_info[:2]]['marker%d' %
                                      self.awg_map['awg_mk'][2]] = awg_marker
             self._awgs[awg_info[0]].set(
@@ -170,36 +170,36 @@ class virtual_awg(Instrument):
         for nr in awgnrs:
             self._awgs[nr].run()
 
-    def make_sawtooth(self, sweeprange, risetime, width=.95, repetitionnr=1):
+    def make_sawtooth(self, sweeprange, period, width=.95, repetitionnr=1):
         '''Make a sawtooth with a decline width determined by width. Not yet scaled with
         awg_to_plunger value.
         '''
         samplerate = 1. / self.AWG_clock
-        tt = np.arange(0, risetime * repetitionnr + samplerate, samplerate)
+        tt = np.arange(0, period * repetitionnr + samplerate, samplerate)
         v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
         wave = (v_wave / 2) * scipy.signal.sawtooth(2 *
-                                                    np.pi * tt / risetime, width=width)
+                                                    np.pi * tt / period, width=width)
 
         return wave
 
-    def sweep_gate(self, gate, sweeprange, risetime, width=.95):
+    def sweep_gate(self, gate, sweeprange, period, width=.95):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the FPGA.
 
         Arguments:
             gate (string): the name of the gate to sweep
             sweeprange (float): the range of voltages to sweep over
-            risetime (float): the risetime of the triangular signal
+            period (float): the period of the triangular signal
 
         Returns:
             waveform (dictionary): The waveform being send with the AWG.
 
         Example:
         -------
-        >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
+        >>> wave = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
         waveform = dict()
-        wave_raw = self.make_sawtooth(sweeprange, risetime, width)
+        wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
         wave = np.array([x / awg_to_plunger for x in wave_raw])
         waveform[gate] = wave
@@ -224,7 +224,7 @@ class virtual_awg(Instrument):
 
         Example:
         -------
-        >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
+        >>> wave = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
         width = waveform['width']
 
@@ -232,8 +232,9 @@ class virtual_awg(Instrument):
             end = int(np.floor(width * len(data) - 1))
             data_processed = data[1:end]
         elif direction == 'backwards':
-            begin = int(np.ceil((1 - width) * len(data)))
+            begin = int(np.ceil(width * len(data) + 1))
             data_processed = data[begin:]
+            data_processed = data_processed[::-1]
 
         data_processed = [x / Naverage for x in data_processed]
 
@@ -260,20 +261,20 @@ class virtual_awg(Instrument):
         samp_freq = fpga_samp_freq
 
         error_corr = resolution[0] * .02e-6
-        risetime_horz = resolution[0] / samp_freq + error_corr
-        risetime_vert = resolution[1] * risetime_horz
+        period_horz = resolution[0] / samp_freq + error_corr
+        period_vert = resolution[1] * period_horz
 
         waveform = dict()
         # horizontal waveform
         wave_horz_raw = self.make_sawtooth(
-            sweepranges[0], risetime_horz, repetitionnr=resolution[0])
+            sweepranges[0], period_horz, repetitionnr=resolution[0])
         awg_to_plunger_horz = self.hardware.parameters[
             'awg_to_%s' % sweepgates[0]].get()
         wave_horz = np.array([x / awg_to_plunger_horz for x in wave_horz_raw])
         waveform[sweepgates[0]] = wave_horz
 
         # vertical waveform
-        wave_vert_raw = self.make_sawtooth(sweepranges[0], risetime_vert)
+        wave_vert_raw = self.make_sawtooth(sweepranges[0], period_vert)
         awg_to_plunger_vert = self.hardware.parameters[
             'awg_to_%s' % sweepgates[1]].get()
         wave_vert = np.array([x / awg_to_plunger_vert for x in wave_vert_raw])

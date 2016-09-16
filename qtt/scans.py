@@ -452,7 +452,7 @@ def plot_sweep(data, gates, sweepgate, sweeprange):
     sweepgate = getattr(gates, sweepgate)
     initval = sweepgate.get()
     sweepvalues = sweepgate[initval - sweeprange /
-                            2:sweeprange / 2 + initval:sweeprange / len(data)]
+                            2: initval + sweeprange / 2:sweeprange / len(data)]
 
     dataset = makeDataSet1D(sweepvalues)
     dataset.measured.ndarray = data

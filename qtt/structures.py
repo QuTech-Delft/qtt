@@ -4,6 +4,7 @@ import qcodes
 from qtt.scans import scan1D
 import qtt.data
 from qtt.algorithms.coulomb import *
+import matplotlib.pyplot as plt
 
 
 class sensingdot_t:
@@ -24,7 +25,8 @@ class sensingdot_t:
         # values for measurement
         # RFfreq = None
         if index is not None:
-            self.valuefunc = station.components['keithley%d' % index].amplitude.get
+            self.valuefunc = station.components[
+                'keithley%d' % index].amplitude.get
 
     def __repr__(self):
         gates = self.station.gates
@@ -135,14 +137,16 @@ class sensingdot_t:
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, correctdelay=True, step=-3., max_wait_time=.8, scanrange=300):
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
-        alldata = sd.scan1D(outputdir=outputdir, step=step, scanrange=scanrange, max_wait_time=max_wait_time)
+        alldata = sd.scan1D(outputdir=outputdir, step=step,
+                            scanrange=scanrange, max_wait_time=max_wait_time)
 
         x, y = qtt.data.dataset1Ddata(alldata)
 
         istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = peakdataOrientation(x, y)
 
-        goodpeaks = coulombPeaks(x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
+        goodpeaks = coulombPeaks(
+            x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.title('autoTune: sd %d' % sd.index, fontsize=14)
 
@@ -219,26 +223,79 @@ class sensingdot_t:
             print('autoTuneFine: factor %.2f, delta %.1f' % (factor, d))
 
         # set sweep to center
-        set_gate(sweepdata['gates'][0], (sweepdata['start'] + sweepdata['end']) / 2)
+        set_gate(sweepdata['gates'][0], (sweepdata[
+                 'start'] + sweepdata['end']) / 2)
 
         sdmiddle = sd.sdval[1]
         if 1:
             set_gate(cdata['gates'][0], (cdata['start'] + cdata['end']) / 2)
 
-            sdmiddle = autotunePlunger(g, sd.sdval[1], readfunc, targetvalue=sd.targetvalue, fig=fig)
+            sdmiddle = autotunePlunger(
+                g, sd.sdval[1], readfunc, targetvalue=sd.targetvalue, fig=fig)
 
         set_gate(cdata['gates'][0], cdata['start'])  # set step to start value
         cvalstart = sdmiddle - d / 2
-        sdstart = autotunePlunger(g, cvalstart, readfunc, targetvalue=sd.targetvalue, fig=fig + 1)
+        sdstart = autotunePlunger(
+            g, cvalstart, readfunc, targetvalue=sd.targetvalue, fig=fig + 1)
         if sd.verbose >= 2:
-            print(' autoTuneFine: cvalstart %.1f, sdstart %.1f' % (cvalstart, sdstart))
+            print(' autoTuneFine: cvalstart %.1f, sdstart %.1f' %
+                  (cvalstart, sdstart))
 
         set_gate(cdata['gates'][0], cdata['end'])  # set step to end value
         # cvalstart2=((sdstart+d) + (sd.sdval[1]+d/2) )/2
         cvalstart2 = sdmiddle + (sdmiddle - sdstart)
         if sd.verbose >= 2:
-            print(' autoTuneFine: cvalstart2 %.1f = %.1f + %.1f (d %.1f)' % (cvalstart2, sdmiddle, (sdmiddle - sdstart), d))
+            print(' autoTuneFine: cvalstart2 %.1f = %.1f + %.1f (d %.1f)' %
+                  (cvalstart2, sdmiddle, (sdmiddle - sdstart), d))
         sdend = autotunePlunger(
             g, cvalstart2, readfunc, targetvalue=sd.targetvalue, fig=fig + 2)
 
         return (sdstart, sdend, sdmiddle)
+
+    def fastTune(sd, Naverage=50, sweeprange=79, period=.5e-3, fig=201, mirrorfactor=1.):
+        ''' Fast tuning of the sensing dot plunger '''
+
+        waveform, sweep_info = sd.station.awg.sweep_gate(
+            sd.gg[1], sweeprange, period)
+
+        qtt.time.sleep(2)
+
+        fpga_ch = int(sd.gg[1][2])
+        ReadDevice = ['FPGA_ch%d' % fpga_ch]
+        _, DataRead_ch1, DataRead_ch2 = sd.station.fpga.readFPGA(
+            Naverage=Naverage, ReadDevice=ReadDevice)
+
+        sd.station.awg.stop()
+
+        data = sd.station.awg.sweep_process(DataRead_ch1, waveform, Naverage)
+
+        sdplg = getattr(sd.station.gates, sd.gg[1])
+        initval = sdplg.get()
+        sweepvalues = sdplg[initval - sweeprange /
+                            2:sweeprange / 2 + initval:sweeprange / len(data)]
+
+        alldata = qtt.data.makeDataSet1D(sweepvalues)
+        alldata.measured.ndarray = data
+
+        y = np.array(alldata.arrays['measured'])
+        y = np.array([x * mirrorfactor for x in y])
+        x = alldata.arrays[sd.gg[1]]
+        x, y = peakdataOrientation(x, y)
+
+        goodpeaks = coulombPeaks(
+            x, y, verbose=1, fig=fig, plothalf=True, istep=1)
+
+        if fig is not None:
+            plt.title('autoTune: sd %d' % sd.index, fontsize=14)
+
+        if len(goodpeaks) > 0:
+            sd.sdval[1] = goodpeaks[0]['xhalfl']
+            sd.targetvalue = goodpeaks[0]['yhalfl']
+        else:
+            print('autoTune: could not find good peak, may need to adjust mirrorfactor')
+
+        if sd.verbose:
+            print(
+                'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
+
+        return sd.sdval[1], alldata
