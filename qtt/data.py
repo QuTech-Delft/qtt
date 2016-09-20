@@ -596,7 +596,11 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
 
 
 def makeDataSet1D(p, mname='measured', location=None):
-    ''' Make DataSet with one 1D array and one setpoint array '''
+    ''' Make DataSet with one 1D array and one setpoint array
+    
+    Arguments:
+        p (array): the setpoint array of data
+    '''
     xx = np.array(p)
     yy = np.ones(xx.size)
     x = DataArray(name=p.name, array_id=p.name,
@@ -611,7 +615,12 @@ def makeDataSet1D(p, mname='measured', location=None):
 
 
 def makeDataSet2D(p1, p2, mname='measured', location=None):
-    ''' Make DataSet with one 2D array and two setpoint arrays '''
+    ''' Make DataSet with one 2D array and two setpoint arrays 
+    
+    Arguments:
+        p1 (array): first setpoint array of data
+        p2 (array): second setpoint array of data
+    '''
     xx = np.array(p1)
     yy0 = np.array(p2)
     yy = np.tile(yy0, [xx.size, 1])
