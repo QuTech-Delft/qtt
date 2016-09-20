@@ -267,7 +267,11 @@ class sensingdot_t:
 
         sd.station.awg.stop()
 
-        data = sd.station.awg.sweep_process(DataRead_ch1, waveform, Naverage)
+        if fpga_ch==1:
+            datr = DataRead_ch1
+        else:
+            datr = DataRead_ch2
+        data = sd.station.awg.sweep_process(datr, waveform, Naverage)
 
         sdplg = getattr(sd.station.gates, sd.gg[1])
         initval = sdplg.get()
@@ -275,7 +279,7 @@ class sensingdot_t:
                             2:sweeprange / 2 + initval:sweeprange / len(data)]
 
         alldata = qtt.data.makeDataSet1D(sweepvalues)
-        alldata.measured.ndarray = data
+        alldata.measured.ndarray = np.array(data)
 
         y = np.array(alldata.arrays['measured'])
         y = np.array([x * mirrorfactor for x in y])

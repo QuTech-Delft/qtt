@@ -475,7 +475,7 @@ def plot_sweep(data, gates, sweepgate, sweeprange):
                             2: initval + sweeprange / 2:sweeprange / len(data)]
 
     dataset = makeDataSet1D(sweepvalues)
-    dataset.measured.ndarray = data
+    dataset.measured.ndarray = np.array(data)
     plot = MatPlot(dataset.measured, interval=0)
 
     return plot, dataset
@@ -496,7 +496,7 @@ def plot_sweep_2D(data, gates, sweepgates, sweepranges):
                            2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
 
     dataset = makeDataSet2D(sweep_vert, sweep_horz)
-    dataset.measured.ndarray = data
+    dataset.measured.ndarray = np.array(data)
     plot = MatPlot(dataset.measured, interval=0)
 
     return plot, dataset
