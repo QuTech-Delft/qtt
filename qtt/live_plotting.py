@@ -153,11 +153,12 @@ class MockCallback_2d:
 
 class fpgaCallback_1d:
 
-    def __init__(self, station, waveform, Naverage=4, fpga_ch=1):
+    def __init__(self, station, waveform, Naverage=4, fpga_ch=1, mirrorfactor=1):
         self.station = station
         self.waveform = waveform
         self.Naverage = Naverage
         self.fpga_ch = fpga_ch
+        self.mirrorfactor = mirrorfactor
 
     def __call__(self, verbose=0):
         ''' Callback function to read a single line of data from the FPGA '''
@@ -174,6 +175,8 @@ class fpgaCallback_1d:
 
         data_processed = self.station.awg.sweep_process(
             data, self.waveform, self.Naverage)
+            
+        data_processed = [x * self.mirrorfactor for x in data_processed]
 
         return data_processed
 
