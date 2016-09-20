@@ -8,7 +8,7 @@ def readme():
         return f.read()
 
 extras = {
-    'Numpy': ('numpy', '1.9')
+    'Numpy': ('numpy', '1.9'),
     'MatPlot': ('matplotlib', '1.5'),
 #    'QtPlot': ('pyqtgraph', '0.9.10'),
     'SciPi': ('scipy', '0.15'),

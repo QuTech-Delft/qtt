@@ -216,6 +216,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         data_manager = False
 
     delay = scanjob.get('delay', delay)
+    if delay is None:
+       delay=0
     logging.debug('delay: %s' % str(delay))
     print('scan1D: starting Loop (background %s)' % background)
     data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(location=location, data_manager=data_manager, background=background)
