@@ -14,7 +14,7 @@ import qcodes
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes import DataArray
 import qtt
-from qtt.data import qtt.makeDataSet2D
+from qtt.data import makeDataSet2D
 
 #%%
 
@@ -179,9 +179,9 @@ class virtual_awg(Instrument):
         samplerate = 1. / self.AWG_clock
         tt = np.arange(0, period * repetitionnr + samplerate, samplerate)
         v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
-        wave = (v_wave / 2) * scipy.signal.sawtooth(2 * np.pi * tt / period, width=width)
+        wave_raw = (v_wave / 2) * scipy.signal.sawtooth(2 * np.pi * tt / period, width=width)
 
-        return wave
+        return wave_raw
 
     def sweep_gate(self, gate, sweeprange, period, width=.95):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
@@ -197,17 +197,18 @@ class virtual_awg(Instrument):
 
         Example:
         -------
-        >>> wave = sweep_gate('P1',sweeprange=60,period=1e-3)
+        >>> waveform = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
-        wave = np.array([x / awg_to_plunger for x in wave_raw])
+        wave = wave_raw/awg_to_plunger
         waveform[gate] = wave
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
         waveform['width'] = width
         waveform['sweeprange'] = sweeprange
+        waveform['samplerate'] = 1 / self.AWG_clock
 
         return waveform, sweep_info
 
@@ -225,7 +226,7 @@ class virtual_awg(Instrument):
 
         Example:
         -------
-        >>> wave = sweep_gate('P1',sweeprange=60,period=1e-3)
+        >>> data_processed = sweep_process(data, waveform, 25)
         '''
         width = waveform['width']
 
@@ -241,9 +242,13 @@ class virtual_awg(Instrument):
 
         return data_processed
 
-    def plot_wave(self, wave):
+    def plot_wave(self, wave, samplerate=None):
         ''' Plot the wave '''
-        horz_var = np.arange(0, len(wave) / self.AWG_clock, 1 / self.AWG_clock)
+        if samplerate is None:
+            samplerate = 1/self.AWG_clock
+        else:
+            samplerate = samplerate
+        horz_var = np.arange(0, len(wave)*samplerate, samplerate)
         x = DataArray(name='time(s)', label='time (s)',
                       preset_data=horz_var, is_setpoint=True)
         y = DataArray(
@@ -271,14 +276,14 @@ class virtual_awg(Instrument):
             sweepranges[0], period_horz, repetitionnr=resolution[0])
         awg_to_plunger_horz = self.hardware.parameters[
             'awg_to_%s' % sweepgates[0]].get()
-        wave_horz = np.array([x / awg_to_plunger_horz for x in wave_horz_raw])
+        wave_horz = wave_horz_raw / awg_to_plunger_horz
         waveform[sweepgates[0]] = wave_horz
         
         # vertical waveform
         wave_vert_raw = self.make_sawtooth(sweepranges[0], period_vert)
         awg_to_plunger_vert = self.hardware.parameters[
             'awg_to_%s' % sweepgates[1]].get()
-        wave_vert = np.array([x / awg_to_plunger_vert for x in wave_vert_raw])
+        wave_vert = wave_vert_raw / awg_to_plunger_vert
         waveform[sweepgates[1]] = wave_vert
 
         if comp is not None:
@@ -297,6 +302,7 @@ class virtual_awg(Instrument):
         waveform['width_vert'] = .95
         waveform['sweeprange_vert'] = sweepranges[1]
         waveform['resolution'] = resolution
+        waveform['samplerate'] = 1 / self.AWG_clock
 
         return waveform, sweep_info
 
