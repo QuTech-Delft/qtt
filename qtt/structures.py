@@ -256,7 +256,7 @@ class sensingdot_t:
         ''' Fast tuning of the sensing dot plunger '''
 
         waveform, sweep_info = sd.station.awg.sweep_gate(
-            sd.gg[1], sweeprange, period)
+            sd.gg[1], sweeprange, period, wave_name='fastTune_%s' % sd.gg[1])
 
         qtt.time.sleep(sleeptime)
 

@@ -100,10 +100,13 @@ class virtual_awg(Instrument):
         wave_len = len(waveforms[sweepgates[0]])
         for g in sweepgates:
             sweep_info[self.awg_map[g]] = dict()
-            sweep_info[self.awg_map[g]]['waveform'] = waveforms[g]
+            sweep_info[self.awg_map[g]]['waveform'] = waveforms[g]['wave']
             sweep_info[self.awg_map[g]]['marker1'] = np.zeros(wave_len)
             sweep_info[self.awg_map[g]]['marker2'] = np.zeros(wave_len)
-            sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
+            if 'name' in waveforms[g].keys():
+                sweep_info[self.awg_map[g]]['name'] = waveforms[g]['name']
+            else:
+                sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
 
         # fpga marker
         fpga_marker = np.zeros(wave_len)
@@ -184,7 +187,7 @@ class virtual_awg(Instrument):
 
         return wave_raw
 
-    def sweep_gate(self, gate, sweeprange, period, width=.95):
+    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the FPGA.
 
@@ -204,7 +207,12 @@ class virtual_awg(Instrument):
         wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
         wave = wave_raw/awg_to_plunger
-        waveform[gate] = wave
+        waveform[gate] = dict()
+        waveform[gate]['wave'] = wave
+        if wave_name==None:
+            waveform[gate]['name'] = 'sweep_%s' % gate
+        else:
+            waveform[gate]['name'] = wave_name
         sweep_info = self.sweep_init(waveform)
         self.sweep_run(sweep_info)
         waveform['width'] = width
@@ -278,20 +286,26 @@ class virtual_awg(Instrument):
         awg_to_plunger_horz = self.hardware.parameters[
             'awg_to_%s' % sweepgates[0]].get()
         wave_horz = wave_horz_raw / awg_to_plunger_horz
-        waveform[sweepgates[0]] = wave_horz
+        waveform[sweepgates[0]] = dict()
+        waveform[sweepgates[0]]['wave'] = wave_horz
+        waveform[sweepgates[0]]['name'] = 'sweep_2D_horz_%s' % sweepgates[0]
 
         # vertical waveform
         wave_vert_raw = self.make_sawtooth(sweepranges[0], period_vert)
         awg_to_plunger_vert = self.hardware.parameters[
             'awg_to_%s' % sweepgates[1]].get()
         wave_vert = wave_vert_raw / awg_to_plunger_vert
-        waveform[sweepgates[1]] = wave_vert
+        waveform[sweepgates[1]] = dict()
+        waveform[sweepgates[1]]['wave'] = wave_vert
+        waveform[sweepgates[1]]['name'] = 'sweep_2D_vert_%s' % sweepgates[1]
 
         if comp is not None:
             for g in comp.keys():
                 if g not in sweepgates:
-                    waveform[g] = comp[g]['vert'] * \
+                    waveform[g] = dict()
+                    waveform[g]['wave'] = comp[g]['vert'] * \
                         wave_vert + comp[g]['horz'] * wave_horz
+                    waveform[g]['name'] = 'sweep_2D_comp_%s' % g
                 else:
                     raise Exception('Can not compensate a sweepgate')
 
