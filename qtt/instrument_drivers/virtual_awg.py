@@ -74,7 +74,7 @@ class virtual_awg(Instrument):
         if verbose:
             print('Stopped AWGs')
 
-    def sweep_init(self, waveforms):
+    def sweep_init(self, waveforms, delete=True):
         ''' Send waveform(s) to gate(s)
 
         Arguments:
@@ -89,7 +89,7 @@ class virtual_awg(Instrument):
         '''
         sweepgates = [g for g in waveforms]
 
-        for awg in self._awgs:
+        for awg in self._awgs and delete:
             awg.delete_all_waveforms_from_list()
 
         awgs = [self._awgs[self.awg_map[g][0]] for g in sweepgates]
@@ -187,7 +187,7 @@ class virtual_awg(Instrument):
 
         return wave_raw
 
-    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None):
+    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the FPGA.
 
@@ -213,7 +213,7 @@ class virtual_awg(Instrument):
             waveform[gate]['name'] = 'sweep_%s' % gate
         else:
             waveform[gate]['name'] = wave_name
-        sweep_info = self.sweep_init(waveform)
+        sweep_info = self.sweep_init(waveform, delete)
         self.sweep_run(sweep_info)
         waveform['width'] = width
         waveform['sweeprange'] = sweeprange
@@ -266,7 +266,7 @@ class virtual_awg(Instrument):
 
         return plot
 
-    def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None):
+    def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None, delete=True):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
         '''
@@ -309,7 +309,7 @@ class virtual_awg(Instrument):
                 else:
                     raise Exception('Can not compensate a sweepgate')
 
-        sweep_info = self.sweep_init(waveform)
+        sweep_info = self.sweep_init(waveform, delete)
         self.sweep_run(sweep_info)
 
         waveform['width_horz'] = .95
