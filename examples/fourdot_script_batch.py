@@ -10,7 +10,8 @@ from imp import reload
 import sys,os,platform, pdb
 import logging
 import numpy as np
-os.environ['QT_API'] = 'pyqt'
+if __name__=='__main__':
+    os.environ['QT_API'] = 'pyqt'
 import pdb
 import qtpy
 import logging
@@ -18,7 +19,8 @@ import matplotlib
 #matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot
-matplotlib.pyplot.ion()
+if __name__=='__main__':
+    matplotlib.pyplot.ion()
 
 
 import multiprocessing

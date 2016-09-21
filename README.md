@@ -45,6 +45,16 @@ As the project is still private, install it directly from this repository:
 > conda install -c nmearl pyqtgraph
 > pip install pyvisa
 ```
+For Mac OS with anaconda type from the command line:
+```
+> cd [MYLOCALDIR]/qtt
+> conda install --file requirements_mac.txt
+> conda install -c menpo opencv3
+> conda install -c nmearl pyqtgraph
+> pip install pyvisa
+```
+(For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
+
 For other systems
 ```
 > cd [MYLOCALDIR]/qtt
@@ -54,12 +64,10 @@ For other systems
 > pip install pyvisa 
 > # install opencv according to platform instructions
 ```
-(For Mac OS, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
 
 If necessary install the drivers for your hardware. Some links:
 * (Virtual COM port driver)[http://www.ftdichip.com/Drivers/VCP.htm]
 * (GPIB USB interface)[http://www.ni.com/download/ni-488.2-16.0.0/6132/en/]
-
 
 - Register the repositories with Python. For each of the repositories run this from the root directory:
 ```

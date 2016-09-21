@@ -1,5 +1,6 @@
 numpy >= 1.11
 scipy
+matplotlib
 coverage
 pandas
 scikit-image

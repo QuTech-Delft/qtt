@@ -3,11 +3,12 @@
 
 import qtpy
 import matplotlib
-try:
-    if qtpy.API_NAME == 'PyQt4 (API v2)':
-        matplotlib.use('Qt4Agg')
-except:
-    pass
+if 0:
+    try:
+        if qtpy.API_NAME == 'PyQt4 (API v2)':
+            matplotlib.use('Qt4Agg')
+    except:
+        pass
 import qtt.live
 import qtt.tools
 
