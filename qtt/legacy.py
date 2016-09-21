@@ -61,11 +61,16 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -3})
     sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -3})
 
+    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
+
     if full == 0:
         stepdata['step'] = -12
         sweepdata['step'] = -12
-
-    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
+    if full == -1:
+        stepdata['step'] = -42
+        sweepdata['step'] = -42
+        wait_time=0
+        
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
 

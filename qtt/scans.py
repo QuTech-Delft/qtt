@@ -76,7 +76,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
 
     wait_time = qtt.scans.waitTime(od['gates'][2], gate_settle=getattr(station, 'gate_settle', None))
 
-    alldatahi = qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time)
+    alldatahi = qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time, background=False)
 
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldatahi, verbose=0, arrayname=None)
     impixel, tr = dataset2image(alldatahi, mode='pixel')
@@ -237,6 +237,10 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         data.complete(delay=.25)
         data.sync()
         dt = -1
+        if qcodes.get_bg() is not None:
+            logging.info('background measurement not completed')
+            time.sleep(.1)
+        
         logging.info('scan1D: completed %s' % (str(data.location),))
     else:
         dt = time.time() - t0
@@ -256,8 +260,23 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
 import pyqtgraph as pg
 
+def wait_bg_finish(verbose=0):
+    """ Wait for background job to finish """
+    for ii in range(10):
+        m=qcodes.get_bg()
+        if verbose:
+            print( 'wait_bg_finish: loop %d: bg %s ' % (ii, m))
+        if m is None:
+            break
+        time.sleep(0.05)
+    m=qcodes.get_bg()
+    if verbose:
+            print( 'wait_bg_finish: final: bg %s ' % ( m, ))
+    if m is not None:
+        logging.info( 'background job not finished' )
+    return m is None
 
-def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=None):
+def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False):
     """ Make a 2D scan and create dictionary to store on disk
 
     Args:
@@ -332,6 +351,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     if background is True:
         alldata.background_functions = dict({'qt': pg.mkQApp().processEvents})
         alldata.complete(delay=.5)
+        wait_bg_finish()
 
     dt = time.time() - t0
 

@@ -51,6 +51,7 @@ from qtt.scans import scan2D, scan1D,onedotHiresScan
 from qtt.legacy import getODbalancepoint
 from qtt.reports import generateOneDotReport
 from qtt.tools import stripDataset
+from qtt.scans import wait_bg_finish
 
 import pyqtgraph
 from qtt.scans import scanPinchValue
@@ -156,7 +157,7 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-09-07q'; Tvalues=np.array([-380])
+    basetag='batch-2016-09-11'; Tvalues=np.array([-380])
             
     b=False
     
@@ -381,6 +382,8 @@ for ii, Tvalue in enumerate(Tvalues):
         plt.figure(10); plt.clf(); MatPlot(alldata.arrays[alldata.default_parameter_name()], interval=0, num=10)
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
         
+        _=wait_bg_finish()
+
         scandata, od=onedotHiresScan(station, od, dv=70, verbose=1)
                 
         stripDataset(alldata)
