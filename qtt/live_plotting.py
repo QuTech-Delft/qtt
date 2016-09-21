@@ -166,10 +166,10 @@ class fpgaCallback_1d:
         totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
             Naverage=self.Naverage, ReadDevice=ReadDevice)
 
-        if self.fpga_ch == 1:
-            data = DataRead_ch1[1:-1]
-        elif self.fpga_ch == 2:
-            data = DataRead_ch2[1:-1]
+        if 'FPGA_ch1' in ReadDevice:
+            data = DataRead_ch1
+        elif 'FPGA_ch2' in ReadDevice:
+            data = DataRead_ch2
         else:
             raise Exception('FPGA channel not well specified')
 
