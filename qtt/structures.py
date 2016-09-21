@@ -11,7 +11,7 @@ class sensingdot_t:
 
     """ Class representing a sensing dot """
 
-    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=0):
+    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=0, fpga_ch=None):
         self.verbose = 1
         self.gg = ggv
         self.sdval = sdvalv
@@ -20,7 +20,10 @@ class sensingdot_t:
         self.instrument = 'keithley1'
         self.targetvalue = 800
         self.goodpeaks = None
-        self.fpga_ch = int(sd.gg[1][2])
+        if fpga_ch==None:
+            self.fpga_ch = int(sd.gg[1][2])
+        else:
+            self.fpga_ch = fpga_ch
 
         self.station = station
         # values for measurement
