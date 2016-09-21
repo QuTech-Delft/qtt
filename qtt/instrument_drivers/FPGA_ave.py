@@ -13,7 +13,7 @@ class FPGA_ave(VisaInstrument):
     <name> = instruments.create('name', 'FPGA_AVE', address='<COM PORT>')
     <COM PORT> = COM5 e.g.
     '''
-    def __init__(self, name, address, verbose=1, **kwargs):
+    def __init__(self, name, address, mirrorfactors=[1,1], verbose=1, **kwargs):
         logging.debug(__name__ + ' : Initializing instrument')
         super().__init__(name, address, **kwargs)
 
@@ -24,6 +24,7 @@ class FPGA_ave(VisaInstrument):
         self._sampling_frequency=1000e3
         self.visa_handle.baud_rate = 57600
         self.set_sampling_frequency(self._sampling_frequency)
+        self.mirrorfactors = mirrorfactors
 
         # Add parameters
         self.add_parameter('mode',
@@ -228,6 +229,8 @@ class FPGA_ave(VisaInstrument):
         self._data_signed=signed
         self.visa_handle.flush(16)
 
+        signed = [x*self.mirrorfactors[0] for x in signed]
+        
         return signed
 
     def get_ch2_data(self,address=6, checkdone=True):
@@ -260,6 +263,8 @@ class FPGA_ave(VisaInstrument):
 
         self._data_signed=signed
         self.visa_handle.flush(16)
+
+        signed = [x*self.mirrorfactors[1] for x in signed]
 
         return signed
 

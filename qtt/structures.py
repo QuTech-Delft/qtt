@@ -20,6 +20,7 @@ class sensingdot_t:
         self.instrument = 'keithley1'
         self.targetvalue = 800
         self.goodpeaks = None
+        self.fpga_ch = int(sd.gg[1][2])
 
         self.station = station
         # values for measurement
@@ -252,7 +253,7 @@ class sensingdot_t:
 
         return (sdstart, sdend, sdmiddle)
 
-    def fastTune(sd, Naverage=50, sweeprange=79, period=.5e-3, fig=201, mirrorfactor=1., sleeptime=2, delete=True):
+    def fastTune(sd, Naverage=50, sweeprange=79, period=.5e-3, fig=201, sleeptime=2, delete=True):
         ''' Fast tuning of the sensing dot plunger '''
 
         waveform, sweep_info = sd.station.awg.sweep_gate(
@@ -260,14 +261,13 @@ class sensingdot_t:
 
         qtt.time.sleep(sleeptime)
 
-        fpga_ch = int(sd.gg[1][2])
-        ReadDevice = ['FPGA_ch%d' % fpga_ch]
+        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
         _, DataRead_ch1, DataRead_ch2 = sd.station.fpga.readFPGA(
             Naverage=Naverage, ReadDevice=ReadDevice)
 
         sd.station.awg.stop()
 
-        if fpga_ch==1:
+        if self.fpga_ch==1:
             datr = DataRead_ch1
         else:
             datr = DataRead_ch2
@@ -282,7 +282,6 @@ class sensingdot_t:
         alldata.measured.ndarray = np.array(data)
 
         y = np.array(alldata.arrays['measured'])
-        y = np.array([x * mirrorfactor for x in y])
         x = alldata.arrays[sd.gg[1]]
         x, y = peakdataOrientation(x, y)
 

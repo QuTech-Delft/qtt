@@ -197,11 +197,12 @@ class virtual_awg(Instrument):
             period (float): the period of the triangular signal
 
         Returns:
-            waveform (dictionary): The waveform being send with the AWG.
+            waveform (dict): The waveform being send with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
 
         Example:
         -------
-        >>> waveform = sweep_gate('P1',sweeprange=60,period=1e-3)
+        >>> waveform, sweep_info = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
@@ -226,8 +227,8 @@ class virtual_awg(Instrument):
         the sawtooth send with the AWG.
 
         Arguments:
-            data (array): the data
-            waveform (dictionary): contains the wave and the sawtooth width
+            data (list): the data
+            waveform (dict): contains the wave and the sawtooth width
             direction (string): option to use backwards signal i.o. forwards
 
         Returns:
@@ -247,24 +248,9 @@ class virtual_awg(Instrument):
             data_processed = data[begin:]
             data_processed = data_processed[::-1]
 
-        data_processed = [x / Naverage for x in data_processed]
+        data_processed = np.array(data_processed)/Naverage
 
         return data_processed
-
-    def plot_wave(self, wave, samplerate=None):
-        ''' Plot the wave '''
-        if samplerate is None:
-            samplerate = 1/self.AWG_clock
-        else:
-            samplerate = samplerate
-        horz_var = np.arange(0, len(wave)*samplerate, samplerate)
-        x = DataArray(name='time(s)', label='time (s)',
-                      preset_data=horz_var, is_setpoint=True)
-        y = DataArray(
-            label='sweep value (mV)', preset_data=wave, set_arrays=(x,))
-        plot = QtPlot(x, y)
-
-        return plot
 
     def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None, delete=True):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
@@ -339,3 +325,19 @@ class virtual_awg(Instrument):
                 data_processed, dy=diff_dir, sigma=1)
 
         return data_processed
+
+#%%
+def plot_wave_raw(station, wave_raw, samplerate=None):
+    ''' Plot the raw wave '''
+    if samplerate is None:
+        samplerate = 1/station.awg.AWG_clock
+    else:
+        samplerate = samplerate
+    horz_var = np.arange(0, len(wave_raw)*samplerate, samplerate)
+    x = DataArray(name='time(s)', label='time (s)',
+                  preset_data=horz_var, is_setpoint=True)
+    y = DataArray(
+        label='sweep value (mV)', preset_data=wave_raw, set_arrays=(x,))
+    plot = QtPlot(x, y)
+
+    return plot

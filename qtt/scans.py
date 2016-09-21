@@ -446,8 +446,8 @@ from qtt.data import makeDataSet1D, makeDataSet2D
 #%%
 
 
-def plot_sweep(data, gates, sweepgate, sweeprange):
-    ''' Plot the data of a 1D sweep '''
+def makeDataset_sweep(data, gates, sweepgate, sweeprange, fig=None):
+    ''' Convert the data of a 1D sweep to a DataSet '''
 
     sweepgate = getattr(gates, sweepgate)
     initval = sweepgate.get()
@@ -456,13 +456,16 @@ def plot_sweep(data, gates, sweepgate, sweeprange):
 
     dataset = makeDataSet1D(sweepvalues)
     dataset.measured.ndarray = np.array(data)
-    plot = MatPlot(dataset.measured, interval=0)
+    
+    if fig is None:
+        return dataset
+    else:
+        plot = MatPlot(dataset.measured, interval=0, num=fig)
+        return plot, dataset
 
-    return plot, dataset
 
-
-def plot_sweep_2D(data, gates, sweepgates, sweepranges):
-    ''' Plot the data of a 2D sweep '''
+def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
+    ''' Convert the data of a 2D sweep to a DataSet '''
 
     gate_horz = getattr(gates, sweepgates[0])
     gate_vert = getattr(gates, sweepgates[1])
@@ -477,9 +480,12 @@ def plot_sweep_2D(data, gates, sweepgates, sweepranges):
 
     dataset = makeDataSet2D(sweep_vert, sweep_horz)
     dataset.measured.ndarray = np.array(data)
-    plot = MatPlot(dataset.measured, interval=0)
-
-    return plot, dataset
+    
+    if fig is None:
+        return dataset
+    else:
+        plot = MatPlot(dataset.measured, interval=0, num=fig)
+        return plot, dataset
 
 #%%
 
