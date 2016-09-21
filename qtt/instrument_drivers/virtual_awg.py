@@ -31,6 +31,8 @@ class virtual_awg(Instrument):
         self.hardware = hardware
         self.verbose = verbose
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
+        self.corr = .02e-6
+        self.maxdatapts = 8189
         qcodes.installZMQlogger()
         logging.info('virtual_awg: setup')
 
@@ -261,12 +263,12 @@ class virtual_awg(Instrument):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
         '''
-        if resolution[0]*resolution[1]>8189:
+        if resolution[0] * resolution[1] > self.maxdatapts:
             raise Exception('resolution is set higher than FPGA memory allows')
 
         samp_freq = fpga_samp_freq
 
-        error_corr = resolution[0] * .02e-6
+        error_corr = resolution[0] * self.corr
         period_horz = resolution[0] / samp_freq + error_corr
         period_vert = resolution[1] * period_horz
 
