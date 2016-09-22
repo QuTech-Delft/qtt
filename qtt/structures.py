@@ -21,7 +21,7 @@ class sensingdot_t:
         self.targetvalue = 800
         self.goodpeaks = None
         if fpga_ch==None:
-            self.fpga_ch = int(sd.gg[1][2])
+            self.fpga_ch = int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
 
@@ -256,27 +256,27 @@ class sensingdot_t:
 
         return (sdstart, sdend, sdmiddle)
 
-    def fastTune(sd, Naverage=50, sweeprange=79, period=.5e-3, fig=201, sleeptime=2, delete=True):
+    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, fig=201, sleeptime=2, delete=True):
         ''' Fast tuning of the sensing dot plunger '''
 
-        waveform, sweep_info = sd.station.awg.sweep_gate(
-            sd.gg[1], sweeprange, period, wave_name='fastTune_%s' % sd.gg[1], delete=delete)
+        waveform, sweep_info = self.station.awg.sweep_gate(
+            self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
         qtt.time.sleep(sleeptime)
 
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        _, DataRead_ch1, DataRead_ch2 = sd.station.fpga.readFPGA(
+        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
             Naverage=Naverage, ReadDevice=ReadDevice)
 
-        sd.station.awg.stop()
+        self.station.awg.stop()
 
         if self.fpga_ch==1:
             datr = DataRead_ch1
         else:
             datr = DataRead_ch2
-        data = sd.station.awg.sweep_process(datr, waveform, Naverage)
+        data = self.station.awg.sweep_process(datr, waveform, Naverage)
 
-        sdplg = getattr(sd.station.gates, sd.gg[1])
+        sdplg = getattr(self.station.gates, self.gg[1])
         initval = sdplg.get()
         sweepvalues = sdplg[initval - sweeprange /
                             2:sweeprange / 2 + initval:sweeprange / len(data)]
@@ -285,23 +285,23 @@ class sensingdot_t:
         alldata.measured.ndarray = np.array(data)
 
         y = np.array(alldata.arrays['measured'])
-        x = alldata.arrays[sd.gg[1]]
+        x = alldata.arrays[self.gg[1]]
         x, y = peakdataOrientation(x, y)
 
         goodpeaks = coulombPeaks(
             x, y, verbose=1, fig=fig, plothalf=True, istep=1)
 
         if fig is not None:
-            plt.title('autoTune: sd %d' % sd.index, fontsize=14)
+            plt.title('autoTune: sd %d' % self.index, fontsize=14)
 
         if len(goodpeaks) > 0:
-            sd.sdval[1] = goodpeaks[0]['xhalfl']
-            sd.targetvalue = goodpeaks[0]['yhalfl']
+            self.sdval[1] = goodpeaks[0]['xhalfl']
+            self.targetvalue = goodpeaks[0]['yhalfl']
         else:
             print('autoTune: could not find good peak, may need to adjust mirrorfactor')
 
-        if sd.verbose:
+        if self.verbose:
             print(
-                'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
+                'sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
 
-        return sd.sdval[1], alldata
+        return self.sdval[1], alldata
