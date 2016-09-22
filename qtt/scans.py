@@ -474,8 +474,7 @@ def makeDataset_sweep(data, gates, sweepgate, sweeprange, fig=None):
     sweepvalues = sweepgate[initval - sweeprange /
                             2: initval + sweeprange / 2:sweeprange / len(data)]
 
-    dataset = makeDataSet1D(sweepvalues)
-    dataset.measured.ndarray = np.array(data)
+    dataset = makeDataSet1D(sweepvalues, preset_data=data)
     
     if fig is None:
         return dataset
@@ -498,8 +497,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
     sweep_vert = gate_vert[initval_vert - sweepranges[1] /
                            2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
 
-    dataset = makeDataSet2D(sweep_vert, sweep_horz)
-    dataset.measured.ndarray = np.array(data)
+    dataset = makeDataSet2D(sweep_vert, sweep_horz, preset_data=data)
     
     if fig is None:
         return dataset

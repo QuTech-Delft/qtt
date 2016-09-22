@@ -342,10 +342,12 @@ class virtual_awg(Instrument):
 
 
 #%%
-def plot_wave_raw(station, wave_raw, samplerate=None):
+def plot_wave_raw(wave_raw, samplerate=None, station=None):
     ''' Plot the raw wave '''
     if samplerate is None:
-        samplerate = 1/station.awg.AWG_clock
+        if station is None:
+            raise Exception('There is no station')
+        samplerate = 1/station.awg.getattr('AWG_clock')
     else:
         samplerate = samplerate
     horz_var = np.arange(0, len(wave_raw)*samplerate, samplerate)

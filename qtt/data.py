@@ -592,7 +592,7 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
     write_data(path, dataset)
 
 
-def makeDataSet1D(p, mname='measured', location=None):
+def makeDataSet1D(p, mname='measured', location=None, preset_data=None):
     ''' Make DataSet with one 1D array and one setpoint array
     
     Arguments:
@@ -607,11 +607,14 @@ def makeDataSet1D(p, mname='measured', location=None):
     dd = new_data(arrays=(), location=location)
     dd.add_array(x)
     dd.add_array(y)
+    
+    if preset_data is not None:
+        dd.measured.ndarray = np.array(preset_data)
 
     return dd
+    
 
-
-def makeDataSet2D(p1, p2, mname='measured', location=None):
+def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     ''' Make DataSet with one 2D array and two setpoint arrays 
     
     Arguments:
@@ -632,6 +635,10 @@ def makeDataSet2D(p1, p2, mname='measured', location=None):
     dd.add_array(z)
     dd.add_array(x)
     dd.add_array(y)
+    
+    if preset_data is not None:
+        dd.measured.ndarray = np.array(preset_data)
+    
     return dd
 
 
