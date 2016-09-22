@@ -90,15 +90,16 @@ class virtual_awg(Instrument):
         '''
         sweepgates = [g for g in waveforms]
 
-        for awg in self._awgs and delete:
-            awg.delete_all_waveforms_from_list()
+        if delete:
+            for awg in self._awgs:
+                awg.delete_all_waveforms_from_list()
 
         awgs = [self._awgs[self.awg_map[g][0]] for g in sweepgates]
         fpga_info = self.awg_map['fpga_mk']
         awgs.append(self._awgs[fpga_info[0]])
 
         sweep_info = dict()
-        wave_len = len(waveforms[sweepgates[0]])
+        wave_len = len(waveforms[sweepgates[0]]['wave'])
         for g in sweepgates:
             sweep_info[self.awg_map[g]] = dict()
             sweep_info[self.awg_map[g]]['waveform'] = waveforms[g]['wave']
@@ -119,7 +120,10 @@ class virtual_awg(Instrument):
             sweep_info[fpga_info[:2]]['waveform'] = np.zeros(wave_len)
             sweep_info[fpga_info[:2]]['marker1'] = np.zeros(wave_len)
             sweep_info[fpga_info[:2]]['marker2'] = np.zeros(wave_len)
-            sweep_info[fpga_info[:2]]['name'] = 'fpga_mk'
+            fpga_mk_name = 'fpga_mk'            
+            for g in sweepgates:
+                fpga_mk_name += '_%s' % g
+            sweep_info[fpga_info[:2]]['name'] = fpga_mk_name
 
         sweep_info[fpga_info[:2]]['marker%d' % fpga_info[2]] = fpga_marker
         self._awgs[fpga_info[0]].set(
@@ -154,6 +158,22 @@ class virtual_awg(Instrument):
             self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
                                                        sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
 
+#            if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
+#                self._awgs[sweep[0]].set_sqel_waveform(
+#                    sweep_info[sweep]['name'], sweep[1], 1)
+#                self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
+#                self._awgs[sweep[0]].set_sqel_event_jump_target_index(
+#                    sweep[1], 1)
+#                self._awgs[sweep[0]].set_sqel_event_jump_type(1, 'IND')
+#            else:
+#                self._awgs[sweep[0]].set(
+#                    'ch%i_waveform' % sweep[1], sweep_info[sweep]['name'])
+
+        return sweep_info
+
+    def sweep_run(self, sweep_info):
+        ''' Activate AWG(s) and channel(s) for the sweep(s) '''       
+        for sweep in sweep_info:
             if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
                     sweep_info[sweep]['name'], sweep[1], 1)
@@ -164,11 +184,7 @@ class virtual_awg(Instrument):
             else:
                 self._awgs[sweep[0]].set(
                     'ch%i_waveform' % sweep[1], sweep_info[sweep]['name'])
-
-        return sweep_info
-
-    def sweep_run(self, sweep_info):
-        ''' Activate AWG(s) and channel(s) for the sweep(s) '''
+                    
         for sweep in sweep_info:
             self._awgs[sweep[0]].set('ch%i_state' % sweep[1], 1)
 
