@@ -7,18 +7,20 @@ Created on Wed Aug 31 13:04:09 2016
 
 #%%
 import numpy as np
-from qcodes import Instrument
-from qcodes.plots.pyqtgraph import QtPlot
-from qcodes import DataArray
 import scipy.signal
 import logging
 import qcodes
+from qcodes import Instrument
+from qcodes.plots.pyqtgraph import QtPlot
+from qcodes import DataArray
 import qtt
 
 #%%
 
 
 class virtual_awg(Instrument):
+    shared_kwargs = ['instruments', 'hardware']
+
     shared_kwargs = ['instruments', 'hardware']
 
     shared_kwargs = ['instruments', 'hardware']
@@ -203,6 +205,7 @@ class virtual_awg(Instrument):
 
         return wave_raw
 
+
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the FPGA.
@@ -313,9 +316,9 @@ class virtual_awg(Instrument):
 
         sweep_info = self.sweep_init(waveform, delete)
         self.sweep_run(sweep_info)
-        
+
         waveform['width_horz'] = .95
-        waveform['sweeprange_horz'] = sweepranges[0]    
+        waveform['sweeprange_horz'] = sweepranges[0]
         waveform['width_vert'] = .95
         waveform['sweeprange_vert'] = sweepranges[1]
         waveform['resolution'] = resolution

@@ -506,26 +506,6 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
         return plot, dataset
 
 
-def plot_sweep_2D(data, gates, sweepgates, sweepranges):
-    ''' Plot the data of a 2D sweep '''
-
-    gate_horz = getattr(gates, sweepgates[0])
-    gate_vert = getattr(gates, sweepgates[1])
-
-    initval_horz = gate_horz.get()
-    initval_vert = gate_vert.get()
-
-    sweep_horz = gate_horz[initval_horz - sweepranges[0] /
-                           2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data[0])]
-    sweep_vert = gate_vert[initval_vert - sweepranges[1] /
-                           2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
-
-    dataset = makeDataSet2D(sweep_vert, sweep_horz)
-    dataset.measured.ndarray = data
-    plot = MatPlot(dataset.measured, interval=0)
-
-    return plot, dataset
-
 #%%
 
 
@@ -559,6 +539,8 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
         pv[ii] = adata['pinchvalue']
     od['pinchvalues'] = pv
     return od
+
+#%%
 
 
 #%% Testing
