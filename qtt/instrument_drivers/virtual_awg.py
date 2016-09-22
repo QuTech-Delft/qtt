@@ -4,26 +4,25 @@ Created on Wed Aug 31 13:04:09 2016
 
 @author: diepencjv
 """
-#%%
-''' Desired functionality
-- Sweep a gate with a triangular signal
-- Veryfast honeycombs
-- Compensate gate sweep
-'''
 
 #%%
 import numpy as np
-from qcodes import Instrument
 import scipy.signal
-import qcodes
 import logging
-from qcodes import DataArray
+import qcodes
+from qcodes import Instrument
 from qcodes.plots.pyqtgraph import QtPlot
+from qcodes import DataArray
+import qtt
 
 #%%
 
 
 class virtual_awg(Instrument):
+    shared_kwargs = ['instruments', 'hardware']
+
+    shared_kwargs = ['instruments', 'hardware']
+
     shared_kwargs = ['instruments', 'hardware']
 
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
@@ -32,7 +31,9 @@ class virtual_awg(Instrument):
         self.awg_map = awg_map
         self.hardware = hardware
         self.verbose = verbose
-        self.delay_FPGA = 25.0e-6  # should depend on filterboxes
+        self.delay_FPGA = 2.0e-6  # should depend on filterboxes
+        self.corr = .02e-6
+        self.maxdatapts = 8189
         qcodes.installZMQlogger()
         logging.info('virtual_awg: setup')
 
@@ -52,7 +53,7 @@ class virtual_awg(Instrument):
             raise Exception(
                 'Configuration of AWGs not supported by virtual_awg instrument')
 
-        self.AWG_clock = 1e7
+        self.AWG_clock = 1e8
         self.ch_amp = 4.0
         for awg in self._awgs:
             awg.set('clock_freq', self.AWG_clock)
@@ -70,14 +71,13 @@ class virtual_awg(Instrument):
         ''' Stops all AWGs and turns of all channels '''
         for awg in self._awgs:
             awg.stop()
-            awg.set('ch1_state', 0)
-            awg.set('ch2_state', 0)
-            awg.set('ch3_state', 0)
-            awg.set('ch4_state', 0)
+            for i in range(1, 5):
+                awg.set('ch%d_state' % i, 0)
+
         if verbose:
             print('Stopped AWGs')
 
-    def sweep_init(self, waveforms):
+    def sweep_init(self, waveforms, delete=True):
         ''' Send waveform(s) to gate(s)
 
         Arguments:
@@ -92,33 +92,40 @@ class virtual_awg(Instrument):
         '''
         sweepgates = [g for g in waveforms]
 
-        for awg in self._awgs:
-            awg.delete_all_waveforms_from_list()
+        if delete:
+            for awg in self._awgs:
+                awg.delete_all_waveforms_from_list()
 
         awgs = [self._awgs[self.awg_map[g][0]] for g in sweepgates]
         fpga_info = self.awg_map['fpga_mk']
         awgs.append(self._awgs[fpga_info[0]])
 
         sweep_info = dict()
-        wave_zero = np.zeros(len(waveforms[sweepgates[0]]))
+        wave_len = len(waveforms[sweepgates[0]]['wave'])
         for g in sweepgates:
             sweep_info[self.awg_map[g]] = dict()
-            sweep_info[self.awg_map[g]]['waveform'] = waveforms[g]
-            sweep_info[self.awg_map[g]]['marker1'] = wave_zero
-            sweep_info[self.awg_map[g]]['marker2'] = wave_zero
-            sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
+            sweep_info[self.awg_map[g]]['waveform'] = waveforms[g]['wave']
+            sweep_info[self.awg_map[g]]['marker1'] = np.zeros(wave_len)
+            sweep_info[self.awg_map[g]]['marker2'] = np.zeros(wave_len)
+            if 'name' in waveforms[g].keys():
+                sweep_info[self.awg_map[g]]['name'] = waveforms[g]['name']
+            else:
+                sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
 
         # fpga marker
-        fpga_marker = np.zeros(len(wave_zero))
+        fpga_marker = np.zeros(wave_len)
         fpga_marker[int(self.delay_FPGA * self.AWG_clock):(
-            int(self.delay_FPGA * self.AWG_clock) + len(wave_zero) // 20)] = 1.0
+            int(self.delay_FPGA * self.AWG_clock) + wave_len // 20)] = 1.0
 
         if fpga_info[:2] not in sweep_info:
             sweep_info[fpga_info[:2]] = dict()
-            sweep_info[fpga_info[:2]]['waveform'] = wave_zero
-            sweep_info[fpga_info[:2]]['marker1'] = wave_zero
-            sweep_info[fpga_info[:2]]['marker2'] = wave_zero
-            sweep_info[fpga_info[:2]]['name'] = 'fpga_mk'
+            sweep_info[fpga_info[:2]]['waveform'] = np.zeros(wave_len)
+            sweep_info[fpga_info[:2]]['marker1'] = np.zeros(wave_len)
+            sweep_info[fpga_info[:2]]['marker2'] = np.zeros(wave_len)
+            fpga_mk_name = 'fpga_mk'            
+            for g in sweepgates:
+                fpga_mk_name += '_%s' % g
+            sweep_info[fpga_info[:2]]['name'] = fpga_mk_name
 
         sweep_info[fpga_info[:2]]['marker%d' % fpga_info[2]] = fpga_marker
         self._awgs[fpga_info[0]].set(
@@ -127,20 +134,20 @@ class virtual_awg(Instrument):
             'ch%i_m%i_high' % (fpga_info[1], fpga_info[2]), 2.6)
 
         # awg marker
-        if hasattr(self,'awg_seq'):
+        if hasattr(self, 'awg_seq'):
             awg_info = self.awg_map['awg_mk']
             if awg_info[:2] not in sweep_info:
                 awgs.append(self._awgs[awg_info[0]])
                 sweep_info[awg_info[:2]] = dict()
-                sweep_info[awg_info[:2]]['waveform'] = wave_zero
-                sweep_info[awg_info[:2]]['marker1'] = wave_zero
-                sweep_info[awg_info[:2]]['marker2'] = wave_zero
+                sweep_info[awg_info[:2]]['waveform'] = np.zeros(wave_len)
+                sweep_info[awg_info[:2]]['marker1'] = np.zeros(wave_len)
+                sweep_info[awg_info[:2]]['marker2'] = np.zeros(wave_len)
                 sweep_info[awg_info[:2]]['name'] = 'awg_mk'
 
-            awg_marker = np.zeros(len(wave_zero))
-            awg_marker[0:len(wave_zero) // 20] = 1
+            awg_marker = np.zeros(wave_len)
+            awg_marker[0:wave_len // 20] = 1
             awg_marker = np.roll(
-                awg_marker, len(wave_zero) - int(self.delay_AWG * self.AWG_clock))
+                awg_marker, wave_len - int(self.delay_AWG * self.AWG_clock))
             sweep_info[awg_info[:2]]['marker%d' %
                                      self.awg_map['awg_mk'][2]] = awg_marker
             self._awgs[awg_info[0]].set(
@@ -152,8 +159,24 @@ class virtual_awg(Instrument):
         for sweep in sweep_info:
             self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
                                                        sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
-            
-            if hasattr(self,'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
+
+#            if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
+#                self._awgs[sweep[0]].set_sqel_waveform(
+#                    sweep_info[sweep]['name'], sweep[1], 1)
+#                self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
+#                self._awgs[sweep[0]].set_sqel_event_jump_target_index(
+#                    sweep[1], 1)
+#                self._awgs[sweep[0]].set_sqel_event_jump_type(1, 'IND')
+#            else:
+#                self._awgs[sweep[0]].set(
+#                    'ch%i_waveform' % sweep[1], sweep_info[sweep]['name'])
+
+        return sweep_info
+
+    def sweep_run(self, sweep_info):
+        ''' Activate AWG(s) and channel(s) for the sweep(s) '''       
+        for sweep in sweep_info:
+            if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
                     sweep_info[sweep]['name'], sweep[1], 1)
                 self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
@@ -163,11 +186,7 @@ class virtual_awg(Instrument):
             else:
                 self._awgs[sweep[0]].set(
                     'ch%i_waveform' % sweep[1], sweep_info[sweep]['name'])
-
-        return sweep_info
-
-    def sweep_run(self, sweep_info):
-        ''' Activate AWG(s) and channel(s) for the sweep(s) '''
+                    
         for sweep in sweep_info:
             self._awgs[sweep[0]].set('ch%i_state' % sweep[1], 1)
 
@@ -175,52 +194,60 @@ class virtual_awg(Instrument):
         for nr in awgnrs:
             self._awgs[nr].run()
 
-    def make_sawtooth(self, sweeprange, risetime, width=.95):
+    def make_sawtooth(self, sweeprange, period, width=.95, repetitionnr=1):
         '''Make a sawtooth with a decline width determined by width. Not yet scaled with
         awg_to_plunger value.
         '''
         samplerate = 1. / self.AWG_clock
-        tt = np.arange(0, 2 * risetime + samplerate, samplerate)
+        tt = np.arange(0, period * repetitionnr + samplerate, samplerate)
         v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
-        wave = (v_wave / 2) * scipy.signal.sawtooth(
-            np.pi * tt / risetime, width=width)
+        wave_raw = (v_wave / 2) * scipy.signal.sawtooth(2 * np.pi * tt / period, width=width)
 
-        return wave
+        return wave_raw
 
-    def sweep_gate(self, gate, sweeprange, risetime, width=.95):
+
+    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the FPGA.
 
         Arguments:
             gate (string): the name of the gate to sweep
             sweeprange (float): the range of voltages to sweep over
-            risetime (float): the risetime of the triangular signal
+            period (float): the period of the triangular signal
 
         Returns:
-            waveform (dictionary): The waveform being send with the AWG.
+            waveform (dict): The waveform being send with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
 
         Example:
         -------
-        >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
+        >>> waveform, sweep_info = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
         waveform = dict()
-        wave_raw = self.make_sawtooth(sweeprange, risetime, width)
+        wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
-        wave = np.array([x / awg_to_plunger for x in wave_raw])
-        waveform[gate] = wave
-        sweep_info = self.sweep_init(waveform)
+        wave = wave_raw/awg_to_plunger
+        waveform[gate] = dict()
+        waveform[gate]['wave'] = wave
+        if wave_name==None:
+            waveform[gate]['name'] = 'sweep_%s' % gate
+        else:
+            waveform[gate]['name'] = wave_name
+        sweep_info = self.sweep_init(waveform, delete)
         self.sweep_run(sweep_info)
         waveform['width'] = width
+        waveform['sweeprange'] = sweeprange
+        waveform['samplerate'] = 1 / self.AWG_clock
 
-        return waveform
+        return waveform, sweep_info
 
-    def sweep_process(self, data, waveform, direction='forwards'):
+    def sweep_process(self, data, waveform, Naverage, direction='forwards'):
         '''Process the data returned by reading out based on the shape of
         the sawtooth send with the AWG.
 
         Arguments:
-            data (array): the data
-            waveform (dictionary): contains the wave and the sawtooth width
+            data (list): the data
+            waveform (dict): contains the wave and the sawtooth width
             direction (string): option to use backwards signal i.o. forwards
 
         Returns:
@@ -228,7 +255,7 @@ class virtual_awg(Instrument):
 
         Example:
         -------
-        >>> wave = sweep_gate('P1',sweeprange=60,risetime=1e-3)
+        >>> data_processed = sweep_process(data, waveform, 25)
         '''
         width = waveform['width']
 
@@ -236,18 +263,101 @@ class virtual_awg(Instrument):
             end = int(np.floor(width * len(data) - 1))
             data_processed = data[1:end]
         elif direction == 'backwards':
-            begin = int(np.ceil((1 - width) * len(data)))
+            begin = int(np.ceil(width * len(data) + 1))
             data_processed = data[begin:]
+            data_processed = data_processed[::-1]
+
+        data_processed = np.array(data_processed)/Naverage
 
         return data_processed
 
-    def plot_wave(self, wave):
-        ''' Plot the wave '''
-        horz_var = np.arange(0, len(wave) / self.AWG_clock, 1 / self.AWG_clock)
-        x = DataArray(name='time(s)', label='time (s)',
-                      preset_data=horz_var, is_setpoint=True)
-        y = DataArray(
-            label='sweep value (mV)', preset_data=wave, set_arrays=(x,))
-        plot = QtPlot(x, y)
+    def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None, delete=True):
+        ''' Send sawtooth signals to the sweepgates which effectively do a 2D
+        scan.
+        '''
+        if resolution[0] * resolution[1] > self.maxdatapts:
+            raise Exception('resolution is set higher than FPGA memory allows')
 
-        return plot
+        samp_freq = fpga_samp_freq
+
+        error_corr = resolution[0] * self.corr
+        period_horz = resolution[0] / samp_freq + error_corr
+        period_vert = resolution[1] * period_horz
+
+        waveform = dict()
+        # horizontal waveform
+        wave_horz_raw = self.make_sawtooth(
+            sweepranges[0], period_horz, repetitionnr=resolution[0])
+        awg_to_plunger_horz = self.hardware.parameters[
+            'awg_to_%s' % sweepgates[0]].get()
+        wave_horz = wave_horz_raw / awg_to_plunger_horz
+        waveform[sweepgates[0]] = dict()
+        waveform[sweepgates[0]]['wave'] = wave_horz
+        waveform[sweepgates[0]]['name'] = 'sweep_2D_horz_%s' % sweepgates[0]
+
+        # vertical waveform
+        wave_vert_raw = self.make_sawtooth(sweepranges[0], period_vert)
+        awg_to_plunger_vert = self.hardware.parameters[
+            'awg_to_%s' % sweepgates[1]].get()
+        wave_vert = wave_vert_raw / awg_to_plunger_vert
+        waveform[sweepgates[1]] = dict()
+        waveform[sweepgates[1]]['wave'] = wave_vert
+        waveform[sweepgates[1]]['name'] = 'sweep_2D_vert_%s' % sweepgates[1]
+
+        if comp is not None:
+            for g in comp.keys():
+                if g not in sweepgates:
+                    waveform[g] = dict()
+                    waveform[g]['wave'] = comp[g]['vert'] * \
+                        wave_vert + comp[g]['horz'] * wave_horz
+                    waveform[g]['name'] = 'sweep_2D_comp_%s' % g
+                else:
+                    raise Exception('Can not compensate a sweepgate')
+
+        sweep_info = self.sweep_init(waveform, delete)
+        self.sweep_run(sweep_info)
+
+        waveform['width_horz'] = .95
+        waveform['sweeprange_horz'] = sweepranges[0]
+        waveform['width_vert'] = .95
+        waveform['sweeprange_vert'] = sweepranges[1]
+        waveform['resolution'] = resolution
+        waveform['samplerate'] = 1 / self.AWG_clock
+
+        return waveform, sweep_info
+
+
+    def sweep_2D_process(self, data, waveform, diff_dir=None):
+        ''' Process data from sweep_2D '''
+        width_horz = waveform['width_horz']
+        width_vert = waveform['width_vert']
+        resolution = waveform['resolution']    
+        
+        # split up the fpga data in chunks of horizontal sweeps        
+        chunks_ch1 = [data[x:x+resolution[0]] for x in range(0, len(data), resolution[0])]
+        chunks_ch1 = [chunks_ch1[i][1:int(width_horz*len(chunks_ch1[i]))] for i in range(0,len(chunks_ch1))]
+        data_processed = chunks_ch1[:int(width_vert*len(chunks_ch1))]
+        
+        if diff_dir is not None:
+            data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
+        
+        return data_processed
+
+
+#%%
+def plot_wave_raw(wave_raw, samplerate=None, station=None):
+    ''' Plot the raw wave '''
+    if samplerate is None:
+        if station is None:
+            raise Exception('There is no station')
+        samplerate = 1/station.awg.getattr('AWG_clock')
+    else:
+        samplerate = samplerate
+    horz_var = np.arange(0, len(wave_raw)*samplerate, samplerate)
+    x = DataArray(name='time(s)', label='time (s)',
+                  preset_data=horz_var, is_setpoint=True)
+    y = DataArray(
+        label='sweep value (mV)', preset_data=wave_raw, set_arrays=(x,))
+    plot = QtPlot(x, y)
+
+    return plot
