@@ -606,22 +606,35 @@ def makeDataSet1Dplain(xname, x, yname, y, location=None):
     
     return dd
     
-def makeDataSet1D(p, mname='measured', location=None, preset_data=None):
+def makeDataSet1D(x, xname=None, y=None, yname=None, location=None):
     ''' Make DataSet with one 1D array and one setpoint array
     
     Arguments:
-        p (array): the setpoint array of data
+        x (array): the setpoint array of data
     '''
-    xx = np.array(p)
-    yy = np.ones(xx.size)
-    x = DataArray(name=p.name, array_id=p.name, label=p.parameter.label, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=mname, array_id=mname, label=mname, preset_data=yy, set_arrays=(x,))
+    xx = np.array(x)
+    if xname is not None:
+        x = DataArray(name=xname, array_id=xname, label=x.parameter.label, preset_data=xx, is_setpoint=True)
+    else:
+        x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, preset_data=xx, is_setpoint=True)
+
+    if y is None:
+        yy = np.ones(xx.size)
+        if yname is None:
+            yname = 'measured'
+        else:
+            yname is yname
+    elif y is not None:
+        yy = np.array(y)
+        if yname is None:
+            yname = y.name
+        else:
+            yname is yname
+
+    y = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location)
     dd.add_array(x)
     dd.add_array(y)
-    
-    if preset_data is not None:
-        dd.measured.ndarray = np.array(preset_data)
 
     return dd
     

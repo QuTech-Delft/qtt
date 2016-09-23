@@ -474,16 +474,16 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=N
     Note: sweepvalues are only an approximation    
     
     '''
-
     if sweepgate_value is None:
-        sweepgate = getattr(gates, sweepgate)
-        initval = sweepgate.get()
-        sweepvalues=sweepgate[initval - sweeprange /  2:  initval + sweeprange / 2: sweeprange / len(data)]
-        dataset = makeDataSet1D(sweepvalues, preset_data=data)
-    else:
-        initval =sweepgate_value
-        sweepvalues = np.linspace( initval-sweeprange/2, initval+sweeprange/2, len(data))
-        dataset = makeDataSet1Dplain(sweepgate, sweepvalues, 'measured', data)
+        if gates is not None:
+            sweepgate_param = gates.getattr(sweepgate)
+            initval = sweepgate_param.get()
+        else:
+            raise Exception('No gates supplied')
+    
+    sweepvalues = np.linspace( initval-sweeprange/2, initval+sweeprange/2, len(data))
+    dataset = makeDataSet1D(sweepgate, sweepvalues, 'measured', data)
+    
     if fig is None:
         return dataset, None
     else:

@@ -17,15 +17,11 @@ class sensingdot_t:
         self.sdval = sdvalv
         self.targetvalue = 800
         self.goodpeaks = None
-<<<<<<< bcc3b11b8ce661d1e3edee193cec36b718998b39
-        if fpga_ch == None:
-=======
         self.station = station
         self.RFfreq = RFfreq # ?
         self.index = index
         self.instrument = 'keithley%d' % index
         if fpga_ch is None:
->>>>>>> Add functionality for scan2Dfast, needs to be cleaned up!
             self.fpga_ch = int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
