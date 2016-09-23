@@ -463,26 +463,32 @@ if __name__ == '__main__':
     adata = analyseGateSweep(alldataX, fig=10, minthr=None, maxthr=None)
 
 #%%
-from qtt.data import makeDataSet1D, makeDataSet2D
+from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 
 #%%
 
 
-def makeDataset_sweep(data, gates, sweepgate, sweeprange, fig=None):
-    ''' Convert the data of a 1D sweep to a DataSet '''
+def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None):
+    ''' Convert the data of a 1D sweep to a DataSet
 
-    sweepgate = getattr(gates, sweepgate)
-    initval = sweepgate.get()
-    sweepvalues = sweepgate[initval - sweeprange /
-                            2: initval + sweeprange / 2:sweeprange / len(data)]
+    Note: sweepvalues are only an approximation    
+    
+    '''
 
-    dataset = makeDataSet1D(sweepvalues, preset_data=data)
-
+    if sweepgate_value is None:
+        sweepgate = getattr(gates, sweepgate)
+        initval = sweepgate.get()
+        sweepvalues=sweepgate[initval - sweeprange /  2:  initval + sweeprange / 2: sweeprange / len(data)]
+        dataset = makeDataSet1D(sweepvalues, preset_data=data)
+    else:
+        initval =sweepgate_value
+        sweepvalues = np.linspace( initval-sweeprange/2, initval+sweeprange/2, len(data))
+        dataset = makeDataSet1Dplain(sweepgate, sweepvalues, 'measured', data)
     if fig is None:
-        return dataset
+        return dataset, None
     else:
         plot = MatPlot(dataset.measured, interval=0, num=fig)
-        return plot, dataset
+        return dataset, plot
 
 
 def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
@@ -502,10 +508,10 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
     dataset = makeDataSet2D(sweep_vert, sweep_horz, preset_data=data)
 
     if fig is None:
-        return dataset
+        return dataset, None
     else:
         plot = MatPlot(dataset.measured, interval=0, num=fig)
-        return plot, dataset
+        return dataset, plot
 
 
 #%%

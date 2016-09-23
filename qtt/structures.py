@@ -11,21 +11,25 @@ class sensingdot_t:
 
     """ Class representing a sensing dot """
 
-    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=0, fpga_ch=None):
+    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=None, fpga_ch=None):
         self.verbose = 1
         self.gg = ggv
         self.sdval = sdvalv
-        self.RFfreq = RFfreq
-        self.index = index
-        self.instrument = 'keithley1'
         self.targetvalue = 800
         self.goodpeaks = None
+<<<<<<< bcc3b11b8ce661d1e3edee193cec36b718998b39
         if fpga_ch == None:
+=======
+        self.station = station
+        self.RFfreq = RFfreq # ?
+        self.index = index
+        self.instrument = 'keithley%d' % index
+        if fpga_ch is None:
+>>>>>>> Add functionality for scan2Dfast, needs to be cleaned up!
             self.fpga_ch = int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
 
-        self.station = station
         # values for measurement
         # RFfreq = None
         if index is not None:
@@ -116,7 +120,7 @@ class sensingdot_t:
 
     def scan2D(sd, ds=90, stepsize=-4, fig=None):
         """ Make 2D-scan of the sensing dot """
-        keithleyidx = [1]
+        keithleyidx = [index]
         gg = sd.gg
         sdval = sd.sdval
 

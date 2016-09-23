@@ -591,7 +591,21 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
     logging.info('saveExperimentData %s' % path)
     write_data(path, dataset)
 
-
+def makeDataSet1Dplain(xname, x, yname, y, location=None):
+    ''' Make DataSet with one 1D array and one setpoint array
+    
+    Arguments:
+    '''
+    xx = np.array(x)
+    yy = np.array(y)
+    x = DataArray(name=xname, array_id=xname, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=yname, array_id=yname, preset_data=yy, set_arrays=(x,))
+    dd = new_data(arrays=(), location=location)
+    dd.add_array(x)
+    dd.add_array(y)
+    
+    return dd
+    
 def makeDataSet1D(p, mname='measured', location=None, preset_data=None):
     ''' Make DataSet with one 1D array and one setpoint array
     
@@ -600,10 +614,8 @@ def makeDataSet1D(p, mname='measured', location=None, preset_data=None):
     '''
     xx = np.array(p)
     yy = np.ones(xx.size)
-    x = DataArray(name=p.name, array_id=p.name,
-                  label=p.parameter.label, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=mname, array_id=mname, label=mname,
-                  preset_data=yy, set_arrays=(x,))
+    x = DataArray(name=p.name, array_id=p.name, label=p.parameter.label, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=mname, array_id=mname, label=mname, preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location)
     dd.add_array(x)
     dd.add_array(y)
@@ -625,12 +637,9 @@ def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     yy0 = np.array(p2)
     yy = np.tile(yy0, [xx.size, 1])
     zz = np.NaN * np.ones((xx.size, yy0.size))
-    x = DataArray(name=p1.name, array_id=p1.name,
-                  label=p1.parameter.label, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=p2.name,  array_id=p2.name, label=p2.parameter.label,
-                  preset_data=yy, set_arrays=(x,), is_setpoint=True)
-    z = DataArray(name=mname, array_id=mname, label=mname,
-                  preset_data=zz, set_arrays=(x, y))
+    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=p2.name,  array_id=p2.name, label=p2.parameter.label, preset_data=yy, set_arrays=(x,), is_setpoint=True)
+    z = DataArray(name=mname, array_id=mname, label=mname, preset_data=zz, set_arrays=(x, y))
     dd = new_data(arrays=(), location=location)
     dd.add_array(z)
     dd.add_array(x)
