@@ -88,6 +88,14 @@ jupyter notebook
 call deactivate eendebakpt
 ```
 
+## Install redis
+
+For Windows install Chocolately and then do
+```
+> choco install redis064
+> pip install redis
+```
+For Unix systems follow the instructions of your OS.
 
 ## Git credentials
 
