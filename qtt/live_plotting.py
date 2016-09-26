@@ -115,11 +115,15 @@ class livePlot:
         elif len(self.sweepgates) == 2:
             if data is not None:
                 self.img.setImage(data.T)
-                self.horz_low = self.gates.get(
-                    self.sweepgates[0]) - self.sweepranges[0] / 2
+                value_x=0; value_y=0
+                try:
+                    value_x=self.gates.get(self.sweepgates[0])
+                    value_y=self.gates.get(self.sweepgates[1])
+                except:
+                        pass
+                self.horz_low = value_x - self.sweepranges[0] / 2
                 self.horz_range = self.sweepranges[0]
-                self.vert_low = self.gates.get(
-                    self.sweepgates[1]) - self.sweepranges[1] / 2
+                self.vert_low = value_y - self.sweepranges[1] / 2
                 self.vert_range = self.sweepranges[1]
                 self.rect = QtCore.QRect(
                     self.horz_low, self.vert_low, self.horz_range, self.vert_range)
@@ -149,6 +153,7 @@ class livePlot:
                 dd = self.datafunction()
                 self.update(data=dd)
             except Exception as e:
+                print('livePlot: Exception in updatebg')
                 print(e)
                 self.stopreadout()
         else:
