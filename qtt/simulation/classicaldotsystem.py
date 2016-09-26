@@ -37,17 +37,19 @@ except:
 
 from qtt.simulation.dotsystem import tprint, BaseDotSystem
 
+
 def ncr(n, r):
     """ Calculating number of possible combinations: nCr"""
     r = min(r, n - r)
-    if r == 0: return 1
+    if r == 0:
+        return 1
     numer = functools.reduce(op.mul, range(n, n - r, -1))
     denom = functools.reduce(op.mul, range(1, r + 1))
     return numer // denom
 
 
-
 class ClassicalDotSystem(BaseDotSystem):
+
     def __init__(self, name='dotsystem', ndots=3, ngates=3, maxelectrons=3, **kwargs):
         self.name = name
         self.ndots = ndots
@@ -75,16 +77,16 @@ class ClassicalDotSystem(BaseDotSystem):
         self.Nt = len(self.nbasis)
 
         # make addition energy basis
-        self.add_basis=self.basis.copy()
-        self.coulomb_energy=np.zeros( (self.basis.shape[0], self.W.size) )
+        self.add_basis = self.basis.copy()
+        self.coulomb_energy = np.zeros((self.basis.shape[0], self.W.size))
         for i in range(self.Nt):
-            self.add_basis[i]= (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
+            self.add_basis[i] = (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
             self.coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
 
     def calculate_energies(self, gatevalues):
         """ Calculate the energies of all dot states, given a set of gate values. Returns array of energies. """
         energies = np.zeros((self.Nt,))
-        tmp1=-(self.mu0 + np.dot(self.alpha, gatevalues))
+        tmp1 = -(self.mu0 + np.dot(self.alpha, gatevalues))
         for i in range(self.Nt):
             energy = 0
             energy += np.dot(tmp1, self.basis[i])
@@ -108,16 +110,16 @@ class ClassicalDotSystem(BaseDotSystem):
         npointsy = np.shape(paramvalues2D)[2]
 
         if nparams != self.ngates:
-            print('simulate_honeycomb: number of parameters (%d) does not equal number of gates (%d)...' % (nparams, self.ngates) )
+            print('simulate_honeycomb: number of parameters (%d) does not equal number of gates (%d)...' % (nparams, self.ngates))
             return
 
         self.hcgs = np.empty((npointsx, npointsy, self.ndots))
 
         if multiprocess and _have_mp:
-            pool = Pool(processes = os.cpu_count())
+            pool = Pool(processes=os.cpu_count())
             param_iter = [(paramvalues2D[:, i, j]) for i in range(npointsx) for j in range(npointsy)]
             result = pool.map(self.calculate_ground_state, param_iter)
-            self.hcgs = np.reshape(np.array(result),(npointsx,npointsy,self.ndots))
+            self.hcgs = np.reshape(np.array(result), (npointsx, npointsy, self.ndots))
         else:
             for i in range(npointsx):
                 if verbose:
@@ -130,8 +132,8 @@ class ClassicalDotSystem(BaseDotSystem):
             print('simulatehoneycomb: %.2f [s]' % (time.time() - t0))
 
 
-
 class TripleDot(ClassicalDotSystem):
+
     def __init__(self, name='tripledot', **kwargs):
         super().__init__(name=name, ndots=3, ngates=3, **kwargs)
 
@@ -143,13 +145,15 @@ class TripleDot(ClassicalDotSystem):
         vardict["Eadd_values"] = np.array([54.0, 52.8, 54.0])  # addition energy
         vardict["W_values"] = np.array([6.0, 1.0, 5.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
         vardict["alpha_values"] = np.array([[1.0, 0.25, 0.1],
-                                 [0.25, 1.0, 0.25],
-                                 [0.1, 0.25, 1.0]])
+                                            [0.25, 1.0, 0.25],
+                                            [0.1, 0.25, 1.0]])
 
         for name in self.varnames:
-            setattr(self, name, vardict[name+'_values'])
+            setattr(self, name, vardict[name + '_values'])
+
 
 class DoubleDot(ClassicalDotSystem):
+
     def __init__(self, name='doubledot', **kwargs):
         super().__init__(name=name, ndots=2, ngates=2, **kwargs)
 
@@ -160,8 +164,7 @@ class DoubleDot(ClassicalDotSystem):
         vardict["mu0_values"] = np.array([120.0, 100.0])  # chemical potential at zero gate voltage
         vardict["Eadd_values"] = np.array([54.0, 52.8])  # addition energy
         vardict["W_values"] = np.array([6.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
-        vardict["alpha_values"] = np.array([[1.0, 0.25], [0.25, 1.0] ])
+        vardict["alpha_values"] = np.array([[1.0, 0.25], [0.25, 1.0]])
 
         for name in self.varnames:
-            setattr(self, name, vardict[name+'_values'])
-            
+            setattr(self, name, vardict[name + '_values'])

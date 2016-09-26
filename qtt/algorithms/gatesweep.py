@@ -16,7 +16,8 @@ import cv2
 
 #%%
 
-#import qtt.scans # FIXME: circular
+# import qtt.scans # FIXME: circular
+
 
 def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=True, drawmidpoints=True):
     """ Analyse sweep of a gate for pinch value, low value and high value
@@ -33,23 +34,23 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     goodgate = True
 
     if isinstance(dd, qcodes.DataSet):
-        data=dd
-        XX=None
+        data = dd
+        XX = None
 
         # should be made generic
-        g=[x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data,x).is_setpoint ][0]
-        value=qtt.data.getDefaultParameterName(data) # 'amplitude'
+        g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint ][0]
+        value = qtt.data.getDefaultParameterName(data) # 'amplitude'
 
-        x=data.arrays[g]
-        value=data.arrays[value]
+        x = data.arrays[g]
+        value = data.arrays[value]
 
         # detect direction of scan
-        scandirection=np.sign(x[-1]-x[0])
-        if scandirection<0 and 1:
+        scandirection = np.sign(x[-1]-x[0])
+        if scandirection < 0 and 1:
             pass
-            scandirection=1
-            x=x[::-1]
-            value=value[::-1]
+            scandirection = 1
+            x = x[::-1]
+            value = value[::-1]
     else:
         # legacy code
         XX = dd['data_array']
@@ -63,12 +64,11 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                     # double sweep, reduce
             if verbose:
                 print('analyseGateSweep: scan with sweepback: reducing data')
-            XX = XX[0:sr.size, :]
+            XX = XX[0:sr.size,:]
 
         x = XX[:, 0]
         value = XX[:, 2]
-        XX=None
-
+        XX = None
 
     lowvalue = np.percentile(value, 1)
     highvalue = np.percentile(value, 90)
@@ -94,14 +94,14 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     ww = value
     for ii in range(4):
         ww = scipy.ndimage.filters.correlate1d(ww, kk, mode='nearest')
-        #ww=scipy.signal.convolve(ww, kk, mode='same')
-        #ww=scipy.signal.convolve2d(ww, kk, mode='same', boundary='symm')
+        # ww=scipy.signal.convolve(ww, kk, mode='same')
+        # ww=scipy.signal.convolve2d(ww, kk, mode='same', boundary='symm')
     midvalue = .7 * lowvalue + .3 * highvalue
-    if scandirection>=0:
+    if scandirection >= 0:
         mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][0]
     else:
         mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][-1]
-    mp=max(mp, 2) # fix for case with zero data signal
+    mp = max(mp, 2) # fix for case with zero data signal
     midpoint2 = x[mp]
 
     if verbose >= 2:
@@ -118,7 +118,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         goodgate = False
 
     # check for gates that are fully open or closed
-    if scandirection>0:
+    if scandirection > 0:
         xleft = x[0:mp]
         leftval = ww[0:mp]
         rightval = ww[mp]
@@ -144,11 +144,11 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         fit = np.polyfit(xleft, leftval, 1)
         pp = np.polyval(fit, xleft)
 
-        #pmid = np.polyval(fit, midpoint2)
+        # pmid = np.polyval(fit, midpoint2)
         p0 = np.polyval(fit, xleft[-1])
         pmid = np.polyval(fit, xleft[0])
         if verbose:
-	        print('p0 %.1f, pmid %.1f, leftval[0] %.1f' % (p0, pmid, leftval[0]))
+            print('p0 %.1f, pmid %.1f, leftval[0] %.1f' % (p0, pmid, leftval[0]))
 
         if pmid + (pmid - p0) * .25 > leftval[0]:
             midpoint1 = np.percentile(x, .5)
@@ -159,7 +159,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                     'analyseGateSweep: gate not good: gate is not closed (or fully closed) (line fit check)')
 
     # another check on closed gates
-    if scandirection>0:
+    if scandirection > 0:
         leftidx = range(0, mp)
         fitleft = np.polyfit(
             [x[leftidx[0]], x[leftidx[-1]]], [lowvalue, value[leftidx[-1]]], 1)
@@ -169,17 +169,17 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             [x[leftidx[-1]], x[leftidx[0]]], [lowvalue, value[leftidx[0]]], 1)
     leftval = value[leftidx]
 
-    #fitleft=np.polyfit([x[leftidx[-1]],x[leftidx[0]]], [lowvalue, midvalue], 1)
+    # fitleft=np.polyfit([x[leftidx[-1]],x[leftidx[0]]], [lowvalue, midvalue], 1)
 
     leftpred = np.polyval(fitleft, x[leftidx])
 
-    if np.abs( scandirection*(xleft[1]-xleft[0]) ) >150 and xleft.size>15:
-        xleft0 = x[mp+6:]
-        leftval0 = ww[mp+6:]
+    if np.abs( scandirection*(xleft[1]-xleft[0]) ) > 150 and xleft.size > 15:
+        xleft0 = x[mp + 6:]
+        leftval0 = ww[mp + 6:]
         fitL = np.polyfit(xleft0, leftval0, 1)
         pp = np.polyval(fitL, xleft0)
-        nd=fitL[0]/(highvalue-lowvalue)
-        if goodgate and (nd*750>1):
+        nd = fitL[0]/(highvalue-lowvalue)
+        if goodgate and (nd*750 > 1):
             midpoint1 = np.percentile(x, .5)
             midpoint2 = np.percentile(x, .5)
             goodgate = False
@@ -211,12 +211,12 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         plot2Dline([0, -1, highvalue], '--m', label='high value')
 
         if drawmidpoints:
-            if verbose>=2:
+            if verbose >= 2:
                 plot2Dline([-1, 0, midpoint1], '--g', linewidth=1)
             plot2Dline([-1, 0, midpoint2], '--m', linewidth=2)
 
-        if verbose>=2:
-            #plt.plot(x[leftidx], leftval, '.r', markersize=15)
+        if verbose >= 2:
+            # plt.plot(x[leftidx], leftval, '.r', markersize=15)
             plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1)
 
         if verbose >= 2:
@@ -246,8 +246,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 #%%
 
 
-
-
 #%%
 
 def costscoreOD(a, b, pt, ww, verbose=0, output=False):
@@ -256,19 +254,19 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     Arguments:
         a,b (float): position along axis (a: x-axis)
         pt (numpy array): point in image
-    
+
     """
     pts = np.array(
         [[a, 0], pt, [ww.shape[1] - 1, b], [ww.shape[1] - 1, 0], [a, 0]])
     pts = pts.reshape((5, 1, 2)).astype(int)
     imx = 0 * ww.copy().astype(np.uint8)
     cv2.fillConvexPoly(imx, pts, color=[1])
-    #tmp=fillPoly(imx, pts)
+    # tmp=fillPoly(imx, pts)
 
     cost = -(imx == ww).sum()
 
     # add penalty for moving out of range
-    cost += (.025 * ww.size) * np.maximum(b - ww.shape[0]-1, 0) / ww.shape[0]
+    cost += (.025 * ww.size) * np.maximum(b - ww.shape[0] - 1, 0) / ww.shape[0]
     cost += (.025 * ww.size) * np.maximum(-a, 0) / ww.shape[1]
 
     cost += (.025 * ww.size) * 2 * (pts[2, 0, 1] < 0)
@@ -281,31 +279,28 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
         return cost
 
 
-
-
-
 #%%
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
-    #XX = dd['data_array']
-    extentscan, g0,g2,vstep, vsweep, arrayname=dataset2Dmetadata(dd, arrayname=None)
+    # XX = dd['data_array']
+    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
-    #scanjob=dd.metadata['scanjob']
-    #stepdata = scanjob['stepdata']
-    #g0 = stepdata['gates'][0]
-    #sweepdata = scanjob['sweepdata']
-    #g2 = sweepdata['gates'][0]
+    # scanjob=dd.metadata['scanjob']
+    # stepdata = scanjob['stepdata']
+    # g0 = stepdata['gates'][0]
+    # sweepdata = scanjob['sweepdata']
+    # g2 = sweepdata['gates'][0]
 
-    #nx = vstep.size
-    #ny = vsweep.size
+    # nx = vstep.size
+    # ny = vsweep.size
 
     im, impixel, tr = dataset2image2(dd)
 
-    #im= np.array(dd.arrays[arrayname])
-    #tr = qtt.data.image_transform(dd)
-    #impixel = tr.transform(im)
+    # im= np.array(dd.arrays[arrayname])
+    # tr = qtt.data.image_transform(dd)
+    # impixel = tr.transform(im)
 
-    extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0] ] # matplotlib extent style
+    extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
 
     ims = impixel.copy()
     kk = np.ones((3, 3)) / 9.
@@ -329,10 +324,10 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         zz = -ww[0] + ww[1]
         idx = zz.argmin()
         pt = np.array([[ww[1][idx]], [ww[0][idx]]])
-        ptv=tr.pixel2scan(pt)
-        #print(pt); print(ptv)
-        #print(vsweep)
-        
+        ptv = tr.pixel2scan(pt)
+        # print(pt); print(ptv)
+        # print(vsweep)
+
     except:
         print('qutechtnotools: error in onedotGetBalance: please debug')
         idx = 0
@@ -340,12 +335,12 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         ptv = np.array([[vstep[pt[0, 0]]], [vsweep[-pt[1, 0]]]])
         pass
     od['balancepoint0'] = ptv
-    #od['balancepoint0'] = ptv
+    # od['balancepoint0'] = ptv
 
     # balance point: method 2 (fit quadrilateral)
     wwarea = ims > lv
 
-    #x0=np.array( [pt[0],im.shape[0]+.1,pt[0], pt[1] ] )
+    # x0=np.array( [pt[0],im.shape[0]+.1,pt[0], pt[1] ] )
     x0 = np.array([pt[0] - .1 * im.shape[1], pt[1] + .1 *
                    im.shape[0], pt[0], pt[1]]).reshape(4,)  # initial square
     ff = lambda x: costscoreOD(x[0], x[1], x[2:4], wwarea)
@@ -355,15 +350,15 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
     xx = scipy.optimize.minimize(ff, x0, method='Nelder-Mead', options=opts)
-    #print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
+    # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     opts['disp'] = verbose >= 2
     xx = scipy.optimize.minimize(ff, xx.x, method='Powell', options=opts)
     x = xx.x
-    #print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
+    # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     cost, pts, imx = costscoreOD(x0[0], x0[1], x0[2:4], wwarea, output=True)
     balancefitpixel0 = pts.reshape((-1, 2)).T.copy()
     cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True)
-    pt = pts[1, :, :].transpose()
+    pt = pts[1,:,:].transpose()
 
     od['balancepointpixel'] = pt
     od['balancepointpolygon'] = tr.pixel2scan(pt)
@@ -391,7 +386,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         plt.axis('image')
         if verbose >= 2 or drawpoly:
             pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
-        if verbose>=2:
+        if verbose >= 2:
             pmatlab.plotPoints(od['balancepoint0'], '.r', markersize=13, label='balancepoint0')
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=17, label='balancepoint')
 
@@ -399,15 +394,15 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 
-        qtt.tools.showImage(tr.itransform(ims), extentImage, fig=fig+1)
+        qtt.tools.showImage(tr.itransform(ims), extentImage, fig=fig + 1)
         plt.axis('image')
         plt.title('Smoothed image')
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16, label='balancepoint')
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 
-        qtt.tools.showImage(ims > lv, None, fig=fig+2)
-        #plt.imshow(ims > lv, extent=None, interpolation='nearest')
+        qtt.tools.showImage(ims > lv, None, fig=fig + 2)
+        # plt.imshow(ims > lv, extent=None, interpolation='nearest')
         pmatlab.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
         pmatlab.plotPoints(od['balancefitpixel'], '--c', markersize=16, label='balancefit')
         pmatlab.plotLabels(od['balancefitpixel'])
@@ -430,14 +425,12 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     return od, ptv, pt, ims, lv, wwarea
 
-if __name__=='__main__':
+if __name__ == '__main__':
     reload(qtt.data)
-    dd=alldata
-    od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=110)
+    dd = alldata
+    od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)
 
 #%% Testing
 
-if __name__=='__main__':
-     adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None)
-
-
+if __name__ == '__main__':
+    adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None)
