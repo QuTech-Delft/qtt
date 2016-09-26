@@ -30,6 +30,15 @@ class rda_t:
         # we use redis as backend now
         self.r = redis.Redis(host='127.0.0.1', port=6379) # , password='test')
 
+        try:
+            self.set('dummy', -1)
+            v=self.get_float('dummy')
+            if (not v==-1):
+                raise Exception('set not equal to get')
+        except Exception as e:
+            print(e)
+            raise Exception('rda_t: communication failure')
+             
     def get_float(self, key, default_value=None):
         return float(self.get(key, default_value))
     
