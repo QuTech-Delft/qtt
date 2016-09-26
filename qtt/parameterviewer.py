@@ -65,10 +65,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     def init(self):
         ''' Initialize parameter viewer '''
-        # if self._station==None:
-        #    return
-        # dd = self._station.snapshot()
-        # x =
         for ii, iname in enumerate(self._instrumentnames):
             instr = self._instruments[ii]
             # pp=instr.parameters.keys()
@@ -90,7 +86,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box.setMaximum(1000)
 
                 # A = QtGui.QTreeWidgetItem(gatesroot, [g, box])
-                A = QtWidgets.QTreeWidgetItem(gatesroot, [g, str(value)])
+                v=''
+                A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
                 # qq=self.topLevelItem(0).child(2)
                 # qq=self.topLevelItem(0).child(2)
                 self._itemsdict[iname][g] = A
