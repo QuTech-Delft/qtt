@@ -82,17 +82,22 @@ class ClassicalDotSystem(BaseDotSystem):
         for i in range(self.Nt):
             self.add_basis[i] = (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
             self.coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
-
+    
     def calculate_energies(self, gatevalues):
         """ Calculate the energies of all dot states, given a set of gate values. Returns array of energies. """
         energies = np.zeros((self.Nt,))
         tmp1 = -(self.mu0 + np.dot(self.alpha, gatevalues))
-        for i in range(self.Nt):
-            energy = 0
-            energy += np.dot(tmp1, self.basis[i])
-            energy += np.dot(self.coulomb_energy[i], self.W)
-            energy += np.dot(self.add_basis[i], self.Eadd)
-            energies[i] = energy
+        if 0:
+            for i in range(self.Nt):
+                energy = 0
+                energy += np.dot(tmp1, self.basis[i])
+                energy += np.dot(self.coulomb_energy[i], self.W)
+                energy += np.dot(self.add_basis[i], self.Eadd)
+                energies[i] = energy
+        else:
+            energies += self.basis.dot(tmp1) 
+            energies += self.coulomb_energy.dot(self.W) 
+            energies += self.add_basis.dot(self.Eadd) 
         return energies
 
     def calculate_ground_state(self, gatevalues):
@@ -143,7 +148,7 @@ class TripleDot(ClassicalDotSystem):
 
         vardict["mu0_values"] = np.array([-27.0, -20.0, -25.0])  # chemical potential at zero gate voltage
         vardict["Eadd_values"] = np.array([54.0, 52.8, 54.0])  # addition energy
-        vardict["W_values"] = np.array([6.0, 1.0, 5.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        vardict["W_values"] = 3*np.array([6.0, 1.0, 5.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
         vardict["alpha_values"] = np.array([[1.0, 0.25, 0.1],
                                             [0.25, 1.0, 0.25],
                                             [0.1, 0.25, 1.0]])
