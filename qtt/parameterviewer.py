@@ -84,7 +84,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box.setKeyboardTracking(False)  # do not emit signals when still editing
                 box.setMinimum(-1000)
                 box.setMaximum(1000)
-
+                box.setSingleStep(5)
+                
                 # A = QtGui.QTreeWidgetItem(gatesroot, [g, box])
                 v=''
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
@@ -104,6 +105,15 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
+    def setSingleStep(self, instrument_name, value):
+        lst = pv._itemsdict[instrument_name]
+        for p in lst:
+            box=lst[p]            
+            try:
+                box.setSingleStep(value)
+            except:
+                    pass
+        
     def valueChanged(self, iname, param, value, *args, **kwargs):
         # print([iname, param, value])
         # print(args)
