@@ -18,6 +18,37 @@ import logging
 import scipy.ndimage as ndimage
 import qtt.algorithms.generic
 
+#%% Communication
+
+import redis
+
+class rda_t:
+    
+    def __init__(self):
+        """ Class for simple real-time data access """
+        
+        # we use redis as backend now
+        self.r = redis.Redis(host='127.0.0.1', port=6379) # , password='test')
+
+    def get_float(self, key, default_value=None):
+        return float(self.get(key, default_value))
+    
+    def get_int(self, key, default_value=None):
+        v=self.get(key, default_value)
+        return int(float(v))
+        
+    def get(self, key, default_value=None):
+        value= self.r.get(key)
+        if value is None:
+            return default_value
+        else:
+            return value
+    def set(self, key, value):
+        self.r.set(key, value)
+        pass
+
+
+
 #%% Liveplot object
 
 
@@ -123,7 +154,8 @@ class livePlot:
         else:
             self.stopreadout()
             dd = None
-
+        time.sleep(0.00001)
+        
     def startreadout(self, callback=None, rate=10., maxidx=None):
         if maxidx is not None:
             self.maxidx = maxidx
