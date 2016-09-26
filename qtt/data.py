@@ -277,7 +277,7 @@ class image_transform:
             im = im[::, ::-1]
         if self.flipY:
             im = im[::-1, ::]
-        #im=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
+        # im=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
 
         return im
 
@@ -286,7 +286,7 @@ class image_transform:
             im = im[::, ::-1]
         if self.flipY:
             im = im[::-1, ::]
-        #im=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
+        # im=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
 
         return im
 
@@ -317,9 +317,9 @@ class image_transform:
         # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
         
         f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted = False, fill_value='extrapolate')
-        ptx[1, :] = f(x[1, :])  # step
+        ptx[1,:] = f(x[1,:])  # step
         f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted = False, fill_value='extrapolate')
-        ptx[0, :] = f(x[0,:])  # sweep
+        ptx[0,:] = f(x[0,:])  # sweep
 
         return ptx
 
@@ -335,7 +335,7 @@ class image_transform:
         """
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
             self.dataset, arrayname=None, verbose=0)
-        #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
+        # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
         nx = vsweep.size
         ny = vstep.size
 
@@ -345,12 +345,12 @@ class image_transform:
         ptpixel = np.zeros((2, nn))
         f = scipy.interpolate.interp1d(
             [xx[2], xx[3]], [0, ny - 1], assume_sorted=False)
-        ptpixel[1, :] = f(x[1, :])
+        ptpixel[1,:] = f(x[1,:])
         f = scipy.interpolate.interp1d(
             [xx[0], xx[1]], [0, nx - 1], assume_sorted=False)
-        ptpixel[0, :] = f(x[0, :])  # sweep to pixel x
-        #ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
-        #ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
+        ptpixel[0,:] = f(x[0,:])  # sweep to pixel x
+        # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
+        # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
 
         ptpixel = pmatlab.projectiveTransformation(
             self.H, np.array(ptpixel).astype(float))
@@ -387,7 +387,7 @@ def pix2scan(pt, dd2d):
     warnings.warn('use transformation object instead')
     extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
         dd2d, verbose=0)
-    #xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
+    # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
     nx = vsweep.size  # zdata.shape[0]
     ny = vstep.size  # zdata.shape[1]
 

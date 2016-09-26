@@ -20,7 +20,7 @@ class sensingdot_t:
         self.instrument = 'keithley1'
         self.targetvalue = 800
         self.goodpeaks = None
-        if fpga_ch==None:
+        if fpga_ch == None:
             self.fpga_ch = int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
@@ -270,7 +270,7 @@ class sensingdot_t:
 
         self.station.awg.stop()
 
-        if self.fpga_ch==1:
+        if self.fpga_ch == 1:
             datr = DataRead_ch1
         else:
             datr = DataRead_ch2

@@ -69,7 +69,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     if full == -1:
         stepdata['step'] = -42
         sweepdata['step'] = -42
-        wait_time=0
+        wait_time = 0
         
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)

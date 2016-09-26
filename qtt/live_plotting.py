@@ -22,6 +22,7 @@ import qtt.algorithms.generic
 
 
 class livePlot:
+
     """ Class to enable live plotting of data """
 
     def __init__(self, gates, sweepgates, sweepranges, verbose=1):
@@ -174,7 +175,7 @@ class fpgaCallback_1d:
 
         data_processed = self.station.awg.sweep_process(
             data, self.waveform, self.Naverage)
-        
+
         return data_processed
 
 

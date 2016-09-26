@@ -221,7 +221,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     delay = scanjob.get('delay', delay)
     if delay is None:
-       delay=0
+        delay = 0
     logging.debug('delay: %s' % str(delay))
     print('scan1D: starting Loop (background %s)' % background)
     data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(
@@ -246,7 +246,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         if qcodes.get_bg() is not None:
             logging.info('background measurement not completed')
             time.sleep(.1)
-        
+
         logging.info('scan1D: completed %s' % (str(data.location),))
     else:
         dt = time.time() - t0
@@ -266,21 +266,23 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
 import pyqtgraph as pg
 
+
 def wait_bg_finish(verbose=0):
     """ Wait for background job to finish """
     for ii in range(10):
-        m=qcodes.get_bg()
+        m = qcodes.get_bg()
         if verbose:
-            print( 'wait_bg_finish: loop %d: bg %s ' % (ii, m))
+            print('wait_bg_finish: loop %d: bg %s ' % (ii, m))
         if m is None:
             break
         time.sleep(0.05)
-    m=qcodes.get_bg()
+    m = qcodes.get_bg()
     if verbose:
-            print( 'wait_bg_finish: final: bg %s ' % ( m, ))
+        print('wait_bg_finish: final: bg %s ' % (m, ))
     if m is not None:
-        logging.info( 'background job not finished' )
+        logging.info('background job not finished')
     return m is None
+
 
 def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False):
     """ Make a 2D scan and create dictionary to store on disk
@@ -475,7 +477,7 @@ def makeDataset_sweep(data, gates, sweepgate, sweeprange, fig=None):
                             2: initval + sweeprange / 2:sweeprange / len(data)]
 
     dataset = makeDataSet1D(sweepvalues, preset_data=data)
-    
+
     if fig is None:
         return dataset
     else:
@@ -498,7 +500,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
                            2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
 
     dataset = makeDataSet2D(sweep_vert, sweep_horz, preset_data=data)
-    
+
     if fig is None:
         return dataset
     else:

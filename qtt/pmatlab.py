@@ -1498,8 +1498,8 @@ except:
         import shapely
         import shapely.geometry
     except Exception as inst:
-	    #warnings.warn('pmatlab: could not load shapely, not all functionality is available')
-	    pass
+            # warnings.warn('pmatlab: could not load shapely, not all functionality is available')
+        pass
 
 
     def polyintersect(x1, x2):
