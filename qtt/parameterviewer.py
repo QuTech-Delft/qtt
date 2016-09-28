@@ -12,8 +12,8 @@ from qtpy.QtCore import Qt
 from qtpy import QtWidgets
 from qtpy import QtGui
 import pyqtgraph
-import math
 from qtt import pmatlab
+from functools import partial
 
 
 class QCodesTimer(threading.Thread):
@@ -31,8 +31,6 @@ class QCodesTimer(threading.Thread):
             logging.debug('QCodesTimer: run!')
             self.fn()
 
-from functools import partial
-
 
 class ParameterViewer(QtWidgets.QTreeWidget):
 
@@ -47,8 +45,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         w.setColumnCount(3)
         header = QtWidgets.QTreeWidgetItem(["Parameter", "Value"])
         w.setHeaderItem(header)
-                        # Another alternative is
-                        # setHeaderLabels(["Tree","First",...])
         w.setWindowTitle(name)
 
         self._instruments = instruments
@@ -90,7 +86,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 v=''
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
                 # qq=self.topLevelItem(0).child(2)
-                # qq=self.topLevelItem(0).child(2)
                 self._itemsdict[iname][g] = A
 
                 if pp[g].has_set:
@@ -106,7 +101,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
     def setSingleStep(self, instrument_name, value):
-        lst = pv._itemsdict[instrument_name]
+        lst = self._itemsdict[instrument_name]
         for p in lst:
             box=lst[p]            
             try:
@@ -115,14 +110,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                     pass
         
     def valueChanged(self, iname, param, value, *args, **kwargs):
-        # print([iname, param, value])
-        # print(args)
-        # print(kwargs)
-
         instr = self._instruments[self._instrumentnames.index(iname)]
         logging.info('set %s.%s to %s' % (iname, param, value))
         instr.set(param, value)
-        # v=self.gates.get(self.name)+self.delta
 
     def updatecallback(self, start=True):
         if self._timer is not None:
@@ -138,8 +128,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     def updatedata(self):
         ''' Update data in viewer using station.snapshow '''
-        # dd = self._station.snapshot()
-        # gates = dd['instruments']['gates']
         # pp = gates['parameters']
         # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
         logging.debug('ParameterViewer: update values')
@@ -188,7 +176,6 @@ def createParameterWidgetRemote(instruments, doexec=True):
 
 def createParameterWidget(instruments, doexec=True):
     instrumentnames = [i.name for i in instruments]
-    # qtt.tools.dumpstring('createUpdateWidget: start')
     app = pyqtgraph.mkQApp()
 
     ms = pmatlab.monitorSizes()[-1]
@@ -207,9 +194,6 @@ def createParameterWidget(instruments, doexec=True):
 
 if __name__ == '__main__':
     import qcodes
-    # station=qcodes.station.Station()
-    # station.add_component(gates)
-    # station.gates=gates
     p = ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
     p.show()
     self = p
