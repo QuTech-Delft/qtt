@@ -45,10 +45,15 @@ class rda_t:
             raise Exception('rda_t: communication failure')
              
     def get_float(self, key, default_value=None):
-        return float(self.get(key, default_value))
+        v=self.get(key, default_value)
+        if v is None:
+            return v
+        return float(v)
     
     def get_int(self, key, default_value=None):
         v=self.get(key, default_value)
+        if v is None:
+            return v
         return int(float(v))
         
     def get(self, key, default_value=None):
