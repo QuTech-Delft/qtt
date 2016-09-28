@@ -36,9 +36,15 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     shared_kwargs = ['station', 'instrumentnames']
 
-    ''' Simple class to show qcodes parameters '''
-
+    
     def __init__(self, instruments, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
+        ''' Simple class to show qcodes parameters
+
+        Arguments:
+            instruments (list): list of Qcodes Instruments to show
+            name (str): string used in the window title
+        
+        '''
         super().__init__(**kwargs)
         w = self
         w.setGeometry(1700, 50, 300, 600)
@@ -101,6 +107,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
     def setSingleStep(self, instrument_name, value):
+        """ Set the default step size for parameters in the viewer """
         lst = self._itemsdict[instrument_name]
         for p in lst:
             box=lst[p]            
@@ -110,6 +117,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                     pass
         
     def valueChanged(self, iname, param, value, *args, **kwargs):
+        """ Callback used to update values in an instrument """
         instr = self._instruments[self._instrumentnames.index(iname)]
         logging.info('set %s.%s to %s' % (iname, param, value))
         instr.set(param, value)
@@ -169,6 +177,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
 
 def createParameterWidgetRemote(instruments, doexec=True):
+    """ Create a parameter widget in a remote process.
+    
+    Note: this can only be used if all the Instruments are remote instruments.
+    """
     p = mp.Process(target=createParameterWidget, args=(instruments,))
     p.start()
     return p
@@ -190,7 +202,7 @@ def createParameterWidget(instruments, doexec=True):
         app.exec()
     return p
 
-#%%
+#%% Debugging code
 
 if __name__ == '__main__':
     import qcodes
@@ -208,4 +220,3 @@ if __name__ == '__main__':
     box.setMaximum(10)
     qq = self.topLevelItem(0).child(2)
     self.setItemWidget(qq, 1, box)
-     # ui->treeWidget->setItemWidget(ui->treeWidget->topLevelItem(2)->child(0) , 1 , _spin_angle);

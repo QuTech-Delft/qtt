@@ -45,18 +45,26 @@ class rda_t:
             raise Exception('rda_t: communication failure')
              
     def get_float(self, key, default_value=None):
+        """ Get value by key and convert to a float """
         v=self.get(key, default_value)
         if v is None:
             return v
         return float(v)
     
     def get_int(self, key, default_value=None):
+        """ Get value by key and convert to an int """
         v=self.get(key, default_value)
         if v is None:
             return v
         return int(float(v))
         
     def get(self, key, default_value=None):
+        """ Get a value 
+        
+        Arugments:
+            key (str): value to be retrieved
+            default_value (Anything): value to return if the key is not present
+        """
         value= self.r.get(key)
         if value is None:
             return default_value
