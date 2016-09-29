@@ -25,6 +25,8 @@ import qtt.live
 
 from qtt.data import *
 
+from qcodes.utils.helpers import tprint
+
 #%%
 
 
@@ -472,7 +474,6 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         pg.mkQApp().processEvents()
 
     station.awg.stop()
-    alldata.write()
 
     dt = qtt.time.time() - t0
 
@@ -487,6 +488,8 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     metadata['dt'] = dt
     metadata['wait_time'] = wait_time
     alldata.metadata = metadata
+    
+    alldata.write()
 
     return alldata
 
