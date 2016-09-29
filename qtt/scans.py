@@ -456,8 +456,6 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
             background = False
 
     alldata = makeDataSet2D(stepvalues, sweepvalues)
-    if 'base_location' in scanjob.keys():
-        alldata.io.base_location = scanjob['base_location']
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
