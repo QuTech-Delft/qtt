@@ -122,7 +122,7 @@ class virtual_awg(Instrument):
             sweep_info[fpga_info[:2]]['waveform'] = np.zeros(wave_len)
             sweep_info[fpga_info[:2]]['marker1'] = np.zeros(wave_len)
             sweep_info[fpga_info[:2]]['marker2'] = np.zeros(wave_len)
-            fpga_mk_name = 'fpga_mk'            
+            fpga_mk_name = 'fpga_mk'
             for g in sweepgates:
                 fpga_mk_name += '_%s' % g
             sweep_info[fpga_info[:2]]['name'] = fpga_mk_name
@@ -160,21 +160,10 @@ class virtual_awg(Instrument):
             self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
                                                        sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
 
-#            if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
-#                self._awgs[sweep[0]].set_sqel_waveform(
-#                    sweep_info[sweep]['name'], sweep[1], 1)
-#                self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
-#                self._awgs[sweep[0]].set_sqel_event_jump_target_index(
-#                    sweep[1], 1)
-#                self._awgs[sweep[0]].set_sqel_event_jump_type(1, 'IND')
-#            else:
-#                self._awgs[sweep[0]].set(
-#                    'ch%i_waveform' % sweep[1], sweep_info[sweep]['name'])
-
         return sweep_info
 
     def sweep_run(self, sweep_info):
-        ''' Activate AWG(s) and channel(s) for the sweep(s) '''       
+        ''' Activate AWG(s) and channel(s) for the sweep(s) '''
         for sweep in sweep_info:
             if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
@@ -186,7 +175,7 @@ class virtual_awg(Instrument):
             else:
                 self._awgs[sweep[0]].set(
                     'ch%i_waveform' % sweep[1], sweep_info[sweep]['name'])
-                    
+
         for sweep in sweep_info:
             self._awgs[sweep[0]].set('ch%i_state' % sweep[1], 1)
 
@@ -204,7 +193,6 @@ class virtual_awg(Instrument):
         wave_raw = (v_wave / 2) * scipy.signal.sawtooth(2 * np.pi * tt / period, width=width)
 
         return wave_raw
-
 
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
@@ -226,10 +214,10 @@ class virtual_awg(Instrument):
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
-        wave = wave_raw/awg_to_plunger
+        wave = wave_raw / awg_to_plunger
         waveform[gate] = dict()
         waveform[gate]['wave'] = wave
-        if wave_name==None:
+        if wave_name == None:
             waveform[gate]['name'] = 'sweep_%s' % gate
         else:
             waveform[gate]['name'] = wave_name
@@ -267,7 +255,7 @@ class virtual_awg(Instrument):
             data_processed = data[begin:]
             data_processed = data_processed[::-1]
 
-        data_processed = np.array(data_processed)/Naverage
+        data_processed = np.array(data_processed) / Naverage
 
         return data_processed
 
@@ -326,21 +314,20 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
 
-
     def sweep_2D_process(self, data, waveform, diff_dir=None):
         ''' Process data from sweep_2D '''
         width_horz = waveform['width_horz']
         width_vert = waveform['width_vert']
-        resolution = waveform['resolution']    
-        
-        # split up the fpga data in chunks of horizontal sweeps        
-        chunks_ch1 = [data[x:x+resolution[0]] for x in range(0, len(data), resolution[0])]
-        chunks_ch1 = [chunks_ch1[i][1:int(width_horz*len(chunks_ch1[i]))] for i in range(0,len(chunks_ch1))]
-        data_processed = chunks_ch1[:int(width_vert*len(chunks_ch1))]
-        
+        resolution = waveform['resolution']
+
+        # split up the fpga data in chunks of horizontal sweeps
+        chunks_ch1 = [data[x:x + resolution[0]] for x in range(0, len(data), resolution[0])]
+        chunks_ch1 = [chunks_ch1[i][1:int(width_horz * len(chunks_ch1[i]))] for i in range(0, len(chunks_ch1))]
+        data_processed = chunks_ch1[:int(width_vert * len(chunks_ch1))]
+
         if diff_dir is not None:
             data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
-        
+
         return data_processed
 
 
@@ -350,10 +337,10 @@ def plot_wave_raw(wave_raw, samplerate=None, station=None):
     if samplerate is None:
         if station is None:
             raise Exception('There is no station')
-        samplerate = 1/station.awg.getattr('AWG_clock')
+        samplerate = 1 / station.awg.getattr('AWG_clock')
     else:
         samplerate = samplerate
-    horz_var = np.arange(0, len(wave_raw)*samplerate, samplerate)
+    horz_var = np.arange(0, len(wave_raw) * samplerate, samplerate)
     x = DataArray(name='time(s)', label='time (s)',
                   preset_data=horz_var, is_setpoint=True)
     y = DataArray(
