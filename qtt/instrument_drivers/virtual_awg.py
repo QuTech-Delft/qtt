@@ -348,3 +348,19 @@ def plot_wave_raw(wave_raw, samplerate=None, station=None):
     plot = QtPlot(x, y)
 
     return plot
+
+def sweep_2D_process(data, waveform, diff_dir=None):
+    ''' Process data from sweep_2D '''
+    width_horz = waveform['width_horz']
+    width_vert = waveform['width_vert']
+    resolution = waveform['resolution']
+
+    # split up the fpga data in chunks of horizontal sweeps
+    chunks_ch1 = [data[x:x + resolution[0]] for x in range(0, len(data), resolution[0])]
+    chunks_ch1 = [chunks_ch1[i][1:int(width_horz * len(chunks_ch1[i]))] for i in range(0, len(chunks_ch1))]
+    data_processed = chunks_ch1[:int(width_vert * len(chunks_ch1))]
+
+    if diff_dir is not None:
+        data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
+
+    return data_processed

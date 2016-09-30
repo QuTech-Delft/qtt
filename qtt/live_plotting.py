@@ -17,6 +17,7 @@ import qtpy.QtCore as QtCore
 import logging
 import scipy.ndimage as ndimage
 import qtt.algorithms.generic
+import qtt
 
 #%% Communication
 
@@ -253,8 +254,7 @@ class fpgaCallback_2d:
         else:
             raise Exception('FPGA channel not well specified')
 
-        im_diff = self.station.awg.sweep_2D_process(
-            data, self.waveform, self.diff_dir)
+        im_diff = qtt.instrument_drivers.virtual_awg.sweep_2D_process(data, self.waveform, self.diff_dir)
 
         if self.smoothing:
             im_diff = qtt.algorithms.generic.smoothImage(im_diff)
