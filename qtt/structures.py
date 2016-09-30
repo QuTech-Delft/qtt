@@ -11,21 +11,21 @@ class sensingdot_t:
 
     """ Class representing a sensing dot """
 
-    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=0, fpga_ch=None):
+    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=None, fpga_ch=None):
         self.verbose = 1
         self.gg = ggv
         self.sdval = sdvalv
-        self.RFfreq = RFfreq
-        self.index = index
-        self.instrument = 'keithley1'
         self.targetvalue = 800
         self.goodpeaks = None
-        if fpga_ch == None:
+        self.station = station
+        self.RFfreq = RFfreq  # ?
+        self.index = index
+        self.instrument = 'keithley%d' % index
+        if fpga_ch is None:
             self.fpga_ch = int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
 
-        self.station = station
         # values for measurement
         # RFfreq = None
         if index is not None:
@@ -116,7 +116,7 @@ class sensingdot_t:
 
     def scan2D(sd, ds=90, stepsize=-4, fig=None):
         """ Make 2D-scan of the sensing dot """
-        keithleyidx = [1]
+        keithleyidx = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
 
@@ -281,7 +281,7 @@ class sensingdot_t:
         sweepvalues = sdplg[initval - sweeprange /
                             2:sweeprange / 2 + initval:sweeprange / len(data)]
 
-        alldata = qtt.data.makeDataSet1D(sweepvalues, preset_data=data)
+        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data)
 
         y = np.array(alldata.arrays['measured'])
         x = alldata.arrays[self.gg[1]]

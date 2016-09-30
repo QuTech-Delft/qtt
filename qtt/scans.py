@@ -25,6 +25,8 @@ import qtt.live
 
 from qtt.data import *
 
+from qcodes.utils.helpers import tprint
+
 #%%
 
 
@@ -387,6 +389,103 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     return alldata
 
+# Causes errors with the IVVI
+def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None):
+    """ Make a 2D scan and create dictionary to store on disk
+
+    Arguments:
+        station (object): contains all data on the measurement station
+        scanjob (dict): data for scan range
+    """
+
+    stepdata = scanjob['stepdata']
+    sweepdata = scanjob['sweepdata']
+    Naverage = scanjob.get('Naverage', 20)
+
+#    logging.info('scan2D: todo: implement compensategates')
+
+    delay = scanjob.get('delay', 0.0)
+    if wait_time is not None:
+        raise Exception('not implemented')
+
+    gates = station.gates
+
+    sweepgate = sweepdata.get('gate', None)
+    sweepparam = getattr(gates, sweepgate)
+
+    stepgate = stepdata.get('gate', None)
+    stepparam = getattr(gates, stepgate)
+
+    def readfunc(waveform):
+        fpga_ch = scanjob['sd'].fpga_ch
+        data_raw = np.array(station.fpga.readFPGA(Naverage=Naverage)[fpga_ch - 1])
+        data = station.awg.sweep_process(data_raw, waveform, Naverage)
+        return data
+
+    sweeprange = (sweepdata['end'] - sweepdata['start'])
+    sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 60)  # FIXME
+    period = scanjob['sweepdata'].get('period', 1e-3)
+    sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
+    stepparam.set(stepdata['start'])
+    sweepparam.set(sweepgate_value)
+    waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
+
+    qtt.time.sleep(2.5)
+
+    data = readfunc(waveform)
+    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+
+    sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
+    stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
+
+    logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
+    logging.info('scan2D: delay %f' % delay)
+
+    t0 = qtt.time.time()
+
+    if background is None:
+        try:
+            gates._server_name
+            background = True
+        except:
+            background = False
+
+    alldata = makeDataSet2D(stepvalues, sweepvalues)
+
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
+    if liveplotwindow is not None:
+        liveplotwindow.clear()
+        liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
+
+    for ix, x in enumerate(stepvalues):
+        tprint('scan2Dfast: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
+        stepvalues.set(x)
+        qtt.time.sleep(delay)
+        alldata.measured.ndarray[ix] = readfunc(waveform)
+        liveplotwindow.update_plot()
+        pg.mkQApp().processEvents()
+
+    station.awg.stop()
+
+    dt = qtt.time.time() - t0
+
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
+
+    metadata = alldata.metadata
+    metadata['scantime'] = str(datetime.datetime.now())
+    metadata['scanjob'] = scanjob
+    metadata['allgatevalues'] = gates.allvalues()
+    metadata['scantime'] = str(datetime.datetime.now())
+    metadata['dt'] = dt
+    metadata['wait_time'] = wait_time
+    alldata.metadata = metadata
+    
+    alldata.write()
+
+    return alldata
+
 #%% Measurement tools
 
 
@@ -463,26 +562,32 @@ if __name__ == '__main__':
     adata = analyseGateSweep(alldataX, fig=10, minthr=None, maxthr=None)
 
 #%%
-from qtt.data import makeDataSet1D, makeDataSet2D
+from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 
 #%%
 
 
-def makeDataset_sweep(data, gates, sweepgate, sweeprange, fig=None):
-    ''' Convert the data of a 1D sweep to a DataSet '''
+def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None):
+    ''' Convert the data of a 1D sweep to a DataSet
 
-    sweepgate = getattr(gates, sweepgate)
-    initval = sweepgate.get()
-    sweepvalues = sweepgate[initval - sweeprange /
-                            2: initval + sweeprange / 2:sweeprange / len(data)]
+    Note: sweepvalues are only an approximation    
 
-    dataset = makeDataSet1D(sweepvalues, preset_data=data)
+    '''
+    if sweepgate_value is None:
+        if gates is not None:
+            sweepgate_param = gates.getattr(sweepgate)
+            sweepgate_value = sweepgate_param.get()
+        else:
+            raise Exception('No gates supplied')
+
+    sweepvalues = np.linspace(sweepgate_value - sweeprange / 2, sweepgate_value + sweeprange / 2, len(data))
+    dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured', y=data)
 
     if fig is None:
-        return dataset
+        return dataset, None
     else:
         plot = MatPlot(dataset.measured, interval=0, num=fig)
-        return plot, dataset
+        return dataset, plot
 
 
 def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
@@ -502,10 +607,10 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
     dataset = makeDataSet2D(sweep_vert, sweep_horz, preset_data=data)
 
     if fig is None:
-        return dataset
+        return dataset, None
     else:
         plot = MatPlot(dataset.measured, interval=0, num=fig)
-        return plot, dataset
+        return dataset, plot
 
 
 #%%

@@ -315,11 +315,11 @@ class image_transform:
         ptx = np.zeros((2, nn))
         # ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
         # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
-        
-        f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted = False, fill_value='extrapolate')
-        ptx[1,:] = f(x[1,:])  # step
-        f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted = False, fill_value='extrapolate')
-        ptx[0,:] = f(x[0,:])  # sweep
+
+        f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
+        ptx[1, :] = f(x[1, :])  # step
+        f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
+        ptx[0, :] = f(x[0, :])  # sweep
 
         return ptx
 
@@ -369,8 +369,8 @@ class image_transform:
         x = ptx
         nn = pt.shape[1]
         ptx = np.zeros((2, nn))
-        ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[2], xx[3]])    # step
-        ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
+        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
+        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
         return ptx
 
 
@@ -395,8 +395,8 @@ def pix2scan(pt, dd2d):
     x = pt
     nn = pt.shape[1]
     ptx = np.zeros((2, nn))
-    ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[3], xx[2]])    # step
-    ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
+    ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
+    ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
     return ptx
 
 #%%
@@ -592,31 +592,49 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
     write_data(path, dataset)
 
 
-def makeDataSet1D(p, mname='measured', location=None, preset_data=None):
+def makeDataSet1Dplain(xname, x, yname, y, location=None):
     ''' Make DataSet with one 1D array and one setpoint array
-    
+
     Arguments:
-        p (array): the setpoint array of data
+        xname (string): the name of the setpoint array
+        x (array): the setpoint data
+        yname (string): the name of the measured array
+        y (array): the measured data
     '''
-    xx = np.array(p)
-    yy = np.ones(xx.size)
-    x = DataArray(name=p.name, array_id=p.name,
-                  label=p.parameter.label, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=mname, array_id=mname, label=mname,
-                  preset_data=yy, set_arrays=(x,))
+    xx = np.array(x)
+    yy = np.array(y)
+    x = DataArray(name=xname, array_id=xname, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=yname, array_id=yname, preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location)
     dd.add_array(x)
     dd.add_array(y)
-    
-    if preset_data is not None:
-        dd.measured.ndarray = np.array(preset_data)
 
     return dd
-    
+
+
+def makeDataSet1D(x, yname='measured', y=None, location=None):
+    ''' Make DataSet with one 1D array and one setpoint array
+
+    Arguments:
+        x (array): the setpoint array of data
+    '''
+    xx = np.array(x)
+    yy = np.ones(xx.size)
+    x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, preset_data=xx, is_setpoint=True)
+    ytmp = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
+    dd = new_data(arrays=(), location=location)
+    dd.add_array(x)
+    dd.add_array(ytmp)
+
+    if y is not None:
+        dd.measured.ndarray = np.array(y)
+
+    return dd
+
 
 def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     ''' Make DataSet with one 2D array and two setpoint arrays 
-    
+
     Arguments:
         p1 (array): first setpoint array of data
         p2 (array): second setpoint array of data
@@ -625,20 +643,17 @@ def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     yy0 = np.array(p2)
     yy = np.tile(yy0, [xx.size, 1])
     zz = np.NaN * np.ones((xx.size, yy0.size))
-    x = DataArray(name=p1.name, array_id=p1.name,
-                  label=p1.parameter.label, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=p2.name,  array_id=p2.name, label=p2.parameter.label,
-                  preset_data=yy, set_arrays=(x,), is_setpoint=True)
-    z = DataArray(name=mname, array_id=mname, label=mname,
-                  preset_data=zz, set_arrays=(x, y))
+    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label, preset_data=yy, set_arrays=(x,), is_setpoint=True)
+    z = DataArray(name=mname, array_id=mname, label=mname, preset_data=zz, set_arrays=(x, y))
     dd = new_data(arrays=(), location=location)
     dd.add_array(z)
     dd.add_array(x)
     dd.add_array(y)
-    
+
     if preset_data is not None:
         dd.measured.ndarray = np.array(preset_data)
-    
+
     return dd
 
 
