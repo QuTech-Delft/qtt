@@ -21,7 +21,10 @@ import qtt
 
 #%% Communication
 
-import redis
+try:
+	import redis
+except:
+	pass
 
 class rda_t:
     
@@ -38,6 +41,7 @@ class rda_t:
                 raise Exception('set not equal to get')
         except Exception as e:
             print(e)
+            print('rda_t: check whether redis is installed and the server is running')	 
             raise Exception('rda_t: communication failure')
              
     def get_float(self, key, default_value=None):

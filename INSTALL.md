@@ -92,7 +92,7 @@ call deactivate eendebakpt
 
 For Windows install Chocolately and then do
 ```
-> choco install redis064
+> choco install redis-64
 > pip install redis
 ```
 For Unix systems follow the instructions of your OS.
