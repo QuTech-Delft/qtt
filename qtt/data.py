@@ -621,10 +621,10 @@ def makeDataSet1D(x, yname='measured', y=None, location=None):
     xx = np.array(x)
     yy = np.ones(xx.size)
     x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
+    ytmp = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location)
     dd.add_array(x)
-    dd.add_array(y)
+    dd.add_array(ytmp)
 
     if y is not None:
         dd.measured.ndarray = np.array(y)

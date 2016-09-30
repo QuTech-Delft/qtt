@@ -281,11 +281,7 @@ class sensingdot_t:
         sweepvalues = sdplg[initval - sweeprange /
                             2:sweeprange / 2 + initval:sweeprange / len(data)]
 
-<<<<<<< 351ec71d6c346302e59204b766a1af4f02c6225a
-        alldata = qtt.data.makeDataSet1D(sweepvalues, preset_data=data)
-=======
         alldata = qtt.data.makeDataSet1D(sweepvalues, y=data)
->>>>>>> Add work on scan2dfast
 
         y = np.array(alldata.arrays['measured'])
         x = alldata.arrays[self.gg[1]]
