@@ -389,7 +389,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     return alldata
 
-
+# Causes errors with the IVVI
 def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None):
     """ Make a 2D scan and create dictionary to store on disk
 

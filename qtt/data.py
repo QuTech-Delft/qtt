@@ -315,19 +315,11 @@ class image_transform:
         ptx = np.zeros((2, nn))
         # ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
         # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
-<<<<<<< 351ec71d6c346302e59204b766a1af4f02c6225a
-        
-        f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted = False, fill_value='extrapolate')
-        ptx[1,:] = f(x[1,:])  # step
-        f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted = False, fill_value='extrapolate')
-        ptx[0,:] = f(x[0,:])  # sweep
-=======
 
         f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
         ptx[1, :] = f(x[1, :])  # step
         f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
         ptx[0, :] = f(x[0, :])  # sweep
->>>>>>> Add work on scan2dfast
 
         return ptx
 
@@ -629,10 +621,10 @@ def makeDataSet1D(x, yname='measured', y=None, location=None):
     xx = np.array(x)
     yy = np.ones(xx.size)
     x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, preset_data=xx, is_setpoint=True)
-    ytmp = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
+    y = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location)
     dd.add_array(x)
-    dd.add_array(ytmp)
+    dd.add_array(y)
 
     if y is not None:
         dd.measured.ndarray = np.array(y)
