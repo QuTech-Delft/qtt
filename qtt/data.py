@@ -317,9 +317,9 @@ class image_transform:
         # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
 
         f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
-        ptx[1, :] = f(x[1, :])  # step
+        ptx[1,:] = f(x[1,:])  # step
         f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
-        ptx[0, :] = f(x[0, :])  # sweep
+        ptx[0,:] = f(x[0,:])  # sweep
 
         return ptx
 
@@ -369,8 +369,8 @@ class image_transform:
         x = ptx
         nn = pt.shape[1]
         ptx = np.zeros((2, nn))
-        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
-        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
+        ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[2], xx[3]])    # step
+        ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
         return ptx
 
 
@@ -395,8 +395,8 @@ def pix2scan(pt, dd2d):
     x = pt
     nn = pt.shape[1]
     ptx = np.zeros((2, nn))
-    ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
-    ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
+    ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[3], xx[2]])    # step
+    ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
     return ptx
 
 #%%

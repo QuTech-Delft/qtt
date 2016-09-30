@@ -12,6 +12,8 @@ import qtt.legacy
 from qtt import pmatlab
 import numpy as np
 import pyqtgraph as pg
+from functools import partial
+
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
 import logging
@@ -22,64 +24,62 @@ import qtt
 #%% Communication
 
 try:
-	import redis
+    import redis
 except:
-	pass
+    pass
+
 
 class rda_t:
-    
+
     def __init__(self):
         """ Class for simple real-time data access """
-        
+
         # we use redis as backend now
-        self.r = redis.Redis(host='127.0.0.1', port=6379) # , password='test')
+        self.r = redis.Redis(host='127.0.0.1', port=6379)  # , password='test')
 
         try:
             self.set('dummy', -1)
-            v=self.get_float('dummy')
-            if (not v==-1):
+            v = self.get_float('dummy')
+            if (not v == -1):
                 raise Exception('set not equal to get')
         except Exception as e:
             print(e)
-            print('rda_t: check whether redis is installed and the server is running')	 
+            print('rda_t: check whether redis is installed and the server is running')
             raise Exception('rda_t: communication failure')
-             
+
     def get_float(self, key, default_value=None):
         """ Get value by key and convert to a float """
-        v=self.get(key, default_value)
+        v = self.get(key, default_value)
         if v is None:
             return v
         return float(v)
-    
+
     def get_int(self, key, default_value=None):
         """ Get value by key and convert to an int """
-        v=self.get(key, default_value)
+        v = self.get(key, default_value)
         if v is None:
             return v
         return int(float(v))
-        
+
     def get(self, key, default_value=None):
-        """ Get a value 
-        
+        """ Get a value
+
         Arugments:
             key (str): value to be retrieved
             default_value (Anything): value to return if the key is not present
         """
-        value= self.r.get(key)
+        value = self.r.get(key)
         if value is None:
             return default_value
         else:
             return value
+
     def set(self, key, value):
         self.r.set(key, value)
         pass
 
 
-from qtt import QtWidgets
-from functools import partial
-
 class RdaControl(QtWidgets.QMainWindow):
-
 
     def __init__(self, name='LivePlot Control', boxes=['xrange', 'yrange', 'nx', 'ny'], **kwargs):
         """ Simple control for real-time data parameters """
@@ -87,56 +87,56 @@ class RdaControl(QtWidgets.QMainWindow):
         w = self
         w.setGeometry(1700, 50, 300, 600)
         w.setWindowTitle(name)
-        vbox=QtWidgets.QVBoxLayout()
-        self.verbose=0
-        
+        vbox = QtWidgets.QVBoxLayout()
+        self.verbose = 0
+
         self.rda = rda_t()
-        self.boxes=boxes
-        self.widgets={}
+        self.boxes = boxes
+        self.widgets = {}
         for ii, b in enumerate(self.boxes):
-            self.widgets[b]={}
-            hbox=QtWidgets.QHBoxLayout()
-            self.widgets[b]['hbox']=hbox
+            self.widgets[b] = {}
+            hbox = QtWidgets.QHBoxLayout()
+            self.widgets[b]['hbox'] = hbox
             tbox = QtWidgets.QLabel(b)
-            self.widgets[b]['tbox']=tbox
+            self.widgets[b]['tbox'] = tbox
             dbox = QtWidgets.QDoubleSpinBox()
             dbox.setKeyboardTracking(False)  # do not emit signals when still editing
 
-            self.widgets[b]['dbox']=dbox
+            self.widgets[b]['dbox'] = dbox
             val = self.rda.get_float(b, 100)
-            
+
             dbox.setMinimum(-10000)
             dbox.setMaximum(10000)
             dbox.setSingleStep(10)
             dbox.setValue(val)
-            #self.widgets[b]=tbox
+            # self.widgets[b]=tbox
             dbox.setValue(100)
             dbox.valueChanged.connect(partial(self.valueChanged, b))
             hbox.addWidget(tbox)
             hbox.addWidget(dbox)
             vbox.addLayout(hbox)
 
-        #w.setLayout(vbox)
-        widget=QtWidgets.QWidget()
+        # w.setLayout(vbox)
+        widget = QtWidgets.QWidget()
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
-        
+
         self.update_values()
-        
+
     def update_values(self):
         for ii, b in enumerate(self.boxes):
-            val=self.rda.get_float(b)
+            val = self.rda.get_float(b)
             if val is None:
                 # default...
-                val=100
-            dbox=self.widgets[b]['dbox']
-            #oldstate = dbox.blockSignals(True)
+                val = 100
+            dbox = self.widgets[b]['dbox']
+            # oldstate = dbox.blockSignals(True)
             dbox.setValue(val)
-            #dbox.blockSignals(oldstate)
+            # dbox.blockSignals(oldstate)
 
     def valueChanged(self, name, value):
         if self.verbose:
-            print('valueChanged: %s %s' %(name, value))
+            print('valueChanged: %s %s' % (name, value))
         self.rda.set(name, value)
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
@@ -197,7 +197,7 @@ class livePlot:
         if len(self.sweepgates) == 1:
             if data is not None:
                 self.data = np.array(data)
-                gate_param = getattr(self.gates,self.sweepgates[0])
+                gate_param = getattr(self.gates, self.sweepgates[0])
                 gateval = gate_param.get_latest()
                 sweepvalues = np.arange(gateval - self.sweepranges[0] / 2, self.sweepranges[
                                         0] / 2 + gateval, self.sweepranges[0] / len(data))
@@ -207,10 +207,10 @@ class livePlot:
         elif len(self.sweepgates) == 2:
             if data is not None:
                 self.img.setImage(data.T)
-                gate_horz = getattr(self.gates,self.sweepgates[0])
+                gate_horz = getattr(self.gates, self.sweepgates[0])
                 value_x = gate_horz.get_latest()
-                value_y=self.gates.get(self.sweepgates[1])
-                gate_vert = getattr(self.gates,self.sweepgates[1])
+                value_y = self.gates.get(self.sweepgates[1])
+                gate_vert = getattr(self.gates, self.sweepgates[1])
                 value_y = gate_vert.get_latest()
                 self.horz_low = value_x - self.sweepranges[0] / 2
                 self.horz_range = self.sweepranges[0]
@@ -251,7 +251,7 @@ class livePlot:
             self.stopreadout()
             dd = None
         time.sleep(0.00001)
-        
+
     def startreadout(self, callback=None, rate=10., maxidx=None):
         if maxidx is not None:
             self.maxidx = maxidx

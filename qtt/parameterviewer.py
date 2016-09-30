@@ -36,14 +36,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     shared_kwargs = ['station', 'instrumentnames']
 
-    
     def __init__(self, instruments, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
         ''' Simple class to show qcodes parameters
 
         Arguments:
             instruments (list): list of Qcodes Instruments to show
             name (str): string used in the window title
-        
+
         '''
         super().__init__(**kwargs)
         w = self
@@ -87,9 +86,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box.setMinimum(-1000)
                 box.setMaximum(1000)
                 box.setSingleStep(5)
-                
+
                 # A = QtGui.QTreeWidgetItem(gatesroot, [g, box])
-                v=''
+                v = ''
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
                 # qq=self.topLevelItem(0).child(2)
                 self._itemsdict[iname][g] = A
@@ -110,12 +109,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         """ Set the default step size for parameters in the viewer """
         lst = self._itemsdict[instrument_name]
         for p in lst:
-            box=lst[p]            
+            box = lst[p]
             try:
                 box.setSingleStep(value)
             except:
                     pass
-        
+
     def valueChanged(self, iname, param, value, *args, **kwargs):
         """ Callback used to update values in an instrument """
         instr = self._instruments[self._instrumentnames.index(iname)]
@@ -178,7 +177,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
 def createParameterWidgetRemote(instruments, doexec=True):
     """ Create a parameter widget in a remote process.
-    
+
     Note: this can only be used if all the Instruments are remote instruments.
     """
     p = mp.Process(target=createParameterWidget, args=(instruments,))

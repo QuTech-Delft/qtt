@@ -390,6 +390,8 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     return alldata
 
 # Causes errors with the IVVI
+
+
 def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None):
     """ Make a 2D scan and create dictionary to store on disk
 
@@ -481,7 +483,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     metadata['dt'] = dt
     metadata['wait_time'] = wait_time
     alldata.metadata = metadata
-    
+
     alldata.write()
 
     return alldata
@@ -570,7 +572,7 @@ from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None):
     ''' Convert the data of a 1D sweep to a DataSet
 
-    Note: sweepvalues are only an approximation    
+    Note: sweepvalues are only an approximation
 
     '''
     if sweepgate_value is None:
