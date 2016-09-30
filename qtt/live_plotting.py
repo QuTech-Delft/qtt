@@ -109,20 +109,19 @@ class RdaControl(QtWidgets.QMainWindow):
             dbox.setMaximum(10000)
             dbox.setSingleStep(10)
             dbox.setValue(val)
-            # self.widgets[b]=tbox
             dbox.setValue(100)
             dbox.valueChanged.connect(partial(self.valueChanged, b))
             hbox.addWidget(tbox)
             hbox.addWidget(dbox)
             vbox.addLayout(hbox)
 
-        # w.setLayout(vbox)
         widget = QtWidgets.QWidget()
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
 
         self.update_values()
-
+        self.show() 
+        
     def update_values(self):
         for ii, b in enumerate(self.boxes):
             val = self.rda.get_float(b)
