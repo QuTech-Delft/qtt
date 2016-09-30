@@ -151,13 +151,9 @@ class BaseDotSystem():
 
             occs1 = occs%1
             
-            m1=np.minimum(occs1[:, :, 0], np.abs(1-occs1[:, :, 0]))
-            m2=np.minimum(occs1[:, :, 0], np.abs(1-occs1[:, :, 0]))
-            m3=np.minimum(occs1[:, :, 0], np.abs(1-occs1[:, :, 0]))
-            delocalizations[1:-1, 1:-1]=m1[1:-1,1:-1]+ m2[1:-1,1:-1] + m3[1:-1,1:-1]
-            #for i in range(1, np.shape(occs)[0]-1):
-            #    for j in range(1, np.shape(occs)[1]-1):
-            #        delocalizations[i, j] = min(occs1[i, j, 0], abs(1-occs1[i, j, 0])) + min(occs1[i, j, 0], abs(1-occs1[i, j, 0])) + min(occs1[i, j, 0], abs(1-occs1[i, j, 0]))
+            for mi in range(occs.shape[2]):
+                m1=np.minimum(occs1[:, :, mi], np.abs(1-occs1[:, :, mi]))
+                delocalizations[1:-1, 1:-1]+=m1[1:-1,1:-1]
 
         else:
             for i in range(1, np.shape(occs)[0]-1):

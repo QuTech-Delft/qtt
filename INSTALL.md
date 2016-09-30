@@ -95,7 +95,15 @@ For Windows install Chocolately and then do
 > choco install redis-64
 > pip install redis
 ```
-For Unix systems follow the instructions of your OS.
+To start the redis server use `redis-server.exe` from the command line.
+There are also packages to install the redis server as a service, see (https://github.com/rgl/redis/downloads).
+
+For Unix systems follow the instructions of your OS. For Ubuntu it is:
+```
+sudo apt-get install redis-server
+sudo apt-get install python3-redis
+```
+
 
 ## Git credentials
 

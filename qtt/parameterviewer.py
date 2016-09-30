@@ -12,8 +12,8 @@ from qtpy.QtCore import Qt
 from qtpy import QtWidgets
 from qtpy import QtGui
 import pyqtgraph
-import math
 from qtt import pmatlab
+from functools import partial
 
 
 class QCodesTimer(threading.Thread):
@@ -31,24 +31,25 @@ class QCodesTimer(threading.Thread):
             logging.debug('QCodesTimer: run!')
             self.fn()
 
-from functools import partial
-
 
 class ParameterViewer(QtWidgets.QTreeWidget):
 
     shared_kwargs = ['station', 'instrumentnames']
 
-    ''' Simple class to show qcodes parameters '''
-
     def __init__(self, instruments, instrumentnames=['gates'], name='QuTech Parameter Viewer', **kwargs):
+        ''' Simple class to show qcodes parameters
+
+        Arguments:
+            instruments (list): list of Qcodes Instruments to show
+            name (str): string used in the window title
+
+        '''
         super().__init__(**kwargs)
         w = self
         w.setGeometry(1700, 50, 300, 600)
         w.setColumnCount(3)
         header = QtWidgets.QTreeWidgetItem(["Parameter", "Value"])
         w.setHeaderItem(header)
-                        # Another alternative is
-                        # setHeaderLabels(["Tree","First",...])
         w.setWindowTitle(name)
 
         self._instruments = instruments
@@ -85,11 +86,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box.setMinimum(-1000)
                 box.setMaximum(1000)
                 box.setSingleStep(5)
-                
+
                 # A = QtGui.QTreeWidgetItem(gatesroot, [g, box])
-                v=''
+                v = ''
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
-                # qq=self.topLevelItem(0).child(2)
                 # qq=self.topLevelItem(0).child(2)
                 self._itemsdict[iname][g] = A
 
@@ -106,23 +106,20 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
     def setSingleStep(self, instrument_name, value):
-        lst = pv._itemsdict[instrument_name]
+        """ Set the default step size for parameters in the viewer """
+        lst = self._itemsdict[instrument_name]
         for p in lst:
-            box=lst[p]            
+            box = lst[p]
             try:
                 box.setSingleStep(value)
             except:
                     pass
-        
-    def valueChanged(self, iname, param, value, *args, **kwargs):
-        # print([iname, param, value])
-        # print(args)
-        # print(kwargs)
 
+    def valueChanged(self, iname, param, value, *args, **kwargs):
+        """ Callback used to update values in an instrument """
         instr = self._instruments[self._instrumentnames.index(iname)]
         logging.info('set %s.%s to %s' % (iname, param, value))
         instr.set(param, value)
-        # v=self.gates.get(self.name)+self.delta
 
     def updatecallback(self, start=True):
         if self._timer is not None:
@@ -138,8 +135,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     def updatedata(self):
         ''' Update data in viewer using station.snapshow '''
-        # dd = self._station.snapshot()
-        # gates = dd['instruments']['gates']
         # pp = gates['parameters']
         # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
         logging.debug('ParameterViewer: update values')
@@ -181,6 +176,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
 
 def createParameterWidgetRemote(instruments, doexec=True):
+    """ Create a parameter widget in a remote process.
+
+    Note: this can only be used if all the Instruments are remote instruments.
+    """
     p = mp.Process(target=createParameterWidget, args=(instruments,))
     p.start()
     return p
@@ -188,7 +187,6 @@ def createParameterWidgetRemote(instruments, doexec=True):
 
 def createParameterWidget(instruments, doexec=True):
     instrumentnames = [i.name for i in instruments]
-    # qtt.tools.dumpstring('createUpdateWidget: start')
     app = pyqtgraph.mkQApp()
 
     ms = pmatlab.monitorSizes()[-1]
@@ -203,13 +201,10 @@ def createParameterWidget(instruments, doexec=True):
         app.exec()
     return p
 
-#%%
+#%% Debugging code
 
 if __name__ == '__main__':
     import qcodes
-    # station=qcodes.station.Station()
-    # station.add_component(gates)
-    # station.gates=gates
     p = ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
     p.show()
     self = p
@@ -224,4 +219,3 @@ if __name__ == '__main__':
     box.setMaximum(10)
     qq = self.topLevelItem(0).child(2)
     self.setItemWidget(qq, 1, box)
-     # ui->treeWidget->setItemWidget(ui->treeWidget->topLevelItem(2)->child(0) , 1 , _spin_angle);
