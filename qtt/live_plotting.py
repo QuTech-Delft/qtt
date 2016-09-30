@@ -126,20 +126,11 @@ class livePlot:
         elif len(self.sweepgates) == 2:
             if data is not None:
                 self.img.setImage(data.T)
-<<<<<<< cd737864d190c6bb838115ca2e6a135a21248123
-                value_x=0; value_y=0
-                try:
-                    value_x=self.gates.get(self.sweepgates[0])
-                    value_y=self.gates.get(self.sweepgates[1])
-                except:
-                        pass
-=======
                 gate_horz = getattr(self.gates,self.sweepgates[0])
                 value_x = gate_horz.get_latest()
                 value_y=self.gates.get(self.sweepgates[1])
                 gate_vert = getattr(self.gates,self.sweepgates[1])
                 value_y = gate_vert.get_latest()
->>>>>>> Fix speed of live_plotting
                 self.horz_low = value_x - self.sweepranges[0] / 2
                 self.horz_range = self.sweepranges[0]
                 self.vert_low = value_y - self.sweepranges[1] / 2
