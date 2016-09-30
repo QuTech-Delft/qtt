@@ -217,7 +217,7 @@ class virtual_awg(Instrument):
         wave = wave_raw / awg_to_plunger
         waveform[gate] = dict()
         waveform[gate]['wave'] = wave
-        if wave_name == None:
+        if wave_name is None:
             waveform[gate]['name'] = 'sweep_%s' % gate
         else:
             waveform[gate]['name'] = wave_name

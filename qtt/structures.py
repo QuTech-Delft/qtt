@@ -116,7 +116,7 @@ class sensingdot_t:
 
     def scan2D(sd, ds=90, stepsize=-4, fig=None):
         """ Make 2D-scan of the sensing dot """
-        keithleyidx = [index]
+        keithleyidx = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
 
