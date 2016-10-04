@@ -125,6 +125,7 @@ class ClassicalDotSystem(BaseDotSystem):
             param_iter = [(paramvalues2D[:, i, j]) for i in range(npointsx) for j in range(npointsy)]
             result = pool.map(self.calculate_ground_state, param_iter)
             self.hcgs = np.reshape(np.array(result), (npointsx, npointsy, self.ndots))
+            pool.terminate()
         else:
             for i in range(npointsx):
                 if verbose:
