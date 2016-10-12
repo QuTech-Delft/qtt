@@ -174,3 +174,22 @@ class DoubleDot(ClassicalDotSystem):
 
         for name in self.varnames:
             setattr(self, name, vardict[name + '_values'])
+
+class SquareDot(ClassicalDotSystem):
+    def __init__(self, name='squaredot', **kwargs):
+        super().__init__(name=name, ndots=4, ngates=4, **kwargs)
+
+        self.makebasis()
+
+        vardict = {}
+
+        vardict["mu0_values"] = np.array([-30.0, -30.0, -30.0, -30.0])
+        vardict["Eadd_values"] = np.array([50.0, 50.0, 50.0, 50.0])
+        vardict["W_values"] = np.array([5.0, 5.0, 2.0, 2.0, 5.0, 5.0])  # order:(1,2), (1,3), (1,4), (2,3), (2,4), (3,4)
+        vardict["alpha_values"] = np.array([[1.0, 0.25, 0.25, 0.1],
+                                            [0.25, 1.0, 0.1, 0.25],
+                                            [0.25, 0.1, 1.0, 0.25],
+                                            [0.1, 0.25, 0.25, 1.0]])
+
+        for name in self.varnames:
+            setattr(self, name, vardict[name + '_values'])
