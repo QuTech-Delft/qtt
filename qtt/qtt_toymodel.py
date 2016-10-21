@@ -514,7 +514,7 @@ class virtual_gates(Instrument):
 
     def allvalues(self):
         """ Return all gate values in a simple dict """
-        vals = [(gate, self.get(gate)) for gate in self._gate_map]
+        vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map) ]
         return dict(vals)
 
     def resetgates(gates, activegates, basevalues=None, verbose=2):

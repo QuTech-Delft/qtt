@@ -308,7 +308,10 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 #    if wait_time == None:
 #        wait_time = getwaittime(sweepdata['gates'][0])
 
+    
     delay = scanjob.get('delay', 0.0)
+    if wait_time is not None:
+        delay = wait_time
 
     # readdevs = ['keithley%d' % x for x in keithleyidx]
 

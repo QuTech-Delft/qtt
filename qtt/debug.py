@@ -27,6 +27,7 @@ def dumpstring(txt, tag='dump'):
 import inspect
 import functools
 import tempfile
+import time
 import datetime
 
 def functioncalldecorator(f, name=None):
@@ -41,9 +42,10 @@ def functioncalldecorator(f, name=None):
     @functools.wraps(f)
     def wrapped(*args, **kwargs):
         dstr = str(datetime.datetime.now())
-        dumpstring( 'function %s: %s' % (name, dstr) + 'function %s: arguments %s, %s' % (name, args, kwargs), tag='functionlog'  )
+        clock = time.perf_counter()
         r = f(*args, **kwargs)
-        dumpstring( 'function %s: output %s\n' % (name, r, ), tag='functionlog'  )
+        ss='function %s: %.6f, %s\n' % (name, clock, dstr) + 'function %s: arguments %s, %s' % (name, args, kwargs)
+        dumpstring( ss+'\n'  + 'function %s: output %s\n' % (name, r, ), tag='functionlog'  )
         #print ('method %s: output %s' % (f, r) )
         return r
     return wrapped
@@ -56,8 +58,17 @@ def logInstrument(instrument):
         p=instrument.parameters[k]        
         if p.has_get:
             print('decorate %s' % p)
-            p.get = functioncalldecorator(p.get)
+            p.get = functioncalldecorator(p.get, '%s.get' % p.name )
         if p.has_get and p.has_set:
             p.set = functioncalldecorator(p.set, '%s.set' % p.name)
             
+#%%
+import time
+if __name__=='__main__':
+    for ii in range(10000):   
+        #print(datetime.dtetime.now())
+        #print( time.time())
+        #print(time.process_time())
+        #print(time.clock())
+        print(time.perf_counter())
             
