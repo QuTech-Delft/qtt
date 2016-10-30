@@ -32,11 +32,10 @@ class sensingdot_t:
             self.valuefunc = station.components[
                 'keithley%d' % index].amplitude.get
 
-    def __repr__(self):
+    def show(self):
         gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
             self.gg[1], str(self.sdval), gates.get(self.gg[1]), self.value(), self.targetvalue)
-        # s='sensingdot_t: %s: %.1f '  % (self.gg[1], self.value() )
         return s
 
     def initialize(self, sdval=None, setPlunger=False):
