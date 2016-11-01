@@ -45,16 +45,31 @@ def extract_data(filename):
     y = np.array([])
     y2 = np.array([])
     y3 = np.array([])
+    ii=0
     with open(filename,"r") as f:
+        
         for line in f.readlines():
-            if line[0] in str(range(10)):
+            ii=ii+1
+            #print('## line %d' %ii)
+            if line[0] in str(list(range(10))):
                 srch = "\t"
                 xapp,yapp,y2app,y3app = line.split(srch)
+                #print('%.1f,%.1f,%.1f,%.1f' % ( float(xapp), float(yapp), float(y2app), float(y3app)) )
                 x = np.append(x,float(xapp))    # corresponds to elapsed time
                 y = np.append(y,float(yapp))    # yellow frequency
                 y2 = np.append(y2,float(y2app)) # gate voltage
+                #print('  y2.shape %s' % (y2.shape, ) )
                 y3 = np.append(y3,float(y3app)) # newfocus frequency --> mostly ignored for the moment    
-    
+            else:
+                pass
+                #print('funny line: |%s|' % line)
+                #print(' |%s|' % line[0])
+            if ii>1900:
+                pass
+                #break
+            
+    #print('shape')
+    #print(y2.shape)
     
     ### need to clean data up in case 'wrong value' was recorded. this can happen with the laser freuqencies if the Wavemeter has got no signal
 
@@ -64,11 +79,14 @@ def extract_data(filename):
     return [x[filter_cond],y[filter_cond],gate_scaling*y2[filter_cond],y3[filter_cond]]
 
 
+#_=extract_data(filename)
+
 # In[4]:
 
 data = list(range(len(files)))
 for i in range(len(files)):
     data[i] = extract_data(files[i])
+    print('data %d: length %s' % (i, data[i][0].shape))
 
 
 # In[5]:
@@ -147,6 +165,16 @@ jumpYellow = yellow[np.append(False, jumpSelect)] - yellow[np.append(jumpSelect,
 jumpRelative = jumpGate / jumpYellow
 
 
+#%% Save data for maarten
+
+xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow) )
+
+               
+np.save('/home/eendebakpt/tmp/jdata.npy', xx)
+
+plt.figure(1); plt.clf()
+plt.plot( xx[0,:], xx[5,:], '.b')
+
 # In[9]:
 
 fig=  plt.figure()
@@ -199,6 +227,20 @@ plt.plot(jumpGate, jumpYellow, 'x')
 ax.set_xlabel('Voltage jump on gate (mV)')
 ax.set_ylabel('Frequency jump on yellow (GHz)')
 plt.title('Correlation between gate and yellow jumps.')
+
+# green points
+
+xx=np.vstack((jumpGate, jumpYellow) )
+
+import pmatlab
+from pmatlab import points_in_polygon
+rr=np.array([[-24.2,7.25],[0.6796,.4297]])
+pmatlab.plotPoints(pmatlab.region2poly(rr), '.-g')
+pp=pmatlab.region2poly(rr)
+idx=points_in_polygon(xx.T, pp.T)==1
+pmatlab.plotPoints(xx[:, idx], '.g')
+
+print('# green: %d' % np.sum(idx==1))
 
 
 # In[11]:
