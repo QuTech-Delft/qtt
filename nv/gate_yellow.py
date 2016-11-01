@@ -3,6 +3,7 @@ to model long sequences efficiently.
 '''
 
 #%%
+import os,sys
 from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,10 +12,11 @@ from keras.layers import Dense, LSTM
 
 import pandas as pd
 import seaborn as sns
+import deeptools
 
 #%%
 print('Generating Data')
-data = np.load('jdata.npy')
+data = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'jdata.npy'))
 data -= data.mean(1)[:, np.newaxis]
 data /= data.std(1)[:, np.newaxis] * 3
 
@@ -22,12 +24,15 @@ xx=data[4:,:].T
 x=data[4,:]
 y=data[5,:]
 
-plt.figure(100); plt.clf()
-plt.plot(x,y, '.b')
-plt.axis('image')
+#plt.figure(100); plt.clf(); plt.plot(x,y, '.b'); plt.axis('image')
+
+#%%
+df=pd.DataFrame(np.vstack( (x,y) ).T, columns=['gate jump', 'yellow jump'])
+plt.figure(300); plt.clf()
+df.plot(kind='scatter', x='gate jump', y=1, ax=plt.gca(), linewidths=0)
 
 #%% Learn clusters
-
+import sklearn
 import sklearn.cluster
 from sklearn.cluster import DBSCAN, Birch
 from sklearn import metrics
@@ -68,9 +73,16 @@ if 0:
 print("Silhouette Coefficient: %0.3f"
       % metrics.silhouette_score(X, labels))
 
-plt.figure(400);
-plt.clf(); plt.jet()
-plt.scatter(X[:,0], X[:,1], c=labels)
+#plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
+
+import matplotlib.cm as cm
+import pmatlab
+
+plt.figure(301); plt.clf(); plt.jet()
+df.plot(kind='scatter', x='gate jump', y=1, ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+
+pmatlab.tilefigs([300,301])
+#plt.figure(400);plt.clf(); plt.jet() ;plt.scatter(X[:,0], X[:,1], c=labels.astype(np.int)+1)
       
 #%% tSNE
 import sklearn
@@ -79,25 +91,184 @@ import sklearn.manifold
 sklearn.manifold.TSNE(n_components=2)
 #, perplexity=30.0, early_exaggeration=4.0, learning_rate=1000.0, n_iter=1000, n_iter_without_progress=30, min_grad_norm=1e-07, metric='euclidean', init='random', verbose=0, random_state=None, method='barnes_hut', angle=0.5)[source]
 
+xxx=data[4:,:].T
+#xxx=data[1:,:].T
+
 import numpy as np
 from sklearn.manifold import TSNE
 #X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
 model = TSNE(n_components=2, random_state=0)
 np.set_printoptions(suppress=True)
-qq=model.fit_transform(xx)
+qq=model.fit_transform(xxx)
 
 plt.figure(400); plt.clf();
-plt.scatter(qq[:,0], qq[:,1])
+plt.scatter(qq[:,0], qq[:,1], c=labels)
+plt.title('t-SNE plot')
+
+
+
+#%% Split into test and train
+
+n=int(data.shape[1]/2)
+
+train_idx = list(range(0, n))
+test_idx = list(range(n, data.shape[1]))
+
+#%% Linear regression like model for jump size prediction
+
+import numpy
+import pandas
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers.embeddings import Embedding
+
+from keras.wrappers.scikit_learn import KerasRegressor
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
+X0 = labels.reshape( (-1,1)) # jump label
+
+encoder = LabelEncoder()
+encoder.fit(labels)
+encoded_X = encoder.transform(X0.flatten())
+# convert integers to dummy variables (i.e. one hot encoded)
+X = np_utils.to_categorical(encoded_X)
+
+def processInput(x):
+    encoded_X = encoder.transform(x.flatten())
+    # convert integers to dummy variables (i.e. one hot encoded)
+    X = np_utils.to_categorical(encoded_X)
+    return X    
+
+Y = data[4:,].T # jump size
+
+model = Sequential()
+nhidden=7
+model.add(Dense(nhidden,input_dim=X.shape[1], init='uniform', activation='linear'))
+#model.add(Embedding(labels.max()+1, nhidden, init='uniform'))
+#model.add(Dense(4,input_dim=X.shape[1], init='uniform', activation='relu'))
+model.add(Dense(2,input_dim=nhidden, init='uniform', activation='linear'))
+#model.compile(loss='mse', optimizer='rmsprop')
+model.compile(loss='mse', optimizer='sgd')
+import keras
+
+#model.compile(loss='mse', optimizer=keras.optimizers.RMSprop(lr=.01))
+
+#model.optimizer.lr.get_value()
+
+seed=7
+np.random.seed(seed)
+
+if 0:
+    estimator = KerasRegressor(build_fn=model, nb_epoch=100, batch_size=5, verbose=1)
+    
+    kfold = KFold(n_splits=10, random_state=seed)
+    results = cross_val_score(estimator, X, Y, cv=kfold)
+    print("Results: %.2f (%.2f) MSE" % (results.mean(), results.std()))
 
 #%%
-X=data[4:,np.newaxis,:].T
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import LabelEncoder
+from sklearn.pipeline import Pipeline
+from keras.utils import np_utils
 
-m = Sequential()
-m.add(LSTM(5, input_dim=X.shape[1], return_sequences=True))
-m.add(LSTM(5, return_sequences=True))
-m.compile(loss='mse', optimizer='adam')
-m.fit(X, X)
 
+import keras as K
+
+class BinaryEmbedding(Dense):
+    def build(self, input_shape):
+        super(BinaryEmbedding, self).build(input_shape)
+        self.trainable_weights = [self.W]
+
+    def call(self, x, mask=None):
+        return self.activation(K.dot(x, self.W))
+        
+
+#%%
+if 0:
+    max_features=8
+    model = Sequential()
+    model.add(Embedding(max_features, 128, dropout=0.2))
+    model.add(Dense(18, input_dim=1 ))  # try using a GRU instead, for fun
+#model.add(LSTM(128, dropout_W=0.2, dropout_U=0.2))  # try using a GRU instead, for fun
+
+#%%
+X0_train=X0[train_idx,:]
+X_train=X[train_idx,:]
+#X_train=X_train-X_train.mean(0)
+Y_train=Y[train_idx,:]
+
+#Y_train=np.hstack( (2*X_train, -Y_train[:,0:1] ) )
+
+epochs=40
+loss = []
+print('Training')
+for i in range(epochs):
+    print('Epoch', i, '/', epochs)
+    l = model.fit(X_train,
+                  Y_train,
+                  batch_size=batch_size,
+                  verbose=1,
+                  nb_epoch=5,
+                  shuffle=False)
+    model.reset_states()
+    loss.append(l.history['loss'][-1])
+    
+#%%
+def plotLoss(loss):
+    plt.figure(10); plt.clf()
+    plt.plot(loss, '.b')    
+    
+plotLoss(loss)
+#for j in range(5):
+#    model.fit(X_train, Y_train, nb_epoch=30, batch_size=batch_size, verbose=1)
+
+#%% Todo: 
+#
+# - scatter plot of predicted errors (with colors for each class)
+# - add more input to the model
+# - restructure
+# - learn probability of next jump (bayes)
+
+
+#%%
+sc=model.evaluate(X, Y)
+
+
+qq=np.unique(X0); cl=processInput(qq)
+cc=model.predict(cl)
+print(cc)
+
+plt.figure(301); plt.clf(); plt.jet()
+df.plot(kind='scatter', x='gate jump', y=1, ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+
+plt.plot(cc[:,0], cc[:,1], '.k', linewidth=5 )
+
+for i,c in enumerate(cc):
+    pmatlab.plotLabels(c.reshape( (-1,1) ), '%d: %s' % (i, c) )
+
+# plot centers
+for i in [0,1,2,3,4]:
+    ii=(X0_train==i).flatten()
+    cc=Y_train[ii,:].mean(0).reshape( (-1,1))
+    #plt.plot(Y_train[ii,0], Y_train[ii,1], '.', linewidth=5 )
+    pmatlab.plotPoints(cc, '.k')
+    pmatlab.plotLabels(cc, i)
+    
+
+#%% Test a LSTM approach to predicting jumps
+
+if 0:
+    X=data[4:,np.newaxis,:].T
+    
+    m = Sequential()
+    m.add(LSTM(5, input_dim=X.shape[1], return_sequences=True))
+    m.add(LSTM(5, return_sequences=True))
+    m.compile(loss='mse', optimizer='adam')
+    m.fit(X, X)
+    
 #%%
 
 from keras.utils.visualize_util import plot
@@ -114,12 +285,12 @@ epochs = 250
 #%%
 jump_size = np.sqrt(np.sum(data[-2:, :]**2, 0))
 
-data = data[:, jump_size > 0.25]
-data = data[:, :-2]
-time = data[0, :]
+datax = data[:, jump_size > 0.25]
+datax = datax[:, :]
+time = datax[0, :]
 
-X_data = data.T[:-1, np.newaxis, 4:]
-Y_data = data.T[1:, 4:]
+X_data = datax.T[:-1, np.newaxis, 4:]
+Y_data = datax.T[1:, 4:]
 
 print('Input shape:', X_data.shape)
 
@@ -142,7 +313,7 @@ model.compile(loss='mse', optimizer='rmsprop')
 
 #%%
 
-epochs=400
+epochs=40
 loss = []
 print('Training')
 for i in range(epochs):
