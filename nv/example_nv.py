@@ -169,11 +169,12 @@ jumpRelative = jumpGate / jumpYellow
 
 xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow) )
 
-               
-np.save('/home/eendebakpt/tmp/jdata.npy', xx)
+if 0:                 
+    # save data
+    np.save('/home/eendebakpt/tmp/jdata.npy', xx)
 
-plt.figure(1); plt.clf()
-plt.plot( xx[0,:], xx[5,:], '.b')
+    plt.figure(1); plt.clf()
+    plt.plot( xx[0,:], xx[5,:], '.b')
 
 # In[9]:
 

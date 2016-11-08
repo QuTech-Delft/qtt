@@ -5,18 +5,11 @@ Created on Thu Nov  3 11:16:29 2016
 @author: eendebakpt
 """
 
-'''Example script to generate text from Nietzsche's writings.
-
-At least 20 epochs are required before the generated text
-starts sounding coherent.
-
-It is recommended to run this script on GPU, as recurrent
-networks are quite computationally intensive.
-
-If you try this script on new data, make sure your corpus
-has at least ~100k characters. ~1M is better.
-'''
-#from __future__ import print_function
+# TODO: clean up code
+# TODO: get rid of the `zero cluster`
+# 2-grams without the zero cluster
+# Auxilirary variable: last big step as input for machine learning
+# Why does the learning not converge?
 
 #%% Load packages
 from keras.models import Sequential
@@ -27,6 +20,8 @@ from keras.utils.data_utils import get_file
 import numpy as np
 import random
 import sys
+from theano import tensor as T
+
 
 import numpy
 from keras.models import Sequential
@@ -35,11 +30,138 @@ from keras.layers import LSTM
 from keras.utils import np_utils
 
 
-labels=np.load('labels.npy')
+labels = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy')).T
+#labels=np.load('labels.npy')
 text=labels
 print('corpus length:', len(labels))
 
 #%%
+
+#%% Naive
+#
+# make histogram
+
+textX=[char_indices[c] for c in text]
+
+bc=np.bincount(textX)
+prob=bc/bc.sum()
+
+def fmt(x, ndigits=3):
+    v=[('%%.%df' % ndigits) % p for p in x]
+    return ', '.join(v)
+
+print('probability of each of the classes: %s' % fmt(prob))
+
+import keras.backend as K
+
+def avg_steps(y_true, y_pred, verbose=0):
+    A=0.
+    for i, g in enumerate(y_true):
+       v=y_pred[i]
+       idx=np.argsort(v)[::-1]
+       j = int((idx==g).nonzero()[0])
+       A += j+1
+
+       if verbose:
+           print('i %d: gt %d: %d' % (i,g, j))
+    if verbose:
+       print('A: %.3f' % A)
+    A /= len(y_true)
+    return A
+
+def avg_steps2(y_true, y_pred):
+    A=0.
+    for i, g in enumerate(y_true): # loop over the predictions
+       v=y_pred[i]
+       idx=np.argsort(v)[::-1]
+       j = int((idx==g).nonzero()[0])
+       A += j+1
+    A /= len(y_true)
+    return A
+
+from theano import tensor as T
+
+
+def avg_steps3(y_true, y_pred):
+    # dummy code!
+    return K.in_top_k(y_pred, y_true, k=3)
+    
+n=len(labels)
+lx=encoder.transform(labels)
+y_pred=np.tile( prob, (n, 1))
+av1=avg_steps(lx, y_pred)    
+print('  avg number of steps: %.3f' % av1)
+
+
+if 0:
+    y_true = np.array( [0,0,1, 1, 2] )
+    y_pred = np.array( [ [ .9, .1, 0], [.95, 0, .05], [0, .7, .3], [0, .9, .1], [0, .55, .45] ] )
+    qq = avg_steps(y_true, y_pred)    
+    print('  avg number of steps: %.3f' % qq)
+  
+#%%
+  if 0:
+    from theano import tensor as T
+    predictions=y_pred
+    k=3
+    targets = y_true
+    #targets= list(y_true)
+    
+    def equal(x, y):
+        return T.eq(x, y)
+    def any(x, axis=None, keepdims=False):
+        '''Bitwise reduction (logical OR).
+        '''
+        return T.any(x, axis=axis, keepdims=keepdims)   
+        
+    predictions_top_k = T.argsort(predictions)[:, -k:]
+    result, _ = theano.map(lambda prediction, target: any(equal(prediction, target)), sequences=[predictions_top_k, targets])
+   
+# accuracy = T.mean(T.any(T.eq(T.argsort(predictions, axis=1)[:, -k:], targets.dimshuffle(0, 'x')), axis=1), dtype=theano.config.floatX)
+
+#%% 2-grams
+alphabet=ll
+
+def two_grams(alphabet, textX, normalize=True):
+    gg=np.zeros( ( len(alphabet), len(alphabet) ), dtype=float)
+    for i in range(len(textX)-1):
+        ix=textX[i]
+        iy=textX[i+1]
+        gg[iy, ix]+=1
+
+    if normalize:        
+        for j in range(gg.shape[1]):
+            gg[:,j]=gg[:,j] / gg[:,j].sum()
+
+    return gg
+    
+gg=two_grams(alphabet, textX)
+
+#gg /= (len(text)-1 )    
+plt.figure(100); plt.clf()
+plt.imshow(gg, interpolation='nearest')
+plt.axis('image')
+plt.colorbar()
+plt.xlabel('Class label')
+plt.ylabel('Next')
+    
+plt.xticks(range(len(alphabet)), alphabet)    
+plt.yticks(range(len(alphabet)), alphabet)    
+
+pmatlab.tilefigs([100])
+
+y_pred2 = np.vstack( (prob, gg[:, lx[:-1]].T ) )
+#y_pred2 = np.vstack( (prob, gg[:, lx[1:]].T ) )
+y_pred=np.tile( prob, (n, 1))
+
+_=avg_steps(lx, y_pred, verbose=1)    
+av2=avg_steps(lx, y_pred2, verbose=1)    
+print('  avg number of steps (1-grams): %.5f' % av1)
+print('  avg number of steps (2-grams): %.5f' % av2)
+
+
+
+#%%  Sequences
 chars = sorted(list(set(labels)))
 print('total chars:', len(chars))
 char_indices = dict((c, i) for i, c in enumerate(chars))
@@ -64,19 +186,42 @@ for i, sentence in enumerate(sentences):
     y[i, char_indices[next_chars[i]]] = 1
 
 #%%
+import keras.backend as K
+
+def top_k_categorical_accuracy(y_true, y_pred, k=3):
+    return K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), k))
+
+def top_k_categorical_accuracy_loss(y_true, y_pred, k=3):
+    return 10-K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), k))
+
+def avg_step_loss(y_true, y_pred):
+    q1=K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), 1))
+    q2=K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), 2))
+    q3=K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), 3))
+    q4=K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), 4))
+
+    return 5 - (q1+q2+q3+q4)
+#    return 10-K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), k))
+
+#avg_step_loss= top_k_categorical_accuracy_loss
 
 # build the model: a single LSTM
 print('Build model...')
 model = Sequential(name='dummy')
 model.add(LSTM(10, input_shape=(maxlen,  len(chars))))
 #model.add(LSTM(10, input_shape=(maxlen, len(chars))))
-model.add(LSTM(10))
+#model.add(LSTM(10))
 #model.add(LSTM(10, input_shape=(maxlen, 10)))
 model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
 
-optimizer = RMSprop(lr=0.01)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+import keras
+optimizer = RMSprop(lr=0.02)
+optimizer=keras.optimizers.SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
+optimizer=keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+
+model.compile(loss=avg_step_loss, optimizer=optimizer, metrics=['accuracy', avg_step_loss])
+#model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', top_k_categorical_accuracy])
 
 
 def sample(preds, temperature=1.0):
@@ -90,22 +235,73 @@ def sample(preds, temperature=1.0):
 
 # train the model, output generated text after each iteration
 trainer=Trainer(model, X, y)
-trainer.train()
+trainer.train(epochs=10)
 trainer.plotLoss(fig=10)
 
-#%% Naive
-#
-# make histogram
 
-textX=[char_indices[c] for c in text]
+y_pred=model.predict(X)
+y_true=y.argmax(axis=1)
+av=avg_steps(y_true, y_pred)    
+print('  avg number of steps: %.5f' % av)
 
-bc=np.bincount(textX)
-prob=bc/bc.sum()
+#%% Distraction
 
-def fmt(x):
-    v=['%.2f' % p for p in x]
-    return ', '.join(v)
+def sample(preds, temperature=1.0):
+    # helper function to sample an index from a probability array
+    preds = np.asarray(preds).astype('float64')
+    preds = np.log(preds) / temperature
+    exp_preds = np.exp(preds)
+    preds = exp_preds / np.sum(exp_preds)
+    probas = np.random.multinomial(1, preds, 1)
+    return np.argmax(probas)
 
+pred=y_pred[10]    
+sample(pred, 1)
+
+#%% Distraction 2
+
+qq=lx[lx>1]
+print(qq)
+gg=two_grams(alphabet, qq, normalize=False)
+
+plt.figure(1)
+plt.clf()
+plt.imshow(gg, interpolation='nearest'); plt.axis('image')
+plt.colorbar()
+#plt.plot(qq, '.b')
+
+plt.xticks(range(len(alphabet)), alphabet)    
+plt.yticks(range(len(alphabet)), alphabet)    
+
+    
+#%%
+y_true=y
+y_pred=model.predict(X)
+k=3
+q=K.mean(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), k) )
+print(q.eval())
+q=(K.in_top_k(y_pred, K.argmax(y_true, axis=-1), k) ).eval()
+print(q)
+
+
+#%%
+dataX, dataY = create_dataset(textX, look_back=4)
+
+#processInput(x)
+X = np_utils.to_categorical(dataX.flatten())
+X=X.reshape( (-1, 4, 6))
+
+y_predD= model.predict(X)
+
+encoder.transform( dataX[2] )
+
+avD=avg_steps(dataY, y_predD)    
+print('  avg number of steps: %.3f' % av1)
+print('  avg number of steps 2-grams: %.3f' % av2)
+print('  avg number of steps char enc: %.3f' % avD)
+
+
+  
 #%%
 
 # Naive LSTM to learn one-char to one-char mapping
@@ -150,7 +346,7 @@ else:
 #%%
 import numpy
 
-# convert an array of values into a dataset matrix
+# convert a sequence of values into a dataset matrix
 def create_dataset(dataset, look_back=1):
 	if len(np.array(dataset).shape)==1:
 		dataset=np.array(dataset).reshape( (-1,1))
@@ -163,35 +359,13 @@ def create_dataset(dataset, look_back=1):
 	return numpy.array(dataX), numpy.array(dataY)
  
  
-dataX, dataY = create_dataset(textX, look_back=1)
+dataX, dataY = create_dataset(textX, look_back=4)
 
 X = numpy.reshape(dataX, (len(dataX), seq_length, 1))
 # normalize
 X = X / float(len(alphabet))
     
 y = np_utils.to_categorical(dataY)
-
-#%% 2-grams
-alphabet=set(text)
-gg=np.zeros( ( len(alphabet), len(alphabet) ), dtype=float)
-for i in range(len(textX)-1):
-    ix=textX[i]
-    iy=textX[i+1]
-    gg[iy, ix]+=1
-    
-for j in range(gg.shape[1]):
-    gg[:,j]=gg[:,j] / gg[:,j].sum()
-
-#gg /= (len(text)-1 )    
-plt.figure(100); plt.clf()
-plt.imshow(gg, interpolation='nearest')
-plt.axis('image')
-plt.colorbar()
-plt.xlabel('Class label')
-plt.ylabel('Next')
-    
-plt.xticks(range(len(alphabet)), alphabet)    
-plt.yticks(range(len(alphabet)), alphabet)    
 
  #%%
 if 0:    
@@ -243,7 +417,7 @@ for start_index in range(10,211,30):
     print('predicted:       %s' % fmt(preds) )
     print('true: %s' %  sentenceF )
 
-import keras as K
+import keras.backend as K
 
 
 y_true=y

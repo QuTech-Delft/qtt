@@ -137,7 +137,7 @@ def showModel(model, fig=10):
     plt.title('Model %s' % model.name)
 
 
-def showTSNE(X, fig=400):
+def showTSNE(X, labels=None, fig=400):
     sklearn.manifold.TSNE(n_components=2)
         
     #X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
@@ -146,7 +146,10 @@ def showTSNE(X, fig=400):
     qq=model.fit_transform(X)
     
     plt.figure(fig); plt.clf();
-    plt.scatter(qq[:,0], qq[:,1], c=labels)
+    if labels is None:
+        plt.scatter(qq[:,0], qq[:,1])
+    else:
+        plt.scatter(qq[:,0], qq[:,1], c=labels)
     plt.title('t-SNE plot')
 
 
