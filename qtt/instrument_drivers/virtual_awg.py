@@ -228,7 +228,28 @@ class virtual_awg(Instrument):
         waveform['samplerate'] = 1 / self.AWG_clock
 
         return waveform, sweep_info
+        
+    def sweep_gate_virt(self, gate_comb, sweeprange, period, width=.95, delete=True):
+        ''' Send a sawtooth signal with the AWG to a linear combination of 
+        gates to sweep. Also send a marker to the FPGA.
+        '''
+        waveform = dict()
+        for g in gate_comb.keys():
+            wave_raw = self.make_sawtooth(sweeprange, period, width)
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw*gate_comb[g] / awg_to_plunger
+            waveform[g] = dict()
+            waveform[g]['wave'] = wave
+            waveform[g]['name'] = 'sweep_%s' % g
 
+        sweep_info = self.sweep_init(waveform, delete)
+        self.sweep_run(sweep_info)
+        waveform['width'] = width
+        waveform['sweeprange'] = sweeprange
+        waveform['samplerate'] = 1 / self.AWG_clock
+
+        return waveform, sweep_info
+        
     def sweep_process(self, data, waveform, Naverage, direction='forwards'):
         '''Process the data returned by reading out based on the shape of
         the sawtooth send with the AWG.
@@ -284,7 +305,7 @@ class virtual_awg(Instrument):
         waveform[sweepgates[0]]['name'] = 'sweep_2D_horz_%s' % sweepgates[0]
 
         # vertical waveform
-        wave_vert_raw = self.make_sawtooth(sweepranges[0], period_vert)
+        wave_vert_raw = self.make_sawtooth(sweepranges[1], period_vert)
         awg_to_plunger_vert = self.hardware.parameters[
             'awg_to_%s' % sweepgates[1]].get()
         wave_vert = wave_vert_raw / awg_to_plunger_vert
@@ -313,6 +334,57 @@ class virtual_awg(Instrument):
         waveform['samplerate'] = 1 / self.AWG_clock
 
         return waveform, sweep_info
+
+    def sweep_2D_virt(self, fpga_samp_freq, gates_horz, gates_vert, sweepranges, resolution, delete=True):
+        ''' Send sawtooth signals to the linear combinations of gates set by
+        gates_horz and gates_vert which effectively do a 2D scan of two virtual
+        gates.
+        '''
+        if resolution[0] * resolution[1] > self.maxdatapts:
+            raise Exception('resolution is set higher than FPGA memory allows')
+
+        samp_freq = fpga_samp_freq
+
+        error_corr = resolution[0] * self.corr
+        period_horz = resolution[0] / samp_freq + error_corr
+        period_vert = resolution[1] * period_horz
+        
+        waveform = dict()
+        # horizontal virtual gate
+        for g in gates_horz.keys():
+            wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[0])
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw*gates_horz[g] / awg_to_plunger
+            waveform[g] = dict()
+            waveform[g]['wave'] = wave
+            waveform[g]['name'] = 'sweep_2D_virt_%s' % g
+            
+        # vertical virtual gate
+        for g in gates_vert.keys():
+            wave_raw = self.make_sawtooth(sweepranges[1], period_vert)
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw*gates_vert[g] / awg_to_plunger
+            if g in waveform.keys():
+                waveform[g]['wave'] = waveform[g]['wave'] + wave
+            else:
+                waveform[g] = dict()
+                waveform[g]['wave'] = wave
+                waveform[g]['name'] = 'sweep_2D_virt_%s' % g
+        
+        #TODO: Implement compensation of sensing dot plunger        
+        
+        sweep_info = self.sweep_init(waveform, delete)
+        self.sweep_run(sweep_info)
+        
+        waveform['width_horz'] = .95
+        waveform['sweeprange_horz'] = sweepranges[0]
+        waveform['width_vert'] = .95
+        waveform['sweeprange_vert'] = sweepranges[1]
+        waveform['resolution'] = resolution
+        waveform['samplerate'] = 1 / self.AWG_clock
+        
+        return waveform, sweep_info
+        
 
     def sweep_2D_process(self, data, waveform, diff_dir=None):
         ''' Process data from sweep_2D '''

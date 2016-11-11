@@ -370,13 +370,12 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
+
     alldata.metadata['scanjob'] = scanjob
-    if 1:
-        metadata = alldata.metadata
-        metadata['allgatevalues'] = gates.allvalues()
-        metadata['scantime'] = str(datetime.datetime.now())
-        metadata['dt'] = dt
+    alldata.metadata['allgatevalues'] = gates.allvalues()
+    alldata.metadata['scantime'] = str(datetime.datetime.now())
+    alldata.metadata['dt'] = dt
+    alldata.metadata['wait_time'] = wait_time
 
     if 0:
         # FIXME...
@@ -389,13 +388,19 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         alldata['gatevalues']['T'] = get_gate('T')
         # basename='%s-sweep-2d-%s' % (idstr, 'x-%s-%s' % (gg[0], gg[2]) )
         # save(os.path.join(xdir, basename +'.pickle'), alldata )
+        
+    # save the dataset to disk
+    name = '_'.join(sai.array_id for sai in alldata.measured.set_arrays)
+    alldata.location = alldata.location_provider(alldata.default_io, record={'name': name})
+    alldata.write()
+
 
     return alldata
 
 # Causes errors with the IVVI
 
 
-def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None):
+def scan2Dfast(station, scanjob, liveplotwindow=None, diff_dir=None, wait_time=None, background=None):
     """ Make a 2D scan and create dictionary to store on disk
 
     Arguments:
@@ -407,7 +412,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
 
-#    logging.info('scan2D: todo: implement compensategates')
+#    logging.info('scan2D: todo: implement compensategates for sensing dot compensation')
 
     delay = scanjob.get('delay', 0.0)
     if wait_time is not None:
@@ -421,23 +426,43 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     stepgate = stepdata.get('gate', None)
     stepparam = getattr(gates, stepgate)
 
-    def readfunc(waveform):
+    def readfunc(waveform, Naverage):
         fpga_ch = scanjob['sd'].fpga_ch
-        data_raw = np.array(station.fpga.readFPGA(Naverage=Naverage)[fpga_ch - 1])
+        ReadDevice = ['FPGA_ch%d' % fpga_ch]
+        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
         data = station.awg.sweep_process(data_raw, waveform, Naverage)
         return data
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
-    sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 60)  # FIXME
+#    sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 60)  # FIXME
     period = scanjob['sweepdata'].get('period', 1e-3)
     sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
-    stepparam.set(stepdata['start'])
-    sweepparam.set(sweepgate_value)
-    waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
+    
+    
+#    if 'gates_vert' in scanjob.keys():
+#        steprange = (stepdata['end']-stepdata['start'])
+#        for g in scanjob['gates_vert']:
+#            gates.set(g,gates.get(g)+scanjob['gates_vert'][g]*steprange/2)
+#    else:
+#        stepparam.set(stepdata['start'])
+    
+    if 'gates_vert' in scanjob.keys():
+        scanjob['gates_vert_init'] = {}
+        for g in scanjob['gates_vert']:
+            gates.set(g,gates.get(g)+(stepdata['start']-stepdata['end'])*scanjob['gates_vert'][g]/2)
+            scanjob['gates_vert_init'][g] = gates.get(g)
+    else:
+        stepparam.set(stepdata['start'])
+        sweepparam.set(sweepgate_value)
+    
+    if 'gates_horz' in scanjob.keys():
+        waveform, sweep_info = station.awg.sweep_gate_virt(scanjob['gates_horz'], sweeprange, period)
+    else:
+        waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
 
     qtt.time.sleep(2.5)
 
-    data = readfunc(waveform)
+    data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
 
     sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
@@ -465,10 +490,16 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     for ix, x in enumerate(stepvalues):
         tprint('scan2Dfast: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
-        stepvalues.set(x)
+        if 'gates_vert' in scanjob.keys():
+            for g in scanjob['gates_vert']:
+                gates.set(g,scanjob['gates_vert_init'][g]+ix*stepdata['step']*scanjob['gates_vert'][g])
+        else:
+            stepvalues.set(x)
         qtt.time.sleep(delay)
-        alldata.measured.ndarray[ix] = readfunc(waveform)
+        alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
         liveplotwindow.update_plot()
+        liveplotwindow.fig.axes[0].autoscale(tight=True)
+        liveplotwindow.fig.axes[1].autoscale(tight=True)
         pg.mkQApp().processEvents()
 
     station.awg.stop()
@@ -477,16 +508,26 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
+        
+    if diff_dir is not None:
+        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        name = 'diff_dir_%s' % diff_dir
+        data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
+        alldata.add_array(data_arr)
+        plot = MatPlot(interval=0)
+        plot.add(alldata.arrays[name])
+        plot.fig.axes[0].autoscale(tight=True)
+        plot.fig.axes[1].autoscale(tight=True)
 
-    metadata = alldata.metadata
-    metadata['scantime'] = str(datetime.datetime.now())
-    metadata['scanjob'] = scanjob
-    metadata['allgatevalues'] = gates.allvalues()
-    metadata['scantime'] = str(datetime.datetime.now())
-    metadata['dt'] = dt
-    metadata['wait_time'] = wait_time
-    alldata.metadata = metadata
+    alldata.metadata['scanjob'] = scanjob
+    alldata.metadata['allgatevalues'] = gates.allvalues()
+    alldata.metadata['scantime'] = str(datetime.datetime.now())
+    alldata.metadata['dt'] = dt
+    alldata.metadata['wait_time'] = wait_time
 
+    # save the dataset to disk
+    name = '_'.join(sai.array_id for sai in alldata.measured.set_arrays)
+    alldata.location = alldata.location_provider(alldata.default_io, record={'name': name})
     alldata.write()
 
     return alldata
