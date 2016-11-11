@@ -100,8 +100,12 @@ class sensingdot_t:
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
-        wait_time = sd.station.gate_settle(gg[1])
+        if hasattr(sd.station,'gate_settle'):
+            wait_time = sd.station.gate_settle(gg[1])
+        else:
+            wait_time = 1.5 #FIXME
         wait_time = np.minimum(wait_time, max_wait_time)
+        
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
