@@ -22,8 +22,8 @@ if __name__=='__main__':
 import qcodes
 import qcodes as qc
 import matplotlib
-if __name__=='__main__':
-    matplotlib.use('Qt4Agg')
+#if __name__=='__main__':
+#    matplotlib.use('Qt4Agg')
 
 import qtt
 import qtt.scans

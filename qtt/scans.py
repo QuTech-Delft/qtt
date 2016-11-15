@@ -614,6 +614,8 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
     if fig is None:
         return dataset, None
     else:
+        if fig is not None:
+            plt.figure(fig).clear()        
         plot = MatPlot(dataset.measured, interval=0, num=fig)
         return dataset, plot
 

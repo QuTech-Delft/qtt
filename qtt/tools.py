@@ -556,6 +556,10 @@ def reshape_metadata(dataset, printformat='dict'):
     Returns:
         metadata (string): the reshaped metadata
     '''
+    
+    if not 'station' in dataset.metadata:
+        return 'dataset %s: no metadata available' % (str(dataset.location), )
+
     all_md = dataset.metadata['station']['instruments']
     metadata = dict()
     
@@ -613,7 +617,7 @@ def setupMeasurementWindows(station, ilist=None):
     w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
     w.updatecallback()
 
-    plotQ = QtPlot(windowtitle='Live plot', interval=.5)
+    plotQ = QtPlot(window_title='Live plot', interval=.5)
     plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
     plotQ.update()
 

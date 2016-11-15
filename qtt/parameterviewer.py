@@ -83,7 +83,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 # ww=['gates', g]
                 si = min(sys.getswitchinterval(), 0.1)  # hack to make this semi thread-safe
                 sys.setswitchinterval(100)  # hack to make this semi thread-safe
-                value = pp[g].get()
+                #value = pp[g].get()
                 sys.setswitchinterval(si)  # hack to make this semi thread-safe
                 box = QtWidgets.QDoubleSpinBox()
                 box.setKeyboardTracking(False)  # do not emit signals when still editing
