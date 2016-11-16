@@ -1482,7 +1482,7 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
     samplesize=[int(imx.shape[1]*istep/istepmodel), int(imx.shape[0]*istep/istepmodel)]
 
     LW=2 # [mV]
-    LL=5 # [mV]
+    LL=15 # [mV]
     
     H=costFunctionLine.scaling0.copy()
     H[0,0]=istep/istepmodel
@@ -1505,8 +1505,8 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
             print('costFunctionLine: sample line patch: lowv %.1f, highv %.1f' % (lowv, highv))
             #print(px)
     linepatch=lowv+np.zeros( (samplesize[1], samplesize[0] )  )  
-    lineSegment(linepatch, pm, theta=pp[2], w=LW/istepmodel, l=LL/istepmodel, H=highv-lowv, ml=-6/istepmodel)
-    dd=patch-linepatch
+    lineseg = lineSegment(linepatch, pm, theta=pp[2], w=LW/istepmodel, l=LL/istepmodel, H=highv-lowv, ml=-6/istepmodel)
+    dd=patch-(linepatch-lineseg)
     cost=np.linalg.norm(dd)
     cost0=cost
     
