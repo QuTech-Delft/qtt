@@ -790,3 +790,4 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     imf = img_back.real
     imf = imf[0:imx.shape[0], 0:imx.shape[1]]
     return imf
+
