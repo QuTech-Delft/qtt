@@ -429,7 +429,7 @@ def pix2scan(pt, dd2d):
         contains scan data
 
     """
-    warnings.warn('use transformation object instead')
+#    warnings.warn('use transformation object instead')
     extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
         dd2d, verbose=0)
     # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
@@ -438,10 +438,22 @@ def pix2scan(pt, dd2d):
 
     xx = extent
     x = pt
+<<<<<<< 5e9bb85167f5a5363c6dca425d8caceef8cec26c
     nn = pt.shape[1]
     ptx = np.zeros((2, nn))
     ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
     ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
+=======
+    if len(pt.shape)==1:
+        ptx = np.zeros((2, 1))
+        ptx[1] = np.interp(x[1], [0, ny - 1], [xx[3], xx[2]])    # step
+        ptx[0] = np.interp(x[0], [0, nx - 1], [xx[0], xx[1]])    # sweep
+    else:
+        nn = pt.shape[1]
+        ptx = np.zeros((2, nn))
+        ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[3], xx[2]])    # step
+        ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
+>>>>>>> Add 1d array functionality in pix2scan and a signedslope in slopeClick in tools
     return ptx
 
 #%%
