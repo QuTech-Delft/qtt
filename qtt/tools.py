@@ -814,7 +814,7 @@ class slopeClick():
             print('point2: [%.2f, %.2f]' % (event.xdata, event.ydata))
             self.drawpoint2 = self.draw(self.point2,'bo')
             self.line = plt.plot([self.point1[0],self.point2[0]],[self.point1[1],self.point2[1]], figure=self.fig)
-            self.signed_slope = self.point1[1]-self.point2[1])/np.abs(self.point1[0]-self.point2[0]
+            self.signed_slope = (self.point1[1]-self.point2[1])/(self.point1[0]-self.point2[0])
             self.slope = np.abs(self.signed_slope)
             print('slope: %.2f' % self.slope)
             print('inverse slope: %.3f' % (1/self.slope))
