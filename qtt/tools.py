@@ -791,12 +791,12 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     imf = imf[0:imx.shape[0], 0:imx.shape[1]]
     return imf
 
-#%% 
-class mouseClick():
-    '''
-   Clicking tool for measuring the slope of a line by clicking two points.
-    '''
+#%%
+class slopeClick():
     def __init__(self, plot):
+        '''
+        Clicking tool for measuring the slope of a line by clicking two points.
+        '''
         self.fig = plot.fig
         self.cid = plot.fig.canvas.mpl_connect('button_press_event', self)
         self.fig.axes[0].autoscale(enable=False)
@@ -814,7 +814,8 @@ class mouseClick():
             print('point2: [%.2f, %.2f]' % (event.xdata, event.ydata))
             self.drawpoint2 = self.draw(self.point2,'bo')
             self.line = plt.plot([self.point1[0],self.point2[0]],[self.point1[1],self.point2[1]], figure=self.fig)
-            self.slope = np.abs(self.point1[1]-self.point2[1])/np.abs(self.point1[0]-self.point2[0])
+            self.signed_slope = self.point1[1]-self.point2[1])/np.abs(self.point1[0]-self.point2[0]
+            self.slope = np.abs(self.signed_slope)
             print('slope: %.2f' % self.slope)
             print('inverse slope: %.3f' % (1/self.slope))
         else:
