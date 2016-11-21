@@ -267,7 +267,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
             time.sleep(.1)
 
         logging.info('scan1D: completed %s' % (str(data.location),))
-        data=loop.run(location=location, background=background)
+        data=loop.run(location=location, background=background, data_manager=True)
         data.sync()
     else:
         dt = time.time() - t0
@@ -429,7 +429,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
  
  
     if background is True:
-        alldata = loop.run(background=background)
+        alldata = loop.run(background=background, data_manager=True)
         alldata.background_functions = dict({'qt': pg.mkQApp().processEvents})
         alldata.complete(delay=.5)
         #print('complete: %.3f' % alldata.fraction_complete() )
@@ -545,7 +545,8 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         tprint('scan2Dfast: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
         stepvalues.set(x)
         qtt.time.sleep(delay)
-        alldata.measured.ndarray[ix] = readfunc(waveform)
+        #alldata.measured.ndarray[ix] = readfunc(waveform)
+        alldata.measured[ix] = readfunc(waveform)
         liveplotwindow.update_plot()
         pg.mkQApp().processEvents()
 

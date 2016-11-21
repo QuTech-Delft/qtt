@@ -165,6 +165,7 @@ class sensingdot_t:
             x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.title('autoTune: sd %d' % sd.index, fontsize=14)
+            #plt.xlabel(sdplg.name)
 
         sd.goodpeaks = goodpeaks
         sd.tunex = x
@@ -274,6 +275,7 @@ class sensingdot_t:
         waveform, sweep_info = self.station.awg.sweep_gate(
             self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
+        # time for AWG to settle
         qtt.time.sleep(sleeptime)
 
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
@@ -304,7 +306,8 @@ class sensingdot_t:
 
         if fig is not None:
             plt.title('autoTune: sd %d' % self.index, fontsize=14)
-
+            plt.xlabel(sdplg.name)
+            
         if len(goodpeaks) > 0:
             self.sdval[1] = goodpeaks[0]['xhalfl']
             self.targetvalue = goodpeaks[0]['yhalfl']
