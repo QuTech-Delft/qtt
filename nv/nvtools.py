@@ -11,6 +11,47 @@ import numpy as np
 import sklearn.manifold
 from sklearn.manifold import TSNE
 
+#%%
+
+def extract_data(filename, gate_scaling):
+    """ Extract data from a datafile """
+    x = np.array([])
+    y = np.array([])
+    y2 = np.array([])
+    y3 = np.array([])
+    ii=0
+    with open(filename,"r") as f:
+        
+        for line in f.readlines():
+            ii=ii+1
+            #print('## line %d' %ii)
+            if line[0] in str(list(range(10))):
+                srch = "\t"
+                xapp,yapp,y2app,y3app = line.split(srch)
+                #print('%.1f,%.1f,%.1f,%.1f' % ( float(xapp), float(yapp), float(y2app), float(y3app)) )
+                x = np.append(x,float(xapp))    # corresponds to elapsed time
+                y = np.append(y,float(yapp))    # yellow frequency
+                y2 = np.append(y2,float(y2app)) # gate voltage
+                #print('  y2.shape %s' % (y2.shape, ) )
+                y3 = np.append(y3,float(y3app)) # newfocus frequency --> mostly ignored for the moment    
+            else:
+                pass
+                #print('funny line: |%s|' % line)
+                #print(' |%s|' % line[0])
+            if ii>1900:
+                pass
+                #break
+            
+    #print('shape')
+    #print(y2.shape)
+    
+    ### need to clean data up in case 'wrong value' was recorded. this can happen with the laser freuqencies if the Wavemeter has got no signal
+
+    filter_cond =  (-2000 <y2*gate_scaling) & (12<y) 
+    filter_cond = filter_cond & (2000 >y2*gate_scaling) & (y<100)
+    
+    return [x[filter_cond],y[filter_cond],gate_scaling*y2[filter_cond],y3[filter_cond]]
+
 
 #%%
 def testTheano():
