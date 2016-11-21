@@ -156,7 +156,17 @@ def diffDataset(alldata, diff_dir='y', fig=None):
         
 #%%
 
-
+def sweepgate(scanjob):
+    g=scanjob['sweepdata'].get('gate', None)
+    if g is None:
+        g= scanjob['sweepdata'].get('gates', [None]) [0]
+    return g
+def stepgate(scanjob):
+    g=scanjob['stepdata'].get('gate', None)
+    if g is None:
+        g= scanjob['stepdata'].get('gates', [None]) [0]
+    return g
+    
 def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
     """ Show result of a 2D scan """
     if dd is None:
@@ -216,7 +226,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
         labelx = labels[1]
         labely = labels[0]
         if scanjob.get('sweepdata', None) is not None:
-            labelx = scanjob['sweepdata']['gates'][0]
+            labelx = sweepgate(scanjob)
             plt.xlabel('%s' % labelx + unitstr)
         else:
             pass
@@ -227,10 +237,9 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
         if scanjob.get('stepdata', None) is not None:
             if units is None:
-                plt.ylabel('%s' % scanjob['stepdata']['gates'][0])
+                plt.ylabel('%s' % stepgate(scanjob) )
             else:
-                plt.ylabel('%s (%s)' %
-                           (scanjob['stepdata']['gates'][0], units))
+                plt.ylabel('%s (%s)' % (stepgate(scanjob), units))
 
         if not title is None:
             plt.title(title)

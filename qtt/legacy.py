@@ -662,7 +662,7 @@ def fixReversal(im0, verbose=0):
     if verbose:
         print(' fixReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
     if fr:
-        im0 = -im0
+        im0 = -np.array(im0)
     return im0
 
 

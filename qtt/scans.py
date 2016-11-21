@@ -292,7 +292,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
                 t0=time.time()
                 liveplotwindow.update()
                 #QtWidgets.QApplication.processEvents()
-                print('myupdate: %.3f ' % (time.time()-t0))
+                if verbose>=2:
+                    print('scan1D: myupdate: %.3f ' % (time.time()-t0))
                 
             data=loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
         else:

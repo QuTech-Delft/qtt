@@ -11,7 +11,6 @@ from qtt.tools import freezeclass
 @freezeclass
 class sensingdot_t:
 
-
     def __init__(self, ggv, sdvalv=None, station=None, RFfreq=None, index=None, fpga_ch=None):
         """ Class representing a sensing dot 
     
@@ -41,6 +40,18 @@ class sensingdot_t:
             self.valuefunc = station.components[
                 'keithley%d' % index].amplitude.get
 
+    def __getstate__(self):
+        """ Override to make the object pickable
+        """
+        print('sensingdot_t: __getstate__')
+        #d=super().__getstate__()
+        import copy
+        d=copy.copy(self.__dict__)
+        for name in ['station', 'valuefunc']:
+            if name in d:
+                d[name]=str(d[name])
+        return d
+        
     def show(self):
         gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
