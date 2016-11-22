@@ -56,7 +56,7 @@ import virtualDot;
 if __name__=='__main__':
 
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
-    server_name=None
+    #server_name=None
     station = virtualDot.initialize(server_name=server_name)    
     
     keithley1 = station.keithley1

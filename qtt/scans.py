@@ -233,37 +233,16 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
 
     if background:
-        data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params).run(
-            location=location, data_manager=data_manager, background=background)
-        time.sleep(.1)
-        data.sync()  # wait for at least 1 data point
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(data))
-    else:
-        # run with live plotting loop
-        loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
-        print('loop.data_set: %s' % loop.data_set)
-        print('background: %s, data_managr %s' % (background, data_manager) )
-        data = loop.get_data_set(data_manager=data_manager) 
-
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(data))
-        
-        data=loop.with_bg_task(liveplotwindow.update, 0.05).run(location=location, background=background)
-        data.sync()
-        print('loop.run returned...:' )
-        
-#    loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
-
-
-
-    if background:
         if verbose>=2:
             print('scan1D: background %s, data_manager %s' % (background, data_manager))
-        data=loop.run(location=location, background=background, data_manager=data_manager)
-        data.background_functions = dict({'qt': pg.mkQApp().processEvents})
+        loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
+        loop.background_functions = dict({'qt': pg.mkQApp().processEvents})
+        data=loop.run(location=location, data_manager=data_manager, background=background)
+        if liveplotwindow is not None:
+            time.sleep(.1)
+            data.sync()  # wait for at least 1 data point
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(data))
         data.complete(delay=.25)
         data.sync()
         dt = -1
@@ -272,20 +251,17 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
             time.sleep(.1)
 
         logging.info('scan1D: running %s' % (str(data.location),))
-        if liveplotwindow is not None:
-            time.sleep(.1)
-            data.sync()  # wait for at least 1 data point
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(data))
-        data.sync()
     else:
-        data=loop.get_data_set(data_manager=data_manager, location=location)
-    
+        # run with live plotting loop
+        loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
+        print('loop.data_set: %s' % loop.data_set)
+        print('background: %s, data_managr %s' % (background, data_manager) )
+        data = loop.get_data_set(data_manager=data_manager, location=location) 
+
         if liveplotwindow is not None:
-            time.sleep(.1)
-            data.sync()  # wait for at least 1 data point
             liveplotwindow.clear()
             liveplotwindow.add(getDefaultParameter(data))
+
         dt = time.time() - t0
         if liveplotwindow is not None:
             def myupdate():
