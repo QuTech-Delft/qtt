@@ -193,7 +193,7 @@ def getDefaultParameter(data):
         pass
     return None
 
-
+#%%
 def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, wait_time=None):
     ''' Simple 1D scan '''
     gates = station.gates
@@ -220,22 +220,40 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         data_manager = None
     else:
         data_manager = False
+        background=False
 
     delay = scanjob.get('delay', delay)
     if delay is None:
         delay = 0
     logging.debug('delay: %s' % str(delay))
     print('scan1D: starting Loop (background %s)' % background)
-    loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
-    data=loop.get_data_set(data_manager=data_manager, location=location)
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
-    if liveplotwindow is not None:
+
+    if background:
+        data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params).run(
+            location=location, data_manager=data_manager, background=background)
         time.sleep(.1)
         data.sync()  # wait for at least 1 data point
-        liveplotwindow.clear()
-        liveplotwindow.add(getDefaultParameter(data))
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(data))
+    else:
+        # run with live plotting loop
+        loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
+        print('loop.data_set: %s' % loop.data_set)
+        print('background: %s, data_managr %s' % (background, data_manager) )
+        data = loop.get_data_set(data_manager=data_manager) 
+
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(data))
+        
+        data=loop.with_bg_task(liveplotwindow.update, 0.05).run(location=location, background=background)
+        data.sync()
+        print('loop.run returned...:' )
+        
 
 
 
@@ -282,6 +300,18 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 import pyqtgraph as pg
 
 
+if __name__=='__main__':
+    
+    loop3 = qc.Loop(gates.R[-15:15:1], 0.1).each( keithley1.amplitude)
+    data = loop3.get_data_set(data_manager=False) 
+
+    reload(qtt.scans)
+    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .2}), 'instrument': [keithley3.amplitude], 'delay': .000})
+    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=None)
+
+    data1d.sync(); # data.arrays
+    
+#%%
 def wait_bg_finish(verbose=0):
     """ Wait for background job to finish """
     for ii in range(10):
@@ -361,7 +391,11 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         except:
             background = False
 
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
+
     if background:
+<<<<<<< Updated upstream
         if verbose>=2:
             print('background %s, data_manager %s' % (background, '[default]'))    
         alldata=loop.get_data_set() # use default data_manager
@@ -375,7 +409,25 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(getDefaultParameter(alldata))
+=======
+        data_manager = None
+        alldata = measurement.run(background=background, data_manager=data_manager)
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(alldata))
+    else:
+        data_manager = False
+        alldata = measurement.get_data_set(data_manager=False) 
 
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(alldata))
+>>>>>>> Stashed changes
+
+        alldata = measurement.run(background=background, data_manager=data_manager)
+#
+ 
+ 
     if background is True:
         alldata = loop.run(background=background)
         alldata.background_functions = dict({'qt': pg.mkQApp().processEvents})

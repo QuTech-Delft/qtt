@@ -6,7 +6,9 @@ import qtt.data
 from qtt.algorithms.coulomb import *
 import matplotlib.pyplot as plt
 
+from qtt.tools import freezeclass
 
+@freezeclass
 class sensingdot_t:
 
 

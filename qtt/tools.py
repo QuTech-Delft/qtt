@@ -22,6 +22,7 @@ import qtpy.QtWidgets as QtWidgets
 # do NOT load any other qtt submodules here
 import tempfile
 
+
 #%% Debugging
 
 def dumpstring(txt):
@@ -64,6 +65,31 @@ def checkPickle(obj):
     return True
 # checkPickle(ivvi1)
 
+from functools import wraps
+
+def freezeclass(cls):
+    """ Decorator to freeze a class """
+    cls.__frozen = False
+
+    def frozensetattr(self, key, value):
+        if self.__frozen and not hasattr(self, key):
+            print("Class {} is frozen. Cannot set {} = {}"
+                  .format(cls.__name__, key, value))
+        else:
+            object.__setattr__(self, key, value)
+
+    def init_decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            self.__frozen = True
+        return wrapper
+
+    cls.__setattr__ = frozensetattr
+    cls.__init__ = init_decorator(cls.__init__)
+
+    return cls
+    
 #%%
 
 import scipy.ndimage as ndimage
