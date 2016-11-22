@@ -408,24 +408,6 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         liveplotwindow = qtt.live.livePlot()
 
     if background:
-        data_manager = None
-        alldata = measurement.run(background=background, data_manager=data_manager)
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(alldata))
-    else:
-        data_manager = False
-        alldata = measurement.get_data_set(data_manager=False) 
-
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(alldata))
-
-        alldata = measurement.run(background=background, data_manager=data_manager)
-#
- 
- 
-    if background:
         if verbose>=2:
             print('background %s, data_manager %s' % (background, '[default]'))    
         #alldata=loop.get_data_set() # use default data_manager
