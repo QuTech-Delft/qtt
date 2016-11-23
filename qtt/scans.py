@@ -250,7 +250,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
             liveplotwindow.clear()
             liveplotwindow.add(getDefaultParameter(data))
         
-        data=loop.with_bg_task(liveplotwindow.update, 0.05).run( background=background)
+        data=loop.with_bg_task(liveplotwindow.update, min_delay=0.25).run( background=background)
         data.sync()
         print('loop.run returned...:' )
         
