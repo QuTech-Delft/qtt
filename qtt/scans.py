@@ -395,46 +395,27 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         liveplotwindow = qtt.live.livePlot()
 
     if background:
-<<<<<<< Updated upstream
         if verbose>=2:
             print('background %s, data_manager %s' % (background, '[default]'))    
-        alldata=loop.get_data_set() # use default data_manager
-    else:
-        data_manager = False
-        alldata=loop.get_data_set(data_manager=data_manager)
-
-
-    if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
-    if liveplotwindow is not None:
-        liveplotwindow.clear()
-        liveplotwindow.add(getDefaultParameter(alldata))
-=======
-        data_manager = None
-        alldata = measurement.run(background=background, data_manager=data_manager)
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(alldata))
-    else:
-        data_manager = False
-        alldata = measurement.get_data_set(data_manager=False) 
+        #alldata=loop.get_data_set() # use default data_manager
+        alldata = loop.run(background=background, data_manager=True)
 
         if liveplotwindow is not None:
             liveplotwindow.clear()
             liveplotwindow.add(getDefaultParameter(alldata))
->>>>>>> Stashed changes
-
-        alldata = measurement.run(background=background, data_manager=data_manager)
-#
- 
- 
-    if background is True:
-        alldata = loop.run(background=background)
         alldata.background_functions = dict({'qt': pg.mkQApp().processEvents})
         alldata.complete(delay=.5)
         #print('complete: %.3f' % alldata.fraction_complete() )
         wait_bg_finish(verbose=verbose>=2)
     else:
+        data_manager = False
+        alldata=loop.get_data_set(data_manager=data_manager)
+
+
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(alldata))
+
         def myupdate():
             t0=time.time()
             liveplotwindow.update()
@@ -442,8 +423,6 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
             print('myupdate: %.3f ' % (time.time()-t0))
                 
         alldata=loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
-
-        #alldata = loop.run(background=background)
 
     dt = time.time() - t0
 
