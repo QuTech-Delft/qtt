@@ -244,13 +244,13 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
         print('loop.data_set: %s' % loop.data_set)
         print('background: %s, data_managr %s' % (background, data_manager) )
-        data = loop.get_data_set(data_manager=data_manager) 
+        data = loop.get_data_set(data_manager=data_manager, location=location) 
 
         if liveplotwindow is not None:
             liveplotwindow.clear()
             liveplotwindow.add(getDefaultParameter(data))
         
-        data=loop.with_bg_task(liveplotwindow.update, 0.05).run(location=location, background=background)
+        data=loop.with_bg_task(liveplotwindow.update, 0.05).run( background=background)
         data.sync()
         print('loop.run returned...:' )
         
