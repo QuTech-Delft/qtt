@@ -22,6 +22,7 @@ import qtpy.QtWidgets as QtWidgets
 # do NOT load any other qtt submodules here
 import tempfile
 
+
 #%% Debugging
 
 def dumpstring(txt):
@@ -64,6 +65,31 @@ def checkPickle(obj):
     return True
 # checkPickle(ivvi1)
 
+from functools import wraps
+
+def freezeclass(cls):
+    """ Decorator to freeze a class """
+    cls.__frozen = False
+
+    def frozensetattr(self, key, value):
+        if self.__frozen and not hasattr(self, key):
+            print("Class {} is frozen. Cannot set {} = {}"
+                  .format(cls.__name__, key, value))
+        else:
+            object.__setattr__(self, key, value)
+
+    def init_decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            self.__frozen = True
+        return wrapper
+
+    cls.__setattr__ = frozensetattr
+    cls.__init__ = init_decorator(cls.__init__)
+
+    return cls
+    
 #%%
 
 import scipy.ndimage as ndimage
@@ -556,6 +582,10 @@ def reshape_metadata(dataset, printformat='dict'):
     Returns:
         metadata (string): the reshaped metadata
     '''
+    
+    if not 'station' in dataset.metadata:
+        return 'dataset %s: no metadata available' % (str(dataset.location), )
+
     all_md = dataset.metadata['station']['instruments']
     metadata = dict()
     
@@ -613,7 +643,7 @@ def setupMeasurementWindows(station, ilist=None):
     w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
     w.updatecallback()
 
-    plotQ = QtPlot(windowtitle='Live plot', interval=.5)
+    plotQ = QtPlot(window_title='Live plot', interval=.5)
     plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
     plotQ.update()
 

@@ -193,7 +193,7 @@ def getDefaultParameter(data):
         pass
     return None
 
-
+#%%
 def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, wait_time=None):
     ''' Simple 1D scan '''
     gates = station.gates
@@ -214,32 +214,49 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         minstrument = scanjob.get('keithleyidx', None)
     params = getParams(station, minstrument)
 
-    station.set_measurement(*params)
+    #station.set_measurement(*params)
 
     if background:
         data_manager = None
     else:
         data_manager = False
+        background=False
 
     delay = scanjob.get('delay', delay)
     if delay is None:
         delay = 0
     logging.debug('delay: %s' % str(delay))
     print('scan1D: starting Loop (background %s)' % background)
-    data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).run(
-        location=location, data_manager=data_manager, background=background)
-    data.sync()
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
 
-    if liveplotwindow is not None:
+    if background:
+        data = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params).run(
+            location=location, data_manager=data_manager, background=background)
         time.sleep(.1)
         data.sync()  # wait for at least 1 data point
-        liveplotwindow.clear()
-        liveplotwindow.add(getDefaultParameter(data))
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(data))
+    else:
+        # run with live plotting loop
+        loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
+        print('loop.data_set: %s' % loop.data_set)
+        print('background: %s, data_managr %s' % (background, data_manager) )
+        data = loop.get_data_set(data_manager=data_manager) 
 
-    # FIXME
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(data))
+        
+        data=loop.with_bg_task(liveplotwindow.update, 0.05).run(location=location, background=background)
+        data.sync()
+        print('loop.run returned...:' )
+        
+
+
+
     if background:
         data.background_functions = dict({'qt': pg.mkQApp().processEvents})
         data.complete(delay=.25)
@@ -250,17 +267,31 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
             time.sleep(.1)
 
         logging.info('scan1D: completed %s' % (str(data.location),))
+        data=loop.run(location=location, background=background)
+        data.sync()
     else:
         dt = time.time() - t0
+        if liveplotwindow is not None:
+            def myupdate():
+                t0=time.time()
+                liveplotwindow.update()
+                #QtWidgets.QApplication.processEvents()
+                print('myupdate: %.3f ' % (time.time()-t0))
+                
+            data=loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
+        else:
+            data=loop.run(background=background)            
+        data.sync()
+
     if not hasattr(data, 'metadata'):
         data.metadata = dict()
 
-    if 1:
-        metadata = data.metadata
-        metadata['allgatevalues'] = gates.allvalues()
-        metadata['scantime'] = str(datetime.datetime.now())
-        metadata['dt'] = dt
-        metadata['scanjob'] = scanjob
+    # add metadata
+    metadata = data.metadata
+    metadata['allgatevalues'] = gates.allvalues()
+    metadata['scantime'] = str(datetime.datetime.now())
+    metadata['dt'] = dt
+    metadata['scanjob'] = scanjob
 
     logging.info('scan1D: done %s' % (str(data.location),))
 
@@ -269,6 +300,18 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 import pyqtgraph as pg
 
 
+if __name__=='__main__':
+    
+    loop3 = qc.Loop(gates.R[-15:15:1], 0.1).each( keithley1.amplitude)
+    data = loop3.get_data_set(data_manager=False) 
+
+    reload(qtt.scans)
+    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .2}), 'instrument': [keithley3.amplitude], 'delay': .000})
+    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=None)
+
+    data1d.sync(); # data.arrays
+    
+#%%
 def wait_bg_finish(verbose=0):
     """ Wait for background job to finish """
     for ii in range(10):
@@ -286,7 +329,7 @@ def wait_bg_finish(verbose=0):
     return m is None
 
 
-def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False):
+def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False, verbose=1):
     """ Make a 2D scan and create dictionary to store on disk
 
     Args:
@@ -300,8 +343,9 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     if minstrument is None:
         minstrument = scanjob.get('keithleyidx', None)
 
-    logging.info('scan2D: todo: implement compensategates')
-    logging.info('scan2D: todo: implement wait_time')
+    if verbose:
+        logging.info('scan2D: todo: implement compensategates')
+        logging.info('scan2D: todo: implement wait_time')
     # compensateGates = scanjob.get('compensateGates', [])
     # gate_values_corners = scanjob.get('gate_values_corners', [[]])
 
@@ -338,8 +382,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     fullloop = steploop.loop(sweepvalues, delay=delay)
 
     params = getParams(station, minstrument)
-
-    measurement = fullloop.each(*params)
+    loop = fullloop.each(*params)
 
     if background is None:
         try:
@@ -348,23 +391,59 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         except:
             background = False
 
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
+
     if background:
-        data_manager = None
+<<<<<<< Updated upstream
+        if verbose>=2:
+            print('background %s, data_manager %s' % (background, '[default]'))    
+        alldata=loop.get_data_set() # use default data_manager
     else:
         data_manager = False
+        alldata=loop.get_data_set(data_manager=data_manager)
 
-    alldata = measurement.run(background=background, data_manager=data_manager)
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(getDefaultParameter(alldata))
+=======
+        data_manager = None
+        alldata = measurement.run(background=background, data_manager=data_manager)
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(alldata))
+    else:
+        data_manager = False
+        alldata = measurement.get_data_set(data_manager=False) 
 
+        if liveplotwindow is not None:
+            liveplotwindow.clear()
+            liveplotwindow.add(getDefaultParameter(alldata))
+>>>>>>> Stashed changes
+
+        alldata = measurement.run(background=background, data_manager=data_manager)
+#
+ 
+ 
     if background is True:
+        alldata = loop.run(background=background)
         alldata.background_functions = dict({'qt': pg.mkQApp().processEvents})
         alldata.complete(delay=.5)
-        wait_bg_finish()
+        #print('complete: %.3f' % alldata.fraction_complete() )
+        wait_bg_finish(verbose=verbose>=2)
+    else:
+        def myupdate():
+            t0=time.time()
+            liveplotwindow.update()
+            #QtWidgets.QApplication.processEvents()
+            print('myupdate: %.3f ' % (time.time()-t0))
+                
+        alldata=loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
+
+        #alldata = loop.run(background=background)
 
     dt = time.time() - t0
 
@@ -381,7 +460,6 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         # FIXME...
         alldata = copy.copy(scanjob)
         alldata['wait_time'] = wait_time
-        alldata['data_array'] = data.get_data()
         alldata['datadir'] = data._dir
         alldata['timemark'] = data._timemark
         alldata['gatevalues'] = gatevalues(activegates)
@@ -397,10 +475,15 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     return alldata
 
-# Causes errors with the IVVI
+if __name__=='__main__':
+    import logging
+    import datetime 
+    scanjob['stepdata']=dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 3.})
+    data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
+    
 
-
-def scan2Dfast(station, scanjob, liveplotwindow=None, diff_dir=None, wait_time=None, background=None):
+#%%
+def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None):
     """ Make a 2D scan and create dictionary to store on disk
 
     Arguments:
@@ -655,6 +738,8 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
     if fig is None:
         return dataset, None
     else:
+        if fig is not None:
+            plt.figure(fig).clear()        
         plot = MatPlot(dataset.measured, interval=0, num=fig)
         return dataset, plot
 

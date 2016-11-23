@@ -6,14 +6,23 @@ import qtt.data
 from qtt.algorithms.coulomb import *
 import matplotlib.pyplot as plt
 
+from qtt.tools import freezeclass
 
+@freezeclass
 class sensingdot_t:
 
-    """ Class representing a sensing dot """
 
-    def __init__(self, ggv, sdvalv, station=None, RFfreq=None, index=None, fpga_ch=None):
+    def __init__(self, ggv, sdvalv=None, station=None, RFfreq=None, index=None, fpga_ch=None):
+        """ Class representing a sensing dot 
+    
+        Arguments:
+            ggv (list): gates to be used
+            sdvalv (array or None): values to be set on the gates
+        """
         self.verbose = 1
         self.gg = ggv
+        if sdvalv is None:
+            sdvalv = [station.gates.get(g) for g in ggv]
         self.sdval = sdvalv
         self.targetvalue = 800
         self.goodpeaks = None
@@ -103,10 +112,11 @@ class sensingdot_t:
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
-        if hasattr(sd.station,'gate_settle'):
+        wait_time = .8
+        try:
             wait_time = sd.station.gate_settle(gg[1])
-        else:
-            wait_time = 1.5 #FIXME
+        except:
+            pass
         wait_time = np.minimum(wait_time, max_wait_time)
         
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %

@@ -123,6 +123,40 @@ def dataset_labels(alldata, tag=None):
     return '?'
 
 
+def uniqueArrayName(dataset, name0):
+    ''' Generate a unique name for a DataArray in a dataset '''
+    ii=0
+    name = name0
+    while name in dataset.arrays:
+         name = name0+'_%d' % ii  
+         ii=ii+1
+         if ii>1000:
+             raise Exception('too many arrays in DataSet')
+    return name
+
+from qcodes.plots.qcmatplotlib import MatPlot
+    
+def diffDataset(alldata, diff_dir='y', fig=None):
+        """ Differentiate a dataset and plot the result """
+        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)        
+        name = 'diff_dir_%s' % diff_dir
+        name = uniqueArrayName(alldata, name)
+        data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
+        
+        alldata.add_array(data_arr)
+
+        if fig is not None:
+            plt.figure(fig); plt.clf()            
+            plot = MatPlot(interval=0, num=fig)
+            plot.add(alldata.arrays[name])
+            plot.fig.axes[0].autoscale(tight=True)
+            plot.fig.axes[1].autoscale(tight=True)
+
+        return alldata
+        
+#%%
+
+
 def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
     """ Show result of a 2D scan """
     if dd is None:
