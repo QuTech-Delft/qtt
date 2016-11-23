@@ -467,11 +467,7 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         # basename='%s-sweep-2d-%s' % (idstr, 'x-%s-%s' % (gg[0], gg[2]) )
         # save(os.path.join(xdir, basename +'.pickle'), alldata )
         
-    # save the dataset to disk
-    name = '_'.join(sai.array_id for sai in alldata.measured.set_arrays)
-    alldata.location = alldata.location_provider(alldata.default_io, record={'name': name})
     alldata.write()
-
 
     return alldata
 
@@ -483,14 +479,15 @@ if __name__=='__main__':
     
 
 #%%
-def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None):
+def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None):
     """ Make a 2D scan and create dictionary to store on disk
 
     Arguments:
         station (object): contains all data on the measurement station
         scanjob (dict): data for scan range
+    Returns:
+        alldata (qcodes Dataset): measurement data and metadata
     """
-
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
@@ -608,9 +605,6 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
 
-    # save the dataset to disk
-    name = '_'.join(sai.array_id for sai in alldata.measured.set_arrays)
-    alldata.location = alldata.location_provider(alldata.default_io, record={'name': name})
     alldata.write()
 
     return alldata
