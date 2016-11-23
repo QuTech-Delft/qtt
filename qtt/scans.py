@@ -276,6 +276,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
             data=loop.run(background=background)            
         data.sync()
 
+
     if not hasattr(data, 'metadata'):
         data.metadata = dict()
 
@@ -412,8 +413,6 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
             print('myupdate: %.3f ' % (time.time()-t0))
                 
         alldata=loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
-
-        #alldata = loop.run(background=background)
 
     dt = time.time() - t0
 
