@@ -250,12 +250,9 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
             liveplotwindow.clear()
             liveplotwindow.add(getDefaultParameter(data))
         
-        data=loop.with_bg_task(liveplotwindow.update, min_delay=0.25).run( background=background)
-        data.sync()
+        data=loop.with_bg_task(liveplotwindow.update, min_delay=0.25)
         print('loop.run returned...:' )
         
-
-
 
     if background:
         data.background_functions = dict({'qt': pg.mkQApp().processEvents})
@@ -278,7 +275,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
                 #QtWidgets.QApplication.processEvents()
                 print('myupdate: %.3f ' % (time.time()-t0))
                 
-            data=loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
+            data=loop.run(background=background)
         else:
             data=loop.run(background=background)            
         data.sync()
