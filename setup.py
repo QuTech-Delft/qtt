@@ -17,6 +17,7 @@ extras = {
     'pandas': ('pandas', '0.15'),
     'Polygon3': ('Polygon', '3.0'),
     'hickle': ('hickle', '2.0'),
+    'attrs': ('attr', '16.2.0'),
     'h5py': ('h5py', '0.1'),
 }
 extras_require = {k: '>='.join(v) for k, v in extras.items()}

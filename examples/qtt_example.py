@@ -22,6 +22,9 @@ if __name__=='__main__':
 import qcodes
 import qcodes as qc
 import matplotlib
+from qcodes.plots.pyqtgraph import QtPlot
+from qcodes.plots.qcmatplotlib import MatPlot
+
 #if __name__=='__main__':
 #    matplotlib.use('Qt4Agg')
 
@@ -30,7 +33,7 @@ import qtt.scans
 import qtt.qtt_toymodel;
 import qtt.live
 from qtt.scans import scan1D
-
+# taskkill /F /IM python.exe
 
 datadir = os.path.join(tempfile.tempdir, 'qdata')
 qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
@@ -52,6 +55,10 @@ import virtualDot;
 
 if __name__=='__main__':
 
+    try:
+        virtualDot.close()
+    except:
+        pass
     server_name='testv%d' % np.random.randint(1000) # needs to be set for background loops to work
     #server_name=None
     station = virtualDot.initialize(server_name=server_name)    
@@ -77,8 +84,11 @@ if __name__=='__main__':
     qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
     mwindows=qtt.setupMeasurementWindows(station)
     mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
-    from qtt.parameterviewer import createParameterWidgetRemote
-    createParameterWidgetRemote([gates,])
+    from qtt.parameterviewer import createParameterWidgetRemote, createParameterWidget
+    if server_name is None:
+        createParameterWidget([gates,])
+    else:
+        createParameterWidgetRemote([gates,])
     plotQ=mwindows['plotwindow']
     qtt.live.liveplotwindow=plotQ
     qtt.live.mwindows=mwindows
@@ -99,8 +109,9 @@ if __name__=='__main__':
 
 
 if __name__=='__main__':
-    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .2}), 'instrument': [keithley3.amplitude], 'delay': .000})
-    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=None)
+    reload(qtt.scans)
+    scanjob = dict( {'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': 1.}), 'instrument': [keithley3.amplitude], 'delay': .000})
+    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=False, verbose=2)
 
     data1d.sync(); # data.arrays
 
