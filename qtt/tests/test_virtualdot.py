@@ -4,9 +4,9 @@ import qcodes
 import qcodes.tests.data_mocks
 
 import qtt.data
-import virtualDot
+#mport virtualDot
 
-import virtualDot as msetup; from virtualDot import sample; 
+#mport virtualDot as msetup; from virtualDot import sample; 
 
 #%%
 class TestVirtualDot(TestCase):
