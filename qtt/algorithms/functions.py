@@ -19,7 +19,7 @@ def FermiLinear(x, a, b, cc, A, T, kb=1):
         y = a*x + b + A*(1/ (1+\exp( (x-cc)/(kb*T) ) ) )
         
 
-    """        
+    """   
     y = a*x+b+A*1./(1+np.exp( (x-cc)/(kb*T) ) )
     return y
 
