@@ -1,9 +1,22 @@
 language: python
 python:
-    - "3.4"
     - "3.5"
-before_install:
-    - pip install pytest pytest-cov
-script:
-    - py.test --doctest-modules
+branches:
+  only:
+    - master
+
+# command to install dependencies
+install:
+    - pip install --upgrade pip
+    - pip install ipython
+    - pip install -r develop_requirements.txt
+    - python setup.py develop
+# command to run tests
+script: 
+    - python  qcodes/test.py --skip-coverage
+
+#before_install:
+#    - pip install pytest pytest-cov
+#script:
+#    - py.test --doctest-modules
 

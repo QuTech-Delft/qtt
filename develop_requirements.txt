@@ -6,7 +6,5 @@ pandas
 qcodes
 scikit-image
 pyqt
-qtpy
-h5py
-spyder
+
 
