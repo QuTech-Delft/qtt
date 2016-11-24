@@ -11,7 +11,6 @@ from qtt.tools import freezeclass
 @freezeclass
 class sensingdot_t:
 
-
     def __init__(self, ggv, sdvalv=None, station=None, RFfreq=None, index=None, fpga_ch=None):
         """ Class representing a sensing dot 
     
@@ -44,6 +43,18 @@ class sensingdot_t:
     def __repr__(self):
         return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
 
+    def __getstate__(self):
+        """ Override to make the object pickable
+        """
+        print('sensingdot_t: __getstate__')
+        #d=super().__getstate__()
+        import copy
+        d=copy.copy(self.__dict__)
+        for name in ['station', 'valuefunc']:
+            if name in d:
+                d[name]=str(d[name])
+        return d
+        
     def show(self):
         gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
@@ -169,6 +180,7 @@ class sensingdot_t:
             x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.title('autoTune: sd %d' % sd.index, fontsize=14)
+            #plt.xlabel(sdplg.name)
 
         sd.goodpeaks = goodpeaks
         sd.tunex = x
@@ -278,6 +290,7 @@ class sensingdot_t:
         waveform, sweep_info = self.station.awg.sweep_gate(
             self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
+        # time for AWG to settle
         qtt.time.sleep(sleeptime)
 
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
@@ -308,7 +321,8 @@ class sensingdot_t:
 
         if fig is not None:
             plt.title('autoTune: sd %d' % self.index, fontsize=14)
-
+            plt.xlabel(sdplg.name)
+            
         if len(goodpeaks) > 0:
             self.sdval[1] = goodpeaks[0]['xhalfl']
             self.targetvalue = goodpeaks[0]['yhalfl']

@@ -57,10 +57,12 @@ def negfloat(x):
     return -float(x)
 
 
-def checkPickle(obj):
+def checkPickle(obj, verbose=0):
     try:
         _ = pickle.dumps(obj)
-    except:
+    except Exception as ex:
+        if verbose:
+            print(ex)
         return False
     return True
 # checkPickle(ivvi1)
