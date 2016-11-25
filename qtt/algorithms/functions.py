@@ -1,7 +1,12 @@
 import numpy as np
 
 
-def FermiL(x, a, b, cc, A, T, kb=1):
+def linear_function(x, a, b):
+    """ Linear function with offset"""
+    return a * x + b
+
+
+def Fermi(x, cc, A, T, kb=1):
     """ Fermi distribution 
 
     Arguments:
@@ -18,7 +23,7 @@ def FermiL(x, a, b, cc, A, T, kb=1):
 
         y =  A*(1/ (1+\exp( (x-cc)/(kb*T) ) ) )
     """
-    y = a * x + b + A * 1. / (1 + np.exp((x - cc) / (kb * T)))
+    y = A * 1. / (1 + np.exp((x - cc) / (kb * T)))
     return y
 
 
