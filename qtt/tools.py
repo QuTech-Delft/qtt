@@ -1,31 +1,34 @@
-import qtpy
-# print(qtpy.API_NAME)
-
+import sys, os
 import numpy as np
 import scipy
 import matplotlib
-import sys, os
 import logging
 import qcodes
 import pickle
 
 # explicit import
-from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
+try:
+    from qcodes.plots.pyqtgraph import QtPlot
+except:
+    pass
 
 from qtt import pmatlab
 from qtt.pmatlab import mpl2clipboard
 
-import qtpy.QtGui as QtGui
-import qtpy.QtWidgets as QtWidgets
-
 # do NOT load any other qtt submodules here
 import tempfile
 
+try:
+    import qtpy.QtGui as QtGui
+    import qtpy.QtWidgets as QtWidgets
+except:
+    pass
 
 #%% Debugging
 
 def dumpstring(txt):
+    """ Dump a string to temporary file on disk """
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
 
@@ -36,20 +39,6 @@ def stripDataset(dataset):
     dataset.data_manager = None
     dataset.background_functions = {}
     
-#%%
-try:
-    from qcodes.process.heartbeat import *
-    import time
-
-    def pauseHeartBeat():
-        m = initHeartBeat(bfile, reinit=False)
-        setHeartBeat(m, 0)
-        for ii in range(5):
-            print('pause %d: ...' % ii)
-            time.sleep(1)
-        setHeartBeat(m, 1)
-except:
-    pass
 #%%
 
 def negfloat(x):
@@ -65,7 +54,6 @@ def checkPickle(obj, verbose=0):
             print(ex)
         return False
     return True
-# checkPickle(ivvi1)
 
 from functools import wraps
 
@@ -291,6 +279,9 @@ def static_var(varname, value):
 
 
 try:
+    import qtpy.QtGui as QtGui
+    import qtpy.QtWidgets as QtWidgets
+
     def monitorSizes(verbose=0):
         """ Return monitor sizes """
         _qd = QtWidgets.QDesktopWidget()
@@ -631,28 +622,31 @@ if __name__ == '__main__' and 0:
     print(x)
 
 #%%
-from qtt.parameterviewer import ParameterViewer
-import qtt.gui
-from qtt.gui.dataviewer import DataViewer
-
-def setupMeasurementWindows(station, ilist=None):
-    ms = monitorSizes()
-    vv = ms[-1]
-    # create custom viewer which gathers data from a station object
-    if ilist is None:
-        ilist = [station.gates]
-    w = ParameterViewer(ilist)
-    w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
-    w.updatecallback()
-
-    plotQ = QtPlot(window_title='Live plot', interval=.5)
-    plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
-    plotQ.update()
-
-    app = QtWidgets.QApplication.instance()
-    app.processEvents()
+try:
+    from qtt.parameterviewer import ParameterViewer
+    import qtt.gui
+    #from qtt.gui.dataviewer import DataViewer
     
-    return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
+    def setupMeasurementWindows(station, ilist=None):
+        ms = monitorSizes()
+        vv = ms[-1]
+        # create custom viewer which gathers data from a station object
+        if ilist is None:
+            ilist = [station.gates]
+        w = ParameterViewer(ilist)
+        w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
+        w.updatecallback()
+    
+        plotQ = QtPlot(window_title='Live plot', interval=.5)
+        plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
+        plotQ.update()
+    
+        app = QtWidgets.QApplication.instance()
+        app.processEvents()
+        
+        return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
+except:
+    pass
 
 import time
 def updatePlotTitle(qplot, basetxt='Live plot'):
@@ -677,22 +671,7 @@ def timeProgress(data):
 
 #%%
 
-def logistic(x, x0=0, alpha=1):
-    """ Logistic function
-
-    Arguments:
-    x : array
-        values
-    x0, alpha : float
-        parameters of function
-
-    Example
-    -------
-
-    >>> y=logistic(0, 1, alpha=1)
-    """
-    f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
-    return f
+from qtt.algorithms.functions import logistic
 
 #%%
 

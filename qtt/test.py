@@ -1,9 +1,6 @@
 """Unified qcodes test runners."""
 
 import sys
-import qtpy
-# print(qtpy.QT_API)
-
 
 def _test_core(test_pattern='test*.py', **kwargs):
     import unittest
