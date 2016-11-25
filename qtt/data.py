@@ -1,5 +1,3 @@
-import qtpy
-# print(qtpy.API_NAME)
 
 import numpy as np
 import scipy
