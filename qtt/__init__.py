@@ -11,8 +11,11 @@ if 0:
 import qtt.live
 import qtt.tools
 
+import qtt.data
+import qtt.algorithms
+
 # todo: remove import *
-from qtt.tools import *
+#from qtt.tools import *
 from qtt.data import *
 from qtt.algorithms import *
 
