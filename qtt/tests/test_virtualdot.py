@@ -4,40 +4,45 @@ import qcodes
 import qcodes.tests.data_mocks
 
 import qtt.data
-#mport virtualDot
+from qtt.qtt_toymodel import virtual_gates, VirtualIVVI
+from qtt.simulation.dotsystem import TripleDot
 
-#mport virtualDot as msetup; from virtualDot import sample; 
 
 #%%
-class TestVirtualDot(TestCase):
-    
+
+
+class TestVirtualGates(TestCase):
 
     def setUp(self):
-        pass
-        #self.station = msetup.initialize(reinit=False, server_name=None, verbose=0)
+        gate_map = {
+        'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4),
+        'L': (0, 5), 'D1': (0, 6), 'R': (0, 7) }
+
+        self.ivvi = VirtualIVVI('ivvi', model=None, server_name= None)
+        self.gates = virtual_gates('gates', instruments=[self.ivvi], gate_map=gate_map , server_name= None)
         
     def tearDown(self):
-        pass
-        #msetup.close(verbose=0)
-
-        
-    def test_dotmodel(self):
-        gate_map=msetup.DotModel.gate_map
-        
-        onedot=msetup.DotModel(name='dot', server_name=None, verbose=0)
-        _=onedot.compute()
+        self.gates.close()
+        self.ivvi.close()
 
     def test_gates(self):
+        self.gates.R.set(100)
+        self.assertEqual( self.gates.R.get(), 100)
+
+
+class TestVirtualDot(TestCase):
+
+    def setUp(self):
+        self.ds = TripleDot(maxelectrons=2)
+
+    def tearDown(self):
         pass
-        #gates=self.station.gates
 
-        #gates.set('L', 100.)
-        #self.assertEqual( gates.get('L'), 100.)
-        
-    
-if __name__=='__main__':
-    t=TestVirtualDot()
+    def test_dotmodel(self):
+        self.ds.calculate_energies({})
+
+
+if __name__ == '__main__':
+    t= TestVirtualGates()
+    t = TestVirtualDot()
     pass
-
-
-

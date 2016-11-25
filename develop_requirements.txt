@@ -6,5 +6,3 @@ pandas
 qcodes
 scikit-image
 pyqt
-
-
