@@ -13,10 +13,6 @@ install:
     - python setup.py develop
 # command to run tests
 script: 
-    - python  qcodes/test.py --skip-coverage
+    - python  qtt/test.py --skip-coverage
 
-#before_install:
-#    - pip install pytest pytest-cov
-#script:
-#    - py.test --doctest-modules
 
