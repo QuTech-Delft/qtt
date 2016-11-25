@@ -42,7 +42,7 @@ class virtual_awg(Instrument):
         elif len(self._awgs) == 1:
             self.awg_cont = self._awgs[0]
             self.awg_cont.set('run_mode', 'CONT')
-        elif len(self._awgs) == 2 and 'awg_mk' in self.awg_map.keys():
+        elif len(self._awgs) == 2 and 'awg_mk' in self.awg_map:
             self.awg_cont = self._awgs[self.awg_map['awg_mk'][0]]
             self.awg_cont.set('run_mode', 'CONT')
             self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0] + 1) % 2]
@@ -107,7 +107,7 @@ class virtual_awg(Instrument):
             sweep_info[self.awg_map[g]]['waveform'] = waveforms[g]['wave']
             sweep_info[self.awg_map[g]]['marker1'] = np.zeros(wave_len)
             sweep_info[self.awg_map[g]]['marker2'] = np.zeros(wave_len)
-            if 'name' in waveforms[g].keys():
+            if 'name' in waveforms[g]:
                 sweep_info[self.awg_map[g]]['name'] = waveforms[g]['name']
             else:
                 sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
@@ -163,7 +163,11 @@ class virtual_awg(Instrument):
         return sweep_info
 
     def sweep_run(self, sweep_info):
-        ''' Activate AWG(s) and channel(s) for the sweep(s) '''
+        ''' Activate AWG(s) and channel(s) for the sweep(s).
+        
+        Arguments:
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
+        '''
         for sweep in sweep_info:
             if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
@@ -186,6 +190,13 @@ class virtual_awg(Instrument):
     def make_sawtooth(self, sweeprange, period, width=.95, repetitionnr=1):
         '''Make a sawtooth with a decline width determined by width. Not yet scaled with
         awg_to_plunger value.
+        
+        Arguments:
+            sweeprange (float): the range of voltages to sweep over
+            period (float): the period of the triangular signal
+            
+        Returns:
+            wave_raw (array): raw data which represents the waveform
         '''
         samplerate = 1. / self.AWG_clock
         tt = np.arange(0, period * repetitionnr + samplerate, samplerate)
@@ -232,9 +243,18 @@ class virtual_awg(Instrument):
     def sweep_gate_virt(self, gate_comb, sweeprange, period, width=.95, delete=True):
         ''' Send a sawtooth signal with the AWG to a linear combination of 
         gates to sweep. Also send a marker to the FPGA.
+        
+        Arguments:
+            gate_comb (dict): the gates to sweep and the coefficients as values
+            sweeprange (float): the range of voltages to sweep over
+            period (float): the period of the triangular signal
+            
+        Returns:
+            waveform (dict): The waveform being send with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
         waveform = dict()
-        for g in gate_comb.keys():
+        for g in gate_comb:
             wave_raw = self.make_sawtooth(sweeprange, period, width)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw*gate_comb[g] / awg_to_plunger
@@ -257,6 +277,7 @@ class virtual_awg(Instrument):
         Arguments:
             data (list): the data
             waveform (dict): contains the wave and the sawtooth width
+            Naverage (int): number of times the signal was averaged
             direction (string): option to use backwards signal i.o. forwards
 
         Returns:
@@ -283,6 +304,15 @@ class virtual_awg(Instrument):
     def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None, delete=True):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
+        
+        Arguments:
+            fpga_samp_freq (float): sampling frequency of the fpga in Hertz.
+            sweepgates (list): two strings with names of gates to sweep
+            sweepranges (list): two floats for sweepranges in milliVolts
+            
+        Returns:
+            waveform (dict): The waveforms being send with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
         if resolution[0] * resolution[1] > self.maxdatapts:
             raise Exception('resolution is set higher than FPGA memory allows')
@@ -314,7 +344,7 @@ class virtual_awg(Instrument):
         waveform[sweepgates[1]]['name'] = 'sweep_2D_vert_%s' % sweepgates[1]
 
         if comp is not None:
-            for g in comp.keys():
+            for g in comp:
                 if g not in sweepgates:
                     waveform[g] = dict()
                     waveform[g]['wave'] = comp[g]['vert'] * \
@@ -339,6 +369,17 @@ class virtual_awg(Instrument):
         ''' Send sawtooth signals to the linear combinations of gates set by
         gates_horz and gates_vert which effectively do a 2D scan of two virtual
         gates.
+        
+        Arguments:
+            fpga_samp_freq (float): sampling frequency of the fpga in Hertz.
+            gates_horz (dict): the gates for the horizontal direction and their coefficients
+            gates_vert (dict): the gates for the vertical direction and their coefficients
+            sweepranges (list): two floats for sweepranges in milliVolts
+            resolution (list): two ints for numbers of pixels
+            
+        Returns:
+            waveform (dict): The waveforms being send with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
         if resolution[0] * resolution[1] > self.maxdatapts:
             raise Exception('resolution is set higher than FPGA memory allows')
@@ -351,7 +392,7 @@ class virtual_awg(Instrument):
         
         waveform = dict()
         # horizontal virtual gate
-        for g in gates_horz.keys():
+        for g in gates_horz:
             wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[0])
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw*gates_horz[g] / awg_to_plunger
@@ -360,11 +401,11 @@ class virtual_awg(Instrument):
             waveform[g]['name'] = 'sweep_2D_virt_%s' % g
             
         # vertical virtual gate
-        for g in gates_vert.keys():
+        for g in gates_vert:
             wave_raw = self.make_sawtooth(sweepranges[1], period_vert)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw*gates_vert[g] / awg_to_plunger
-            if g in waveform.keys():
+            if g in waveform:
                 waveform[g]['wave'] = waveform[g]['wave'] + wave
             else:
                 waveform[g] = dict()
@@ -387,7 +428,15 @@ class virtual_awg(Instrument):
         
 
     def sweep_2D_process(self, data, waveform, diff_dir=None):
-        ''' Process data from sweep_2D '''
+        ''' Process data from sweep_2D 
+        
+        Arguments:
+            data (list): the raw measured data
+            waveform (dict): The waveforms that was sent with the AWG.
+            
+        Returns:
+            data_processed (list): the processed data
+        '''
         width_horz = waveform['width_horz']
         width_vert = waveform['width_vert']
         resolution = waveform['resolution']
@@ -405,7 +454,14 @@ class virtual_awg(Instrument):
 
 #%%
 def plot_wave_raw(wave_raw, samplerate=None, station=None):
-    ''' Plot the raw wave '''
+    ''' Plot the raw wave 
+    
+    Arguments:
+        wave_raw (array): raw data which represents the waveform
+        
+    Returns:
+        plot (QtPlot): the plot showing the data
+    '''
     if samplerate is None:
         if station is None:
             raise Exception('There is no station')
@@ -422,7 +478,15 @@ def plot_wave_raw(wave_raw, samplerate=None, station=None):
     return plot
 
 def sweep_2D_process(data, waveform, diff_dir=None):
-    ''' Process data from sweep_2D '''
+    ''' Process data from sweep_2D 
+    
+    Arguments:
+        data (list): the raw measured data
+        waveform (dict): The waveforms that was sent with the AWG.
+        
+    Returns:
+        data_processed (list): the processed data
+    '''
     width_horz = waveform['width_horz']
     width_vert = waveform['width_vert']
     resolution = waveform['resolution']

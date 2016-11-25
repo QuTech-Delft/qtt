@@ -487,15 +487,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     period = scanjob['sweepdata'].get('period', 1e-3)
     sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
     
-    
-#    if 'gates_vert' in scanjob.keys():
-#        steprange = (stepdata['end']-stepdata['start'])
-#        for g in scanjob['gates_vert']:
-#            gates.set(g,gates.get(g)+scanjob['gates_vert'][g]*steprange/2)
-#    else:
-#        stepparam.set(stepdata['start'])
-    
-    if 'gates_vert' in scanjob.keys():
+    if 'gates_vert' in scanjob:
         scanjob['gates_vert_init'] = {}
         for g in scanjob['gates_vert']:
             gates.set(g,gates.get(g)+(stepdata['start']-stepdata['end'])*scanjob['gates_vert'][g]/2)
@@ -504,7 +496,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         stepparam.set(stepdata['start'])
         sweepparam.set(sweepgate_value)
     
-    if 'gates_horz' in scanjob.keys():
+    if 'gates_horz' in scanjob:
         waveform, sweep_info = station.awg.sweep_gate_virt(scanjob['gates_horz'], sweeprange, period)
     else:
         waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
@@ -539,7 +531,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     for ix, x in enumerate(stepvalues):
         tprint('scan2Dfast: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
-        if 'gates_vert' in scanjob.keys():
+        if 'gates_vert' in scanjob:
             for g in scanjob['gates_vert']:
                 gates.set(g,scanjob['gates_vert_init'][g]+ix*stepdata['step']*scanjob['gates_vert'][g])
         else:
@@ -547,8 +539,6 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         qtt.time.sleep(delay)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
         liveplotwindow.update_plot()
-        liveplotwindow.fig.axes[0].autoscale(tight=True)
-        liveplotwindow.fig.axes[1].autoscale(tight=True)
         pg.mkQApp().processEvents()
 
     station.awg.stop()
@@ -565,8 +555,6 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         alldata.add_array(data_arr)
         plot = MatPlot(interval=0)
         plot.add(alldata.arrays[name])
-        plot.fig.axes[0].autoscale(tight=True)
-        plot.fig.axes[1].autoscale(tight=True)
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
