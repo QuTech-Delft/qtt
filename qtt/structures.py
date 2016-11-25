@@ -40,6 +40,9 @@ class sensingdot_t:
             self.valuefunc = station.components[
                 'keithley%d' % index].amplitude.get
 
+    def __repr__(self):
+        return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
+
     def __getstate__(self):
         """ Override to make the object pickable
         """
@@ -126,6 +129,7 @@ class sensingdot_t:
         except:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
+        
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
