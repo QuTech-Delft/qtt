@@ -49,7 +49,6 @@ def checkPickle(obj, verbose=0):
             print(ex)
         return False
     return True
-# checkPickle(ivvi1)
 
 from functools import wraps
 
@@ -664,22 +663,7 @@ def timeProgress(data):
 
 #%%
 
-def logistic(x, x0=0, alpha=1):
-    """ Logistic function
-
-    Arguments:
-    x : array
-        values
-    x0, alpha : float
-        parameters of function
-
-    Example
-    -------
-
-    >>> y=logistic(0, 1, alpha=1)
-    """
-    f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
-    return f
+from qtt.algorithms.functions import logistic
 
 #%%
 
