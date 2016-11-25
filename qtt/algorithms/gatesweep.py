@@ -2,7 +2,7 @@
 
 import scipy
 import scipy.ndimage
-from qtt import cfigure, plot2Dline
+from qtt.tools import cfigure, plot2Dline
 import qcodes
 import numpy as np
 import matplotlib.pyplot as plt

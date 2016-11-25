@@ -15,9 +15,10 @@ import qtt.data
 import qtt.algorithms
 
 # todo: remove import *
-#from qtt.tools import *
+from qtt.tools import cfigure, plot2Dline
 from qtt.data import *
 from qtt.algorithms import *
+from qtt.algorithms.functions import logistic
 
 
 #%% Enhance the qcodes functionality

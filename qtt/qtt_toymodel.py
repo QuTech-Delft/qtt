@@ -25,6 +25,7 @@ import qtt
 
 logger = logging.getLogger('qtt')
 
+import qtt.algorithms.functions
 import qtt.simulation.dotsystem
 from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransform
 from qtt.simulation.dotsystem import *
@@ -185,7 +186,7 @@ class FourdotModel(Instrument):
             v = self.gate2ivvi_value(g)
             # i, j = self.gate2ivvi(g)
             # v = float( self._data[i].get(j, 0) )
-            c = c * qtt.logistic(v, offset + jj * 5, 1 / 40.)
+            c = c * qtt.algorithms.functions.logistic(v, offset + jj * 5, 1 / 40.)
         val = c
         if random:
             val = c + (np.random.rand() - .5) * random
