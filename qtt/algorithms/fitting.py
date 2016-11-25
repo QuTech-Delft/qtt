@@ -6,6 +6,10 @@ from qtt.algorithms.functions import FermiLinear, linear_function, Fermi
 
 
 def initFermiLinear(xdata, ydata, fig=None):
+    """ Initalization of fitting a FermiLinear function 
+
+    First the linear part is estimated, then the Fermi part of the function    
+    """
     xdata = np.array(xdata)
     ydata = np.array(ydata)
     n = xdata.size
@@ -30,12 +34,12 @@ def initFermiLinear(xdata, ydata, fig=None):
         dx = np.mean(dx)
         dd = np.hstack((np.diff(ydata[0:nx]), np.diff(ydata[-nx:])))
         dd = np.convolve(dd, np.array([1., 1, 1]) / 3)  # smooth
-        # print(dd)
-        #print('dd: %.3f %.3f' % (np.mean(dd), np.percentile(dd,50)))
-        #a=np.percentile(dd, 50)/dx
-        dd = np.array(sorted(dd))
-        w = int(dd.size / 10)
-        a = np.mean(dd[w:-w]) / dx
+        if dd.size>15:
+            dd = np.array(sorted(dd))
+            w = int(dd.size / 10)
+            a = np.mean(dd[w:-w]) / dx
+        else:
+            a=np.mean(dd)/dx
         b = my - a * mx
         xx = np.hstack((xdata[0:nx], xdata[-nx:]))
         ab = [a, b]
@@ -73,9 +77,7 @@ def initFermiLinear(xdata, ydata, fig=None):
         plt.clf()
         plt.plot(xdata, yr, '.b', label='Fermi part')
         f = Fermi(xdata, cc, A, T)
-
         plt.plot(xdata, f, '-m', label='estimated')
-        #plt.plot(xdata, yr, '.b', label='Fermi part')
 
         plt.legend()
     return ab, ff
