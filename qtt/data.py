@@ -25,9 +25,6 @@ except:
 
 import qtt.tools
 
-# import qtpy.QtGui as QtGui
-# import qtpy.QtWidgets as QtWidgets
-
 import matplotlib.pyplot as plt
 
 from qtt.tools import diffImageSmooth
@@ -37,6 +34,7 @@ from qcodes import DataArray, new_data
 
 
 def getDefaultParameterName(data, defname='amplitude'):
+    print('do not use this function, use the function from the object...')
     if defname in data.arrays.keys():
         return defname
     if (defname + '_0') in data.arrays.keys():

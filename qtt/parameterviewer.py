@@ -125,14 +125,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         logging.info('set %s.%s to %s' % (iname, param, value))
         instr.set(param, value)
 
-    def updatecallback(self, start=True):
+    def updatecallback(self, start=True, dt=3):
         if self._timer is not None:
             del self._timer
 
         self.updatedata()
 
         if start:
-            self._timer = QCodesTimer(fn=self.updatedata, dt=4)
+            self._timer = QCodesTimer(fn=self.updatedata, dt=dt)
             self._timer.start()
         else:
             self._timer = None
