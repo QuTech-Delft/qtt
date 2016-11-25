@@ -790,3 +790,16 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     imf = img_back.real
     imf = imf[0:imx.shape[0], 0:imx.shape[1]]
     return imf
+
+#%%
+
+
+def slopeClick(drawmode='r--'):
+    ''' Calculate slope for linepiece of two points clicked by user. Works 
+    with matplotlib but not with pyqtgraph and uses the currently active 
+    figure)
+    '''
+    coords = pmatlab.ginput(2, drawmode)
+    signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
+
+    return coords, signedslope
