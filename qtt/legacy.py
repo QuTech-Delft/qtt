@@ -49,17 +49,17 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     if verbose:
         print('onedotScan: one-dot: %s' % od['name'])
     gg = od['gates']
-    keithleyidx = [ od['instrument'] ]
+    keithleyidx = [od['instrument']]
 
     gates = station.gates
-    gates.set(gg[1], float(basevalues[gg[1]]-0 ) )    # plunger
+    gates.set(gg[1], float(basevalues[gg[1]] - 0))    # plunger
 
-    pv1 = od['pinchvalues'][0]+0
-    pv2 = od['pinchvalues'][2]+0
-    stepstart = float(np.minimum( od['pinchvalues'][0]+400, 90))
-    sweepstart = float(np.minimum( od['pinchvalues'][2]+300, 90) )
-    stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1-10, 'step': -3})
-    sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2-10, 'step': -3})
+    pv1 = od['pinchvalues'][0] + 0
+    pv2 = od['pinchvalues'][2] + 0
+    stepstart = float(np.minimum(od['pinchvalues'][0] + 400, 90))
+    sweepstart = float(np.minimum(od['pinchvalues'][2] + 300, 90))
+    stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': -3})
+    sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': -3})
 
     wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
 
@@ -70,7 +70,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
         stepdata['step'] = -42
         sweepdata['step'] = -42
         wait_time = 0
-        
+
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
 
@@ -93,7 +93,7 @@ def onedotPlungerScan(station, od, verbose=1):
 
     pv = od['pinchvalues'][1]
 
-    scanjob = dict({'keithleyidx': [od['instrument'] ]})
+    scanjob = dict({'keithleyidx': [od['instrument']]})
     scanjob['sweepdata'] = dict({'gates': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
 
     wait_time = qtt.scans.waitTime(gg[1], gate_settle=getattr(station, 'gate_settle', None))
@@ -179,10 +179,10 @@ def filterBG(imx, ksize, sigma=None):
     # imq = cv2.bilateralFilter(imx.astype(np.float32),9,75,75)
     # imq=cv2.medianBlur(imx.astype(np.uint8), 33)
 
-    if ksize%2 == 0:
-        ksize = ksize+1
+    if ksize % 2 == 0:
+        ksize = ksize + 1
     if sigma is None:
-        sigma = 0.3*((ksize-1)*0.5 - 1) + 0.8
+        sigma = 0.3 * ((ksize - 1) * 0.5 - 1) + 0.8
     # sigma=.8
     imq = imx.copy()
     imq = cv2.GaussianBlur(imq, (int(ksize), int(ksize)), sigma)
@@ -237,7 +237,7 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 import math
 
 
-def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(10) ):
+def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(10)):
     """ Determine region where we have no electrons
 
     The output region is in pixel coordinates.
@@ -252,27 +252,27 @@ def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(
             scale factor
 
     """
-    pt0 = pt+np.array([-distmv, distmv])/istep
-    dd = widthmv/istep # [mV]
+    pt0 = pt + np.array([-distmv, distmv]) / istep
+    dd = widthmv / istep  # [mV]
 
-    phi1 = np.deg2rad(np.pi+phi)
-    phi2 = np.deg2rad(np.pi/2-phi)
-    rr0 = np.zeros( (4, 2))
+    phi1 = np.deg2rad(np.pi + phi)
+    phi2 = np.deg2rad(np.pi / 2 - phi)
+    rr0 = np.zeros((4, 2))
     rr0[0] = pt0
 
     if 1:
-        rr0[1] = pt0+(np.array([ -dd, 0]) )
-        rr0[3] = pt0+(np.array([ 0, dd]) )
-        rr0[1][1] += (rr0[1][0]-rr0[0][0])*math.sin(phi)
-        rr0[3][0] += (rr0[3][1]-rr0[0][1])*math.sin(phi)
+        rr0[1] = pt0 + (np.array([-dd, 0]))
+        rr0[3] = pt0 + (np.array([0, dd]))
+        rr0[1][1] += (rr0[1][0] - rr0[0][0]) * math.sin(phi)
+        rr0[3][0] += (rr0[3][1] - rr0[0][1]) * math.sin(phi)
     else:
-        rr0[1] = pt0+pmatlab.rot2D(phi1).dot(np.array([ dd, 0]) )
-        rr0[3] = pt0+pmatlab.rot2D(phi2).dot(np.array([ dd, 0]) )
-    rr0[2] = np.array([rr0[1][0], rr0[3][1] ] )
+        rr0[1] = pt0 + pmatlab.rot2D(phi1).dot(np.array([dd, 0]))
+        rr0[3] = pt0 + pmatlab.rot2D(phi2).dot(np.array([dd, 0]))
+    rr0[2] = np.array([rr0[1][0], rr0[3][1]])
     # make sure we are inside scan region. we add 1.0 to fix differentiaion issues at the border
     rr0[[1, 2], 0] = np.maximum(rr0[[1, 2], 0], 1.0)
 
-    rr = np.vstack( (rr0, rr0[0:1,:]))
+    rr = np.vstack((rr0, rr0[0:1, :]))
     # print(rr0)
 
     if fig is not None:
@@ -304,20 +304,19 @@ def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
             0: false, 1: undetermined, 2: good
     """
     rr0 = singleRegion(pt, imx, istep, fig=None)
-    rr = np.vstack( (rr0, rr0[0:1,:]))
-
+    rr = np.vstack((rr0, rr0[0:1, :]))
 
     imtmp = imx.copy()
-    pts = rr.reshape( (-1, 1, 2) ).astype(int)
+    pts = rr.reshape((-1, 1, 2)).astype(int)
 
-    mask = 0*imtmp.copy().astype(np.uint8)
+    mask = 0 * imtmp.copy().astype(np.uint8)
     cv2.fillConvexPoly(mask, pts, color=[1])
 
     if 0:
         vvbg = fitBackground(imx, smooth=True, verbose=verbose, fig=None, order=int(3), removeoutliers=True)
     else:
-        vvx = imx+filterBG(imx, ksize=math.ceil(45./istep) )
-        vvbg = imx-filterBG(imx, ksize=math.ceil(45./istep) )
+        vvx = imx + filterBG(imx, ksize=math.ceil(45. / istep))
+        vvbg = imx - filterBG(imx, ksize=math.ceil(45. / istep))
         # vv=vvbg
         if 0:
             showIm(imx, fig=123)
@@ -326,16 +325,16 @@ def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
             showIm(imx - vvx, fig=126, title='imx-vvx')
         # imf=fourierHighPass(imx, nc=30)
 
-    qq0 = cv2.meanStdDev(imx-vvbg)
-    qq = cv2.meanStdDev(imx-vvbg, mask=mask)
+    qq0 = cv2.meanStdDev(imx - vvbg)
+    qq = cv2.meanStdDev(imx - vvbg, mask=mask)
     if verbose >= 2:
-        print('qq0 %s' %  (str(qq0)) )
-        print('qq %s' %  (str(qq)) )
+        print('qq0 %s' % (str(qq0)))
+        print('qq %s' % (str(qq)))
         # print(qq)
 
-    thr = 3.*qq[1]
+    thr = 3. * qq[1]
     # thr=3.5*qq[1]
-    imf = imx-vvbg
+    imf = imx - vvbg
     # imf=smoothImage(imf)
     # imf=anisodiff(imf,niter=25,kappa=50)
 
@@ -352,25 +351,25 @@ def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
         showIm(mask, fig=fig, title='mask')
         plt.plot(rr[:, 0], rr[:, 1], '.-g', markersize=14)
         if verbose >= 2:
-            showIm(imf, fig=fig+1)
+            showIm(imf, fig=fig + 1)
             plt.colorbar()
             plt.title('filtered image')
             img = cv2.cvtColor(scaleImage(imx - vvbg), cv2.COLOR_GRAY2RGB)
             img = scaleImage(imx - vvbg)
-            imq = np.hstack( (img, scaleImage(res)))
-            showIm(imq, fig=fig + 10);
+            imq = np.hstack((img, scaleImage(res)))
+            showIm(imq, fig=fig + 10)
             plt.title('filtered image + thresholded')
 
             plt.plot(rr[:, 0], rr[:, 1], '.-g', markersize=12)
-            rr2 = rr+np.array([imx.shape[1], 0])
+            rr2 = rr + np.array([imx.shape[1], 0])
             plt.plot(rr2[:, 0], rr2[:, 1], '.-g', markersize=12)
 
-            showIm(res, fig=fig + 11);
+            showIm(res, fig=fig + 11)
             # showIm(imf, fig=fig+11);
             plt.plot(rr[:, 0], rr[:, 1], '.-g', markersize=14)
 
-    pixthr = (2.5/istep)**2
-    if (np.sum(res*mask) <= pixthr ):
+    pixthr = (2.5 / istep)**2
+    if (np.sum(res * mask) <= pixthr):
         if np.abs(pmatlab.polyarea(rr)) < ((40 / istep)**2):
             check = 1
         else:
@@ -378,9 +377,9 @@ def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
     else:
         check = 0
     if verbose >= 2:
-        print('singleElectronCheck: area of region: %.1f/%.1f [mv]^2'  % (np.abs( pmatlab.polyarea(rr)), (40/istep)**2) )
+        print('singleElectronCheck: area of region: %.1f/%.1f [mv]^2' % (np.abs(pmatlab.polyarea(rr)), (40 / istep)**2))
     if verbose >= 2:
-        print('singleElectronCheck: np.sum(res*mask) %d/%d '  % (np.sum(res*mask), pixthr))
+        print('singleElectronCheck: np.sum(res*mask) %d/%d ' % (np.sum(res * mask), pixthr))
     checks = dict({0: 'false', 1: 'undetermined', 2: 'good'})
 
     if verbose:
@@ -714,12 +713,12 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
     imtmp, (fw, fh, mvx, mvy, H) = straightenImage(imc, imextent, mvx=istep, verbose=verbose >= 2, interpolation=cv2.INTER_AREA)  # cv2.INTER_NEAREST
     imx = imtmp.astype(np.float64)
 
-    ksize0 = int(math.ceil(31./istep))
-    ksize0 += (ksize0-1)%2
-    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=2.25);
+    ksize0 = int(math.ceil(31. / istep))
+    ksize0 += (ksize0 - 1) % 2
+    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=2.25)
 
     # Select best point
-    bestidx = np.argsort(pts[0]-pts[1])[0]
+    bestidx = np.argsort(pts[0] - pts[1])[0]
     pt = pts[:, bestidx]
 
     ptq = pmatlab.projectiveTransformation((H.I), pt)
@@ -743,7 +742,7 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
 
         plt.axis('image')
 
-        region = int(70/mvx)*np.array([[-1, 1], [-1, 1]])+ptmv.reshape(2, 1)
+        region = int(70 / mvx) * np.array([[-1, 1], [-1, 1]]) + ptmv.reshape(2, 1)
         region[0, 0] = max(region[0, 0], imextent[0])
         region[1, 0] = max(region[1, 0], imextent[2])
         region[0, 1] = min(region[0, 1], imextent[1])
@@ -798,13 +797,13 @@ def getTwoDotValues(td, ods, basevaluestd=dict({}), verbose=1):
 
         tddata['gates'] = [ggg[0], ggL[1], ggg[1], ggR[1], ggg[2]]
         tddata['gatevaluesleft'] = [bpleft[1, 0], basevaluestd[ggL[1]], bpleft[0, 0]]
-        tddata['gatevaluesright'] = [ bpright[1, 0], basevaluestd[ggR[1]], bpright[0, 0]]
+        tddata['gatevaluesright'] = [bpright[1, 0], basevaluestd[ggR[1]], bpright[0, 0]]
 
         fac = .10
         fac = 0
         facplunger = .1
 
-        cc = [-rightval * fac, -facplunger * rightval, -(leftval + rightval) * fac / 2, -facplunger*leftval, -leftval * fac]
+        cc = [-rightval * fac, -facplunger * rightval, -(leftval + rightval) * fac / 2, -facplunger * leftval, -leftval * fac]
         print('getTwoDotValues: one-dots share a gate: %s: compensate %s' %
               (str(tddata['gates']), str(cc)))
         for ii, g in enumerate(tddata['gates']):

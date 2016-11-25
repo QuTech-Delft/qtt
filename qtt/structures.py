@@ -8,12 +8,13 @@ import matplotlib.pyplot as plt
 
 from qtt.tools import freezeclass
 
+
 @freezeclass
 class sensingdot_t:
 
     def __init__(self, ggv, sdvalv=None, station=None, RFfreq=None, index=None, fpga_ch=None):
         """ Class representing a sensing dot 
-    
+
         Arguments:
             ggv (list): gates to be used
             sdvalv (array or None): values to be set on the gates
@@ -47,14 +48,14 @@ class sensingdot_t:
         """ Override to make the object pickable
         """
         print('sensingdot_t: __getstate__')
-        #d=super().__getstate__()
+        # d=super().__getstate__()
         import copy
-        d=copy.copy(self.__dict__)
+        d = copy.copy(self.__dict__)
         for name in ['station', 'valuefunc']:
             if name in d:
-                d[name]=str(d[name])
+                d[name] = str(d[name])
         return d
-        
+
     def show(self):
         gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
@@ -129,7 +130,7 @@ class sensingdot_t:
         except:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
-        
+
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
@@ -180,7 +181,7 @@ class sensingdot_t:
             x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.title('autoTune: sd %d' % sd.index, fontsize=14)
-            #plt.xlabel(sdplg.name)
+            # plt.xlabel(sdplg.name)
 
         sd.goodpeaks = goodpeaks
         sd.tunex = x
@@ -322,7 +323,7 @@ class sensingdot_t:
         if fig is not None:
             plt.title('autoTune: sd %d' % self.index, fontsize=14)
             plt.xlabel(sdplg.name)
-            
+
         if len(goodpeaks) > 0:
             self.sdval[1] = goodpeaks[0]['xhalfl']
             self.targetvalue = goodpeaks[0]['yhalfl']

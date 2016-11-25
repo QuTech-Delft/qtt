@@ -123,48 +123,54 @@ def dataset_labels(alldata, tag=None):
 
 def uniqueArrayName(dataset, name0):
     ''' Generate a unique name for a DataArray in a dataset '''
-    ii=0
+    ii = 0
     name = name0
     while name in dataset.arrays:
-         name = name0+'_%d' % ii  
-         ii=ii+1
-         if ii>1000:
-             raise Exception('too many arrays in DataSet')
+        name = name0 + '_%d' % ii
+        ii = ii + 1
+        if ii > 1000:
+            raise Exception('too many arrays in DataSet')
     return name
 
 from qcodes.plots.qcmatplotlib import MatPlot
-    
+
+
 def diffDataset(alldata, diff_dir='y', fig=None):
-        """ Differentiate a dataset and plot the result """
-        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)        
-        name = 'diff_dir_%s' % diff_dir
-        name = uniqueArrayName(alldata, name)
-        data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
-        
-        alldata.add_array(data_arr)
+    """ Differentiate a dataset and plot the result """
+    imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+    name = 'diff_dir_%s' % diff_dir
+    name = uniqueArrayName(alldata, name)
+    data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
 
-        if fig is not None:
-            plt.figure(fig); plt.clf()            
-            plot = MatPlot(interval=0, num=fig)
-            plot.add(alldata.arrays[name])
-            plot.fig.axes[0].autoscale(tight=True)
-            plot.fig.axes[1].autoscale(tight=True)
+    alldata.add_array(data_arr)
 
-        return alldata
-        
+    if fig is not None:
+        plt.figure(fig)
+        plt.clf()
+        plot = MatPlot(interval=0, num=fig)
+        plot.add(alldata.arrays[name])
+        plot.fig.axes[0].autoscale(tight=True)
+        plot.fig.axes[1].autoscale(tight=True)
+
+    return alldata
+
 #%%
 
+
 def sweepgate(scanjob):
-    g=scanjob['sweepdata'].get('gate', None)
+    g = scanjob['sweepdata'].get('gate', None)
     if g is None:
-        g= scanjob['sweepdata'].get('gates', [None]) [0]
+        g = scanjob['sweepdata'].get('gates', [None])[0]
     return g
+
+
 def stepgate(scanjob):
-    g=scanjob['stepdata'].get('gate', None)
+    g = scanjob['stepdata'].get('gate', None)
     if g is None:
-        g= scanjob['stepdata'].get('gates', [None]) [0]
+        g = scanjob['stepdata'].get('gates', [None])[0]
     return g
-    
+
+
 def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
     """ Show result of a 2D scan """
     if dd is None:
@@ -235,7 +241,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
         if scanjob.get('stepdata', None) is not None:
             if units is None:
-                plt.ylabel('%s' % stepgate(scanjob) )
+                plt.ylabel('%s' % stepgate(scanjob))
             else:
                 plt.ylabel('%s (%s)' % (stepgate(scanjob), units))
 
@@ -358,9 +364,9 @@ class image_transform:
         # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
 
         f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
-        ptx[1,:] = f(x[1,:])  # step
+        ptx[1, :] = f(x[1, :])  # step
         f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
-        ptx[0,:] = f(x[0,:])  # sweep
+        ptx[0, :] = f(x[0, :])  # sweep
 
         return ptx
 
@@ -386,10 +392,10 @@ class image_transform:
         ptpixel = np.zeros((2, nn))
         f = scipy.interpolate.interp1d(
             [xx[2], xx[3]], [0, ny - 1], assume_sorted=False)
-        ptpixel[1,:] = f(x[1,:])
+        ptpixel[1, :] = f(x[1, :])
         f = scipy.interpolate.interp1d(
             [xx[0], xx[1]], [0, nx - 1], assume_sorted=False)
-        ptpixel[0,:] = f(x[0,:])  # sweep to pixel x
+        ptpixel[0, :] = f(x[0, :])  # sweep to pixel x
         # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
         # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
 
@@ -410,8 +416,8 @@ class image_transform:
         x = ptx
         nn = pt.shape[1]
         ptx = np.zeros((2, nn))
-        ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[2], xx[3]])    # step
-        ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
+        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
+        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
         return ptx
 
 
@@ -436,8 +442,8 @@ def pix2scan(pt, dd2d):
     x = pt
     nn = pt.shape[1]
     ptx = np.zeros((2, nn))
-    ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[3], xx[2]])    # step
-    ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
+    ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
+    ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
     return ptx
 
 #%%

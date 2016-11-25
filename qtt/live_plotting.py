@@ -120,8 +120,8 @@ class RdaControl(QtWidgets.QMainWindow):
         self.setCentralWidget(widget)
 
         self.update_values()
-        self.show() 
-        
+        self.show()
+
     def update_values(self):
         for ii, b in enumerate(self.boxes):
             val = self.rda.get_float(b)

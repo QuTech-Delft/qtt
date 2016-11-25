@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 import numpy as np
 import scipy
 import matplotlib
@@ -27,6 +28,7 @@ except:
 
 #%% Debugging
 
+
 def dumpstring(txt):
     """ Dump a string to temporary file on disk """
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
@@ -34,12 +36,14 @@ def dumpstring(txt):
 
 #%%
 
+
 def stripDataset(dataset):
     dataset.sync()
     dataset.data_manager = None
     dataset.background_functions = {}
-    
+
 #%%
+
 
 def negfloat(x):
     ''' Helper function '''
@@ -56,6 +60,7 @@ def checkPickle(obj, verbose=0):
     return True
 
 from functools import wraps
+
 
 def freezeclass(cls):
     """ Decorator to freeze a class """
@@ -79,7 +84,7 @@ def freezeclass(cls):
     cls.__init__ = init_decorator(cls.__init__)
 
     return cls
-    
+
 #%%
 
 import scipy.ndimage as ndimage
@@ -99,15 +104,15 @@ def diffImage(im, dy, size=None):
     if dy == 1 or dy == 'y':
         im = np.diff(im, n=1, axis=0)
         if size == 'same':
-            im = np.vstack((im, im[-1:,:]))
+            im = np.vstack((im, im[-1:, :]))
     if dy == -1:
         im = -np.diff(im, n=1, axis=0)
         if size == 'same':
-            im = np.vstack((im, im[-1:,:]))
+            im = np.vstack((im, im[-1:, :]))
     if dy == 2:
         imx = np.diff(im, n=1, axis=1)
         imy = np.diff(im, n=1, axis=0)
-        im = imx[0:-1,:] + imy[:, 0:-1]
+        im = imx[0:-1, :] + imy[:, 0:-1]
     return im
 
 
@@ -156,23 +161,27 @@ def diffImageSmooth(im, dy='x', sigma=2., size=None):
 #%%
 
 import dateutil
+
+
 def scanTime(dd):
     w = dd.metadata.get('scantime', None)
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
     return w
 
+
 def plot_parameter(data, default_parameter='amplitude'):
     ''' Return parameter to be plotted '''
-    if 'main_parameter'  in data.metadata.keys():
+    if 'main_parameter' in data.metadata.keys():
         return data.metadata['main_parameter']
     if default_parameter in data.arrays.keys():
         return default_parameter
     try:
-        key = next(iter (data.arrays.keys()))
+        key = next(iter(data.arrays.keys()))
         return key
     except:
         return None
+
 
 def plot1D(dataset, fig=1):
     """ Simlpe plot function """
@@ -190,12 +199,13 @@ def plot1D(dataset, fig=1):
 from qtt import pmatlab
 
 
-
 if __name__ == '__main__':
     plot1D(dataset, fig=10)
     plot1D(dataset.amplitude, fig=12)
 
 #%%
+
+
 def showImage(im, extent=None, fig=None):
     if fig is not None:
         plt.figure(fig)
@@ -238,6 +248,7 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
 
 #%% Tools from pmatlab
 
+
 def plot2Dline(line, *args, **kwargs):
     """ Plot a 2D line in a matplotlib figure
 
@@ -267,8 +278,9 @@ def cfigure(*args, **kwargs):
     else:
         fig = plt.figure(*args, facecolor='w', **kwargs)
     ff = lambda xx, figx=fig: mpl2clipboard(fig=figx)
-    fig.canvas.mpl_connect('key_press_event', ff) # mpl2clipboard)
+    fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
     return fig
+
 
 def static_var(varname, value):
     """ Helper function to create a static variable """
@@ -312,6 +324,7 @@ except:
         """ Dummy function for monitor sizes """
         return [[0, 0, 1600, 1200]]
     pass
+
 
 @static_var('monitorindex', -1)
 def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, verbose=0):
@@ -388,6 +401,7 @@ def mkdirc(d):
         pass
     return d
 
+
 def in_ipynb():
     try:
         cfg = get_ipython().config
@@ -406,9 +420,8 @@ def pythonVersion():
     except:
         ipversion = 'None'
 
-
     pversion = '.'.join('%s' % x for x in sys.version_info[0:3])
-    print('python %s, ipython %s, notebook %s' % ( pversion, ipversion, in_ipynb() ))
+    print('python %s, ipython %s, notebook %s' % (pversion, ipversion, in_ipynb()))
 
 #%%
 
@@ -417,6 +430,7 @@ try:
 except:
     pass
 import matplotlib.pyplot as plt
+
 
 def showDotGraph(dot, fig=10):
     dot.format = 'png'
@@ -452,7 +466,7 @@ try:
 
         The interface to Powerpoint used is described here:
             https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
-            
+
         Example
         -------
         >>> title = 'An example title'
@@ -471,18 +485,18 @@ try:
             ppt = Application.ActivePresentation
         except Exception:
             print('could not open active Powerpoint presentation')
-            return None, None              
+            return None, None
 
         if show:
-            Application.Visible = True # shows what's happening, not required, but helpful for now
+            Application.Visible = True  # shows what's happening, not required, but helpful for now
 
         if verbose:
-            print('name: %s'  % ppt.Name)
+            print('name: %s' % ppt.Name)
 
         ppLayoutTitleOnly = 11
         layout = ppLayoutTitleOnly
 
-        slide = ppt.Slides.Add(ppt.Slides.Count+1, layout)
+        slide = ppt.Slides.Add(ppt.Slides.Count + 1, layout)
 
         if title is not None:
             slide.shapes.title.textframe.textrange.text = title
@@ -497,7 +511,7 @@ try:
                 figtemp = QtGui.QPixmap.grabWidget(fig)
                 figtemp.save(fname)
             else:
-                if verbose:                
+                if verbose:
                     print('figure is of an unknown type')
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
 
@@ -523,7 +537,7 @@ try:
 
     def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1, printformat='fancy', **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
-    
+
         Arguments:
             dataset (DataSet): data and metadata from DataSet added to slide
             notes (string): notes added to slide
@@ -533,7 +547,7 @@ try:
         Returns:
             ppt: PowerPoint presentation
             slide: PowerPoint slide
-            
+
         Example
         -------
         >>> notes = 'some additional information' 
@@ -541,47 +555,49 @@ try:
         '''
         if len(dataset.arrays) < 2:
             raise Exception('The dataset contains less than two data arrays')
-            
+
         if len(dataset.arrays) > 3:
             raise Exception('The dataset contains more than three data arrays')
-        
+
         temp_fig = QtPlot(dataset.default_parameter_array(), show_window=False)
-        
+
         text = 'Dataset location: %s' % dataset.location
-    
+
         if notes is None:
             notes = 'Dataset metadata: %s' % reshape_metadata(dataset, printformat=printformat)
-        
-        ppt, slide = addPPTslide(title=title,fig=temp_fig,txt=text,notes=notes,show=show,verbose=verbose, **kwargs)
-    
+
+        ppt, slide = addPPTslide(title=title, fig=temp_fig, txt=text, notes=notes, show=show, verbose=verbose, **kwargs)
+
         return ppt, slide
 
 except:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
         ''' Dummy implementation '''
         pass
+
     def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
         ''' Dummy implementation '''
         pass
 
-#%%    
+#%%
 from collections import OrderedDict
+
 
 def reshape_metadata(dataset, printformat='dict'):
     '''Reshape the metadata of a DataSet
-    
+
     Arguments:
         dataset (DataSet): a dataset of which the metadata will be reshaped
     Returns:
         metadata (string): the reshaped metadata
     '''
-    
+
     if not 'station' in dataset.metadata:
         return 'dataset %s: no metadata available' % (str(dataset.location), )
 
     all_md = dataset.metadata['station']['instruments']
     metadata = dict()
-    
+
     for x in sorted(all_md.keys()):
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
@@ -596,23 +612,22 @@ def reshape_metadata(dataset, printformat='dict'):
                     metadata[x][y]['value'] = float(format(param_md['value'], '.3f'))
                 metadata[x][y]['units'] = param_md['units']
                 metadata[x][y]['label'] = param_md['label']
-    
 
     if printformat == 'dict':
         ss = str(metadata).replace('(', '').replace(')', '').replace('OrderedDict', '')
     else:
         ss = ''
         for k in metadata:
-            print('--- %s'  % k)
+            print('--- %s' % k)
             s = metadata[k]
-            ss += '\n## %s:\n'  % k
+            ss += '\n## %s:\n' % k
             for p in s:
                 pp = s[p]
-                print('  --- %s'  % p)
-                ss += '%s: %s %s' % ( pp['name'], pp['value'], pp.get('units', '') )
-                ss += '\n'            
+                print('  --- %s' % p)
+                ss += '%s: %s %s' % (pp['name'], pp['value'], pp.get('units', ''))
+                ss += '\n'
             # ss+=str(s)
-        
+
     return ss
 
 if __name__ == '__main__' and 0:
@@ -626,7 +641,7 @@ try:
     from qtt.parameterviewer import ParameterViewer
     import qtt.gui
     #from qtt.gui.dataviewer import DataViewer
-    
+
     def setupMeasurementWindows(station, ilist=None):
         ms = monitorSizes()
         vv = ms[-1]
@@ -634,21 +649,23 @@ try:
         if ilist is None:
             ilist = [station.gates]
         w = ParameterViewer(ilist)
-        w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
+        w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
         w.updatecallback()
-    
+
         plotQ = QtPlot(window_title='Live plot', interval=.5)
-        plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
+        plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
-    
+
         app = QtWidgets.QApplication.instance()
         app.processEvents()
-        
-        return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
+
+        return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None})
 except:
     pass
 
 import time
+
+
 def updatePlotTitle(qplot, basetxt='Live plot'):
     txt = basetxt + ' (%s)' % time.asctime()
     qplot.win.setWindowTitle(txt)
@@ -676,6 +693,8 @@ from qtt.algorithms.functions import logistic
 #%%
 
 from itertools import chain
+
+
 def flatten(lst):
     ''' Flatten a list
     >>> flatten([ [1,2], [3,4], [10] ])
@@ -684,6 +703,8 @@ def flatten(lst):
     return list(chain(*lst))
 
 #%%
+
+
 def cutoffFilter(x, thr, omega):
     """ Smooth cutoff filter
 
@@ -696,12 +717,14 @@ def cutoffFilter(x, thr, omega):
     >>> _=plt.plot(x, cutoffFilter(x, 2, .25), '-r')
 
     """
-    y = .5*(1-np.sin(np.pi*(x-thr)/(2*omega)))
-    y[x < thr-omega] = 1
-    y[x > thr+omega] = 0
+    y = .5 * (1 - np.sin(np.pi * (x - thr) / (2 * omega)))
+    y[x < thr - omega] = 1
+    y[x > thr + omega] = 0
     return y
 
 #%%
+
+
 def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
     """ Create smooth ND filter for Fourier high or low-pass filtering
 
@@ -713,7 +736,7 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
     rr = np.meshgrid(*[range(f) for f in fs])
 
     x = np.dstack(rr)
-    x = x-(np.array(fs)/2 - .5)
+    x = x - (np.array(fs) / 2 - .5)
     x = np.linalg.norm(x, axis=2)
     # showIm(x);
 
@@ -724,7 +747,7 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
         plt.clf()
         plt.imshow(F, interpolation='nearest')
 
-    return F#, rr
+    return F  # , rr
 F = smoothFourierFilter([36, 36])
 
 
@@ -732,37 +755,37 @@ F = smoothFourierFilter([36, 36])
 
 def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     """ Implement simple high pass filter using the Fourier transform """
-    f = np.fft.fft2(imx, s=[fs, fs])                  #do the fourier transform
+    f = np.fft.fft2(imx, s=[fs, fs])  # do the fourier transform
 
     fx = np.fft.fftshift(f)
 
     if fig:
         plt.figure(fig)
         plt.clf()
-        plt.imshow(np.log(np.abs(f)+1), interpolation='nearest')
+        plt.imshow(np.log(np.abs(f) + 1), interpolation='nearest')
         # plt.imshow(f.real, interpolation='nearest')
-        plt.title('Fourier spectrum (real part)' )
-        plt.figure(fig+1)
+        plt.title('Fourier spectrum (real part)')
+        plt.figure(fig + 1)
         plt.clf()
         # plt.imshow(fx.real, interpolation='nearest')
         # plt.imshow(np.sign(np.real(fx))*np.log(np.abs(fx)+1), interpolation='nearest')
-        plt.imshow(np.log(np.abs(fx)+1), interpolation='nearest')
-        plt.title('Fourier spectrum (real part)' )
+        plt.imshow(np.log(np.abs(fx) + 1), interpolation='nearest')
+        plt.title('Fourier spectrum (real part)')
 
     if nc > 0 and omega == 0:
         f[0:nc, 0:nc] = 0
         f[-nc:, -nc:] = 0
         f[-nc:, 0:nc] = 0
         f[0:nc, -nc:] = 0
-        img_back = np.fft.ifft2(f)     #inverse fourier transform
+        img_back = np.fft.ifft2(f)  # inverse fourier transform
 
     else:
         # smooth filtering
 
-        F = 1-smoothFourierFilter(fx.shape, thr=nc, omega=omega)
-        fx = F*fx
-        ff = np.fft.ifftshift(fx)  #inverse shift
-        img_back = np.fft.ifft2(ff)     #inverse fourier transform
+        F = 1 - smoothFourierFilter(fx.shape, thr=nc, omega=omega)
+        fx = F * fx
+        ff = np.fft.ifftshift(fx)  # inverse shift
+        img_back = np.fft.ifft2(ff)  # inverse fourier transform
 
     imf = img_back.real
     imf = imf[0:imx.shape[0], 0:imx.shape[1]]

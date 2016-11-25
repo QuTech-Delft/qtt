@@ -105,7 +105,7 @@ def installZMQlogger(port=5800, name=None, clear=True, level=logging.INFO):
 
     rootlogger.addHandler(handler)
     logging.debug('installZMQlogger: handler installed')
-                  # first message always is discarded
+    # first message always is discarded
     return rootlogger
 
 #%%

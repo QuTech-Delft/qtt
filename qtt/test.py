@@ -2,6 +2,7 @@
 
 import sys
 
+
 def _test_core(test_pattern='test*.py', **kwargs):
     import unittest
 
