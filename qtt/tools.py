@@ -1,10 +1,7 @@
-import qtpy
-# print(qtpy.API_NAME)
-
+import sys, os
 import numpy as np
 import scipy
 import matplotlib
-import sys, os
 import logging
 import qcodes
 import pickle
@@ -15,9 +12,6 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 from qtt import pmatlab
 from qtt.pmatlab import mpl2clipboard
-
-import qtpy.QtGui as QtGui
-import qtpy.QtWidgets as QtWidgets
 
 # do NOT load any other qtt submodules here
 import tempfile
@@ -291,6 +285,9 @@ def static_var(varname, value):
 
 
 try:
+    import qtpy.QtGui as QtGui
+    import qtpy.QtWidgets as QtWidgets
+
     def monitorSizes(verbose=0):
         """ Return monitor sizes """
         _qd = QtWidgets.QDesktopWidget()

@@ -1,6 +1,3 @@
-import qtpy
-# print(qtpy.API_NAME)
-
 import numpy as np
 import scipy
 import os
@@ -11,9 +8,6 @@ import time
 import qcodes
 import qcodes as qc
 import datetime
-
-import qtpy.QtGui as QtGui
-import qtpy.QtWidgets as QtWidgets
 
 import matplotlib.pyplot as plt
 

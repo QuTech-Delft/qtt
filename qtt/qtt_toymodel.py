@@ -16,15 +16,19 @@ from qcodes import Instrument   # , Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
 from qcodes.instrument.parameter import ManualParameter
 
-import pyqtgraph
-import pyqtgraph.Qt as Qt
-from pyqtgraph.Qt import QtGui
+#import pyqtgraph
+#import pyqtgraph.Qt as Qt
 from functools import partial
 import threading
 
 import qtt
 
 logger = logging.getLogger('qtt')
+
+import qtt.simulation.dotsystem
+from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransform
+from qtt.simulation.dotsystem import *
+
 
 #%%
 
@@ -47,14 +51,6 @@ class ModelError(Exception):
     ''' Error in Model '''
     pass
 
-
-import qtt.simulation.dotsystem
-from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransform
-
-# import traceback
-
-
-from qtt.simulation.dotsystem import *
 
 
 def dotConductance(self, index=0, verbose=0, T=6):
@@ -411,16 +407,10 @@ class VirtualMeter(Instrument):
 
 #%%
 
-# class MyInstrument(Instrument):
-#    def __init__(self, name, **kwargs):
-#        super().__init__(name, **kwargs)
-
 try:
     import graphviz
 except:
     pass
-
-# from qcodes.utils.validators import Validator
 
 
 class virtual_gates(Instrument):

@@ -1,7 +1,6 @@
 # set up the qtt namespace
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
-import qtpy
 import matplotlib
 if 0:
     try:
@@ -20,6 +19,10 @@ from qtt.algorithms import *
 
 #%% Enhance the qcodes functionality
 
+try:
+    import qtpy
+except:
+    pass
 try:
     from qtpy.QtCore import Qt
     from qcodes.plots.pyqtgraph import QtPlot
