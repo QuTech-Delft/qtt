@@ -7,8 +7,11 @@ import qcodes
 import pickle
 
 # explicit import
-from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
+try:
+    from qcodes.plots.pyqtgraph import QtPlot
+except:
+    pass
 
 from qtt import pmatlab
 from qtt.pmatlab import mpl2clipboard
@@ -20,6 +23,7 @@ import tempfile
 #%% Debugging
 
 def dumpstring(txt):
+    """ Dump a string to temporary file on disk """
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
 
@@ -30,20 +34,6 @@ def stripDataset(dataset):
     dataset.data_manager = None
     dataset.background_functions = {}
     
-#%%
-try:
-    from qcodes.process.heartbeat import *
-    import time
-
-    def pauseHeartBeat():
-        m = initHeartBeat(bfile, reinit=False)
-        setHeartBeat(m, 0)
-        for ii in range(5):
-            print('pause %d: ...' % ii)
-            time.sleep(1)
-        setHeartBeat(m, 1)
-except:
-    pass
 #%%
 
 def negfloat(x):
@@ -630,7 +620,7 @@ if __name__ == '__main__' and 0:
 #%%
 from qtt.parameterviewer import ParameterViewer
 import qtt.gui
-from qtt.gui.dataviewer import DataViewer
+#from qtt.gui.dataviewer import DataViewer
 
 def setupMeasurementWindows(station, ilist=None):
     ms = monitorSizes()
