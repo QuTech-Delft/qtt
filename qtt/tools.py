@@ -19,6 +19,11 @@ from qtt.pmatlab import mpl2clipboard
 # do NOT load any other qtt submodules here
 import tempfile
 
+try:
+    import qtpy.QtGui as QtGui
+    import qtpy.QtWidgets as QtWidgets
+except:
+    pass
 
 #%% Debugging
 
@@ -617,28 +622,31 @@ if __name__ == '__main__' and 0:
     print(x)
 
 #%%
-from qtt.parameterviewer import ParameterViewer
-import qtt.gui
-#from qtt.gui.dataviewer import DataViewer
-
-def setupMeasurementWindows(station, ilist=None):
-    ms = monitorSizes()
-    vv = ms[-1]
-    # create custom viewer which gathers data from a station object
-    if ilist is None:
-        ilist = [station.gates]
-    w = ParameterViewer(ilist)
-    w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
-    w.updatecallback()
-
-    plotQ = QtPlot(window_title='Live plot', interval=.5)
-    plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
-    plotQ.update()
-
-    app = QtWidgets.QApplication.instance()
-    app.processEvents()
+try:
+    from qtt.parameterviewer import ParameterViewer
+    import qtt.gui
+    #from qtt.gui.dataviewer import DataViewer
     
-    return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
+    def setupMeasurementWindows(station, ilist=None):
+        ms = monitorSizes()
+        vv = ms[-1]
+        # create custom viewer which gathers data from a station object
+        if ilist is None:
+            ilist = [station.gates]
+        w = ParameterViewer(ilist)
+        w.setGeometry(vv[0]+vv[2]-400-300, vv[1], 300, 600)
+        w.updatecallback()
+    
+        plotQ = QtPlot(window_title='Live plot', interval=.5)
+        plotQ.setGeometry(vv[0]+vv[2]-600, vv[1]+vv[3]-400, 600, 400)
+        plotQ.update()
+    
+        app = QtWidgets.QApplication.instance()
+        app.processEvents()
+        
+        return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None} )
+except:
+    pass
 
 import time
 def updatePlotTitle(qplot, basetxt='Live plot'):
