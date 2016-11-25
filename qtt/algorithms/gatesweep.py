@@ -38,14 +38,14 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         XX = None
 
         # should be made generic
-        g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint ][0]
-        value = qtt.data.getDefaultParameterName(data) # 'amplitude'
+        g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
+        value = qtt.data.getDefaultParameterName(data)  # 'amplitude'
 
         x = data.arrays[g]
         value = data.arrays[value]
 
         # detect direction of scan
-        scandirection = np.sign(x[-1]-x[0])
+        scandirection = np.sign(x[-1] - x[0])
         if scandirection < 0 and 1:
             pass
             scandirection = 1
@@ -64,7 +64,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                     # double sweep, reduce
             if verbose:
                 print('analyseGateSweep: scan with sweepback: reducing data')
-            XX = XX[0:sr.size,:]
+            XX = XX[0:sr.size, :]
 
         x = XX[:, 0]
         value = XX[:, 2]
@@ -101,7 +101,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][0]
     else:
         mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][-1]
-    mp = max(mp, 2) # fix for case with zero data signal
+    mp = max(mp, 2)  # fix for case with zero data signal
     midpoint2 = x[mp]
 
     if verbose >= 2:
@@ -173,13 +173,13 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     leftpred = np.polyval(fitleft, x[leftidx])
 
-    if np.abs( scandirection*(xleft[1]-xleft[0]) ) > 150 and xleft.size > 15:
+    if np.abs(scandirection * (xleft[1] - xleft[0])) > 150 and xleft.size > 15:
         xleft0 = x[mp + 6:]
         leftval0 = ww[mp + 6:]
         fitL = np.polyfit(xleft0, leftval0, 1)
         pp = np.polyval(fitL, xleft0)
-        nd = fitL[0]/(highvalue-lowvalue)
-        if goodgate and (nd*750 > 1):
+        nd = fitL[0] / (highvalue - lowvalue)
+        if goodgate and (nd * 750 > 1):
             midpoint1 = np.percentile(x, .5)
             midpoint2 = np.percentile(x, .5)
             goodgate = False
@@ -358,7 +358,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     cost, pts, imx = costscoreOD(x0[0], x0[1], x0[2:4], wwarea, output=True)
     balancefitpixel0 = pts.reshape((-1, 2)).T.copy()
     cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True)
-    pt = pts[1,:,:].transpose()
+    pt = pts[1, :, :].transpose()
 
     od['balancepointpixel'] = pt
     od['balancepointpolygon'] = tr.pixel2scan(pt)
