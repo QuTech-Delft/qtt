@@ -296,11 +296,11 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
         jobs = loadExperimentData(resultsdir, tag='doubledot', dstr='jobs')
         q = [j['td']['name'] for j in jobs]
     except Exception as e:
-            jobs = []
-            q = None
-            print(resultsdir)
-            raise e
-            pass
+        jobs = []
+        q = None
+        print(resultsdir)
+        raise e
+        pass
 
     for idx, td in enumerate(two_dots):
         basefig = 1000 + 100 * idx
@@ -318,7 +318,7 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
 
         dd2d = pmatlab.load(pfile)
         if isinstance(dd2d, tuple):
-                dd2d = dd2d[0]
+            dd2d = dd2d[0]
         name = td['name']
         xdata[name] = dd2d
 
@@ -358,7 +358,7 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
 
         ddplunger = qtt.load_data(pfileplunger)
         if isinstance(ddplunger, tuple):
-                ddplunger = ddplunger[0]
+            ddplunger = ddplunger[0]
 
         if ddplunger is None:
             print('could not load file %s' % pfileplunger)

@@ -34,10 +34,10 @@ class QCodesTimer(threading.Thread):
 
 class ParameterViewer(QtWidgets.QTreeWidget):
 
+    shared_kwargs = ['station', 'instrumentnames']
 
-    shared_kwargs=['station', 'instrumentnames']
-    
     ''' Simple class to show qcodes parameters '''
+
     def __init__(self, instruments, instrumentnames=None, name='QuTech Parameter Viewer', **kwargs):
         ''' Simple class to show qcodes parameters
 
@@ -56,8 +56,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         if instrumentnames is None:
             instrumentnames = [i.name for i in instruments]
-        self._instruments=instruments
-        self._instrumentnames=instrumentnames
+        self._instruments = instruments
+        self._instrumentnames = instrumentnames
         self._itemsdict = dict()
         for i in instrumentnames:
             self._itemsdict[i] = dict()
@@ -117,7 +117,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             try:
                 box.setSingleStep(value)
             except:
-                    pass
+                pass
 
     def valueChanged(self, iname, param, value, *args, **kwargs):
         """ Callback used to update values in an instrument """

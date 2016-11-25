@@ -119,18 +119,19 @@ try:
     def slotTest(txt):
         """ Helper function for Qt slots """
         class slotObject(QtCore.QObject):
+
             def __init__(self, txt):
                 QObject.__init__(self)
                 self.txt = txt
+
             @Slot()
             def slot(self, v=None):
                 if v is None:
                     print('slotTest: %s' % self.txt)
                 else:
-                    print('slotTest: %s: %s' % (self.txt, str(v) ) )
+                    print('slotTest: %s: %s' % (self.txt, str(v)))
         s = slotObject(txt)
         return s.slot
-
 
     class signalTest(QObject):
         """ Helper function for Qt signals """
@@ -143,7 +144,7 @@ try:
             self.s.emit()
 
 except Exception as ex:
-    logging.info('pmatlab: load qt: %s'  % ex)
+    logging.info('pmatlab: load qt: %s' % ex)
     print(ex)
     print('pmatlab: no Qt found')
 
@@ -225,6 +226,7 @@ def tprint(string, dt=1, output=False):
         else:
             return
 
+
 def partiala(method, **kwargs):
     ''' Function to perform functools.partial on named arguments '''
     def t(x):
@@ -258,6 +260,7 @@ def createCheckerboard(wh, outfile=None, fac=100, fig=None):
         cv2.imwrite(outfile, Br)
     return B, Br
 
+
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
     """ Update font sizes for a plot """
     if ax is None:
@@ -267,7 +270,7 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
     for tick in ax.yaxis.get_major_ticks():
         tick.label.set_fontsize(fsize)
 
-    for x in [ax.xaxis.label, ax.yaxis.label]: # ax.title,
+    for x in [ax.xaxis.label, ax.yaxis.label]:  # ax.title,
         x.set_fontsize(labelsize)
 
     plt.tick_params(axis='both', which='major', labelsize=fsize)
@@ -277,6 +280,7 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
         ax.title.set_fontsize(titlesize)
 
     plt.draw()
+
 
 def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
     """
@@ -294,14 +298,14 @@ def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
 
     scale = np.array(scale)
     if scale.size == 1:
-        scale = scale*np.ones(x0.size)
+        scale = scale * np.ones(x0.size)
     tt = np.arange(-1, 1, 5e-2)
 
     for ii in range(nn):
-        val = np.zeros( tt.size)
+        val = np.zeros(tt.size)
         for jj in range(tt.size):
             x = x0.copy()
-            x[ii] += scale[ii]*tt[jj]
+            x[ii] += scale[ii] * tt[jj]
             val[jj] = fun(x)
         if c is None:
             plt.plot(tt, val, marker)
@@ -321,6 +325,7 @@ class fps_t:
     >>> fps.show()
     framerate: 5.000
     """
+
     def __init__(self, nn=40):
         self.n = nn
         self.tt = np.zeros(self.n)
@@ -391,7 +396,7 @@ def projectiveTransformation(H, x):
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))
     """
     k = x.shape[0]
-    kout = H.shape[0]-1
+    kout = H.shape[0] - 1
     xx = x.transpose().reshape((-1, 1, k))
 
     if (xx.dtype is np.integer or xx.dtype == 'int64'):
@@ -445,7 +450,7 @@ def camera2opengl(mtx, far=100, near=1):
     f = far
     n = near
     s = 1
-    M = np.array( [[alpha/cx, 0, 0, 0], [0, beta/cy, 0, 0], [0, 0, -(f+n)/(f-n), -2*f*n/(f-n)], [0, 0, -1, 0]] )
+    M = np.array([[alpha / cx, 0, 0, 0], [0, beta / cy, 0, 0], [0, 0, -(f + n) / (f - n), -2 * f * n / (f - n)], [0, 0, -1, 0]])
     return M
 
 #%%
@@ -475,7 +480,7 @@ class camera_t():
 
 
         """
-        self.T = T # world-to-camera matrix
+        self.T = T  # world-to-camera matrix
         self.mtx = None
         self.distcoeff = distcoeff
         self.imsize = imsize
@@ -551,7 +556,7 @@ class camera_t():
                     ['%f' % x for x in (np.array(m).flatten()).tolist()])
                 fid.write('%s\n' % mm)
 
-            fid.write('%s\n' % ' '.join(['%f' % float(x) for x in np.array(self.distcoeff).flatten() ]))
+            fid.write('%s\n' % ' '.join(['%f' % float(x) for x in np.array(self.distcoeff).flatten()]))
             fid.write('%d %d\n' % (self.imsize[0], self.imsize[1]))
             fid.write('-1 -1\n')
 
@@ -615,7 +620,6 @@ class camera_t():
     def rpy(self):
         return RBE2euler(self.T[0:3, 0:3])
 
-
     def drawHorizon(self, img, height=0, color=(255, 0, 0), thickness=3):
         """ Draw camera horizon on image """
         mtx = self.mtx
@@ -626,13 +630,13 @@ class camera_t():
         up = self.upDirection()
         side = np.cross(vd.flat, up.flat)
         cc = self.cameraCentre()
-        xx = 10000;
+        xx = 10000
         gside = np.cross(vd.flat, [0, 0, 1])
 
-        vv2 = np.linspace(-xx, xx, 100)*gside.reshape( (3, 1) )
-        vv1 = cc+vd*xx
-        Xhor = vv1+vv2
-        Xhor[2,:] += height
+        vv2 = np.linspace(-xx, xx, 100) * gside.reshape((3, 1))
+        vv1 = cc + vd * xx
+        Xhor = vv1 + vv2
+        Xhor[2, :] += height
         xhor = self.projectPoints(Xhor)
         # hidx=pointsinrect(xhor, [[1;1] [1600;1200]]);
         # xhor=xhor(:, hidx);
@@ -716,9 +720,9 @@ class camera_t():
         if X.shape[0] == 3 and X.shape[1] != 3:
             # legacy mode
             if X.size > 0:
-                xim = cv2.projectPoints( X.transpose(), rvec, tvec, ecam.mtx, ecam.distcoeff)[0]
+                xim = cv2.projectPoints(X.transpose(), rvec, tvec, ecam.mtx, ecam.distcoeff)[0]
             else:
-                xim = np.zeros( (0, 1, 2))
+                xim = np.zeros((0, 1, 2))
         else:
             xim = cv2.projectPoints(X, rvec, tvec, ecam.mtx, ecam.distcoeff)[0]
 
@@ -770,13 +774,13 @@ class camera_t():
         # apply to all points
         xx = projectiveTransformation(Twc, X.T)
         # valid and invalid indices
-        ind = (xx[2,:] >= neardist).nonzero()[0]
+        ind = (xx[2, :] >= neardist).nonzero()[0]
 
         # notind = (bools==False).nonzero()[0]
         if ind.size == 0:
             xim = np.zeros((0, 1, 2))
         else:
-            xim = cv2.projectPoints(X[ind,:], rvec, tvec, mtx, distcoeff)[0]
+            xim = cv2.projectPoints(X[ind, :], rvec, tvec, mtx, distcoeff)[0]
 
         if verbose >= 2:
             plt.figure(100)
@@ -805,7 +809,7 @@ class camera_t():
         ximuall = cv2.projectPoints(X.transpose(), rvec, tvec, mtx, None)[0]
 
         # do the z buffer test
-        bools = xx[2,:] > neardist
+        bools = xx[2, :] > neardist
         # do the 2d projection test
         if not rect is None:
             for ii, pt in enumerate(ximuall):
@@ -825,7 +829,7 @@ class camera_t():
                 X[:, ind].transpose(), rvec, tvec, mtx, None)[0]
             xim = cv2.projectPoints(
                 X[:, ind].transpose(), rvec, tvec, mtx, distcoeff)[0]
-            ximall[notind,:,:] = -1
+            ximall[notind, :, :] = -1
 
         if verbose >= 2:
             plt.figure(100)
@@ -840,24 +844,26 @@ class camera_t():
 
     def estimatePose(ecam, XX, xim):
         try:
-            pnpmode = cv2.EPNP # opencv3 dev
+            pnpmode = cv2.EPNP  # opencv3 dev
             # pnpmode = cv2.CV_ITERATIVE # opencv3 dev
-            pnpmodeiter = cv2.CV_ITERATIVE # opencv3 dev
+            pnpmodeiter = cv2.CV_ITERATIVE  # opencv3 dev
         except:
-            pnpmode = cv2.SOLVEPNP_EPNP # opencv2?
-            pnpmodeiter = cv2.SOLVEPNP_ITERATIVE # opencv3 dev
+            pnpmode = cv2.SOLVEPNP_EPNP  # opencv2?
+            pnpmodeiter = cv2.SOLVEPNP_ITERATIVE  # opencv3 dev
             pass
 #        pnpmode= cv2.SOLVEPNP_ITERATIVE
 
         mtx = ecam.mtx
         distcoeff = ecam.distcoeff
-        found, rvec, tvec = cv2.solvePnP(XX, xim.reshape( (-1, 1, 2)), mtx, distcoeff, None, None, False, pnpmode) # tvec=init_tvec, rvec=init_rvec, useExtrinsicGuess=1 )
+        found, rvec, tvec = cv2.solvePnP(XX, xim.reshape((-1, 1, 2)), mtx, distcoeff, None, None, False, pnpmode)  # tvec=init_tvec, rvec=init_rvec, useExtrinsicGuess=1 )
         Tgood = opencv2T(rvec, tvec)  # world-to-camera
         ecamx = camera_t(Tgood, mtx, distcoeff)
         return ecamx
 
 #%%
 import subprocess
+
+
 def runcmd(cmd, verbose=0):
     """ Run command and return output """
     output = subprocess.check_output(cmd, shell=True)
@@ -874,7 +880,8 @@ def angleDiff(x, y):
     >>> d=angleDiff( 0.01, np.pi+0.02)
     >>> d=angleDiff( 0.01, 2*np.pi+0.02)
     """
-    return np.abs( ( (x-y+np.pi) % (2 * np.pi ) ) - np.pi )
+    return np.abs(((x - y + np.pi) % (2 * np.pi)) - np.pi)
+
 
 def angleDiffOri(x, y):
     """ Return difference between two angles in radians modulo pi
@@ -882,7 +889,7 @@ def angleDiffOri(x, y):
     >>> d=angleDiff( 0.01, np.pi+0.02)
     >>> d=angleDiff( 0.01, 2*np.pi+0.02)
     """
-    return np.abs( ( (x-y+np.pi/2) % ( np.pi ) ) - np.pi/2 )
+    return np.abs(((x - y + np.pi / 2) % (np.pi)) - np.pi / 2)
 
 
 def opencvpose2attpos(rvecs, tvecs):
@@ -890,7 +897,7 @@ def opencvpose2attpos(rvecs, tvecs):
     rvec = np.array(rvecs).flatten()
     R, tmp = cv2.Rodrigues(rvec)
     att = RBE2euler(R)
-    pos = -R.transpose().dot( np.matrix(tvec.reshape((3, 1))) )
+    pos = -R.transpose().dot(np.matrix(tvec.reshape((3, 1))))
     return att, pos
 
 
@@ -973,6 +980,7 @@ def pg_rotation2H(R):
     X[0:-1, 0:-1] = R
     return X
 
+
 def directionMean(vec):
     """ Calculate the mean of a set of directions
 
@@ -983,16 +991,17 @@ def directionMean(vec):
 
     """
     def dist(a, vec):
-        phi = np.arctan2( vec[:, 0], vec[:, 1])
-        x = a-phi
-        x = np.mod(x+np.pi/2, np.pi)-np.pi/2
+        phi = np.arctan2(vec[:, 0], vec[:, 1])
+        x = a - phi
+        x = np.mod(x + np.pi / 2, np.pi) - np.pi / 2
         cost = np.linalg.norm(x)
         return cost
     Nfeval = 1
+
     def callbackF(Xi):
         global Nfeval
         print(Xi)
-        print( '{0:4d}   {1: 3.6f}'.format(Nfeval, Xi[0], dist(Xi[0], vec) ) )
+        print('{0:4d}   {1: 3.6f}'.format(Nfeval, Xi[0], dist(Xi[0], vec)))
         Nfeval += 1
 
     m = vec.mean(axis=0)
@@ -1002,6 +1011,7 @@ def directionMean(vec):
     r = scipy.optimize.minimize(ff, a0, callback=None, options=dict({'disp': False}))
     a = r.x
     return a
+
 
 def circular_mean(weights, angles):
     """ Calculate circular mean of a set of 2D vectors """
@@ -1034,7 +1044,7 @@ def rot2D_old(phi):
     return np.matrix([[math.cos(phi), -math.sin(phi)], [math.sin(phi), math.cos(phi)]])
 
 
-@static_var("b", np.matrix(np.zeros( (2, 2))))
+@static_var("b", np.matrix(np.zeros((2, 2))))
 def rot2D(phi):
     """ Return 2x2 rotation matrix from angle
 
@@ -1061,6 +1071,7 @@ def rot2D(phi):
     r.itemset(3, c)
     return r
 
+
 def pg_rotx(phi):
     """ Rotate around the x-axis with angle """
     c = math.cos(phi)
@@ -1083,7 +1094,7 @@ if platform.node() == 'marmot':
         T[0:3, 3] = f[0:3].reshape(3, 1)
         return T
 
-    @static_var("b", np.array(np.zeros( (2, 2))))
+    @static_var("b", np.array(np.zeros((2, 2))))
     def rot2D(phi):
         """ Return 2x2 rotation matrix from angle
 
@@ -1114,32 +1125,32 @@ if platform.node() == 'marmot':
         """ Rotate around the x-axis with angle """
         c = math.cos(phi)
         s = math.sin(phi)
-        R = np.zeros( (3, 3))
+        R = np.zeros((3, 3))
         R.flat = [1, 0, 0, 0, c, -s, 0, s, c]
         return R
 
 
-
-def imshowz(im,  *args, **kwargs):
+def imshowz(im, *args, **kwargs):
     """ Show image with interactive z-values """
-    plt.imshow(im,  *args, **kwargs)
+    plt.imshow(im, *args, **kwargs)
 
     sz = im.shape
     numrows, numcols = sz[0], sz[1]
+
     def format_coord(x, y):
-        col = int(x+0.5)
-        row = int(y+0.5)
+        col = int(x + 0.5)
+        row = int(y + 0.5)
         if col >= 0 and col < numcols and row >= 0 and row < numrows:
             z = im[row, col]
             try:
                 if len(z) == 1:
                     return 'x=%1.4f, y=%1.4f, z=%1.4f' % (x, y, z)
                 else:
-                    return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z) )
+                    return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z))
             except:
-                return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z) )
+                return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z))
         else:
-            return 'x=%1.4f, y=%1.4f'%(x, y)
+            return 'x=%1.4f, y=%1.4f' % (x, y)
 
     ax = plt.gca()
     ax.format_coord = format_coord
@@ -1158,13 +1169,14 @@ def pg_scaling(scale, cc=None):
 
     """
     scale = np.array(scale)
-    scale = np.hstack( (scale, 1))
+    scale = np.hstack((scale, 1))
     H = np.diag(scale)
     if cc is not None:
         cc = np.array(cc).flatten()
-        H = pg_transl2H(cc)*H*pg_transl2H(-cc)
+        H = pg_transl2H(cc) * H * pg_transl2H(-cc)
 
     return H
+
 
 def pg_transl2H(tr):
     """ Convert translation to homogeneous transform matrix
@@ -1200,6 +1212,7 @@ def setregion(im, subim, pos):
     im[pos[0]:(pos[0] + h), pos[1]:(pos[1] + w), ...] = subim
     return im
 
+
 def frontFilter(X, rvec, tvec, mtx, verbose=0, distcoeff=None, rect=None, neardist=0.01, returnall=False):
     """ Select points which are in front of the camera (and in a certain region)
         Points in a 3xN np.array.float32 and rect with in a 2x5 np.array.float32
@@ -1211,7 +1224,7 @@ def frontFilter(X, rvec, tvec, mtx, verbose=0, distcoeff=None, rect=None, neardi
     ximuall = cv2.projectPoints(X.transpose(), rvec, tvec, mtx, None)[0]
 
     # do the z buffer test
-    bools = xx[2,:] > neardist
+    bools = xx[2, :] > neardist
     # do the 2d projection test
     if not rect is None:
         for ii, pt in enumerate(ximuall):
@@ -1244,7 +1257,7 @@ def frontFilter(X, rvec, tvec, mtx, verbose=0, distcoeff=None, rect=None, neardi
         else:
             ximall = cv2.projectPoints(
                 X.transpose(), rvec, tvec, mtx, distcoeff)[0]
-            ximall[notind,:,:] = -1
+            ximall[notind, :, :] = -1
         return xim, ind, ximall
     else:
         return xim, ind
@@ -1264,7 +1277,7 @@ def region2poly(rr):
         # todo: eliminate transpose
     # poly=np.array( (2, 5), dtype=rr.dtype)
     # poly.flat =rr.flat[ [0,1,1,0, 0, 2,2,3,3,2] ]
-    poly = rr.flat[ [0, 1, 1, 0, 0, 2, 2, 3, 3, 2] ].reshape( (2, 5))
+    poly = rr.flat[[0, 1, 1, 0, 0, 2, 2, 3, 3, 2]].reshape((2, 5))
 
     # poly = np.array([rr[:, 0:1], np.array([[rr[0, 1]], [rr[1, 0]]]), rr[ :, 1:2], np.array([[rr[0, 0]], [rr[1, 1]]]), rr[:, 0:1]]).reshape((5, 2)).T
     return poly
@@ -1355,6 +1368,7 @@ def auto_canny(image, sigma=0.33):
 
 #%% Plotting functions
 
+
 def plotPoints(xx, *args, **kwargs):
     """ Plot 2D or 3D points
 
@@ -1368,11 +1382,11 @@ def plotPoints(xx, *args, **kwargs):
 
     """
     if xx.shape[0] == 2:
-        h = plt.plot(xx[0,:], xx[1,:], *args, **kwargs)
+        h = plt.plot(xx[0, :], xx[1, :], *args, **kwargs)
     elif xx.shape[0] == 3:
-        h = plt.plot(xx[0,:], xx[1,:], xx[2,:], *args, **kwargs)
+        h = plt.plot(xx[0, :], xx[1, :], xx[2, :], *args, **kwargs)
     if xx.shape[0] == 1:
-        h = plt.plot(xx[0,:], *args, **kwargs)
+        h = plt.plot(xx[0, :], *args, **kwargs)
     else:
         h = None
     return h
@@ -1423,7 +1437,7 @@ def plotPoints3D(xx, *args, **kwargs):
         # ax = p3.Axes3D(fig)
     # ax=p.gca()
     # r=ax.plot3D(np.ravel(xx[0,:]),np.ravel(xx[1,:]),np.ravel(xx[2,:]),  *args, **kwargs)
-    r = ax.plot(np.ravel(xx[0,:]), np.ravel(xx[1,:]), np.ravel(xx[2,:]),  *args, **kwargs)
+    r = ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]), np.ravel(xx[2, :]), *args, **kwargs)
     # ax.set_xlabel('X'); ax.set_ylabel('Y'); ax.set_zlabel('Z')
     #   fig.add_axes(ax)
     # p.show()
@@ -1455,7 +1469,7 @@ def polyarea(p):
         for x in range(len(p)):
             x0 = p[x, 0]
             y0 = p[x, 1]
-            xp = x+1
+            xp = x + 1
             if xp >= len(p):
                 xp = 0
             x1 = p[xp, 0]
@@ -1501,7 +1515,6 @@ except:
             # warnings.warn('pmatlab: could not load shapely, not all functionality is available')
         pass
 
-
     def polyintersect(x1, x2):
         """ Intersection of two polygons
 
@@ -1517,12 +1530,13 @@ except:
         p1 = shapely.geometry.Polygon(x1)
         p2 = shapely.geometry.Polygon(x2)
         p = p1.intersection(p2)
-        if p.is_empty: # len(p)==0:
-            return np.zeros( (0, 2))
+        if p.is_empty:  # len(p)==0:
+            return np.zeros((0, 2))
         x = np.array(list(p.exterior.coords))
         return x
 
 #%%
+
 
 def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0), thickness=-1, copyimage=True):
     """ Draw points on image
@@ -1549,6 +1563,7 @@ def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0),
             cv2.putText(
                 out, '%d' % (i + 1), tpnt, cv2.FONT_HERSHEY_SIMPLEX, fscale, color, fthickness)
     return out
+
 
 def enlargelims(factor=1.05):
     """ Enlarge the limits of a plot
@@ -1591,6 +1606,7 @@ def findfilesR(p, patt):
         lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
     return lst
 
+
 def signedsqrt(val):
     """ Signed square root function
 
@@ -1599,8 +1615,9 @@ def signedsqrt(val):
     >>> signedmin(-10, 5)
     -5
     """
-    val = np.sign(val)*np.sqrt(np.abs(val))
+    val = np.sign(val) * np.sqrt(np.abs(val))
     return val
+
 
 def signedmin(val, w):
     """ Signed minimum value function
@@ -1622,9 +1639,10 @@ def smoothstep(x, x0=0, alpha=1):
     >>> _ = plt.plot(t, smoothstep(t, 300, alpha=1./100),'.b')
 
     """
-    x = alpha*(x-x0)
-    f = (  (x/np.sqrt(1+x*x) ) + 1)/2
+    x = alpha * (x - x0)
+    f = ((x / np.sqrt(1 + x * x)) + 1) / 2
     return f
+
 
 def logistic(x, x0=0, alpha=1):
     """ Simple logistic function
@@ -1633,8 +1651,9 @@ def logistic(x, x0=0, alpha=1):
     >>> _ = plt.plot(t, logistic(t, 300, alpha=1./100),'.b')
 
     """
-    f = 1/(1+np.exp(-2*alpha*(x-x0)))
+    f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
     return f
+
 
 def findfiles(p, patt, recursive=False):
     """ Get a list of files """
@@ -1647,7 +1666,8 @@ def findfiles(p, patt, recursive=False):
 
 #%%
 
-def gaborFilter(ksize, sigma,theta,Lambda=1,psi=0,gamma=1, cut=None):
+
+def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
     """ Create a Gabor filter of specified size
 
 
@@ -1672,22 +1692,22 @@ def gaborFilter(ksize, sigma,theta,Lambda=1,psi=0,gamma=1, cut=None):
     >>> g = gaborFilter(ksize=15, sigma=2,theta=2,Lambda=1, gamma=1)
 
     """
-    h = ( (ksize-1)//2 )
-    x, y = np.meshgrid(range(-h, h+1), range(-h, h+1))
-    sigma_x = sigma;
+    h = ((ksize - 1) // 2)
+    x, y = np.meshgrid(range(-h, h + 1), range(-h, h + 1))
+    sigma_x = sigma
     # print('gamma %s' % gamma)
-    sigma_y = float(sigma)/gamma;
+    sigma_y = float(sigma) / gamma
     # Rotation
-    x_theta = x*np.cos(theta)+y*np.sin(theta);
-    y_theta = -x*np.sin(theta)+y*np.cos(theta);
+    x_theta = x * np.cos(theta) + y * np.sin(theta)
+    y_theta = -x * np.sin(theta) + y * np.cos(theta)
 
-    xt = 2*np.pi/Lambda*x_theta
+    xt = 2 * np.pi / Lambda * x_theta
     if cut is not None:
         pass
         xt = np.minimum(xt, cut)
         xt = np.maximum(xt, -cut)
 
-    gb = np.exp(-.5*(x_theta**2/sigma_x**2+y_theta**2/sigma_y**2))*np.cos(xt+psi);
+    gb = np.exp(-.5 * (x_theta**2 / sigma_x**2 + y_theta**2 / sigma_y**2)) * np.cos(xt + psi)
     return gb
 
 #%%
@@ -1695,6 +1715,7 @@ def gaborFilter(ksize, sigma,theta,Lambda=1,psi=0,gamma=1, cut=None):
 import numpy as np
 import scipy.ndimage.filters as filters
 import scipy.ndimage.morphology as morphology
+
 
 def detect_local_minima(arr, thr=None):
     """
@@ -1737,10 +1758,10 @@ def detect_local_minima(arr, thr=None):
     return np.where(detected_minima)
 
 
-
 #%% Matlab compatibility functions
 
 __t00 = 0
+
 
 def tic():
     """ Start timer """
@@ -1789,7 +1810,7 @@ def ginput(n=1, drawmode=''):
         x = np.array(x).T
         xx = np.hstack((xx, x))
         if drawmode is not None:
-            plt.plot(xx[0,:].T, xx[1,:].T, drawmode)
+            plt.plot(xx[0, :].T, xx[1, :].T, drawmode)
     return xx
 
 
@@ -1873,11 +1894,13 @@ atexit.register(closefn)
 #%%
 import warnings
 
+
 def deprecation(message):
     """ Issue a deprecation warning message """
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
-def anisodiff(img,niter=1,kappa=50,gamma=0.1,step=(1., 1.),option=1,ploton=False):
+
+def anisodiff(img, niter=1, kappa=50, gamma=0.1, step=(1., 1.), option=1, ploton=False):
     """
     Anisotropic diffusion.
 
@@ -1969,33 +1992,33 @@ def anisodiff(img,niter=1,kappa=50,gamma=0.1,step=(1., 1.),option=1,ploton=False
     for ii in xrange(niter):
 
         # calculate the diffs
-        deltaS[:-1,: ] = np.diff(imgout, axis=0)
+        deltaS[:-1, :] = np.diff(imgout, axis=0)
         deltaE[:, :-1] = np.diff(imgout, axis=1)
 
         # conduction gradients (only need to compute one per dim!)
         if option == 1:
-            gS = np.exp(-(deltaS/kappa)**2.)/step[0]
-            gE = np.exp(-(deltaE/kappa)**2.)/step[1]
+            gS = np.exp(-(deltaS / kappa)**2.) / step[0]
+            gE = np.exp(-(deltaE / kappa)**2.) / step[1]
         elif option == 2:
-            gS = 1./(1.+(deltaS/kappa)**2.)/step[0]
-            gE = 1./(1.+(deltaE/kappa)**2.)/step[1]
+            gS = 1. / (1. + (deltaS / kappa)**2.) / step[0]
+            gE = 1. / (1. + (deltaE / kappa)**2.) / step[1]
 
         # update matrices
-        E = gE*deltaE
-        S = gS*deltaS
+        E = gE * deltaE
+        S = gS * deltaS
 
         # subtract a copy that has been shifted 'North/West' by one
         # pixel. don't as questions. just do it. trust me.
         NS[:] = S
         EW[:] = E
-        NS[1:,:] -= S[:-1,:]
+        NS[1:, :] -= S[:-1, :]
         EW[:, 1:] -= E[:, :-1]
 
         # update the image
-        imgout += gamma*(NS+EW)
+        imgout += gamma * (NS + EW)
 
         if ploton:
-            iterstring = "Iteration %i" % (ii+1)
+            iterstring = "Iteration %i" % (ii + 1)
             ih.set_data(imgout)
             ax2.set_title(iterstring)
             fig.canvas.draw()
@@ -2027,8 +2050,6 @@ except:
         warnings.warn('writeTxt: could not find PIL')
         return None
     pass
-
-
 
 
 #%% Copy mplimage to clipboard
@@ -2078,7 +2099,7 @@ try:
             cb.setPixmap(qim)
 
             if 0:
-                im = im[:,:, 0:3].copy()
+                im = im[:, :, 0:3].copy()
                 qim = QtWidgets.QImage(
                     im.data, im.shape[0], im.shape[1], QtWidgets.QImage.Format_RGB888)
                 cb.setImage(qim)
@@ -2107,9 +2128,11 @@ def addfigurecopy(fig=None):
     else:
         Fig = plt.figure(fig)
     ff = lambda xx, figx=Fig: mpl2clipboard(fig=figx)
-    Fig.canvas.mpl_connect('key_press_event', ff) # mpl2clipboard)
+    Fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
 
 #%%
+
+
 def cfigure(*args, **kwargs):
     """ Create Matplotlib figure with copy to clipboard functionality
 
@@ -2121,7 +2144,7 @@ def cfigure(*args, **kwargs):
     else:
         fig = plt.figure(*args, facecolor='w', **kwargs)
     ff = lambda xx, figx=fig: mpl2clipboard(fig=figx)
-    fig.canvas.mpl_connect('key_press_event', ff) # mpl2clipboard)
+    fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
     return fig
 
 #%%
@@ -2171,6 +2194,7 @@ except:
 
 #%%
 
+
 def getWindowRectangle():
     """ Return current window rectangle """
     x, y, w, h = None, None, None, None
@@ -2190,6 +2214,7 @@ def getWindowRectangle():
         x, y, w, h = g.left(), g.top(), g.width(), g.height()
         # mngr.window.setGeometry(x,y,w,h)
     return (x, y, w, h)
+
 
 def setWindowRectangle(x, y=None, w=None, h=None, mngr=None, be=None):
     """ Position the current Matplotlib figure at the specified position
@@ -2239,11 +2264,15 @@ def raiseWindow(fig):
     w.show()
 
 #%%
+
+
 def ca():
     """ Close all open windows """
     plt.close('all')
 
 #%%
+
+
 @static_var('monitorindex', -1)
 def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, verbose=0):
     """ Tile figure windows on a specified area
@@ -2319,6 +2348,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, v
 
 #%%
 
+
 def robustCost(x, thr, method='L1'):
     """ Robust cost function
 
@@ -2336,33 +2366,33 @@ def robustCost(x, thr, method='L1'):
     if method == 'L1':
         y = np.minimum(np.abs(x), thr)
     elif method == 'L2' or method == 'square':
-        y = np.minimum(x*x, thr)
+        y = np.minimum(x * x, thr)
     elif method == 'BZ':
-        alpha = thr*thr
+        alpha = thr * thr
         epsilon = np.exp(-alpha)
-        y = -np.log( np.exp(-x*x ) + epsilon )
+        y = -np.log(np.exp(-x * x) + epsilon)
     elif method == 'BZ0':
         # print('BZ0')
-        alpha = thr*thr
+        alpha = thr * thr
         epsilon = np.exp(-alpha)
-        y = -np.log( np.exp(-x*x ) + epsilon )  + np.log(1+epsilon)
+        y = -np.log(np.exp(-x * x) + epsilon) + np.log(1 + epsilon)
     elif method == 'cauchy':
-        b2 = thr*thr
-        d2 = x*x
-        y = np.log ( 1+d2/b2 )
+        b2 = thr * thr
+        d2 = x * x
+        y = np.log(1 + d2 / b2)
     elif method == 'cg':
         delta = x
-        delta2 = delta*delta
-        w = 1/thr # ratio of std.dev
-        w2 = w*w
-        A = .1 # fraction of outliers
-        y = -np.log(A*np.exp(-delta2) + (1-A)*np.exp(-delta2/w2)/w )
-        y = y + np.log(A + (1-A)*1/w )
+        delta2 = delta * delta
+        w = 1 / thr  # ratio of std.dev
+        w2 = w * w
+        A = .1  # fraction of outliers
+        y = -np.log(A * np.exp(-delta2) + (1 - A) * np.exp(-delta2 / w2) / w)
+        y = y + np.log(A + (1 - A) * 1 / w)
     elif method == 'huber':
-        d2 = x*x
-        d = 2*thr*np.abs(x)-thr*thr
+        d2 = x * x
+        d = 2 * thr * np.abs(x) - thr * thr
         y = d2
-        idx = np.abs(y) >= thr*thr
+        idx = np.abs(y) >= thr * thr
         y[idx] = d[idx]
     elif method == 'show':
         plt.figure(10)
@@ -2374,12 +2404,14 @@ def robustCost(x, thr, method='L1'):
         # print('robustCost: %s'  % mm)
         y = mm
     else:
-        raise Exception('no such method' )
+        raise Exception('no such method')
     return y
 
 # robustCost(np.arange(-5,5,.1), 2, 'show')
 
 #%%
+
+
 class timeConverter:
     """ Class to convert time between current time and cyclic log times """
     tstart = None
@@ -2571,7 +2603,7 @@ def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
     """ Search for specific type of object in Matplotlib figure """
     cc = fig.get_children()
     if verbose:
-        print('findImageHandle: %s: %d children' % (str(fig), len(cc)) )
+        print('findImageHandle: %s: %d children' % (str(fig), len(cc)))
     for c in cc:
         if isinstance(c, otype):
             return c
@@ -2618,7 +2650,7 @@ def niceplot(ax, fig=None, despine=True, verbose=0, figurebg=True, tightlayout=T
 
     # Remove top and right axes lines ("spines")
     if verbose >= 2:
-        print('niceplot: ax %s, fig %s' % ( str(ax), str(fig)))
+        print('niceplot: ax %s, fig %s' % (str(ax), str(fig)))
     if verbose:
         print('niceplot: remove spines')
 
@@ -2720,6 +2752,8 @@ def otsu(im, fig=None):
     return thr
 
 #%%
+
+
 def histogram(x, nbins=30, fig=1):
     """
     >>> _=histogram(np.random.rand(1,100))
@@ -2758,39 +2792,39 @@ def decomposeProjectiveTransformation(H, verbose=0):
     """
     H = np.matrix(H)
     k = H.shape[0]
-    km = k-1
+    km = k - 1
 
-    eta = H[k-1, k-1]
-    Hp = np.matrix( np.vstack( (np.eye(km, k), H[k-1,:] )) )
+    eta = H[k - 1, k - 1]
+    Hp = np.matrix(np.vstack((np.eye(km, k), H[k - 1, :])))
     A = H[0:km, 0:km]
     t = H[0:km, -1]
-    v = H[k-1, 0:km].T
+    v = H[k - 1, 0:km].T
 
     eps = 1e-10
-    if np.abs(np.linalg.det(A)) < 4*eps:
-        print('decomposeProjectiveTransformation: part A of matrix is (near) singular');
+    if np.abs(np.linalg.det(A)) < 4 * eps:
+        print('decomposeProjectiveTransformation: part A of matrix is (near) singular')
 
-    sRK = A-np.matrix(t).dot( np.matrix(v.T) );   # upper left block of H*inv(Hp)
-    R, K = np.linalg.qr(sRK);
+    sRK = A - np.matrix(t).dot(np.matrix(v.T))   # upper left block of H*inv(Hp)
+    R, K = np.linalg.qr(sRK)
     K = np.matrix(K)
     R = np.matrix(R)
 
-    s = (np.abs(np.linalg.det(K)))**(1./km)
-    K = K/s;
+    s = (np.abs(np.linalg.det(K)))**(1. / km)
+    K = K / s
 
-    if k == 2 and K[0, 0] < 0: # in 3-dimensional case normalize sign
-        K = np.diag([-1, 1])*K;
-        R = R.dot( np.diag([-1, 1]) );
+    if k == 2 and K[0, 0] < 0:  # in 3-dimensional case normalize sign
+        K = np.diag([-1, 1]) * K
+        R = R.dot(np.diag([-1, 1]))
     else:
         # primitive...
-        sc = np.sign(np.diag(K));
-        K = np.diag(sc)*K;
-        R = R*np.diag(sc);
-    br = np.hstack( (np.zeros( (1, km) ), np.ones( (1, 1) ) ))
-    Hs = np.matrix(np.vstack( (np.hstack( (s*R, t.reshape( (-1, 1 ) ))), br )) )
-    Ha = np.matrix( np.vstack( (np.hstack( (K, np.zeros( (km, 1) )   ) ), br )) )
+        sc = np.sign(np.diag(K))
+        K = np.diag(sc) * K
+        R = R * np.diag(sc)
+    br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
+    Hs = np.matrix(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
+    Ha = np.matrix(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))
 
-    phi = np.arctan2(R[1, 0], R[0, 0] )
+    phi = np.arctan2(R[1, 0], R[0, 0])
 
     if verbose:
         print('decomposeProjectiveTransformation: size %d' % k)
@@ -2806,6 +2840,7 @@ def modulepath(m):
         return None
     return package.get_filename()
 
+
 def checkmodule(mname):
     import imp
     q = imp.find_module(mname)
@@ -2813,6 +2848,7 @@ def checkmodule(mname):
     q = importlib.util.find_spec(mname)
     print(q)
     return q
+
 
 def unittest(verbose=1):
     """ Unittest function for module """

@@ -53,7 +53,6 @@ class ModelError(Exception):
     pass
 
 
-
 def dotConductance(self, index=0, verbose=0, T=6):
     ''' Calculate conductance in dot due to Coulomb peak tunneling '''
 
@@ -479,8 +478,8 @@ class virtual_gates(Instrument):
                            set_cmd=partial(self._set, gate=gate),
                            # get_parser=float,
                            vals=Numbers(-2000, 2000), )
-                           # sweep_step=0.1,
-                           # sweep_delay=0.05)
+        # sweep_step=0.1,
+        # sweep_delay=0.05)
         self.add_function(
             'get_{}'.format(gate), call_cmd=partial(self.get, param_name=gate))
         self.add_function('set_{}'.format(gate), call_cmd=partial(
@@ -505,7 +504,7 @@ class virtual_gates(Instrument):
 
     def allvalues(self):
         """ Return all gate values in a simple dict """
-        vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map) ]
+        vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
         return dict(vals)
 
     def resetgates(gates, activegates, basevalues=None, verbose=2):

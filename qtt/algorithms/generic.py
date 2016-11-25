@@ -39,15 +39,15 @@ def nonmaxsuppts(v, d, minval=None):
 def disk(radius):
     """ Create disk of specified radius """
     radius = int(radius)
-    nn = 2*radius+1
+    nn = 2 * radius + 1
     x, y = np.meshgrid(range(nn), range(nn))
-    d = ((x-radius)**2+(y-radius)**2 < 0.01+radius**2).astype(int)
+    d = ((x - radius)**2 + (y - radius)**2 < 0.01 + radius**2).astype(int)
     return d
 
 
 def localMaxima(arr, radius=1, thr=None):
     ''' Calculate local maxima in a 2D array '''
-    strel = disk(radius) # skimage.morphology.disk(radius)
+    strel = disk(radius)  # skimage.morphology.disk(radius)
     local_max = (filters.maximum_filter(arr, footprint=strel) == arr)
 
     if thr is not None:
@@ -102,14 +102,14 @@ def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
     h, w = im8.shape[:2]
     eigen = cv2.cornerEigenValsAndVecs(im8, blocksize, ksize=ksize)
     eigen = eigen.reshape(h, w, 3, 2)  # [[e1, e2], v1, v2]
-    flow = eigen[:,:, eigenvec]
-    ll = eigen[:,:, 0]
+    flow = eigen[:, :, eigenvec]
+    ll = eigen[:, :, 0]
 
     if fig is not None:
         vis = im8.copy()
         vis[:] = (192 + np.uint32(vis)) / 2
         d = 12
-        points = np.dstack(np.mgrid[int(d / 2):w:d, int(d/2):h:d]).reshape(-1, 2)
+        points = np.dstack(np.mgrid[int(d / 2):w:d, int(d / 2):h:d]).reshape(-1, 2)
         for x, y in points:
             vx, vy = np.int32(flow[y, x] * d)
             # vx,vy=int(ff*ll[y,x,0]*vx), int(ff*ll[y,x,0]*vy)
@@ -229,7 +229,7 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
 
     ptxf = resizefactor * ptx  # [:,::-1]
     val = getValuePixel(flow, ptxf)
-    l = getValuePixel(ll[:,:, 0], ptxf)
+    l = getValuePixel(ll[:, :, 0], ptxf)
 
     if verbose:
         print('findCoulombDirection: initial: %s' % str(val))
@@ -260,9 +260,9 @@ def extent2fullextent(extent0, im):
     """ Convert extent to include half pixel border """
     nx = im.shape[1]
     ny = im.shape[0]
-    dx = (extent0[1]-extent0[0])/(nx-1)
-    dy = (extent0[3]-extent0[2])/(ny-1)
-    extent = [extent0[0]-dx/2, extent0[1]+dx/2, extent0[2]-dy/2, extent0[3]+dy/2 ]
+    dx = (extent0[1] - extent0[0]) / (nx - 1)
+    dy = (extent0[3] - extent0[2]) / (ny - 1)
+    extent = [extent0[0] - dx / 2, extent0[1] + dx / 2, extent0[2] - dy / 2, extent0[3] + dy / 2]
     return extent
 
 
@@ -296,7 +296,7 @@ def show2Dimage(im, dd, **kwargs):
     # imh=plt.imshow(im, extent=xx, interpolation='nearest')
     if units is not None:
         if 'stepdata' in mdata:
-            plt.xlabel('%s (%s)' % (dd['sweepdata']['gates'][0], units) )
+            plt.xlabel('%s (%s)' % (dd['sweepdata']['gates'][0], units))
             plt.ylabel('%s (%s)' % (dd['stepdata']['gates'][0], units))
     else:
         if 'stepdata' in mdata:
@@ -343,7 +343,7 @@ def getValuePixel(imx, pt):
         imx = imx.astype(np.float32)
         vv = np.zeros((imx.shape[2]))
         for ii in range(imx.shape[2]):
-            vv[ii] = cv2.getRectSubPix(imx[:,:, ii], (1, 1), (ptf[0], ptf[1]))
+            vv[ii] = cv2.getRectSubPix(imx[:, :, ii], (1, 1), (ptf[0], ptf[1]))
     return vv
 
 
