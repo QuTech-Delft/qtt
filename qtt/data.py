@@ -438,12 +438,6 @@ def pix2scan(pt, dd2d):
 
     xx = extent
     x = pt
-<<<<<<< b214e17bb47a41ee28377aa7aef097ed583fe39d
-    nn = pt.shape[1]
-    ptx = np.zeros((2, nn))
-    ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
-    ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
-=======
     if len(pt.shape)==1:
         ptx = np.zeros((2, 1))
         ptx[1] = np.interp(x[1], [0, ny - 1], [xx[3], xx[2]])    # step
@@ -453,7 +447,6 @@ def pix2scan(pt, dd2d):
         ptx = np.zeros((2, nn))
         ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[3], xx[2]])    # step
         ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
->>>>>>> Add 1d array functionality in pix2scan and a signedslope in slopeClick in tools
     return ptx
 
 #%%
