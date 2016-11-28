@@ -789,6 +789,7 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
 
     imf = img_back.real
     imf = imf[0:imx.shape[0], 0:imx.shape[1]]
+
     return imf
 
 #%%
@@ -801,7 +802,7 @@ def slopeClick(drawmode='r--'):
         drawmode (string): plotting style
         
     Returns:
-        coords (array): coordinates of the two clicked points
+        coords (2 x 2 array): coordinates of the two clicked points
         signedslope (float): slope of linepiece connecting the two points
     '''
     coords = pmatlab.ginput(2, drawmode)
@@ -809,22 +810,35 @@ def slopeClick(drawmode='r--'):
 
     return coords, signedslope
 
-def clickGatevals(dataset, drawmode='ro'):
-    ''' Get gate values for all gates at clicked point. Only works for matplotlib.    
+def clickGatevals(plot, drawmode='ro'):
+    ''' Get gate values for all gates at clicked point in a heatmap.
     
     Arguments:
-        dataset (qcodes Dataset): measurement data and metadata
+        plot (qcodes MatPlot object): plot of measurement data
         drawmode (string): plotting style
         
     Returns:    
-        allgatevalues (dict): values of the gates at clicked point
+        gatevals (dict): values of the gates at clicked point
     '''
+    # TODO: implement for virtual gates
+    if type(plot) != qcodes.plots.qcmatplotlib.MatPlot:
+        raise Exception('The plot object is not based on the MatPlot class from qcodes.')
+
+    plot.fig.show()
     coords = pmatlab.ginput(drawmode=drawmode)
+    data_array = plot.traces[0]['config']['z']
+    dataset = data_array.data_set
     gatevals = dataset.metadata['allgatevalues']
     
-    for arr in dataset.measured.set_arrays:
-        arr.ndarray.shape # TODO
-    
-    return allgatevalues
+    if len(data_array.set_arrays) != 2:
+        raise Exception('The DataArray does not have exactly two set_arrays.')
+        
+    for arr in data_array.set_arrays:
+        if len(arr.ndarray.shape)==1:
+            gatevals[arr.name] = coords[1, 0]
+        else:
+            gatevals[arr.name] = coords[0, 0]
+        
+    return gatevals
 
 #%%

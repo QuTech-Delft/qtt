@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from qtt.data import dataset2Dmetadata, pix2scan, image_transform, dataset2image, dataset2image2
-from qtt.tools import *
+#from qtt.tools import *
 import qtt.data
 import scipy
 from qtt import pmatlab
@@ -426,6 +426,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     return od, ptv, pt, ims, lv, wwarea
 
 if __name__ == '__main__':
+    from imp import reload
     reload(qtt.data)
     dd = alldata
     od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)

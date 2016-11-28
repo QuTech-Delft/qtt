@@ -570,13 +570,14 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
     Arguments:
         station (qcodes station): contains all of the instruments
         scangates (list): the two gates to scan
-        coords (array): coordinates of the points to scan between
+        coords (2 x 2 array): coordinates of the points to scan between
         sd (object): corresponds to the sensing dot used for read-out
         
     Returns:
         dataset (qcodes Dataset): measurement data and metadata
     '''
     #TODO: put a different parameter and values on the horizontal axis?
+    #TODO: extend functionality to any number of gates (virtual gates?)
     x0 = [coords[0,0], coords[1,0]]
     x1 = [coords[1,0], coords[1,1]]
     sweeprange = np.sqrt((x0[0]-x1[0])**2+(x0[1]-x1[1])**2)
