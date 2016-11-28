@@ -429,7 +429,7 @@ def pix2scan(pt, dd2d):
         contains scan data
 
     """
-#    warnings.warn('use transformation object instead')
+    warnings.warn('use transformation object instead')
     extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
         dd2d, verbose=0)
     # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)

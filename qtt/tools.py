@@ -802,7 +802,7 @@ def slopeClick(drawmode='r--'):
         drawmode (string): plotting style
         
     Returns:
-        coords (array): coordinates of the two clicked points
+        coords (2 x 2 array): coordinates of the two clicked points
         signedslope (float): slope of linepiece connecting the two points
     '''
     coords = pmatlab.ginput(2, drawmode)
