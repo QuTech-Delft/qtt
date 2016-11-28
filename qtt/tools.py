@@ -792,14 +792,39 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     return imf
 
 #%%
-
-
 def slopeClick(drawmode='r--'):
     ''' Calculate slope for linepiece of two points clicked by user. Works 
-    with matplotlib but not with pyqtgraph and uses the currently active 
-    figure)
+    with matplotlib but not with pyqtgraph. Uses the currently active 
+    figure.
+    
+    Arguments:
+        drawmode (string): plotting style
+        
+    Returns:
+        coords (array): coordinates of the two clicked points
+        signedslope (float): slope of linepiece connecting the two points
     '''
     coords = pmatlab.ginput(2, drawmode)
     signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
 
     return coords, signedslope
+
+def clickGatevals(dataset, drawmode='ro'):
+    ''' Get gate values for all gates at clicked point. Only works for matplotlib.    
+    
+    Arguments:
+        dataset (qcodes Dataset): measurement data and metadata
+        drawmode (string): plotting style
+        
+    Returns:    
+        allgatevalues (dict): values of the gates at clicked point
+    '''
+    coords = pmatlab.ginput(drawmode=drawmode)
+    gatevals = dataset.metadata['allgatevalues']
+    
+    for arr in dataset.measured.set_arrays:
+        arr.ndarray.shape # TODO
+    
+    return allgatevalues
+
+#%%
