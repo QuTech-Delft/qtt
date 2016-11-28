@@ -811,8 +811,7 @@ def slopeClick(drawmode='r--'):
     return coords, signedslope
 
 def clickGatevals(plot, drawmode='ro'):
-    ''' Get gate values for all gates at clicked point in a heatmap. Only works
-    for matplotlib.
+    ''' Get gate values for all gates at clicked point in a heatmap.
     
     Arguments:
         plot (qcodes MatPlot object): plot of measurement data
