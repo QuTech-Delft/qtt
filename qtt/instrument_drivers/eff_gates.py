@@ -20,18 +20,18 @@ class eff_gates(Instrument):
     a way such that they correspond to the chemical potentials in mV's.
 
     They do not (yet?) have an offset relative to the physical gates.
-
+    
     Input:
         name (string):
         gates (object):
         eff_gate_map ():
     '''
     shared_kwargs = ['gates']
-
     def __init__(self, name, gates, eff_gate_map, **kwargs):
         super().__init__(name, **kwargs)
 
         self.gates = gates
+
         self.map = eff_gate_map
         self._gates_list = sorted(list(self.map[list(self.map.keys())[0]].keys()))
         self._eff_gates_list = sorted(list(self.map.keys()))
@@ -54,7 +54,7 @@ class eff_gates(Instrument):
     def _get(self, gate):
         gateval = sum([self.map[gate][g] * self.gates[g].get() for g in self.map[gate]])
         return gateval
-
+        
     def _set(self, value, gate):
         gate_vec = np.zeros(len(self._eff_gates_list))
         increment = value - self.get(gate)
