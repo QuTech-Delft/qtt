@@ -42,9 +42,9 @@ import pmatlab
 import sklearn.manifold
 
 os.chdir('/home/eendebakpt/svn/qutech/qtt/nv')
-import deeptools
-from deeptools import labelMapping
-from deeptools import showModel
+import nvtools
+from nvtools import labelMapping
+from nvtools import showModel
 
 #%%
 print('Generating Data')
