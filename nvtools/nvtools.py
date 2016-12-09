@@ -32,21 +32,13 @@ def extract_data(filename, gate_scaling):
                 x = np.append(x,float(xapp))    # corresponds to elapsed time
                 y = np.append(y,float(yapp))    # yellow frequency
                 y2 = np.append(y2,float(y2app)) # gate voltage
-                #print('  y2.shape %s' % (y2.shape, ) )
                 y3 = np.append(y3,float(y3app)) # newfocus frequency --> mostly ignored for the moment    
             else:
                 pass
                 #print('funny line: |%s|' % line)
                 #print(' |%s|' % line[0])
-            if ii>1900:
-                pass
-                #break
             
-    #print('shape')
-    #print(y2.shape)
-    
     ### need to clean data up in case 'wrong value' was recorded. this can happen with the laser freuqencies if the Wavemeter has got no signal
-
     filter_cond =  (-2000 <y2*gate_scaling) & (12<y) 
     filter_cond = filter_cond & (2000 >y2*gate_scaling) & (y<100)
     
@@ -55,6 +47,7 @@ def extract_data(filename, gate_scaling):
 
 #%%
 def testTheano():
+    ''' That the Theano package '''
     vlen = 10 * 30 * 768  # 10 x #cores x # threads per core
     iters = 10
     
@@ -151,7 +144,7 @@ def clusterCenters(db, X, labels=None):
 
 
 def labelMapping(labels):
-    
+    ''' Helper function '''
     chars = sorted(list(set(labels)))
     char_indices = dict((c, i) for i, c in enumerate(chars))
     indices_char = dict((i, c) for i, c in enumerate(chars))
@@ -159,6 +152,7 @@ def labelMapping(labels):
     return chars, char_indices, indices_char
 
 def showModel(model, fig=10):
+    """ Show keras model """
     import keras
     import cv2
     import tempfile
@@ -179,9 +173,9 @@ def showModel(model, fig=10):
 
 
 def showTSNE(X, labels=None, fig=400):
+    """ Visualize a dataset using t-SNE """
     sklearn.manifold.TSNE(n_components=2)
         
-    #X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     model = TSNE(n_components=2, random_state=0)
     np.set_printoptions(suppress=True)
     qq=model.fit_transform(X)
