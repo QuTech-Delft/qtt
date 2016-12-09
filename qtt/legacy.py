@@ -16,13 +16,12 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-from qtt.algorithms import onedotGetBalance
+from qtt.algorithms.onedot import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.scans import pinchoffFilename
 from qtt.data import load_data, show2D
+from qtt.tools import diffImage, diffImageSmooth
 
-# should be removed later
-# from pmatlab import tilefigs
 
 from qtt import pmatlab
 from qtt.pmatlab import plotPoints, tilefigs
@@ -622,7 +621,6 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
     return vv
 
 
-from qtt.algorithms import diffImage, diffImageSmooth
 
 
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):

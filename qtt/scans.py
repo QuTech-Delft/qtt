@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 from qtt.tools import tilefigs
 import qtt.tools
-from qtt.algorithms import analyseGateSweep
+from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
