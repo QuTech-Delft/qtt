@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Oct 23 13:11:16 2016
+Load data and visualize results
 
 @author: eendebakpt
 """
@@ -14,13 +14,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 import copy
 
-sys.path.append(r'/home/eendebakpt/svn/qutech/qtt/nv')
-os.chdir(r'/home/eendebakpt/data/qutech/nv')
+from nvtools.nvtools import extract_data
 
-from nvtools import extract_data
+#%% Load data
 
-# In[2]:
-
+os.chdir('/home/eendebakpt/data/qutech/nv')
 files = []
 NV1 = True
 if NV1:
@@ -40,19 +38,13 @@ for t in timestamp_list:
 # files[2] = '20160811_145538_frequency_logger.dat'
 print( files)
 
-
-
-# In[4]:
-
 data = list(range(len(files)))
 for i in range(len(files)):
     data[i] = extract_data(files[i], gate_scaling)
     print('data %d: length %s' % (i, data[i][0].shape))
 
 
-# In[5]:
-
-# Remove empty intervals (i.e. idle time) from data 
+#%% Remove empty intervals (i.e. idle time) from data 
 stitchIndices,stitchTimeDiff = list(range(len(data))),list(range(len(data)))
 
 for i,d in zip(range(len(data)),data):
@@ -74,9 +66,7 @@ for i,d in zip(range(len(data)),data):
     
 
 
-# In[6]:
-
-# % Stitch all datafiles together
+#%% Stitch all datafiles together
 allData = [np.array([]),np.array([]),np.array([]),np.array([])]
 allStitchIndices = []
 for i in range(len(data)):
@@ -95,7 +85,7 @@ for i in range(len(data)):
 # allStitchIndices = allStitchIndices(2:end);
 
 
-# In[7]:
+#%% Show some data
 
 fig = plt.figure(figsize=(17,6))
 ax = plt.subplot(211)
@@ -111,7 +101,7 @@ plt.show()
 
 # In[8]:
 
-# % Analyze jumps --> create data
+# % Analyze jumps --> create jumps from the data
 time = allData[0]
 yellow = allData[1]
 gate = allData[2]
@@ -126,13 +116,14 @@ jumpYellow = yellow[np.append(False, jumpSelect)] - yellow[np.append(jumpSelect,
 jumpRelative = jumpGate / jumpYellow
 
 
-#%% Save data for maarten
+#%% Save data for other scripts
 
 xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow) )
 
 if 0:                 
     # save data
-    np.save('/home/eendebakpt/tmp/jdata.npy', xx)
+    #np.save('/home/eendebakpt/tmp/jdata.npy', xx)
+    np.save('jdata.npy', xx)
 
     plt.figure(1); plt.clf()
     plt.plot( xx[0,:], xx[5,:], '.b')
@@ -146,15 +137,16 @@ ax = plt.subplot(111)
 plt.plot(yellow, newfocus, 'x')
 
 fig=plt.figure()
-plt.plot(newfocus, '.b')
+plt.plot(newfocus, '.b'); plt.ylabel('Newfocus')
 
 fig=plt.figure()
-plt.plot(time, '.b')
+plt.plot(time, '.b'); plt.ylabel('Time')
 
 
-# In[9]:
 
-### do we identify jumps correctly?
+#%% do we identify jumps correctly?
+#
+# Plot a section to look at the selected jumps
 plot_length = 100
 x = allData[0][:plot_length]
 y = allData[1][:plot_length]
@@ -176,9 +168,8 @@ ax2.set_ylabel('Yellow frequency (GHz)')
 plt.show()
 
 
-# In[10]:
 
-# Plot correlations between gate and yellow jumps
+#%% Plot correlations between gate and yellow jumps
 fig=  plt.figure()
 ax = plt.subplot(111)
 
@@ -205,7 +196,7 @@ pmatlab.plotPoints(xx[:, idx], '.g')
 print('# green: %d' % np.sum(idx==1))
 
 
-# In[11]:
+#%% Correlation between a jump and the next jump
 
 fig=  plt.figure()
 ax = plt.subplot(211)
@@ -222,9 +213,8 @@ ax.set_ylabel('Frequency jump on gate')
 plt.title('Correlation betweenyellow jumps.')
 
 
-# In[15]:
+#%% Select small jumps 
 
-#print(jumpGate<10)
 print(jumpGate.shape)
 smallIdx=np.nonzero(np.abs(np.array(jumpGate))<15 & ( np.abs(np.array(jumpYellow) ) <2) )[0]
 jumpSelect
@@ -232,7 +222,6 @@ jumpIdx=np.nonzero(jumpSelect)[0]
 #print(jumpIdx)
 #smallIdx=jumpIdx[idx]
 print(smallIdx)
-#import pmatlab
 
 si=24
 jumpGate[si]
@@ -241,6 +230,7 @@ jumpGate[si]
 # In[14]:
 
 def plotSection(allData, idx, mode='gate'):
+    """ Helper function to plot a section of data """
     x = allData[0][idx]
     y = allData[1][idx]
     y2 = allData[2][idx]
@@ -283,7 +273,7 @@ plt.plot(allData[0][si], yellow[si], '.y', markersize=12)
 
 print('gate: %f' % (gate[si]-gate[si+1], ))
 
-# # Notes
+#%% Notes
 
 # * To correctly predict jumps we need the ground truth. The real ground truth is not available, only the results after several tries. Maybe we can extrapolate back in time?
 # * What is the newfocus variable?

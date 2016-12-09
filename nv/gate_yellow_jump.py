@@ -5,11 +5,13 @@ Created on Thu Nov  3 11:16:29 2016
 @author: eendebakpt
 """
 
-# TODO: clean up code
-# TODO: get rid of the `zero cluster`
-# 2-grams without the zero cluster
-# Auxilirary variable: last big step as input for machine learning
-# Why does the learning not converge?
+#%% Todo list
+#
+# * clean up code 
+# * Get rid of the `zero cluster`?
+# * 2-grams without the zero cluster
+# * Auxilirary variable: last big step as input for machine learning
+# * Why does the learning not converge?
 
 #%% Load packages
 from keras.models import Sequential
@@ -30,8 +32,8 @@ from keras.layers import LSTM
 from keras.utils import np_utils
 
 
-labels = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy')).T
-#labels=np.load('labels.npy')
+#labels = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy')).T
+labels=np.load('labels.npy')
 text=labels
 print('corpus length:', len(labels))
 
@@ -40,6 +42,10 @@ print('corpus length:', len(labels))
 #%% Naive
 #
 # make histogram
+
+chars = sorted(list(set(labels)))
+print('total chars:', len(chars))
+char_indices = dict((c, i) for i, c in enumerate(chars))
 
 textX=[char_indices[c] for c in text]
 
@@ -55,6 +61,7 @@ print('probability of each of the classes: %s' % fmt(prob))
 import keras.backend as K
 
 def avg_steps(y_true, y_pred, verbose=0):
+    """ Calculate average number of steps needed for finding the correct cluster """
     A=0.
     for i, g in enumerate(y_true):
        v=y_pred[i]
@@ -69,22 +76,23 @@ def avg_steps(y_true, y_pred, verbose=0):
     A /= len(y_true)
     return A
 
-def avg_steps2(y_true, y_pred):
-    A=0.
-    for i, g in enumerate(y_true): # loop over the predictions
-       v=y_pred[i]
-       idx=np.argsort(v)[::-1]
-       j = int((idx==g).nonzero()[0])
-       A += j+1
-    A /= len(y_true)
-    return A
-
-from theano import tensor as T
-
-
-def avg_steps3(y_true, y_pred):
-    # dummy code!
-    return K.in_top_k(y_pred, y_true, k=3)
+if 0:
+    def avg_steps2(y_true, y_pred):
+        A=0.
+        for i, g in enumerate(y_true): # loop over the predictions
+           v=y_pred[i]
+           idx=np.argsort(v)[::-1]
+           j = int((idx==g).nonzero()[0])
+           A += j+1
+        A /= len(y_true)
+        return A
+    
+    from theano import tensor as T
+    
+    
+    def avg_steps3(y_true, y_pred):
+        # dummy code!
+        return K.in_top_k(y_pred, y_true, k=3)
     
 n=len(labels)
 lx=encoder.transform(labels)
@@ -92,32 +100,7 @@ y_pred=np.tile( prob, (n, 1))
 av1=avg_steps(lx, y_pred)    
 print('  avg number of steps: %.3f' % av1)
 
-
-if 0:
-    y_true = np.array( [0,0,1, 1, 2] )
-    y_pred = np.array( [ [ .9, .1, 0], [.95, 0, .05], [0, .7, .3], [0, .9, .1], [0, .55, .45] ] )
-    qq = avg_steps(y_true, y_pred)    
-    print('  avg number of steps: %.3f' % qq)
   
-#%%
-  if 0:
-    from theano import tensor as T
-    predictions=y_pred
-    k=3
-    targets = y_true
-    #targets= list(y_true)
-    
-    def equal(x, y):
-        return T.eq(x, y)
-    def any(x, axis=None, keepdims=False):
-        '''Bitwise reduction (logical OR).
-        '''
-        return T.any(x, axis=axis, keepdims=keepdims)   
-        
-    predictions_top_k = T.argsort(predictions)[:, -k:]
-    result, _ = theano.map(lambda prediction, target: any(equal(prediction, target)), sequences=[predictions_top_k, targets])
-   
-# accuracy = T.mean(T.any(T.eq(T.argsort(predictions, axis=1)[:, -k:], targets.dimshuffle(0, 'x')), axis=1), dtype=theano.config.floatX)
 
 #%% 2-grams
 alphabet=ll
@@ -185,7 +168,7 @@ for i, sentence in enumerate(sentences):
         X[i, t, char_indices[char]] = 1
     y[i, char_indices[next_chars[i]]] = 1
 
-#%%
+#%% Train LSTM like thing with custom loss function
 import keras.backend as K
 
 def top_k_categorical_accuracy(y_true, y_pred, k=3):
@@ -258,7 +241,7 @@ def sample(preds, temperature=1.0):
 pred=y_pred[10]    
 sample(pred, 1)
 
-#%% Distraction 2
+#%% Distraction 2 (2-grams for reduced data)
 
 qq=lx[lx>1]
 print(qq)
@@ -275,6 +258,22 @@ plt.yticks(range(len(alphabet)), alphabet)
 
     
 #%%
+    
+import numpy
+
+def create_dataset(dataset, look_back=1):
+    # convert a sequence of values into a dataset matrix
+	if len(np.array(dataset).shape)==1:
+		dataset=np.array(dataset).reshape( (-1,1))
+        
+	dataX, dataY = [], []
+	for i in range(len(dataset)-look_back-1):
+		a = dataset[i:(i+look_back), 0]
+		dataX.append(a)
+		dataY.append(dataset[i + look_back, 0])
+	return numpy.array(dataX), numpy.array(dataY)
+
+
 y_true=y
 y_pred=model.predict(X)
 k=3
@@ -343,20 +342,9 @@ else:
     Y=np.array( [char_to_int[c] for c in text[2:]] )
 
 
-#%%
-import numpy
+#%% ###########################################################################
 
-# convert a sequence of values into a dataset matrix
-def create_dataset(dataset, look_back=1):
-	if len(np.array(dataset).shape)==1:
-		dataset=np.array(dataset).reshape( (-1,1))
-        
-	dataX, dataY = [], []
-	for i in range(len(dataset)-look_back-1):
-		a = dataset[i:(i+look_back), 0]
-		dataX.append(a)
-		dataY.append(dataset[i + look_back, 0])
-	return numpy.array(dataX), numpy.array(dataY)
+#%% Debugging
  
  
 dataX, dataY = create_dataset(textX, look_back=4)

@@ -41,15 +41,15 @@ import pmatlab
 
 import sklearn.manifold
 
-os.chdir('/home/eendebakpt/svn/qutech/qtt/nv')
 import nvtools
-from nvtools import labelMapping
-from nvtools import showModel
+from nvtools.nvtools import labelMapping
+from nvtools.nvtools import showModel
+
+os.chdir('/home/eendebakpt/svn/qutech/qtt/nv')
 
 #%%
 print('Generating Data')
 data = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'jdata.npy')).T
-
 
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
 plt.figure(300); plt.clf()
@@ -101,8 +101,7 @@ plt.figure(301); plt.clf(); plt.jet()
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
 
 
-
-from deeptools import clusterCenters
+from nvtools.nvtools import clusterCenters, showTSNE
 chars, l2i, i2l = labelMapping(labels)    
 ll=chars
 cc=clusterCenters(db, Xbase, ll)
@@ -125,13 +124,11 @@ np.save(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy'), labels)
       
 #%% tSNE
 
-from deeptools import showTSNE
 showTSNE(Xbase, labels=labels, fig=400)
 
 #%% Split into test and train
 
 n=int(data.shape[0]/2)
-
 train_idx = list(range(0, n))
 test_idx = list(range(n, data.shape[0]))
 
@@ -181,7 +178,7 @@ X0_train=X0[train_idx,:]
 X_train=X[train_idx,:]
 Y_train=Y[train_idx,:]
 
-from deeptools import Trainer
+from nvtools.nvtools import Trainer
         
 trainer = Trainer(model, X_train, Y_train)
 _=trainer.train()
@@ -247,136 +244,3 @@ print('TODO: better predictions... (take other variables into account)')
       
     
     
-#%% Predict jump type
-#    
-# Input data: jump labels, other data...   
-#
-
-Xtrain=labels[train_idx]
-Ytrain=0
-
-#%% Naive Bayes?
-
-# probability given no training data
-# probability given previous jump (or previous n-jumps)
-#
-#
-
-if 0:
-    from sklearn import datasets
-    iris = datasets.load_iris()
-    from sklearn.naive_bayes import GaussianNB
-    gnb = GaussianNB()
-    y_pred = gnb.fit(iris.data, iris.target).predict(iris.data)
-    print("Number of mislabeled points out of a total %d points : %d"
-          % (iris.data.shape[0],(iris.target != y_pred).sum()))
-    
-#%%
-
-if 0:
-    kfold = KFold(n_splits=10, shuffle=True, random_state=seed)
-    results = cross_val_score(estimator, X, dummy_y, cv=kfold)
-    print("Baseline: %.2f%% (%.2f%%)" % (results.mean()*100, results.std()*100))
-    
-#%% Test a LSTM approach to predicting jumps
-
-if 0:
-    X=data[4:,np.newaxis,:].T
-    
-    m = Sequential()
-    m.add(LSTM(5, input_dim=X.shape[1], return_sequences=True))
-    m.add(LSTM(5, return_sequences=True))
-    m.compile(loss='mse', optimizer='adam')
-    m.fit(X, X)
-    
-
-
-#%%
-# since we are using stateful rnn tsteps can be set to 1
-if 0:
-    tsteps = 1
-    batch_size = 20
-    epochs = 250
-# number of elements ahead that are used to make the prediction
-
-#%% Data data: only select the large jump
-if 0:
-    jump_size = np.sqrt(np.sum(data[-2:, :]**2, 0))
-    
-    datax = data[:, jump_size > 0.25]
-    datax = datax[:, :]
-    time = datax[0, :]
-    
-    X_data = datax.T[:-1, np.newaxis, 4:]
-    Y_data = datax.T[1:, 4:]
-    
-    print('Input shape:', X_data.shape)
-    
-    print('Output shape')
-    print(Y_data.shape)
-    
-    #%%
-    print('Creating Model')
-    model = Sequential()
-    model.add(LSTM(10,
-                   batch_input_shape=(batch_size, tsteps, 2),
-                   return_sequences=True,
-                   stateful=True))
-    model.add(LSTM(10,
-                   batch_input_shape=(batch_size, tsteps, 2),
-                   return_sequences=False,
-                   stateful=True))
-    model.add(Dense(2))
-    model.compile(loss='mse', optimizer='rmsprop')
-    
-    #%%
-    
-    epochs=40
-    loss = []
-    print('Training')
-    for i in range(epochs):
-        print('Epoch', i, '/', epochs)
-        l = model.fit(X_data,
-                      Y_data,
-                      batch_size=batch_size,
-                      verbose=1,
-                      nb_epoch=1,
-                      shuffle=False)
-        model.reset_states()
-        loss.append(l.history['loss'][0])
-    
-    #%%
-    print('Predicting')
-    predicted_output = model.predict(X_data, batch_size=batch_size)
-    
-    data_df_a = pd.DataFrame(X_data[:, 0, 0], columns=['jump'])
-    data_df_a['time'] = time[:-1]
-    data_df_a['next_jump'] = Y_data[:, 0]
-    data_df_a['type'] = 'a'
-    data_df_a['predicted_jump'] = predicted_output[:, 0]
-    
-    data_df_b = pd.DataFrame(X_data[:, 0, 1], columns=['jump'])
-    data_df_b['time'] = time[:-1]
-    data_df_b['next_jump'] = Y_data[:, 1]
-    data_df_b['type'] = 'b'
-    data_df_b['predicted_jump'] = predicted_output[:, 1]
-    
-    data_df = pd.concat([data_df_a, data_df_b])
-    
-    g = sns.FacetGrid(data_df, row='type', aspect=1)
-    g.map(plt.scatter, 'next_jump', 'predicted_jump')
-    g.set(xlim=(-2, 2), ylim=(-2, 2), )
-    
-    g = sns.FacetGrid(data_df, row='type', aspect=1)
-    g.map(plt.hist, 'next_jump', bins=100)
-    
-    #%%
-    plt.figure(100); plt.clf()
-    plt.plot(data_df_a['next_jump'].values, data_df_a['predicted_jump'].values, '.b' )
-    pmatlab.plot2Dline([1,-1,0], '--g')
-    plt.figure(101); plt.clf()
-    plt.plot(data_df_b['next_jump'].values, data_df_b['predicted_jump'].values, '.b' )
-    pmatlab.plot2Dline([1,-1,0], '--g')
-    
-    import pmatlab
-    pmatlab.tilefigs([0,100,0,101])

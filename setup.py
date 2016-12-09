@@ -22,8 +22,10 @@ extras = {
 }
 extras_require = {k: '>='.join(v) for k, v in extras.items()}
 
+print('packages: %s'  % find_packages() )
+
 setup(name='qtt',
-      version='0.1.0',
+      version='0.1.1',
       use_2to3=False,
       author='Pieter Eendebak',
       author_email='pieter.eendebak@tno.nl',

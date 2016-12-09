@@ -1,7 +1,7 @@
-from theano import function, config, shared, tensor, sandbox
 import numpy
 import time
 import pygpu
+from theano import function, config, shared, tensor, sandbox
 
 from matplotlib import pyplot as plt
 import sklearn
@@ -12,6 +12,27 @@ import sklearn.manifold
 from sklearn.manifold import TSNE
 
 #%%
+
+from contextlib import contextmanager
+import sys, os
+
+@contextmanager
+def suppress_stdout():
+    """ Suppress output 
+    
+    Example:
+       >>> with suppress_stdout():
+       >>>    print("You cannot see this")
+    
+    """
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
+            
 
 def extract_data(filename, gate_scaling):
     """ Extract data from a datafile """
