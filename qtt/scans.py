@@ -405,7 +405,8 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
             t0 = time.time()
             liveplotwindow.update()
             # QtWidgets.QApplication.processEvents()
-            print('myupdate: %.3f ' % (time.time() - t0))
+            if verbose>=2:
+                print('myupdate: %.3f ' % (time.time() - t0))
 
         alldata = loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
 
