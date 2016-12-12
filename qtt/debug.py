@@ -21,7 +21,9 @@ import tempfile
 
 def dumpstring(txt, tag='dump'):
     """ Dump a text string to temperary file on disk """
-    with open(os.path.join(tempfile.tempdir, 'qtt-%s.txt' % tag), 'a+t') as fid:
+    tfile=os.path.join(tempfile.tempdir, 'qtt-%s.txt' % tag)
+    dumpstring.tfile=tfile # store temporary file in object
+    with open(tfile, 'a+t') as fid:
         fid.write(txt + '\n')
 
 #%% Decorator for generic function
