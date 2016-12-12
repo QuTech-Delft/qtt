@@ -14,7 +14,6 @@ import pdb
 import qtpy
 import logging
 import matplotlib
-#matplotlib.use('Qt4Agg')
 
 import matplotlib.pyplot
 if __name__=='__main__':
@@ -64,7 +63,7 @@ if __name__=='__main__':
 
 if __name__=='__main__':
 
-    if platform.node()=='TUD205521':
+    if platform.node()=='TUD205521' and 0:
         import stationV2 as msetup
         from stationV2 import sample
         awg1=None
@@ -81,7 +80,9 @@ if __name__=='__main__':
             ''' Funny ... '''
             return True
         
-    msetup.initialize(reinit=False, server_name='virtualV2-%d' % np.random.randint(100) )
+    server_name='virtualV2-%d' % np.random.randint(100)
+    server_name=None
+    msetup.initialize(reinit=False, server_name=server_name )
     #msetup.initialize(reinit=False, server_name=None )
     
     bottomgates = sample.bottomGates()
@@ -107,14 +108,12 @@ if __name__=='__main__':
         datadir = '/home/eendebakpt/data/qdata'
     
     qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
-    mwindows=qtt.setupMeasurementWindows(station)
+    mwindows=qtt.tools.setupMeasurementWindows(station)
     mwindows['parameterviewer'].callbacklist.append( mwindows['plotwindow'].update )
     
     
-    mwindows['parameterviewer'].callbacklist.append( partial(qtt.updatePlotTitle, mwindows['plotwindow']) )
-    
-    #liveplotwindow.win.setWindowTitle('sfs')
-    
+    mwindows['parameterviewer'].callbacklist.append( partial(qtt.tools.updatePlotTitle, mwindows['plotwindow']) )
+        
     qtt.scans.mwindows=mwindows
     liveplotwindow=mwindows['plotwindow']
     qtt.live.liveplotwindow=liveplotwindow
@@ -149,8 +148,8 @@ if __name__=='__main__':
 Tvalues=[]
 if __name__=='__main__':
 
-    sdgates = qtt.flatten([s['gates'] for s in sddots])
-    activegates=['T'] + list(qtt.flatten([s['gates'] for s in one_dots])) + sdgates
+    sdgates = qtt.tools.flatten([s['gates'] for s in sddots])
+    activegates=['T'] + list(qtt.tools.flatten([s['gates'] for s in one_dots])) + sdgates
     
     basevalues=dict()
     for g in activegates:
@@ -289,7 +288,7 @@ for ii, Tvalue in enumerate(Tvalues):
     if not __name__=='__main__':
         break
     tag=basetag+'-T%d'  % Tvalue
-    outputdir=qtt.mkdirc(os.path.join(datadir, tag))
+    outputdir=qtt.tools.mkdirc(os.path.join(datadir, tag))
     if not measureFirst:
         continue;
 
@@ -302,7 +301,7 @@ for ii, Tvalue in enumerate(Tvalues):
     #%% Main loop
 
     print('## start of scan for topgate %.1f [mV]: tag %s' % (Tvalue, tag) )
-    tmp=qtt.mkdirc(os.path.join(outputdir, 'one_dot'));
+    tmp=qtt.tools.mkdirc(os.path.join(outputdir, 'one_dot'));
 
 
     print('we have %d one-dots' % len(one_dots) )
@@ -316,13 +315,13 @@ for ii, Tvalue in enumerate(Tvalues):
     #%% Initialize to default values
 
     print('## 1dot_script: initializing gates')
-    qtt.resetgates(gates, activegates, basevalues)
-    qtt.resetgates(gates, sdgates, basevalues)
+    gates.resetgates( activegates, basevalues)
+    gates.resetgates( sdgates, basevalues)
 
     #%% Perform sanity check on the channels
 
 
-    for gate in qtt.flatten([o['gates'] for o in one_dots]):
+    for gate in qtt.tools.flatten([o['gates'] for o in one_dots]):
         alldata=qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
 
 
@@ -330,7 +329,7 @@ for ii, Tvalue in enumerate(Tvalues):
         ki=od['instrument']
         for gate in od['gates']:
             scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, stepdelay=stepDelay(gate), full=full)
-            qtt.resetgates(gates,activegates, basevalues, verbose=0)
+            gates.resetgates(activegates, basevalues, verbose=0)
 
     ww=one_dots
     for od in ww:
@@ -351,7 +350,7 @@ for ii, Tvalue in enumerate(Tvalues):
 
             alldata, mdata=qtt.scans.loadDataset(pfile)
 
-            adata=qtt.analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None, verbose=1)
+            adata=qtt.algorithms.gatesweep.analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None, verbose=1)
 
             basevaluesS[g]=float(min(adata['pinchvalue']+500, 0))
 
