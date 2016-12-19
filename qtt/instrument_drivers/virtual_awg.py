@@ -21,10 +21,6 @@ import qtt
 class virtual_awg(Instrument):
     shared_kwargs = ['instruments', 'hardware']
 
-    shared_kwargs = ['instruments', 'hardware']
-
-    shared_kwargs = ['instruments', 'hardware']
-
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
         super().__init__(name, **kwargs)
         self._awgs = instruments
@@ -48,6 +44,7 @@ class virtual_awg(Instrument):
             self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0] + 1) % 2]
             self.awg_seq.set('run_mode', 'SEQ')
             self.awg_seq.set_sq_length(1)
+            self.awg_seq.set_sqel_trigger_wait(1,0)
             self.delay_AWG = self.hardware.parameters['delay_AWG'].get()
         else:
             raise Exception(
