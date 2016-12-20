@@ -1803,7 +1803,7 @@ def fullpath(*args):
     return p
 
 
-def ginput(n=1, drawmode=''):
+def ginput(n=1, drawmode='', **kwargs):
     """ Select points from figure
 
     Press middle mouse button to stop selection
@@ -1822,7 +1822,7 @@ def ginput(n=1, drawmode=''):
         x = np.array(x).T
         xx = np.hstack((xx, x))
         if drawmode is not None:
-            plt.plot(xx[0, :].T, xx[1, :].T, drawmode)
+            plt.plot(xx[0, :].T, xx[1, :].T, drawmode, **kwargs)
     return xx
 
 
