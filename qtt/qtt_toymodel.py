@@ -509,7 +509,7 @@ class virtual_gates(Instrument):
     def allvalues_string(self):
         """ Return all gate values in string format """
         vals = self.allvalues()
-        s = '{' +','.join([ '%s: %.2f' % (x, vals[x]) for x in vals]) + '}'
+        s = '{' +','.join([ '\'%s\': %.2f' % (x, vals[x]) for x in vals]) + '}'
         return s
 
         

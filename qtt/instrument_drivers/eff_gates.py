@@ -42,7 +42,6 @@ class eff_gates(Instrument):
             self.map_inv[effg] = dict()
             for idg, g in enumerate(self._gates_list):
                 self.map_inv[effg][g] = self._matrix_inv[idg][ideff]  # swapped idg and ideff
-
         for g in self._eff_gates_list:
             self.add_parameter(g,
                                label='%s (mV)' % g,

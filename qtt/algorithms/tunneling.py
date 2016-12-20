@@ -13,12 +13,19 @@ def polmod_all_2slopes(x, par, kT=0.001):
     ''' Polarization line model
     
     Arguments:
-        x (array)
-        par (array)
-        kt (float)
+        x (1 x N array): gate voltages in units of ...
+        par (1 x 6 array): parameters for the model
+            - par[0]: tunnel coupling in ...
+            - par[1]: average x value
+            - par[2]: background signal
+            - par[3]: slope on left side
+            - par[4]: slope on right side
+            - par[5]: sensitivity
+        kt (float): temperature in mV
     Returns:
-        E (float)
+        E (float): 
     '''
+    # kT should be 75e-3 * kB / la ? i.e. 0.08 mV
     x = x - par[1]
     
     Om = np.sqrt(x**2 + 4 * par[0]**2)
@@ -54,19 +61,23 @@ def fit_pol_all(delta, data):
     Returns:
         par_fit (array)
     '''
-    slope_guess = np.mean(np.diff(data[0:29]))/np.mean(np.diff(delta[0:29])) # hard-coded 30 points
+    slope_guess = np.polyfit(delta[0:99],data[0:99],1)[0] # hard-coded 30 points
+#    slope_guess = np.mean(np.diff(data[0:99]))/np.mean(np.diff(delta[0:99])) # hard-coded 30 points
     dat_noslope= data - slope_guess * delta
     b = np.round(len(data)/2)
-    sensor_offset_guess = data[int(b)-1]
+#    sensor_offset_guess = data[int(b)-1]
+    sensor_offset_guess = np.mean(data)
+#    delta_offset_guess = np.mean(delta) # average of the delta values
     delta_offset_guess = delta[int(b)-1]
     sensitivity_guess = np.max(dat_noslope) - np.min(dat_noslope)
     sensor_offset_guess = sensor_offset_guess - .5 * sensitivity_guess
     
-    t_guess = 1 # hard-coded value
+    t_guess = 1*4.2/80
+#    t_guess = 1 # hard-coded value
     par_guess = np.array([t_guess, delta_offset_guess, sensor_offset_guess, slope_guess, slope_guess, sensitivity_guess]) # second slope guess could be done more accurately
 
     func = lambda par: polweight_all_2slopes(delta, data, par)
 
     par_fit = scipy.optimize.fmin(func, par_guess)
 
-    return par_fit
+    return par_fit, par_guess
