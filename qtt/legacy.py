@@ -16,7 +16,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-from qtt.algorithms.onedot import onedotGetBalance
+from qtt.algorithms.gatesweep import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.scans import pinchoffFilename
 from qtt.data import load_data, show2D
@@ -635,6 +635,8 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
         returndict['yy'] = yy
         returndict['ims'] = ims
     return vv
+
+
 
 
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):

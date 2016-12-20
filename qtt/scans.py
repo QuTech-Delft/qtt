@@ -445,17 +445,18 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
-
+    
 #    logging.info('scan2D: todo: implement compensategates for sensing dot compensation')
 
     delay = scanjob.get('delay', 0.0)
-    if wait_time is not None:
-        raise Exception('not implemented')
+#    if wait_time is not None:
+#        raise Exception('not implemented')
 
     gates = station.gates
+    gvs = gates.allvalues()
 
     sweepgate = sweepdata.get('gate', None)
-    sweepparam = getattr(gates, sweepgate)
+    sweepparam = getattr(gates, sweepgate) # Use any type of parameter?
 
     stepgate = stepdata.get('gate', None)
     stepparam = getattr(gates, stepgate)
@@ -472,6 +473,11 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     period = scanjob['sweepdata'].get('period', 1e-3)
     sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
 
+    if 'gates_horz' in scanjob:
+        waveform, sweep_info = station.awg.sweep_gate_virt(scanjob['gates_horz'], sweeprange, period)
+    else:
+        waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
+
     if 'gates_vert' in scanjob:
         scanjob['gates_vert_init'] = {}
         for g in scanjob['gates_vert']:
@@ -481,12 +487,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         stepparam.set(stepdata['start'])
         sweepparam.set(sweepgate_value)
 
-    if 'gates_horz' in scanjob:
-        waveform, sweep_info = station.awg.sweep_gate_virt(scanjob['gates_horz'], sweeprange, period)
-    else:
-        waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
-
-    qtt.time.sleep(2.5)
+    qtt.time.sleep(wait_time)
 
     data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
@@ -542,7 +543,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         plot.add(alldata.arrays[name])
 
     alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gates.allvalues()
+    alldata.metadata['allgatevalues'] = gvs
     alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
@@ -594,13 +595,18 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
 
 
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
-    ''' Do a scan over the line connecting two points. Add functionality for
+    ''' Do a scan (AWG sweep) over the line connecting two points. Add functionality for
     virtual gates, which should contain functionality to automatically determine
+<<<<<<< c5b52acda10d7f01c8ec7cbbd33ad987e7e8491a
     whether or not to use the AWG or the IVVI's to scan. 
 
+=======
+    whether to use the AWG or the IVVI's to scan. 
+    
+>>>>>>> Work on effective gates and polarization code
     Arguments:
         station (qcodes station): contains all of the instruments
-        scangates (list): the two gates to scan
+        scangates (list): the gates to scan
         coords (2 x 2 array): coordinates of the points to scan between
         sd (object): corresponds to the sensing dot used for read-out
 

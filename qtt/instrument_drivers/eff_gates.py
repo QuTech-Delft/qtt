@@ -32,11 +32,16 @@ class eff_gates(Instrument):
         super().__init__(name, **kwargs)
 
         self.gates = gates
-        self._map = eff_gate_map
-        self._gates_list = sorted(list(self._map[list(self._map.keys())[0]].keys()))
-        self._eff_gates_list = sorted(list(self._map.keys()))
-        self._matrix = np.array([[self._map[x][y] for y in self._gates_list] for x in self._eff_gates_list])
+        self.map = eff_gate_map
+        self._gates_list = sorted(list(self.map[list(self.map.keys())[0]].keys()))
+        self._eff_gates_list = sorted(list(self.map.keys()))
+        self._matrix = np.array([[self.map[x][y] for y in self._gates_list] for x in self._eff_gates_list])
         self._matrix_inv = np.linalg.inv(self._matrix)
+        self.map_inv = dict()
+        for ideff, effg in enumerate(self._eff_gates_list):
+            self.map_inv[effg] = dict()
+            for idg, g in enumerate(self._gates_list):
+                self.map_inv[effg][g] = self._matrix_inv[idg][ideff] # swapped idg and ideff
         
         for g in self._eff_gates_list:
             self.add_parameter(g,
@@ -47,14 +52,19 @@ class eff_gates(Instrument):
                                vals=Numbers(-2000, 2000))
 
     def _get(self, gate):
-        gateval = sum([self._map[gate][g]*self.gates[g].get() for g in self._map[gate]])
+        gateval = sum([self.map[gate][g]*self.gates[g].get() for g in self.map[gate]])
         return gateval
         
     def _set(self, value, gate):
         gate_vec = np.zeros(len(self._eff_gates_list))
         increment = value - self.get(gate)
         gate_vec[self._eff_gates_list.index(gate)] = increment
-        set_matrix = np.dot(self._matrix_inv, gate_vec)
+        set_vec = np.dot(self._matrix_inv, gate_vec)
         for idx, g in enumerate(self._gates_list):
-            self.gates.set(g, self.gates.get(g) + set_matrix[idx])
+            self.gates.set(g, self.gates.get(g) + set_vec[idx])
         return
+        
+    def allvalues(self):
+        """ Return all eff_gates values in a simple dict """
+        vals = [(gate, self.get(gate)) for gate in self._eff_gates_list]
+        return dict(vals)
