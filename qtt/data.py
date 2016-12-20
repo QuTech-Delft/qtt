@@ -501,6 +501,21 @@ def data_extension():
     return 'pickle'
 
 
+def pickleload(pkl_file):
+    """ Load objects from file with pickle """
+    try:
+        with open(pkl_file, 'rb') as output:
+            data2 = pickle.load(output)
+    except:
+        if sys.version_info.major >= 3:
+            # if pickle file was saved in python2 we might fix issues with a different encoding
+            with open(pkl_file, 'rb') as output:
+                data2 = pickle.load(output, encoding='latin')
+            # pickle.load(pkl_file, fix_imports=True, encoding="ASCII", errors="strict")
+        else:
+            data2 = None
+    return data2
+    
 def load_data(mfile: str):
     ''' Load data from specified file '''
     # return hickle.load(mfile)
@@ -508,8 +523,9 @@ def load_data(mfile: str):
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
-    with open(mfile, 'rb') as fid:
-        return pickle.load(fid)
+    return pickleload(mfile)
+    #with open(mfile, 'rb') as fid:
+    #    return pickle.load(fid)
 
 
 def write_data(mfile: str, data):
@@ -632,6 +648,9 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('loadExperimentdata %s' % path)
+    from qtt import pmatlab
+    dataset = pmatlab.load(path)
+
     dataset = load_data(path)
     return dataset
 
