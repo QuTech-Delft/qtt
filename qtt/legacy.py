@@ -105,6 +105,21 @@ def onedotPlungerScan(station, od, verbose=1):
 
 #%%
 
+def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbose=1):
+    """ Scan the pinch-off values for the 3 main gates of a 1-dot """
+    od['pinchvalue'] = np.zeros((3, 1))
+    keithleyidx = [od['instrument']]
+
+    for jj, g in enumerate(od['gates']):
+        alldata=scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, keithleyidx=keithleyidx,cache=cache, full=full)
+
+        adata = alldata.metadata['adata']
+        od['pinchvalue'][jj] = adata['pinchvalue']
+
+    return od
+    
+#%%
+
 
 def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """ Save matplotlib figure to disk

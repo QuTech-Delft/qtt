@@ -266,7 +266,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
                 if verbose >= 2:
                     print('scan1D: myupdate: %.3f ' % (time.time() - t0))
 
-            data = loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
+            data = loop.with_bg_task(myupdate, min_delay=0.6).run(background=background)
         else:
             data = loop.run(background=background)
         data.sync()

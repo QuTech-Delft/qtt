@@ -63,7 +63,7 @@ if __name__=='__main__':
 
 if __name__=='__main__':
 
-    if platform.node()=='TUD205521' and 0:
+    if platform.node()=='TUD205521' and 1:
         import stationV2 as msetup
         from stationV2 import sample
         awg1=None
@@ -156,7 +156,7 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-09-11'; Tvalues=np.array([-380])
+    basetag='batch-2016-12-15'; Tvalues=np.array([-381])
             
     b=False
     
@@ -260,25 +260,12 @@ def closeExperiment(station, eid=None):
     
 #%% One-dot measurements
 
-from qtt.legacy import onedotScan
+from qtt.legacy import onedotScan, onedotScanPinchValues
 
 
 #alldata, od = onedotScan(station,od, basevaluesS, outputdir, verbose=1)
 #od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=10)
 
-#%%
-def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbose=1):
-    """ Scan the pinch-off values for the 3 main gates of a 1-dot """
-    od['pinchvalue'] = np.zeros((3, 1))
-    keithleyidx = [od['instrument']]
-
-    for jj, g in enumerate(od['gates']):
-        alldata=scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, keithleyidx=keithleyidx,cache=cache, full=full)
-
-        adata = alldata.metadata['adata']
-        od['pinchvalue'][jj] = adata['pinchvalue']
-
-    return od
     
 #%%
 
@@ -340,7 +327,7 @@ for ii, Tvalue in enumerate(Tvalues):
             #break
 
 #scanPinchValue(station, outputdir, gate='L', basevalues=basevalues, keithleyidx=[ki], cache=False, full=full, fig=10)
-
+   
     #%% Re-calculate basevalues
     # todo: place this in function
     basevaluesS=copy.deepcopy(basevalues)

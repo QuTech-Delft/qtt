@@ -39,7 +39,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
         # should be made generic
         g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
-        value = qtt.data.getDefaultParameterName(data)  # 'amplitude'
+        value = data.default_parameter_name() # e.g. 'amplitude'
 
         x = data.arrays[g]
         value = data.arrays[value]
