@@ -454,7 +454,7 @@ try:
 
         Arguments:
             title (string): title added to slide
-            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot): 
+            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
                 figure added to slide
             txt (string): text in textbox added to slide
             notes (string): notes added to slide
@@ -506,6 +506,9 @@ try:
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
             if isinstance(fig, matplotlib.figure.Figure):
+                fig.savefig(fname)
+            elif isinstance(fig, int):
+                fig=plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, QtWidgets.QWidget):
                 figtemp = QtGui.QPixmap.grabWidget(fig)
@@ -795,7 +798,7 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
 #%%
 import copy
 
-def slopeClick(drawmode='r--'):
+def slopeClick(drawmode='r--', **kwargs):
     ''' Calculate slope for linepiece of two points clicked by user. Works 
     with matplotlib but not with pyqtgraph. Uses the currently active 
     figure.
@@ -809,7 +812,7 @@ def slopeClick(drawmode='r--'):
     '''
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    coords = pmatlab.ginput(2, drawmode)
+    coords = pmatlab.ginput(2, drawmode, **kwargs)
     signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
 
     return coords, signedslope

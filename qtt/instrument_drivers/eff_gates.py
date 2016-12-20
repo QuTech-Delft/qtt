@@ -35,7 +35,7 @@ class eff_gates(Instrument):
         self.map = eff_gate_map
         self._gates_list = sorted(list(self.map[list(self.map.keys())[0]].keys()))
         self._eff_gates_list = sorted(list(self.map.keys()))
-        self._matrix = np.array([[self.map[x][y] for y in self._gates_list] for x in self._eff_gates_list])
+        self._matrix = np.array([[self.map[x].get(y, 0) for y in self._gates_list] for x in self._eff_gates_list])
         self._matrix_inv = np.linalg.inv(self._matrix)
         self.map_inv = dict()
         for ideff, effg in enumerate(self._eff_gates_list):
