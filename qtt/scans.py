@@ -445,13 +445,13 @@ if __name__ == '__main__':
 
 #%%
 def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None):
-    """ Make a 2D scan and create dictionary to store on disk
+    """ Make a 2D scan and create qcodes dataset to store on disk
 
     Arguments:
-        station (object): contains all data on the measurement station
+        station (qcodes.station.Station): contains all data on the measurement station
         scanjob (dict): data for scan range
     Returns:
-        alldata (qcodes Dataset): measurement data and metadata
+        alldata (qcodes.data.data_set.DataSet): measurement data and metadata
     """
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
@@ -560,6 +560,39 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     alldata.write()
 
+    return alldata
+
+#%%
+def scan2dturbo(station, sd, sweepgates, sweepranges=[40,40], resolution=[90,90], Naverage=1000):
+    """ Perform a very fast 2d scan by varying both gates with the AWG.
+    
+    Arguments:
+        station (qcodes.station.Station): contains all data on the measurement station
+        sd (qtt.structures.sensingdot_t): describes the sensing dot
+        sweepgates (2 x 1 list): first the gate to sweep very fast and then the gate to sweep fast
+        
+    Returns:
+        alldata (qcodes.data.data_set.DataSet): measurement data and metadata
+    """
+    fpga_ch = sd.fpga_ch
+    fpga_samp_freq = station.fpga.get_sampling_frequency()
+    
+    waveform, sweep_info = station.awg.sweep_2D(fpga_samp_freq, sweepgates, sweepranges, resolution)
+    waittime = resolution[0]*resolution[1]*Naverage/fpga_samp_freq
+    
+    ReadDevice = ['FPGA_ch%d' % fpga_ch]
+    _,DataRead_ch1,DataRead_ch2 = station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
+    
+    station.awg.stop()
+    
+    dataread = [DataRead_ch1,DataRead_ch2][fpga_ch-1]
+    data = station.awg.sweep_2D_process(dataread, waveform)
+    alldata,_ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges)
+    
+    alldata.metadata['allgatevalues'] = station.gates.allvalues()
+    alldata.metadata['fpga_samp_freq'] = fpga_samp_freq
+    alldata.write()
+    
     return alldata
 
 #%%
