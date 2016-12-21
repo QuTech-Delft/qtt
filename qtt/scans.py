@@ -563,8 +563,8 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     return alldata
 
 #%%
-def scan2dturbo(station, sd, sweepgates, sweepranges=[40,40], resolution=[90,90], Naverage=1000):
-    """ Perform a very fast 2d scan by varying both gates with the AWG.
+def scan2Dturbo(station, sd, sweepgates, sweepranges=[40,40], resolution=[90,90], Naverage=1000):
+    """ Perform a very fast 2d scan by varying two physical gates with the AWG.
     
     Arguments:
         station (qcodes.station.Station): contains all data on the measurement station
