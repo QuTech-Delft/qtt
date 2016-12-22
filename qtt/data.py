@@ -438,15 +438,15 @@ def pix2scan(pt, dd2d):
 
     xx = extent
     x = pt
-    if len(pt.shape)==1:
+    if len(pt.shape) == 1:
         ptx = np.zeros((2, 1))
         ptx[1] = np.interp(x[1], [0, ny - 1], [xx[3], xx[2]])    # step
         ptx[0] = np.interp(x[0], [0, nx - 1], [xx[0], xx[1]])    # sweep
     else:
         nn = pt.shape[1]
         ptx = np.zeros((2, nn))
-        ptx[1,:] = np.interp(x[1,:], [0, ny - 1], [xx[3], xx[2]])    # step
-        ptx[0,:] = np.interp(x[0,:], [0, nx - 1], [xx[0], xx[1]])    # sweep
+        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
+        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
     return ptx
 
 #%%
@@ -515,7 +515,8 @@ def pickleload(pkl_file):
         else:
             data2 = None
     return data2
-    
+
+
 def load_data(mfile: str):
     ''' Load data from specified file '''
     # return hickle.load(mfile)
@@ -524,7 +525,7 @@ def load_data(mfile: str):
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
     return pickleload(mfile)
-    #with open(mfile, 'rb') as fid:
+    # with open(mfile, 'rb') as fid:
     #    return pickle.load(fid)
 
 
