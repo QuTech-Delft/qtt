@@ -421,17 +421,6 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
 
-    if 0:
-        # FIXME...
-        alldata = copy.copy(scanjob)
-        alldata['wait_time'] = wait_time
-        alldata['datadir'] = data._dir
-        alldata['timemark'] = data._timemark
-        alldata['gatevalues'] = gatevalues(activegates)
-        alldata['gatevalues']['T'] = get_gate('T')
-        # basename='%s-sweep-2d-%s' % (idstr, 'x-%s-%s' % (gg[0], gg[2]) )
-        # save(os.path.join(xdir, basename +'.pickle'), alldata )
-
     alldata.write()
 
     return alldata
@@ -595,6 +584,7 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
     alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges)
 
     alldata.metadata['allgatevalues'] = station.gates.allvalues()
+    alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['fpga_samp_freq'] = fpga_samp_freq
     alldata.write()
 
