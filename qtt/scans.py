@@ -568,13 +568,16 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 90], Naverage=1000):
     """ Perform a very fast 2d scan by varying two physical gates with the AWG.
 
-    Arguments:
+    Args:
         station (qcodes.station.Station): contains all data on the measurement station
         sd (qtt.structures.sensingdot_t): describes the sensing dot
         sweepgates (2 x 1 list): first the gate to sweep very fast and then the gate to sweep fast
 
     Returns:
         alldata (qcodes.data.data_set.DataSet): measurement data and metadata
+
+    Note: the function assumes the station contains an FPGA with readFPGA function. The FPGA channel  is determined form the sensing dot.
+
     """
     fpga_ch = sd.fpga_ch
     fpga_samp_freq = station.fpga.get_sampling_frequency()
