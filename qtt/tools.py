@@ -793,14 +793,16 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     return imf
 
 #%%
+
+
 def slopeClick(drawmode='r--'):
     ''' Calculate slope for linepiece of two points clicked by user. Works 
     with matplotlib but not with pyqtgraph. Uses the currently active 
     figure.
-    
+
     Arguments:
         drawmode (string): plotting style
-        
+
     Returns:
         coords (2 x 2 array): coordinates of the two clicked points
         signedslope (float): slope of linepiece connecting the two points
@@ -810,13 +812,14 @@ def slopeClick(drawmode='r--'):
 
     return coords, signedslope
 
+
 def clickGatevals(plot, drawmode='ro'):
     ''' Get gate values for all gates at clicked point in a heatmap.
-    
+
     Arguments:
         plot (qcodes MatPlot object): plot of measurement data
         drawmode (string): plotting style
-        
+
     Returns:    
         gatevals (dict): values of the gates at clicked point
     '''
@@ -829,16 +832,16 @@ def clickGatevals(plot, drawmode='ro'):
     data_array = plot.traces[0]['config']['z']
     dataset = data_array.data_set
     gatevals = dataset.metadata['allgatevalues']
-    
+
     if len(data_array.set_arrays) != 2:
         raise Exception('The DataArray does not have exactly two set_arrays.')
-        
+
     for arr in data_array.set_arrays:
-        if len(arr.ndarray.shape)==1:
+        if len(arr.ndarray.shape) == 1:
             gatevals[arr.name] = coords[1, 0]
         else:
             gatevals[arr.name] = coords[0, 0]
-        
+
     return gatevals
 
 #%%
