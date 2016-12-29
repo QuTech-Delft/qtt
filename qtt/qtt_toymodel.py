@@ -506,7 +506,13 @@ class virtual_gates(Instrument):
         """ Return all gate values in a simple dict """
         vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
         return dict(vals)
+    def allvalues_string(self):
+        """ Return all gate values in string format """
+        vals = self.allvalues()
+        s = '{' +','.join([ '%s: %.2f' % (x, vals[x]) for x in vals]) + '}'
+        return s
 
+        
     def resetgates(gates, activegates, basevalues=None, verbose=2):
         """ Reset a set of gates to default values
 
