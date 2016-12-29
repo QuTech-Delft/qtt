@@ -813,6 +813,7 @@ def slopeClick(drawmode='r--', **kwargs):
     ax = plt.gca()
     ax.set_autoscale_on(False)
     coords = pmatlab.ginput(2, drawmode, **kwargs)
+    plt.pause(1e-6)
     signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
 
     return coords, signedslope
