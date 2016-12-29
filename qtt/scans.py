@@ -18,6 +18,7 @@ from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
 from qtt.data import *
+from qtt.data import diffDataset
 
 from qcodes.utils.helpers import tprint
 
@@ -445,17 +446,18 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
-
+    
 #    logging.info('scan2D: todo: implement compensategates for sensing dot compensation')
 
     delay = scanjob.get('delay', 0.0)
-    if wait_time is not None:
-        raise Exception('not implemented')
+#    if wait_time is not None:
+#        raise Exception('not implemented')
 
     gates = station.gates
+    gvs = gates.allvalues()
 
     sweepgate = sweepdata.get('gate', None)
-    sweepparam = getattr(gates, sweepgate)
+    sweepparam = getattr(gates, sweepgate) # Use any type of parameter?
 
     stepgate = stepdata.get('gate', None)
     stepparam = getattr(gates, stepgate)
@@ -472,6 +474,11 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     period = scanjob['sweepdata'].get('period', 1e-3)
     sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
 
+    if 'gates_horz' in scanjob:
+        waveform, sweep_info = station.awg.sweep_gate_virt(scanjob['gates_horz'], sweeprange, period)
+    else:
+        waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
+
     if 'gates_vert' in scanjob:
         scanjob['gates_vert_init'] = {}
         for g in scanjob['gates_vert']:
@@ -481,12 +488,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         stepparam.set(stepdata['start'])
         sweepparam.set(sweepgate_value)
 
-    if 'gates_horz' in scanjob:
-        waveform, sweep_info = station.awg.sweep_gate_virt(scanjob['gates_horz'], sweeprange, period)
-    else:
-        waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
-
-    qtt.time.sleep(2.5)
+    qtt.time.sleep(wait_time)
 
     data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
@@ -534,15 +536,16 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         alldata.metadata = dict()
 
     if diff_dir is not None:
-        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
-        name = 'diff_dir_%s' % diff_dir
-        data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
-        alldata.add_array(data_arr)
-        plot = MatPlot(interval=0)
-        plot.add(alldata.arrays[name])
+        alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
+        #imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        #name = 'diff_dir_%s' % diff_dir
+        #data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
+        #alldata.add_array(data_arr)
+        #plot = MatPlot(interval=0)
+        #plot.add(alldata.arrays[name])
 
     alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gates.allvalues()
+    alldata.metadata['allgatevalues'] = gvs
     alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
@@ -551,10 +554,32 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     return alldata
 
+def plotData(alldata, diff_dir=None, fig=1):
+
+    plt.figure(fig); plt.clf()
+    if diff_dir is not None:
+        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        name = 'diff_dir_%s' % diff_dir
+        name = uniqueArrayName(alldata, name)
+        data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
+        alldata.add_array(data_arr)
+        plot = MatPlot(interval=0, num=fig)
+        plot.add(alldata.arrays[name])
+        #plt.axis('image')
+        plot.fig.axes[0].autoscale(tight=True)
+        plot.fig.axes[1].autoscale(tight=True)
+    else:
+        plot=MatPlot(interval=0, num=fig)
+        plot.add(alldata.default_parameter_array('measured') )
+        #plt.axis('image')
+        plot.fig.axes[0].autoscale(tight=True)
+        plot.fig.axes[1].autoscale(tight=True)
+    
+    
 #%%
 
 
-def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 90], Naverage=1000):
+def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 90], Naverage=1000, verbose=1):
     """ Perform a very fast 2d scan by varying two physical gates with the AWG.
 
     Args:
@@ -568,6 +593,9 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
     Note: the function assumes the station contains an FPGA with readFPGA function. The FPGA channel  is determined form the sensing dot.
 
     """
+    if verbose:
+        print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
+        
     fpga_ch = sd.fpga_ch
     fpga_samp_freq = station.fpga.get_sampling_frequency()
 
@@ -594,13 +622,14 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
 
 
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
-    ''' Do a scan over the line connecting two points. Add functionality for
-    virtual gates, which should contain functionality to automatically determine
-    whether or not to use the AWG or the IVVI's to scan. 
-
+    ''' Do a scan (AWG sweep) over the line connecting two points.
+    
+    TODO: Add functionality for virtual gates, which should contain functionality to automatically determine
+    whether to use the AWG or the IVVI's to scan. 
+    
     Arguments:
         station (qcodes station): contains all of the instruments
-        scangates (list): the two gates to scan
+        scangates (list): the gates to scan
         coords (2 x 2 array): coordinates of the points to scan between
         sd (object): corresponds to the sensing dot used for read-out
 

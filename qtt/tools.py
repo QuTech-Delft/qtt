@@ -454,7 +454,7 @@ try:
 
         Arguments:
             title (string): title added to slide
-            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot): 
+            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
                 figure added to slide
             txt (string): text in textbox added to slide
             notes (string): notes added to slide
@@ -506,6 +506,9 @@ try:
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
             if isinstance(fig, matplotlib.figure.Figure):
+                fig.savefig(fname)
+            elif isinstance(fig, int):
+                fig=plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, QtWidgets.QWidget):
                 figtemp = QtGui.QPixmap.grabWidget(fig)
@@ -793,9 +796,9 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     return imf
 
 #%%
+import copy
 
-
-def slopeClick(drawmode='r--'):
+def slopeClick(drawmode='r--', **kwargs):
     ''' Calculate slope for linepiece of two points clicked by user. Works 
     with matplotlib but not with pyqtgraph. Uses the currently active 
     figure.
@@ -807,7 +810,10 @@ def slopeClick(drawmode='r--'):
         coords (2 x 2 array): coordinates of the two clicked points
         signedslope (float): slope of linepiece connecting the two points
     '''
-    coords = pmatlab.ginput(2, drawmode)
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+    coords = pmatlab.ginput(2, drawmode, **kwargs)
+    plt.pause(1e-6)
     signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
 
     return coords, signedslope
@@ -823,16 +829,18 @@ def clickGatevals(plot, drawmode='ro'):
     Returns:    
         gatevals (dict): values of the gates at clicked point
     '''
-    # TODO: implement for virtual gates
+    # TODO: implement for virtual gates 
     if type(plot) != qcodes.plots.qcmatplotlib.MatPlot:
         raise Exception('The plot object is not based on the MatPlot class from qcodes.')
 
-    plot.fig.show()
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+#    plot.fig.show()
     coords = pmatlab.ginput(drawmode=drawmode)
     data_array = plot.traces[0]['config']['z']
     dataset = data_array.data_set
-    gatevals = dataset.metadata['allgatevalues']
 
+    gatevals = copy.deepcopy(dataset.metadata['allgatevalues'])
     if len(data_array.set_arrays) != 2:
         raise Exception('The DataArray does not have exactly two set_arrays.')
 
