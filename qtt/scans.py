@@ -18,6 +18,7 @@ from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
 from qtt.data import *
+from qtt.data import diffDataset
 
 from qcodes.utils.helpers import tprint
 
@@ -535,12 +536,13 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         alldata.metadata = dict()
 
     if diff_dir is not None:
-        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
-        name = 'diff_dir_%s' % diff_dir
-        data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
-        alldata.add_array(data_arr)
-        plot = MatPlot(interval=0)
-        plot.add(alldata.arrays[name])
+        alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
+        #imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        #name = 'diff_dir_%s' % diff_dir
+        #data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
+        #alldata.add_array(data_arr)
+        #plot = MatPlot(interval=0)
+        #plot.add(alldata.arrays[name])
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gvs
@@ -552,6 +554,28 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     return alldata
 
+def plotData(alldata, diff_dir=None, fig=1):
+
+    plt.figure(fig); plt.clf()
+    if diff_dir is not None:
+        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        name = 'diff_dir_%s' % diff_dir
+        name = uniqueArrayName(alldata, name)
+        data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
+        alldata.add_array(data_arr)
+        plot = MatPlot(interval=0, num=fig)
+        plot.add(alldata.arrays[name])
+        #plt.axis('image')
+        plot.fig.axes[0].autoscale(tight=True)
+        plot.fig.axes[1].autoscale(tight=True)
+    else:
+        plot=MatPlot(interval=0, num=fig)
+        plot.add(alldata.default_parameter_array('measured') )
+        #plt.axis('image')
+        plot.fig.axes[0].autoscale(tight=True)
+        plot.fig.axes[1].autoscale(tight=True)
+    
+    
 #%%
 
 
@@ -595,15 +619,11 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
 
 
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
-    ''' Do a scan (AWG sweep) over the line connecting two points. Add functionality for
-    virtual gates, which should contain functionality to automatically determine
-<<<<<<< c5b52acda10d7f01c8ec7cbbd33ad987e7e8491a
-    whether or not to use the AWG or the IVVI's to scan. 
-
-=======
+    ''' Do a scan (AWG sweep) over the line connecting two points.
+    
+    TODO: Add functionality for virtual gates, which should contain functionality to automatically determine
     whether to use the AWG or the IVVI's to scan. 
     
->>>>>>> Work on effective gates and polarization code
     Arguments:
         station (qcodes station): contains all of the instruments
         scangates (list): the gates to scan
