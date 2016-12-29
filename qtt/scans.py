@@ -579,7 +579,7 @@ def plotData(alldata, diff_dir=None, fig=1):
 #%%
 
 
-def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 90], Naverage=1000):
+def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 90], Naverage=1000, verbose=1):
     """ Perform a very fast 2d scan by varying two physical gates with the AWG.
 
     Args:
@@ -593,6 +593,9 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
     Note: the function assumes the station contains an FPGA with readFPGA function. The FPGA channel  is determined form the sensing dot.
 
     """
+    if verbose:
+        print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
+        
     fpga_ch = sd.fpga_ch
     fpga_samp_freq = station.fpga.get_sampling_frequency()
 

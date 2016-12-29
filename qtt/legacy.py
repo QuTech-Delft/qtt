@@ -16,7 +16,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-from qtt.algorithms.gatesweep import onedotGetBalance
+from qtt.algorithms.onedot import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.scans import pinchoffFilename
 from qtt.data import load_data, show2D
