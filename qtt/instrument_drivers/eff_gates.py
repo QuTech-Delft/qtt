@@ -18,16 +18,16 @@ class eff_gates(Instrument):
     They are defined, such that when changing one of the effective gates, the
     others are (almost) not influenced. The effective gates are developed in 
     a way such that they correspond to the chemical potentials in mV's.
-    
+
     They do not (yet?) have an offset relative to the physical gates.
-    
+
     Input:
         name (string):
         gates (object):
         eff_gate_map ():
     '''
     shared_kwargs = ['gates']
-    
+
     def __init__(self, name, gates, eff_gate_map, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -41,8 +41,8 @@ class eff_gates(Instrument):
         for ideff, effg in enumerate(self._eff_gates_list):
             self.map_inv[effg] = dict()
             for idg, g in enumerate(self._gates_list):
-                self.map_inv[effg][g] = self._matrix_inv[idg][ideff] # swapped idg and ideff
-        
+                self.map_inv[effg][g] = self._matrix_inv[idg][ideff]  # swapped idg and ideff
+
         for g in self._eff_gates_list:
             self.add_parameter(g,
                                label='%s (mV)' % g,
@@ -52,9 +52,9 @@ class eff_gates(Instrument):
                                vals=Numbers(-2000, 2000))
 
     def _get(self, gate):
-        gateval = sum([self.map[gate][g]*self.gates[g].get() for g in self.map[gate]])
+        gateval = sum([self.map[gate][g] * self.gates[g].get() for g in self.map[gate]])
         return gateval
-        
+
     def _set(self, value, gate):
         gate_vec = np.zeros(len(self._eff_gates_list))
         increment = value - self.get(gate)
@@ -63,7 +63,7 @@ class eff_gates(Instrument):
         for idx, g in enumerate(self._gates_list):
             self.gates.set(g, self.gates.get(g) + set_vec[idx])
         return
-        
+
     def allvalues(self):
         """ Return all eff_gates values in a simple dict """
         vals = [(gate, self.get(gate)) for gate in self._eff_gates_list]
