@@ -38,9 +38,12 @@ def dumpstring(txt):
 
 
 def stripDataset(dataset):
+    """ Make sure a dataset can be pickled """
     dataset.sync()
     dataset.data_manager = None
-    dataset.background_functions = {}
+    dataset.background_functions = {}    
+    #dataset.formatter = qcodes.DataSet.default_formatter
+    dataset.formatter.close_file(dataset)
 
 #%%
 

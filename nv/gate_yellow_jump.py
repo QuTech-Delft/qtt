@@ -21,8 +21,10 @@ from keras.optimizers import RMSprop
 from keras.utils.data_utils import get_file
 import numpy as np
 import random
-import sys
+import sys,os
 from theano import tensor as T
+
+from nvtools.nvtools import Trainer
 
 
 import numpy
