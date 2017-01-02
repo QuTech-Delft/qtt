@@ -18,7 +18,7 @@ from nvtools.nvtools import extract_data
 
 #%% Load data
 
-os.chdir('/home/eendebakpt/data/qutech/nv')
+os.chdir('C:\\Users\\Laurens\\Documents\\qtechData')
 files = []
 NV1 = True
 if NV1:
@@ -185,7 +185,7 @@ plt.title('Correlation between gate and yellow jumps.')
 
 xx=np.vstack((jumpGate, jumpYellow) )
 
-import pmatlab
+from qtt import pmatlab
 from pmatlab import points_in_polygon
 rr=np.array([[-24.2,7.25],[0.6796,.4297]])
 pmatlab.plotPoints(pmatlab.region2poly(rr), '.-g')

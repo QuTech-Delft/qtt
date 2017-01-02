@@ -12,7 +12,10 @@ from qtt.data import dataset2Dmetadata, pix2scan, image_transform, dataset2image
 import qtt.data
 import scipy
 from qtt import pmatlab
-import cv2
+try :
+    import cv2
+except:
+    pass
 
 #%%
 

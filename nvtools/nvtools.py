@@ -1,6 +1,9 @@
 import numpy
 import time
-import pygpu
+try:
+    import pygpu
+except:
+    pass
 from theano import function, config, shared, tensor, sandbox
 
 from matplotlib import pyplot as plt
