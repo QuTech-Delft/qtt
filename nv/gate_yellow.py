@@ -37,7 +37,7 @@ from keras.utils import np_utils
 import sklearn
 
 import matplotlib.cm as cm
-import pmatlab
+from qtt import pmatlab
 
 import sklearn.manifold
 
@@ -45,11 +45,12 @@ import nvtools
 from nvtools.nvtools import labelMapping
 from nvtools.nvtools import showModel
 
-os.chdir('/home/eendebakpt/svn/qutech/qtt/nv')
+import qcodes
+os.chdir(qcodes.config['user']['nvDataDir'])
 
 #%%
 print('Generating Data')
-data = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'jdata.npy')).T
+data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
 
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
 plt.figure(300); plt.clf()
@@ -119,7 +120,7 @@ pmatlab.tilefigs([300,301, 303])
 #plt.figure(400);plt.clf(); plt.jet() ;plt.scatter(X[:,0], X[:,1], c=labels.astype(np.int)+1)
       
       
-np.save(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy'), labels)
+np.save(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'), labels)
 
       
 #%% tSNE
