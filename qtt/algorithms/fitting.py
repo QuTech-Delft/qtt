@@ -78,6 +78,8 @@ def initFermiLinear(xdata, ydata, fig=None):
         plt.plot(xdata, yr, '.b', label='Fermi part')
         f = Fermi(xdata, cc, A, T)
         plt.plot(xdata, f, '-m', label='estimated')
+        plt.plot(xdata, f, '-m', label='estimated')
+        #plt.plot(xdata, yr, '.b', label='Fermi part')
 
         plt.legend()
     return ab, ff
