@@ -637,8 +637,6 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
     return vv
 
 
-
-
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
     """ Clean up image from sensing dot """
     verbose = int(verbose)
