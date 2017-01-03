@@ -18,16 +18,22 @@ class eff_gates(Instrument):
     They are defined, such that when changing one of the effective gates, the
     others are (almost) not influenced. The effective gates are developed in 
     a way such that they correspond to the chemical potentials in mV's.
+<<<<<<< HEAD
     
     They do not (yet?) have an offset relative to the physical gates.
     
+=======
+
+    They do not (yet?) have an offset relative to the physical gates.
+
+>>>>>>> a50fbf305873d07ac7b3250cfb1873064ae5c39a
     Input:
         name (string):
         gates (object):
         eff_gate_map ():
     '''
     shared_kwargs = ['gates']
-    
+
     def __init__(self, name, gates, eff_gate_map, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -63,7 +69,7 @@ class eff_gates(Instrument):
         for idx, g in enumerate(self._gates_list):
             self.gates.set(g, self.gates.get(g) + set_vec[idx])
         return
-        
+
     def allvalues(self):
         """ Return all eff_gates values in a simple dict """
         vals = [(gate, self.get(gate)) for gate in self._eff_gates_list]
