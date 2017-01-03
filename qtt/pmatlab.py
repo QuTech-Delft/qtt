@@ -389,7 +389,19 @@ def mkdirc(d):
         pass
     return d
 
-
+def points_in_polygon(pts, pp):
+    """
+    
+    Arguments:
+        pt (Nx2 array): point
+        pp (Nxk array): polygon
+    """
+    rr=np.zeros( len(pts))
+    for i, pt in enumerate(pts):
+        r = cv2.pointPolygonTest(np.array(pp).astype(np.float32), (pt[0], pt[1]), measureDist=False)
+        rr[i]=r
+    return rr
+    
 def projectiveTransformation(H, x):
     """ Apply a projective transformation to a kxN array
 
@@ -1791,7 +1803,7 @@ def fullpath(*args):
     return p
 
 
-def ginput(n=1, drawmode=''):
+def ginput(n=1, drawmode='', **kwargs):
     """ Select points from figure
 
     Press middle mouse button to stop selection
@@ -1810,7 +1822,7 @@ def ginput(n=1, drawmode=''):
         x = np.array(x).T
         xx = np.hstack((xx, x))
         if drawmode is not None:
-            plt.plot(xx[0, :].T, xx[1, :].T, drawmode)
+            plt.plot(xx[0, :].T, xx[1, :].T, drawmode, **kwargs)
     return xx
 
 

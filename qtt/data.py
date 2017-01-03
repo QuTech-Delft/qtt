@@ -95,7 +95,12 @@ def dataset2image2(dataset):
 
 
 def dataset_get_istep(alldata, mode=None):
-    istep = np.abs(alldata.metadata['scanjob']['sweepdata']['step'])
+    """ Return number of mV per pixel in scan """
+    try:
+        istep = np.abs(alldata.metadata['scanjob']['sweepdata']['step'])
+    except:
+        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None) 
+        istep = np.mean(vstep)
     return istep
 
 

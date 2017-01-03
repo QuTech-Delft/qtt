@@ -68,3 +68,25 @@ class eff_gates(Instrument):
         """ Return all eff_gates values in a simple dict """
         vals = [(gate, self.get(gate)) for gate in self._eff_gates_list]
         return dict(vals)
+
+    def resetgates(self, activegates, basevalues=None, verbose=2):
+        """ Reset a set of gates to default values
+
+        Arguments:
+            activegates (list or dict): gates to reset
+            basevalues (dict): new values for the gates
+            verbose (int): output level
+        """
+        if verbose:
+            print('resetgates: setting gates to default values')
+        for g in activegates:
+            if basevalues == None:
+                val = 0
+            else:
+                if g in basevalues:
+                    val = basevalues[g]
+                else:
+                    val = 0
+            if verbose >= 2:
+                print('  setting gate %s to %.1f [mV]' % (g, val))
+            self.set(g, val)

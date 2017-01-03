@@ -1477,7 +1477,14 @@ def calcSlope(pp):
 #%%
 @pmatlab.static_var("scaling0", np.diag([1.,1,1]) )
 def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=np.deg2rad(70), ksizemv=12, dthr=8, dwidth=3, alldata=None, px=None):
-    """ FIXME """
+    """ Cost function for line fitting
+    
+        pp (list or array): line parameters
+        imx (numpy array): image to fit to
+        istep (float)
+        px (array): translational offset to operate from
+    
+    """
     istepmodel=.5
     samplesize=[int(imx.shape[1]*istep/istepmodel), int(imx.shape[0]*istep/istepmodel)]
 
@@ -1493,20 +1500,25 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
     patch=cv2.warpPerspective(imx.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
     pm0=np.array(pp[0:2]).reshape( (1,2))/istepmodel # [pixel]
     if px is None:
-        px=[patch.shape[1]/2, patch.shape[0]/2 ]
-    pm=pm0+px
+        pxpatch=[patch.shape[1]/2, patch.shape[0]/2 ]
+    else:
+        pxpatch = (float(istep)/istepmodel) * np.array(px)
+    pm=pm0+pxpatch
     #modelpatch, cdata=createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=0)
 
     lowv=np.percentile(imx, 1)
-    highv=np.percentile(imx, 90)
+    highv=np.percentile(imx, 95)
     theta=pp[2]
     
     if verbose:
             print('costFunctionLine: sample line patch: lowv %.1f, highv %.1f' % (lowv, highv))
             #print(px)
     linepatch=lowv+np.zeros( (samplesize[1], samplesize[0] )  )  
-    lineseg = lineSegment(linepatch, pm, theta=pp[2], w=LW/istepmodel, l=LL/istepmodel, H=highv-lowv, ml=-6/istepmodel)
-    dd=patch-(linepatch-lineseg)
+    lineSegment(linepatch, pm, theta=pp[2], w=LW/istepmodel, l=LL/istepmodel, H=highv-lowv, ml=-6/istepmodel)
+    #plt.figure(99); plt.clf(); plt.imshow(lineseg, interpolation='nearest'); plt.colorbar()
+    #plt.figure(99); plt.clf(); plt.imshow(linepatch-lineseg, interpolation='nearest'); plt.colorbar()
+    #plt.figure(99); plt.clf(); plt.imshow(linepatch, interpolation='nearest'); plt.colorbar()
+    dd=patch-(linepatch)
     cost=np.linalg.norm(dd)
     cost0=cost
     
@@ -1525,9 +1537,11 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
     if fig is not None:
         pmatlab.cfigure(fig); plt.clf()
         plt.imshow(patch, interpolation='nearest'); plt.title('patch: cost %.2f, dist %.1f' % (cost, ddx0*istep ))
+        plt.colorbar()
         pm=pm.flatten()
-        plt.plot(pm[0], pm[1], '.g', markersize=24)
-        plt.plot(px[0], px[1], '.m', markersize=18, label='center')
+        #plt.plot(pm0.flatten()[0], pm0.flatten()[1], 'dk', markersize=12, label='initial starting point?')
+        plt.plot(pm[0], pm[1], '.g', markersize=24, label='fitted point')
+        plt.plot(pxpatch[0], pxpatch[1], '.m', markersize=18, label='offset for parameters')
 
 
         qq=np.array(pm.reshape(2,1)+ (LL/istepmodel)*pmatlab.rot2D(theta).dot(np.array([[1,-1],[0,0]])))
@@ -1536,7 +1550,7 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
 
         #print(pm)
         plt.axis('image')
-#        plt.colorbar()
+#       plt.colorbar()
         
         pmatlab.cfigure(fig+1); plt.clf()
         plt.imshow(linepatch, interpolation='nearest'); plt.title('line patch')
@@ -1561,3 +1575,46 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
             print('costFunction: dd %s ' % ww)
 
     return cost    
+    
+    
+if __name__=='__main__':
+        res.x=res.x+[.0,.0,.15]
+        pp=res.x
+        verbose=2
+        c=costFunctionLine(pp, imx, istep, verbose=verbose, fig=fig, px=px); plt.figure(fig); plt.xlabel(cgate); plt.ylabel(igate); #plt.close(fig+1)
+        plt.colorbar()
+        
+#%%
+
+import scipy
+from scipy.optimize import minimize
+from qtt.deprecated.linetools import costFunctionLine
+figl=100
+
+
+
+def fitLine(im, param0=None, fig=None):
+    """ Fit a line local to a model """
+    if param0 is None:        
+        param0=[0,0,.5*np.pi] # x,y,theta, 
+    istep=.5
+    verbose=1
+    cb=None
+    imx=-np.array(alldata.diff_dir_xy)
+    px=[imx.shape[1]/2, imx.shape[0]/2 ]
+
+    #qtt.data.dataset2Dmetadata(alldata)
+
+    costfun=lambda x : costFunctionLine(x, imx, istep, verbose=0, px=px, dthr=7, dwidth=4)
+    res = minimize(costfun, param0, method='powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
+    
+    cgate=alldata.diff_dir_xy.set_arrays[1].name; igate=alldata.diff_dir_xy.set_arrays[0].name
+    #res.x=param0
+    c=costFunctionLine(res.x, imx, istep, verbose=1, fig=figl, px=px); plt.figure(figl); plt.xlabel(cgate); plt.ylabel(igate);
+    
+                
+if __name__=='__main__':
+        param0=[0,0,.5*np.pi] # x,y,theta, 
+        
+        fitdata = fitLine(im, param0=None, fig=None)
+        

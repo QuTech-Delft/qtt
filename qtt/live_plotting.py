@@ -149,7 +149,7 @@ class livePlot:
     def __init__(self, gates, sweepgates, sweepranges, verbose=1):
         win = pg.GraphicsWindow(title="Live view")
         win.resize(800, 600)
-        win.move(-900, 10)
+#        win.move(-900, 10)
 
         # TODO: automatic scaling?
         # TODO: implement FPGA callback in qcodes
