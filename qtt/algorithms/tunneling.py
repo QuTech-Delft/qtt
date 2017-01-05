@@ -117,6 +117,7 @@ if __name__ == '__main__':
     plt.legend(numpoints=1)
 
     #%% Quick estimate
+    import qtt
     from qtt import pmatlab as pgeometry
     noise = np.arange(0, .1, .5e-3)
     noise = np.hstack((noise, np.arange(1e-4, 5e-4, 1e-4)))
