@@ -19,13 +19,13 @@ You need 3.4+, but we recommand Python 3.5. For Unix python is installed by defa
 The installer can be found here
 
 ## Install necessary packages
-
-> conda install numpy matplotlib scipy spyder jupyter pyqt
+```
+> conda install numpy matplotlib scipy spyder jupyter pyqt h5py
 > conda install -c https://conda.binstar.org/nmearl pyqtgraph
 > conda install coverage nose scikit-image qtpy graphviz
 > pip install pyvisa
 > conda install -c https://conda.binstar.org/menpo opencv3
-
+```
 
 ## Clone the necessary GIT repositories
 
@@ -34,16 +34,10 @@ The installer can be found here
 3) VandersypenUsers
 4) VandersypenSetups
 
-The git links are:
-
-https://github.com/qdev-dk/Qcodes.git
-https://github.com/VandersypenQutech/qtt.git
-https://github.com/VandersypenQutech/users.git
-https://github.com/VandersypenQutech/stations.git
-
+The git commands are:
 ```
 > cd [MYLOCALDIR]
-> git clone https://github.com/qdev-dk/Qcodes.git
+> git clone https://github.com/VandersypenQutech/Qcodes.git
 > git clone https://github.com/VandersypenQutech/qtt.git
 > git clone https://github.com/VandersypenQutech/users.git
 > git clone https://github.com/VandersypenQutech/stations.git
