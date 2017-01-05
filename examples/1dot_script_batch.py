@@ -629,7 +629,7 @@ for ii, Tvalue in enumerate(Tvalues):
 
 
 
-        if 1: # fast scan, qcodes
+        if not simulation(): # fast scan, qcodes
             sd.initialize(setPlunger=True)
             defaultactivegates=[]
             scanjob['sd']=sd
@@ -638,10 +638,8 @@ for ii, Tvalue in enumerate(Tvalues):
             dstr='doubledot-%s-gc' % scanjob['td']['name']
             alldata.metadata['sd']=str(sd)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
-            
-            STOP
-            
-        if 1:
+                        
+        else:
             # slow scan
             print('slow scan without compensation!')
             sd.initialize(setPlunger=True)
