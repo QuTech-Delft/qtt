@@ -168,8 +168,6 @@ ax2.set_xlabel('elapsed time (s)')
 ax2.set_ylabel('Yellow frequency (GHz)')
 plt.show()
 
-
-
 #%% Plot correlations between gate and yellow jumps
 fig=  plt.figure()
 ax = plt.subplot(111)
