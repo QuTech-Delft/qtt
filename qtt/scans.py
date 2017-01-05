@@ -74,6 +74,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
 
     wait_time = qtt.scans.waitTime(
         od['gates'][2], gate_settle=getattr(station, 'gate_settle', None))
+    scanjob['wait_time_step']=5+3*wait_time
 
     alldatahi = qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time, background=False)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
