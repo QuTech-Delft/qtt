@@ -11,7 +11,6 @@ import sklearn
 import sklearn.manifold
 import numpy as np
 
-import sklearn.manifold
 from sklearn.manifold import TSNE
 
 #%%
