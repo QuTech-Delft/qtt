@@ -2867,3 +2867,15 @@ if __name__ == "__main__":
     doctest.testmod()
 
 #%% Testing zone
+def points_in_polygon(pts, pp):
+    """
+    
+    Arguments:
+        pt (Nx2 array): point
+        pp (Nxk array): polygon
+    """
+    rr=np.zeros( len(pts))
+    for i, pt in enumerate(pts):
+        r = cv2.pointPolygonTest(np.array(pp).astype(np.float32), (pt[0], pt[1]), measureDist=False)
+        rr[i]=r
+    return rr
