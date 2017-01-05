@@ -105,8 +105,9 @@ def onedotPlungerScan(station, od, verbose=1):
 
 #%%
 
+from qtt.scans import scanPinchValue
 
-def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbose=1):
+def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=0, verbose=1):
     """ Scan the pinch-off values for the 3 main gates of a 1-dot """
     od['pinchvalue'] = np.zeros((3, 1))
     keithleyidx = [od['instrument']]

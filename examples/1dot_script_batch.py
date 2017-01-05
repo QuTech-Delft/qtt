@@ -156,7 +156,7 @@ if __name__=='__main__':
         basevalues[g]=0
     
     
-    basetag='batch-2016-12-15'; Tvalues=np.array([-381])
+    basetag='batch-2017-1-12'; Tvalues=np.array([-381])
             
     b=False
     
@@ -322,7 +322,7 @@ for ii, Tvalue in enumerate(Tvalues):
     for od in ww:
         print('getting data for 1-dot: %s' % od['name'] )
 
-        od = onedotScanPinchValues(od, basevalues, outputdir, cache=cache, full=full)
+        od = onedotScanPinchValues(station, od, basevalues, outputdir, cache=cache, full=full)
 
             #break
 
@@ -516,18 +516,16 @@ for ii, Tvalue in enumerate(Tvalues):
 
     gates.set_T(Tvalue)       # set T value
 
-    outputdir=qtt.mkdirc(os.path.join(datadir, tag))
-    outputdir2d=qtt.mkdirc(os.path.join(datadir, tag2d))
+    outputdir=qtt.tools.mkdirc(os.path.join(datadir, tag))
+    outputdir2d=qtt.tools.mkdirc(os.path.join(datadir, tag2d))
 
     gates.set_T(Tvalue)       # set T value
 
 
     #RFsiggen1.set_frequency(RFfreq)   # SD2
     qtt.legacy.stop_AWG(awg1)
-    #RFsiggen1.off()
     qtt.legacy.stopbias(gates)
-    #RFsiggen1.on()  # for sensing dot
-
+    
     #instrumentStatus()
 
     #readfunc=lambda: keithley1.readnext()*(1e12/(Amp*10e6) )
@@ -543,8 +541,7 @@ for ii, Tvalue in enumerate(Tvalues):
     print('## %d jobs to run' % len(jobs))
     #STOP
 
-    #jobs=jobs[2:]
-
+    
     #%% Define sensing dot
     #sd=sensingdot_t(ggsd, sdval)
 

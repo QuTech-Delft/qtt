@@ -1,9 +1,13 @@
 import numpy as np
 import qcodes
 
+import warnings
+
 from qtt.scans import scan1D
 import qtt.data
 from qtt.algorithms.coulomb import *
+from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
+
 import matplotlib.pyplot as plt
 
 from qtt.tools import freezeclass
@@ -81,25 +85,7 @@ class sensingdot_t:
         """ Return current through sensing dot """
         if self.valuefunc is not None:
             return self.valuefunc()
-        global keithley1
-        global keithley2
-        if self.index == 1:
-            keithley = keithley1
-            kfactor = keithleyFactor(['keithley1'])[0]
-        else:
-            keithley = keithley2
-            kfactor = keithleyFactor(['keithley2'])[0]
-        if keithley is None:
-            # raise Exception('sensingdot_t: keithley is None!')
-            warnings.warn('keithley is None')
-            return None
-        Amp = 10
-        readval = keithley.readnext()
-        if readval is None:
-            val = 0
-        else:
-            val = kfactor * readval * (1e12 / (Amp * 10e6))
-        return val
+        raise Exception('value function is not defined for this sensing dot object')
 
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
         """ Make 1D-scan of the sensing dot """
@@ -148,7 +134,7 @@ class sensingdot_t:
         gg = sd.gg
         sdval = sd.sdval
 
-        set_gate(gg[1], sdval[1])
+        sd.station.gates.set(gg[1], sdval[1])
 
         scanjob = dict()
         scanjob['stepdata'] = dict(
@@ -159,11 +145,10 @@ class sensingdot_t:
         scanjob['compensateGates'] = []
         scanjob['gate_values_corners'] = [[]]
 
-        alldata = scan2Djob(
-            scanjob, TitleComment='2D', activegates=defaultactivegates(), wait_time=0.1)
+        alldata = qtt.scans.scan2D( scanjob, TitleComment='2D', wait_time=0.1)
 
         if fig is not None:
-            show2D(alldata, fig=fig)
+            qtt.scans.plotData(alldata, fig=fig)
         return alldata
 
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, correctdelay=True, step=-3., max_wait_time=.8, scanrange=300):
@@ -233,7 +218,7 @@ class sensingdot_t:
         cvalstart = sd.sdval[1]
         sdstart = autotunePlunger(
             g, cvalstart, readfunc, dstep=.5, stephalfmv=stephalfmv, targetvalue=sd.targetvalue, fig=fig + 1)
-        set_gate(g, sdstart)
+        sd.station.gates.set(g, sdstart)
         sd.sdval[1] = sdstart
         time.sleep(.5)
         if sd.verbose:

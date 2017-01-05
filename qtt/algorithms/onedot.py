@@ -117,7 +117,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
 
     theta0 = baseangle  # np.deg2rad(-45)
 #    step = dd['sweepdata']['step']
-    step = np.abs(np.mean(np.diff(vstep)))
+    step = np.abs(np.nanmean(np.diff(vstep)))
 
     filters, angles, _ = makeCoulombFilter(theta0=theta0, step=step, fig=None)
 
