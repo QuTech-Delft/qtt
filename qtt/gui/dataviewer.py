@@ -47,7 +47,7 @@ class DataViewer(QtWidgets.QWidget):
         default_parameter (string): name of default parameter to plot
     '''
 
-    def __init__(self, datadir=None, window_title='Data browser', default_parameter='amlitude', extensions=['dat', 'hdf5']):
+    def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5']):
         super(DataViewer, self).__init__()
 
         self.default_parameter = default_parameter
@@ -156,6 +156,7 @@ class DataViewer(QtWidgets.QWidget):
             for j, logtag in enumerate(sorted(logs[datetag])):
                 child1 = QtGui.QStandardItem(logtag)
                 child2 = QtGui.QStandardItem('info about plot')
+                print('datetag %s, logtag %s' % (datetag, logtag))
                 child3 = QtGui.QStandardItem(os.path.join(datetag, logtag))
                 parent1.appendRow([child1, child2, child3])
             model.appendRow(parent1)
@@ -168,21 +169,7 @@ class DataViewer(QtWidgets.QWidget):
         arraynames = data.arrays.keys()
         if self.default_parameter in arraynames:
             return self.default_parameter
-        vv = [v for v in arraynames if v.endswith('default_parameter')]
-        if (len(vv) > 0):
-            return vv[0]
-        vv = [v for v in arraynames if v.endswith('amplitude')]
-        if (len(vv) > 0):
-            return vv[0]
-
-        if 'amplitude' in data.arrays.keys():
-            return 'amplitude'
-
-        try:
-            key = next(iter(data.arrays.keys()))
-            return key
-        except Exception:
-            return None
+        return data.default_parameter_name()
 
     def selectedDatafile(self):
         return self.datatag
@@ -203,8 +190,21 @@ class DataViewer(QtWidgets.QWidget):
             print('logCallback! tag %s' % tag)
             try:
                 logging.debug('load tag %s' % tag)
-                data = qcodes.load_data(tag)
+                
 
+                try: 
+                    # load with default formatter
+                    from qcodes.data.gnuplot_format import GNUPlotFormat
+                    hformatter = GNUPlotFormat()
+                    data = qcodes.load_data(tag, formatter=hformatter)
+                except Exception as ex:
+                    print('default formatter not working, trying HDF5')
+                    print('tag: %s'  % tag)
+                    print(ex)
+                    from qcodes.data.hdf5_format import HDF5Format
+                    hformatter = HDF5Format()
+                    data = qcodes.load_data(tag, formatter=hformatter)
+                        
                 self.dataset=data
                 
                 self.qplot.clear()
@@ -232,6 +232,9 @@ class DataViewer(QtWidgets.QWidget):
 
 
 if __name__ == '__main__':
+    import sys
+    sys.argv+=['-d',os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
+    
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
     parser.add_argument(
@@ -242,7 +245,7 @@ if __name__ == '__main__':
 
     app = pg.mkQApp()
 
-    dataviewer = DataViewer(datadir=datadir, extensions=['hdf5', 'dat'])
+    dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
     dataviewer.setGeometry(1280, 60, 700, 800)
     dataviewer.qplot.setMaximumHeight(400)
     dataviewer.show()
