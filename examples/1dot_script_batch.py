@@ -579,8 +579,12 @@ for ii, Tvalue in enumerate(Tvalues):
         if autotuneSD:
             print('### autotune SD')
             sd.autoTuneInit(scanjob)
-            tmp, alldata = sd.autoTune(outputdir=outputdir, max_wait_time=.5, step=-4)
-
+            
+            try:
+                tmp, alldata=sd.fastTune()
+            except:
+                tmp, alldata = sd.autoTune(outputdir=outputdir, max_wait_time=.5, step=-4)
+            
             dstr='tunesd-%s-sd%d' % (scanjob['td']['name'], sd.index)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 
@@ -625,6 +629,18 @@ for ii, Tvalue in enumerate(Tvalues):
 
 
 
+        if 1: # fast scan, qcodes
+            sd.initialize(setPlunger=True)
+            defaultactivegates=[]
+            scanjob['sd']=sd
+            alldata = qtt.scans.scan2Dfast(station, scanjob, liveplotwindow=liveplotwindow)
+            
+            dstr='doubledot-%s-gc' % scanjob['td']['name']
+            alldata.metadata['sd']=str(sd)
+            saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+            
+            STOP
+            
         if 1:
             # slow scan
             print('slow scan without compensation!')

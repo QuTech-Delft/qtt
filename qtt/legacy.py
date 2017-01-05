@@ -53,8 +53,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     gates = station.gates
     gates.set(gg[1], float(basevalues[gg[1]] - 0))    # plunger
 
-    pv1 = od['pinchvalues'][0] + 0
-    pv2 = od['pinchvalues'][2] + 0
+    pv1 = float(od['pinchvalues'][0]) + 0
+    pv2 = float(od['pinchvalues'][2]) + 0
     stepstart = float(np.minimum(od['pinchvalues'][0] + 400, 90))
     sweepstart = float(np.minimum(od['pinchvalues'][2] + 300, 90))
     stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': -3})
