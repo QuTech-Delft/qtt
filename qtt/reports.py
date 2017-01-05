@@ -278,7 +278,7 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
     lst = pmatlab.findfiles(dxdir, 'scandata-doubledot.*pickle')
     print('found %d data files' % len(lst))
 
-    _ = qtt.mkdirc(os.path.join(resultsdir, 'pictures'))
+    _ = qtt.tools.mkdirc(os.path.join(resultsdir, 'pictures'))
 
     # full=2
     xdata = dict()

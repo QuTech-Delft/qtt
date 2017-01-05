@@ -138,7 +138,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """
     imfile0 = '%s.%s' % (name, ext)
     imfile = os.path.join(resultsdir, 'pictures', imfile0)
-    qtt.mkdirc(os.path.join(resultsdir, 'pictures'))
+    qtt.tools.mkdirc(os.path.join(resultsdir, 'pictures'))
     imfilerel = os.path.join('pictures', imfile0)
 
     if fig is not None:
