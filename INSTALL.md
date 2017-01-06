@@ -15,24 +15,39 @@ If you want a GUI you can use either
 
 ## Create a working Python environment
 
-You need 3.4+, but we recommand Python 3.5. For Unix python is installed by default, for windows we recommend using Anaconda.
-The installer can be found here
+You need 3.4+, but we recommand Python 3.5+. For Unix python is installed by default, for windows 
+we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows you need admin rights, or create
+ your [own environment](http://conda.pydata.org/docs/using/envs.html).
+
 
 ## Install necessary packages
 ```
-> conda install numpy matplotlib scipy spyder jupyter pyqt h5py
+> conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py
 > conda install -c https://conda.binstar.org/nmearl pyqtgraph
-> conda install coverage nose scikit-image qtpy graphviz
+> conda install -y coverage nose scikit-image qtpy graphviz
 > pip install pyvisa
 > conda install -c https://conda.binstar.org/menpo opencv3
 ```
+For Mac OS with anaconda type from the command line:
+```
+> cd [MYLOCALDIR]/qtt
+> conda install --file requirements_mac.txt
+> conda install -c menpo opencv3
+> conda install -c nmearl pyqtgraph
+> pip install pyvisa
+```
+(For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
 
 ## Clone the necessary GIT repositories
 
-1) QCodes
-2) QTT
-3) VandersypenUsers
-4) VandersypenSetups
+All code is hosted on GitHub. If you are unfamiliar with git, read an [introduction](https://guides.github.com/activities/hello-world/) first.
+
+There are four repositories:
+
+1. QCodes
+2. QTT
+3. VandersypenUsers
+4. VandersypenSetups
 
 The git commands are:
 ```
@@ -43,16 +58,30 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
+(temporary) Goto the qtt directory and checkout the branch `sq3`
+```
+> cd [MYLOCALDIR]/qtt
+> git checkout sq3
+```
+
 ## Install packages
 
 - Register the repositories it with Python. For each of the repositories run this from the root directory:
 ```
-> conda develop ./  (for Anaconda)
+> conda develop .  (for Anaconda)
 > python setup.py develop --user  (for other systems)
 ```
 
 Note: the following does NOT work with anaconda
  > python setup.py develop --user
+
+
+## Hardware 
+
+- If necessary install the drivers for your hardware. Some links:
+* (Virtual COM port driver)[http://www.ftdichip.com/Drivers/VCP.htm]
+* (GPIB USB interface)[http://www.ni.com/download/ni-488.2-16.0.0/6132/en/]
+
 
 ## Create startup shortcuts
 
@@ -60,26 +89,37 @@ For Spyder one can use something like:
 
 ```
 @echo off
+
+set USERNAME=eendebakpt
+set QTTUSERDIR=D:\users\%USERNAME%\users\%USERNAME%
+set QCODESFRONTEND=spyder
+
 echo "Starting spyder" 
-call activate eendebakpt
+SET PYTHONPATH=%PYTHONPATH%;%QTTUSERDIR%
+call activate %USERNAME%
 d:
-cd d:\users\eendebakpt
-spyder --new-instance -w d:\users\eendebakpt 
-#spyder --show-console --new-instance -w d:\users\eendebakpt --session=eendebakpt.session.tar 
-call deactivate eendebakpt
+cd d:\users\%USERNAME%
+
+spyder --show-console --new-instance -w d:\users\%USERNAME% --window-title %USERNAME%
+
+#echo "Press ..."
+pause
+
+call deactivate %USERNAME%
 ```
 
 For a notebook session:
 
 ```
 @echo off
-echo "Starting Jupyter notebook" 
+set USERNAME=eendebakpt
 
-call activate eendebakpt
+echo "Starting Jupyter notebook" 
+call activate %USERNAME%
 d:
-cd d:\users\eendebakpt
+cd d:\users\%USERNAME%
 jupyter notebook
-call deactivate eendebakpt
+call deactivate %USERNAME%
 ```
 
 ## Install redis

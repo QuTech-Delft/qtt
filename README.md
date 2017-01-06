@@ -20,66 +20,22 @@ QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` 
 
 ## Installation
 
-For more detailed instructions read the file [INSTALL.md](install.md).
+For more detailed instructions read the file [INSTALL.md](INSTALL.md).
 
 Make sure you have a working Python distribution. We recommend [Anaconda](https://www.continuum.io/downloads) as an easy way to get most of the dependencies out-of-the-box.
 
 As the project is still private, install it directly from this repository:
 
-- Install git: the [command-line toolset](https://git-scm.com/) is the most powerful but the [desktop GUI from github](https://desktop.github.com/) is also quite good
-
 - Clone this repositories somewhere on your hard drive. If you're using command line git, open a terminal window in the directory where you'd like to put qcodes and type:
 ```
 > cd [MYLOCALDIR]
-> git clone https://github.com/qdev-dk/Qcodes.git
+> git clone https://github.com/VandersypenQutech/Qcodes.git
 > git clone https://github.com/VandersypenQutech/qtt.git
 > git clone https://github.com/VandersypenQutech/users.git
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-- Install python dependencies. For windows with anaconda type from the command line:
-```
-> cd [MYLOCALDIR]/qtt
-> conda install --file requirements.txt
-> conda install -c menpo opencv3
-> conda install -c nmearl pyqtgraph
-> pip install pyvisa
-```
-For Mac OS with anaconda type from the command line:
-```
-> cd [MYLOCALDIR]/qtt
-> conda install --file requirements_mac.txt
-> conda install -c menpo opencv3
-> conda install -c nmearl pyqtgraph
-> pip install pyvisa
-```
-(For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
-
-For other systems
-```
-> cd [MYLOCALDIR]/qtt
-> pip install -r requirements.txt
-> pip install numpy scipy matplotlib pandas scikit-image
-> pip install pyqtgraph qtpy spyder
-> pip install pyvisa 
-> # install opencv according to platform instructions
-```
-
-If necessary install the drivers for your hardware. Some links:
-* (Virtual COM port driver)[http://www.ftdichip.com/Drivers/VCP.htm]
-* (GPIB USB interface)[http://www.ni.com/download/ni-488.2-16.0.0/6132/en/]
-
-- Register the repositories with Python. For each of the repositories run this from the root directory:
-```
-> conda develop ./  (for Anaconda)
-> python setup.py develop --user  (for other systems)
-```
-
-(temporary) Goto the qtt directory and checkout the branch `spinqubits3`
-```
-> cd [MYLOCALDIR]/qtt
-> git checkout spinqubits3
-```
+- Install necessary python dependencies and install the python packages.
 
 ### Updating QTT
 
