@@ -16,10 +16,9 @@ import copy
 
 from nvtools.nvtools import extract_data
 
-import qcodes
 #%% Load data
 
-os.chdir(qcodes.config['user']['nvDataDir'])
+os.chdir('C:\\Users\\Laurens\\Documents\\qtechData')
 files = []
 NV1 = True
 if NV1:
@@ -124,7 +123,7 @@ xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus
 if 0:                 
     # save data
     #np.save('/home/eendebakpt/tmp/jdata.npy', xx)
-    np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy'), xx)
+    np.save('jdata.npy', xx)
 
     plt.figure(1); plt.clf()
     plt.plot( xx[0,:], xx[5,:], '.b')
@@ -148,11 +147,11 @@ plt.plot(time, '.b'); plt.ylabel('Time')
 #%% do we identify jumps correctly?
 #
 # Plot a section to look at the selected jumps
-plot_range = [300,600]
-x = allData[0][plot_range[0]:plot_range[1]]
-y = allData[1][plot_range[0]:plot_range[1]]
-y2 = allData[2][plot_range[0]:plot_range[1]]
-plot_select = jumpSelect & (allData[0]<x[-1])[:-1] & (allData[0]>x[0])[:-1]
+plot_length = 100
+x = allData[0][:plot_length]
+y = allData[1][:plot_length]
+y2 = allData[2][:plot_length]
+plot_select = jumpSelect & (allData[0]<x[-1])[:-1]
 fig = plt.figure(figsize=(17,6))
 ax = plt.subplot(211)
 plt.plot(x,y2,'x-')
@@ -167,6 +166,8 @@ ax2.set_xlabel('elapsed time (s)')
 # ax2.set_xlim([0,1000])
 ax2.set_ylabel('Yellow frequency (GHz)')
 plt.show()
+
+
 
 #%% Plot correlations between gate and yellow jumps
 fig=  plt.figure()
@@ -185,7 +186,7 @@ plt.title('Correlation between gate and yellow jumps.')
 xx=np.vstack((jumpGate, jumpYellow) )
 
 from qtt import pmatlab
-from qtt.pmatlab import points_in_polygon
+from pmatlab import points_in_polygon
 rr=np.array([[-24.2,7.25],[0.6796,.4297]])
 pmatlab.plotPoints(pmatlab.region2poly(rr), '.-g')
 pp=pmatlab.region2poly(rr)
