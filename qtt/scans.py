@@ -286,6 +286,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     logging.info('scan1D: done %s' % (str(data.location),))
 
+    data.write(write_metadata=True)
+
     return data
 
 import pyqtgraph as pg
@@ -517,7 +519,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
 
-    alldata.write()
+    alldata.write(write_metadata=True)
 
     return alldata
     
@@ -644,7 +646,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
 
-    alldata.write()
+    alldata.write(write_metadata=True)
 
     return alldata
 
