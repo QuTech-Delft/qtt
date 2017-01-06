@@ -27,8 +27,9 @@ df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'ye
 labels=np.load('labels.npy')
 
 #%% Remove the 0 cluster (optional)
-strippedLabels = labels[labels!=0]
-df=df.iloc[labels!=0] 
+if 1:
+    strippedLabels = labels[labels!=0]
+    df=df.iloc[labels!=0] 
 
 #%% Data needs to be scaled for almost any machine learning algorithm to work
 
@@ -50,10 +51,10 @@ gateV = df['gate']
 fig = plt.figure(figsize=(13,6))
 plt1 = plt.subplot(121)
 plt1.set_title('Yellow frequency lagplot')
-pd.tools.plotting.lag_plot(laserFreq,c=labels[labels!=0])
+pd.tools.plotting.lag_plot(laserFreq)
 plt2 = plt.subplot(122)
 plt2.set_title('Gate voltage lagplot')
-pd.tools.plotting.lag_plot(gateV,c=labels[labels!=0])
+pd.tools.plotting.lag_plot(gateV)
 #How does this plot look with only the non zero jumps?
 
 if 0:
@@ -105,49 +106,58 @@ pd.tools.plotting.lag_plot(gateV[strippedLabels==3],c='y')
 pd.tools.plotting.lag_plot(gateV[strippedLabels==4],c='w')
 
 #%% Persistance model (baseline)
-testSetSize = 20
-#Laser frequency
-# split lagged datasets into train and test sets
+testSetSize = 40
+# Laser frequency
+# Split lagged datasets into train and test sets
 X = laserFraqDataframe.values
 lFtrain, lFtest = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 train_X, train_y = lFtrain[:,0], lFtrain[:,1]
 test_X, test_y = lFtest[:,0], lFtest[:,1]
  
-# persistence model
+# Persistence model
 def model_persistence(x):
 	return x
  
-# walk-forward validation
+# Walk-forward validation
 predictions = list()
 for x in test_X:
 	yhat = model_persistence(x)
 	predictions.append(yhat)
 test_score = mean_squared_error(test_y, predictions)
 print('Test MSE Yellow frequency: %.3f' % test_score)
-# plot predictions vs expected
+# Plot predictions vs expected
 fig = plt.figure()
-plt.plot(test_y)
-plt.plot(predictions, color='red')
+plt.plot(test_y, label='Yellow frequency')
+plt.plot(predictions, color='red', label='Prediction')
+plt.legend()
 plt.show()
 
-# split lagged datasets into train and test sets
+# Store residuals for later plotting
+yfPersResiduals = [test_y[i]-predictions[i] for i in range(len(predictions))]
+
+# Split lagged datasets into train and test sets
 X = gateVdataframe.values
 gVtrain, gVtest = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 train_X, train_y = gVtrain[:,0], gVtrain[:,1]
 test_X, test_y = gVtest[:,0], gVtest[:,1]
 
-# walk-forward validation
+# Walk-forward validation
 predictions = list()
 for x in test_X:
 	yhat = model_persistence(x)
 	predictions.append(yhat)
 test_score = mean_squared_error(test_y, predictions)
 print('Test MSE gate voltage: %.3f' % test_score)
-# plot predictions vs expected
+# Plot predictions vs expected
 fig = plt.figure()
-plt.plot(test_y)
-plt.plot(predictions, color='red')
+plt.plot(test_y, label='Gate voltage')
+plt.plot(predictions, color='red', label='Prediction')
+plt.legend()
 plt.show()
+
+# Store residuals for later plotting
+gvPersResiduals = [test_y[i]-predictions[i] for i in range(len(predictions))]
+
 
 #%% Train an autoregression model
 testSetSize = 40
@@ -182,10 +192,14 @@ error = mean_squared_error(test, predictions)
 print('Test MSE: %.3f' % error)
 # plot
 fig = plt.figure()
-plt.plot(test, label='testData')
+plt.plot(test, label='Yellow frequency')
 plt.plot(predictions, color='red', label = 'predictions')
 plt.legend()
 
+# Store residuals for later plotting
+yfAcResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
+
+# The same for gate voltage
 X = gateV.values
 train, test = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 # train autoregression model
@@ -212,9 +226,13 @@ error = mean_squared_error(test, predictions)
 print('Test MSE: %.3f' % error)
 # plot
 fig = plt.figure()
-plt.plot(test, label='testData')
+plt.plot(test, label='Gate voltage')
 plt.plot(predictions, color='red', label = 'predictions')
 plt.legend()
+
+# Store residuals for later plotting
+gvAcResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
+
 
 #%% Do the same as above but this time with the jumps rather than the absolute values
 #The absolute values did not work very well, predicting the jumps works surprisingly well however
@@ -249,7 +267,7 @@ result = gateVdataframe.corr()
 print(result)
 
 #%% Persistance model (baseline)
-testSetSize = 20
+testSetSize = 40
 #Laser frequency
 # split lagged datasets into train and test sets
 X = laserFraqDataframe.values
@@ -274,6 +292,10 @@ plt.plot(test_y)
 plt.plot(predictions, color='red')
 plt.show()
 
+# Store residuals for later plotting
+yfPersJumpResiduals = [test_y[i]-predictions[i] for i in range(len(predictions))]
+
+# Same for gate voltage
 # split lagged datasets into train and test sets
 X = gateVdataframe.values
 gVtrain, gVtest = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
@@ -293,8 +315,11 @@ plt.plot(test_y)
 plt.plot(predictions, color='red')
 plt.show()
 
+# Store residuals for later plotting
+gvPersJumpResiduals = [test_y[i]-predictions[i] for i in range(len(predictions))]
+
 #%% Train an autoregression model
-testSetSize = 20
+testSetSize = 40
 scale=1
 # split dataset yellow frequency
 X = laserFreqJump.values
@@ -331,6 +356,10 @@ plt.plot(test, label='testData')
 plt.plot(predictions, color='red', label = 'predictions')
 plt.legend()
 
+# Store residuals for later plotting
+yfAcJumpResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
+
+# Same for gate voltage
 X = gateVJump.values
 train, test = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 # train autoregression model
@@ -361,3 +390,8 @@ plt.plot(test, label='testData')
 plt.plot(predictions, color='red', label = 'predictions')
 plt.legend()
 
+# Store residuals for later plotting
+gvAcJumpResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
+
+
+#%% Plot the residuals to see if any pattern remains
