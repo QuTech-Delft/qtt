@@ -15,6 +15,7 @@ from nvtools.nvtools import extract_data
 import qcodes
 from statsmodels.tsa.ar_model import AR
 from sklearn.preprocessing import StandardScaler
+from statsmodels.graphics.gofplots import qqplot
 
 #%%
 print('Generating Data')
@@ -24,10 +25,10 @@ df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'ye
 #plt.figure(300); plt.clf()
 #df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
 
-labels=np.load('labels.npy')
+labels=np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 
 #%% Remove the 0 cluster (optional)
-if 1:
+if 0:
     strippedLabels = labels[labels!=0]
     df=df.iloc[labels!=0] 
 
@@ -395,3 +396,45 @@ gvAcJumpResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
 
 
 #%% Plot the residuals to see if any pattern remains
+plt.figure()
+plt.subplot(221)
+plt.title('Yellow frequency AutoCorrelation Residuals')
+plt.plot(yfAcResiduals)
+
+plt.subplot(222)
+plt.title('Gate voltage AutoCorrelation Residuals')
+plt.plot(gvAcResiduals)
+
+plt.subplot(223)
+plt.title('Yellow frequency jumps AutoCorrelation Residuals')
+plt.plot(yfAcJumpResiduals)
+
+plt.subplot(224)
+plt.title('Gate voltage jumps AutoCorrelation Residuals')
+plt.plot(gvAcJumpResiduals)
+
+#%% Plot the residuals density plots to see if any pattern remains
+plt.title('Yellow frequency AutoCorrelation Residuals')
+pd.DataFrame(yfAcResiduals).plot(kind='kde')
+
+plt.title('Gate voltage AutoCorrelation Residuals')
+pd.DataFrame(gvAcResiduals).plot(kind='kde')
+
+plt.title('Yellow frequency jumps AutoCorrelation Residuals')
+pd.DataFrame(yfAcJumpResiduals).plot(kind='kde')
+
+plt.title('Gate voltage jumps AutoCorrelation Residuals')
+pd.DataFrame(gvAcJumpResiduals).plot(kind='kde')
+
+#%% qqplots of residuals
+plt.title('Yellow frequency AutoCorrelation Residuals')
+qqplot(pd.DataFrame(yfAcResiduals))
+
+plt.title('Gate voltage AutoCorrelation Residuals')
+qqplot(pd.DataFrame(gvAcResiduals))
+
+plt.title('Yellow frequency jumps AutoCorrelation Residuals')
+qqplot(pd.DataFrame(yfAcJumpResiduals))
+
+plt.title('Gate voltage jumps AutoCorrelation Residuals')
+qqplot(pd.DataFrame(gvAcJumpResiduals))
