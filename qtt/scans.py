@@ -421,6 +421,9 @@ def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
+    if station:
+        alldata.add_metadata({'station': station.snapshot()})
+
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
     alldata.metadata['scantime'] = str(datetime.datetime.now())
@@ -512,6 +515,9 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
+
+    if station:
+        alldata.add_metadata({'station': station.snapshot()})
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
@@ -633,12 +639,10 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
-        #imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
-        #name = 'diff_dir_%s' % diff_dir
-        #data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
-        #alldata.add_array(data_arr)
-        #plot = MatPlot(interval=0)
-        #plot.add(alldata.arrays[name])
+
+    # add the station metadata
+    if station:
+        alldata.add_metadata({'station': station.snapshot()})
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gvs
