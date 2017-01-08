@@ -323,6 +323,21 @@ def wait_bg_finish(verbose=0):
         logging.info('background job not finished')
     return m is None
 
+def makeScanjob(sweepgates, values, sweepranges, resolution):
+    """ Create a scanjob from sweep ranges and a centre """
+    sj = {}
+
+    nx = len(sweepgates)
+    step = sweepranges[0] / resolution[0]
+    stepdata = {'gates': [sweepgates[0]], 'start': values[0] - sweepranges[0] / 2, 'end': values[0] + sweepranges[0] / 2, 'step': step}
+    sj['stepdata'] = stepdata
+    if nx == 2:
+        step = sweepranges[1] / resolution[1]
+        sweepdata = {'gates': [sweepgates[1]], 'start': values[1] - sweepranges[1] / 2, 'end': values[1] + sweepranges[0] / 2, 'step': step}
+        sj['sweepdata'] = sweepdata
+        sj['wait_time_step'] = 4
+    return sj
+
 #%%
 
 
