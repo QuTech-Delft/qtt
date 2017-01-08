@@ -565,10 +565,11 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
     
-    delay = scanjob.get('delay', 0.0)
-#    if wait_time is not None:
-#        raise Exception('not implemented')
+    if wait_time is None:
+        wait_time = scanjob.get('wait_time', 0.5)
 
+    wait_time_awg = 2.0
+        
     gates = station.gates
     gvs = gates.allvalues()
 
@@ -609,7 +610,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         stepparam.set(stepdata['start'])
         sweepparam.set(float(sweepgate_value) )
 
-    qtt.time.sleep(wait_time)
+    qtt.time.sleep(wait_time_awg)
 
     data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
@@ -618,7 +619,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
 
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
-    logging.info('scan2D: delay %f' % delay)
+    logging.info('scan2D: wait_time %f' % wait_time)
 
     t0 = qtt.time.time()
 
@@ -640,7 +641,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
         else:
             stepvalues.set(x)
-        qtt.time.sleep(delay)
+        qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
         liveplotwindow.update_plot()
         pg.mkQApp().processEvents()
