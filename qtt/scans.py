@@ -74,6 +74,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
 
     wait_time = qtt.scans.waitTime(
         od['gates'][2], gate_settle=getattr(station, 'gate_settle', None))
+    scanjob['wait_time_step']=5+3*wait_time
 
     alldatahi = qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time, background=False)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -405,6 +406,9 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
         def myupdate():
             t0 = time.time()
             liveplotwindow.update()
+            import matplotlib.pyplot as plt
+            #plt.pause(1e-5)
+            
             # QtWidgets.QApplication.processEvents()
             if verbose >= 2:
                 print('myupdate: %.3f ' % (time.time() - t0))
@@ -457,9 +461,14 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     gvs = gates.allvalues()
 
     sweepgate = sweepdata.get('gate', None)
-    sweepparam = getattr(gates, sweepgate) # Use any type of parameter?
+    if sweepgate is None:
+        sweepgate = sweepdata.get('gates')[0]
+    sweepparam = getattr(gates, sweepgate)
 
     stepgate = stepdata.get('gate', None)
+    if stepgate is None:
+        stepgate = stepdata.get('gates')[0]
+    
     stepparam = getattr(gates, stepgate)
 
     def readfunc(waveform, Naverage):
@@ -486,7 +495,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
             scanjob['gates_vert_init'][g] = gates.get(g)
     else:
         stepparam.set(stepdata['start'])
-        sweepparam.set(sweepgate_value)
+        sweepparam.set(float(sweepgate_value) )
 
     qtt.time.sleep(wait_time)
 

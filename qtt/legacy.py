@@ -53,8 +53,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     gates = station.gates
     gates.set(gg[1], float(basevalues[gg[1]] - 0))    # plunger
 
-    pv1 = od['pinchvalues'][0] + 0
-    pv2 = od['pinchvalues'][2] + 0
+    pv1 = float(od['pinchvalues'][0]) + 0
+    pv2 = float(od['pinchvalues'][2]) + 0
     stepstart = float(np.minimum(od['pinchvalues'][0] + 400, 90))
     sweepstart = float(np.minimum(od['pinchvalues'][2] + 300, 90))
     stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': -3})
@@ -71,6 +71,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
         wait_time = 0
 
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
+    scanjob['wait_time_step']=8
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
@@ -105,8 +106,9 @@ def onedotPlungerScan(station, od, verbose=1):
 
 #%%
 
+from qtt.scans import scanPinchValue
 
-def onedotScanPinchValues(od, basevalues, outputdir, cache=False, full=0, verbose=1):
+def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=0, verbose=1):
     """ Scan the pinch-off values for the 3 main gates of a 1-dot """
     od['pinchvalue'] = np.zeros((3, 1))
     keithleyidx = [od['instrument']]
@@ -136,7 +138,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """
     imfile0 = '%s.%s' % (name, ext)
     imfile = os.path.join(resultsdir, 'pictures', imfile0)
-    qtt.mkdirc(os.path.join(resultsdir, 'pictures'))
+    qtt.tools.mkdirc(os.path.join(resultsdir, 'pictures'))
     imfilerel = os.path.join('pictures', imfile0)
 
     if fig is not None:

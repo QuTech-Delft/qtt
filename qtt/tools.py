@@ -43,7 +43,10 @@ def stripDataset(dataset):
     dataset.data_manager = None
     dataset.background_functions = {}    
     #dataset.formatter = qcodes.DataSet.default_formatter
-    dataset.formatter.close_file(dataset)
+    try:
+        dataset.formatter.close_file(dataset)
+    except:
+        pass
 
 #%%
 
