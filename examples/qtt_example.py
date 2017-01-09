@@ -119,6 +119,7 @@ if __name__ == '__main__':
 #%% Make a 2D scan
 if __name__ == '__main__':
 
+    reload(qtt.scans)
     scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -330, 'end': 160, 'step': 4.}), 'instrument': [keithley1.amplitude], 'wait_time': 0.})
     scanjob['stepdata'] = dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, background=None, liveplotwindow=plotQ)
