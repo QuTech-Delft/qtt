@@ -56,15 +56,14 @@ class DataViewer(QtWidgets.QWidget):
             datadir = qcodes.DataSet.default_io.base_location
         self.datadir = datadir
 
-        self.extensions=extensions
+        self.extensions = extensions
         qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
         logging.info('DataViewer: data directory %s' % datadir)
 
         # setup GUI
 
+        self.dataset = None
 
-        self.dataset=None
-        
         self.text = QtWidgets.QLabel()
         self.text.setText('Log files at %s' %
                           self.datadir)
@@ -74,7 +73,7 @@ class DataViewer(QtWidgets.QWidget):
         self._treemodel = QtGui.QStandardItemModel()
         self.logtree.setModel(self._treemodel)
         self.__debug = dict()
-        self.qplot = QtPlot() # remote=False, interval=0)
+        self.qplot = QtPlot()  # remote=False, interval=0)
         self.plotwindow = self.qplot
 
         topLayout = QtWidgets.QHBoxLayout()
@@ -84,7 +83,7 @@ class DataViewer(QtWidgets.QWidget):
         topLayout.addWidget(self.reloadbutton)
 
         vertLayout = QtWidgets.QVBoxLayout()
-        
+
         vertLayout.addItem(topLayout)
         vertLayout.addWidget(self.logtree)
         vertLayout.addWidget(self.plotwindow)
@@ -114,7 +113,7 @@ class DataViewer(QtWidgets.QWidget):
 
         # get logs from disk
         self.updateLogs()
-        self.datatag=None
+        self.datatag = None
 
     def pptCallback(self):
         if self.dataset is None:
@@ -123,12 +122,12 @@ class DataViewer(QtWidgets.QWidget):
         qtt.tools.addPPT_dataset(self.dataset)
     def clipboardCallback(self):
         dataviewer.plotwindow.copyToClipboard()
-        
+
     def updateLogs(self):
         ''' Update the list of measurements '''
         model = self._treemodel
         #dd = findfilesR(self.datadir, '.*dat')
-        dd=[]
+        dd = []
         for e in self.extensions:
             dd += findfilesR(self.datadir, '.*%s' % e)
         print('found %d files' % (len(dd)))
@@ -136,7 +135,7 @@ class DataViewer(QtWidgets.QWidget):
 
         self.datafiles = sorted(dd)
         self.datafiles = [os.path.join(self.datadir, d) for d in self.datafiles]
-        
+
         model.clear()
         model.setHorizontalHeaderLabels(['Log', 'Comments'])
 
@@ -173,7 +172,7 @@ class DataViewer(QtWidgets.QWidget):
 
     def selectedDatafile(self):
         return self.datatag
-        
+
     def logCallback(self, index):
         ''' Function called when a log entry is selected '''
         logging.info('logCallback!')
@@ -183,30 +182,29 @@ class DataViewer(QtWidgets.QWidget):
         row = index.row()
 
         tag = pp.child(row, 2).data()
-        self.datatag=tag
-        
+        self.datatag = tag
+
         # load data
         if tag is not None:
             print('logCallback! tag %s' % tag)
             try:
                 logging.debug('load tag %s' % tag)
-                
 
-                try: 
+                try:
                     # load with default formatter
                     from qcodes.data.gnuplot_format import GNUPlotFormat
                     hformatter = GNUPlotFormat()
                     data = qcodes.load_data(tag, formatter=hformatter)
                 except Exception as ex:
                     print('default formatter not working, trying HDF5')
-                    print('tag: %s'  % tag)
+                    print('tag: %s' % tag)
                     print(ex)
                     from qcodes.data.hdf5_format import HDF5Format
                     hformatter = HDF5Format()
                     data = qcodes.load_data(tag, formatter=hformatter)
-                        
-                self.dataset=data
-                
+
+                self.dataset = data
+
                 self.qplot.clear()
 
                 infotxt = 'arrays: ' + ', '.join(list(data.arrays.keys()))
@@ -233,8 +231,8 @@ class DataViewer(QtWidgets.QWidget):
 
 if __name__ == '__main__':
     import sys
-    sys.argv+=['-d',os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
-    
+    sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
     parser.add_argument(
@@ -257,12 +255,11 @@ if __name__ == '__main__':
 #%%
 
 if 0:
-    tag=list(list(dataviewer.logs.items())[0][1].items() )[0][1]
+    tag = list(list(dataviewer.logs.items())[0][1].items())[0][1]
     data = qcodes.load_data(tag)
 
-    l=data.location
-    
-    data.formatter=HDF5Format()
+    l = data.location
+
+    data.formatter = HDF5Format()
     data.write()
     data._h5_base_group.close()
-    
