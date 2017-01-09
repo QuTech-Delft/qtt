@@ -54,14 +54,12 @@ except:
 import virtualDot
 
 if __name__ == '__main__':
+    nr_dots = 2
 
-    try:
-        virtualDot.close()
-    except:
-        pass
+    virtualDot.close()
     server_name = 'testv%d' % np.random.randint(1000)  # needs to be set for background loops to work
     server_name = None
-    station = virtualDot.initialize(server_name=server_name)
+    station = virtualDot.initialize(server_name=server_name, nr_dots=nr_dots)
 
     keithley1 = station.keithley1
     keithley3 = station.keithley3
@@ -105,7 +103,7 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     reload(qtt.scans)
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': 1.}), 'instrument': [keithley3.amplitude], 'delay': .000})
+    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': 1.}), 'instrument': [keithley3.amplitude], 'wait_time': .000})
     data1d = qtt.scans.scan1D(scanjob, station, location=None, background=False, verbose=2)
 
     data1d.sync()  # data.arrays
@@ -121,8 +119,8 @@ if __name__ == '__main__':
 #%% Make a 2D scan
 if __name__ == '__main__':
 
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -530, 'end': 160, 'step': 8.}), 'instrument': [keithley1.amplitude], 'delay': 0.})
-    scanjob['stepdata'] = dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 10.})
+    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -330, 'end': 160, 'step': 4.}), 'instrument': [keithley1.amplitude], 'wait_time': 0.})
+    scanjob['stepdata'] = dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, background=None, liveplotwindow=plotQ)
 
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
@@ -136,10 +134,14 @@ if __name__ == '__main__':
 
 #%% Fit 2D cross
 if __name__ == '__main__':
+    from qtt.legacy import *
     from qtt.legacy import analyse2dot
-    pt, resultsfine = analyse2dot(data, fig=300, efig=None, istep=1)
+    qtt.scans.plotData(data, fig=30)
+
+    pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
 
+    
 #%% Send data to powerpoint
 if __name__ == '__main__':
     print('add copy data to Powerpoint use the following:')
