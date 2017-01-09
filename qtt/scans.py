@@ -657,8 +657,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
 
     # add the station metadata
-    if station:
-        alldata.add_metadata({'station': station.snapshot()})
+    alldata.add_metadata({'station': station.snapshot()})
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gvs
