@@ -20,7 +20,7 @@ from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
 #from qtt.data import *
-from qtt.data import diffDataset, experimentFile, loadDataset
+from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 
 from qcodes.utils.helpers import tprint
 
@@ -498,14 +498,18 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
     alldata.add_metadata({'station': station.snapshot()})
 
+    
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
     alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
-
+    
     alldata.write(write_metadata=True)
-
+    #print(type(scanjob['stepdata']['start']))
+    #print(type(alldata.metadata['scanjob']['stepdata']['start']))
+    #return alldata, alldata.metadata['scanjob']['stepdata']['start']
+        
     return alldata
     
 if __name__ == '__main__':
@@ -765,6 +769,7 @@ def pinchoffFilename(g, od=None):
         basename = '%s-sweep-1d-%s' % (od['name'], g)
     return basename
 
+    
 
 def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)

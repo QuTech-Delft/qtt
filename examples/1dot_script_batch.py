@@ -67,6 +67,9 @@ from qtt.data import saveExperimentData, loadExperimentData
 if __name__ == '__main__':
     app = pyqtgraph.mkQApp()
 
+if __name__ == '__main__':
+    from qcodes.data.hdf5_format import HDF5Format
+    qcodes.DataSet.default_formatter = HDF5Format()
 
 #%% Load configuration
 
@@ -166,7 +169,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-12'
+    basetag = 'batch-2017-1-9y'
     Tvalues = np.array([-381])
 
     b = False
@@ -638,6 +641,16 @@ for ii, Tvalue in enumerate(Tvalues):
         else:
             # slow scan
             print('slow scan without compensation!')
+            
+            scanjob['stepdata']['step']=-4
+            scanjob['sweepdata']['step']=-4
+            scanjob['wait_time_step']=0
+            
+            ds=90
+            scanjob['sweepdata']['start']+=ds; scanjob['sweepdata']['end']+=-ds
+            scanjob['stepdata']['start']+=ds; scanjob['stepdata']['end']+=-ds
+            
+            qtt.live.liveplotwindow.clear()
             sd.initialize(setPlunger=True)
             defaultactivegates = []
             alldata = scan2D(station, scanjob, wait_time=None, background=False)
@@ -645,19 +658,20 @@ for ii, Tvalue in enumerate(Tvalues):
             alldata.metadata['sd'] = str(sd)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 
-            from qtt.legacy import analyse2dot
-            pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
-            print('WARNING: skipping analysis')
-            print('WARNING: skipping hires scan')
-            if 0:
-                
-                from qtt.legacy import positionScanjob
-                scanjobc = positionScanjob(scanjob, resultsfine['ptmv'])
-                alldatac, data = scan2Dfast(scanjobc, wait_time=wait_time, activegates=defaultactivegates())
-                dstr = 'doubledot-center-%s' % scanjob['td']['name']
-                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+        from qtt.legacy import analyse2dot
+        pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
 
-                ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+        from qtt.legacy import positionScanjob
+        scanjobc = positionScanjob(scanjob, resultsfine['ptmv'])
+        if simulation():
+            
+            alldatac  = scan2D(station, scanjobc)
+            dstr = 'doubledot-center-%s' % scanjob['td']['name']
+            saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+
+            ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+        else:
+            print('WARNING: skipping hires scan')
 
         #%% Scan in fast mode...
         if 0:

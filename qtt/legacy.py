@@ -114,9 +114,9 @@ def onedotPlungerScan(station, od, verbose=1):
     scanjob = dict({'keithleyidx': [od['instrument']]})
     scanjob['sweepdata'] = dict({'gates': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
 
-    wait_time = qtt.scans.waitTime(gg[1], gate_settle=getattr(station, 'gate_settle', None))
+    wait_time = qtt.scans.waitTime(gg[1], station=station)
 
-    alldata = scan1D(scanjob, station, delay=wait_time, title_comment='sweep of plunger')
+    alldata = scan1D(scanjob, station, wait_time=wait_time, title_comment='sweep of plunger')
     alldata.metadata['od'] = od
     stripDataset(alldata)
     scandata = dict(dataset=alldata, od=od)
@@ -768,7 +768,7 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
 
     if fig is not None:
         ims, (fw, fh, mvx, mvy, _) = straightenImage(imc, imextent, mvx=1, verbose=0)
-        show2D(alldata, ims, fig=fig)
+        show2D(alldata, ims, fig=fig, verbose=0)
         scaleCmap(ims)
         plt.axis('image')
         plt.title('zero-zero point (zoom)')
@@ -880,9 +880,9 @@ def showODresults(od, dd2d, fig=200, imx=None, ww=None):
     if not fig:
         return
 
-    tmp = show2D(dd2d, fig=fig)
+    tmp = show2D(dd2d, fig=fig, verbose=0)
 
-    _ = show2D(dd2d, fig=fig + 1)
+    _ = show2D(dd2d, fig=fig + 1, verbose=0)
     plt.title('result')
     plt.axis('image')
     plotPoints(balancepoint, '.m', markersize=18)
@@ -977,7 +977,7 @@ def fillPoly(im, poly_verts, color=None):
     return grid
 
 
-def getPinchvalues(od, xdir):
+def getPinchvalues(od, xdir, verbose=1):
     """ Get pinch values from recorded data """
     gg = od['gates']
     od['pinchvalues'] = -800 * np.ones(3)
@@ -986,13 +986,11 @@ def getPinchvalues(od, xdir):
         pp = pinchoffFilename(g, od=None)
         pfile = os.path.join(xdir, pp)
 
-        print('getPinchvalues: gate %s' % g)
         dd, metadata = qtt.data.loadDataset(pfile)
-        # dd = load_data(pfile)
-
-        # print(dd.keys())
 
         adata = qtt.algorithms.analyseGateSweep(dd, fig=0, minthr=100, maxthr=800, verbose=0)
+        if verbose:
+            print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchvalue']) )
         od['pinchvalues'][jj] = adata['pinchvalue']
     return od
 
@@ -1004,7 +1002,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
     jobs = []
     for jj, td in enumerate(two_dots):
-        print('\n#### analysing two-dot: %s' % str(td['gates']))
+        if verbose:
+            print('\n#### analysing two-dot: %s' % str(td['gates']))
 
         try:
             od1 = 'dot-' + '-'.join(td['gates'][0:3])
@@ -1027,10 +1026,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                 dstr = '%s-sweep-2d' % (od['name'])
                 dd2d = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
 
-                if verbose >= 2:
-                    print('  at getPinchvalues')
-
-                od = getPinchvalues(od, xdir)
+                od = getPinchvalues(od, xdir, verbose=verbose>=2)
 
                 if fig:
                     fign = 1000 + 100 * jj + 10 * ii
@@ -1039,9 +1035,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     fign = None
                     figm = None
 
-                if verbose >= 2:
-                    print('  at onedotGetBalance')
-                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=1, fig=fign)
+                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=verbose>=2, fig=fign)
 
                 dstrhi = '%s-sweep-2d-hires' % (od['name'])
                 tmphi = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
@@ -1054,7 +1048,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     od['setpoint'] = ptv + 10
 
                 if verbose >= 2:
-                    print('  at fillPoly')
+                    print('createDoubleDotJobs: at fillPoly')
                 imx = 0 * wwarea.copy().astype(np.uint8)
                 tmp = fillPoly(imx, od['balancefit'])
                 # cv2.fillConvexPoly(imx, od['balancefit'],color=[1] )
@@ -1094,7 +1088,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             # s1=np.minimum(basevalues[p1], e1+240)
             # s2=np.minimum(basevalues[p2], e2+240)
             scanjob['stepdata'] = dict({'gates': [p1], 'start': s1, 'end': e1, 'step': -2})
-            scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -2})
+            scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -4})
 
             scanjob['keithleyidx'] = sdinstruments
             scanjob['basename'] = 'doubledot-2d'

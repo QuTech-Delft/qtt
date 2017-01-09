@@ -611,7 +611,9 @@ def writeDataset(path, dataset, metadata=None):
 
     :param path: filename without extension
     '''
+    print('write_copy to %s' % path)
     dataset.write_copy(path=path)
+    print('write_copy to %s (done)' % path)
 
     # already done in write_copy...
     # dataset.save_metadata(path=path)
@@ -751,6 +753,8 @@ def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     if preset_data is not None:
         dd.measured.ndarray = np.array(preset_data)
 
+    dd.last_write=-1
+        
     return dd
 
 
