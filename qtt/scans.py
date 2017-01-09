@@ -157,7 +157,7 @@ def getDefaultParameter(data):
 #%%
 
 
-def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, background=False, title_comment=None, wait_time=None, verbose=1):
+def scan1D(scanjob, station, location=None, liveplotwindow=None, background=False, title_comment=None, wait_time=None, verbose=1):
     ''' Simple 1D scan '''
     gates = station.gates
     sweepdata = scanjob['sweepdata']
@@ -167,8 +167,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     param = getattr(gates, gate)
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
-    if wait_time is not None:
-        delay = wait_time
+    if wait_time is None:
+        wait_time = scanjob.get('wait_time', 0)
     t0 = time.time()
 
     # legacy code...
@@ -188,16 +188,14 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
 
-    delay = scanjob.get('delay', delay)
-    if delay is None:
-        delay = 0
-    logging.debug('delay: %s' % str(delay))
+
+    logging.debug('wait_time: %s' % str(wait_time))
     print('scan1D: starting Loop (background %s)' % background)
 
     if background:
         if verbose >= 2:
             print('scan1D: background %s, data_manager %s' % (background, data_manager))
-        loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
+        loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
         loop.background_functions = dict({'qt': pg.mkQApp().processEvents})
         data = loop.run(location=location, data_manager=data_manager, background=background)
         if liveplotwindow is not None:
@@ -215,7 +213,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
         logging.info('scan1D: running %s' % (str(data.location),))
     else:
         # run with live plotting loop
-        loop = qc.Loop(sweepvalues, delay=delay, progress_interval=1).each(*params)
+        loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
         print('loop.data_set: %s' % loop.data_set)
         print('background: %s, data_managr %s' % (background, data_manager))
         data = loop.get_data_set(data_manager=data_manager, location=location)

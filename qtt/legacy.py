@@ -168,8 +168,8 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     return imfilerel, imfile
 
 
-def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3):
-    c2 = plt.Circle(pt, radius, color=color, fill=False, linewidth=3, alpha=alpha)
+def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
+    c2 = plt.Circle(pt, radius, color=color, fill=False, linewidth=3, alpha=alpha, **kwargs)
     plt.gca().add_artist(c2)
     return c2
 
@@ -492,14 +492,15 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
     ---------
     im: array
         input image
-    imextend: list
-        coordinates of image region
+    imextend: list of 4 floats
+        coordinates of image region (x0, x1, y0, y1)
     mvx, mvy : float
         number of mV per pixel requested
 
     Returns
     -------
-     ims, (fw, fh, mvx, mvy, H) : data
+     ims: transformed image
+     (fw, fh, mvx, mvy, H) : data
          H is the homogeneous transform from original to straightened image
 
     """
@@ -514,8 +515,8 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
     if mvy is None:
         mvy = mvx
 
-    fw = (float(mvx0) / mvx)
-    fh = (float(mvy0) / mvy)
+    fw = np.abs( (float(mvx0) / mvx) )
+    fh = np.abs( (float(mvy0) / mvy) )
     if verbose:
         print('straightenImage: fx %.4f fy %.4f' % (fw, fh))
         print('straightenImage: result mvx %.4f mvy %.4f' % (mvx, mvy))
@@ -769,10 +770,11 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
         ims, (fw, fh, mvx, mvy, _) = straightenImage(imc, imextent, mvx=1, verbose=0)
         show2D(alldata, ims, fig=fig)
         scaleCmap(ims)
+        plt.axis('image')
         plt.title('zero-zero point (zoom)')
 
         # plotPoints(ptmv, '.m', markersize=22)
-        c2 = plotCircle(ptmv, radius=11.5, color='r', linewidth=3, alpha=.5)
+        c2 = plotCircle(ptmv, radius=11.5, color='r', linewidth=3, alpha=.5, label='fitted point')
 
         plt.axis('image')
 

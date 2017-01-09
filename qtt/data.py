@@ -60,6 +60,15 @@ def getDefaultParameter(data, defname='amplitude'):
 
 
 def dataset2image(dataset, mode='pixel'):
+    """ Extract image from a dataset
+    
+    Args:
+        dataset
+    Returns:
+        im (numpy array)
+        tr (image_transform object)
+            
+    """
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         dataset, verbose=0, arrayname=None)
     tr = image_transform(dataset, mode=mode)
@@ -76,9 +85,9 @@ def dataset2image2(dataset):
     Arguments
         dataset (DataSet): measured data
     Returns:
-        im (array): raw image
+        imraw (array): raw image
         impixel (array): image in pixel coordinates
-        tr (transformation): transformation object
+        tr (image_transform object): transformation object
     """
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         dataset, verbose=0, arrayname=None)
@@ -86,10 +95,10 @@ def dataset2image2(dataset):
     im = None
     impixel = None
     if arrayname is not None:
-        im = dataset.arrays[arrayname]
-        impixel = tr.transform(im)
+        imraw = dataset.arrays[arrayname]
+        impixel = tr.transform(imraw)
 
-    return im, impixel, tr
+    return imraw, impixel, tr
 
 #%%
 
@@ -268,12 +277,12 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
 #%%
 
-''' Class to convert scan coordinate to image coordinates '''
 
 
 class image_transform:
 
     def __init__(self, dataset=None, arrayname=None, mode='pixel', verbose=0):
+        ''' Class to convert scan coordinate to image coordinates '''
         self.H = np.eye(3)  # raw image to pixel image transformation
         self.extent = []  # image extent in pixel
         self.verbose = verbose
@@ -301,12 +310,20 @@ class image_transform:
                 # print('flip...')
                 self.flipX = True
                 self.H = Hx.dot(self.H)
+            if vstep[0] < vstep[1]:
+                # print('flip...')
+                self.flipY = True
+                self.H = Hy.dot(self.H)
 
         # return im
         self.Hi = numpy.linalg.inv(self.H)
 
     def extent_image(self):
-        """ Return matplotlib style image extent """
+        """ Return matplotlib style image extent
+        
+        Returns:
+            extentImage (4 floats): x1, x2, y1, y2
+        """
         vsweep = self.vsweep
         vstep = self.vstep
         extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]
