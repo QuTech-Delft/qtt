@@ -134,6 +134,11 @@ from qtt.scans import analyseGateSweep
 if __name__ == '__main__':
     adata = analyseGateSweep(data1d, fig=100)
 
+#%% Fit 2D cross
+if __name__ == '__main__':
+    from qtt.legacy import analyse2dot
+    pt, resultsfine = analyse2dot(data, fig=300, efig=None, istep=1)
+
 
 #%% Send data to powerpoint
 if __name__ == '__main__':

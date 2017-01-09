@@ -33,6 +33,23 @@ import datetime
 from qtt.scans import scan2D, scan1D
 from qtt.tools import stripDataset
 
+def positionScanjob(scanjob, pt):
+    """ Helper function
+    
+    Changes an existing scanjob to scan at the centre of the specified point
+    
+    """
+    scanjob=copy.deepcopy(scanjob)
+    sh = float( pt[0] - (scanjob['sweepdata']['start']+scanjob['sweepdata']['end'])/2 )
+    scanjob['sweepdata']['start'] += sh
+    scanjob['sweepdata']['end'] += sh
+    
+    sh = float( pt[1] - (scanjob['stepdata']['start']+scanjob['stepdata']['end'])/2 )
+    scanjob['stepdata']['start'] += sh
+    scanjob['stepdata']['end'] += sh
+
+    return scanjob 
+    
 
 def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     """ Scan a one-dot
@@ -60,7 +77,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': -3})
     sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': -3})
 
-    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
+    wait_time = qtt.scans.waitTime(gg[2], station=station)
+    wait_time_base = qtt.scans.waitTime(None, station=station)
 
     if full == 0:
         stepdata['step'] = -12
@@ -71,7 +89,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
         wait_time = 0
 
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
-    scanjob['wait_time_step']=8
+    scanjob['wait_time_step']=wait_time_base+3*wait_time
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
