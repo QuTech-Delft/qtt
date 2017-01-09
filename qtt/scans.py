@@ -491,6 +491,8 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
     logging.info('scan2D: wait_time %f' % wait_time)
 
+    params = getParams(station, minstrument)
+
     alldata = makeDataSet2D(stepvalues, sweepvalues)
 
     t0 = qtt.time.time()
@@ -518,7 +520,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
                 qtt.time.sleep(wait_time_step)
             time.sleep(wait_time)
 
-            value = minstrument[0].get()
+            value = params[0].get()
             alldata.measured.ndarray[ix, iy] = value
         liveplotwindow.update_plot()
         pg.mkQApp().processEvents()
