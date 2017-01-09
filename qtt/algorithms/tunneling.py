@@ -55,7 +55,7 @@ def polweight_all_2slopes(delta, data, par, kT=0.001):
     return total
 
 
-def fit_pol_all(delta, data, verbose=1):
+def fit_pol_all(delta, data, kT=0.001, verbose=1):
     ''' Calculate initial values for fitting and fit
 
     Arguments:
@@ -79,9 +79,9 @@ def fit_pol_all(delta, data, verbose=1):
 #    t_guess = 1 # hard-coded value
     par_guess = np.array([t_guess, delta_offset_guess, sensor_offset_guess, slope_guess, slope_guess, sensitivity_guess])  # second slope guess could be done more accurately
 
-    func = lambda par: polweight_all_2slopes(delta, data, par)
+    func = lambda par: polweight_all_2slopes(delta, data, par, kT=kT)
 
-    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=200, maxfun=3000, disp=verbose >= 2)
+    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=200, maxfun=5000, disp=verbose >= 2)
 
     return par_fit, par_guess
 
@@ -181,14 +181,14 @@ if __name__ == '__main__':
 
     #%% Number of data points
     Noise = .02
-    npoints=np.array([20, 30,50,70,100,120,160,180,200,300,500,1000])
-    niter=60
+    npoints = np.array([20, 30, 50, 70, 100, 120, 160, 180, 200, 300, 500, 1000])
+    niter = 60
     ppall = np.zeros((len(npoints), niter, 6))
     for ii, n in enumerate(npoints):
         print('full fit %d/%d' % (ii, len(npoints)))
         xx = np.linspace(-10, 10, n)
         yy = polmod_all_2slopes(xx, par, kT=0.001)
-        
+
         for j in range(niter):
             yyx = yy + Noise * (np.random.rand(yy.size) - .5)
             parfit, _ = fit_pol_all(xx, yyx)
@@ -196,7 +196,7 @@ if __name__ == '__main__':
 #%%
     mean = np.mean(ppall[:, :, 0], axis=1)
     mstd = np.std(ppall[:, :, 0], axis=1)
-                 
+
     plot_data = True
 
     tb = Series(mean, index=npoints)
