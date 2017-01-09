@@ -8,6 +8,7 @@ import time
 import qcodes
 import qcodes as qc
 import datetime
+import warnings
 
 import matplotlib.pyplot as plt
 
@@ -285,6 +286,8 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     logging.info('scan1D: done %s' % (str(data.location),))
 
+    data.write(write_metadata=True)
+
     return data
 
 import pyqtgraph as pg
@@ -320,10 +323,25 @@ def wait_bg_finish(verbose=0):
         logging.info('background job not finished')
     return m is None
 
+def makeScanjob(sweepgates, values, sweepranges, resolution):
+    """ Create a scanjob from sweep ranges and a centre """
+    sj = {}
+
+    nx = len(sweepgates)
+    step = sweepranges[0] / resolution[0]
+    stepdata = {'gates': [sweepgates[0]], 'start': values[0] - sweepranges[0] / 2, 'end': values[0] + sweepranges[0] / 2, 'step': step}
+    sj['stepdata'] = stepdata
+    if nx == 2:
+        step = sweepranges[1] / resolution[1]
+        sweepdata = {'gates': [sweepgates[1]], 'start': values[1] - sweepranges[1] / 2, 'end': values[1] + sweepranges[0] / 2, 'step': step}
+        sj['sweepdata'] = sweepdata
+        sj['wait_time_step'] = 4
+    return sj
+
 #%%
 
 
-def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False, verbose=1):
+def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False, verbose=1):
     """ Make a 2D scan and create dictionary to store on disk
 
     Args:
@@ -344,8 +362,6 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     delay = scanjob.get('delay', 0.0)
     if wait_time is not None:
         delay = wait_time
-
-    # readdevs = ['keithley%d' % x for x in keithleyidx]
 
     gates = station.gates
 
@@ -420,6 +436,8 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
+    alldata.add_metadata({'station': station.snapshot()})
+
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
     alldata.metadata['scantime'] = str(datetime.datetime.now())
@@ -430,6 +448,102 @@ def scan2D(station, scanjob, title_comment='', liveplotwindow=None, wait_time=No
 
     return alldata
 
+def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=False, diff_dir=None, verbose=1):
+    """ Make a 2D scan and create dictionary to store on disk
+
+    Args:
+        station (object): contains all data on the measurement station
+        scanjob (dict): data for scan range
+
+    Returns:
+        alldata (DataSet)
+    """
+
+    stepdata = scanjob['stepdata']
+    sweepdata = scanjob['sweepdata']
+    minstrument = scanjob.get('instrument', None)
+    if minstrument is None:
+        minstrument = scanjob.get('keithleyidx', None)
+
+    gates = station.gates
+    # get the gates to step and sweep
+    sweepgate = sweepdata.get('gate', None)
+    if sweepgate is None:
+        sweepgate = sweepdata.get('gates')[0]
+
+    stepgate = stepdata.get('gate', None)
+    if stepgate is None:
+        stepgate = stepdata.get('gates')[0]
+    param = getattr(gates, sweepgate)
+    stepparam = getattr(gates, stepgate)
+
+    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+    stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
+
+    # get the delays
+    if wait_time is None:
+        wait_time = scanjob.get('wait_time', None)
+        if wait_time is None:
+            wait_time = waitTime(sweepgate)
+
+    wait_time_step = scanjob.get('wait_time_step', wait_time)
+    logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
+    logging.info('scan2D: wait_time %f' % wait_time)
+
+    params = getParams(station, minstrument)
+
+    alldata = makeDataSet2D(stepvalues, sweepvalues)
+
+    t0 = qtt.time.time()
+
+    if background:
+        warnings.warn('scan2D: background running not implemented, running in foreground')
+
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
+    if liveplotwindow is not None:
+        liveplotwindow.clear()
+        liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
+
+    for ix, x in enumerate(stepvalues):
+        tprint('scan2D: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
+        if 'gates_vert' in scanjob:
+            for g in scanjob['gates_vert']:
+                gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
+        else:
+            stepvalues.set(x)
+
+        for iy, y in enumerate(sweepvalues):
+            sweepvalues.set(y)
+            if iy == 0:
+                qtt.time.sleep(wait_time_step)
+            time.sleep(wait_time)
+
+            value = params[0].get()
+            alldata.measured.ndarray[ix, iy] = value
+        liveplotwindow.update_plot()
+        pg.mkQApp().processEvents()
+
+    dt = qtt.time.time() - t0
+
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
+
+    if diff_dir is not None:
+        alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
+
+    alldata.add_metadata({'station': station.snapshot()})
+
+    alldata.metadata['scanjob'] = scanjob
+    alldata.metadata['allgatevalues'] = gates.allvalues()
+    alldata.metadata['scantime'] = str(datetime.datetime.now())
+    alldata.metadata['dt'] = dt
+    alldata.metadata['wait_time'] = wait_time
+
+    alldata.write(write_metadata=True)
+
+    return alldata
+    
 if __name__ == '__main__':
     import logging
     import datetime
@@ -438,7 +552,7 @@ if __name__ == '__main__':
 
 
 #%%
-def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None):
+def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None, verbose=1):
     """ Make a 2D scan and create qcodes dataset to store on disk
 
     Arguments:
@@ -451,12 +565,11 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
     
-#    logging.info('scan2D: todo: implement compensategates for sensing dot compensation')
+    if wait_time is None:
+        wait_time = scanjob.get('wait_time', 0.5)
 
-    delay = scanjob.get('delay', 0.0)
-#    if wait_time is not None:
-#        raise Exception('not implemented')
-
+    wait_time_startloop = scanjob.get('wait_time_startloop', 2.0)
+        
     gates = station.gates
     gvs = gates.allvalues()
 
@@ -497,7 +610,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         stepparam.set(stepdata['start'])
         sweepparam.set(float(sweepgate_value) )
 
-    qtt.time.sleep(wait_time)
+    qtt.time.sleep(wait_time_startloop)
 
     data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
@@ -506,16 +619,12 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
 
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
-    logging.info('scan2D: delay %f' % delay)
+    logging.info('scan2D: wait_time %f' % wait_time)
 
     t0 = qtt.time.time()
 
-    if background is None:
-        try:
-            gates._server_name
-            background = True
-        except:
-            background = False
+    if background:
+        warnings.warn('scan2D: background running not implemented, running in foreground')
 
     alldata = makeDataSet2D(stepvalues, sweepvalues)
 
@@ -532,7 +641,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
         else:
             stepvalues.set(x)
-        qtt.time.sleep(delay)
+        qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
         liveplotwindow.update_plot()
         pg.mkQApp().processEvents()
@@ -546,12 +655,9 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
-        #imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
-        #name = 'diff_dir_%s' % diff_dir
-        #data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
-        #alldata.add_array(data_arr)
-        #plot = MatPlot(interval=0)
-        #plot.add(alldata.arrays[name])
+
+    # add the station metadata
+    alldata.add_metadata({'station': station.snapshot()})
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gvs
@@ -559,7 +665,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
 
-    alldata.write()
+    alldata.write(write_metadata=True)
 
     return alldata
 

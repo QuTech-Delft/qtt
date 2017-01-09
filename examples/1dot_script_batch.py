@@ -31,7 +31,7 @@ if __name__ == '__main__':
         pass
 
 import webbrowser
-import datetime
+import time, datetime
 import copy
 import matplotlib.pyplot as plt
 
@@ -161,6 +161,7 @@ if __name__ == '__main__':
     for g in activegates:
         basevalues[g] = 0
 
+    #basetag = 'batch-2017-1-12'
     basetag = 'batch-2017-1-12'
     Tvalues = np.array([-381])
 
@@ -640,7 +641,8 @@ for ii, Tvalue in enumerate(Tvalues):
             alldata.metadata['sd'] = str(sd)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 
-            #pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
+            from qtt.legacy import analyse2dot
+            pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
             print('WARNING: skipping analysis')
             print('WARNING: skipping hires scan')
             if 0:

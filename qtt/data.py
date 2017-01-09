@@ -708,12 +708,17 @@ def makeDataSet1D(x, yname='measured', y=None, location=None):
 
 
 def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
-    ''' Make DataSet with one 2D array and two setpoint arrays 
-
-    Arguments:
+    """ Make DataSet with one 2D array and two setpoint arrays
+    
+    Args:
         p1 (array): first setpoint array of data
         p2 (array): second setpoint array of data
-    '''
+        mname (str): name of measured array
+        location (str or None): location for the DataSet
+        preset_data (array or None): optional array to fill the DataSet
+    Returns:
+        dd (DataSet)
+    """
     xx = np.array(p1)
     yy0 = np.array(p2)
     yy = np.tile(yy0, [xx.size, 1])

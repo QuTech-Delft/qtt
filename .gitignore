@@ -74,3 +74,4 @@ test*.bin
 test*.pickle
 *.profile
 model.png
+test*py
