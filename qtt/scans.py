@@ -436,8 +436,7 @@ def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    if station:
-        alldata.add_metadata({'station': station.snapshot()})
+    alldata.add_metadata({'station': station.snapshot()})
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
@@ -497,7 +496,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
     t0 = qtt.time.time()
 
-    if background is True:
+    if background:
         warnings.warn('scan2D: background running not implemented, running in foreground')
 
     if liveplotwindow is None:
@@ -533,8 +532,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
 
-    if station:
-        alldata.add_metadata({'station': station.snapshot()})
+    alldata.add_metadata({'station': station.snapshot()})
 
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
@@ -570,7 +568,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     if wait_time is None:
         wait_time = scanjob.get('wait_time', 0.5)
 
-    wait_time_awg = 2.0
+    wait_time_startloop = scanjob.get('wait_time_startloop', 2.0)
         
     gates = station.gates
     gvs = gates.allvalues()
@@ -612,7 +610,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         stepparam.set(stepdata['start'])
         sweepparam.set(float(sweepgate_value) )
 
-    qtt.time.sleep(wait_time_awg)
+    qtt.time.sleep(wait_time_startloop)
 
     data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
@@ -625,7 +623,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     t0 = qtt.time.time()
 
-    if background is True:
+    if background:
         warnings.warn('scan2D: background running not implemented, running in foreground')
 
     alldata = makeDataSet2D(stepvalues, sweepvalues)
