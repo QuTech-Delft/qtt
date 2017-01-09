@@ -41,16 +41,20 @@ from qcodes.plots.qcmatplotlib import MatPlot
 from functools import partial
 import qtt.scans
 
+
 import qtt
 import qtt.scans
 from qtt.scans import experimentFile
+from qtt import pgeometry
+from qtt.data import write_data
 import qtt.reports
-#reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
-#import qcodes.utils.reload_code
-#_=qcodes.utils.reload_code.reload_code()
+if 1:
+    reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
+    import qcodes.utils.reload_code
+    #_=qcodes.utils.reload_code.reload_code()
 from qcodes.utils.validators import Numbers
 
-from qtt.data import *
+from qtt.data import getDateString, experimentFile
 from qtt.scans import scan2D, scan1D, onedotHiresScan
 from qtt.legacy import getODbalancepoint
 from qtt.reports import generateOneDotReport
@@ -370,7 +374,7 @@ for ii, Tvalue in enumerate(Tvalues):
         plt.figure(10)
         plt.clf()
         MatPlot(alldata.arrays[alldata.default_parameter_name()], interval=0, num=10)
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
+        pgeometry.plotPoints(od['balancepoint'], '.m', markersize=19)
 
         _ = wait_bg_finish()
 
@@ -636,7 +640,7 @@ for ii, Tvalue in enumerate(Tvalues):
             print('slow scan without compensation!')
             sd.initialize(setPlunger=True)
             defaultactivegates = []
-            alldata = scan2D(station, scanjob, title_comment='scan double-dot', wait_time=None, background=False)
+            alldata = scan2D(station, scanjob, wait_time=None, background=False)
             dstr = 'doubledot-%s-gc' % scanjob['td']['name']
             alldata.metadata['sd'] = str(sd)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
@@ -646,8 +650,10 @@ for ii, Tvalue in enumerate(Tvalues):
             print('WARNING: skipping analysis')
             print('WARNING: skipping hires scan')
             if 0:
+                
+                from qtt.legacy import positionScanjob
                 scanjobc = positionScanjob(scanjob, resultsfine['ptmv'])
-                alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
+                alldatac, data = scan2Dfast(scanjobc, wait_time=wait_time, activegates=defaultactivegates())
                 dstr = 'doubledot-center-%s' % scanjob['td']['name']
                 saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 

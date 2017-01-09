@@ -10,16 +10,14 @@
 import os
 import logging
 import numpy as np
+from functools import partial
+import threading
 
 import qcodes as qc
 from qcodes import Instrument   # , Parameter, Loop, DataArray
 from qcodes.utils.validators import Numbers
 from qcodes.instrument.parameter import ManualParameter
 
-#import pyqtgraph
-#import pyqtgraph.Qt as Qt
-from functools import partial
-import threading
 
 import qtt
 
@@ -28,7 +26,8 @@ logger = logging.getLogger('qtt')
 import qtt.algorithms.functions
 import qtt.simulation.dotsystem
 from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransform
-from qtt.simulation.dotsystem import *
+from qtt.simulation.dotsystem import defaultDotValues
+from qtt.simulation.dotsystem import DoubleDot
 
 
 #%%
@@ -48,7 +47,6 @@ def partiala(method, **kwargs):
 
 
 class ModelError(Exception):
-
     ''' Error in Model '''
     pass
 
@@ -110,9 +108,7 @@ class FourdotModel(Instrument):
             g = instr + '_amplitude'
             self.add_parameter(g,
                                # label='Gate {} (mV)'.format(g),
-                               # get_cmd=getattr(self, instr+'_get' ),
                                get_cmd=partial(getattr(self, instr + '_get'), 'amplitude'),
-                               # set_cmd=partial(self._data_set, g),
                                get_parser=float,
                                )
 
@@ -142,7 +138,7 @@ class FourdotModel(Instrument):
             setattr(self.ds, 'isC%d' % (ii + 1), 3)
 
         Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=self.ds.ndots)
-        Vmatrix[0:3, -1] = [100, 100, 100]
+        Vmatrix[0:self.ds.ndots, -1] = [-200]*self.ds.ndots
         self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
 
         # coulomb model for sd1
@@ -229,9 +225,6 @@ class FourdotModel(Instrument):
         sd1 = (1 / np.sum(self.sddist1)) * (ret * self.sddist1).sum()
         sd2 = (1 / np.sum(self.sddist1)) * (ret * self.sddist2).sum()
 
-        # c1=self._compute_pinchoff(['SD1b'], offset=-200.)
-        # c2=self._compute_pinchoff(['SD1b'], offset=-200.)
-
         return [val1 + sd1 + cond1, val2 + sd2]
 
     def compute(self, biasrandom=None):
@@ -301,17 +294,20 @@ class FourdotModel(Instrument):
         self.lock.release()
         return val
 
-#    def keithley3_set(self, param, value):
-#        print('huh?')
-
 
 class VirtualIVVI(Instrument):
 
     shared_kwargs = ['model']
 
-    ''' Virtual instrument representing an IVVI '''
 
     def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
+        """ Virtual instrument representing an IVVI 
+        
+        Args:
+            name (str)
+            model (object)
+            gates (lis of gate names)
+        """
         super().__init__(name, **kwargs)
 
         self.model = model
@@ -386,23 +382,18 @@ class VirtualMeter(Instrument):
         self.add_parameter(g,
                            label='%s Current (nA)' % name,
                            get_cmd=partial(self.get_gate, g),
-                           # set_cmd=partial(self.set_gate, g),
                            )
-
-        # self.add_function('readnext', call_cmd=partial(self.get, 'amplitude'))
         self.add_parameter('readnext', get_cmd=partial(self.get, 'amplitude'), label=name)
 
     def get_gate(self, gate):
         # need a remote get...
         return self.model.get(self.name + '_' + gate)
-        # self.name+'_'+gate
 
         # logging.debug('%s: get_gate %s' % (self.name,gate) )
        # return 0
 
     def set_gate(self, gate, value):
         self.model.set(self.name + '_' + gate, value)
-        # logging.info('set_gate %s: %s' % (gate, value))
         return
 
 #%%
@@ -421,6 +412,13 @@ class virtual_gates(Instrument):
     shared_kwargs = ['instruments']
 
     def __init__(self, name, instruments, gate_map, **kwargs):
+        """ Class to make names gates to gates on an instrument
+        
+        Args:
+            name (str)
+            instruments (list of qcodes instruments):
+            gate_map (dict)
+        """
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
@@ -429,14 +427,6 @@ class virtual_gates(Instrument):
             logging.debug('virtual_gates: make gate %s' % gate)
             self._make_gate(gate)
 
-        if 0:
-            # debugging
-            print('pid %d: add to q.txt' % os.getpid())
-            with open('/home/eendebakpt/tmp/q.txt', 'at') as fid:
-                l = logging.getLogger()
-                fid.write('virtual_gates on pid %d\n' % os.getpid())
-                fid.write('  handlers: %s\n' % (str(l.handlers)))
-                logging.info('hello from %d ' % os.getpid())
         self.get_all()
 
     def get_idn(self):
@@ -476,10 +466,7 @@ class virtual_gates(Instrument):
                            units='mV',
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate),
-                           # get_parser=float,
                            vals=Numbers(-2000, 2000), )
-        # sweep_step=0.1,
-        # sweep_delay=0.05)
         self.add_function(
             'get_{}'.format(gate), call_cmd=partial(self.get, param_name=gate))
         self.add_function('set_{}'.format(gate), call_cmd=partial(
@@ -577,7 +564,6 @@ class virtual_gates(Instrument):
         dot.subgraph(cgates)
         for c0 in iclusters:
             dot.subgraph(c0)
-        # group
 
         for g in gates._gate_map:
             xx = gates._gate_map[g]

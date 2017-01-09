@@ -231,7 +231,9 @@ class DataViewer(QtWidgets.QWidget):
 
 if __name__ == '__main__':
     import sys
-    sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
+    if len(sys.argv)<2:
+        #sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'data', 'qutech', 'data')]
+        sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")

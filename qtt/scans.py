@@ -9,6 +9,7 @@ import qcodes
 import qcodes as qc
 import datetime
 import warnings
+import pyqtgraph as pg
 
 import matplotlib.pyplot as plt
 
@@ -18,8 +19,8 @@ from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
-from qtt.data import *
-from qtt.data import diffDataset
+#from qtt.data import *
+from qtt.data import diffDataset, experimentFile, loadDataset
 
 from qcodes.utils.helpers import tprint
 
@@ -55,8 +56,8 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 
 #%%
 
-from qtt.algorithms.generic import *
-
+from qtt.algorithms.generic import findCoulombDirection
+from qtt.data import dataset2Dmetadata, dataset2image
 
 def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     """ Make high-resolution scan of a one-dot """
@@ -73,11 +74,10 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], -780)
     scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
 
-    wait_time = qtt.scans.waitTime(
-        od['gates'][2], gate_settle=getattr(station, 'gate_settle', None))
-    scanjob['wait_time_step']=5+3*wait_time
+    wait_time = qtt.scans.waitTime(od['gates'][2], station=station)
+    scanjobhi['wait_time_step']=qtt.scans.waitTime(None, station)+3*wait_time
 
-    alldatahi = qtt.scans.scan2D(station, scanjobhi, title_comment='2D scan, local', wait_time=wait_time, background=False)
+    alldatahi = qtt.scans.scan2D(station, scanjobhi, wait_time=wait_time, background=False)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         alldatahi, verbose=0, arrayname=None)
     impixel, tr = dataset2image(alldatahi, mode='pixel')
@@ -135,29 +135,9 @@ if __name__ == '__main__':
 #%%
 
 import time
-"""
-def complete(self, delay=1.0, txt=''):
-        ''' Block untill dataset had completed '''
-        logging.info('waiting for data to complete')
-        try:
-            nloops=0
-            while True:
-                logging.info('%s waiting for data to complete (loop %d)' % (txt, nloops) )
-                if self.sync()==False:
-                    break
-                time.sleep(delay)
-                nloops=nloops+1
-                try:
-                    pyqtgraph.QtGui.QApplication.instance().processEvents()
-                except:
-                    print('error in processEvents...')
-        except Exception as ex:
-            return False
-        return True
-"""
-
 
 def getParams(station, keithleyidx):
+    """ Get qcodes parameters from an index or string """
     params = []
     for x in keithleyidx:
         if isinstance(x, int):
@@ -171,25 +151,9 @@ def getParams(station, keithleyidx):
 
 
 def getDefaultParameter(data):
-    if 'amplitude' in data.arrays.keys():
-        return data.amplitude
-    if 'amplitude_0' in data.arrays.keys():
-        return data.amplitude_0
-    if 'amplitude_1' in data.arrays.keys():
-        return data.amplitude_1
-
-    vv = [v for v in (data.arrays.keys()) if v.endswith('amplitude')]
-    if (len(vv) > 0):
-        name = vv[0]
-        return getattr(data, name)
-
-    try:
-        name = next(iter(data.arrays.keys()))
-        return getattr(data, name)
-    except:
-        pass
-    return None
-
+    return data.default_parameter_name()
+    raise 'Please do not use this function'
+    
 #%%
 
 
@@ -258,7 +222,7 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
         if liveplotwindow is not None:
             liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(data))
+            liveplotwindow.add(data.default_parameter_array() )
 
         dt = time.time() - t0
         if liveplotwindow is not None:
@@ -290,7 +254,6 @@ def scan1D(scanjob, station, location=None, delay=.01, liveplotwindow=None, back
 
     return data
 
-import pyqtgraph as pg
 
 
 if __name__ == '__main__':
@@ -505,6 +468,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
 
+    
     for ix, x in enumerate(stepvalues):
         tprint('scan2D: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
         if 'gates_vert' in scanjob:
@@ -521,8 +485,10 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
             value = params[0].get()
             alldata.measured.ndarray[ix, iy] = value
-        liveplotwindow.update_plot()
-        pg.mkQApp().processEvents()
+            
+        if ix==len(stepvalues)-1 or ix % 5 == 0:
+            liveplotwindow.update_plot()
+            pg.mkQApp().processEvents()
 
     dt = qtt.time.time() - t0
 
