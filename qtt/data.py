@@ -12,14 +12,13 @@ import datetime
 import warnings
 import pickle
 import scipy
-
-import numpy.linalg
-from qtt import pmatlab
-
 try:
     import hickle
 except:
     pass
+
+import numpy.linalg
+from qtt import pmatlab
 
 import qtt.tools
 
@@ -557,6 +556,9 @@ def write_data(mfile: str, data):
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
+    if isinstance(data, qcodes.DataSet):
+        data = qtt.tools.stripDataset(data)
+
     with open(mfile, 'wb') as fid:
         pickle.dump(data, fid)
     # hickle.dump(metadata, mfile)

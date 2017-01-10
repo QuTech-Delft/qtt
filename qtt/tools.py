@@ -47,6 +47,7 @@ def stripDataset(dataset):
         dataset.formatter.close_file(dataset)
     except:
         pass
+    return dataset
 
 #%%
 
