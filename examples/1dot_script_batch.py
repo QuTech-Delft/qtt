@@ -162,7 +162,11 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
+<<<<<<< Updated upstream
     basetag = 'batch-2017-1-12'
+=======
+    basetag = 'batch-2017-1-9c'
+>>>>>>> Stashed changes
     Tvalues = np.array([-381])
 
     b = False
