@@ -82,11 +82,11 @@ plt.plot(gdf)
 freqBins = 600
 
 test = nufftpy.nufft1(time,df[['yellow']].values.ravel(),freqBins)
-xt = nufftpy.nufftfreqs(freqBins)[1:freqBins:10]
+xt = nufftpy.nufftfreqs(freqBins)[1:freqBins:25]
 
 plt.figure()
 plt.plot(test)
-plt.xticks(range(freqBins)[1:freqBins:10], list(xt))
-
+plt.xticks(range(freqBins)[1:freqBins:25], list(xt))
+plt.title('non-Uniform Fourier transform yellow frequency')
 # So that peak probably was just the centre fold, it is weird that the peak isn't centered for the other
-# plot, and it is also strange that the 
+# plot, and it is also strange that the other plot is not symmetric

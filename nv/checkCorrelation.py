@@ -16,6 +16,9 @@ import qcodes
 from statsmodels.tsa.ar_model import AR
 from sklearn.preprocessing import StandardScaler
 from statsmodels.graphics.gofplots import qqplot
+from scipy.interpolate import interp1d
+
+interpolated = False
 
 #%%
 print('Generating Data')
@@ -45,10 +48,23 @@ datascalerBase = StandardScaler().fit(data[:,4:])
 x=dataS[:,4]
 y=dataS[:,5]
 
+#%% How does interprelation change the outcome?
+if 0:
+    interpGate = interp1d(df[['time']].values.ravel(),df[['gate']].values.ravel(), kind='nearest')(range(0,390939,100))
+    interpYellow = interp1d(df[['time']].values.ravel(),df[['yellow']].values.ravel(), kind='nearest')(range(0,390939,100))
+    interpGateJump = interp1d(df[['time']].values.ravel(),df[['gate jump']].values.ravel(), kind='nearest')(range(0,390939,100))
+    interpYellowJump = interp1d(df[['time']].values.ravel(),df[['yellow jump']].values.ravel(), kind='nearest')(range(0,390939,100))
+    interpolated = True
+
 
 #%% Visually confirm autocorrelation
 laserFreq = df['yellow']
 gateV = df['gate']
+
+if interpolated:
+    laserFreq = pd.Series(interpYellow)
+    gateV = pd.Series(interpGate)
+
 fig = plt.figure(figsize=(13,6))
 plt1 = plt.subplot(121)
 plt1.set_title('Yellow frequency lagplot')
@@ -241,6 +257,11 @@ gvAcResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
 #%% Visually confirm autocorrelation
 laserFreqJump = df['yellow jump']
 gateVJump = df['gate jump']
+
+if interpolated:
+    laserFreqJump = pd.Series(interpYellowJump)
+    gateVJump = pd.Series(interpGateJump)
+
 fig = plt.figure(figsize=(13,6))
 plt1 = plt.subplot(121)
 plt1.set_title('Yellow frequency lagplot')
