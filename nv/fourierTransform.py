@@ -14,6 +14,7 @@ import pandas as pd
 from pynufft import pynufft
 from scipy.interpolate import interp1d
 import matplotlib
+import nufftpy
 
 #%%
 print('Generating Data')
@@ -64,7 +65,7 @@ gdf=NufftObj.forward(gateData)
 plt.figure()
 plt.subplot(211)
 plt.title('Fourier transformation of gate voltage - irregular')
-plt.plot(gdf[1:200])
+plt.plot(gdf)
 
 # initiation of the object
 NufftObj = pynufft.pynufft()
@@ -75,4 +76,17 @@ gdf=NufftObj.forward(gateData)
 
 plt.subplot(212)
 plt.title('Fourier transformation of yellow frequency - irregular')
-plt.plot(gdf[1:200])
+plt.plot(gdf)
+
+#%% Trying out a hopefully more usefull nufft
+freqBins = 600
+
+test = nufftpy.nufft1(time,df[['yellow']].values.ravel(),freqBins)
+xt = nufftpy.nufftfreqs(freqBins)[1:freqBins:10]
+
+plt.figure()
+plt.plot(test)
+plt.xticks(range(freqBins)[1:freqBins:10], list(xt))
+
+# So that peak probably was just the centre fold, it is weird that the peak isn't centered for the other
+# plot, and it is also strange that the 
