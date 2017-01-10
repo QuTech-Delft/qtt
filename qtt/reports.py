@@ -45,7 +45,7 @@ from qtt.legacy import analyse2dot
 from qtt.tools import diffImageSmooth, scanTime
 from qtt.scans import experimentFile, pinchoffFilename
 from qtt.data import *
-
+from qtt import pgeometry
 from qtt.algorithms.generic import *
 
 import qtt.legacy  # should be removed in the future
@@ -316,7 +316,9 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
                 print('   file %s' % pfile)
                 continue
 
-        dd2d = pmatlab.load(pfile)
+        if verbose>=2:
+            print('load file %s'  % pfile)
+        dd2d = pgeometry.load(pfile)
         if isinstance(dd2d, tuple):
             dd2d = dd2d[0]
         name = td['name']

@@ -31,7 +31,8 @@ if __name__ == '__main__':
         pass
 
 import webbrowser
-import time, datetime
+import time
+import datetime
 import copy
 import matplotlib.pyplot as plt
 
@@ -49,7 +50,13 @@ from qtt import pgeometry
 from qtt.data import write_data
 import qtt.reports
 if 1:
-    reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
+    reload(qtt)
+    reload(qtt.scans)
+    reload(qtt.data)
+    reload(qtt.algorithms)
+    reload(qtt.algorithms.generic)
+    reload(qtt)
+    reload(qtt.reports)
     import qcodes.utils.reload_code
     #_=qcodes.utils.reload_code.reload_code()
 from qcodes.utils.validators import Numbers
@@ -169,7 +176,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-9y'
+    basetag = 'batch-2017-1-9g'
     Tvalues = np.array([-381])
 
     b = False
@@ -641,15 +648,17 @@ for ii, Tvalue in enumerate(Tvalues):
         else:
             # slow scan
             print('slow scan without compensation!')
-            
-            scanjob['stepdata']['step']=-4
-            scanjob['sweepdata']['step']=-4
-            scanjob['wait_time_step']=0
-            
-            ds=90
-            scanjob['sweepdata']['start']+=ds; scanjob['sweepdata']['end']+=-ds
-            scanjob['stepdata']['start']+=ds; scanjob['stepdata']['end']+=-ds
-            
+
+            scanjob['stepdata']['step'] = -4
+            scanjob['sweepdata']['step'] = -4
+            scanjob['wait_time_step'] = 0
+
+            ds = 90
+            scanjob['sweepdata']['start'] += ds
+            scanjob['sweepdata']['end'] += -ds
+            scanjob['stepdata']['start'] += ds
+            scanjob['stepdata']['end'] += -ds
+
             qtt.live.liveplotwindow.clear()
             sd.initialize(setPlunger=True)
             defaultactivegates = []
@@ -664,8 +673,8 @@ for ii, Tvalue in enumerate(Tvalues):
         from qtt.legacy import positionScanjob
         scanjobc = positionScanjob(scanjob, resultsfine['ptmv'])
         if simulation():
-            
-            alldatac  = scan2D(station, scanjobc)
+
+            alldatac = scan2D(station, scanjobc)
             dstr = 'doubledot-center-%s' % scanjob['td']['name']
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 
@@ -774,7 +783,7 @@ import webbrowser
 
 if __name__ == '__main__':
     reload(qtt.reports)
-    
+
     one_dots = sample.get_one_dots(full=2)
     two_dots = sample.get_two_dots(full=1)
 
@@ -787,7 +796,7 @@ if __name__ == '__main__':
 
     try:
         # generate report
-        fname, _ = qtt.reports.generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
+        fname, _ = qtt.reports.generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid, verbose=1)
         webbrowser.open(fname, new=2)
     except Exception as e:
         print(e)
