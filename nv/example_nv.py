@@ -13,12 +13,12 @@ import sys,os
 import numpy as np
 from matplotlib import pyplot as plt
 import copy
-
+import qcodes
 from nvtools.nvtools import extract_data
 
 #%% Load data
 
-os.chdir('C:\\Users\\Laurens\\Documents\\qtechData')
+os.chdir(qcodes.config['user']['nvDataDir'])
 files = []
 NV1 = True
 if NV1:
