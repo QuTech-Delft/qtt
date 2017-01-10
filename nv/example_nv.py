@@ -13,7 +13,7 @@ import sys,os
 import numpy as np
 from matplotlib import pyplot as plt
 import copy
-
+import qcodes
 from nvtools.nvtools import extract_data
 
 import qcodes

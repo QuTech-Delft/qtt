@@ -15,7 +15,7 @@ import pandas as pd
 import seaborn as sns
 import sklearn
 import sklearn.cluster
-from sklearn.cluster import DBSCAN, Birch
+from sklearn.cluster import DBSCAN, Birch, KMeans, AffinityPropagation, MeanShift,SpectralClustering
 from sklearn import metrics
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import StandardScaler
@@ -72,11 +72,10 @@ y=dataS[:,5]
 #plt.figure(100); plt.clf(); plt.plot(x,y, '.b'); plt.axis('image')
 
 #%% Learn clusters
-
-
 X=Xbase
 db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
+#db=SpectralClustering(7,gamma=0.2).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
