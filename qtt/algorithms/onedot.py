@@ -203,6 +203,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
         return cost
 
 #%%
+
+
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
     # XX = dd['data_array']
@@ -224,7 +226,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     lv = lv + lvstd / 2  # works for very smooth images
 
     lv = (.45 * pmatlab.otsu(ims) + .55 * lv)  # more robust
-    if verbose>=2:
+    if verbose >= 2:
         print('onedotGetBalance: threshold for low value %.1f' % lv)
 
     # balance point: method 1 (first point above threshold of 45 degree line)
@@ -340,4 +342,3 @@ if __name__ == '__main__':
     reload(qtt.data)
     dd = alldata
     od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)
-

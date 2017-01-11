@@ -33,23 +33,24 @@ import datetime
 from qtt.scans import scan2D, scan1D
 from qtt.tools import stripDataset
 
+
 def positionScanjob(scanjob, pt):
     """ Helper function
-    
+
     Changes an existing scanjob to scan at the centre of the specified point
-    
+
     """
-    scanjob=copy.deepcopy(scanjob)
-    sh = float( pt[0] - (scanjob['sweepdata']['start']+scanjob['sweepdata']['end'])/2 )
+    scanjob = copy.deepcopy(scanjob)
+    sh = float(pt[0] - (scanjob['sweepdata']['start'] + scanjob['sweepdata']['end']) / 2)
     scanjob['sweepdata']['start'] += sh
     scanjob['sweepdata']['end'] += sh
-    
-    sh = float( pt[1] - (scanjob['stepdata']['start']+scanjob['stepdata']['end'])/2 )
+
+    sh = float(pt[1] - (scanjob['stepdata']['start'] + scanjob['stepdata']['end']) / 2)
     scanjob['stepdata']['start'] += sh
     scanjob['stepdata']['end'] += sh
 
-    return scanjob 
-    
+    return scanjob
+
 
 def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     """ Scan a one-dot
@@ -89,7 +90,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
         wait_time = 0
 
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
-    scanjob['wait_time_step']=wait_time_base+3*wait_time
+    scanjob['wait_time_step'] = wait_time_base + 3 * wait_time
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
@@ -125,6 +126,7 @@ def onedotPlungerScan(station, od, verbose=1):
 #%%
 
 from qtt.scans import scanPinchValue
+
 
 def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=0, verbose=1):
     """ Scan the pinch-off values for the 3 main gates of a 1-dot """
@@ -515,8 +517,8 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
     if mvy is None:
         mvy = mvx
 
-    fw = np.abs( (float(mvx0) / mvx) )
-    fh = np.abs( (float(mvy0) / mvy) )
+    fw = np.abs((float(mvx0) / mvx))
+    fh = np.abs((float(mvy0) / mvy))
     if verbose:
         print('straightenImage: fx %.4f fy %.4f' % (fw, fh))
         print('straightenImage: result mvx %.4f mvy %.4f' % (mvx, mvy))
@@ -656,8 +658,6 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
         returndict['yy'] = yy
         returndict['ims'] = ims
     return vv
-
-
 
 
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
@@ -990,7 +990,7 @@ def getPinchvalues(od, xdir, verbose=1):
 
         adata = qtt.algorithms.analyseGateSweep(dd, fig=0, minthr=100, maxthr=800, verbose=0)
         if verbose:
-            print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchvalue']) )
+            print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchvalue']))
         od['pinchvalues'][jj] = adata['pinchvalue']
     return od
 
@@ -1026,7 +1026,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                 dstr = '%s-sweep-2d' % (od['name'])
                 dd2d = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
 
-                od = getPinchvalues(od, xdir, verbose=verbose>=2)
+                od = getPinchvalues(od, xdir, verbose=verbose >= 2)
 
                 if fig:
                     fign = 1000 + 100 * jj + 10 * ii
@@ -1035,7 +1035,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     fign = None
                     figm = None
 
-                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=verbose>=2, fig=fign)
+                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=verbose >= 2, fig=fign)
 
                 dstrhi = '%s-sweep-2d-hires' % (od['name'])
                 tmphi = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
