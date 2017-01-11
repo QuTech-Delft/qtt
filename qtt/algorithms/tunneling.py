@@ -55,8 +55,10 @@ def polweight_all_2slopes(delta, data, par, kT=0.001):
     return total
 
 
-def fit_pol_all(delta, data, kT=0.001, verbose=1, par_guess=None):
-    ''' Calculate initial values for fitting and fit
+def fit_pol_all(delta, data, kT=0.001, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
+    ''' Calculate initial values for fitting and fit. The default value for the 
+    maxiter argument of scipy.optimize.fmin is N*200 the number of variables, 
+    i.e. 1200 in our case.
 
     Arguments:
         delta (array):
@@ -82,7 +84,7 @@ def fit_pol_all(delta, data, kT=0.001, verbose=1, par_guess=None):
 
     func = lambda par: polweight_all_2slopes(delta, data, par, kT=kT)
 
-    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=800, maxfun=5000, disp=verbose >= 2)
+    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     return par_fit, par_guess
 
