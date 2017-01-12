@@ -55,8 +55,10 @@ def polweight_all_2slopes(delta, data, par, kT=0.001):
     return total
 
 
-def fit_pol_all(delta, data, kT=0.001, verbose=1, par_guess=None):
-    ''' Calculate initial values for fitting and fit
+def fit_pol_all(delta, data, kT=0.001, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
+    ''' Calculate initial values for fitting and fit. The default value for the 
+    maxiter argument of scipy.optimize.fmin is N*200 the number of variables, 
+    i.e. 1200 in our case.
 
     Arguments:
         delta (array):
@@ -75,14 +77,14 @@ def fit_pol_all(delta, data, kT=0.001, verbose=1, par_guess=None):
         delta_offset_guess = delta[int(b) - 1]
         sensitivity_guess = np.max(dat_noslope) - np.min(dat_noslope)
         sensor_offset_guess = sensor_offset_guess - .5 * sensitivity_guess
-    
+
         t_guess = 1 * 4.2 / 80
     #    t_guess = 1 # hard-coded value
         par_guess = np.array([t_guess, delta_offset_guess, sensor_offset_guess, slope_guess, slope_guess, sensitivity_guess])  # second slope guess could be done more accurately
 
     func = lambda par: polweight_all_2slopes(delta, data, par, kT=kT)
 
-    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=800, maxfun=5000, disp=verbose >= 2)
+    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     return par_fit, par_guess
 
@@ -149,12 +151,12 @@ if __name__ == '__main__':
     yy2 = polmod_all_2slopes(xx, parfit2, kT=0.001)
     yy2i = polmod_all_2slopes(xx, parfit2i, kT=0.001)
 
-    c0=polweight_all_2slopes(xx, yy, par, kT=0.001)
-    c1=polweight_all_2slopes(xx, yy1, par, kT=0.001)
-    c2=polweight_all_2slopes(xx, yy2, par, kT=0.001)
-    c2i=polweight_all_2slopes(xx, yy2i, par, kT=0.001)
+    c0 = polweight_all_2slopes(xx, yy, par, kT=0.001)
+    c1 = polweight_all_2slopes(xx, yy1, par, kT=0.001)
+    c2 = polweight_all_2slopes(xx, yy2, par, kT=0.001)
+    c2i = polweight_all_2slopes(xx, yy2i, par, kT=0.001)
     print('cost %f init %f guess %f -> %f' % (c0, c1, c2, c2i))
-        
+
     plt.figure(300)
     plt.clf()
     plt.plot(xx, yy, '-', label='model')
@@ -162,8 +164,7 @@ if __name__ == '__main__':
     plt.plot(xx, yy1, '--r', label='fitted with gt')
     plt.plot(xx, yy2, '--g', label='fitted with guess')
     plt.legend()
-    _=plt.ylabel('Frequency')
-    
+    _ = plt.ylabel('Frequency')
 
     #%% Full estimate
     niter = 60
@@ -175,7 +176,6 @@ if __name__ == '__main__':
             parfit, _ = fit_pol_all(xx, yyx)
             ppall[ii, j] = parfit
 
-                                 
     #%% Show uncertainties
     import pandas as pd
     from pandas import Series
