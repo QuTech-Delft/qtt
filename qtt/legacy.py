@@ -175,6 +175,14 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
 
 
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
+    """ Plot a circle in a matplotlib figure
+    
+    Args:
+        pt (array): center of circle
+        radius (float): radius of circle
+        color (str or list)
+        alpha (float): transparency        
+    """
     c2 = plt.Circle(pt, radius, color=color, fill=False, linewidth=3, alpha=alpha, **kwargs)
     plt.gca().add_artist(c2)
     return c2
@@ -183,8 +191,6 @@ def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
 def scaleCmap(imx, setclim=True, verbose=0):
     """ Scale colormap of sensing dot image """
     p99 = np.percentile(imx, 99.9)
-    mx = imx.max()
-
     mval = p99
 
     # 0 <-> alpha

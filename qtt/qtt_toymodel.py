@@ -411,7 +411,10 @@ class virtual_gates(Instrument):
     shared_kwargs = ['instruments']
 
     def __init__(self, name, instruments, gate_map, **kwargs):
-        """ Class to make names gates to gates on an instrument
+        """ Class to map named gates to gates on an instrument
+
+        A typical example would be to map the names of gates to the
+        dacs of several IVVI's.
 
         Args:
             name (str)
