@@ -459,7 +459,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
     if wait_time is None:
         wait_time = scanjob.get('wait_time', None)
         if wait_time is None:
-            wait_time = waitTime(sweepgate)
+            wait_time = waitTime(sweepgate) / 2.
 
     wait_time_step = scanjob.get('wait_time_step', wait_time)
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
