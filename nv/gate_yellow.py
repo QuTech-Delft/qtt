@@ -45,8 +45,8 @@ import nvtools
 from nvtools.nvtools import labelMapping
 from nvtools.nvtools import showModel
 
-import qcodes
 os.chdir(qcodes.config['user']['nvDataDir'])
+from statsmodels.graphics.gofplots import qqplot
 
 #%%
 print('Generating Data')
@@ -55,6 +55,21 @@ data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
 plt.figure(300); plt.clf()
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
+plt.figure(300); plt.clf()
+df.plot(kind='scatter', x='gate', y='yellow', ax=plt.gca(), linewidths=0)
+plt.figure()
+plt.subplot(221)
+plt.title('Yellow frequency jumps over time')
+df.plot(kind='scatter', x='yellow jump', y='time', ax=plt.gca(), linewidths=0)
+plt.subplot(222)
+plt.title('Gate voltage jumps over time')
+df.plot(kind='scatter', x='gate jump', y='time', ax=plt.gca(), linewidths=0)
+plt.subplot(223)
+plt.title('Yellow frequency over time')
+df.plot(kind='scatter', x='yellow', y='time', ax=plt.gca(), linewidths=0)
+plt.subplot(224)
+plt.title('Gate voltage over time')
+df.plot(kind='scatter', x='gate', y='time', ax=plt.gca(), linewidths=0)
 
 #%% Data needs to be scaled for almost any machine learning algorithm to work
 
