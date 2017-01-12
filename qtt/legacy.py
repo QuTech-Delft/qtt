@@ -99,6 +99,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
 
     return alldata, od
 
+import time
 
 def onedotPlungerScan(station, od, verbose=1):
     """ Make a scan with the plunger of a one-dot """
@@ -107,17 +108,20 @@ def onedotPlungerScan(station, od, verbose=1):
     gg = od['gates']
     ptv = od['setpoint']
 
-    gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
-    gates.set(gg[0], ptv[1, 0] + 20)
 
     pv = od['pinchvalues'][1]
 
     scanjob = dict({'keithleyidx': [od['instrument']]})
     scanjob['sweepdata'] = dict({'gates': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
 
-    wait_time = qtt.scans.waitTime(gg[1], station=station)
+    gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
+    gates.set(gg[0], ptv[1, 0] + 20)
+    gates.set(gg[1], scanjob['sweepdata']['start'])
 
-    alldata = scan1D(scanjob, station, wait_time=wait_time, title_comment='sweep of plunger')
+    wait_time = qtt.scans.waitTime(gg[1], station=station)
+    time.sleep(wait_time)
+    
+    alldata = scan1D(scanjob, station, wait_time=wait_time/4., title_comment='sweep of plunger')
     alldata.metadata['od'] = od
     stripDataset(alldata)
     scandata = dict(dataset=alldata, od=od)
