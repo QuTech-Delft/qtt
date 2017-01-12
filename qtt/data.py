@@ -612,6 +612,9 @@ def writeDataset(path, dataset, metadata=None):
 
     :param path: filename without extension
     '''
+    
+    dataset=qtt.tools.stripDataset(dataset)
+
     print('write_copy to %s' % path)
     dataset.write_copy(path=path)
     print('write_copy to %s (done)' % path)
