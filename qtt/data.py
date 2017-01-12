@@ -61,6 +61,9 @@ def getDefaultParameter(data, defname='amplitude'):
 def dataset2image(dataset, mode='pixel'):
     """ Extract image from a dataset
 
+    The image is converted so that it is in conventional coordinates, e.g. the
+    step values (vertical axis) go from low to high (bottom to top).
+    
     Args:
         dataset
     Returns:
@@ -87,11 +90,13 @@ def dataset2image2(dataset):
         imraw (array): raw image
         impixel (array): image in pixel coordinates
         tr (image_transform object): transformation object
+
+    See also: dataset2image
     """
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         dataset, verbose=0, arrayname=None)
     tr = image_transform(dataset, mode='pixel')
-    im = None
+    imraw = None
     impixel = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname]
@@ -99,8 +104,7 @@ def dataset2image2(dataset):
 
     return imraw, impixel, tr
 
-#%%
-
+#%% 
 
 def dataset_get_istep(alldata, mode=None):
     """ Return number of mV per pixel in scan """
