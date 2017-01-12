@@ -90,7 +90,7 @@ model.add(GRU(10, input_shape=(lag,2), return_sequences=True))
 model.add(GRU(10))
 model.add(Dense(lblCount, activation='softmax'))
 
-optimiser = Adam(lr=0.000003) #0.000001 might work but needs >>>500 epochs
+optimiser = Adam(lr=0.000003)
 model.compile(optimiser, loss='binary_crossentropy', metrics=['accuracy'])
 hist=model.fit(X_train, y_train, batch_size=5, nb_epoch=500, validation_split=0.2, verbose=2).history
 
@@ -210,11 +210,11 @@ nbEpochs = 300
 loss=[]
 
 model = Sequential()
-model.add(GRU(4, batch_input_shape=(batchSize,lag,2), stateful=True))#, return_sequences=True))
+model.add(GRU(10, batch_input_shape=(batchSize,lag,2), stateful=True))#, return_sequences=True))
 #model.add(GRU(5, stateful=True))
 model.add(Dense(lblCount, activation='softmax'))
 
-optimiser = Adam(lr=0.000001)
+optimiser = Adam(lr=0.00001)
 model.compile(optimiser, loss='categorical_crossentropy', metrics=['accuracy'])
 for i in range(nbEpochs): # Number of epochs
     loss = np.append(loss,model.fit(X_train, y_train, batch_size=batchSize, nb_epoch=1, verbose=2, shuffle=False).history['loss'])
@@ -233,7 +233,7 @@ print('\nAP: ', ap,'   ac: ', ac)
 
 #%% Plot the history
 plt.figure()
-plt.plot(hist['loss'],label='Train loss')
+plt.plot(loss,label='Train loss')
 #plt.plot(hist['val_loss'],label='Validation loss')
 plt.legend()
 
