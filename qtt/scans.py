@@ -154,7 +154,6 @@ def getParams(station, keithleyidx):
 
 def getDefaultParameter(data):
     return data.default_parameter_name()
-    raise 'Please do not use this function'
 
 #%%
 
