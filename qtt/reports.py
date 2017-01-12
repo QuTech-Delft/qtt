@@ -316,8 +316,8 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
                 print('   file %s' % pfile)
                 continue
 
-        if verbose>=2:
-            print('load file %s'  % pfile)
+        if verbose >= 2:
+            print('load file %s' % pfile)
         dd2d = pgeometry.load(pfile)
         if isinstance(dd2d, tuple):
             dd2d = dd2d[0]

@@ -21,7 +21,7 @@ import qtt.live
 
 #from qtt.data import *
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
-
+from qtt.data import uniqueArrayName
 from qcodes.utils.helpers import tprint
 
 #%%
@@ -59,6 +59,7 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 from qtt.algorithms.generic import findCoulombDirection
 from qtt.data import dataset2Dmetadata, dataset2image
 
+
 def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     """ Make high-resolution scan of a one-dot """
     if verbose:
@@ -75,7 +76,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
 
     wait_time = qtt.scans.waitTime(od['gates'][2], station=station)
-    scanjobhi['wait_time_step']=qtt.scans.waitTime(None, station)+3*wait_time
+    scanjobhi['wait_time_step'] = qtt.scans.waitTime(None, station) + 3 * wait_time
 
     alldatahi = qtt.scans.scan2D(station, scanjobhi, wait_time=wait_time, background=False)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -136,6 +137,7 @@ if __name__ == '__main__':
 
 import time
 
+
 def getParams(station, keithleyidx):
     """ Get qcodes parameters from an index or string """
     params = []
@@ -153,7 +155,7 @@ def getParams(station, keithleyidx):
 def getDefaultParameter(data):
     return data.default_parameter_name()
     raise 'Please do not use this function'
-    
+
 #%%
 
 
@@ -167,6 +169,8 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
     param = getattr(gates, gate)
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
+    scanjob['scantype']='scan1D'
+    
     if wait_time is None:
         wait_time = scanjob.get('wait_time', 0)
     t0 = time.time()
@@ -188,9 +192,9 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
 
-
     logging.debug('wait_time: %s' % str(wait_time))
-    print('scan1D: starting Loop (background %s)' % background)
+    if verbose:
+        print('scan1D: starting Loop (background %s)' % background)
 
     if background:
         if verbose >= 2:
@@ -220,7 +224,7 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
 
         if liveplotwindow is not None:
             liveplotwindow.clear()
-            liveplotwindow.add(data.default_parameter_array() )
+            liveplotwindow.add(data.default_parameter_array())
 
         dt = time.time() - t0
         if liveplotwindow is not None:
@@ -231,7 +235,7 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
                 if verbose >= 2:
                     print('scan1D: myupdate: %.3f ' % (time.time() - t0))
 
-            data = loop.with_bg_task(myupdate, min_delay=0.6).run(background=background)
+            data = loop.with_bg_task(myupdate, min_delay=1.8).run(background=background)
         else:
             data = loop.run(background=background)
         data.sync()
@@ -244,6 +248,7 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
     metadata['allgatevalues'] = gates.allvalues()
     metadata['scantime'] = str(datetime.datetime.now())
     metadata['dt'] = dt
+    metadata['scanparams'] = {'wait_time':wait_time}
     metadata['scanjob'] = scanjob
 
     logging.info('scan1D: done %s' % (str(data.location),))
@@ -251,7 +256,6 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
     data.write(write_metadata=True)
 
     return data
-
 
 
 if __name__ == '__main__':
@@ -283,6 +287,7 @@ def wait_bg_finish(verbose=0):
     if m is not None:
         logging.info('background job not finished')
     return m is None
+
 
 def makeScanjob(sweepgates, values, sweepranges, resolution):
     """ Create a scanjob from sweep ranges and a centre """
@@ -384,8 +389,8 @@ def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time
             t0 = time.time()
             liveplotwindow.update()
             import matplotlib.pyplot as plt
-            #plt.pause(1e-5)
-            
+            # plt.pause(1e-5)
+
             # QtWidgets.QApplication.processEvents()
             if verbose >= 2:
                 print('myupdate: %.3f ' % (time.time() - t0))
@@ -409,6 +414,14 @@ def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time
 
     return alldata
 
+def delta_time(tprev, thr=2):
+    """ Helper function to prevent too many updates """
+    t=time.time()        
+    delta=t-tprev
+    if delta>thr:
+        tprev=t
+    return delta, tprev
+
 def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=False, diff_dir=None, verbose=1):
     """ Make a 2D scan and create dictionary to store on disk
 
@@ -419,6 +432,8 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
     Returns:
         alldata (DataSet)
     """
+
+    scanjob['scantype']='scan2D'
 
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
@@ -466,7 +481,9 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
 
-    
+
+         
+    tprev=time.time()
     for ix, x in enumerate(stepvalues):
         tprint('scan2D: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
         if 'gates_vert' in scanjob:
@@ -483,10 +500,12 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
             value = params[0].get()
             alldata.measured.ndarray[ix, iy] = value
-            
-        if ix==len(stepvalues)-1 or ix % 5 == 0:
-            liveplotwindow.update_plot()
-            pg.mkQApp().processEvents()
+
+        if ix == len(stepvalues) - 1 or ix % 5 == 0:
+            delta, tprev= delta_time(tprev, thr=2)
+            if delta>2:
+                liveplotwindow.update_plot()
+                pg.mkQApp().processEvents()
 
     dt = qtt.time.time() - t0
 
@@ -498,20 +517,19 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
     alldata.add_metadata({'station': station.snapshot()})
 
-    
     alldata.metadata['scanjob'] = scanjob
     alldata.metadata['allgatevalues'] = gates.allvalues()
     alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
-    
+
     alldata.write(write_metadata=True)
-    #print(type(scanjob['stepdata']['start']))
-    #print(type(alldata.metadata['scanjob']['stepdata']['start']))
-    #return alldata, alldata.metadata['scanjob']['stepdata']['start']
-        
+    # print(type(scanjob['stepdata']['start']))
+    # print(type(alldata.metadata['scanjob']['stepdata']['start']))
+    # return alldata, alldata.metadata['scanjob']['stepdata']['start']
+
     return alldata
-    
+
 if __name__ == '__main__':
     import logging
     import datetime
@@ -529,14 +547,16 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     Returns:
         alldata (qcodes.data.data_set.DataSet): measurement data and metadata
     """
+    scanjob['scantype']='scan2Dfast'
+
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
-    
+
     if wait_time is None:
         wait_time = scanjob.get('wait_time', 0.5)
 
-    wait_time_startloop = scanjob.get('wait_time_startloop', 2.0)
+    wait_time_startloop = scanjob.get('wait_time_startloop', 2.0+4*wait_time)
         
     gates = station.gates
     gvs = gates.allvalues()
@@ -549,7 +569,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     stepgate = stepdata.get('gate', None)
     if stepgate is None:
         stepgate = stepdata.get('gates')[0]
-    
+
     stepparam = getattr(gates, stepgate)
 
     def readfunc(waveform, Naverage):
@@ -576,7 +596,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
             scanjob['gates_vert_init'][g] = gates.get(g)
     else:
         stepparam.set(stepdata['start'])
-        sweepparam.set(float(sweepgate_value) )
+        sweepparam.set(float(sweepgate_value))
 
     qtt.time.sleep(wait_time_startloop)
 
@@ -602,6 +622,8 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
 
+    tprev=time.time()
+        
     for ix, x in enumerate(stepvalues):
         tprint('scan2Dfast: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
         if 'gates_vert' in scanjob:
@@ -611,8 +633,11 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
             stepvalues.set(x)
         qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
-        liveplotwindow.update_plot()
-        pg.mkQApp().processEvents()
+        if liveplotwindow is not None:
+            delta, tprev = delta_time(tprev, thr=2)
+            if delta>2:
+                liveplotwindow.update_plot()
+                pg.mkQApp().processEvents()
 
     station.awg.stop()
 
@@ -637,8 +662,9 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     return alldata
 
-def plotData(alldata, diff_dir=None, fig=1):
 
+def plotData(alldata, diff_dir=None, fig=1):
+    """ Plot a dataset and optionally differentiate """
     plt.figure(fig); plt.clf()
     if diff_dir is not None:
         imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
@@ -648,17 +674,17 @@ def plotData(alldata, diff_dir=None, fig=1):
         alldata.add_array(data_arr)
         plot = MatPlot(interval=0, num=fig)
         plot.add(alldata.arrays[name])
-        #plt.axis('image')
+        # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
         plot.fig.axes[1].autoscale(tight=True)
     else:
-        plot=MatPlot(interval=0, num=fig)
-        plot.add(alldata.default_parameter_array('measured') )
-        #plt.axis('image')
+        plot = MatPlot(interval=0, num=fig)
+        plot.add(alldata.default_parameter_array('measured'))
+        # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
         plot.fig.axes[1].autoscale(tight=True)
-    
-    
+
+
 #%%
 
 
@@ -678,7 +704,7 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
     """
     if verbose:
         print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
-        
+
     fpga_ch = sd.fpga_ch
     fpga_samp_freq = station.fpga.get_sampling_frequency()
 
@@ -694,9 +720,13 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
     data = station.awg.sweep_2D_process(dataread, waveform)
     alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges)
 
+    scanjob={}
+    scanjob['scantype']='scan2Dturbo'
+
     alldata.metadata['allgatevalues'] = station.gates.allvalues()
     alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['fpga_samp_freq'] = fpga_samp_freq
+    alldata.metadata['scanjob']=scanjob
     alldata.write()
 
     return alldata
@@ -706,10 +736,10 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
 
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
     ''' Do a scan (AWG sweep) over the line connecting two points.
-    
+
     TODO: Add functionality for virtual gates, which should contain functionality to automatically determine
     whether to use the AWG or the IVVI's to scan. 
-    
+
     Arguments:
         station (qcodes station): contains all of the instruments
         scangates (list): the gates to scan
@@ -769,7 +799,6 @@ def pinchoffFilename(g, od=None):
         basename = '%s-sweep-1d-%s' % (od['name'], g)
     return basename
 
-    
 
 def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
@@ -784,8 +813,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
         return alldata
 
     if stepdelay is None:
-        stepdelay = waitTime(gate, gate_settle=getattr(
-            station, 'gate_settle', None))
+        stepdelay = waitTime(gate, station=station)
 
     if basevalues is None:
         b = 0
@@ -797,8 +825,11 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
         sweepdata['step'] = -6
 
     scanjob = dict(
-        {'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'delay': stepdelay})
+        {'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'wait_time': stepdelay})
 
+    station.gates.set(sweepdata, sweepdata['start'])  # set gate to starting value
+    time.sleep(stepdelay)
+    
     alldata = scan1D(scanjob, station, title_comment='scan gate %s' %
                      gate, background=background)
 
@@ -813,6 +844,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
     alldata.metadata['adata'] = adata
     #  alldata['adata'] = adata
 
+    alldata=qtt.tools.stripDataset(alldata)
     writeDataset(outputfile, alldata)
     # alldata.write_to_disk(outputfile)
  #   pmatlab.save(outputfile, alldata)

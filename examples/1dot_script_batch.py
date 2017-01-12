@@ -103,8 +103,10 @@ if __name__ == '__main__':
 
     server_name = 'virtualV2-%d' % np.random.randint(100)
     server_name = None
+    msetup.close()
     msetup.initialize(reinit=False, server_name=server_name)
     #msetup.initialize(reinit=False, server_name=None )
+    station = msetup.getStation()
 
     bottomgates = sample.bottomGates()
 

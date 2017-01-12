@@ -138,7 +138,7 @@ class FourdotModel(Instrument):
             setattr(self.ds, 'isC%d' % (ii + 1), 3)
 
         Vmatrix = qtt.simulation.dotsystem.defaultVmatrix(n=self.ds.ndots)
-        Vmatrix[0:self.ds.ndots, -1] = [-200]*self.ds.ndots
+        Vmatrix[0:self.ds.ndots, -1] = [-200] * self.ds.ndots
         self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
 
         # coulomb model for sd1
@@ -299,10 +299,9 @@ class VirtualIVVI(Instrument):
 
     shared_kwargs = ['model']
 
-
     def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
         """ Virtual instrument representing an IVVI 
-        
+
         Args:
             name (str)
             model (object)
@@ -413,7 +412,7 @@ class virtual_gates(Instrument):
 
     def __init__(self, name, instruments, gate_map, **kwargs):
         """ Class to make names gates to gates on an instrument
-        
+
         Args:
             name (str)
             instruments (list of qcodes instruments):
@@ -496,10 +495,9 @@ class virtual_gates(Instrument):
     def allvalues_string(self):
         """ Return all gate values in string format """
         vals = self.allvalues()
-        s = '{' +','.join([ '\'%s\': %.2f' % (x, vals[x]) for x in vals]) + '}'
+        s = '{' + ','.join(['\'%s\': %.2f' % (x, vals[x]) for x in vals]) + '}'
         return s
 
-        
     def resetgates(gates, activegates, basevalues=None, verbose=2):
         """ Reset a set of gates to default values
 

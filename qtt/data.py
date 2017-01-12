@@ -60,13 +60,13 @@ def getDefaultParameter(data, defname='amplitude'):
 
 def dataset2image(dataset, mode='pixel'):
     """ Extract image from a dataset
-    
+
     Args:
         dataset
     Returns:
         im (numpy array)
         tr (image_transform object)
-            
+
     """
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         dataset, verbose=0, arrayname=None)
@@ -107,7 +107,7 @@ def dataset_get_istep(alldata, mode=None):
     try:
         istep = np.abs(alldata.metadata['scanjob']['sweepdata']['step'])
     except:
-        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None) 
+        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
         istep = np.mean(vstep)
     return istep
 
@@ -277,7 +277,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 #%%
 
 
-
 class image_transform:
 
     def __init__(self, dataset=None, arrayname=None, mode='pixel', verbose=0):
@@ -319,7 +318,7 @@ class image_transform:
 
     def extent_image(self):
         """ Return matplotlib style image extent
-        
+
         Returns:
             extentImage (4 floats): x1, x2, y1, y2
         """
@@ -613,6 +612,9 @@ def writeDataset(path, dataset, metadata=None):
 
     :param path: filename without extension
     '''
+    
+    dataset=qtt.tools.stripDataset(dataset)
+
     print('write_copy to %s' % path)
     dataset.write_copy(path=path)
     print('write_copy to %s (done)' % path)
@@ -730,7 +732,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None):
 
 def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     """ Make DataSet with one 2D array and two setpoint arrays
-    
+
     Args:
         p1 (array): first setpoint array of data
         p2 (array): second setpoint array of data
@@ -755,8 +757,8 @@ def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     if preset_data is not None:
         dd.measured.ndarray = np.array(preset_data)
 
-    dd.last_write=-1
-        
+    dd.last_write = -1
+
     return dd
 
 
