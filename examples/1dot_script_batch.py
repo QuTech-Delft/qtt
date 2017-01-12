@@ -75,8 +75,8 @@ if __name__ == '__main__':
     app = pyqtgraph.mkQApp()
 
 if __name__ == '__main__':
-    from qcodes.data.hdf5_format import HDF5Format
-    qcodes.DataSet.default_formatter = HDF5Format()
+    from qcodes.data.hdf5_format import HDF5FormatMetadata as MyFormatter
+    qcodes.DataSet.default_formatter = MyFormatter()
 
 #%% Load configuration
 
@@ -176,7 +176,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-9g'
+    basetag = 'batch-2017-1-9h'
     Tvalues = np.array([-381])
 
     b = False
