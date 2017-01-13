@@ -5,6 +5,13 @@ Created on Thu Jan 12 15:50:54 2017
 @author: Laurens
 """
 
+''' WIP
+TODO:
+    Add a part that stores all the parameters in a CSV file
+    Add a PCA part, perhaps that will improve learning (as the clusters are diagonal)
+    Add more regularisation (dropout?)
+'''
+
 #%% Load packages
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout
@@ -37,11 +44,11 @@ lag = 100
 keepNoClass = False
 keepZeroCluster = True
 zeroOrNotZero = False # Classify only zero cluster vs not-zero cluster (so don't remove that zero cluster)
-sequentialTesting = False # The stateful LSTM will likely work better with this set to True
-LSTMtype = 0
+sequentialTesting = True # The stateful LSTM will likely work better with this set to True
+LSTMtype = 2
 
-batch_size = 1
-nb_epochs = 300
+batchSize = 1
+nbEpochs = 3#00
 learningRate = 0.00001
 
 #%%
@@ -86,7 +93,7 @@ if ~keepNoClass: # to make training a little bit easier for now
     dataSet = dataSet[lbls<5,:,:] # Remove all the points that do not belong to a class
     lbls = lbls[lbls<5]
 
-if ~zeroOrNotZero: # Only classify 0 cluster vs not 0 cluster
+if zeroOrNotZero: # Only classify 0 cluster vs not 0 cluster
     if ~keepZeroCluster:
         print('You should keep the zero cluster, otherwise this will not work')
         print('I am keeping the zero cluster for you!!')
@@ -115,13 +122,66 @@ else:
 
 #%% All the different LSTM's
 
-'''' WIP
-TODO:
-    Add the LSTM's
-    Add the testing
-    Add the plotting
-    Add a part that stores all the parameters in a CSV file
-    Add a PCA part, perhaps that will improve learning (as the clusters are diagonal)
-    Add more regularisation (dropout?)
-''''
+if LSTMtype==0:    # Basic LSTM
+    model = Sequential()
+    model.add(GRU(10, input_shape=(lag,X_train.shape[2])))
+    model.add(Dense(lblCount, activation='softmax'))
+    
+    optimiser = Adam(lr=learningRate)
+    model.compile(optimiser, loss='binary_crossentropy', metrics=['accuracy'])
+    hist=model.fit(X_train, y_train, batch_size=batchSize, nb_epoch=nbEpochs, validation_split=0.2, verbose=2).history
+elif LSTMtype==1:    # Double LSTM layer
+    model = Sequential()
+    model.add(GRU(10, input_shape=(lag,X_train.shape[2]), return_sequences=True))
+    model.add(GRU(10))
+    model.add(Dense(lblCount, activation='softmax'))
+    
+    optimiser = Adam(lr=learningRate)
+    model.compile(optimiser, loss='binary_crossentropy', metrics=['accuracy'])
+    hist=model.fit(X_train, y_train, batch_size=batchSize, nb_epoch=nbEpochs, validation_split=0.2, verbose=2).history
+elif LSTMtype==2:    # Stateful LSTM
+    print('nbEpochs is set to 1 so it will work with the stateful LSTM')
+    npEpochs=1
+    loss=[]
+    
+    model = Sequential()
+    model.add(GRU(10, batch_input_shape=(batchSize,lag,X_train.shape[2]), stateful=True))#, return_sequences=True))
+    #model.add(GRU(5, stateful=True))
+    model.add(Dense(lblCount, activation='softmax'))
+    
+    optimiser = Adam(lr=learningRate)
+    model.compile(optimiser, loss='binary_crossentropy', metrics=['accuracy'])
+    for i in range(nbEpochs): # Number of epochs
+        loss = np.append(loss,model.fit(X_train, y_train, batch_size=batchSize, nb_epoch=npEpochs, verbose=2, shuffle=False).history['loss'])
+        #For some reason the batchsize is ignored in the model.evaluate
+        #val_acc, val_loss = model.evaluate(X_valid, y_valid, batch_size=batchSize)
+        #print('Epoch ',i,'/',nbEpochs,': val_acc: ',val_acc,'   val_loss: ',val_loss)
+        print('Epoch',i+1,'/',nbEpochs)
+        model.reset_states()
 
+
+#%% Test the LSTMs
+if LSTMtype!=2:
+    yhat = model.predict_proba(X_test)
+    ap = average_precision_score(y_test,yhat)
+    yhatt = model.predict_classes(X_test)
+    ac = accuracy_score(np.argmax(y_test,axis=1),yhatt)
+    print('\nAP: ', ap,'   ac: ', ac)
+else: # Test the stateful LSTM
+    sel = int(X_test.shape[0]/batchSize)*batchSize # The amount of data should be divisible by the batch size
+    yhat = model.predict_proba(X_test[:sel,:,:], batch_size=batchSize)
+    ap = average_precision_score(y_test[:sel,:],yhat)
+    yhatt = model.predict_classes(X_test[:sel,:,:], batch_size=batchSize)
+    ac = accuracy_score(np.argmax(y_test[:sel,:],axis=1),yhatt)
+    print('\nAP: ', ap,'   ac: ', ac)
+        
+#%% Plot the history (usefull for checking whether the learning rate is any good) 
+if LSTMtype!=2:
+    plt.figure()
+    plt.plot(hist['loss'],label='Train loss')
+    plt.plot(hist['val_loss'],label='Validation loss')
+    plt.legend()
+else: # Since the stateful LSTM doesn't have validation
+    plt.figure()
+    plt.plot(loss,label='Train loss')
+    plt.legend()
