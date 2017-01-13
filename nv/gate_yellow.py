@@ -40,7 +40,7 @@ import matplotlib.cm as cm
 from qtt import pmatlab
 
 import sklearn.manifold
-
+import qcodes
 import nvtools
 from nvtools.nvtools import labelMapping
 from nvtools.nvtools import showModel
