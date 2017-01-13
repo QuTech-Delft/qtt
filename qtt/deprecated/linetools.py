@@ -950,7 +950,7 @@ def polygon_centroid(p):
 def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, lines=range(4), istep=1, centermodel=True, linesegment=True, addX=True, verbose=0):
     """ Create a cross model
 
-    The parameters are [x, y, width, alpha_j, ...]
+    The parameters are [x, y, width, alpha_1, ..., alpha_4, [rotation of polarization line] ]
     With the optional parameters psi (angle of transition line)
     
     param : array of floats
@@ -1196,7 +1196,9 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     dsize=(samplesize[0], samplesize[1])
     patch=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
   
-    modelpatch, cdata=createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=0)
+    if verbose:
+        print('evaluateCross: patch shape %s'  % (patch.shape,))
+    modelpatch, cdata=createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose>=2)
     (cc,lp,hp,ip,op,_,_,_)=cdata
 
     dd=patch-modelpatch

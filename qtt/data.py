@@ -76,7 +76,7 @@ def dataset2image(dataset, mode='pixel'):
     tr = image_transform(dataset, mode=mode)
     im = None
     if arrayname is not None:
-        imraw = dataset.arrays[arrayname]
+        imraw = dataset.arrays[arrayname].ndarray
         im = tr.transform(imraw)
     return im, tr
 
@@ -112,7 +112,7 @@ def dataset_get_istep(alldata, mode=None):
         istep = np.abs(alldata.metadata['scanjob']['sweepdata']['step'])
     except:
         extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
-        istep = np.mean(vstep)
+        istep = np.mean(np.diff(vstep))
     return istep
 
 
@@ -293,6 +293,9 @@ class image_transform:
             dataset, arrayname=arrayname)
         self.vstep = vstep
         self.vsweep = vsweep
+        
+        self._istep = dataset_get_istep(dataset)
+        
         nx = len(vsweep)
         ny = len(vstep)
         self.flipX = False
@@ -320,6 +323,9 @@ class image_transform:
         # return im
         self.Hi = numpy.linalg.inv(self.H)
 
+    def istep(self):
+        return self._istep
+        
     def extent_image(self):
         """ Return matplotlib style image extent
 
