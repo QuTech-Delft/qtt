@@ -210,6 +210,75 @@ def showTSNE(X, labels=None, fig=400):
         plt.scatter(qq[:,0], qq[:,1], c=labels)
     plt.title('t-SNE plot')
 
+#%%
+
+def fmt(x, ndigits=3):
+    """ Format numbers """
+    v=[('%%.%df' % ndigits) % p for p in x]
+    return ', '.join(v)
+
+def avg_steps(y_true, y_pred, verbose=0):
+    """ Calculate average number of steps needed for finding the correct cluster """
+    A=0.
+    for i, g in enumerate(y_true):
+       v=y_pred[i]
+       idx=np.argsort(v)[::-1]
+       j = int((idx==g).nonzero()[0])
+       A += j+1
+
+       if verbose:
+           print('i %d: gt %d: %d' % (i,g, j))
+    if verbose:
+       print('A: %.3f' % A)
+    A /= len(y_true)
+    return A
+
+    
+    #%%
+    
+def plotSection(allData, idx, jumps=None, mode='gate', si=None):
+    """ Helper function to plot a section of data
+    
+    Args:
+        allData (list of numpy arrays or numpy array): data with time in first element
+        idx (array): indices to plot
+        jumps (None or boolean array): positions of jumps
+        si (index): index of special point
+    """
+    
+    idx=np.array(idx)
+    idx=idx[idx>=0]
+    idx=idx[idx<len(allData)]
+    
+    if isinstance(allData, list):
+        pdata=np.array(allData).T
+    else:
+        pdata=allData
+    x = pdata[idx,0]
+    y = pdata[idx,1]
+    y2 = pdata[idx,2]
+    v=np.zeros( len(pdata) ).astype(bool); v[idx]=1
+    if jumps is not None:
+        plot_select = jumps & v # [:-1]
+    else:
+        plot_select = []
+    ax=plt.gca()
+    if mode=='gate':
+        plt.plot(x,y2,'x-', label='data')
+        plt.plot(pdata[plot_select,0],pdata[plot_select,2],'ro', label='jump')
+        ax.set_xlabel('elapsed time (s)')
+        ax.set_ylabel('Gate voltage (V)')
+    else:
+        plt.plot(x,y,'x-', label='data')
+        plt.plot(pdata[plot_select,0],pdata[plot_select,1],'ro', label='jump')
+        ax.set_xlabel('elapsed time (s)')
+        # ax2.set_xlim([0,1000])
+        ax.set_ylabel('Yellow frequency (GHz)')    
+    if si is not None:
+        plt.plot(pdata[si,0], pdata[si,2], '.y', markersize=12, label='special point')
+
+if __name__=='__main__':
+    plotSection(allData, range(si-offset, si-offset+100), jumpSelect, mode='gate')
 
 #%%        
 if __name__=='__main__':

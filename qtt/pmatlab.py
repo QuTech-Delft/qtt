@@ -201,6 +201,65 @@ except:
 
 #%% Utils
 
+class plotCallback:
+
+    def __init__(self, func=None, xdata=None, ydata=None, scale=[1,1], verbose=0):
+        """ Object to facilitate matplotlib figure callbacks
+
+        Args:
+            func (function): function to be called
+            xdata, ydata (arrays): datapoints to respond to
+            verbose (int): output level
+        Returns:
+            pc (object): plot callback
+
+        Example:
+            >>> xdata=np.arange(4); ydata = np.random.rand( xdata.size)/2 + xdata
+            >>> def f(plotidx, *args, **kwargs):
+            >>>     print('point %d clicked' % plotidx)
+            >>> pc = plotCallback(func=f, xdata=xdata, ydata=ydata)
+            >>> fig = plt.figure(1); plt.clf(); plt.plot(xdata, ydata, '.-b')
+            >>> cid = fig.canvas.mpl_connect('button_press_event', pc)
+
+        """
+
+        self.func = func
+        self.xdata = xdata
+        self.ydata = ydata
+        self.verbose = verbose
+        self.scale = scale
+        
+    def __call__(self, event):
+        if self.verbose:
+            print(self.func)
+        print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+              (event.button, event.x, event.y, event.xdata, event.ydata))
+
+        # pick data point
+        idx = None
+
+        if self.xdata is not None:
+            xdata = np.array(self.xdata)
+            ydata = np.array(self.ydata)
+            #pt = np.array(event.xdata, event.ydata)
+            #xx = np.vstack((xdata, ydata))
+            pt = np.array([event.xdata, event.ydata])
+            xx = np.vstack((xdata.flat, ydata.flat)).T
+            dd = xx - pt
+            dd = np.multiply( np.array(self.scale).reshape( (1,2) ), dd)
+            d = np.linalg.norm(dd, axis=1)
+            idx = np.argmin(d)
+            distance = d[idx]
+            if self.verbose:
+                print('point %d: distance %.3f' % (idx, distance))
+        else:
+            if self.verbose:
+                print('no xdata')
+
+        # call the function
+        self.func(plotidx=idx, button=event.button)
+        if self.verbose:
+            print('plot callback complete')
 
 def static_var(varname, value):
     """ Helper function to create a static variable """
