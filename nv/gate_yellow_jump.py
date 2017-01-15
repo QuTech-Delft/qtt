@@ -45,6 +45,8 @@ print('corpus length:', len(labels))
 #
 # make histogram
 
+from nvtools.nvtools import avg_steps, fmt
+
 chars = sorted(list(set(labels)))
 print('total chars:', len(chars))
 char_indices = dict((c, i) for i, c in enumerate(chars))
@@ -54,13 +56,11 @@ textX=[char_indices[c] for c in text]
 bc=np.bincount(textX)
 prob=bc/bc.sum()
 
-def fmt(x, ndigits=3):
-    v=[('%%.%df' % ndigits) % p for p in x]
-    return ', '.join(v)
 
 print('probability of each of the classes: %s' % fmt(prob))
 
 import keras.backend as K
+
 
 def avg_steps(y_true, y_pred, verbose=0):
     """ Calculate average number of steps needed for finding the correct cluster """

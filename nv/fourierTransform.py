@@ -11,7 +11,7 @@ import numpy as np
 import os
 import qcodes
 import pandas as pd
-from pynufft import pynufft
+from pynufft import pynufft # pip3 install pynufft --user
 from scipy.interpolate import interp1d
 import matplotlib
 import nufftpy
