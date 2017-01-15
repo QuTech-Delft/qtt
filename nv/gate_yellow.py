@@ -45,8 +45,10 @@ import nvtools
 from nvtools.nvtools import labelMapping
 from nvtools.nvtools import showModel
 
-os.chdir(qcodes.config['user']['nvDataDir'])
+# pip install statsmodels --user
 from statsmodels.graphics.gofplots import qqplot
+
+os.chdir(qcodes.config['user']['nvDataDir'])
 
 #%%
 print('Generating Data')

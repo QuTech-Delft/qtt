@@ -109,21 +109,23 @@ newfocus = allData[3]
 dt = np.median(np.diff(time))
 
 jumpSelect = (np.diff(time)>3*dt) & (np.diff(time)<30*60) # take three times the median as a qualifier for a jump
+jumpIndex = np.nonzero(jumpSelect)[0]
 jumpStart = time[np.append(jumpSelect, False)]
 jumpEnd = time[np.append(False, jumpSelect)]
 jumpGate = gate[np.append(False, jumpSelect)] - gate[np.append(jumpSelect, False)]
 jumpYellow = yellow[np.append(False, jumpSelect)] - yellow[np.append(jumpSelect, False)]
 jumpRelative = jumpGate / jumpYellow
-
+jumpSelect=np.append(jumpSelect, False)
 
 #%% Save data for other scripts
 
-xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow) )
+xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow, jumpIndex) )
 
 if 0:                 
     # save data
     #np.save('/home/eendebakpt/tmp/jdata.npy', xx)
-    np.save('jdata.npy', xx)
+    np.save('jdata.npy', xx )
+    np.save('jdata-alldata.npy', allData )
 
     plt.figure(1); plt.clf()
     plt.plot( xx[0,:], xx[5,:], '.b')
@@ -151,7 +153,7 @@ plot_length = 100
 x = allData[0][:plot_length]
 y = allData[1][:plot_length]
 y2 = allData[2][:plot_length]
-plot_select = jumpSelect & (allData[0]<x[-1])[:-1]
+plot_select = jumpSelect & (allData[0]<x[-1]) #[:-1]
 fig = plt.figure(figsize=(17,6))
 ax = plt.subplot(211)
 plt.plot(x,y2,'x-')
@@ -228,33 +230,19 @@ jumpGate[si]
 
 
 # In[14]:
+from imp import reload
+import nvtools
+reload(nvtools)
+reload(nvtools.nvtools)
+from nvtools.nvtools import plotSection
 
-def plotSection(allData, idx, mode='gate'):
-    """ Helper function to plot a section of data """
-    x = allData[0][idx]
-    y = allData[1][idx]
-    y2 = allData[2][idx]
-    v=np.zeros( len(allData[0]) ).astype(bool); v[idx]=1
-    plot_select = jumpSelect & v[:-1]
-    ax=plt.gca()
-    if mode=='gate':
-        plt.plot(x,y2,'x-')
-        plt.plot(allData[0][plot_select],allData[2][plot_select],'ro')
-        ax.set_xlabel('elapsed time (s)')
-        ax.set_ylabel('Gate voltage (V)')
-    else:
-        plt.plot(x,y,'x-')
-        plt.plot(allData[0][plot_select],allData[1][plot_select],'ro')
-        ax2.set_xlabel('elapsed time (s)')
-        # ax2.set_xlim([0,1000])
-        ax2.set_ylabel('Yellow frequency (GHz)')
-        
+       
 offset=10
 fig=plt.figure(figsize=(16,12))
 for ii in range(16):
     ax=plt.subplot(4,4,ii+1)
     si=smallIdx[ii]
-    plotSection(allData, range(si-offset, si-offset+100), mode='gate')
+    plotSection(allData, range(si-offset, si-offset+100), jumpSelect, mode='gate')
     plt.plot(allData[0][si], allData[2][si], '.y', markersize=12)
 
 #%%
