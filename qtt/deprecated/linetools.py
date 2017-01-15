@@ -952,12 +952,14 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
 
     The parameters are [x, y, width, alpha_1, ..., alpha_4, [rotation of polarization line] ]
     With the optional parameters psi (angle of transition line)
+    The x, y, width are in mV. Angles in radians
     
     param : array of floats
         parameters of the model
     l, w, lsegment : float
         parameters of the model
-        
+    lsegment (float) :
+    H (float): intensity of cross
 
     """
     aa = param[3:7]
@@ -1176,9 +1178,15 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2, usemask=False):
     """ Calculate cross matching score
     
-    Returns
-    -------
+    Args:
+        param (array or list):
+        im (numpy array): 
+        
+    Returns:
         cost, patch, cdata, tuple
+        
+    See also:
+        createCross
         
     """
     samplesize=[int(im.shape[1]*istep/istepmodel), int(im.shape[0]*istep/istepmodel)]
