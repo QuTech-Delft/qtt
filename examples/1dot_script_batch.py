@@ -76,6 +76,7 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     from qcodes.data.hdf5_format import HDF5FormatMetadata as MyFormatter
+    from qcodes.data.gnuplot_format import GNUPlotFormat as MyFormatter
     qcodes.DataSet.default_formatter = MyFormatter()
 
 #%% Load configuration
@@ -178,7 +179,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-9h'
+    basetag = 'batch-2017-1-15'
     Tvalues = np.array([-381])
 
     b = False
@@ -254,7 +255,7 @@ if __name__ == '__main__':
         hiresstep = -4
 
     def stepDelay(gate, minstepdelay=0, maxstepdelay=10):
-        return 0
+        return 0.1
 
 #%%
 
@@ -382,6 +383,10 @@ for ii, Tvalue in enumerate(Tvalues):
 
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
+        
+        if (np.any(np.isnan(od['setpoint']))):
+            raise Exception('please debug!')
+            
         #qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
         plt.figure(10)
         plt.clf()
