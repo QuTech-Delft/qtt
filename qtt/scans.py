@@ -460,8 +460,9 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
         wait_time = scanjob.get('wait_time', None)
         if wait_time is None:
             wait_time = waitTime(sweepgate) / 2.
+            wait_time = waitTime(sweepgate, station=station)/8.
 
-    wait_time_step = scanjob.get('wait_time_step', wait_time)
+    wait_time_step = scanjob.get('wait_time_step', 4*wait_time)
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
     logging.info('scan2D: wait_time %f' % wait_time)
 
@@ -484,7 +485,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
          
     tprev=time.time()
     for ix, x in enumerate(stepvalues):
-        tprint('scan2D: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
+        tprint('scan2D: %d/%d: time %.1f: setting %s to %.3f' % (ix, len(stepvalues), time.time()-t0, stepvalues.name, x), dt=.5)
         if 'gates_vert' in scanjob:
             for g in scanjob['gates_vert']:
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
@@ -521,6 +522,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
     alldata.metadata['scantime'] = str(datetime.datetime.now())
     alldata.metadata['dt'] = dt
     alldata.metadata['wait_time'] = wait_time
+    alldata.metadata['scanparams'] = {'wait_time': wait_time}
 
     alldata.write(write_metadata=True)
     # print(type(scanjob['stepdata']['start']))
@@ -826,7 +828,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
     scanjob = dict(
         {'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'wait_time': stepdelay})
 
-    station.gates.set(sweepdata, sweepdata['start'])  # set gate to starting value
+    station.gates.set(gate, sweepdata['start'])  # set gate to starting value
     time.sleep(stepdelay)
     
     alldata = scan1D(scanjob, station, title_comment='scan gate %s' %

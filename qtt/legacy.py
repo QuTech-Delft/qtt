@@ -80,6 +80,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
     wait_time_base = qtt.scans.waitTime(None, station=station)
+    wait_time_sweep = np.minimum(wait_time/6., .15)
 
     if full == 0:
         stepdata['step'] = -12
@@ -91,7 +92,9 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
 
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
     scanjob['wait_time_step'] = wait_time_base + 3 * wait_time
-    alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
+    scanjob['wait_time_sweep'] = wait_time_sweep
+    
+    alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time_sweep, background=False)
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
 
