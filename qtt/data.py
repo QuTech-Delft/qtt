@@ -112,7 +112,7 @@ def dataset_get_istep(alldata, mode=None):
         istep = np.abs(alldata.metadata['scanjob']['sweepdata']['step'])
     except:
         extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
-        istep = np.mean(np.diff(vstep))
+        istep = np.abs(np.mean(np.diff(vstep)))
     return istep
 
 
@@ -325,12 +325,32 @@ class image_transform:
 
     def istep(self):
         return self._istep
+
+    def image_extent(self):
+        """ Return matplotlib style image extent
+
+        Returns:
+            extentImage (4 floats): x1, x2, y1, y2
+                        the y1 values is bottom left
+        """
+        vsweep = self.vsweep
+        vstep = self.vstep
+        extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
+        if self.flipX:
+            extentImage = [extentImage[1], extentImage[
+                0], extentImage[2], extentImage[3]]
+        if self.flipY:
+            extentImage = [extentImage[0], extentImage[
+                1], extentImage[3], extentImage[2]]
+        self.extent = extentImage
+        return extentImage
         
     def extent_image(self):
         """ Return matplotlib style image extent
 
         Returns:
             extentImage (4 floats): x1, x2, y1, y2
+                        the y1 values is bottom left
         """
         vsweep = self.vsweep
         vstep = self.vstep

@@ -44,6 +44,7 @@ except:
 
 from qtt import pmatlab
 from qtt.pmatlab import *
+from qtt import pmatlab as pgeometry
 import cv2
 
 try:
@@ -1200,14 +1201,10 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     param = np.array(param)
     aa = param[3:]
 
-    # pp=np.array(param[0:2]) # /istep
-    #H=createH(samplesize, pp, scale=istep/istepmodel)
-    #H=pmatlab.pg_scaling([istep/istepmodel, istep/istepmodel])
     H = evaluateCross.scaling0.copy()
     H[0, 0] = istep / istepmodel
     H[1, 1] = istep / istepmodel
 
-    #patch=linetools.sampleImage(im, pp, samplesize, fig=11, clearfig=True, nrsub=1)
     dsize = (samplesize[0], samplesize[1])
     patch = cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
 
@@ -1243,23 +1240,39 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     A0 = pmatlab.polyarea(ppx.T)
 
     # special rules
-    if A / A0 < .85:
+    if np.abs(A / A0) < .85:
+        if verbose:
+            print('  add cost for A/A0: A %f A0 %f' % (A, A0))
         cost += 4000
     if aa[0] < 0 or aa[0] > np.pi / 2 - np.deg2rad(5):
         cost += 10000
     if aa[1] < np.pi or aa[1] > 3 * np.pi / 2:
-        pass
+        if verbose:
+            print('  add cost for alpha')
         cost += 10000
     if aa[2] < np.pi or aa[2] > 3 * np.pi / 2:
-        pass
+        if verbose:
+            print('  add cost for alpha')
         cost += 10000
     if aa[3] < 0 or aa[3] > np.pi / 2:
-        pass
+        if verbose:
+            print('  add cost for alpha')
         cost += 10000
 
+    if 1:
+        ccim = (np.array(im.shape) / 2 + .5) * istep
+        tmp=np.linalg.norm(ccim - param[0:2])
+        dcost = 2000 * pgeometry.logistic(tmp, np.mean(ccim), istep)
+        if verbose:
+            print('  add cost for image cc: %.1f' % dcost)
+        cost += dcost
     if pmatlab.angleDiff(aa[0], aa[1]) < np.deg2rad(30):
+        if verbose:
+            print('  add cost for angle diff')
         cost += 1000
     if pmatlab.angleDiff(aa[2], aa[3]) < np.deg2rad(30):
+        if verbose:
+            print('  add cost for angle diff')
         cost += 1000
 
     if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(45):
@@ -1267,10 +1280,13 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(45):
         cost += 10000
     if param[2] < 0:
+        if verbose:
+            print('  add cost for negative param')
         cost += 10000
 
     if np.abs(param[2]) > 7.:
-            #print('x deviation!')
+        if verbose:
+            print('  add cost large param[2]')
         cost += 10000
 
     if np.abs(param[2] - 10) > 8:
@@ -1430,8 +1446,8 @@ def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=No
     """ Fit model of an anti-crossing """
     samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
-    costfun = lambda param0: evaluateCrossX(param0, imx, samplesize, fig=None, istepmodel=istepmodel, istep=istep)[0]
-    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, istep=istep)[0]
+    #costfun = lambda param0: evaluateCrossX(param0, imx, samplesize, fig=None, istepmodel=istepmodel, istep=istep)[0]
+    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False, istep=istep)[0]
 
     #costfun = lambda x0: costFunction(x0, pglobal, ims)
     vv = []
