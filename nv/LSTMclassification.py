@@ -54,7 +54,7 @@ learningRate = 0.00001
 #%%
 print('Generating Data')
 data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
-
+data=data[:,0:6]
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
 jumps = df[['gate jump', 'yellow jump']]
 
