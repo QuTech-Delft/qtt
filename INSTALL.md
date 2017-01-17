@@ -46,8 +46,8 @@ There are four repositories:
 
 1. QCodes
 2. QTT
-3. VandersypenUsers
-4. VandersypenSetups
+3. Users
+4. Stations
 
 The git commands are:
 ```
@@ -58,7 +58,7 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-(temporary) Goto the Qcodes directory and checkout the branch `sq3`
+(temporary) Go to the Qcodes directory and checkout the branch `sq3`
 ```
 > cd [MYLOCALDIR]/Qcodes
 > git checkout sq3
@@ -66,7 +66,7 @@ The git commands are:
 
 ## Install packages
 
-- Register the repositories it with Python. For each of the repositories run this from the root directory:
+- Register the repositories with Python. For each of the repositories run this from the root directory:
 ```
 > conda develop .  (for Anaconda)
 > python setup.py develop --user  (for other systems)
