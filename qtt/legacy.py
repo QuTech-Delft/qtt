@@ -1091,15 +1091,17 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             scanjob = dict({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
+            
+            sweeprange=240
+            if p2=='P3':
+                sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
 
             e1 = ods[0]['pinchvalues'][1]
             e2 = ods[1]['pinchvalues'][1]
-            e1 = float(np.maximum(basevaluesTD[p1] - 120, e1))
-            e2 = float(np.maximum(basevaluesTD[p2] - 120, e2))
-            s1 = basevaluesTD[p1] + 120
-            s2 = basevaluesTD[p2] + 120
-            # s1=np.minimum(basevalues[p1], e1+240)
-            # s2=np.minimum(basevalues[p2], e2+240)
+            e1 = float(np.maximum(basevaluesTD[p1] - sweeprange/2, e1))
+            e2 = float(np.maximum(basevaluesTD[p2] - sweeprange/2, e2))
+            s1 = basevaluesTD[p1] + sweeprange/2
+            s2 = basevaluesTD[p2] + sweeprange/2
             scanjob['stepdata'] = dict({'gates': [p1], 'start': s1, 'end': e1, 'step': -2})
             scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -4})
 

@@ -376,7 +376,12 @@ def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
 
         imfilerel, imfile = qtt.legacy.saveImage(resultsdir, 'sdtune-%s' % td['name'], basefig)
 
-        page.p('Tuning of sensing dot: scan complete %s' % scanTime(ddplunger).strftime('%d-%m-%Y %H:%M:%S'))
+        st=scanTime(ddplunger)
+        if st is None:
+            st='date ?'
+        else:
+            st=st.strftime('%d-%m-%Y %H:%M:%S')
+        page.p('Tuning of sensing dot: scan complete %s' % st)
         # dd2d['scantime']
         page.a.open(href=pfileplunger, style='text-decoration: none;')
         page.img(src=imfilerel, width='80%', alt="sd %s" % td['name'])

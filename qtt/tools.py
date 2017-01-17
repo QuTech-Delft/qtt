@@ -174,6 +174,7 @@ def scanTime(dd):
     w = dd.metadata.get('scantime', None)
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
+        
     return w
 
 

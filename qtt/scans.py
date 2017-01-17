@@ -581,7 +581,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         return data
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
-#    sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 60)  # FIXME
+    #sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 60)  # FIXME
     period = scanjob['sweepdata'].get('period', 1e-3)
     sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
 

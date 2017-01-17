@@ -22,7 +22,6 @@ import matplotlib.pyplot
 if __name__ == '__main__':
     matplotlib.pyplot.ion()
 
-
 import multiprocessing
 if __name__ == '__main__':
     try:
@@ -179,8 +178,8 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-15'
-    Tvalues = np.array([-381])
+    basetag = 'batch-2017-1-17n'
+    Tvalues = np.array([-411])
 
     b = False
 
@@ -284,8 +283,6 @@ def closeExperiment(station, eid=None):
 
     print('closed experiment: %s' % getDateString())
 
-#%% One-dot measurements
-
 from qtt.legacy import onedotScan, onedotScanPinchValues
 
 
@@ -293,7 +290,9 @@ from qtt.legacy import onedotScan, onedotScanPinchValues
 #od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=10)
 
 
-#%%
+#%% One-dot measurements
+
+
 
 
 for ii, Tvalue in enumerate(Tvalues):
@@ -414,6 +413,7 @@ for ii, Tvalue in enumerate(Tvalues):
 
         basenamedot = '%s-dot' % (od['name'])
         saveExperimentData(outputdir, od, tag='one_dot', dstr=basenamedot)
+        #x=loadExperimentData(outputdir, tag='one_dot', dstr=basenamedot)
 
         gates.resetgates(od['gates'], basevaluesS)
 

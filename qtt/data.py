@@ -109,10 +109,14 @@ def dataset2image2(dataset):
 def dataset_get_istep(alldata, mode=None):
     """ Return number of mV per pixel in scan """
     try:
-        istep = np.abs(alldata.metadata['scanjob']['sweepdata']['step'])
+        istep = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
     except:
-        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
-        istep = np.mean(np.diff(vstep))
+        try:
+            extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
+            istep = np.mean(np.diff(vstep))
+        except:
+            _,_,_,istep,_ = dataset1Dmetadata(alldata)
+                                        
     return istep
 
 
@@ -481,6 +485,32 @@ def pix2scan(pt, dd2d):
 
 #%%
 
+def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
+    """ Extract metadata from a 2D scan
+
+    Returns:
+
+        extent (list): x1,x2
+        g0 (string): step gate
+        vstep (array): step values
+        istep (float)
+        arrayname (string): identifier of the main array 
+
+    """
+
+    if arrayname is None:
+        arrayname = alldata.default_parameter_name()
+
+    A = alldata.arrays[arrayname]
+
+    g0 = A.set_arrays[0].name
+    vstep = np.array(A.set_arrays[0])
+    extent = [vstep[0], vstep[-1]]  # change order?
+
+    istep=np.abs(np.mean(np.diff(vstep)))
+    if verbose:
+        print('1D scan: gates %s %s' % (g0,))
+    return extent, g0, vstep, istep, arrayname
 
 def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan
