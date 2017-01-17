@@ -58,9 +58,9 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-(temporary) Goto the qtt directory and checkout the branch `sq3`
+(temporary) Goto the Qcodes directory and checkout the branch `sq3`
 ```
-> cd [MYLOCALDIR]/qtt
+> cd [MYLOCALDIR]/Qcodes
 > git checkout sq3
 ```
 
