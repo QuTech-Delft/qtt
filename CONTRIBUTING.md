@@ -15,7 +15,7 @@ Please contact Pieter Eendebak pieter.eendebak@tno.nl
 To upload code use `git commit` and `git push`. For the `Qcodes` and `qtt` repositories always make a branch first.
 After uploading a branch one can make a (pull request)[https://help.github.com/articles/about-pull-requests/] which will be reviewed for inclusion in QTT.
 
-For the `users` repository you can upload directly to the master branch.
+For the `users` and `stations` repository you can upload directly to the master branch.
 
 ### Bugs reports and feature requests
 
