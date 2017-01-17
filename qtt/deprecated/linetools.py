@@ -19,9 +19,9 @@ import skimage.filters
 try:
     from skimage import morphology
 except:
-    pass        
+    pass
 
-_linetoolswarn=False
+_linetoolswarn = False
 
 import numpy as np
 
@@ -34,16 +34,17 @@ try:
 except:
     if not _linetoolswarn:
         #warnings.warn('module shapely not found')
-        _linetoolswarn=True
+        _linetoolswarn = True
 try:
     from descartes.patch import PolygonPatch
 except:
     if not _linetoolswarn:
         #warnings.warn('module descartes not found')
-        _linetoolswarn=True
+        _linetoolswarn = True
 
 from qtt import pmatlab
 from qtt.pmatlab import *
+from qtt import pmatlab as pgeometry
 import cv2
 
 try:
@@ -161,9 +162,6 @@ def getpatch(ims, pp, samplesize, fig=None):
     return patch
 
 #@autojit
-
-
-
 
 
 def sampleImage(im, pp, samplesize, fig=None, clearfig=True, nrsub=1):
@@ -502,7 +500,7 @@ class linemodel:
 
         # plt.plot(pp[0,:],pp[1,:],'.-b')
         #plot_coords(ax, p.exterior )
-        COLOR = {True:  '#6699cc', False: '#ff3333'}
+        COLOR = {True: '#6699cc', False: '#ff3333'}
 
         def v_color(ob):
             return COLOR[ob.is_valid]
@@ -522,10 +520,10 @@ class linemodel:
         plotPoints(lm.getXY().T, '.r')
         pmatlab.enlargelims()
 
-    def drawLine(lm,  marker='.', color='r'):
+    def drawLine(lm, marker='.', color='r'):
         pmatlab.plotPoints(lm.getXY().T, marker, color=color)
 
-    def drawLineEndpoints(lm,  marker='.', color='r', markersize=18):
+    def drawLineEndpoints(lm, marker='.', color='r', markersize=18):
         plotPoints(
             lm.getXY()[0].reshape((2, 1)), marker, color=color, markersize=18)
         plotPoints(
@@ -874,6 +872,7 @@ def Faces(edges, embedding, verbose=1):
 
 #%%
 
+
 def polyarea(p):
     """ Return signed area of polygon
 
@@ -885,7 +884,7 @@ def polyarea(p):
     -------
         area : float
             area of polygon
-    
+
     >>> polyarea( [ [0,0], [1,0], [1,1], [0,2]] )
     1.5
     """
@@ -897,6 +896,8 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 #%%
+
+
 def closePolygonList(c):
     if c[0] != c[-1]:
         c.append(c[0])
@@ -952,19 +953,21 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
 
     The parameters are [x, y, width, alpha_1, ..., alpha_4, [rotation of polarization line] ]
     With the optional parameters psi (angle of transition line)
-    
+    The x, y, width are in mV. Angles in radians
+
     param : array of floats
         parameters of the model
     l, w, lsegment : float
         parameters of the model
-        
+    lsegment (float) :
+    H (float): intensity of cross
 
     """
     aa = param[3:7]
-    
-    psi=np.pi/4
-    if len(param)>7:
-        psi=param[7]
+
+    psi = np.pi / 4
+    if len(param) > 7:
+        psi = param[7]
         if verbose:
             print('createCross: psi set to %.1f [def]' % np.rad2deg(psi))
     # aa=[0,0,0,0]
@@ -980,10 +983,10 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
         if centermodel:
             cc = np.array(samplesize).reshape((2, 1)) / 2 - .5
         else:
-            cc=np.array(param[0:2]/istep).reshape( (2,1))
-            
-    lp = cc + pmatlab.rot2D(psi+ np.pi / 2).dot(np.array([[param[2]/istep], [0]]))
-    hp = cc - pmatlab.rot2D(psi+ np.pi / 2).dot(np.array([[param[2]/istep], [0]]))
+            cc = np.array(param[0:2] / istep).reshape((2, 1))
+
+    lp = cc + pmatlab.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
+    hp = cc - pmatlab.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
 
     op = np.zeros((5, 2))
     opr = np.zeros((4, 2))
@@ -994,33 +997,34 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
         else:
             ip[ii].flat = hp
         #a += -np.pi/4
-        op[ii] = ip[ii] + ((scale) * pmatlab.rot2D(a).dot(np.array([[1], [0]])) ).flat
-        opr[ii] = ip[ii] + ((lsegment/istep) * pmatlab.rot2D(a).dot(np.array([[1], [0]])) ).flat
+        op[ii] = ip[ii] + ((scale) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
+        opr[ii] = ip[ii] + ((lsegment / istep) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
 
-    
     if samplesize is not None:
         modelpatch = np.zeros([samplesize.flat[1], samplesize.flat[0]])
 
         for ii in lines:
             if linesegment:
-                x0=ip[ii]
-                x1x=np.array(x0+lsegment/istep*(pmatlab.rot2D(aa[ii]).dot( np.array( [[1],[0]]) ) ).T).flatten()
-                
-                lineSegment(modelpatch, x0=x0, x1=x1x, w=w/istep, l=None, H=H)
+                x0 = ip[ii]
+                x1x = np.array(x0 + lsegment / istep * (pmatlab.rot2D(aa[ii]).dot(np.array([[1], [0]]))).T).flatten()
+
+                lineSegment(modelpatch, x0=x0, x1=x1x, w=w / istep, l=None, H=H)
             else:
-                semiLine(modelpatch, x0=ip[ii], theta=aa[ii], w=w/istep, l=l/istep, H=H)
+                semiLine(modelpatch, x0=ip[ii], theta=aa[ii], w=w / istep, l=l / istep, H=H)
         if addX:
-            lx=np.linalg.norm(hp-lp, ord=2)
+            lx = np.linalg.norm(hp - lp, ord=2)
             #print(hp); print(lp)
-            #print(lx)
-            lineSegment(modelpatch, x0=np.array(hp.reshape( (2,1))), x1=np.array(lp.reshape( (2,1))), w=w/istep, l=lx, H=H)
-            
+            # print(lx)
+            lineSegment(modelpatch, x0=np.array(hp.reshape((2, 1))), x1=np.array(lp.reshape((2, 1))), w=w / istep, l=lx, H=H)
+
     else:
         modelpatch = None
-    modelpatch=np.minimum(modelpatch, H)
+    modelpatch = np.minimum(modelpatch, H)
     return modelpatch, (cc, lp, hp, ip, opr, w, H, lsegment)
 
 #%%
+
+
 def lineSegment(im, x0, x1=None, theta=None, w=2, l=12, H=200, ml=0):
     """ Plot half-line into image 
 
@@ -1028,31 +1032,33 @@ def lineSegment(im, x0, x1=None, theta=None, w=2, l=12, H=200, ml=0):
     >>> lineSegment(np.zeros( (160,240)), [60,40], theta=np.deg2rad(20), w=10, l=60)
 
     """
-    x0=np.array(x0).flatten()
+    x0 = np.array(x0).flatten()
     if x1 is None:
         thetar = -theta
-        dx=l
+        dx = l
     else:
-        x1=np.array(x1).flatten()
-        theta = x0-x1
-        theta=np.arctan2( theta[1], theta[0])   +np.pi 
+        x1 = np.array(x1).flatten()
+        theta = x0 - x1
+        theta = np.arctan2(theta[1], theta[0]) + np.pi
         thetar = -theta
-    
-        dx=np.linalg.norm(x0-x1)
-    xx0, yy0 = np.meshgrid(np.arange(im.shape[1])-x0[0], np.arange(im.shape[0])-x0[1])
-    xx0=xx0.astype(np.float32)
-    yy0=yy0.astype(np.float32)
+
+        dx = np.linalg.norm(x0 - x1)
+    xx0, yy0 = np.meshgrid(np.arange(im.shape[1]) - x0[0], np.arange(im.shape[0]) - x0[1])
+    xx0 = xx0.astype(np.float32)
+    yy0 = yy0.astype(np.float32)
 
     xxr = math.cos(thetar) * xx0 - math.sin(thetar) * yy0
     yyr = math.sin(thetar) * xx0 + math.cos(thetar) * yy0
     yyr = pmatlab.signedmin(yyr, w / 2.)
 
-    data = H * np.cos( (np.pi/w) * yyr ) * (pmatlab.smoothstep(xxr, ml, 4)) *(1-pmatlab.smoothstep(xxr, dx, 4))
+    data = H * np.cos((np.pi / w) * yyr) * (pmatlab.smoothstep(xxr, ml, 4)) * (1 - pmatlab.smoothstep(xxr, dx, 4))
 
     im += data
     return im
 
-#%%    
+#%%
+
+
 def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
     """ Plot half-line into image 
 
@@ -1064,15 +1070,15 @@ def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
     #xx, yy = np.meshgrid(np.arange(im.shape[1]), np.arange(im.shape[0]))
     #xx0 = xx - x0[0]
     #yy0 = yy - x0[1]
-    xx0, yy0 = np.meshgrid(np.arange(im.shape[1])-x0[0], np.arange(im.shape[0])-x0[1])
-    xx0=xx0.astype(np.float32)
-    yy0=yy0.astype(np.float32)
+    xx0, yy0 = np.meshgrid(np.arange(im.shape[1]) - x0[0], np.arange(im.shape[0]) - x0[1])
+    xx0 = xx0.astype(np.float32)
+    yy0 = yy0.astype(np.float32)
 
     xxr = math.cos(thetar) * xx0 - math.sin(thetar) * yy0
     yyr = math.sin(thetar) * xx0 + math.cos(thetar) * yy0
     yyr = pmatlab.signedmin(yyr, w / 2.)
 
-    data = H * np.cos( (np.pi/w) * yyr )
+    data = H * np.cos((np.pi / w) * yyr)
     if dohalf:
         data *= (pmatlab.smoothstep(xxr, 0, 10))
 
@@ -1093,6 +1099,7 @@ def createH_old(samplesize, pp):
         theta), -math.sin(theta) * cc[0] - math.cos(theta) * cc[1] + c[1]]
     return H
 
+
 @pmatlab.static_var("HH", np.matrix(np.eye(3)))
 def createH(samplesize, pp, scale=1):
     """ Create H matrix to transform image to patch coordinates """
@@ -1103,18 +1110,20 @@ def createH(samplesize, pp, scale=1):
     H = createH.HH.copy()
     c = math.cos(theta)
     s = math.sin(theta)
-    
-    H.itemset(0, scale*c)
-    H.itemset(1, scale*-s)
-    H.itemset(2, scale*(-c * cc[0] + s * cc[1]) + cx[0] )
-    H.itemset(3, scale*s)
-    H.itemset(4, scale*c)
-    H.itemset(5, scale*(-s * cc[0] - c * cc[1]) + cx[1] )
+
+    H.itemset(0, scale * c)
+    H.itemset(1, scale * -s)
+    H.itemset(2, scale * (-c * cc[0] + s * cc[1]) + cx[0])
+    H.itemset(3, scale * s)
+    H.itemset(4, scale * c)
+    H.itemset(5, scale * (-s * cc[0] - c * cc[1]) + cx[1])
     #H[0,:] = [c, -s, -c*cc[0]+s*cc[1] + cx[0] ]
     #H[1,:] = [s, c, -s*cc[0]-c*cc[1] + cx[1]]
     return H
 
 #%%
+
+
 def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, lenmv=20., sepmv=2.0, dy=5):
     """ Find crosses in image using template match
     Arguments
@@ -1132,12 +1141,12 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
         results : dict
             more results
 
-            
+
  """
     samplesize = np.array([ksize, ksize + dy])
     param = [None, None, sepmv / istep, 3 * np.pi /
              8, -7 * np.pi / 8, 11 * np.pi / 8, np.pi / 8]
-    modelpatch, cdata = createCross(param, samplesize, w=widthmv/istep, l=lenmv/istep, lsegment=lenmv/istep, H=100)
+    modelpatch, cdata = createCross(param, samplesize, w=widthmv / istep, l=lenmv / istep, lsegment=lenmv / istep, H=100)
 
     imtmp = pmatlab.setregion(scaleImage(imx), scaleImage(modelpatch), [0, 0])
 
@@ -1149,20 +1158,20 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
     thr = .65 * rr.max() + .35 * rr.mean()
     #pts = pmatlab.detect_local_minima(-rr, thr=-thr)
-    pts = localMaxima(rr, thr=thr, radius=10/istep)
+    pts = localMaxima(rr, thr=thr, radius=10 / istep)
     pts = np.array(pts)
     pts = pts[[1, 0], :]
 
     ptsim = pts + ((samplesize - 1.) / 2).reshape((2, 1))
 
     if verbose:
-        print('findCrossTemplate: threshold: %.1f, %d local maxima' % (thr, pts.shape[1]) )
+        print('findCrossTemplate: threshold: %.1f, %d local maxima' % (thr, pts.shape[1]))
 
     if fig is not None:
         showIm(imtmp, fig=fig)
         #pt+=samplesize[::-1].reshape( (2,1))
         plt.plot(ptsim[0], ptsim[1], '.m', markersize=22)
-        showIm(rr, fig=fig+1)
+        showIm(rr, fig=fig + 1)
         plt.colorbar()
         plt.title('Template and image')
         plt.plot(pts[0], pts[1], '.m', markersize=22)
@@ -1172,15 +1181,23 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
     return ptsim, rr, dict({'modelpatch': modelpatch})
 
-@pmatlab.static_var("scaling0", np.diag([1.,1,1]) )
+
+@pmatlab.static_var("scaling0", np.diag([1., 1, 1]))
 def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2, usemask=False):
     """ Calculate cross matching score
-    
-    Returns
-    -------
+
+    Args:
+        param (array or list):
+        im (numpy array): 
+
+    Returns:
         cost, patch, cdata, tuple
-        
+
+    See also:
+        createCross
+
     """
+<<<<<<< HEAD
     samplesize=[int(im.shape[1]*istep/istepmodel), int(im.shape[0]*istep/istepmodel)]
     param=np.array(param)
     aa=param[3:]
@@ -1200,259 +1217,300 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         print('evaluateCross: patch shape %s'  % (patch.shape,))
     modelpatch, cdata=createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose>=2)
     (cc,lp,hp,ip,op,_,_,_)=cdata
+=======
+    samplesize = [int(im.shape[1] * istep / istepmodel), int(im.shape[0] * istep / istepmodel)]
+    param = np.array(param)
+    aa = param[3:]
 
-    dd=patch-modelpatch
+    H = evaluateCross.scaling0.copy()
+    H[0, 0] = istep / istepmodel
+    H[1, 1] = istep / istepmodel
+
+    dsize = (samplesize[0], samplesize[1])
+    patch = cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
+
+    if verbose:
+        print('evaluateCross: patch shape %s' % (patch.shape,))
+    modelpatch, cdata = createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose >= 2)
+    (cc, lp, hp, ip, op, _, _, _) = cdata
+>>>>>>> 9d7d1b35b16797e1007ad9aa908f524bd93b9e81
+
+    dd = patch - modelpatch
 
     if usemask:
         # near model mask
         #mask = (modelpatch>1).astype(int)
-        
+
         # distance centre mask
-        imtmp=10+0*modelpatch.copy()
-        imtmp[int(imtmp.shape[1]/2),int(imtmp.shape[0]/2)]=0
-        mask=scipy.ndimage.distance_transform_edt(imtmp)
-        mask=1-.75*mask/mask.max()
-    
+        imtmp = 10 + 0 * modelpatch.copy()
+        imtmp[int(imtmp.shape[1] / 2), int(imtmp.shape[0] / 2)] = 0
+        mask = scipy.ndimage.distance_transform_edt(imtmp)
+        mask = 1 - .75 * mask / mask.max()
 
-        dd=dd*mask
-        
-    #dd=(dd*cf)
-    cost=np.linalg.norm(dd)    
-    
+        dd = dd * mask
+
+    # dd=(dd*cf)
+    cost = np.linalg.norm(dd)
+
     # area of intersection
-    rr=np.array([[0.,im.shape[1]],[0,im.shape[0]]])
-    ppx=pmatlab.region2poly(np.array([[0,samplesize[0]],[0.,samplesize[1]]]) )
-    ppimage=pmatlab.region2poly(rr)
-    pppatch=pmatlab.projectiveTransformation(H, ppimage)        
-    ppi=pmatlab.polyintersect(ppx.T, pppatch.T).T
-    A=pmatlab.polyarea(ppi.T)    
-    A0=pmatlab.polyarea(ppx.T)
-    
-    # special rules
-    if A/A0<.85:
-        cost+=4000
-    if aa[0]<0 or aa[0]>np.pi/2-np.deg2rad(5):
-        cost+=10000
-    if aa[1]<np.pi or aa[1]>3*np.pi/2:
-        pass
-        cost+=10000
-    if aa[2]<np.pi or aa[2]>3*np.pi/2:
-        pass
-        cost+=10000
-    if aa[3]<0 or aa[3]>np.pi/2:
-        pass
-        cost+=10000
+    rr = np.array([[0., im.shape[1]], [0, im.shape[0]]])
+    ppx = pmatlab.region2poly(np.array([[0, samplesize[0]], [0., samplesize[1]]]))
+    ppimage = pmatlab.region2poly(rr)
+    pppatch = pmatlab.projectiveTransformation(H, ppimage)
+    ppi = pmatlab.polyintersect(ppx.T, pppatch.T).T
+    A = pmatlab.polyarea(ppi.T)
+    A0 = pmatlab.polyarea(ppx.T)
 
+    # special rules
+    if np.abs(A / A0) < .85:
+        if verbose:
+            print('  add cost for A/A0: A %f A0 %f' % (A, A0))
+        cost += 4000
+    if aa[0] < 0 or aa[0] > np.pi / 2 - np.deg2rad(5):
+        cost += 10000
+    if aa[1] < np.pi or aa[1] > 3 * np.pi / 2:
+        if verbose:
+            print('  add cost for alpha')
+        cost += 10000
+    if aa[2] < np.pi or aa[2] > 3 * np.pi / 2:
+        if verbose:
+            print('  add cost for alpha')
+        cost += 10000
+    if aa[3] < 0 or aa[3] > np.pi / 2:
+        if verbose:
+            print('  add cost for alpha')
+        cost += 10000
+
+    if 1:
+        ccim = (np.array(im.shape) / 2 + .5) * istep
+        tmp=np.linalg.norm(ccim - param[0:2])
+        dcost = 2000 * pgeometry.logistic(tmp, np.mean(ccim), istep)
+        if verbose:
+            print('  add cost for image cc: %.1f' % dcost)
+        cost += dcost
     if pmatlab.angleDiff(aa[0], aa[1]) < np.deg2rad(30):
-        cost+=1000
+        if verbose:
+            print('  add cost for angle diff')
+        cost += 1000
     if pmatlab.angleDiff(aa[2], aa[3]) < np.deg2rad(30):
-        cost+=1000
+        if verbose:
+            print('  add cost for angle diff')
+        cost += 1000
 
     if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(45):
-        cost+=10000
-    if pmatlab.angleDiffOri(aa[1], aa[3])  > np.deg2rad(45):
-        cost+=10000
-    if param[2]<0:
-        cost+=10000
+        cost += 10000
+    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(45):
+        cost += 10000
+    if param[2] < 0:
+        if verbose:
+            print('  add cost for negative param')
+        cost += 10000
 
-    if np.abs( param[2] ) > 7.:
-            #print('x deviation!')
-            cost+=10000
+    if np.abs(param[2]) > 7.:
+        if verbose:
+            print('  add cost large param[2]')
+        cost += 10000
 
-    if np.abs( param[2]-10 ) >  8:
-            #print('x deviation!')
-            cost+=10000
-        
-    if len(param)>7:
-        if np.abs( angleDiff(param[7], np.pi/4) ) >  np.deg2rad(30):
+    if np.abs(param[2] - 10) > 8:
+        #print('x deviation!')
+        cost += 10000
+
+    if len(param) > 7:
+        if np.abs(angleDiff(param[7], np.pi / 4)) > np.deg2rad(30):
             #print('psi deviation!')
-            cost+=10000
-        
-    
+            cost += 10000
+
     if not fig is None:
-        
-            #lsegment=cdata[7]
-            showIm(patch, fig=fig); plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
-            pmatlab.addfigurecopy(fig=fig)
-            plt.plot( [float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1]) ], '.--m', linewidth=linewidth, markersize=10, label='transition line')
-            plt.plot( cc[0], cc[0], '.m', markersize=12)
-            for ii in range(4):
-                if ii==0:
-                    lbl = 'electron line'
-                else:
-                    lbl = None                    
-                plt.plot( [op[ii,0], ip[ii,0]], [op[ii,1],ip[ii,1]], '.-', linewidth=linewidth, color=[0,.7,0], label=lbl)
-                pmatlab.plotLabels( np.array( (op[ii,:]+ ip[ii,:])/2 ).reshape( (2,-1) ), '%d' % ii )
-            showIm(modelpatch, fig=fig+1); plt.title('Model patch: cost %.1f' % cost)
-            showIm(np.abs(dd), fig=fig+2); plt.title('diff patch: cost %.1f' % cost); plt.colorbar()
-            plt.show()
-            #plt.pause(1e-6)
-            #tilefigs([fig, fig+1], [2,2])
-            
+
+            # lsegment=cdata[7]
+        showIm(patch, fig=fig)
+        plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
+        pmatlab.addfigurecopy(fig=fig)
+        plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m', linewidth=linewidth, markersize=10, label='transition line')
+        plt.plot(cc[0], cc[0], '.m', markersize=12)
+        for ii in range(4):
+            if ii == 0:
+                lbl = 'electron line'
+            else:
+                lbl = None
+            plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-', linewidth=linewidth, color=[0, .7, 0], label=lbl)
+            pmatlab.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
+        showIm(modelpatch, fig=fig + 1)
+        plt.title('Model patch: cost %.1f' % cost)
+        showIm(np.abs(dd), fig=fig + 2)
+        plt.title('diff patch: cost %.1f' % cost)
+        plt.colorbar()
+        plt.show()
+        # plt.pause(1e-6)
+        #tilefigs([fig, fig+1], [2,2])
+
     if verbose:
         print('evaluateCross: cost %.4f' % cost)
         #print('evaluateCross: param %s' % (str(param), ))
     return cost, patch, cdata, (H, )
     pass
 
-    
+
 def evaluateCrossX(param, im, ksize, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2, usemask=False):
     """ Calculate cross matching score
-    
+
     """
     if isinstance(ksize, list):
-        samplesize=[ksize[0], ksize[1]]
+        samplesize = [ksize[0], ksize[1]]
     else:
-        samplesize=[ksize, ksize]
-        
-    pp=np.array(param[0:2]) /istep
-    aa=param[3:]
+        samplesize = [ksize, ksize]
 
-    H=createH(samplesize, pp, scale=istep/istepmodel)
+    pp = np.array(param[0:2]) / istep
+    aa = param[3:]
+
+    H = createH(samplesize, pp, scale=istep / istepmodel)
     #patch=linetools.sampleImage(im, pp, samplesize, fig=11, clearfig=True, nrsub=1)
-    dsize=(samplesize[0], samplesize[1])
-    patch=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_NEAREST), cv2.BORDER_CONSTANT, -1)
-  
-    modelpatch, cdata=createCross(param, samplesize, istep=istepmodel, verbose=0)
-    (cc,lp,hp,ip,op)=cdata
+    dsize = (samplesize[0], samplesize[1])
+    patch = cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_NEAREST), cv2.BORDER_CONSTANT, -1)
+
+    modelpatch, cdata = createCross(param, samplesize, istep=istepmodel, verbose=0)
+    (cc, lp, hp, ip, op) = cdata
 
     # near model mask
     #mask = (modelpatch>1).astype(int)
-    
+
     # distance centre mask
-    imtmp=10+0*modelpatch.copy()
-    imtmp[int(imtmp.shape[1]/2),int(imtmp.shape[0]/2)]=0
-    mask=scipy.ndimage.distance_transform_edt(imtmp)
-    mask=1-.75*mask/mask.max()
+    imtmp = 10 + 0 * modelpatch.copy()
+    imtmp[int(imtmp.shape[1] / 2), int(imtmp.shape[0] / 2)] = 0
+    mask = scipy.ndimage.distance_transform_edt(imtmp)
+    mask = 1 - .75 * mask / mask.max()
 
-
-    dd=patch-modelpatch
+    dd = patch - modelpatch
     if usemask:
-        dd=dd*mask
-        
-    #dd=(dd*cf)
-    cost=np.linalg.norm(dd)    
-    
+        dd = dd * mask
+
+    # dd=(dd*cf)
+    cost = np.linalg.norm(dd)
+
     # area of intersection
-    rr=np.array([[0.,im.shape[1]],[0,im.shape[0]]])
-    ppx=pmatlab.region2poly(np.array([[0,samplesize[0]],[0.,samplesize[1]]]) )
-    ppimage=pmatlab.region2poly(rr)
-    pppatch=pmatlab.projectiveTransformation(H, ppimage)        
-    ppi=pmatlab.polyintersect(ppx.T, pppatch.T).T
-    A=pmatlab.polyarea(ppi.T)    
-    A0=pmatlab.polyarea(ppx.T)
-    
+    rr = np.array([[0., im.shape[1]], [0, im.shape[0]]])
+    ppx = pmatlab.region2poly(np.array([[0, samplesize[0]], [0., samplesize[1]]]))
+    ppimage = pmatlab.region2poly(rr)
+    pppatch = pmatlab.projectiveTransformation(H, ppimage)
+    ppi = pmatlab.polyintersect(ppx.T, pppatch.T).T
+    A = pmatlab.polyarea(ppi.T)
+    A0 = pmatlab.polyarea(ppx.T)
+
     # special rules
-    if A/A0<.85:
-        cost+=4000
-    if aa[0]<0 or aa[0]>np.pi/2-np.deg2rad(5):
-        cost+=10000
-    if aa[1]<np.pi or aa[1]>3*np.pi/2:
+    if A / A0 < .85:
+        cost += 4000
+    if aa[0] < 0 or aa[0] > np.pi / 2 - np.deg2rad(5):
+        cost += 10000
+    if aa[1] < np.pi or aa[1] > 3 * np.pi / 2:
         pass
-        cost+=10000
-    if aa[2]<np.pi or aa[2]>3*np.pi/2:
+        cost += 10000
+    if aa[2] < np.pi or aa[2] > 3 * np.pi / 2:
         pass
-        cost+=10000
-    if aa[3]<0 or aa[3]>np.pi/2:
+        cost += 10000
+    if aa[3] < 0 or aa[3] > np.pi / 2:
         pass
-        cost+=10000
+        cost += 10000
 
     if pmatlab.angleDiff(aa[0], aa[1]) < np.deg2rad(30):
-        cost+=1000
+        cost += 1000
     if pmatlab.angleDiff(aa[2], aa[3]) < np.deg2rad(30):
-        cost+=1000
+        cost += 1000
 
     if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(45):
-        cost+=10000
-    if pmatlab.angleDiffOri(aa[1], aa[3])  > np.deg2rad(45):
-        cost+=10000
-    if param[2]<0:
-        cost+=10000
+        cost += 10000
+    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(45):
+        cost += 10000
+    if param[2] < 0:
+        cost += 10000
 
-    if np.abs( param[2] ) > 7.:
-            #print('x deviation!')
-            cost+=10000
+    if np.abs(param[2]) > 7.:
+        #print('x deviation!')
+        cost += 10000
 
-    if np.abs( param[2]-10 ) >  8:
-            #print('x deviation!')
-            cost+=10000
-        
-    if len(param)>7:
-        if np.abs( angleDiff(param[7], np.pi/4) ) >  np.deg2rad(30):
+    if np.abs(param[2] - 10) > 8:
+        #print('x deviation!')
+        cost += 10000
+
+    if len(param) > 7:
+        if np.abs(angleDiff(param[7], np.pi / 4)) > np.deg2rad(30):
             #print('psi deviation!')
-            cost+=10000
-        
-    
+            cost += 10000
+
     if not fig is None:
-            showIm(patch, fig=fig); plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
-            pmatlab.addfigurecopy(fig=fig)
-            plt.plot( [float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1]) ], '.--m', linewidth=linewidth, markersize=10, label='transition line')
-            plt.plot( cc[0], cc[0], '.m', markersize=12)
-            for ii in range(4):
-                if ii==0:
-                    lbl = 'electron line'
-                else:
-                    lbl = None                    
-                plt.plot( [op[ii,0], ip[ii,0]], [op[ii,1],ip[ii,1]], '.-', linewidth=linewidth, color=[0,.7,0], label=lbl)
-                pmatlab.plotLabels( np.array( (op[ii,:]+ ip[ii,:])/2 ).reshape( (2,-1) ), '%d' % ii )
-            showIm(modelpatch, fig=fig+1); plt.title('Model patch: cost %.1f' % cost)
-            showIm(np.abs(dd), fig=fig+2); plt.title('diff patch: cost %.1f' % cost); plt.colorbar()
-            plt.show()
-            #plt.pause(1e-6)
-            #tilefigs([fig, fig+1], [2,2])
-            
+        showIm(patch, fig=fig)
+        plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
+        pmatlab.addfigurecopy(fig=fig)
+        plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m', linewidth=linewidth, markersize=10, label='transition line')
+        plt.plot(cc[0], cc[0], '.m', markersize=12)
+        for ii in range(4):
+            if ii == 0:
+                lbl = 'electron line'
+            else:
+                lbl = None
+            plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-', linewidth=linewidth, color=[0, .7, 0], label=lbl)
+            pmatlab.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
+        showIm(modelpatch, fig=fig + 1)
+        plt.title('Model patch: cost %.1f' % cost)
+        showIm(np.abs(dd), fig=fig + 2)
+        plt.title('diff patch: cost %.1f' % cost)
+        plt.colorbar()
+        plt.show()
+        # plt.pause(1e-6)
+        #tilefigs([fig, fig+1], [2,2])
+
     if verbose:
         print('evaluateCross: cost %.4f' % cost)
     return cost, patch, cdata, (H, )
     pass
 
+
 def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=None, istepmodel=.5, cb=None):
     """ Fit model of an anti-crossing """
-    samplesize=[int(ksizemv/istepmodel), int(ksizemv/istepmodel)]
+    samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
-    costfun = lambda param0: evaluateCrossX(param0, imx, samplesize, fig=None, istepmodel=istepmodel, istep=istep)[0]
-    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, istep=istep)[0]
+    #costfun = lambda param0: evaluateCrossX(param0, imx, samplesize, fig=None, istepmodel=istepmodel, istep=istep)[0]
+    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False, istep=istep)[0]
 
     #costfun = lambda x0: costFunction(x0, pglobal, ims)
-    vv=[]
+    vv = []
     def fmCallback(plocal, pglobal):
-        vv.append( (plocal, pglobal)) 
+        vv.append((plocal, pglobal))
     if cfig is not None:
-        cb=lambda x: fmCallback(x, None)
+        cb = lambda x: fmCallback(x, None)
         #cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
         #cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
 
     if 1:
         # simple brute force
-        ranges=list( [ slice(x,x+.1,1) for x in param0] )
+        ranges = list([slice(x, x + .1, 1) for x in param0])
         for ii in range(2):
-            ranges[ii]=slice( param0[ii]-13, param0[ii]+13, 1) 
-        ranges=tuple(ranges)    
+            ranges[ii] = slice(param0[ii] - 13, param0[ii] + 13, 1)
+        ranges = tuple(ranges)
         res = scipy.optimize.brute(costfun, ranges)
-        paramy=res
+        paramy = res
     else:
-        paramy=param0
-    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead',  options={'maxiter': 1200, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
+        paramy = param0
+    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead', options={'maxiter': 1200, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose >= 2}, callback=cb)
     #res = scipy.optimize.minimize(costfun, res.x, method='Powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
-    
-    #for kk in range(1000):
+
+    # for kk in range(1000):
     #    xxx=evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, istep=istep)[0]
-        
+
     if verbose:
-        print('fitModel: score %.2f -> %.2f' % (costfun(param0), res.fun) )
-    return res  
+        print('fitModel: score %.2f -> %.2f' % (costfun(param0), res.fun))
+    return res
 
 
 def Vtrace(cdata, param, fig=None):
     """ Calculate position of next V-trace from fitted model """
-    cc=cdata[0]
-    psi=param[-1]
-    
-    q=np.array([10,0]).reshape( (2,1))
-    p1=cc+pmatlab.rot2D(psi).dot(q)
-    p2=cc+pmatlab.rot2D(np.pi+psi).dot(q)
-    pp=np.array(np.hstack( (p1,cc,p2)))
-    pp=np.array(np.hstack( (p1,p2)))
+    cc = cdata[0]
+    psi = param[-1]
+
+    q = np.array([10, 0]).reshape((2, 1))
+    p1 = cc + pmatlab.rot2D(psi).dot(q)
+    p2 = cc + pmatlab.rot2D(np.pi + psi).dot(q)
+    pp = np.array(np.hstack((p1, cc, p2)))
+    pp = np.array(np.hstack((p1, p2)))
     if fig is not None:
         plt.figure(25)
 
@@ -1463,160 +1521,170 @@ def Vtrace(cdata, param, fig=None):
         except:
             # fontsize does not work with older matplotlib versions...
             pass
-    psi,slope=calcSlope(pp)
+    psi, slope = calcSlope(pp)
     return pp, cc, slope
 
+
 def calcSlope(pp):
-    q=-np.diff(pp, axis=1)
+    q = -np.diff(pp, axis=1)
     psi = math.atan2(q[1], q[0])
-    slope=q[1]/q[0]
+    slope = q[1] / q[0]
 
-    return psi, slope    
-    
-    
-#%%
+    return psi, slope
+
 
 #%%
-@pmatlab.static_var("scaling0", np.diag([1.,1,1]) )
+
+#%%
+@pmatlab.static_var("scaling0", np.diag([1., 1, 1]))
 def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=np.deg2rad(70), ksizemv=12, dthr=8, dwidth=3, alldata=None, px=None):
     """ Cost function for line fitting
-    
+
         pp (list or array): line parameters
         imx (numpy array): image to fit to
         istep (float)
         px (array): translational offset to operate from
-    
-    """
-    istepmodel=.5
-    samplesize=[int(imx.shape[1]*istep/istepmodel), int(imx.shape[0]*istep/istepmodel)]
 
-    LW=2 # [mV]
-    LL=15 # [mV]
-    
-    H=costFunctionLine.scaling0.copy()
-    H[0,0]=istep/istepmodel
-    H[1,1]=istep/istepmodel
-    
+    """
+    istepmodel = .5
+    samplesize = [int(imx.shape[1] * istep / istepmodel), int(imx.shape[0] * istep / istepmodel)]
+
+    LW = 2  # [mV]
+    LL = 15  # [mV]
+
+    H = costFunctionLine.scaling0.copy()
+    H[0, 0] = istep / istepmodel
+    H[1, 1] = istep / istepmodel
+
     #patch=linetools.sampleImage(im, pp, samplesize, fig=11, clearfig=True, nrsub=1)
-    dsize=(samplesize[0], samplesize[1])
-    patch=cv2.warpPerspective(imx.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
-    pm0=np.array(pp[0:2]).reshape( (1,2))/istepmodel # [pixel]
+    dsize = (samplesize[0], samplesize[1])
+    patch = cv2.warpPerspective(imx.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
+    pm0 = np.array(pp[0:2]).reshape((1, 2)) / istepmodel  # [pixel]
     if px is None:
-        pxpatch=[patch.shape[1]/2, patch.shape[0]/2 ]
+        pxpatch = [patch.shape[1] / 2, patch.shape[0] / 2]
     else:
-        pxpatch = (float(istep)/istepmodel) * np.array(px)
-    pm=pm0+pxpatch
+        pxpatch = (float(istep) / istepmodel) * np.array(px)
+    pm = pm0 + pxpatch
     #modelpatch, cdata=createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=0)
 
-    lowv=np.percentile(imx, 1)
-    highv=np.percentile(imx, 95)
-    theta=pp[2]
-    
+    lowv = np.percentile(imx, 1)
+    highv = np.percentile(imx, 95)
+    theta = pp[2]
+
     if verbose:
-            print('costFunctionLine: sample line patch: lowv %.1f, highv %.1f' % (lowv, highv))
-            #print(px)
-    linepatch=lowv+np.zeros( (samplesize[1], samplesize[0] )  )  
-    lineSegment(linepatch, pm, theta=pp[2], w=LW/istepmodel, l=LL/istepmodel, H=highv-lowv, ml=-6/istepmodel)
+        print('costFunctionLine: sample line patch: lowv %.1f, highv %.1f' % (lowv, highv))
+        # print(px)
+    linepatch = lowv + np.zeros((samplesize[1], samplesize[0]))
+    lineSegment(linepatch, pm, theta=pp[2], w=LW / istepmodel, l=LL / istepmodel, H=highv - lowv, ml=-6 / istepmodel)
     #plt.figure(99); plt.clf(); plt.imshow(lineseg, interpolation='nearest'); plt.colorbar()
     #plt.figure(99); plt.clf(); plt.imshow(linepatch-lineseg, interpolation='nearest'); plt.colorbar()
     #plt.figure(99); plt.clf(); plt.imshow(linepatch, interpolation='nearest'); plt.colorbar()
-    dd=patch-(linepatch)
-    cost=np.linalg.norm(dd)
-    cost0=cost
-    
+    dd = patch - (linepatch)
+    cost = np.linalg.norm(dd)
+    cost0 = cost
+
     if 1:
-        ddx0=np.linalg.norm(pm0) # [pixel]
-        ddx=np.linalg.norm(pm0) # [pixel]
+        ddx0 = np.linalg.norm(pm0)  # [pixel]
+        ddx = np.linalg.norm(pm0)  # [pixel]
         if verbose:
-            print('costFunctionLine: calculate additonal costs: dist %.1f [mV]' % (ddx*istepmodel) )
-        
-        ddx=pmatlab.smoothstep(ddx, dthr/istepmodel,dwidth/istepmodel)
-        if verbose>=2: 
-            print('  ddx: %.3f, thr %.3f'  % (ddx, dthr/istepmodel))
-        cost+=100000*ddx
+            print('costFunctionLine: calculate additonal costs: dist %.1f [mV]' % (ddx * istepmodel))
+
+        ddx = pmatlab.smoothstep(ddx, dthr / istepmodel, dwidth / istepmodel)
+        if verbose >= 2:
+            print('  ddx: %.3f, thr %.3f' % (ddx, dthr / istepmodel))
+        cost += 100000 * ddx
     #cost = sLimits(cost, plocal, pm, maxshift, maxangle)
-    
+
     if fig is not None:
-        pmatlab.cfigure(fig); plt.clf()
-        plt.imshow(patch, interpolation='nearest'); plt.title('patch: cost %.2f, dist %.1f' % (cost, ddx0*istep ))
+        pmatlab.cfigure(fig)
+        plt.clf()
+        plt.imshow(patch, interpolation='nearest')
+        plt.title('patch: cost %.2f, dist %.1f' % (cost, ddx0 * istep))
         plt.colorbar()
-        pm=pm.flatten()
+        pm = pm.flatten()
         #plt.plot(pm0.flatten()[0], pm0.flatten()[1], 'dk', markersize=12, label='initial starting point?')
         plt.plot(pm[0], pm[1], '.g', markersize=24, label='fitted point')
         plt.plot(pxpatch[0], pxpatch[1], '.m', markersize=18, label='offset for parameters')
 
+        qq = np.array(pm.reshape(2, 1) + (LL / istepmodel) * pmatlab.rot2D(theta).dot(np.array([[1, -1], [0, 0]])))
 
-        qq=np.array(pm.reshape(2,1)+ (LL/istepmodel)*pmatlab.rot2D(theta).dot(np.array([[1,-1],[0,0]])))
-        
-        plt.plot(qq[0,:], qq[1,:], '--k', markersize=24, linewidth=2)
+        plt.plot(qq[0, :], qq[1, :], '--k', markersize=24, linewidth=2)
 
-        #print(pm)
+        # print(pm)
         plt.axis('image')
 #       plt.colorbar()
-        
-        pmatlab.cfigure(fig+1); plt.clf()
-        plt.imshow(linepatch, interpolation='nearest'); plt.title('line patch')
+
+        pmatlab.cfigure(fig + 1)
+        plt.clf()
+        plt.imshow(linepatch, interpolation='nearest')
+        plt.title('line patch')
         plt.plot(px[0], px[1], '.m', markersize=24)
         plt.axis('image')
         plt.colorbar()
-        pmatlab.tilefigs([fig,fig+1])
-        
-        if verbose>=2:
-            pmatlab.cfigure(fig+2); plt.clf()
-            xx=np.arange(0, 20, .1)
-            xxstep=istepmodel*pmatlab.smoothstep(xx/istepmodel, dthr/istepmodel,(1/dwidth)/istepmodel)
-            plt.plot(xx, xxstep, '.-b' , label='distance step')
+        pmatlab.tilefigs([fig, fig + 1])
+
+        if verbose >= 2:
+            pmatlab.cfigure(fig + 2)
+            plt.clf()
+            xx = np.arange(0, 20, .1)
+            xxstep = istepmodel * pmatlab.smoothstep(xx / istepmodel, dthr / istepmodel, (1 / dwidth) / istepmodel)
+            plt.plot(xx, xxstep, '.-b', label='distance step')
             plt.xlabel('Distance [mV]')
             plt.legend()
-            
+
     if verbose:
         print('costFucntion: cost: base %.2f -> final %.2f' % (cost0, cost))
-        if verbose>=2:
-            ww=np.abs(dd).mean(axis=0)
-    
+        if verbose >= 2:
+            ww = np.abs(dd).mean(axis=0)
+
             print('costFunction: dd %s ' % ww)
 
-    return cost    
-    
-    
-if __name__=='__main__':
-        res.x=res.x+[.0,.0,.15]
-        pp=res.x
-        verbose=2
-        c=costFunctionLine(pp, imx, istep, verbose=verbose, fig=fig, px=px); plt.figure(fig); plt.xlabel(cgate); plt.ylabel(igate); #plt.close(fig+1)
-        plt.colorbar()
-        
+    return cost
+
+
+if __name__ == '__main__':
+    res.x = res.x + [.0, .0, .15]
+    pp = res.x
+    verbose = 2
+    c = costFunctionLine(pp, imx, istep, verbose=verbose, fig=fig, px=px)
+    plt.figure(fig)
+    plt.xlabel(cgate)
+    plt.ylabel(igate)  # plt.close(fig+1)
+    plt.colorbar()
+
 #%%
 
 import scipy
 from scipy.optimize import minimize
 from qtt.deprecated.linetools import costFunctionLine
-figl=100
-
+figl = 100
 
 
 def fitLine(im, param0=None, fig=None):
     """ Fit a line local to a model """
-    if param0 is None:        
-        param0=[0,0,.5*np.pi] # x,y,theta, 
-    istep=.5
-    verbose=1
-    cb=None
-    imx=-np.array(alldata.diff_dir_xy)
-    px=[imx.shape[1]/2, imx.shape[0]/2 ]
+    if param0 is None:
+        param0 = [0, 0, .5 * np.pi]  # x,y,theta,
+    istep = .5
+    verbose = 1
+    cb = None
+    imx = -np.array(alldata.diff_dir_xy)
+    px = [imx.shape[1] / 2, imx.shape[0] / 2]
 
-    #qtt.data.dataset2Dmetadata(alldata)
+    # qtt.data.dataset2Dmetadata(alldata)
 
-    costfun=lambda x : costFunctionLine(x, imx, istep, verbose=0, px=px, dthr=7, dwidth=4)
-    res = minimize(costfun, param0, method='powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
-    
-    cgate=alldata.diff_dir_xy.set_arrays[1].name; igate=alldata.diff_dir_xy.set_arrays[0].name
-    #res.x=param0
-    c=costFunctionLine(res.x, imx, istep, verbose=1, fig=figl, px=px); plt.figure(figl); plt.xlabel(cgate); plt.ylabel(igate);
-    
-                
-if __name__=='__main__':
-        param0=[0,0,.5*np.pi] # x,y,theta, 
-        
-        fitdata = fitLine(im, param0=None, fig=None)
-        
+    costfun = lambda x: costFunctionLine(x, imx, istep, verbose=0, px=px, dthr=7, dwidth=4)
+    res = minimize(costfun, param0, method='powell', options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose >= 2}, callback=cb)
+
+    cgate = alldata.diff_dir_xy.set_arrays[1].name
+    igate = alldata.diff_dir_xy.set_arrays[0].name
+    # res.x=param0
+    c = costFunctionLine(res.x, imx, istep, verbose=1, fig=figl, px=px)
+    plt.figure(figl)
+    plt.xlabel(cgate)
+    plt.ylabel(igate)
+
+
+if __name__ == '__main__':
+    param0 = [0, 0, .5 * np.pi]  # x,y,theta,
+
+    fitdata = fitLine(im, param0=None, fig=None)

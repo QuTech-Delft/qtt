@@ -1518,6 +1518,7 @@ try:
         p2 = polygon3.Polygon(x2)
         p = p1 & p2
         x = np.array(p)
+        x = x.reshape((-1,2))
         return x
 except:
     try:
