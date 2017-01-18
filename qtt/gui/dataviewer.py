@@ -6,6 +6,8 @@ import logging
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
+from  qtpy.QtWidgets import QWidget
+
 import pyqtgraph as pg
 import argparse
 
@@ -73,9 +75,15 @@ class DataViewer(QtWidgets.QWidget):
         self._treemodel = QtGui.QStandardItemModel()
         self.logtree.setModel(self._treemodel)
         self.__debug = dict()
-        self.qplot = QtPlot()  # remote=False, interval=0)
-        self.plotwindow = self.qplot
-
+        if isinstance(QtPlot, QWidget):
+            self.qplot = QtPlot()  # remote=False, interval=0)
+        else:
+            self.qplot = QtPlot(remote=False)  # remote=False, interval=0)
+        if isinstance(self.qplot, QWidget):
+            self.plotwindow = self.qplot
+        else:
+            self.plotwindow = self.qplot.win
+    
         topLayout = QtWidgets.QHBoxLayout()
         self.reloadbutton = QtWidgets.QPushButton()
         self.reloadbutton.setText('Reload data')
@@ -195,6 +203,8 @@ class DataViewer(QtWidgets.QWidget):
                     from qcodes.data.gnuplot_format import GNUPlotFormat
                     hformatter = GNUPlotFormat()
                     data = qcodes.load_data(tag, formatter=hformatter)
+                    logging.debug('loaded GNUPlotFormat datasett %s' % tag)
+
                 except Exception as ex:
                     print('default formatter not working, trying HDF5')
                     print('tag: %s' % tag)
@@ -231,7 +241,9 @@ class DataViewer(QtWidgets.QWidget):
 
 if __name__ == '__main__':
     import sys
-    sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
+    if len(sys.argv) < 2:
+        #sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'data', 'qutech', 'data')]
+        sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
@@ -245,7 +257,7 @@ if __name__ == '__main__':
 
     dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
     dataviewer.setGeometry(1280, 60, 700, 800)
-    dataviewer.qplot.setMaximumHeight(400)
+    dataviewer.plotwindow.setMaximumHeight(400)
     dataviewer.show()
     self = dataviewer
 

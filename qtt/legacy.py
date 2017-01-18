@@ -34,6 +34,24 @@ from qtt.scans import scan2D, scan1D
 from qtt.tools import stripDataset
 
 
+def positionScanjob(scanjob, pt):
+    """ Helper function
+
+    Changes an existing scanjob to scan at the centre of the specified point
+
+    """
+    scanjob = copy.deepcopy(scanjob)
+    sh = float(pt[0] - (scanjob['sweepdata']['start'] + scanjob['sweepdata']['end']) / 2)
+    scanjob['sweepdata']['start'] += sh
+    scanjob['sweepdata']['end'] += sh
+
+    sh = float(pt[1] - (scanjob['stepdata']['start'] + scanjob['stepdata']['end']) / 2)
+    scanjob['stepdata']['start'] += sh
+    scanjob['stepdata']['end'] += sh
+
+    return scanjob
+
+
 def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     """ Scan a one-dot
 
@@ -60,7 +78,9 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': -3})
     sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': -3})
 
-    wait_time = qtt.scans.waitTime(gg[2], gate_settle=getattr(station, 'gate_settle', None))
+    wait_time = qtt.scans.waitTime(gg[2], station=station)
+    wait_time_base = qtt.scans.waitTime(None, station=station)
+    wait_time_sweep = np.minimum(wait_time/6., .15)
 
     if full == 0:
         stepdata['step'] = -12
@@ -71,8 +91,10 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
         wait_time = 0
 
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
-    scanjob['wait_time_step']=8
-    alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time, background=False)
+    scanjob['wait_time_step'] = wait_time_base + 3 * wait_time
+    scanjob['wait_time_sweep'] = wait_time_sweep
+    
+    alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time_sweep, background=False)
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
 
@@ -80,6 +102,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
 
     return alldata, od
 
+import time
 
 def onedotPlungerScan(station, od, verbose=1):
     """ Make a scan with the plunger of a one-dot """
@@ -88,17 +111,20 @@ def onedotPlungerScan(station, od, verbose=1):
     gg = od['gates']
     ptv = od['setpoint']
 
-    gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
-    gates.set(gg[0], ptv[1, 0] + 20)
 
     pv = od['pinchvalues'][1]
 
     scanjob = dict({'keithleyidx': [od['instrument']]})
     scanjob['sweepdata'] = dict({'gates': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
 
-    wait_time = qtt.scans.waitTime(gg[1], gate_settle=getattr(station, 'gate_settle', None))
+    gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
+    gates.set(gg[0], ptv[1, 0] + 20)
+    gates.set(gg[1], scanjob['sweepdata']['start'])
 
-    alldata = scan1D(scanjob, station, delay=wait_time, title_comment='sweep of plunger')
+    wait_time = qtt.scans.waitTime(gg[1], station=station)
+    time.sleep(wait_time)
+    
+    alldata = scan1D(scanjob, station, wait_time=wait_time/4., title_comment='sweep of plunger')
     alldata.metadata['od'] = od
     stripDataset(alldata)
     scandata = dict(dataset=alldata, od=od)
@@ -107,6 +133,7 @@ def onedotPlungerScan(station, od, verbose=1):
 #%%
 
 from qtt.scans import scanPinchValue
+
 
 def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=0, verbose=1):
     """ Scan the pinch-off values for the 3 main gates of a 1-dot """
@@ -150,8 +177,16 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     return imfilerel, imfile
 
 
-def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3):
-    c2 = plt.Circle(pt, radius, color=color, fill=False, linewidth=3, alpha=alpha)
+def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
+    """ Plot a circle in a matplotlib figure
+    
+    Args:
+        pt (array): center of circle
+        radius (float): radius of circle
+        color (str or list)
+        alpha (float): transparency        
+    """
+    c2 = plt.Circle(pt, radius, color=color, fill=False, linewidth=3, alpha=alpha, **kwargs)
     plt.gca().add_artist(c2)
     return c2
 
@@ -159,8 +194,6 @@ def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3):
 def scaleCmap(imx, setclim=True, verbose=0):
     """ Scale colormap of sensing dot image """
     p99 = np.percentile(imx, 99.9)
-    mx = imx.max()
-
     mval = p99
 
     # 0 <-> alpha
@@ -474,14 +507,15 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
     ---------
     im: array
         input image
-    imextend: list
-        coordinates of image region
+    imextend: list of 4 floats
+        coordinates of image region (x0, x1, y0, y1)
     mvx, mvy : float
         number of mV per pixel requested
 
     Returns
     -------
-     ims, (fw, fh, mvx, mvy, H) : data
+     ims: transformed image
+     (fw, fh, mvx, mvy, H) : data
          H is the homogeneous transform from original to straightened image
 
     """
@@ -496,8 +530,8 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
     if mvy is None:
         mvy = mvx
 
-    fw = (float(mvx0) / mvx)
-    fh = (float(mvy0) / mvy)
+    fw = np.abs((float(mvx0) / mvx))
+    fh = np.abs((float(mvy0) / mvy))
     if verbose:
         print('straightenImage: fx %.4f fy %.4f' % (fw, fh))
         print('straightenImage: result mvx %.4f mvy %.4f' % (mvx, mvy))
@@ -639,8 +673,6 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
     return vv
 
 
-
-
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
     """ Clean up image from sensing dot """
     verbose = int(verbose)
@@ -722,7 +754,7 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
     # imextent, xdata, ydata, im = get2Ddata(alldata, fastscan=None, verbose=0, fig=None, midx=2)
     extent, g0, g1, xdata, ydata, arrayname = dataset2Dmetadata(alldata)
     im, tr = dataset2image(alldata)
-    imextent = tr.extent_image()
+    imextent = tr.matplotlib_image_extent()
 
     im = fixReversal(im, verbose=0)
     imc = cleanSensingImage(im, sigma=.93, verbose=0)
@@ -749,12 +781,13 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
 
     if fig is not None:
         ims, (fw, fh, mvx, mvy, _) = straightenImage(imc, imextent, mvx=1, verbose=0)
-        show2D(alldata, ims, fig=fig)
+        show2D(alldata, ims, fig=fig, verbose=0)
         scaleCmap(ims)
+        plt.axis('image')
         plt.title('zero-zero point (zoom)')
 
         # plotPoints(ptmv, '.m', markersize=22)
-        c2 = plotCircle(ptmv, radius=11.5, color='r', linewidth=3, alpha=.5)
+        c2 = plotCircle(ptmv, radius=11.5, color='r', linewidth=3, alpha=.5, label='fitted point')
 
         plt.axis('image')
 
@@ -860,9 +893,9 @@ def showODresults(od, dd2d, fig=200, imx=None, ww=None):
     if not fig:
         return
 
-    tmp = show2D(dd2d, fig=fig)
+    tmp = show2D(dd2d, fig=fig, verbose=0)
 
-    _ = show2D(dd2d, fig=fig + 1)
+    _ = show2D(dd2d, fig=fig + 1, verbose=0)
     plt.title('result')
     plt.axis('image')
     plotPoints(balancepoint, '.m', markersize=18)
@@ -957,7 +990,7 @@ def fillPoly(im, poly_verts, color=None):
     return grid
 
 
-def getPinchvalues(od, xdir):
+def getPinchvalues(od, xdir, verbose=1):
     """ Get pinch values from recorded data """
     gg = od['gates']
     od['pinchvalues'] = -800 * np.ones(3)
@@ -966,13 +999,11 @@ def getPinchvalues(od, xdir):
         pp = pinchoffFilename(g, od=None)
         pfile = os.path.join(xdir, pp)
 
-        print('getPinchvalues: gate %s' % g)
         dd, metadata = qtt.data.loadDataset(pfile)
-        # dd = load_data(pfile)
-
-        # print(dd.keys())
 
         adata = qtt.algorithms.analyseGateSweep(dd, fig=0, minthr=100, maxthr=800, verbose=0)
+        if verbose:
+            print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchvalue']))
         od['pinchvalues'][jj] = adata['pinchvalue']
     return od
 
@@ -984,7 +1015,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
     jobs = []
     for jj, td in enumerate(two_dots):
-        print('\n#### analysing two-dot: %s' % str(td['gates']))
+        if verbose:
+            print('\n#### analysing two-dot: %s' % str(td['gates']))
 
         try:
             od1 = 'dot-' + '-'.join(td['gates'][0:3])
@@ -1007,10 +1039,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                 dstr = '%s-sweep-2d' % (od['name'])
                 dd2d = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
 
-                if verbose >= 2:
-                    print('  at getPinchvalues')
-
-                od = getPinchvalues(od, xdir)
+                od = getPinchvalues(od, xdir, verbose=verbose >= 2)
 
                 if fig:
                     fign = 1000 + 100 * jj + 10 * ii
@@ -1019,9 +1048,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     fign = None
                     figm = None
 
-                if verbose >= 2:
-                    print('  at onedotGetBalance')
-                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=1, fig=fign)
+                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=verbose >= 2, fig=fign)
 
                 dstrhi = '%s-sweep-2d-hires' % (od['name'])
                 tmphi = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
@@ -1034,7 +1061,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     od['setpoint'] = ptv + 10
 
                 if verbose >= 2:
-                    print('  at fillPoly')
+                    print('createDoubleDotJobs: at fillPoly')
                 imx = 0 * wwarea.copy().astype(np.uint8)
                 tmp = fillPoly(imx, od['balancefit'])
                 # cv2.fillConvexPoly(imx, od['balancefit'],color=[1] )
@@ -1064,17 +1091,19 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             scanjob = dict({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
+            
+            sweeprange=240
+            if p2=='P3':
+                sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
 
             e1 = ods[0]['pinchvalues'][1]
             e2 = ods[1]['pinchvalues'][1]
-            e1 = float(np.maximum(basevaluesTD[p1] - 120, e1))
-            e2 = float(np.maximum(basevaluesTD[p2] - 120, e2))
-            s1 = basevaluesTD[p1] + 120
-            s2 = basevaluesTD[p2] + 120
-            # s1=np.minimum(basevalues[p1], e1+240)
-            # s2=np.minimum(basevalues[p2], e2+240)
+            e1 = float(np.maximum(basevaluesTD[p1] - sweeprange/2, e1))
+            e2 = float(np.maximum(basevaluesTD[p2] - sweeprange/2, e2))
+            s1 = basevaluesTD[p1] + sweeprange/2
+            s2 = basevaluesTD[p2] + sweeprange/2
             scanjob['stepdata'] = dict({'gates': [p1], 'start': s1, 'end': e1, 'step': -2})
-            scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -2})
+            scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -4})
 
             scanjob['keithleyidx'] = sdinstruments
             scanjob['basename'] = 'doubledot-2d'

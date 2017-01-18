@@ -47,6 +47,7 @@ def stripDataset(dataset):
         dataset.formatter.close_file(dataset)
     except:
         pass
+    return dataset
 
 #%%
 
@@ -173,6 +174,7 @@ def scanTime(dd):
     w = dd.metadata.get('scantime', None)
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
+        
     return w
 
 

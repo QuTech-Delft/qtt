@@ -203,25 +203,14 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
         return cost
 
 #%%
+
+
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
     # XX = dd['data_array']
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
-    # scanjob=dd.metadata['scanjob']
-    # stepdata = scanjob['stepdata']
-    # g0 = stepdata['gates'][0]
-    # sweepdata = scanjob['sweepdata']
-    # g2 = sweepdata['gates'][0]
-
-    # nx = vstep.size
-    # ny = vsweep.size
-
     im, impixel, tr = dataset2image2(dd)
-
-    # im= np.array(dd.arrays[arrayname])
-    # tr = qtt.data.image_transform(dd)
-    # impixel = tr.transform(im)
 
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
 
@@ -237,7 +226,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     lv = lv + lvstd / 2  # works for very smooth images
 
     lv = (.45 * pmatlab.otsu(ims) + .55 * lv)  # more robust
-    if verbose:
+    if verbose >= 2:
         print('onedotGetBalance: threshold for low value %.1f' % lv)
 
     # balance point: method 1 (first point above threshold of 45 degree line)
@@ -298,8 +287,8 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     # print(od['balancefitpixel'])
 
     if verbose:
-        print('balance point 0 at: %.1f %.1f [mV]' % (ptv[0, 0], ptv[1, 0]))
-        print('balance point at: %.1f %.1f [mV]' % (
+        print('onedotGetBalance %s: balance point 0 at: %.1f %.1f [mV]' % (od['name'], ptv[0, 0], ptv[1, 0]))
+        print('onedotGetBalance: balance point at: %.1f %.1f [mV]' % (
             od['balancepoint'][0, 0], od['balancepoint'][1, 0]))
 
     if fig is not None:
@@ -353,4 +342,3 @@ if __name__ == '__main__':
     reload(qtt.data)
     dd = alldata
     od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)
-

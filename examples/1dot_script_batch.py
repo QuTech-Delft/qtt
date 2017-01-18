@@ -22,7 +22,6 @@ import matplotlib.pyplot
 if __name__ == '__main__':
     matplotlib.pyplot.ion()
 
-
 import multiprocessing
 if __name__ == '__main__':
     try:
@@ -31,7 +30,8 @@ if __name__ == '__main__':
         pass
 
 import webbrowser
-import time, datetime
+import time
+import datetime
 import copy
 import matplotlib.pyplot as plt
 
@@ -41,16 +41,26 @@ from qcodes.plots.qcmatplotlib import MatPlot
 from functools import partial
 import qtt.scans
 
+
 import qtt
 import qtt.scans
 from qtt.scans import experimentFile
+from qtt import pgeometry
+from qtt.data import write_data
 import qtt.reports
-#reload(qtt); reload(qtt.scans); reload(qtt.data); reload(qtt.algorithms); reload(qtt.algorithms.generic); reload(qtt); reload(qtt.reports)
-#import qcodes.utils.reload_code
-#_=qcodes.utils.reload_code.reload_code()
+if 1:
+    reload(qtt)
+    reload(qtt.scans)
+    reload(qtt.data)
+    reload(qtt.algorithms)
+    reload(qtt.algorithms.generic)
+    reload(qtt)
+    reload(qtt.reports)
+    import qcodes.utils.reload_code
+    #_=qcodes.utils.reload_code.reload_code()
 from qcodes.utils.validators import Numbers
 
-from qtt.data import *
+from qtt.data import getDateString, experimentFile
 from qtt.scans import scan2D, scan1D, onedotHiresScan
 from qtt.legacy import getODbalancepoint
 from qtt.reports import generateOneDotReport
@@ -63,6 +73,10 @@ from qtt.data import saveExperimentData, loadExperimentData
 if __name__ == '__main__':
     app = pyqtgraph.mkQApp()
 
+if __name__ == '__main__':
+    from qcodes.data.hdf5_format import HDF5FormatMetadata as MyFormatter
+    from qcodes.data.gnuplot_format import GNUPlotFormat as MyFormatter
+    qcodes.DataSet.default_formatter = MyFormatter()
 
 #%% Load configuration
 
@@ -89,8 +103,10 @@ if __name__ == '__main__':
 
     server_name = 'virtualV2-%d' % np.random.randint(100)
     server_name = None
+    msetup.close()
     msetup.initialize(reinit=False, server_name=server_name)
     #msetup.initialize(reinit=False, server_name=None )
+    station = msetup.getStation()
 
     bottomgates = sample.bottomGates()
 
@@ -162,8 +178,8 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-12'
-    Tvalues = np.array([-381])
+    basetag = 'batch-2017-1-17n'
+    Tvalues = np.array([-411])
 
     b = False
 
@@ -219,7 +235,7 @@ if __name__ == '__main__':
 
     # define the index of the sensing dot to use for double-dot scans
     sdid = 1
-    # sdid=2
+    sdid=2
 
     ggsd = ['SD%d%s' % (sdid, c) for c in ['a', 'b', 'c']]
 
@@ -238,7 +254,7 @@ if __name__ == '__main__':
         hiresstep = -4
 
     def stepDelay(gate, minstepdelay=0, maxstepdelay=10):
-        return 0
+        return 0.1
 
 #%%
 
@@ -267,8 +283,6 @@ def closeExperiment(station, eid=None):
 
     print('closed experiment: %s' % getDateString())
 
-#%% One-dot measurements
-
 from qtt.legacy import onedotScan, onedotScanPinchValues
 
 
@@ -276,7 +290,9 @@ from qtt.legacy import onedotScan, onedotScanPinchValues
 #od, ptv, pt,ims,lv, wwarea=qtt.onedotGetBalance(od, alldata, verbose=1, fig=10)
 
 
-#%%
+#%% One-dot measurements
+
+
 
 
 for ii, Tvalue in enumerate(Tvalues):
@@ -366,11 +382,15 @@ for ii, Tvalue in enumerate(Tvalues):
 
         od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
         alldata, od = onedotScan(station, od, basevaluesS, outputdir, verbose=1)
+        
+        if (np.any(np.isnan(od['setpoint']))):
+            raise Exception('please debug!')
+            
         #qtt.QtPlot(alldata.amplitude, remote=False, interval=0)
         plt.figure(10)
         plt.clf()
         MatPlot(alldata.arrays[alldata.default_parameter_name()], interval=0, num=10)
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=19)
+        pgeometry.plotPoints(od['balancepoint'], '.m', markersize=19)
 
         _ = wait_bg_finish()
 
@@ -393,6 +413,7 @@ for ii, Tvalue in enumerate(Tvalues):
 
         basenamedot = '%s-dot' % (od['name'])
         saveExperimentData(outputdir, od, tag='one_dot', dstr=basenamedot)
+        #x=loadExperimentData(outputdir, tag='one_dot', dstr=basenamedot)
 
         gates.resetgates(od['gates'], basevaluesS)
 
@@ -634,24 +655,39 @@ for ii, Tvalue in enumerate(Tvalues):
         else:
             # slow scan
             print('slow scan without compensation!')
+
+            scanjob['stepdata']['step'] = -4
+            scanjob['sweepdata']['step'] = -4
+            scanjob['wait_time_step'] = 0
+
+            ds = 90
+            scanjob['sweepdata']['start'] += ds
+            scanjob['sweepdata']['end'] += -ds
+            scanjob['stepdata']['start'] += ds
+            scanjob['stepdata']['end'] += -ds
+
+            qtt.live.liveplotwindow.clear()
             sd.initialize(setPlunger=True)
             defaultactivegates = []
-            alldata = scan2D(station, scanjob, title_comment='scan double-dot', wait_time=None, background=False)
+            alldata = scan2D(station, scanjob, wait_time=None, background=False)
             dstr = 'doubledot-%s-gc' % scanjob['td']['name']
             alldata.metadata['sd'] = str(sd)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
 
-            from qtt.legacy import analyse2dot
-            pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
-            print('WARNING: skipping analysis')
-            print('WARNING: skipping hires scan')
-            if 0:
-                scanjobc = positionScanjob(scanjob, resultsfine['ptmv'])
-                alldatac, data = scan2Dfastjob(scanjobc, TitleComment='scan double-dot', wait_time=wait_time, activegates=defaultactivegates())
-                dstr = 'doubledot-center-%s' % scanjob['td']['name']
-                saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+        from qtt.legacy import analyse2dot
+        pt, resultsfine = analyse2dot(alldata, fig=300, efig=None, istep=1)
 
-                ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+        from qtt.legacy import positionScanjob
+        scanjobc = positionScanjob(scanjob, resultsfine['ptmv'])
+        if simulation():
+
+            alldatac = scan2D(station, scanjobc)
+            dstr = 'doubledot-center-%s' % scanjob['td']['name']
+            saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
+
+            ptI, resultsfineI = analyse2dot(alldatac, fig=300, efig=None, istep=1)
+        else:
+            print('WARNING: skipping hires scan')
 
         #%% Scan in fast mode...
         if 0:
@@ -754,7 +790,7 @@ import webbrowser
 
 if __name__ == '__main__':
     reload(qtt.reports)
-    
+
     one_dots = sample.get_one_dots(full=2)
     two_dots = sample.get_two_dots(full=1)
 
@@ -767,7 +803,7 @@ if __name__ == '__main__':
 
     try:
         # generate report
-        fname, _ = qtt.reports.generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid)
+        fname, _ = qtt.reports.generateDoubleDotReport(two_dots, resultsdir2d, tag=tag2d, sdidx=sdid, verbose=1)
         webbrowser.open(fname, new=2)
     except Exception as e:
         print(e)
