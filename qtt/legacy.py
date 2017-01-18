@@ -754,7 +754,7 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
     # imextent, xdata, ydata, im = get2Ddata(alldata, fastscan=None, verbose=0, fig=None, midx=2)
     extent, g0, g1, xdata, ydata, arrayname = dataset2Dmetadata(alldata)
     im, tr = dataset2image(alldata)
-    imextent = tr.extent_image()
+    imextent = tr.matplotlib_image_extent()
 
     im = fixReversal(im, verbose=0)
     imc = cleanSensingImage(im, sigma=.93, verbose=0)

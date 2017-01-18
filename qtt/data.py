@@ -214,7 +214,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     labels = [s.name for s in array.set_arrays]
 
     xx = extent
-    xx = tr.extent_image()
+    xx = tr.matplotlib_image_extent()
     ny = vstep.size
     nx = vsweep.size
 
@@ -331,6 +331,9 @@ class image_transform:
         return self._istep
 
     def image_extent(self):
+        return self.extent
+        
+    def matplotlib_image_extent(self):
         """ Return matplotlib style image extent
 
         Returns:
