@@ -15,19 +15,19 @@ class TestVirtualGates(TestCase):
 
     def setUp(self):
         gate_map = {
-        'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4),
-        'L': (0, 5), 'D1': (0, 6), 'R': (0, 7) }
+            'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4),
+            'L': (0, 5), 'D1': (0, 6), 'R': (0, 7)}
 
-        self.ivvi = VirtualIVVI('ivvi', model=None, server_name= None)
-        self.gates = virtual_gates('gates', instruments=[self.ivvi], gate_map=gate_map , server_name= None)
-        
+        self.ivvi = VirtualIVVI('ivvi', model=None, server_name=None)
+        self.gates = virtual_gates('gates', instruments=[self.ivvi], gate_map=gate_map, server_name=None)
+
     def tearDown(self):
         self.gates.close()
         self.ivvi.close()
 
     def test_gates(self):
         self.gates.R.set(100)
-        self.assertEqual( self.gates.R.get(), 100)
+        self.assertEqual(self.gates.R.get(), 100)
 
 
 class TestVirtualDot(TestCase):
@@ -43,6 +43,6 @@ class TestVirtualDot(TestCase):
 
 
 if __name__ == '__main__':
-    t= TestVirtualGates()
+    t = TestVirtualGates()
     t = TestVirtualDot()
     pass

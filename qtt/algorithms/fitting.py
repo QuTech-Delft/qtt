@@ -34,12 +34,12 @@ def initFermiLinear(xdata, ydata, fig=None):
         dx = np.mean(dx)
         dd = np.hstack((np.diff(ydata[0:nx]), np.diff(ydata[-nx:])))
         dd = np.convolve(dd, np.array([1., 1, 1]) / 3)  # smooth
-        if dd.size>15:
+        if dd.size > 15:
             dd = np.array(sorted(dd))
             w = int(dd.size / 10)
             a = np.mean(dd[w:-w]) / dx
         else:
-            a=np.mean(dd)/dx
+            a = np.mean(dd) / dx
         b = my - a * mx
         xx = np.hstack((xdata[0:nx], xdata[-nx:]))
         ab = [a, b]

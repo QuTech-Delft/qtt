@@ -63,7 +63,7 @@ def dataset2image(dataset, mode='pixel'):
 
     The image is converted so that it is in conventional coordinates, e.g. the
     step values (vertical axis) go from low to high (bottom to top).
-    
+
     Args:
         dataset
     Returns:
@@ -104,7 +104,8 @@ def dataset2image2(dataset):
 
     return imraw, impixel, tr
 
-#%% 
+#%%
+
 
 def dataset_get_istep(alldata, mode=None):
     """ Return number of mV per pixel in scan """
@@ -115,8 +116,8 @@ def dataset_get_istep(alldata, mode=None):
             extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
             istep = np.mean(np.diff(vstep))
         except:
-            _,_,_,istep,_ = dataset1Dmetadata(alldata)
-                                        
+            _, _, _, istep, _ = dataset1Dmetadata(alldata)
+
     return istep
 
 
@@ -297,9 +298,9 @@ class image_transform:
             dataset, arrayname=arrayname)
         self.vstep = vstep
         self.vsweep = vsweep
-        
+
         self._istep = dataset_get_istep(dataset)
-        
+
         nx = len(vsweep)
         ny = len(vstep)
         self.flipX = False
@@ -343,7 +344,7 @@ class image_transform:
                 1], extentImage[3], extentImage[2]]
         self.extent = extentImage
         return extentImage
-        
+
     def matplotlib_image_extent(self):
         """ Return matplotlib style image extent
 
@@ -501,6 +502,7 @@ def pix2scan(pt, dd2d):
 
 #%%
 
+
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan
 
@@ -523,10 +525,11 @@ def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
     vstep = np.array(A.set_arrays[0])
     extent = [vstep[0], vstep[-1]]  # change order?
 
-    istep=np.abs(np.mean(np.diff(vstep)))
+    istep = np.abs(np.mean(np.diff(vstep)))
     if verbose:
         print('1D scan: gates %s %s' % (g0,))
     return extent, g0, vstep, istep, arrayname
+
 
 def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan
@@ -668,8 +671,8 @@ def writeDataset(path, dataset, metadata=None):
 
     :param path: filename without extension
     '''
-    
-    dataset=qtt.tools.stripDataset(dataset)
+
+    dataset = qtt.tools.stripDataset(dataset)
 
     print('write_copy to %s' % path)
     dataset.write_copy(path=path)
