@@ -123,7 +123,7 @@ if __name__ == '__main__':
     gates = station.gates
     time.sleep(0.05)
     gates.L.get()
-    gates.R.get()
+    #gates.R.get()
 
     station.set_measurement(keithley3.amplitude)
 
@@ -153,8 +153,8 @@ if __name__ == '__main__':
     one_dots = sample.get_one_dots(sdidx=[])
     full = 0
 
+    #sdindices = [1, 2]
     sdindices = [1, 2]
-    sdindices = [1, ]
 
     sddots = sample.get_one_dots(sdidx=sdindices)[-len(sdindices):]
 
@@ -178,8 +178,8 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-17n'
-    Tvalues = np.array([-411])
+    basetag = 'batch-2017-1-17m'
+    Tvalues = np.array([-400])
 
     b = False
 

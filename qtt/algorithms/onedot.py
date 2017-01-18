@@ -8,11 +8,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from qtt.data import dataset2Dmetadata, image_transform
-from qtt.tools import *
+#from qtt.tools import *
 import qtt.data
 from qtt import pmatlab
 
-from qtt.algorithms.generic import *
+import qtt.scans # import fixReversal, checkReversal
+
+#from qtt.algorithms.generic import *
+from qtt.algorithms.generic import detect_blobs_binary,weightedCentroid
+
 import cv2
 
 #%%
@@ -203,7 +207,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
         return cost
 
 #%%
-
+#from qtt.legacy import fixReversal, checkReversal
+import warnings
 
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
@@ -212,6 +217,12 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     im, impixel, tr = dataset2image2(dd)
 
+    r=qtt.scans.checkReversal(im, verbose=verbose>=2)
+    if r==-1:
+        warnings.warn('image sign is not correct!?')
+        im=qtt.scans.fixReversal(im)
+        impixel=r*impixel
+    
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
 
     ims = impixel.copy()

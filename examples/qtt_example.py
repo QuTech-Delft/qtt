@@ -142,6 +142,8 @@ if __name__ == '__main__':
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
+    # TODO:
+    #def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
 
     
 #%% Send data to powerpoint

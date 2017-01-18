@@ -16,7 +16,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-from qtt.algorithms.onedot import onedotGetBalance
+#from qtt.algorithms.onedot import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.scans import pinchoffFilename
 from qtt.data import load_data, show2D
@@ -52,7 +52,7 @@ def positionScanjob(scanjob, pt):
     return scanjob
 
 
-def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
+def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, step=-5, full=1):
     """ Scan a one-dot
 
     Arguments
@@ -73,10 +73,10 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
 
     pv1 = float(od['pinchvalues'][0]) + 0
     pv2 = float(od['pinchvalues'][2]) + 0
-    stepstart = float(np.minimum(od['pinchvalues'][0] + 400, 90))
-    sweepstart = float(np.minimum(od['pinchvalues'][2] + 300, 90))
-    stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': -3})
-    sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': -3})
+    stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, 90))
+    sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, 90))
+    stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': step})
+    sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
     wait_time_base = qtt.scans.waitTime(None, station=station)
@@ -691,27 +691,8 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
         ww = fixReversal(ww, verbose=verbose)
     return ww
 
-import skimage
-import skimage.filters
-
-
-def fixReversal(im0, verbose=0):
-    """ Fix orientation of image
-
-    Needed when the keithley (or some other measurement device) has been reversed
-    """
-    thr = skimage.filters.threshold_otsu(im0)
-    mval = np.mean(im0)
-
-    # meanopen = np.mean(im0[:,:])
-    # fr=thr<mval
-    fr = thr < 0
-    if verbose:
-        print(' fixReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
-    if fr:
-        im0 = -np.array(im0)
-    return im0
-
+from qtt.scans import fixReversal
+    
 
 #%%
 

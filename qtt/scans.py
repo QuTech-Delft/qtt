@@ -26,6 +26,39 @@ from qcodes.utils.helpers import tprint
 
 #%%
 
+import skimage
+import skimage.filters
+
+def checkReversal(im0, verbose=0):
+    """ Check sign of a current scan
+    
+    We assume that the current is either zero or positive 
+    Needed when the keithley (or some other measurement device) has been reversed
+    """
+    thr = skimage.filters.threshold_otsu(im0)
+    mval = np.mean(im0)
+
+    # meanopen = np.mean(im0[:,:])
+    # fr=thr<mval
+    fr = thr < 0
+    if verbose:
+        print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
+    if fr:
+        return -1
+    else:
+        return 1
+
+
+def fixReversal(im0, verbose=0):
+    """ Fix sign of a current scan
+    
+    We assume that the current is either zero or positive 
+    Needed when the keithley (or some other measurement device) has been reversed
+    """
+    r=checkReversal(im0, verbose=verbose)
+    return r*np.array(im0)
+    
+#%%
 
 def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
     """ Create a scan job
