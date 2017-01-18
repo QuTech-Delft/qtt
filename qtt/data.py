@@ -330,8 +330,19 @@ class image_transform:
     def istep(self):
         return self._istep
 
-    def image_extent(self):
-        return self.extent
+    def scan_image_extent(self):
+        """ Scan extent """
+        vsweep = self.vsweep
+        vstep = self.vstep
+        extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
+        if self.flipX:
+            extentImage = [extentImage[1], extentImage[
+                0], extentImage[2], extentImage[3]]
+        if self.flipY:
+            extentImage = [extentImage[0], extentImage[
+                1], extentImage[3], extentImage[2]]
+        self.extent = extentImage
+        return extentImage
         
     def matplotlib_image_extent(self):
         """ Return matplotlib style image extent
@@ -342,7 +353,7 @@ class image_transform:
         """
         vsweep = self.vsweep
         vstep = self.vstep
-        extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
+        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]
         if self.flipX:
             extentImage = [extentImage[1], extentImage[
                 0], extentImage[2], extentImage[3]]
