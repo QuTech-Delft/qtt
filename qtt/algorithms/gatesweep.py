@@ -12,7 +12,7 @@ from qtt.data import dataset2Dmetadata, pix2scan, image_transform, dataset2image
 import qtt.data
 import scipy
 from qtt import pmatlab
-try :
+try:
     import cv2
 except:
     pass
@@ -42,7 +42,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
         # should be made generic
         g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
-        value = data.default_parameter_name() # e.g. 'amplitude'
+        value = data.default_parameter_name()  # e.g. 'amplitude'
 
         x = data.arrays[g]
         value = data.arrays[value]
@@ -247,10 +247,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     return adata
 
 #%%
-
-
-
-
 
 
 #%% Testing

@@ -145,7 +145,7 @@ class sensingdot_t:
         scanjob['compensateGates'] = []
         scanjob['gate_values_corners'] = [[]]
 
-        alldata = qtt.scans.scan2D( scanjob, TitleComment='2D', wait_time=0.1)
+        alldata = qtt.scans.scan2D(scanjob, TitleComment='2D', wait_time=0.1)
 
         if fig is not None:
             qtt.scans.plotData(alldata, fig=fig)

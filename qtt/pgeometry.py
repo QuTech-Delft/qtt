@@ -389,19 +389,21 @@ def mkdirc(d):
         pass
     return d
 
+
 def points_in_polygon(pts, pp):
     """
-    
+
     Arguments:
         pt (Nx2 array): point
         pp (Nxk array): polygon
     """
-    rr=np.zeros( len(pts))
+    rr = np.zeros(len(pts))
     for i, pt in enumerate(pts):
         r = cv2.pointPolygonTest(np.array(pp).astype(np.float32), (pt[0], pt[1]), measureDist=False)
-        rr[i]=r
+        rr[i] = r
     return rr
-    
+
+
 def projectiveTransformation(H, x):
     """ Apply a projective transformation to a kxN array
 
@@ -1518,7 +1520,7 @@ try:
         p2 = polygon3.Polygon(x2)
         p = p1 & p2
         x = np.array(p)
-        x = x.reshape((-1,2))
+        x = x.reshape((-1, 2))
         return x
 except:
     try:
