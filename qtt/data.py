@@ -111,17 +111,12 @@ def dataset_get_istep(alldata, mode=None):
     try:
         istep = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
     except:
-<<<<<<< HEAD
         try:
             extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
             istep = np.mean(np.diff(vstep))
         except:
             _,_,_,istep,_ = dataset1Dmetadata(alldata)
                                         
-=======
-        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
-        istep = np.abs(np.mean(np.diff(vstep)))
->>>>>>> 9d7d1b35b16797e1007ad9aa908f524bd93b9e81
     return istep
 
 
@@ -334,15 +329,13 @@ class image_transform:
 
     def istep(self):
         return self._istep
-<<<<<<< HEAD
-=======
 
     def image_extent(self):
         """ Return matplotlib style image extent
 
         Returns:
             extentImage (4 floats): x1, x2, y1, y2
-                        the y1 values is bottom left
+                        the y1 value is bottom left
         """
         vsweep = self.vsweep
         vstep = self.vstep
@@ -354,28 +347,6 @@ class image_transform:
             extentImage = [extentImage[0], extentImage[
                 1], extentImage[3], extentImage[2]]
         self.extent = extentImage
-        return extentImage
->>>>>>> 9d7d1b35b16797e1007ad9aa908f524bd93b9e81
-        
-    def extent_image(self):
-        """ Return matplotlib style image extent
-
-        Returns:
-            extentImage (4 floats): x1, x2, y1, y2
-<<<<<<< HEAD
-=======
-                        the y1 values is bottom left
->>>>>>> 9d7d1b35b16797e1007ad9aa908f524bd93b9e81
-        """
-        vsweep = self.vsweep
-        vstep = self.vstep
-        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]
-        if self.flipX:
-            extentImage = [extentImage[1], extentImage[
-                0], extentImage[2], extentImage[3]]
-        if self.flipY:
-            extentImage = [extentImage[0], extentImage[
-                1], extentImage[3], extentImage[2]]
         return extentImage
 
     def transform(self, im):

@@ -1197,27 +1197,6 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         createCross
 
     """
-<<<<<<< HEAD
-    samplesize=[int(im.shape[1]*istep/istepmodel), int(im.shape[0]*istep/istepmodel)]
-    param=np.array(param)
-    aa=param[3:]
-        
-    #pp=np.array(param[0:2]) # /istep
-    #H=createH(samplesize, pp, scale=istep/istepmodel)
-    #H=pmatlab.pg_scaling([istep/istepmodel, istep/istepmodel])
-    H=evaluateCross.scaling0.copy()
-    H[0,0]=istep/istepmodel
-    H[1,1]=istep/istepmodel
-    
-    #patch=linetools.sampleImage(im, pp, samplesize, fig=11, clearfig=True, nrsub=1)
-    dsize=(samplesize[0], samplesize[1])
-    patch=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
-  
-    if verbose:
-        print('evaluateCross: patch shape %s'  % (patch.shape,))
-    modelpatch, cdata=createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose>=2)
-    (cc,lp,hp,ip,op,_,_,_)=cdata
-=======
     samplesize = [int(im.shape[1] * istep / istepmodel), int(im.shape[0] * istep / istepmodel)]
     param = np.array(param)
     aa = param[3:]
@@ -1233,7 +1212,6 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         print('evaluateCross: patch shape %s' % (patch.shape,))
     modelpatch, cdata = createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose >= 2)
     (cc, lp, hp, ip, op, _, _, _) = cdata
->>>>>>> 9d7d1b35b16797e1007ad9aa908f524bd93b9e81
 
     dd = patch - modelpatch
 

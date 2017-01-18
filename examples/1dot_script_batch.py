@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     # define the index of the sensing dot to use for double-dot scans
     sdid = 1
-    # sdid=2
+    sdid=2
 
     ggsd = ['SD%d%s' % (sdid, c) for c in ['a', 'b', 'c']]
 
