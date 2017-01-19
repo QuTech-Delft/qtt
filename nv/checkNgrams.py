@@ -17,15 +17,13 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import average_precision_score, accuracy_score
-from pandas.tools.plotting import andrews_curves
-
 
 #%% Global settings
 dataSelection = ['yellow jump','gate jump','yellow','gate']
 lblsAsInput = True
 lag = 100
 keepNoClass = True
-colors=['r','b','g','y']
+colors=['r','b','g','y','c','m']
 
 #%%
 print('Generating Data')
@@ -126,3 +124,38 @@ p.set_title('cluster -1 followed by:')
 plt.hist(lbls[prevLbls==5],bins=np.arange(lblCount+2)-.5,color='r')
 plt.xticks(range(lblCount+1))
 plt.xlim([-1, lblCount])
+
+#%% Plot 2-grams as histograms
+lbls=labels
+prevLbls=lbls[:-1]
+lbls=lbls[1:]
+prevprevLbls=prevLbls[:-1]
+lbls=lbls[1:]
+prevLbls=prevLbls[1:]
+
+plt.figure()
+for i in range(36):
+    p=plt.subplot(6,6,i+1)
+    p.set_title(str(np.mod((i),6)) + ',' + str(int((i)/6)))
+    plt.hist(lbls[(prevLbls==int((i)/6)) & (prevprevLbls==np.mod((i),6))],bins=np.arange(lblCount+2)-.5,color=colors[np.mod((i+1),6)])
+    plt.xlim([1,5])
+    plt.xticks(range(1,lblCount))
+    plt.xlim([-1, lblCount])
+
+#%% Plot 2-grams as histograms no 0
+lbls=labels[labels>0]
+prevLbls=lbls[:-1]
+lbls=lbls[1:]
+prevprevLbls=prevLbls[:-1]
+lbls=lbls[1:]
+prevLbls=prevLbls[1:]
+
+plt.figure()
+for i in range(36):
+    p=plt.subplot(5,5,i+1)
+    p.set_title(str(np.mod((i),5)+1) + ',' + str(int((i)/6)+1))
+    plt.hist(lbls[(prevLbls==int((i)/5)+1) & (prevprevLbls==np.mod((i),5)+1)],bins=np.arange(lblCount+2)-.5,color=colors[np.mod((i+1),6)])
+    plt.xlim([1,5])
+    plt.xticks(range(1,lblCount))
+    plt.xlim([-1, lblCount])
+
