@@ -22,7 +22,7 @@ import numpy as np
 import random
 import sys,os
 from theano import tensor as T
-
+from sklearn.decomposition import PCA
 
 import numpy
 from keras.models import Sequential
@@ -44,11 +44,12 @@ lag = 100
 keepNoClass = False
 keepZeroCluster = True
 zeroOrNotZero = False # Classify only zero cluster vs not-zero cluster (so don't remove that zero cluster)
-sequentialTesting = True # The stateful LSTM will likely work better with this set to True
-LSTMtype = 2
+sequentialTesting = False # The stateful LSTM will likely work better with this set to True
+LSTMtype = 3
+doPCA = True
 
 batchSize = 1
-nbEpochs = 3#00
+nbEpochs = 300
 learningRate = 0.00001
 
 #%%
@@ -73,6 +74,10 @@ dfS[:]=datascaler.transform(df)
 selectedData = dfS[dataSelection]
 ran = range(0,selectedData.shape[0])
 
+if doPCA:
+    pca = PCA(n_components=2)
+    selectedData = pd.DataFrame(pca.fit_transform(selectedData))
+
 laggedData = np.zeros((len(dataSelection),selectedData.shape[0]-lag,lag))
 for i in range(len(dataSelection)):
     d = pd.DataFrame(selectedData.iloc[:,i])
@@ -89,19 +94,19 @@ if lblsAsInput: # If we also want to use the clusters labels as input
 lbls = labels[lag+1:] #Crop the part of the labels we are not using
 lbls[lbls==-1] = 5 #Setting this class to 5 so it can be one hot encoded and more easily be cut off
 
-if ~keepNoClass: # to make training a little bit easier for now
+if not keepNoClass: # to make training a little bit easier for now
     dataSet = dataSet[lbls<5,:,:] # Remove all the points that do not belong to a class
     lbls = lbls[lbls<5]
 
 if zeroOrNotZero: # Only classify 0 cluster vs not 0 cluster
-    if ~keepZeroCluster:
+    if not keepZeroCluster:
         print('You should keep the zero cluster, otherwise this will not work')
         print('I am keeping the zero cluster for you!!')
         keepZeroCluster=True
         
     lbls[lbls>0] = 1
 
-if ~keepZeroCluster: # Throw out the 0 cluster
+if not keepZeroCluster: # Throw out the 0 cluster
     dataSet = dataSet[lbls>0,:,:]
     lbls=lbls[lbls>0]
     
@@ -158,7 +163,15 @@ elif LSTMtype==2:    # Stateful LSTM
         #print('Epoch ',i,'/',nbEpochs,': val_acc: ',val_acc,'   val_loss: ',val_loss)
         print('Epoch',i+1,'/',nbEpochs)
         model.reset_states()
-
+elif LSTMtype==3: #Dropout
+    model = Sequential()
+    model.add(Dropout(0.3, input_shape=(lag,X_train.shape[2])))
+    model.add(GRU(10))
+    model.add(Dense(lblCount, activation='softmax'))
+    
+    optimiser = Adam(lr=learningRate)
+    model.compile(optimiser, loss='binary_crossentropy', metrics=['accuracy'])
+    hist=model.fit(X_train, y_train, batch_size=batchSize, nb_epoch=nbEpochs, validation_split=0.2, verbose=2).history
 
 #%% Test the LSTMs
 if LSTMtype!=2:
