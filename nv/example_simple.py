@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import pandas as pd
-import pgeometry
+#import pgeometry
 
 import qcodes
 import qtt
@@ -42,8 +42,8 @@ jumpSelect = np.append(jumpSelect, False)
 
 #%% Plot data, add callback for easy viewing
 
-import pgeometry
-from pgeometry import plotCallback
+#import pgeometry
+#from qtt.pgeometry import plotCallback
 
 plt.close(60)
 ScatterFig = plt.figure(60)
@@ -66,7 +66,7 @@ def f(plotidx, *args, **kwargs):
     plotSection(allData, list(range(dataidx - 60, dataidx + 100)), jumpSelect, si=dataidx)
     plt.pause(1e-4)
 
-pc = plotCallback(func=f, xdata=df['gate jump'], ydata=df['yellow jump'], scale=[1, 100], verbose=0)
+pc = pgeometry.plotCallback(func=f, xdata=df['gate jump'], ydata=df['yellow jump'], scale=[1, 100], verbose=0)
 cid = ScatterFig.canvas.mpl_connect('button_press_event', pc)
 
 #%% Example of very simple approach to classification: just probabilities

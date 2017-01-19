@@ -19,19 +19,20 @@ from statsmodels.graphics.gofplots import qqplot
 from scipy.interpolate import interp1d
 
 interpolated = False
+rmvZeroClust = False
 
 #%%
 print('Generating Data')
 data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
 
-df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
+df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
 #plt.figure(300); plt.clf()
 #df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
 
 labels=np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 
 #%% Remove the 0 cluster (optional)
-if 0:
+if rmvZeroClust:
     strippedLabels = labels[labels!=0]
     df=df.iloc[labels!=0] 
 
@@ -106,21 +107,22 @@ result = gateVdataframe.corr()
 print(result)
 
 #%% Lag plot with labels (only run when 0 cluster is removed)
-plt.figure()
-plt1 = plt.subplot(121)
-plt1.set_title('Yellow frequency lagplot')
-pd.tools.plotting.lag_plot(laserFreq[strippedLabels==-1],c='g')
-pd.tools.plotting.lag_plot(laserFreq[strippedLabels==1],c='b')
-pd.tools.plotting.lag_plot(laserFreq[strippedLabels==2],c='r')
-pd.tools.plotting.lag_plot(laserFreq[strippedLabels==3],c='y')
-pd.tools.plotting.lag_plot(laserFreq[strippedLabels==4],c='w')
-plt2 = plt.subplot(122)
-plt2.set_title('Gate voltage lagplot')
-pd.tools.plotting.lag_plot(gateV[strippedLabels==-1],c='g')
-pd.tools.plotting.lag_plot(gateV[strippedLabels==1],c='b')
-pd.tools.plotting.lag_plot(gateV[strippedLabels==2],c='r')
-pd.tools.plotting.lag_plot(gateV[strippedLabels==3],c='y')
-pd.tools.plotting.lag_plot(gateV[strippedLabels==4],c='w')
+if rmvZeroClust:
+    plt.figure()
+    plt1 = plt.subplot(121)
+    plt1.set_title('Yellow frequency lagplot')
+    pd.tools.plotting.lag_plot(laserFreq[strippedLabels==-1],c='g')
+    pd.tools.plotting.lag_plot(laserFreq[strippedLabels==1],c='b')
+    pd.tools.plotting.lag_plot(laserFreq[strippedLabels==2],c='r')
+    pd.tools.plotting.lag_plot(laserFreq[strippedLabels==3],c='y')
+    pd.tools.plotting.lag_plot(laserFreq[strippedLabels==4],c='w')
+    plt2 = plt.subplot(122)
+    plt2.set_title('Gate voltage lagplot')
+    pd.tools.plotting.lag_plot(gateV[strippedLabels==-1],c='g')
+    pd.tools.plotting.lag_plot(gateV[strippedLabels==1],c='b')
+    pd.tools.plotting.lag_plot(gateV[strippedLabels==2],c='r')
+    pd.tools.plotting.lag_plot(gateV[strippedLabels==3],c='y')
+    pd.tools.plotting.lag_plot(gateV[strippedLabels==4],c='w')
 
 #%% Persistance model (baseline)
 testSetSize = 40
@@ -177,6 +179,31 @@ gvPersResiduals = [test_y[i]-predictions[i] for i in range(len(predictions))]
 
 
 #%% Train an autoregression model
+def autoregress(train):
+    model = AR(train)
+    model_fit = model.fit()
+    print('Lag: %s' % model_fit.k_ar)
+    window = model_fit.k_ar
+    
+    coef = model_fit.params
+    # walk forward over time steps in test
+    history = train[len(train)-window:]
+    history = [history[i] for i in range(len(history))]
+    predictions = list()
+    for t in range(len(test)):
+    	length = len(history)
+    	lag = [history[i] for i in range(length-window,length)]
+    	yhat = coef[0]
+    	for d in range(window):
+    		yhat += coef[d+1] * lag[window-d-1]
+    	obs = test[t]
+    	predictions.append(yhat)
+    	history.append(obs)
+    	print('predicted=%f, expected=%f' % (yhat, obs))
+    return predictions
+
+
+
 testSetSize = 40
 # split dataset yellow frequency
 X = laserFreq.values
@@ -186,25 +213,9 @@ train, test = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 #plt.plot(train)
 
 # train autoregression model
-model = AR(train)
-model_fit = model.fit()
-print('Lag: %s' % model_fit.k_ar)
-window = model_fit.k_ar
-coef = model_fit.params
-# walk forward over time steps in test
-history = train[len(train)-window:]
-history = [history[i] for i in range(len(history))]
-predictions = list()
-for t in range(len(test)):
-	length = len(history)
-	lag = [history[i] for i in range(length-window,length)]
-	yhat = coef[0]
-	for d in range(window):
-		yhat += coef[d+1] * lag[window-d-1]
-	obs = test[t]
-	predictions.append(yhat)
-	history.append(obs)
-	print('predicted=%f, expected=%f' % (yhat, obs))
+
+predictions = autoregress(train)
+
 error = mean_squared_error(test, predictions)
 print('Test MSE: %.3f' % error)
 # plot
@@ -220,25 +231,9 @@ yfAcResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
 X = gateV.values
 train, test = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 # train autoregression model
-model = AR(train)
-model_fit = model.fit()
-print('Lag: %s' % model_fit.k_ar)
-window = model_fit.k_ar
-coef = model_fit.params
-# walk forward over time steps in test
-history = train[len(train)-window:]
-history = [history[i] for i in range(len(history))]
-predictions = list()
-for t in range(len(test)):
-	length = len(history)
-	lag = [history[i] for i in range(length-window,length)]
-	yhat = coef[0]
-	for d in range(window):
-		yhat += coef[d+1] * lag[window-d-1]
-	obs = test[t]
-	predictions.append(yhat)
-	history.append(obs)
-	print('predicted=%f, expected=%f' % (yhat, obs))
+
+autoregress(train)
+
 error = mean_squared_error(test, predictions)
 print('Test MSE: %.3f' % error)
 # plot
@@ -303,9 +298,7 @@ def model_persistence(x):
  
 # walk-forward validation
 predictions = list()
-for x in test_X:
-	yhat = model_persistence(x)
-	predictions.append(yhat)
+predictions = [model_persistence(x) for x in test_X]
 test_score = mean_squared_error(test_y, predictions)
 print('Test MSE Yellow frequency: %.3f' % test_score)
 # plot predictions vs expected
@@ -351,25 +344,8 @@ train, test = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 #plt.plot(train)
 
 # train autoregression model
-model = AR(train)
-model_fit = model.fit()
-print('Lag: %s' % model_fit.k_ar)
-window = model_fit.k_ar
-coef = model_fit.params
-# walk forward over time steps in test
-history = train[len(train)-window:]
-history = [history[i] for i in range(len(history))]
-predictions = list()
-for t in range(len(test)):
-    length = len(history)
-    lag = [history[i] for i in range(length-window,length)]
-    yhat = coef[0]
-    for d in range(window):
-        yhat += coef[d+1] * lag[window-d-1]
-    obs = test[t]
-    predictions.append(yhat*scale)
-    history.append(obs)
-    print('predicted=%f, expected=%f' % (yhat, obs))
+autoregress(train)
+
 error = mean_squared_error(test, predictions)
 print('Test MSE: %.3f' % error)
 # plot
@@ -385,25 +361,9 @@ yfAcJumpResiduals = [test[i]-predictions[i] for i in range(len(predictions))]
 X = gateVJump.values
 train, test = X[1:len(X)-testSetSize], X[len(X)-testSetSize:]
 # train autoregression model
-model = AR(train)
-model_fit = model.fit()
-print('Lag: %s' % model_fit.k_ar)
-window = model_fit.k_ar
-coef = model_fit.params
-# walk forward over time steps in test
-history = train[len(train)-window:]
-history = [history[i] for i in range(len(history))]
-predictions = list()
-for t in range(len(test)):
-	length = len(history)
-	lag = [history[i] for i in range(length-window,length)]
-	yhat = coef[0]
-	for d in range(window):
-		yhat += coef[d+1] * lag[window-d-1]
-	obs = test[t]
-	predictions.append(yhat*scale)
-	history.append(obs)
-	print('predicted=%f, expected=%f' % (yhat, obs))
+
+autoregress(train)
+
 error = mean_squared_error(test, predictions)
 print('Test MSE: %.3f' % error)
 # plot

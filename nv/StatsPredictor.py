@@ -39,7 +39,7 @@ class StatsPredictor():
         if not hasattr(self, 'laggedData'):
             print("This instance is not fitted yet. Call 'fit' with "
                "appropriate arguments before using this method.")
-            return
+            return np.array([])
         index = self._getIndex(self.laggedData,self.lastSeq)
         i=0
         while np.sum(index)<10:
