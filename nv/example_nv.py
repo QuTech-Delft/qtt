@@ -188,7 +188,7 @@ plt.title('Correlation between gate and yellow jumps.')
 xx=np.vstack((jumpGate, jumpYellow) )
 
 from qtt import pmatlab
-from pmatlab import points_in_polygon
+from qtt.pmatlab import points_in_polygon
 rr=np.array([[-24.2,7.25],[0.6796,.4297]])
 pmatlab.plotPoints(pmatlab.region2poly(rr), '.-g')
 pp=pmatlab.region2poly(rr)

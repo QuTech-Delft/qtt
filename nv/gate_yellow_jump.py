@@ -32,8 +32,7 @@ from keras.layers import LSTM
 from keras.utils import np_utils
 
 
-#labels = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy')).T
-labels=np.load('labels.npy')
+labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 text=labels
 print('corpus length:', len(labels))
 
@@ -141,8 +140,6 @@ _=avg_steps(lx, y_pred, verbose=1)
 av2=avg_steps(lx, y_pred2, verbose=1)    
 print('  avg number of steps (1-grams): %.5f' % av1)
 print('  avg number of steps (2-grams): %.5f' % av2)
-
-
 
 #%%  Sequences
 chars = sorted(list(set(labels)))
