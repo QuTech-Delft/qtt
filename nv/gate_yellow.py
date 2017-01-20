@@ -95,9 +95,9 @@ y=dataS[:,5]
 
 #%% Learn clusters
 X=Xbase
-#db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
+db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
-db=SpectralClustering(3,gamma=0.2).fit(X)
+#db=SpectralClustering(5,gamma=0.2).fit(X)
 #db=KMeans(n_clusters=7).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
@@ -109,8 +109,7 @@ labels = db.labels_
 
 encoder = sklearn.preprocessing.LabelEncoder()
 encoder.fit(labels)
-
-
+    
 # Number of clusters in labels, ignoring noise if present.
 if 0:
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
@@ -118,8 +117,6 @@ if 0:
     print("Silhouette Coefficient: %0.3f" % metrics.silhouette_score(X, labels))
 
 #plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
-
-
 plt.figure(301); plt.clf(); plt.jet()
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
 

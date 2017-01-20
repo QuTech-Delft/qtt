@@ -121,7 +121,7 @@ jumpSelect=np.append(jumpSelect, False)
 
 xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow, jumpIndex) )
 
-if 1:                 
+if 0:                 
     # save data
     #np.save('/home/eendebakpt/tmp/jdata.npy', xx)
     np.save('jdata.npy', xx )
