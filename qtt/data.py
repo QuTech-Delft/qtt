@@ -351,7 +351,7 @@ class image_transform:
         """
         vsweep = self.vsweep
         vstep = self.vstep
-        extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
+        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]
         if self.flipX:
             extentImage = [extentImage[1], extentImage[
                 0], extentImage[2], extentImage[3]]
