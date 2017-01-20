@@ -28,6 +28,10 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 > pip install pyvisa
 > conda install -c https://conda.binstar.org/menpo opencv3
 ```
+There is a bug in qtconsole, see[qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
+```
+> pip install git+https://github.com/jupyter/qtconsole.git
+```
 For Mac OS with anaconda type from the command line:
 ```
 > cd [MYLOCALDIR]/qtt
