@@ -716,7 +716,11 @@ def plotData(alldata, diff_dir=None, fig=1):
         plot.add(alldata.default_parameter_array('measured'))
         # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
-        plot.fig.axes[1].autoscale(tight=True)
+        try:
+            # TODO: make this cleaner code
+            plot.fig.axes[1].autoscale(tight=True)
+        except:
+            pass
 
 
 #%%
