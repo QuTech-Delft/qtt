@@ -63,11 +63,6 @@ def dataset2image(dataset, mode='pixel'):
 
     The image is converted so that it is in conventional coordinates, e.g. the
     step values (vertical axis) go from low to high (bottom to top).
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> master
     Args:
         dataset
     Returns:

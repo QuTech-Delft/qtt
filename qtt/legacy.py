@@ -180,11 +180,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
 
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     """ Plot a circle in a matplotlib figure
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> master
     Args:
         pt (array): center of circle
         radius (float): radius of circle
