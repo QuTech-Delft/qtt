@@ -773,7 +773,7 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
 #%%
 
 
-def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
+def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 
     TODO: Add functionality for virtual gates, which should contain functionality to automatically determine
@@ -781,8 +781,8 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
 
     Arguments:
         station (qcodes station): contains all of the instruments
-        scangates (list): the gates to scan
-        coords (2 x 2 array): coordinates of the points to scan between
+        scangates (list of length k): the gates to scan
+        coords (k x 2 array): coordinates of the points to scan between              
         sd (object): corresponds to the sensing dot used for read-out
 
     Returns:
@@ -791,18 +791,21 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
     # TODO: put a different parameter and values on the horizontal axis?
     # TODO: extend functionality to any number of gates (virtual gates?)
     # FIXME: single gate variation???
-    x0 = [coords[0, 0], coords[1, 0]]
+    x0 = [coords[0, 0], coords[0, 1]] # first parameters
     x1 = [coords[1, 0], coords[1, 1]]
-    sweeprange = np.sqrt((x0[0] - x1[0])**2 + (x0[1] - x1[1])**2)
+    sweeprange = np.sqrt((x1[1] - x1[0])**2 + (x0[1] - x0[0])**2)
     gate_comb = dict()
 
     #for g in scangates:
     #    gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
-    gate_comb = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
+    gate_comb = {scangates[1]: (x1[1] - x1[0]) / sweeprange, scangates[0]: (x0[1] - x0[0]) / sweeprange}
 
     gate = scangates[0]  # see TODO: proper name
 
     waveform, sweep_info = station.awg.sweep_gate_virt(gate_comb, sweeprange, period)
+    if verbose:
+        print('scanLine: sweeprange %.1f ' % sweeprange)
+        print(sweep_info)
 
     fpga_ch = sd.fpga_ch
     waittime = Naverage * period
