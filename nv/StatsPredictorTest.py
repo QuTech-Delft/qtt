@@ -22,7 +22,8 @@ labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 labels[labels==-1] = 5 #this makes it a bit nicer to handle
 
 #%% Test with ignore 0
-testSize=len(labels)-50
+labels[labels==-1] = 5 #this makes it a bit nicer to handle
+testSize=500
 trainLabels = labels[:-testSize]
 testLabels = labels[-testSize:]
 sp=StatsPredictor(1,trainLabels)
