@@ -7,14 +7,16 @@ import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qtt.data import dataset2Dmetadata, image_transform
+import logging
+
+from qtt.data import dataset2Dmetadata, image_transform, dataset2image, show2D
 #from qtt.tools import *
 import qtt.data
 from qtt import pmatlab
-
+import qtt.pgeometry as pgeometry
 import qtt.scans # import fixReversal, checkReversal
 
-#from qtt.algorithms.generic import *
+from qtt.algorithms.generic import getValuePixel
 from qtt.algorithms.generic import detect_blobs_binary,weightedCentroid
 
 import cv2
@@ -65,14 +67,14 @@ def onedotGetBlobs(fimg, fig=None):
         pmatlab.plotPoints(xx.T, '.m', markersize=12, label='blob centres (alternative)')
         plt.title('Binary blobs')
 
-        tilefigs([fig, fig + 1], [2, 2])
+        pgeometry.tilefigs([fig, fig + 1], [2, 2])
 
     return xxw, (xx, contours)
 
 
 def onedotSelectBlob(im, xx, fimg=None, verbose=0):
     """ Select the best blob from a list of blob positions """
-    ims = smoothImage(im)
+    ims = qtt.algorithms.generic.smoothImage(im)
 
     lowvalue = np.percentile(ims, 5)
     highvalue = np.percentile(ims, 95)
@@ -123,7 +125,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
 #    step = dd['sweepdata']['step']
     step = np.abs(np.nanmean(np.diff(vstep)))
 
-    filters, angles, _ = makeCoulombFilter(theta0=theta0, step=step, fig=None)
+    filters, angles, _ = qtt.algorithms.generic.makeCoulombFilter(theta0=theta0, step=step, fig=None)
 
     lowvalue = np.percentile(im, 5)
     highvalue = np.percentile(im, 95)
@@ -215,7 +217,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     # XX = dd['data_array']
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
-    im, impixel, tr = dataset2image2(dd)
+    im, impixel, tr = qtt.data.dataset2image2(dd)
 
     r=qtt.scans.checkReversal(im, verbose=verbose>=2)
     if r==-1:

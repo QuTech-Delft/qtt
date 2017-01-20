@@ -153,8 +153,8 @@ if __name__ == '__main__':
     one_dots = sample.get_one_dots(sdidx=[])
     full = 0
 
-    #sdindices = [1, 2]
     sdindices = [1, 2]
+    #sdindices = [1,]
 
     sddots = sample.get_one_dots(sdidx=sdindices)[-len(sdindices):]
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-17m'
+    basetag = 'batch-2017-1-17p'
     Tvalues = np.array([-400])
 
     b = False

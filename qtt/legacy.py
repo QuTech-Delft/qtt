@@ -16,6 +16,9 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
+import qtt.algorithms.onedot # import onedotGetBalance
+
+
 #from qtt.algorithms.onedot import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.scans import pinchoffFilename
@@ -439,7 +442,7 @@ def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
 
 #%%
 
-import matplotlib
+#import matplotlib
 
 
 def cmap_map(function, cmap):
@@ -492,7 +495,7 @@ def cmap_discretize(cmap, N, m=1024):
     cdict = {}
     for ki, key in enumerate(('red', 'green', 'blue')):
         cdict[key] = [
-            (indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki]) for i in xrange(N + 1)]
+            (indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki]) for i in range(N + 1)]
     # Return colormap object.
     return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d" % m, cdict, m)
 
@@ -989,6 +992,7 @@ def getPinchvalues(od, xdir, verbose=1):
     return od
 
 
+
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
     # one_dots=get_one_dots(full=1)
@@ -1029,7 +1033,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     fign = None
                     figm = None
 
-                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=verbose >= 2, fig=fign)
+                od, ptv, pt0, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, dd2d, verbose=verbose >= 2, fig=fign)
 
                 dstrhi = '%s-sweep-2d-hires' % (od['name'])
                 tmphi = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)

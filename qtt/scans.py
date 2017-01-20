@@ -420,7 +420,7 @@ def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time
         def myupdate():
             t0 = time.time()
             liveplotwindow.update()
-            import matplotlib.pyplot as plt
+            #import matplotlib.pyplot as plt
             # plt.pause(1e-5)
 
             # QtWidgets.QApplication.processEvents()
