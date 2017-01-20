@@ -6,7 +6,7 @@ import logging
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
-from  qtpy.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 
 import pyqtgraph as pg
 import argparse
@@ -83,7 +83,6 @@ class DataViewer(QtWidgets.QWidget):
             self.plotwindow = self.qplot
         else:
             self.plotwindow = self.qplot.win
-    
         topLayout = QtWidgets.QHBoxLayout()
         self.reloadbutton = QtWidgets.QPushButton()
         self.reloadbutton.setText('Reload data')

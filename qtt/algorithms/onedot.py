@@ -225,6 +225,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         im=qtt.scans.fixReversal(im)
         impixel=r*impixel
     
+
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
 
     ims = impixel.copy()

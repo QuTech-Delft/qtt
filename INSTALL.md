@@ -28,6 +28,10 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 > pip install pyvisa
 > conda install -c https://conda.binstar.org/menpo opencv3
 ```
+There is a bug in qtconsole, see[qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
+```
+> pip install git+https://github.com/jupyter/qtconsole.git
+```
 For Mac OS with anaconda type from the command line:
 ```
 > cd [MYLOCALDIR]/qtt
@@ -46,8 +50,8 @@ There are four repositories:
 
 1. QCodes
 2. QTT
-3. VandersypenUsers
-4. VandersypenSetups
+3. Users
+4. Stations
 
 The git commands are:
 ```
@@ -58,15 +62,15 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-(temporary) Goto the qtt directory and checkout the branch `sq3`
+(temporary) Go to the Qcodes directory and checkout the branch `sq3`
 ```
-> cd [MYLOCALDIR]/qtt
+> cd [MYLOCALDIR]/Qcodes
 > git checkout sq3
 ```
 
 ## Install packages
 
-- Register the repositories it with Python. For each of the repositories run this from the root directory:
+- Register the repositories with Python. For each of the repositories run this from the root directory:
 ```
 > conda develop .  (for Anaconda)
 > python setup.py develop --user  (for other systems)

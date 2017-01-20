@@ -63,7 +63,11 @@ def dataset2image(dataset, mode='pixel'):
 
     The image is converted so that it is in conventional coordinates, e.g. the
     step values (vertical axis) go from low to high (bottom to top).
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> master
     Args:
         dataset
     Returns:
@@ -116,7 +120,7 @@ def dataset_get_istep(alldata, mode=None):
             istep = np.mean(np.diff(vstep))
         except:
             _,_,_,istep,_ = dataset1Dmetadata(alldata)
-                                        
+            _, _, _, istep, _ = dataset1Dmetadata(alldata)
     return istep
 
 
@@ -299,7 +303,6 @@ class image_transform:
         self.vsweep = vsweep
         
         self._istep = dataset_get_istep(dataset)
-        
         nx = len(vsweep)
         ny = len(vstep)
         self.flipX = False
@@ -330,9 +333,20 @@ class image_transform:
     def istep(self):
         return self._istep
 
-    def image_extent(self):
-        return self.extent
-        
+    def scan_image_extent(self):
+        """ Scan extent """
+        vsweep = self.vsweep
+        vstep = self.vstep
+        extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
+        if self.flipX:
+            extentImage = [extentImage[1], extentImage[
+                0], extentImage[2], extentImage[3]]
+        if self.flipY:
+            extentImage = [extentImage[0], extentImage[
+                1], extentImage[3], extentImage[2]]
+        self.extent = extentImage
+        return extentImage
+
     def matplotlib_image_extent(self):
         """ Return matplotlib style image extent
 
@@ -517,6 +531,34 @@ def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
         print('1D scan: gates %s %s' % (g0,))
     return extent, g0, vstep, istep, arrayname
 
+def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
+    """ Extract metadata from a 2D scan
+
+    Returns:
+
+        extent (list): x1,x2
+        g0 (string): step gate
+        vstep (array): step values
+        istep (float)
+        arrayname (string): identifier of the main array 
+
+    """
+
+    if arrayname is None:
+        arrayname = alldata.default_parameter_name()
+
+    A = alldata.arrays[arrayname]
+
+    g0 = A.set_arrays[0].name
+    vstep = np.array(A.set_arrays[0])
+    extent = [vstep[0], vstep[-1]]  # change order?
+
+    istep = np.abs(np.mean(np.diff(vstep)))
+    if verbose:
+        print('1D scan: gates %s %s' % (g0,))
+    return extent, g0, vstep, istep, arrayname
+
+
 def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan
 
@@ -657,8 +699,8 @@ def writeDataset(path, dataset, metadata=None):
 
     :param path: filename without extension
     '''
-    
-    dataset=qtt.tools.stripDataset(dataset)
+
+    dataset = qtt.tools.stripDataset(dataset)
 
     print('write_copy to %s' % path)
     dataset.write_copy(path=path)

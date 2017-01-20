@@ -41,7 +41,7 @@ def stripDataset(dataset):
     """ Make sure a dataset can be pickled """
     dataset.sync()
     dataset.data_manager = None
-    dataset.background_functions = {}    
+    dataset.background_functions = {}
     #dataset.formatter = qcodes.DataSet.default_formatter
     try:
         dataset.formatter.close_file(dataset)
@@ -174,7 +174,6 @@ def scanTime(dd):
     w = dd.metadata.get('scantime', None)
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
-        
     return w
 
 
@@ -516,7 +515,7 @@ try:
             if isinstance(fig, matplotlib.figure.Figure):
                 fig.savefig(fname)
             elif isinstance(fig, int):
-                fig=plt.figure(fig)
+                fig = plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, QtWidgets.QWidget):
                 figtemp = QtGui.QPixmap.grabWidget(fig)
@@ -806,6 +805,7 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
 #%%
 import copy
 
+
 def slopeClick(drawmode='r--', **kwargs):
     ''' Calculate slope for linepiece of two points clicked by user. Works 
     with matplotlib but not with pyqtgraph. Uses the currently active 
@@ -837,7 +837,7 @@ def clickGatevals(plot, drawmode='ro'):
     Returns:    
         gatevals (dict): values of the gates at clicked point
     '''
-    # TODO: implement for virtual gates 
+    # TODO: implement for virtual gates
     if type(plot) != qcodes.plots.qcmatplotlib.MatPlot:
         raise Exception('The plot object is not based on the MatPlot class from qcodes.')
 

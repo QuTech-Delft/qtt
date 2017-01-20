@@ -178,8 +178,13 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
+<<<<<<< HEAD
     basetag = 'batch-2017-1-17p'
     Tvalues = np.array([-400])
+=======
+    basetag = 'batch-2017-1-17n'
+    Tvalues = np.array([-411])
+>>>>>>> master
 
     b = False
 

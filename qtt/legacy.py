@@ -83,7 +83,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
     wait_time_base = qtt.scans.waitTime(None, station=station)
-    wait_time_sweep = np.minimum(wait_time/6., .15)
+    wait_time_sweep = np.minimum(wait_time / 6., .15)
 
     if full == 0:
         stepdata['step'] = -12
@@ -96,7 +96,6 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
     scanjob['wait_time_step'] = wait_time_base + 3 * wait_time
     scanjob['wait_time_sweep'] = wait_time_sweep
-    
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time_sweep, background=False)
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
@@ -114,7 +113,6 @@ def onedotPlungerScan(station, od, verbose=1):
     gg = od['gates']
     ptv = od['setpoint']
 
-
     pv = od['pinchvalues'][1]
 
     scanjob = dict({'keithleyidx': [od['instrument']]})
@@ -127,7 +125,7 @@ def onedotPlungerScan(station, od, verbose=1):
     wait_time = qtt.scans.waitTime(gg[1], station=station)
     time.sleep(wait_time)
     
-    alldata = scan1D(scanjob, station, wait_time=wait_time/4., title_comment='sweep of plunger')
+    alldata = scan1D(scanjob, station, wait_time=wait_time / 4., title_comment='sweep of plunger')
     alldata.metadata['od'] = od
     stripDataset(alldata)
     scandata = dict(dataset=alldata, od=od)
@@ -182,7 +180,11 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
 
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     """ Plot a circle in a matplotlib figure
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> master
     Args:
         pt (array): center of circle
         radius (float): radius of circle
@@ -1081,12 +1083,16 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             if p2=='P3':
                 sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
 
+            sweeprange = 240
+            if p2 == 'P3':
+                sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
+
             e1 = ods[0]['pinchvalues'][1]
             e2 = ods[1]['pinchvalues'][1]
-            e1 = float(np.maximum(basevaluesTD[p1] - sweeprange/2, e1))
-            e2 = float(np.maximum(basevaluesTD[p2] - sweeprange/2, e2))
-            s1 = basevaluesTD[p1] + sweeprange/2
-            s2 = basevaluesTD[p2] + sweeprange/2
+            e1 = float(np.maximum(basevaluesTD[p1] - sweeprange / 2, e1))
+            e2 = float(np.maximum(basevaluesTD[p2] - sweeprange / 2, e2))
+            s1 = basevaluesTD[p1] + sweeprange / 2
+            s2 = basevaluesTD[p2] + sweeprange / 2
             scanjob['stepdata'] = dict({'gates': [p1], 'start': s1, 'end': e1, 'step': -2})
             scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -4})
 
