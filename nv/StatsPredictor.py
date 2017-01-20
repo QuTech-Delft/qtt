@@ -18,13 +18,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import average_precision_score, accuracy_score
 
 class StatsPredictor():
-    def __init__(self,lookback=1, jumpClusters=[], ignoreZero=True):
+    def __init__(self,lookback=1, jumpClusters=[], ignoreZero=True, minimumData=10):
         self.lookback = lookback
         self.ignoreZero=ignoreZero
+        self.minimumData = minimumData
         if len(jumpClusters)>0:
             self.fit(jumpClusters)
     
-    def fit(self, jumpClusters):
+    def _fitClustered(self, jumpClusters):
         if self.ignoreZero:
             jumpClusters = jumpClusters[jumpClusters>0]
         self.labels = jumpClusters[self.lookback+1:]
@@ -40,16 +41,20 @@ class StatsPredictor():
             print("This instance is not fitted yet. Call 'fit' with "
                "appropriate arguments before using this method.")
             return np.array([])
-        index = self._getIndex(self.laggedData,self.lastSeq)
+        index = self.__getIndex(self.laggedData,self.lastSeq)
         i=0
-        while np.sum(index)<10:
+        while np.sum(index)<self.minimumData:
             i+=1
-            index = self._getIndex(self.laggedData[:,:-i],self.lastSeq[:-i])
+            index = self.__getIndex(self.laggedData[:,:-i],self.lastSeq[:-i])
         if i>0:
             print('Prediction made based on lookback of ', self.lookback-i)
-        return np.bincount(self.labels[index])/np.sum(index)
+        prediction=np.bincount(self.labels[index])/np.sum(index)
+        while len(prediction)<len(self.labels):
+            prediction = np.append(prediction,0)
+        #print(len(prediction))
+        return prediction
         
-    def foundNextCluster(self,newClust):
+    def foundNextCluster(self, newClust):
         if self.ignoreZero and newClust==0:
             print('ignoring 0')
             return self.predictNext()
@@ -58,7 +63,15 @@ class StatsPredictor():
         self.lastSeq = np.append(self.lastSeq,newClust)[1:]
         return self.predictNext()
     
-    def _getIndex(self,lagDat,lastSeq):
+    def fit(self, absVals):
+        #Convert absolute values to jumps
+        self._fitClustered(absVals)
+        return
+    
+    def foundNextValue(self):
+        return
+    
+    def __getIndex(self,lagDat,lastSeq):
         index=np.array([],dtype='bool')
         for i in range(lagDat.shape[0]):
             index = np.append(index,np.array_equal(lagDat[i,:],lastSeq))

@@ -122,7 +122,7 @@ jumpSelect=np.append(jumpSelect, False)
 
 xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow, jumpIndex) )
 
-if 0:                 
+if 1:                 
     # save data
     #np.save('/home/eendebakpt/tmp/jdata.npy', xx)
     np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy'), xx)
