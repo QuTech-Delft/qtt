@@ -796,8 +796,8 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
     sweeprange = np.sqrt((x0[0] - x1[0])**2 + (x0[1] - x1[1])**2)
     gate_comb = dict()
 
-    for g in scangates:
-        gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
+    #for g in scangates:
+    #    gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
     gate_comb = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
 
     gate = scangates[0]  # see TODO: proper name
