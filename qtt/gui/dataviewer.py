@@ -51,24 +51,18 @@ class DataViewer(QtWidgets.QWidget):
 
     def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5']):
         super(DataViewer, self).__init__()
-
+        self.verbose=1 # for debugging
         self.default_parameter = default_parameter
-
         if datadir is None:
             datadir = qcodes.DataSet.default_io.base_location
-        self.datadir = datadir
 
         self.extensions = extensions
-        qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
-        logging.info('DataViewer: data directory %s' % datadir)
 
         # setup GUI
 
         self.dataset = None
 
         self.text = QtWidgets.QLabel()
-        self.text.setText('Log files at %s' %
-                          self.datadir)
         self.logtree = QtWidgets.QTreeView()  # QTreeWidget
         self.logtree.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
@@ -84,9 +78,13 @@ class DataViewer(QtWidgets.QWidget):
         else:
             self.plotwindow = self.qplot.win
         topLayout = QtWidgets.QHBoxLayout()
+        self.select_dir = QtWidgets.QPushButton()
+        self.select_dir.setText('Select directory')
+
         self.reloadbutton = QtWidgets.QPushButton()
         self.reloadbutton.setText('Reload data')
         topLayout.addWidget(self.text)
+        topLayout.addWidget(self.select_dir)
         topLayout.addWidget(self.reloadbutton)
 
         vertLayout = QtWidgets.QVBoxLayout()
@@ -112,8 +110,12 @@ class DataViewer(QtWidgets.QWidget):
         # disable edit
         self.logtree.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        self.setDatadir(datadir)
+
         self.logtree.doubleClicked.connect(self.logCallback)
 
+        self.select_dir.clicked.connect(self.selectDirectory)
         self.reloadbutton.clicked.connect(self.updateLogs)
         self.pptbutton.clicked.connect(self.pptCallback)
         self.clipboardbutton.clicked.connect(self.clipboardCallback)
@@ -121,6 +123,13 @@ class DataViewer(QtWidgets.QWidget):
         # get logs from disk
         self.updateLogs()
         self.datatag = None
+
+    def setDatadir(self, datadir):
+        self.datadir = datadir
+        self.io = qcodes.DiskIO(datadir)
+        logging.info('DataViewer: data directory %s' % datadir)
+        self.text.setText('Log files at %s' %
+                          self.datadir)
 
     def pptCallback(self):
         if self.dataset is None:
@@ -130,15 +139,24 @@ class DataViewer(QtWidgets.QWidget):
     def clipboardCallback(self):
         dataviewer.plotwindow.copyToClipboard()
 
+    def selectDirectory(self):
+        from qtpy.QtWidgets import QFileDialog
+        d = QtWidgets.QFileDialog(caption='Select data directory')
+        d.setFileMode(QFileDialog.Directory)
+        d.exec()
+        datadir = d.selectedFiles()[0]
+        self.setDatadir(datadir)
+        print('update logs')
+        self.updateLogs()
+
     def updateLogs(self):
         ''' Update the list of measurements '''
         model = self._treemodel
-        #dd = findfilesR(self.datadir, '.*dat')
         dd = []
         for e in self.extensions:
             dd += findfilesR(self.datadir, '.*%s' % e)
-        print('found %d files' % (len(dd)))
-        # print(dd)
+        if self.verbose:
+            print('found %d files' % (len(dd)))
 
         self.datafiles = sorted(dd)
         self.datafiles = [os.path.join(self.datadir, d) for d in self.datafiles]
@@ -162,7 +180,8 @@ class DataViewer(QtWidgets.QWidget):
             for j, logtag in enumerate(sorted(logs[datetag])):
                 child1 = QtGui.QStandardItem(logtag)
                 child2 = QtGui.QStandardItem('info about plot')
-                print('datetag %s, logtag %s' % (datetag, logtag))
+                if self.verbose>=2:
+                    print('datetag %s, logtag %s' % (datetag, logtag))
                 child3 = QtGui.QStandardItem(os.path.join(datetag, logtag))
                 parent1.appendRow([child1, child2, child3])
             model.appendRow(parent1)
@@ -193,25 +212,32 @@ class DataViewer(QtWidgets.QWidget):
 
         # load data
         if tag is not None:
-            print('logCallback! tag %s' % tag)
+            if self.verbose:
+                print('logCallback! tag %s' % tag)
             try:
                 logging.debug('load tag %s' % tag)
 
                 try:
+                    if self.verbose>=2:
+                                print('trying HDF5')
+                                print('tag: %s' % tag)
+                    from qcodes.data.hdf5_format import HDF5Format
+                    hformatter = HDF5Format()
+                    data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
+                    logging.debug('loaded HDF5 dataset %s' % tag)
+                    print(data)
+                except Exception as ex:
                     # load with default formatter
                     from qcodes.data.gnuplot_format import GNUPlotFormat
                     hformatter = GNUPlotFormat()
-                    data = qcodes.load_data(tag, formatter=hformatter)
-                    logging.debug('loaded GNUPlotFormat datasett %s' % tag)
-
-                except Exception as ex:
-                    print('default formatter not working, trying HDF5')
+                    print('trying GNUPlotFormat')
                     print('tag: %s' % tag)
                     print(ex)
-                    from qcodes.data.hdf5_format import HDF5Format
-                    hformatter = HDF5Format()
-                    data = qcodes.load_data(tag, formatter=hformatter)
+                    data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
+                    logging.debug('loaded GNUPlotFormat datasett %s' % tag)
 
+                if self.verbose:
+                        logging.debug('load tag %s: data loaded' % tag)
                 self.dataset = data
 
                 self.qplot.clear()
