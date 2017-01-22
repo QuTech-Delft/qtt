@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     server_name = 'virtualV2-%d' % np.random.randint(100)
     server_name = None
-    msetup.close()
+    #msetup.close()
     msetup.initialize(reinit=False, server_name=server_name)
     #msetup.initialize(reinit=False, server_name=None )
     station = msetup.getStation()
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     one_dots = sample.get_one_dots(sdidx=[])
     full = 0
 
-    sdindices = [1, 2]
+    sdindices = [1, ]
     #sdindices = [1,]
 
     sddots = sample.get_one_dots(sdidx=sdindices)[-len(sdindices):]
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-17p'
+    basetag = 'batch-2017-1-18p'
     Tvalues = np.array([-400])
 
     b = False
@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     # define the index of the sensing dot to use for double-dot scans
     sdid = 1
-    sdid=2
+    #sdid=2
 
     ggsd = ['SD%d%s' % (sdid, c) for c in ['a', 'b', 'c']]
 
@@ -596,10 +596,12 @@ for ii, Tvalue in enumerate(Tvalues):
             print('### autotune SD')
             sd.autoTuneInit(scanjob)
 
-            try:
+            if 0:
+                # cannot use here, since not yet initialized...
                 tmp, alldata = sd.fastTune()
-            except:
-                tmp, alldata = sd.autoTune(outputdir=outputdir, max_wait_time=.5, step=-4)
+            else:
+                tmp, alldata = sd.autoTune(outputdir=outputdir,
+                                   max_wait_time=.5, scanrange=400, step=-4)
 
             dstr = 'tunesd-%s-sd%d' % (scanjob['td']['name'], sd.index)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)

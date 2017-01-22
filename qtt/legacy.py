@@ -941,7 +941,7 @@ def fillPoly(im, poly_verts, color=None):
 
     Arugments:
         im (array)
-        poly_verts (array): polygon vertices
+        poly_verts (kx2 array): polygon vertices
         color (array or float)
     """
     ny, nx = im.shape[0], im.shape[1]
@@ -953,11 +953,12 @@ def fillPoly(im, poly_verts, color=None):
 
     points = np.vstack((y, x)).T
 
-    npts = poly_verts.size / 2
+    npts = int(poly_verts.size / 2)
     poly_verts = poly_verts.reshape((npts, 2))
     poly_verts = poly_verts[:, [1, 0]]
 
     try:
+        from matplotlib.path import Path
         pp = Path(poly_verts)
         r = pp.contains_points(points)
     except:
@@ -1100,7 +1101,9 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
         except Exception as e:
-            print(e)
+            import logging
+            logging.exception("error with double-dot job!")
+            #print(e)
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])
             # pdb.set_trace()
             continue
