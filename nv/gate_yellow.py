@@ -54,7 +54,7 @@ os.chdir(qcodes.config['user']['nvDataDir'])
 
 #%%
 print('Generating Data')
-data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
+data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
 if 0:
     plt.figure(300); plt.clf()
@@ -135,8 +135,8 @@ X = X[s<-2.5,:]
 #%%
 # translate by mean and scale with std
 
-#db = DBSCAN(eps=0.4, min_samples=10).fit(X) # fit centers
-#db=SpectralClustering(2,gamma=0.2).fit(X)
+#db = DBSCAN(eps=0.5, min_samples=50).fit(X) # fit centers
+db=SpectralClustering(7,gamma=0.2).fit(X)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
     core_samples_mask[db.core_sample_indices_] = True
