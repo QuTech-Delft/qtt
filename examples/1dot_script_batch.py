@@ -153,8 +153,8 @@ if __name__ == '__main__':
     one_dots = sample.get_one_dots(sdidx=[])
     full = 0
 
-    sdindices = [1, ]
-    #sdindices = [1,]
+    sdindices = [2, ]
+    #sdindices = [1,2,]
 
     sddots = sample.get_one_dots(sdidx=sdindices)[-len(sdindices):]
 
@@ -178,10 +178,10 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-18p'
-    Tvalues = np.array([-400])
+    basetag = 'batch-2017-1-23b'
+    Tvalues = np.array([-390])
 
-    b = False
+    b = True
 
     if b:
         basetag = basetag + 'b'
@@ -235,8 +235,11 @@ if __name__ == '__main__':
 
     # define the index of the sensing dot to use for double-dot scans
     sdid = 1
-    #sdid=2
+    sdid=2
 
+    if not sdid in sdindices:
+        raise Exception('are you sure you want this?' )
+        
     ggsd = ['SD%d%s' % (sdid, c) for c in ['a', 'b', 'c']]
 
     import qtt.structures
@@ -601,7 +604,7 @@ for ii, Tvalue in enumerate(Tvalues):
                 tmp, alldata = sd.fastTune()
             else:
                 tmp, alldata = sd.autoTune(outputdir=outputdir,
-                                   max_wait_time=.5, scanrange=400, step=-4)
+                                   max_wait_time=.5, scanrange=700, step=-4)
 
             dstr = 'tunesd-%s-sd%d' % (scanjob['td']['name'], sd.index)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)

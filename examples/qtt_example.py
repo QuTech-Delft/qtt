@@ -9,7 +9,7 @@ from imp import reload
 import sys
 import os
 import numpy as np
-import time
+import time; time.sleep(1e-3)
 import pyqtgraph as pg
 import tempfile
 
@@ -36,15 +36,16 @@ import qtt.gui.dataviewer
 
 # taskkill /F /IM python.exe
 
-datadir = os.path.join(tempfile.tempdir, 'qdata')
-qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
-
-
-try:
-    from qcodes.data.hdf5_format import HDF5Format
-    qcodes.DataSet.default_formatter = HDF5Format()
-except:
-    pass
+if __name__ == '__main__':
+    datadir = os.path.join(tempfile.tempdir, 'qdata')
+    qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+    
+    
+    try:
+        from qcodes.data.hdf5_format import HDF5Format
+        qcodes.DataSet.default_formatter = HDF5Format()
+    except:
+        pass
 
 #%% Create a virtual model for testing
 #
@@ -56,7 +57,7 @@ import virtualDot
 if __name__ == '__main__':
     nr_dots = 2
 
-    virtualDot.close()
+    #virtualDot.close()
     server_name = 'testv%d' % np.random.randint(1000)  # needs to be set for background loops to work
     server_name = None
     station = virtualDot.initialize(server_name=server_name, nr_dots=nr_dots)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
 
     qdatadir = os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')
     qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
-    mwindows = qtt.tools.setupMeasurementWindows(station)
+    mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
     mwindows['parameterviewer'].callbacklist.append(mwindows['plotwindow'].update)
     from qtt.parameterviewer import createParameterWidgetRemote, createParameterWidget
     if server_name is None:

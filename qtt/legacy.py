@@ -55,7 +55,7 @@ def positionScanjob(scanjob, pt):
     return scanjob
 
 
-def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, step=-5, full=1):
+def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, step=-8, full=1):
     """ Scan a one-dot
 
     Arguments

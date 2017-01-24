@@ -274,7 +274,13 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     # scipy.optimize.show_options(method='Nelder-Mead')
 
-    opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
+    import distutils.version
+
+    if distutils.version.LooseVersion(scipy.version.version) < '0.18':
+        opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
+    else:
+        opts = dict({'disp': verbose >= 2, 'fatol': 1e-6, 'xtol': 1e-5})
+        
     xx = scipy.optimize.minimize(ff, x0, method='Nelder-Mead', options=opts)
     # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     opts['disp'] = verbose >= 2
