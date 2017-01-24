@@ -29,9 +29,10 @@ from qcodes.utils.helpers import tprint
 import skimage
 import skimage.filters
 
+
 def checkReversal(im0, verbose=0):
     """ Check sign of a current scan
-    
+
     We assume that the current is either zero or positive 
     Needed when the keithley (or some other measurement device) has been reversed
     """
@@ -51,14 +52,15 @@ def checkReversal(im0, verbose=0):
 
 def fixReversal(im0, verbose=0):
     """ Fix sign of a current scan
-    
+
     We assume that the current is either zero or positive 
     Needed when the keithley (or some other measurement device) has been reversed
     """
-    r=checkReversal(im0, verbose=verbose)
-    return r*np.array(im0)
-    
+    r = checkReversal(im0, verbose=verbose)
+    return r * np.array(im0)
+
 #%%
+
 
 def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
     """ Create a scan job
@@ -282,7 +284,7 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
     metadata['dt'] = dt
     metadata['scanparams'] = {'wait_time': wait_time}
     metadata['scanjob'] = scanjob
-    metadata['scanjob']['instrument']='dummy' # FIXME
+    metadata['scanjob']['instrument'] = 'dummy'  # FIXME
 
     logging.info('scan1D: done %s' % (str(data.location),))
 
@@ -721,7 +723,7 @@ def plotData(alldata, diff_dir=None, fig=1):
             # TODO: make this cleaner code
             plot.fig.axes[1].autoscale(tight=True)
         except:
-                pass
+            pass
 
 
 #%%
@@ -791,12 +793,12 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose
     # TODO: put a different parameter and values on the horizontal axis?
     # TODO: extend functionality to any number of gates (virtual gates?)
     # FIXME: single gate variation???
-    x0 = [coords[0, 0], coords[0, 1]] # first parameters
+    x0 = [coords[0, 0], coords[0, 1]]  # first parameters
     x1 = [coords[1, 0], coords[1, 1]]
     sweeprange = np.sqrt((x1[1] - x1[0])**2 + (x0[1] - x0[0])**2)
     gate_comb = dict()
 
-    #for g in scangates:
+    # for g in scangates:
     #    gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
     gate_comb = {scangates[1]: (x1[1] - x1[0]) / sweeprange, scangates[0]: (x0[1] - x0[0]) / sweeprange}
 
@@ -873,7 +875,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
 
     station.gates.set(gate, sweepdata['start'])  # set gate to starting value
     time.sleep(stepdelay)
-    
+
     alldata = scan1D(scanjob, station, title_comment='scan gate %s' %
                      gate, background=background)
 

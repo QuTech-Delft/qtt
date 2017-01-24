@@ -103,7 +103,8 @@ def dataset2image2(dataset):
 
     return imraw, impixel, tr
 
-#%% 
+#%%
+
 
 def dataset_get_istep(alldata, mode=None):
     """ Return number of mV per pixel in scan """
@@ -295,7 +296,7 @@ class image_transform:
             dataset, arrayname=arrayname)
         self.vstep = vstep
         self.vsweep = vsweep
-        
+
         self._istep = dataset_get_istep(dataset)
         nx = len(vsweep)
         ny = len(vstep)
@@ -498,6 +499,7 @@ def pix2scan(pt, dd2d):
 
 #%%
 
+
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan
 
@@ -520,10 +522,11 @@ def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
     vstep = np.array(A.set_arrays[0])
     extent = [vstep[0], vstep[-1]]  # change order?
 
-    istep=np.abs(np.mean(np.diff(vstep)))
+    istep = np.abs(np.mean(np.diff(vstep)))
     if verbose:
         print('1D scan: gates %s %s' % (g0,))
     return extent, g0, vstep, istep, arrayname
+
 
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan

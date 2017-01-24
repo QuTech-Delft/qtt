@@ -16,7 +16,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-import qtt.algorithms.onedot # import onedotGetBalance
+import qtt.algorithms.onedot  # import onedotGetBalance
 
 
 #from qtt.algorithms.onedot import onedotGetBalance
@@ -106,6 +106,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
 
 import time
 
+
 def onedotPlungerScan(station, od, verbose=1):
     """ Make a scan with the plunger of a one-dot """
     # do sweep with plunger
@@ -124,7 +125,7 @@ def onedotPlungerScan(station, od, verbose=1):
 
     wait_time = qtt.scans.waitTime(gg[1], station=station)
     time.sleep(wait_time)
-    
+
     alldata = scan1D(scanjob, station, wait_time=wait_time / 4., title_comment='sweep of plunger')
     alldata.metadata['od'] = od
     stripDataset(alldata)
@@ -693,7 +694,7 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
     return ww
 
 from qtt.scans import fixReversal
-    
+
 
 #%%
 
@@ -991,7 +992,6 @@ def getPinchvalues(od, xdir, verbose=1):
     return od
 
 
-
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
     # one_dots=get_one_dots(full=1)
@@ -1075,9 +1075,9 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             scanjob = dict({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
-            
-            sweeprange=240
-            if p2=='P3':
+
+            sweeprange = 240
+            if p2 == 'P3':
                 sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
 
             sweeprange = 240
@@ -1103,7 +1103,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
         except Exception as e:
             import logging
             logging.exception("error with double-dot job!")
-            #print(e)
+            # print(e)
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])
             # pdb.set_trace()
             continue
