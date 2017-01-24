@@ -21,15 +21,28 @@ from sklearn.cluster import DBSCAN, SpectralClustering
 from sklearn.neighbors import KernelDensity,KDTree
 
 class StatsPredictor():
-    def __init__(self,lookback=1, jumpClusters=[], ignoreZero=True, minimumData=10,verbose=False):
+    '''
+    The statspredictor predicts the next cluster based on the previous occurences of the last #lookback sequence
+    int lookback - The number of previous values it uses for the prediction
+    [time, yellow, gate] data - The data, used to fit the StatsPredictor
+    Boolean ignoreZero - If true the 0 jumps are removed thus causing the lookback to skip 0
+    int minimumData - The minimum amount of data needed to make a prediction, if this value
+        cannot be reached, the lookback is lowered for that prediction
+    Boolean verbose - Functions might print more if True
+    '''
+    def __init__(self,lookback=1, data=[], ignoreZero=True, minimumData=10,verbose=False):
         self.lookback = lookback
         self.ignoreZero=ignoreZero
         self.minimumData = minimumData
         self.verbose = verbose
         self.online = False #Online not currently implemented
-        if len(jumpClusters)>0:
-            self.fit(jumpClusters)
+        if len(data)>0:
+            self.fit(data)
     
+    '''
+    Fits the predictor using the clusters
+    [] jumpClusters - the sequence of cluster labels
+    '''
     def _fitClustered(self, jumpClusters):
         if self.ignoreZero:
             jumpClusters = jumpClusters[jumpClusters>0]
@@ -41,6 +54,9 @@ class StatsPredictor():
         self.lastSeq = self.laggedData[-1,:]
         self.laggedData = self.laggedData[:-1,:]
 
+    '''
+    Returns probabilities per cluster
+    '''
     def predictNext(self):
         if not hasattr(self, 'laggedData'):
             print("This instance is not fitted yet. Call 'fit' with "
@@ -101,18 +117,34 @@ class StatsPredictor():
         sp = StatsPredictor()
         sp._fitClustered(trainLabels)
         hitTime = np.zeros((len(testJumps),1))
-        for i in range(len(testLabels)):
-            if testLabels[i] == 0:
-                hitTime[i] = 1
-            else:        
-                hitTime[i] = list(sp.predictNext().argsort()[::-1]).index(testLabels[i])+2
-                sp.foundNextCluster(testLabels[i])
+        
+        #Get both gate and yellow jump values on a scale from 0 to 15
+        oldGateRange = np.max(jumps[0,:])-np.min(jumps[0,:])
+        oldYellowRange = np.max(jumps[1,:])-np.min(jumps[1,:])
+        sclJumps = jumps
+        sclJumps[0,:] = ((jumps[0,:]-np.min(jumps[0,:]))*15)/oldGateRange
+        sclJumps[1,:] = ((jumps[1,:]-np.min(jumps[1,:]))*15)/oldYellowRange
 
+        #find cluster centres
+        clustCentres = self.getClusterCentres()
+        hitTime = np.zeros((len(testLabels),1))
+        for i in range(len(testLabels)):
+            #For each jump first check the distance from the centre of the predicted cluster
+            dist = np.linalg.norm(clustCentres[np.argmax(sp.predictNext()),:]-testJumps[i,:])
+            hitTime[i] = dist
+            #Maybe some way of taking the correctness of the clustering into account?
         return np.mean(hitTime)
     
-    def _getClusterCentre(self,jumps):
-        centre=0
-        return centre
+    def getClusterCentres(self,jumps,clust='auto'):
+        if clust=='auto':
+            clust=self.clusterer
+        allLabels = np.unique(clust.labels_)
+        clustCentres = np.zeros((len(allLabels),2))
+        for l in range(len(allLabels)):
+            c = jumps[labels==allLabels[l]]
+            clustCentres[l,0] = np.min(c[0]) + (np.max(c[0]) - np.min(c[0]))/2
+            clustCentres[l,1] = np.min(c[1]) + (np.max(c[1]) - np.min(c[1]))/2
+        return clustCentres
     
     def findClustering(self,jumps):
         spectBands=[3,5,7]
@@ -163,10 +195,17 @@ class StatsPredictor():
         print('Best cluster performance: ', score)
         return self.getLabel(jumps)
 
+    '''
+    Assigns labels to the given jumps based on the label of the nearest neighbour
+    
+    [gate jump, yellow jump] jumps - The jumps to be labelled
+    lbls - if 'auto' use the labels as assigned by the clustering of this instance
+            otherwise use provided labels (provided in order)
+    '''
     def getLabel(self,jumps,lbls='auto'):
         if lbls == 'auto':
             lbls=self.labels
-        labels = lbls[self.kdTree.query(jumps,1,False)]
+        labels = lbls[self.kdTree.query(jumps,1,False)[1,:]]
         if self.zeroDens:#Handle zero
             s = self.densityKern.score_samples(jumps)
             labels[s>=self.densVal] = 0
@@ -205,6 +244,10 @@ class StatsPredictor():
         for i in range(lagDat.shape[0]):
             index = np.append(index,np.array_equal(lagDat[i,:],lastSeq))
         return index
-        
-        
+    
+    '''
+    After x new values the predictor should probably be fit again to improve performance
+    '''
+    def _refit():
+       return
         
