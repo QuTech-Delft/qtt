@@ -15,7 +15,10 @@ from matplotlib import pyplot as plt
 import copy
 
 from nvtools.nvtools import extract_data
-from qtt import pgeometry
+try:
+    from qtt import pgeometry
+except:
+    import pgeometry
 
 #%% Load data
 
@@ -79,7 +82,8 @@ for i in range(len(data)):
 # allData = allData(2:end,:);
 # allStitchIndices = allStitchIndices(2:end);
 
-
+adata=np.array(allData).T
+             
 #%% Show some data
 
 fig = plt.figure(1000, figsize=(17,6));plt.clf()
@@ -104,12 +108,16 @@ def f(plotidx, fig=100, *args, **kwargs):
     plt.clf()
     #dataidx = int(jumpdata[plotidx, 6])
     dataidx=plotidx
-    plotSection(allData, list(range(dataidx - 60, dataidx + 100)), jumpSelect=None, si=dataidx)
+    plotSection(adata, list(range(dataidx - 60, dataidx + 100)), jumps=None, si=dataidx)
     plt.pause(1e-4)
     
     
 pc = pgeometry.plotCallback(func=f, xdata=allData[0], ydata=allData[2])
 pc.connect(fig)
 
-plotSection(allData, range(si-offset, si-offset+100), jumpSelect, mode='gate')
+#%%
+plt.figure(300); plt.clf()
+offset=2
+si=3000
+plotSection(allData, list(range(si-offset, si-offset+100)), None, mode='gate')
 #cid = ScatterFig.canvas.mpl_connect('button_press_event', pc)
