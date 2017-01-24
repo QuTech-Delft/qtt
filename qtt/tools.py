@@ -55,6 +55,17 @@ def deprecated(func):
 
 #%%
 
+def update_dictionary(alldata, **kwargs):
+    """ Update elements of a dictionary
+    
+    Args:
+        alldata (dict)
+        kwargs (dict): keyword arguments
+    
+    """
+    for k in kwargs:
+        alldata[k] = kwargs[k]
+
 
 def stripDataset(dataset):
     """ Make sure a dataset can be pickled """
