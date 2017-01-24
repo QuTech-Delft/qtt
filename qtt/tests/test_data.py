@@ -11,6 +11,7 @@ class Test1(TestCase):
         dataset=qcodes.tests.data_mocks.DataSet2D()
         #print(dataset)
         tr = qtt.data.image_transform(dataset, arrayname='z')
+	istep = tr.istep()
         #print(tr)
     
 if __name__=='__main__':
