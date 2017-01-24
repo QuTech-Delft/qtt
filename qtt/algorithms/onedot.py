@@ -14,10 +14,10 @@ from qtt.data import dataset2Dmetadata, image_transform, dataset2image, show2D
 import qtt.data
 from qtt import pmatlab
 import qtt.pgeometry as pgeometry
-import qtt.scans # import fixReversal, checkReversal
+import qtt.scans  # import fixReversal, checkReversal
 
 from qtt.algorithms.generic import getValuePixel
-from qtt.algorithms.generic import detect_blobs_binary,weightedCentroid
+from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
 
 import cv2
 
@@ -212,6 +212,7 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 #from qtt.legacy import fixReversal, checkReversal
 import warnings
 
+
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot """
     # XX = dd['data_array']
@@ -219,12 +220,11 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     im, impixel, tr = qtt.data.dataset2image2(dd)
 
-    r=qtt.scans.checkReversal(im, verbose=verbose>=2)
-    if r==-1:
+    r = qtt.scans.checkReversal(im, verbose=verbose >= 2)
+    if r == -1:
         warnings.warn('image sign is not correct!?')
-        im=qtt.scans.fixReversal(im)
-        impixel=r*impixel
-    
+        im = qtt.scans.fixReversal(im)
+        impixel = r * impixel
 
     extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
 
@@ -280,7 +280,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
     else:
         opts = dict({'disp': verbose >= 2, 'fatol': 1e-6, 'xtol': 1e-5})
-        
+
     xx = scipy.optimize.minimize(ff, x0, method='Nelder-Mead', options=opts)
     # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     opts['disp'] = verbose >= 2
