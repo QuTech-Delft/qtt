@@ -114,7 +114,6 @@ def dataset_get_istep(alldata, mode=None):
             extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
             istep = np.mean(np.diff(vstep))
         except:
-            _,_,_,istep,_ = dataset1Dmetadata(alldata)
             _, _, _, istep, _ = dataset1Dmetadata(alldata)
     return istep
 
