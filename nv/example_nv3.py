@@ -110,14 +110,18 @@ def f(plotidx, fig=100, *args, **kwargs):
     dataidx=plotidx
     plotSection(adata, list(range(dataidx - 60, dataidx + 100)), jumps=None, si=dataidx)
     plt.pause(1e-4)
+    plt.figure(fig+1);  plt.clf()
+    plotSection(adata, list(range(dataidx - 60, dataidx + 100)), jumps=None, mode='freq', si=dataidx)
+    plt.pause(1e-4)
     
     
 pc = pgeometry.plotCallback(func=f, xdata=allData[0], ydata=allData[2])
 pc.connect(fig)
 
 #%%
-plt.figure(300); plt.clf()
-offset=2
-si=3000
-plotSection(allData, list(range(si-offset, si-offset+100)), None, mode='gate')
-#cid = ScatterFig.canvas.mpl_connect('button_press_event', pc)
+if 0:
+    plt.figure(300); plt.clf()
+    offset=2
+    si=3000
+    plotSection(allData, list(range(si-offset, si-offset+100)), None, mode='gate')
+    #cid = ScatterFig.canvas.mpl_connect('button_press_event', pc)

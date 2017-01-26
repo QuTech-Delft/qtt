@@ -243,6 +243,7 @@ def plotSection(allData, idx, jumps=None, mode='gate', si=None):
         allData (list of numpy arrays or numpy array): data with time in first element
         idx (array): indices to plot
         jumps (None or boolean array): positions of jumps
+        mode (str): 'gate' or 'freq'
         si (index): index of special point
     """
     
@@ -270,12 +271,15 @@ def plotSection(allData, idx, jumps=None, mode='gate', si=None):
         ax.set_ylabel('Gate voltage (V)')
     else:
         plt.plot(x,y,'x-', label='data')
-        plt.plot(pdata[plot_select,0],pdata[plot_select,1],'ro', label='jump')
+        plt.plot(pdata[plot_select,0],pdata[plot_select,1],'ro', label='freq')
         ax.set_xlabel('elapsed time (s)')
         # ax2.set_xlim([0,1000])
         ax.set_ylabel('Yellow frequency (GHz)')    
     if si is not None:
-        plt.plot(pdata[si,0], pdata[si,2], '.y', markersize=12, label='special point')
+        if mode=='gate':
+            plt.plot(pdata[si,0], pdata[si,2], '.y', markersize=12, label='special point')
+        else:
+            plt.plot(pdata[si,0], pdata[si,1], '.y', markersize=12, label='special point')
 
 if __name__=='__main__':
     plotSection(allData, range(si-offset, si-offset+100), jumpSelect, mode='gate')
