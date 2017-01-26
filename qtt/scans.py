@@ -26,6 +26,41 @@ from qcodes.utils.helpers import tprint
 
 #%%
 
+import skimage
+import skimage.filters
+
+
+def checkReversal(im0, verbose=0):
+    """ Check sign of a current scan
+
+    We assume that the current is either zero or positive 
+    Needed when the keithley (or some other measurement device) has been reversed
+    """
+    thr = skimage.filters.threshold_otsu(im0)
+    mval = np.mean(im0)
+
+    # meanopen = np.mean(im0[:,:])
+    # fr=thr<mval
+    fr = thr < 0
+    if verbose:
+        print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
+    if fr:
+        return -1
+    else:
+        return 1
+
+
+def fixReversal(im0, verbose=0):
+    """ Fix sign of a current scan
+
+    We assume that the current is either zero or positive 
+    Needed when the keithley (or some other measurement device) has been reversed
+    """
+    r = checkReversal(im0, verbose=verbose)
+    return r * np.array(im0)
+
+#%%
+
 
 def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
     """ Create a scan job
@@ -249,6 +284,7 @@ def scan1D(scanjob, station, location=None, liveplotwindow=None, background=Fals
     metadata['dt'] = dt
     metadata['scanparams'] = {'wait_time': wait_time}
     metadata['scanjob'] = scanjob
+    metadata['scanjob']['instrument'] = 'dummy'  # FIXME
 
     logging.info('scan1D: done %s' % (str(data.location),))
 
@@ -387,7 +423,6 @@ def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time
         def myupdate():
             t0 = time.time()
             liveplotwindow.update()
-            import matplotlib.pyplot as plt
             # plt.pause(1e-5)
 
             # QtWidgets.QApplication.processEvents()
@@ -684,7 +719,11 @@ def plotData(alldata, diff_dir=None, fig=1):
         plot.add(alldata.default_parameter_array('measured'))
         # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
-        plot.fig.axes[1].autoscale(tight=True)
+        try:
+            # TODO: make this cleaner code
+            plot.fig.axes[1].autoscale(tight=True)
+        except:
+            pass
 
 
 #%%
@@ -736,7 +775,7 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
 #%%
 
 
-def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
+def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 
     TODO: Add functionality for virtual gates, which should contain functionality to automatically determine
@@ -744,8 +783,8 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
 
     Arguments:
         station (qcodes station): contains all of the instruments
-        scangates (list): the gates to scan
-        coords (2 x 2 array): coordinates of the points to scan between
+        scangates (list of length k): the gates to scan
+        coords (k x 2 array): coordinates of the points to scan between              
         sd (object): corresponds to the sensing dot used for read-out
 
     Returns:
@@ -753,17 +792,22 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000):
     '''
     # TODO: put a different parameter and values on the horizontal axis?
     # TODO: extend functionality to any number of gates (virtual gates?)
-    x0 = [coords[0, 0], coords[1, 0]]
+    # FIXME: single gate variation???
+    x0 = [coords[0, 0], coords[0, 1]]  # first parameters
     x1 = [coords[1, 0], coords[1, 1]]
-    sweeprange = np.sqrt((x0[0] - x1[0])**2 + (x0[1] - x1[1])**2)
+    sweeprange = np.sqrt((x1[1] - x1[0])**2 + (x0[1] - x0[0])**2)
     gate_comb = dict()
 
-    for g in scangates:
-        gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
+    # for g in scangates:
+    #    gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
+    gate_comb = {scangates[1]: (x1[1] - x1[0]) / sweeprange, scangates[0]: (x0[1] - x0[0]) / sweeprange}
 
-    gate = scangates[0]  # see TODO
+    gate = scangates[0]  # see TODO: proper name
 
     waveform, sweep_info = station.awg.sweep_gate_virt(gate_comb, sweeprange, period)
+    if verbose:
+        print('scanLine: sweeprange %.1f ' % sweeprange)
+        print(sweep_info)
 
     fpga_ch = sd.fpga_ch
     waittime = Naverage * period

@@ -16,7 +16,10 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-from qtt.algorithms.onedot import onedotGetBalance
+import qtt.algorithms.onedot  # import onedotGetBalance
+
+
+#from qtt.algorithms.onedot import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.scans import pinchoffFilename
 from qtt.data import load_data, show2D
@@ -52,7 +55,7 @@ def positionScanjob(scanjob, pt):
     return scanjob
 
 
-def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
+def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, step=-8, full=1):
     """ Scan a one-dot
 
     Arguments
@@ -73,10 +76,10 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
 
     pv1 = float(od['pinchvalues'][0]) + 0
     pv2 = float(od['pinchvalues'][2]) + 0
-    stepstart = float(np.minimum(od['pinchvalues'][0] + 400, 90))
-    sweepstart = float(np.minimum(od['pinchvalues'][2] + 300, 90))
-    stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': -3})
-    sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': -3})
+    stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, 90))
+    sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, 90))
+    stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': step})
+    sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
     wait_time_base = qtt.scans.waitTime(None, station=station)
@@ -93,7 +96,6 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, full=1):
     scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
     scanjob['wait_time_step'] = wait_time_base + 3 * wait_time
     scanjob['wait_time_sweep'] = wait_time_sweep
-
     alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time_sweep, background=False)
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
@@ -439,7 +441,7 @@ def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
 
 #%%
 
-import matplotlib
+#import matplotlib
 
 
 def cmap_map(function, cmap):
@@ -492,7 +494,7 @@ def cmap_discretize(cmap, N, m=1024):
     cdict = {}
     for ki, key in enumerate(('red', 'green', 'blue')):
         cdict[key] = [
-            (indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki]) for i in xrange(N + 1)]
+            (indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki]) for i in range(N + 1)]
     # Return colormap object.
     return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d" % m, cdict, m)
 
@@ -691,26 +693,7 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
         ww = fixReversal(ww, verbose=verbose)
     return ww
 
-import skimage
-import skimage.filters
-
-
-def fixReversal(im0, verbose=0):
-    """ Fix orientation of image
-
-    Needed when the keithley (or some other measurement device) has been reversed
-    """
-    thr = skimage.filters.threshold_otsu(im0)
-    mval = np.mean(im0)
-
-    # meanopen = np.mean(im0[:,:])
-    # fr=thr<mval
-    fr = thr < 0
-    if verbose:
-        print(' fixReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
-    if fr:
-        im0 = -np.array(im0)
-    return im0
+from qtt.scans import fixReversal
 
 
 #%%
@@ -959,7 +942,7 @@ def fillPoly(im, poly_verts, color=None):
 
     Arugments:
         im (array)
-        poly_verts (array): polygon vertices
+        poly_verts (kx2 array): polygon vertices
         color (array or float)
     """
     ny, nx = im.shape[0], im.shape[1]
@@ -971,11 +954,12 @@ def fillPoly(im, poly_verts, color=None):
 
     points = np.vstack((y, x)).T
 
-    npts = poly_verts.size / 2
+    npts = int(poly_verts.size / 2)
     poly_verts = poly_verts.reshape((npts, 2))
     poly_verts = poly_verts[:, [1, 0]]
 
     try:
+        from matplotlib.path import Path
         pp = Path(poly_verts)
         r = pp.contains_points(points)
     except:
@@ -1048,7 +1032,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     fign = None
                     figm = None
 
-                od, ptv, pt0, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=verbose >= 2, fig=fign)
+                od, ptv, pt0, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, dd2d, verbose=verbose >= 2, fig=fign)
 
                 dstrhi = '%s-sweep-2d-hires' % (od['name'])
                 tmphi = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
@@ -1096,6 +1080,10 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             if p2 == 'P3':
                 sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
 
+            sweeprange = 240
+            if p2 == 'P3':
+                sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
+
             e1 = ods[0]['pinchvalues'][1]
             e2 = ods[1]['pinchvalues'][1]
             e1 = float(np.maximum(basevaluesTD[p1] - sweeprange / 2, e1))
@@ -1113,7 +1101,9 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
         except Exception as e:
-            print(e)
+            import logging
+            logging.exception("error with double-dot job!")
+            # print(e)
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])
             # pdb.set_trace()
             continue

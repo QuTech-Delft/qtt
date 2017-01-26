@@ -77,7 +77,6 @@ class DataViewer(QtWidgets.QWidget):
             self.plotwindow = self.qplot
         else:
             self.plotwindow = self.qplot.win
-
         topLayout = QtWidgets.QHBoxLayout()
         self.select_dir = QtWidgets.QPushButton()
         self.select_dir.setText('Select directory')

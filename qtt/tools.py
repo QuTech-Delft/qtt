@@ -174,7 +174,6 @@ def scanTime(dd):
     w = dd.metadata.get('scantime', None)
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
-
     return w
 
 
@@ -653,15 +652,17 @@ try:
     import qtt.gui
     #from qtt.gui.dataviewer import DataViewer
 
-    def setupMeasurementWindows(station, ilist=None):
+    def setupMeasurementWindows(station, create_parameter_widget=True, ilist=None):
         ms = monitorSizes()
         vv = ms[-1]
         # create custom viewer which gathers data from a station object
         if ilist is None:
             ilist = [station.gates]
-        w = ParameterViewer(ilist)
-        w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
-        w.updatecallback()
+        w = None
+        if create_parameter_widget:
+            w = ParameterViewer(ilist)
+            w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
+            w.updatecallback()
 
         plotQ = QtPlot(window_title='Live plot', interval=.5)
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)

@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     server_name = 'virtualV2-%d' % np.random.randint(100)
     server_name = None
-    msetup.close()
+    #msetup.close()
     msetup.initialize(reinit=False, server_name=server_name)
     #msetup.initialize(reinit=False, server_name=None )
     station = msetup.getStation()
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     gates = station.gates
     time.sleep(0.05)
     gates.L.get()
-    gates.R.get()
+    #gates.R.get()
 
     station.set_measurement(keithley3.amplitude)
 
@@ -153,8 +153,8 @@ if __name__ == '__main__':
     one_dots = sample.get_one_dots(sdidx=[])
     full = 0
 
-    sdindices = [1, 2]
-    sdindices = [1, ]
+    sdindices = [2, ]
+    #sdindices = [1,2,]
 
     sddots = sample.get_one_dots(sdidx=sdindices)[-len(sdindices):]
 
@@ -178,10 +178,10 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-17n'
-    Tvalues = np.array([-411])
+    basetag = 'batch-2017-1-23b'
+    Tvalues = np.array([-390])
 
-    b = False
+    b = True
 
     if b:
         basetag = basetag + 'b'
@@ -237,6 +237,9 @@ if __name__ == '__main__':
     sdid = 1
     sdid=2
 
+    if not sdid in sdindices:
+        raise Exception('are you sure you want this?' )
+        
     ggsd = ['SD%d%s' % (sdid, c) for c in ['a', 'b', 'c']]
 
     import qtt.structures
@@ -596,10 +599,12 @@ for ii, Tvalue in enumerate(Tvalues):
             print('### autotune SD')
             sd.autoTuneInit(scanjob)
 
-            try:
+            if 0:
+                # cannot use here, since not yet initialized...
                 tmp, alldata = sd.fastTune()
-            except:
-                tmp, alldata = sd.autoTune(outputdir=outputdir, max_wait_time=.5, step=-4)
+            else:
+                tmp, alldata = sd.autoTune(outputdir=outputdir,
+                                   max_wait_time=.5, scanrange=700, step=-4)
 
             dstr = 'tunesd-%s-sd%d' % (scanjob['td']['name'], sd.index)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
