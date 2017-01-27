@@ -118,7 +118,9 @@ if 0:
 
 #plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
 plt.figure(301); plt.clf(); plt.jet()
-df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+ax=plt.gca()
+nvtools.nvtools.add_attraction_grid(ax, attractmV, attractFreq)
+df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False, grid=False)
 
 np.save(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'), labels)
 
