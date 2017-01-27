@@ -118,19 +118,11 @@ plt.plot(time, '.b'); plt.ylabel('Time')
 #%% do we identify jumps correctly?
 #
 # Plot a section to look at the selected jumps
-<<<<<<< 290c765dde646ce4a5001e373fe19a77e7bfc620
 plot_range = [300,600]
 x = allData[0][plot_range[0]:plot_range[1]]
 y = allData[1][plot_range[0]:plot_range[1]]
 y2 = allData[2][plot_range[0]:plot_range[1]]
-plot_select = jumpSelect & (allData[0]<x[-1])[:-1] & (allData[0]>x[0])[:-1]
-=======
-plot_length = 100
-x = allData[0][:plot_length]
-y = allData[1][:plot_length]
-y2 = allData[2][:plot_length]
-plot_select = jumpSelect & (allData[0]<x[-1]) #[:-1]
->>>>>>> small updates to make code working
+plot_select = jumpSelect & (allData[0]<x[-1]) & (allData[0]>x[0])
 fig = plt.figure(figsize=(17,6))
 ax = plt.subplot(211)
 plt.plot(x,y2,'x-')
