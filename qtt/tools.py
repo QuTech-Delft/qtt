@@ -47,7 +47,6 @@ def update_dictionary(alldata, **kwargs):
     for k in kwargs:
         alldata[k] = kwargs[k]
 
-
 def stripDataset(dataset):
     """ Make sure a dataset can be pickled """
     dataset.sync()
