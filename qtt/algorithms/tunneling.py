@@ -98,8 +98,14 @@ if __name__ == '__main__':
 
     # generate data
     par = np.array([.2, 0, .1, -.0031, -.001, .21])
-    xx = np.arange(-10, 10, .1)
-    yy = polmod_all_2slopes(xx, par, kT=0.001)
+    #xx0 = np.arange(-10, 10, .1)
+    xx0=np.linspace(-10, 10, 200)
+    #xx0=4*np.linspace(-10, 10, 200)
+    xx=xx0
+    xx=2*xx0
+    #xx=xx0
+    yy0 = polmod_all_2slopes(xx0, par, kT=0.001)
+    yy=yy0 + .015 * (np.random.rand(yy0.size) - .5)
     delta = xx
     data = yy
 
@@ -113,10 +119,12 @@ if __name__ == '__main__':
     # show data
     plt.figure(100)
     plt.clf()
-    plt.plot(xx, yy, '.b', label='data')
-    plt.plot(xx, yy + .1 * (np.random.rand(yy.size) - .5), '.m', label='noise 0.1')
-
+    plt.plot(xx, yy0, '.b', label='data')
+    plt.plot(xx, yy, '.m', label='noise 0.1')
+    plt.xlabel('x')
+    plt.ylabel('value')
     plt.plot(xx, yyfit, '-r', label='fitted')
+    plt.title('fitted t %.3f, gt %.3f'  % (parfit[0], par[0]))
     plt.legend(numpoints=1)
 
     #%% Quick estimate

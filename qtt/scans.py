@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from qtt.tools import tilefigs
 import qtt.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
-from qtt.algorithms.onedot import onedotGetBalanceFine
+import qtt.algorithms.onedot # import onedotGetBalanceFine
 import qtt.live
 
 #from qtt.data import *
@@ -119,7 +119,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     impixel, tr = dataset2image(alldatahi, mode='pixel')
 
     #_,_,_, im = get2Ddata(alldatahi)
-    ptv, fimg, tmp = onedotGetBalanceFine(
+    ptv, fimg, tmp = qtt.algorithms.onedot.onedotGetBalanceFine(
         impixel, alldatahi, verbose=1, fig=fig)
 
     if tmp['accuracy'] < .2:
