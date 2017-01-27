@@ -34,8 +34,7 @@ from keras.layers import LSTM
 from keras.utils import np_utils
 
 
-#labels = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy')).T
-labels=np.load('labels.npy')
+labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 text=labels
 print('corpus length:', len(labels))
 
@@ -44,6 +43,8 @@ print('corpus length:', len(labels))
 #%% Naive
 #
 # make histogram
+
+from nvtools.nvtools import avg_steps, fmt
 
 chars = sorted(list(set(labels)))
 print('total chars:', len(chars))
@@ -54,13 +55,11 @@ textX=[char_indices[c] for c in text]
 bc=np.bincount(textX)
 prob=bc/bc.sum()
 
-def fmt(x, ndigits=3):
-    v=[('%%.%df' % ndigits) % p for p in x]
-    return ', '.join(v)
 
 print('probability of each of the classes: %s' % fmt(prob))
 
 import keras.backend as K
+
 
 def avg_steps(y_true, y_pred, verbose=0):
     """ Calculate average number of steps needed for finding the correct cluster """
@@ -143,8 +142,6 @@ _=avg_steps(lx, y_pred, verbose=1)
 av2=avg_steps(lx, y_pred2, verbose=1)    
 print('  avg number of steps (1-grams): %.5f' % av1)
 print('  avg number of steps (2-grams): %.5f' % av2)
-
-
 
 #%%  Sequences
 chars = sorted(list(set(labels)))

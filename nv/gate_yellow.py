@@ -15,7 +15,7 @@ import pandas as pd
 import seaborn as sns
 import sklearn
 import sklearn.cluster
-from sklearn.cluster import DBSCAN, Birch
+from sklearn.cluster import DBSCAN, Birch, KMeans, AffinityPropagation, MeanShift,SpectralClustering
 from sklearn import metrics
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import StandardScaler
@@ -37,25 +37,48 @@ from keras.utils import np_utils
 import sklearn
 
 import matplotlib.cm as cm
-import pmatlab
+from qtt import pmatlab
 
 import sklearn.manifold
-
+import qcodes
 import nvtools
 from nvtools.nvtools import labelMapping
 from nvtools.nvtools import showModel
 
-os.chdir('/home/eendebakpt/svn/qutech/qtt/nv')
+from sklearn.neighbors import KernelDensity
+
+# pip install statsmodels --user
+from statsmodels.graphics.gofplots import qqplot
+
+os.chdir(qcodes.config['user']['nvDataDir'])
 
 #%%
 print('Generating Data')
-data = np.load(os.path.join(os.path.expanduser('~'), 'tmp', 'jdata.npy')).T
-
-df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
-plt.figure(300); plt.clf()
-df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
+data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
+df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
+if 0:
+    plt.figure(300); plt.clf()
+    df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
+    plt.figure(300); plt.clf()
+    df.plot(kind='scatter', x='gate', y='yellow', ax=plt.gca(), linewidths=0)
+    plt.figure()
+    plt.subplot(221)
+    plt.title('Yellow frequency jumps over time')
+    df.plot(kind='scatter', x='yellow jump', y='time', ax=plt.gca(), linewidths=0)
+    plt.subplot(222)
+    plt.title('Gate voltage jumps over time')
+    df.plot(kind='scatter', x='gate jump', y='time', ax=plt.gca(), linewidths=0)
+    plt.subplot(223)
+    plt.title('Yellow frequency over time')
+    df.plot(kind='scatter', x='yellow', y='time', ax=plt.gca(), linewidths=0)
+    plt.subplot(224)
+    plt.title('Gate voltage over time')
+    df.plot(kind='scatter', x='gate', y='time', ax=plt.gca(), linewidths=0)
 
 #%% Data needs to be scaled for almost any machine learning algorithm to work
+
+#data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
+df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
 
 # translate by mean and scale with std
 datascaler= StandardScaler()
@@ -63,7 +86,7 @@ dataS = datascaler.fit_transform(data)
 dfS=df.copy()
 dfS[:]=datascaler.transform(df)
 
-Xbase=dataS[:,4:] # base data
+Xbase=dataS[:,4:6] # base data
 datascalerBase = StandardScaler().fit(data[:,4:])
 x=dataS[:,4]
 y=dataS[:,5]
@@ -71,11 +94,11 @@ y=dataS[:,5]
 #plt.figure(100); plt.clf(); plt.plot(x,y, '.b'); plt.axis('image')
 
 #%% Learn clusters
-
-
 X=Xbase
 db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
+#db=SpectralClustering(5,gamma=0.2).fit(X)
+#db=KMeans(n_clusters=7).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
@@ -84,10 +107,9 @@ except:
     pass
 labels = db.labels_
 
-encoder = sklearn.preprocessing.LabelEncoder ()
+encoder = sklearn.preprocessing.LabelEncoder()
 encoder.fit(labels)
-
-
+    
 # Number of clusters in labels, ignoring noise if present.
 if 0:
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
@@ -95,12 +117,41 @@ if 0:
     print("Silhouette Coefficient: %0.3f" % metrics.silhouette_score(X, labels))
 
 #plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
-
-
 plt.figure(301); plt.clf(); plt.jet()
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
 
+np.save(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'), labels)
 
+#%% Find dense 0 cluster
+densityKern = KernelDensity().fit(X)
+s = densityKern.score_samples(X)
+plt.figure()
+plt.subplot(121)
+plt.scatter(df['gate jump'],s)
+plt.subplot(122)
+plt.scatter(df['yellow jump'],s)
+
+X = X[s<-2.5,:]
+#%%
+# translate by mean and scale with std
+
+#db = DBSCAN(eps=0.5, min_samples=50).fit(X) # fit centers
+db=SpectralClustering(7,gamma=0.2).fit(X)
+core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+try:
+    core_samples_mask[db.core_sample_indices_] = True
+except:
+    pass
+labels = db.labels_
+
+encoder = sklearn.preprocessing.LabelEncoder()
+encoder.fit(labels)
+
+plt.figure(301); plt.clf(); plt.jet()
+plt.scatter(X[:,0],X[:,1],c=labels,cmap=cm.jet)
+#dfNoCentre.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+
+#%%
 from nvtools.nvtools import clusterCenters, showTSNE
 chars, l2i, i2l = labelMapping(labels)    
 ll=chars
@@ -117,9 +168,6 @@ if 1:
         
 pmatlab.tilefigs([300,301, 303])
 #plt.figure(400);plt.clf(); plt.jet() ;plt.scatter(X[:,0], X[:,1], c=labels.astype(np.int)+1)
-      
-      
-np.save(os.path.join(os.path.expanduser('~'), 'tmp', 'labels.npy'), labels)
 
       
 #%% tSNE
