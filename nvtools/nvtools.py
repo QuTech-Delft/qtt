@@ -279,7 +279,18 @@ def avg_steps(y_true, y_pred, verbose=0):
     return A
 
     
-    #%%
+#%% Visualization
+import matplotlib.ticker as plticker
+
+def add_attraction_grid(ax, attractmV, attractFreq, zorder=0):
+    minorLocator = plticker.MultipleLocator(attractFreq)
+    ax.yaxis.set_minor_locator(minorLocator)
+    minorLocator = plticker.MultipleLocator(attractmV)
+    ax.xaxis.set_minor_locator(minorLocator)
+    # Set grid to use minor tick locations. 
+    ax.grid(which = 'minor', linestyle='-', color=(.9,.9,.9), zorder=zorder)
+
+    
 def nv_plot_callback(plotidx, adata, fig=100, *args, **kwargs):
     verbose = kwargs.get('verbose', 1)
     if verbose:
@@ -307,12 +318,13 @@ def plotSection(allData, idx, jumps=None, mode='gate', si=None):
     
     idx=np.array(idx)
     idx=idx[idx>=0]
-    idx=idx[idx<len(allData)]
     
     if isinstance(allData, list):
         pdata=np.array(allData).T
     else:
         pdata=allData
+    idx=idx[idx<len(pdata)]
+    
     x = pdata[idx,0]
     y = pdata[idx,1]
     y2 = pdata[idx,2]
