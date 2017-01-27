@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 import sklearn
 import sklearn.manifold
 import numpy as np
+import copy
 
 from sklearn.manifold import TSNE
 
@@ -35,6 +36,50 @@ def suppress_stdout():
         finally:
             sys.stdout = old_stdout
             
+
+def remove_empty_intervals(data, thr=30*60):   
+    """ Remove empty intervals 
+    
+    Args:
+        data (list): each element is a list with the first element a numpy array with time
+        thr (float): time threshold in seconds
+    Returns:
+        allData (list): list with merged arrays
+        debugvar (Anything)
+    """                  
+    stitchIndices,stitchTimeDiff = list(range(len(data))),list(range(len(data)))
+    
+    for i,d in zip(range(len(data)),data):
+        timeDiff = np.diff(d)
+        stitchTimeDiff[i] = np.append(np.array([0]),timeDiff[timeDiff > 30*60])
+        stitchTimeDiff[i] = np.cumsum(stitchTimeDiff[i])
+        # find times whenever we were idle for more than thr seconds
+        ind1,ind2 = np.where( timeDiff >thr )
+        stitchIndices[i] = np.append(ind2[ind1==0],np.array([len(d[0])-1]))
+        stitchIndices[i] = np.append(stitchIndices[i][0],np.diff(stitchIndices[i]))
+        
+        # create an array that corrects for the idle times
+        subtraction_arr = np.array([0])
+        for j,inds,diff in zip(range(len(stitchIndices[i])),stitchIndices[i],stitchTimeDiff[i]):
+            subtraction_arr = np.append(subtraction_arr,np.ones(inds)*diff)
+        
+        # manipulate the original time series by setting it initially to 0 and adjusting the idle time with the subtraction array
+        data[i][0] = np.subtract(data[i][0],subtraction_arr)-data[i][0][0]
+
+    allData = [None] * len(data) # np.array([]),np.array([]),np.array([]),np.array([])]
+    allStitchIndices = []
+    for i in range(len(data)):
+        if i ==0:
+            allData = copy.deepcopy(data[i])
+        else:
+            for j,d in zip(range(len(data[i])),data[i]):
+                if j ==0:
+                    addtotime = allData[0][-1]
+                else:
+                    addtotime = 0
+                allData[j] = np.append(allData[j],d+addtotime)
+                
+    return allData, data    
 
 def extract_data(filename, gate_scaling):
     """ Extract data from a datafile """
@@ -235,6 +280,19 @@ def avg_steps(y_true, y_pred, verbose=0):
 
     
     #%%
+def nv_plot_callback(plotidx, adata, fig=100, *args, **kwargs):
+    verbose = kwargs.get('verbose', 1)
+    if verbose:
+        print('plotidx = %s' % plotidx)
+    plt.figure(fig)
+    plt.clf()
+    #dataidx = int(jumpdata[plotidx, 6])
+    dataidx=plotidx
+    plotSection(adata, list(range(dataidx - 60, dataidx + 100)), jumps=None, si=dataidx)
+    plt.pause(1e-4)
+    plt.figure(fig+1);  plt.clf()
+    plotSection(adata, list(range(dataidx - 60, dataidx + 100)), jumps=None, mode='freq', si=dataidx)
+    plt.pause(1e-4)
     
 def plotSection(allData, idx, jumps=None, mode='gate', si=None):
     """ Helper function to plot a section of data
@@ -281,10 +339,10 @@ def plotSection(allData, idx, jumps=None, mode='gate', si=None):
         else:
             plt.plot(pdata[si,0], pdata[si,1], '.y', markersize=12, label='special point')
 
-if __name__=='__main__':
+if __name__=='__main__' and 0:
     plotSection(allData, range(si-offset, si-offset+100), jumpSelect, mode='gate')
 
 #%%        
-if __name__=='__main__':
+if __name__=='__main__' and 0:
     testTheano()
         
