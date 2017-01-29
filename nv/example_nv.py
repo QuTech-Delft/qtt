@@ -151,14 +151,12 @@ ax = plt.subplot(111)
 add_attraction_grid(ax, attractmV, attractFreq, zorder=0)
 
 b = jumpGate/jumpYellow
-plt.plot(jumpGate, jumpYellow, 'x', zorder=3)
+plt.plot(jumpGate, jumpYellow, '.', zorder=3)
 plt.xlabel('Gate [mV]');plt.ylabel('Frequency jump [GHz]')
 
 ax.set_xlabel('Voltage jump on gate (mV)')
 ax.set_ylabel('Frequency jump on yellow (GHz)')
 plt.title('Correlation between gate and yellow jumps.')
-
-
 
 # green points
 

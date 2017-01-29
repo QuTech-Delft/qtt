@@ -339,6 +339,7 @@ def plotSection(allData, idx, jumps=None, mode='gate', si=None):
         pdata = np.array(allData).T
     else:
         pdata=allData
+    idx=np.array(idx)
     idx=idx[idx<len(pdata)]
     
     x = pdata[idx,0]
