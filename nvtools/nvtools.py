@@ -301,7 +301,6 @@ def add_attraction_grid(ax, attractmV, attractFreq, zorder=0):
     ax.grid(which = 'minor', linestyle='-', color=(.9,.9,.9), zorder=zorder)
 
     
-
 def nv_plot_callback(plotidx, adata, fig=100, singlefig=True, *args, **kwargs):
     """ Callback function to plot NV centre data """
     verbose = kwargs.get('verbose', 1)
@@ -334,12 +333,13 @@ def plotSection(allData, idx, jumps=None, mode='gate', si=None):
         mode (str): 'gate' or 'freq'
         si (index): index of special point
     """
-
+    
+    idx=np.array(idx)
+    idx=idx[idx>=0]
     if isinstance(allData, list):
         pdata = np.array(allData).T
     else:
         pdata=allData
-    idx=np.array(idx)
     idx=idx[idx<len(pdata)]
     
     x = pdata[idx,0]
