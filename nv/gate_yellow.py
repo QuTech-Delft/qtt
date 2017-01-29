@@ -8,11 +8,11 @@ from imp import reload
 import os,sys
 import numpy as np
 import matplotlib.pyplot as plt
-from keras.models import Sequential
-from keras.layers import Dense, LSTM
 
 import pandas as pd
-import seaborn as sns
+#import seaborn as sns
+plt.hold(True)
+
 import sklearn
 import sklearn.cluster
 from sklearn.cluster import DBSCAN, Birch, KMeans, AffinityPropagation, MeanShift,SpectralClustering
@@ -20,9 +20,8 @@ from sklearn import metrics
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import StandardScaler
 
-import pandas as pd
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, LSTM
 from keras.layers.embeddings import Embedding
 
 from keras.wrappers.scikit_learn import KerasRegressor

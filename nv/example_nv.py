@@ -65,6 +65,7 @@ ax2.set_xlabel('elapsed time (s)')
 ax2.set_ylabel('Yellow frequency (GHz)')
 plt.show()
 
+#reload(nvtools.nvtools)
 from nvtools.nvtools import plotSection, nv_plot_callback
 
 f = lambda plotidx, **kwargs: nv_plot_callback(plotidx, adata, **kwargs)
