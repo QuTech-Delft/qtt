@@ -28,8 +28,8 @@ import sklearn
 interpolated = False
 
 #%% Load data
-jumpdata = np.load(os.path.join(qcodes.config['user']['nvDataDir'], 'jdata2.npy')).T
-allData = np.load(os.path.join(qcodes.config['user']['nvDataDir'], 'jdata-alldata2.npy')).T
+jumpdata = np.load(os.path.join(qcodes.config['user']['nvDataDir'], 'jdata.npy')).T
+allData = np.load(os.path.join(qcodes.config['user']['nvDataDir'], 'jdata-alldata.npy')).T
 df = pd.DataFrame(jumpdata[:, 0:6], columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
 labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'], 'labels.npy'))
 

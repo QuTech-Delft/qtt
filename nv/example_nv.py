@@ -65,6 +65,7 @@ ax2.set_xlabel('elapsed time (s)')
 ax2.set_ylabel('Yellow frequency (GHz)')
 plt.show()
 
+#reload(nvtools.nvtools)
 from nvtools.nvtools import plotSection, nv_plot_callback
 
 f = lambda plotidx, **kwargs: nv_plot_callback(plotidx, adata, **kwargs)
@@ -150,7 +151,7 @@ ax = plt.subplot(111)
 add_attraction_grid(ax, attractmV, attractFreq, zorder=0)
 
 b = jumpGate/jumpYellow
-plt.plot(jumpGate, jumpYellow, 'x', zorder=3)
+plt.plot(jumpGate, jumpYellow, '.', zorder=3)
 plt.xlabel('Gate [mV]');plt.ylabel('Frequency jump [GHz]')
 
 ax.set_xlabel('Voltage jump on gate (mV)')
