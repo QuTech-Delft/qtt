@@ -20,6 +20,13 @@ from qtt.data import *
 from qtt.algorithms import *
 from qtt.algorithms.functions import logistic
 
+#%%
+
+def start_dataviewer():
+    from qtt.gui.dataviewer import DataViewer
+    dv = DataViewer()
+    dv.show()
+    return dv
 
 #%% Enhance the qcodes functionality
 
