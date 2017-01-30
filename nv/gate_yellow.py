@@ -13,6 +13,10 @@ import pandas as pd
 #import seaborn as sns
 plt.hold(True)
 
+
+import matplotlib.cm as cm
+from qtt import pmatlab
+
 import sklearn
 import sklearn.cluster
 from sklearn.cluster import DBSCAN, Birch, KMeans, AffinityPropagation, MeanShift,SpectralClustering
@@ -20,23 +24,27 @@ from sklearn import metrics
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import StandardScaler
 
-from keras.models import Sequential
-from keras.layers import Dense, LSTM
-from keras.layers.embeddings import Embedding
-
-from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelEncoder
-from keras.utils import np_utils
 
-import sklearn
+try:
+    from sklearn.model_selection import KFold
+    from sklearn.model_selection import cross_val_score
+    from sklearn.model_selection import KFold
+except:
+    pass
 
-import matplotlib.cm as cm
-from qtt import pmatlab
+try:
+    from keras.models import Sequential
+    from keras.layers import Dense, LSTM
+    from keras.layers.embeddings import Embedding
+
+    from keras.wrappers.scikit_learn import KerasRegressor
+    from keras.utils import np_utils
+except:
+        pass
+
 
 import sklearn.manifold
 import qcodes

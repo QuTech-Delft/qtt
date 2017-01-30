@@ -209,6 +209,21 @@ except:
 
 #%%
 
+def two_grams(alphabet, textX, normalize=True):
+    """ Compute 2-grams for a dataset """
+    gg=np.zeros( ( len(alphabet), len(alphabet) ), dtype=float)
+    for i in range(len(textX)-1):
+        ix=textX[i]
+        iy=textX[i+1]
+        gg[iy, ix]+=1
+
+    if normalize:        
+        for j in range(gg.shape[1]):
+            gg[:,j]=gg[:,j] / gg[:,j].sum()
+
+    return gg
+
+
 def clusterCenters(db, X, labels=None):
     ''' Calculate cluster centres from a sklearn clustering '''
     l = db.labels_
