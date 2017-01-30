@@ -1,18 +1,29 @@
 import numpy
 import time
+from matplotlib import pyplot as plt
+import numpy as np
+import copy
+
+
+import sklearn
+import sklearn.manifold
+from sklearn.manifold import TSNE
+
+
 try:
     import pygpu
 except:
     pass
-from theano import function, config, shared, tensor, sandbox
+try:
+    from theano import function, config, shared, tensor, sandbox
+except:
+    pass
 
-from matplotlib import pyplot as plt
-import sklearn
-import sklearn.manifold
-import numpy as np
-import copy
-
-from sklearn.manifold import TSNE
+try:
+    import keras as K
+    from keras.layers import Dense, LSTM
+except:
+    pass
 
 #%%
 
@@ -183,19 +194,18 @@ class Trainer:
         plt.xlabel('Epoch')
 
 #%%
-import keras as K
-from keras.layers import Dense, LSTM
 
-
-class BinaryEmbedding(Dense):
-
-    def build(self, input_shape):
-        super(BinaryEmbedding, self).build(input_shape)
-        self.trainable_weights = [self.W]
-
-    def call(self, x, mask=None):
-        return self.activation(K.dot(x, self.W))
-
+try:
+        class BinaryEmbedding(Dense):
+        
+            def build(self, input_shape):
+                super(BinaryEmbedding, self).build(input_shape)
+                self.trainable_weights = [self.W]
+        
+            def call(self, x, mask=None):
+                return self.activation(K.dot(x, self.W))
+except:
+    pass        
 
 #%%
 
