@@ -541,8 +541,6 @@ if __name__ == '__main__':
     
 
 #%%
-from qtt.tools import readfunc
-
 def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None, verbose=1):
     """ Make a 2D scan and create qcodes dataset to store on disk
 
@@ -619,7 +617,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     qtt.time.sleep(wait_time_startloop)
 
     data = readfunc(waveform, Naverage)
-    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange*scanjob['gates_horz'][sweepgate], sweepgate_value=sweepgate_value, fig=None)
 
     sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
