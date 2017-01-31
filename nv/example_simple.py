@@ -14,7 +14,6 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import pandas as pd
-#import pgeometry
 
 import qcodes
 import qtt
@@ -73,6 +72,7 @@ cid = ScatterFig.canvas.mpl_connect('button_press_event', pc)
 
 encoder = sklearn.preprocessing.LabelEncoder()
 encoder.fit(labels)
+chars = encoder.classes_
 lx = encoder.transform(labels)
 
 char_indices = encoder.transform([-1, 0, 1, 2, 3, 4])
@@ -119,8 +119,89 @@ for ii, l in enumerate(labels):
         threefour[ii] = threefour[ii - 1]
 
 y_pred = np.tile(prob, (len(labels), 1))
-y_pred[(onetwo == 1).nonzero()[0] - 1, char_map[2]] = 0
-y_pred[(onetwo == 2).nonzero()[0] - 1, char_map[1]] = 0
-y_pred[(threefour == 3).nonzero()[0] - 1, char_map[4]] = 0
-y_pred[(threefour == 4).nonzero()[0] - 1, char_map[3]] = 0
+y_pred[(onetwo[:-1] == 1).nonzero()[0] + 1, char_map[1]] = 0
+y_pred[(onetwo[:-1] == 2).nonzero()[0] + 1, char_map[2]] = 0
+y_pred[(threefour[:-1] == 3).nonzero()[0] + 1, char_map[3]] = 0
+y_pred[(threefour[:-1] == 4).nonzero()[0] + 1, char_map[4]] = 0
 print('  avg number of steps: %.3f' % avg_steps(lx, y_pred))
+
+#%% Best possible for a a double 2-level model:
+#
+# Suppose we have two 2-level systems. With probability p system A flips,
+# with probability q=1-p system B flips
+
+from nvtools.nvtools import avg_steps, fmt
+
+def generate_double2lvl(N, p, q):
+    x = np.zeros(N,).astype(int)
+    for ii in range(N-1):
+        if np.random.rand()<=p:
+            x[ii+1] = x[ii] ^1
+        else:
+            x[ii+1] = x[ii] ^2
+            
+    return x
+
+import time
+nn=50000    
+#nn=100
+p=.35
+t0=time.time()
+print(generate_double2lvl(100, p, 1-p))
+labels=generate_double2lvl(nn, p, 1-p)
+
+
+encoder = sklearn.preprocessing.LabelEncoder()
+encoder.fit(labels)
+alphabet = encoder.classes_
+
+
+chars = sorted(list(set(labels)))
+print('total chars:', len(chars))
+char_indices = dict((c, i) for i, c in enumerate(chars))
+
+labelsX=[char_indices[c] for c in labels]
+
+bc=np.bincount(labelsX)
+prob=bc/bc.sum()
+
+
+print('probability of each of the classes: %s' % fmt(prob))
+
+# FIXME: convert from classes to jumps....
+
+from nvtools.nvtools import two_grams
+    
+gg=two_grams(alphabet, labels)
+
+print('dt %.3f' % (time.time()-t0) )
+
+#gg /= (len(text)-1 )    
+plt.figure(100); plt.clf()
+plt.imshow(gg, interpolation='nearest')
+plt.axis('image')
+plt.colorbar()
+plt.xlabel('Class label')
+plt.ylabel('Next')
+    
+plt.xticks(range(len(alphabet)), alphabet)    
+plt.yticks(range(len(alphabet)), alphabet)    
+
+pgeometry.tilefigs([100])
+
+y_pred2 = np.vstack( (prob, gg[:, labelsX[:-1]].T ) )
+#y_pred2 = np.vstack( (prob, gg[:, labelsX[1:]].T ) )
+y_pred=np.tile( prob, (nn, 1))
+
+av0=avg_steps(labelsX, (1/len(alphabet))*np.ones( (nn, len(alphabet) )) )    
+
+av1=avg_steps(labelsX, y_pred, verbose=1)    
+
+av2=avg_steps(labelsX, y_pred2, verbose=0)    
+
+print('dt %.3f' % (time.time()-t0) )
+
+print('  avg number of steps (0-grams): %.5f' % av0)
+print('  avg number of steps (1-grams): %.5f' % av1)
+print('  avg number of steps (2-grams): %.5f' % av2)
+

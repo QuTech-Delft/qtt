@@ -14,26 +14,31 @@ Created on Thu Nov  3 11:16:29 2016
 # * Why does the learning not converge?
 
 #%% Load packages
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout
-from keras.layers import LSTM
-from keras.optimizers import RMSprop
-from keras.utils.data_utils import get_file
 import numpy as np
 import random
 import sys,os
 from theano import tensor as T
 
-from nvtools.nvtools import Trainer
-
-import numpy
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
-from keras.utils import np_utils
 import sklearn
 import qcodes
 from qtt import pgeometry
+from nvtools.nvtools import Trainer
+
+import numpy
+try:
+    import keras.backend as K
+    from keras.models import Sequential
+    from keras.layers import Dense, Activation, Dropout
+    from keras.layers import LSTM
+    from keras.optimizers import RMSprop
+    from keras.utils.data_utils import get_file
+
+    from keras.models import Sequential
+    from keras.layers import Dense
+    from keras.layers import LSTM
+    from keras.utils import np_utils
+except:
+    pass
 
 labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 text=labels
@@ -62,7 +67,6 @@ prob=bc/bc.sum()
 
 print('probability of each of the classes: %s' % fmt(prob))
 
-import keras.backend as K
 
 
 def avg_steps(y_true, y_pred, verbose=0):
@@ -110,18 +114,7 @@ print('  avg number of steps: %.3f' % av1)
 #%% 2-grams
 alphabet=chars
 
-def two_grams(alphabet, textX, normalize=True):
-    gg=np.zeros( ( len(alphabet), len(alphabet) ), dtype=float)
-    for i in range(len(textX)-1):
-        ix=textX[i]
-        iy=textX[i+1]
-        gg[iy, ix]+=1
-
-    if normalize:        
-        for j in range(gg.shape[1]):
-            gg[:,j]=gg[:,j] / gg[:,j].sum()
-
-    return gg
+from nvtools.nvtools import two_grams
     
 gg=two_grams(alphabet, textX)
 

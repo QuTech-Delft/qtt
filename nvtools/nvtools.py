@@ -1,18 +1,29 @@
 import numpy
 import time
+from matplotlib import pyplot as plt
+import numpy as np
+import copy
+
+
+import sklearn
+import sklearn.manifold
+from sklearn.manifold import TSNE
+
+
 try:
     import pygpu
 except:
     pass
-from theano import function, config, shared, tensor, sandbox
+try:
+    from theano import function, config, shared, tensor, sandbox
+except:
+    pass
 
-from matplotlib import pyplot as plt
-import sklearn
-import sklearn.manifold
-import numpy as np
-import copy
-
-from sklearn.manifold import TSNE
+try:
+    import keras as K
+    from keras.layers import Dense, LSTM
+except:
+    pass
 
 #%%
 
@@ -183,21 +194,35 @@ class Trainer:
         plt.xlabel('Epoch')
 
 #%%
-import keras as K
-from keras.layers import Dense, LSTM
 
-
-class BinaryEmbedding(Dense):
-
-    def build(self, input_shape):
-        super(BinaryEmbedding, self).build(input_shape)
-        self.trainable_weights = [self.W]
-
-    def call(self, x, mask=None):
-        return self.activation(K.dot(x, self.W))
-
+try:
+        class BinaryEmbedding(Dense):
+        
+            def build(self, input_shape):
+                super(BinaryEmbedding, self).build(input_shape)
+                self.trainable_weights = [self.W]
+        
+            def call(self, x, mask=None):
+                return self.activation(K.dot(x, self.W))
+except:
+    pass        
 
 #%%
+
+def two_grams(alphabet, textX, normalize=True):
+    """ Compute 2-grams for a dataset """
+    gg=np.zeros( ( len(alphabet), len(alphabet) ), dtype=float)
+    for i in range(len(textX)-1):
+        ix=textX[i]
+        iy=textX[i+1]
+        gg[iy, ix]+=1
+
+    if normalize:        
+        for j in range(gg.shape[1]):
+            gg[:,j]=gg[:,j] / gg[:,j].sum()
+
+    return gg
+
 
 def clusterCenters(db, X, labels=None):
     ''' Calculate cluster centres from a sklearn clustering '''
@@ -288,17 +313,33 @@ def avg_steps(y_true, y_pred, verbose=0):
     A /= len(y_true)
     return A
 
+def searchLength(heatmap, sort=True, verbose=0):
+    """ Calculate search length based on probabilities """
+    if sort:
+        sh=np.sort(heatmap.flatten() )[::-1]
+    else:
+        sh = heatmap.flatten()
+        
+    Ndensity = 0
+    for i in range(sh.size):
+        #v=(i+1)*sh[i]*np.prod(1-sh[:i])
+        v=(i+1)*sh[i] # *np.prod(1-sh[:i])
+        if verbose:
+            print('searchLength: %d: add %.2f' % (i,v) )
+        Ndensity += v
+    return Ndensity
+    
     
 #%% Visualization
 import matplotlib.ticker as plticker
 
-def add_attraction_grid(ax, attractmV, attractFreq, zorder=0):
+def add_attraction_grid(ax, attractmV, attractFreq, zorder=0, color=(.9,.9,.9) ):
     minorLocator = plticker.MultipleLocator(attractFreq)
     ax.yaxis.set_minor_locator(minorLocator)
     minorLocator = plticker.MultipleLocator(attractmV)
     ax.xaxis.set_minor_locator(minorLocator)
     # Set grid to use minor tick locations. 
-    ax.grid(which = 'minor', linestyle='-', color=(.9,.9,.9), zorder=zorder)
+    ax.grid(which = 'minor', linestyle='-', color=color, zorder=zorder)
 
     
 def nv_plot_callback(plotidx, adata, fig=100, singlefig=True, *args, **kwargs):

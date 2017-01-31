@@ -103,6 +103,46 @@ if 0:
     plt.figure(1); plt.clf()
     plt.plot( xx[0,:], xx[5,:], '.b')
 
+    
+#%% Create a 2D histogram
+binx=np.arange(jumpGate.min(), jumpGate.max(), attractmV)
+biny=np.arange(jumpYellow.min(), jumpYellow.max(), attractFreq)
+  
+heatmap, xedges, yedges = np.histogram2d(jumpGate, jumpYellow, bins=[binx, biny])
+extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
+# Laplace or add-one smoothing
+alpha=.001
+heatmapL = (heatmap + alpha ) / (heatmap.sum() + alpha*heatmap.size)
+
+plt.figure(201)
+plt.clf()
+ax=plt.gca()
+plt.imshow(heatmapL.T, extent=extent, origin='lower', interpolation='nearest')
+plt.colorbar()
+
+for x in xedges:
+    pgeometry.plot2Dline([-1,0,x], '-', color=(.8,.8,.8), alpha=.35)
+for y in yedges:
+    pgeometry.plot2Dline([0,-1,y], '-', color=(.8,.8,.8), alpha=.35)
+plt.axis('tight')
+plt.show()
+ax.set_xlabel('Voltage jump on gate (mV)')
+ax.set_ylabel('Frequency jump on yellow (GHz)')
+plt.title('Laplace smoothed probability')
+
+#%% Search length
+from nvtools.nvtools import searchLength
+
+heatmapX=heatmapL/heatmapL.sum()
+    
+print('number of bins: %d' % heatmap.size)
+print('average number of steps (random search): %.1f' % (heatmapX.size/2. + .5) )
+Nd = searchLength(heatmapX)
+print('average number of steps (density based): %.1f' % (Nd) )
+Nd = searchLength(heatmapX, sort=False)
+print('average number of steps (linear): %.1f' % (Nd) )
+    
 # In[9]:
 
 fig=  plt.figure()
