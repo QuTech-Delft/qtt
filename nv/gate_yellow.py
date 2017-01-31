@@ -95,9 +95,9 @@ y=dataS[:,5]
 
 #%% Learn clusters
 X=Xbase
-db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
+db = DBSCAN(eps=0.1, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
-#db=SpectralClustering(5,gamma=0.2).fit(X)
+#db=SpectralClustering(5,gamma=10).fit(X)
 #db=KMeans(n_clusters=7).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
@@ -117,8 +117,13 @@ if 0:
     print("Silhouette Coefficient: %0.3f" % metrics.silhouette_score(X, labels))
 
 #plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
+    
 plt.figure(301); plt.clf(); plt.jet()
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+
+if 0: #Check 0 clusterlocation
+    df0 = df.iloc[labels==0,:]
+    plt.scatter(df0[['gate jump']],df0[['yellow jump']])
 
 np.save(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'), labels)
 
@@ -136,7 +141,7 @@ X = X[s<-2.5,:]
 # translate by mean and scale with std
 
 #db = DBSCAN(eps=0.5, min_samples=50).fit(X) # fit centers
-db=SpectralClustering(7,gamma=0.2).fit(X)
+db=SpectralClustering(9,gamma=6).fit(X)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
     core_samples_mask[db.core_sample_indices_] = True
