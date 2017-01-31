@@ -3,6 +3,7 @@
 Created on Thu Jan 19 12:18:07 2017
 
 @author: Laurens
+<<<<<<< HEAD
 
 
 
@@ -11,6 +12,8 @@ Is cluster 0 always the centre cluster??
 How does a statspredictor fitted without 0 centre handle 0 centre inputs? <- getLabels checks the density
 
 
+=======
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
 """
 
 import numpy as np
@@ -99,10 +102,14 @@ class StatsPredictor():
         prediction=np.bincount(self.labels[index])/np.sum(index)
         while len(prediction)<len(self.labels):
             prediction = np.append(prediction,0)
+<<<<<<< HEAD
         
         if self.ignoreZero: #If we ignore 0, always check 0 first, i.e. make it the first prediction
             prediction = np.append(0,prediction)
         
+=======
+        #print(len(prediction))
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
         return prediction
         
     def foundNextCluster(self, newClust):
@@ -130,21 +137,30 @@ class StatsPredictor():
             clust = self.clusterer
         trainCut = int(np.floor(0.8*len(jumps)))
         #trainJumps = jumps[:trainCut,:]
+<<<<<<< HEAD
         labels = clust.labels_
         trainLabels = labels[:trainCut]
         #testLabels = labels[trainCut:]
+=======
+        labels = self.getLabel(jumps,clust.labels_)
+        trainLabels = labels[:trainCut]
+        testLabels = labels[trainCut:]
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
         if len(np.unique(trainLabels))<2: #It can happen that there is only cluster 0 in the train set
               #In that case the classifier won't be great anyway, so skip it
             return -1
         sp = StatsPredictor(ignoreZero=ignoreZero)
         sp.fitClustered(trainLabels)
         
+<<<<<<< HEAD
         hitTime = self.clusterDistanceMetric()            
         return np.mean(hitTime)
     
     def clusterDistanceMetric(self,jumps,trainCut,clust,statsPred):
         labels = clust.labels_
         testLabels = labels[trainCut:]
+=======
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
         #Get both gate and yellow jump values on a scale from 0 to 15
         oldGateRange = np.max(jumps[:,0])-np.min(jumps[:,0])
         oldYellowRange = np.max(jumps[:,1])-np.min(jumps[:,1])
@@ -152,6 +168,7 @@ class StatsPredictor():
         sclJumps[:,0] = ((jumps[:,0]-np.min(jumps[:,0]))*15)/oldGateRange
         sclJumps[:,1] = ((jumps[:,1]-np.min(jumps[:,1]))*15)/oldYellowRange
         testJumps = sclJumps[trainCut:,:]        
+<<<<<<< HEAD
         
         #find cluster centres
         clustCentres = statsPred.getClusterCentres(jumps,clust)
@@ -169,6 +186,21 @@ class StatsPredictor():
             hitTime[i] = dist
             statsPred.foundNextValue(testJumps[i,:])
             #Maybe some way of taking the correctness of the clustering into account
+=======
+        #find cluster centres
+        clustCentres = sp.getClusterCentres(jumps,clust)
+        #Scale the cluster centres:
+        clustCentres[:,0] =  ((clustCentres[:,0]-np.min(clustCentres[:,0]))*15)/oldGateRange
+        clustCentres[:,1] =  ((clustCentres[:,1]-np.min(clustCentres[:,1]))*15)/oldYellowRange
+                    
+        hitTime = np.zeros((len(testLabels),1))
+        for i in range(len(testLabels)):
+            #For each jump first check the distance from the centre of the predicted cluster
+            dist = np.linalg.norm(clustCentres[np.argmax(sp.predictNext()),:]-testJumps[i,:])
+            hitTime[i] = dist
+            #Maybe some way of taking the correctness of the clustering into account?
+        return np.mean(hitTime)
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
     
     def getClusterCentres(self,jumps='auto',clust='auto'):
         if jumps is 'auto':
@@ -185,8 +217,12 @@ class StatsPredictor():
         return clustCentres
     
     def findClustering(self,jumps):
+<<<<<<< HEAD
         spectBands=[3,5,7,9]
         gamma=np.concatenate((np.arange(0.1,1,0.1),np.arange(1,3,0.2),np.arange(3,10,1)))
+=======
+        spectBands=[3,5,7]
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
         epsilon=np.arange(0.1,0.7,0.1)
         minSamples=range(10,100,10)
         #Try all DBSCAN
@@ -215,6 +251,7 @@ class StatsPredictor():
                         print('---Only 0 in trainset--- DBSCAN   e: ',e,' s: ',samps,' Score: ',score,' Cluster count: ',len(np.unique(clust.labels_)))    
                 elif self.verbose:
                     print('---No clustering--- DBSCAN   e: ',e,' s: ',samps,' Score: ',score,' Cluster count: ',len(np.unique(clust.labels_)))    
+<<<<<<< HEAD
                 #With 0 cluster, don't ignore it in predictions
                 clust = DBSCAN(eps=e,min_samples=samps).fit(jumps)
                 if len(np.unique(clust.labels_))>1:
@@ -233,6 +270,8 @@ class StatsPredictor():
                         print('---Only 0 in trainset--- DBSCAN use0  e: ',e,' s: ',samps,' Score: ',score,' Cluster count: ',len(np.unique(clust.labels_)))    
                 elif self.verbose:
                     print('---No clustering--- DBSCAN use0  e: ',e,' s: ',samps,' Score: ',score,' Cluster count: ',len(np.unique(clust.labels_)))    
+=======
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
                 #Without 0 cluster
                 clust = DBSCAN(eps=e,min_samples=samps).fit(jumps0)
                 if len(np.unique(clust.labels_))>1:
@@ -251,6 +290,7 @@ class StatsPredictor():
                         print('---Only 0 in trainset--- DBSCAN_ignore0   e: ',e,' s: ',samps,' Score: ',score,' Cluster count: ',len(np.unique(clust.labels_)))    
                 elif self.verbose:
                     print('---No clustering--- DBSCAN_ignore0   e: ',e,' s: ',samps,' Score: ',score,' Cluster count: ',len(np.unique(clust.labels_)))    
+<<<<<<< HEAD
         #Check all spectral clustering
         for spect in spectBands:
             for gam in gamma:
@@ -308,12 +348,56 @@ class StatsPredictor():
                         print('---Only 0 in trainset--- Spectral_ignore0   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
                 elif self.verbose:
                     print('---No clustering--- Spectral_ignore0   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
+=======
+        #Try all SpectralClustering (CHECK FOR VARYING GAMMA???)
+        for spect in spectBands:
+            #With 0 cluster
+            clust = SpectralClustering(spect,gamma=0.2).fit(jumps)
+            if len(np.unique(clust.labels_))>1:
+                if self.verbose:
+                    self.plotClustering(clust,jumps)
+                score = self.evaluate(jumps,clust,True)
+                if score > 0:
+                    if score<bestScore:
+                        bestClust = clust
+                        bestScore=score
+                        self.zeroDens=False
+                        clustString='Spectral   spect: '+ str(spect)+' Score: '+ str(score)+' Cluster count: '+str(len(np.unique(clust.labels_)))
+                    if self.verbose:
+                        print('Spectral   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
+                elif self.verbose:
+                    print('---Only 0 in trainset--- Spectral   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
+            elif self.verbose:
+                print('---No clustering--- Spectral   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
+            #Without 0 cluster
+            clust = SpectralClustering(spect,gamma=0.2).fit(jumps0)
+            if len(np.unique(clust.labels_))>1:
+                if self.verbose:
+                    self.plotClustering(clust,jumps0)
+                score = self.evaluate(jumps0,clust,False)
+                if score > 0:
+                    if score<bestScore:
+                        bestClust = clust
+                        bestScore=score
+                        self.zeroDens=True
+                        clustString='Spectral_ignore0   spect: '+ str(spect)+' Score: '+ str(score)+' Cluster count: '+str(len(np.unique(clust.labels_)))
+                    if self.verbose:
+                        print('Spectral_ignore0   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
+                elif self.verbose:
+                    print('---Only 0 in trainset--- Spectral_ignore0   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
+            elif self.verbose:
+                print('---No clustering--- Spectral_ignore0   spect: ', spect,' Score: ', score,' Cluster count: ',len(np.unique(clust.labels_)))    
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
         self.clusterer = bestClust
         if self.zeroDens:
             self.clusterer = self.clusterer.fit(jumps0)
         else:
             self.clusterer = self.clusterer.fit(jumps)
+<<<<<<< HEAD
         print('======= Best cluster performance: ', bestScore)
+=======
+        print('======= Best cluster performance: ', score)
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
         print(clustString)
         if self.verbose:
             self.plotClustering(figNum=201)
@@ -393,7 +477,10 @@ class StatsPredictor():
             jumps=np.vstack((self.jumpGate,self.jumpYellow)).T
         plt.figure(figNum)
         plt.scatter(jumps[:,0],jumps[:,1], c=clust.labels_, cmap=cm.jet, linewidths=0)
+<<<<<<< HEAD
         plt.show()
+=======
+>>>>>>> 0ab703b588d2c7ffbf0586d5fa51f6a9bf5d304a
     
     '''
     After x new values the predictor should probably be fit again to improve performance

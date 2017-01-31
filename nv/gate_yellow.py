@@ -8,11 +8,11 @@ from imp import reload
 import os,sys
 import numpy as np
 import matplotlib.pyplot as plt
+from keras.models import Sequential
+from keras.layers import Dense, LSTM
 
 import pandas as pd
-#import seaborn as sns
-plt.hold(True)
-
+import seaborn as sns
 import sklearn
 import sklearn.cluster
 from sklearn.cluster import DBSCAN, Birch, KMeans, AffinityPropagation, MeanShift,SpectralClustering
@@ -20,8 +20,9 @@ from sklearn import metrics
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.preprocessing import StandardScaler
 
+import pandas as pd
 from keras.models import Sequential
-from keras.layers import Dense, LSTM
+from keras.layers import Dense
 from keras.layers.embeddings import Embedding
 
 from keras.wrappers.scikit_learn import KerasRegressor
@@ -53,7 +54,7 @@ os.chdir(qcodes.config['user']['nvDataDir'])
 
 #%%
 print('Generating Data')
-data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
+data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
 if 0:
     plt.figure(300); plt.clf()
@@ -76,7 +77,8 @@ if 0:
 
 #%% Data needs to be scaled for almost any machine learning algorithm to work
 
-data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
+#data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
+df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
 
 # translate by mean and scale with std
 datascaler= StandardScaler()
@@ -89,17 +91,13 @@ datascalerBase = StandardScaler().fit(data[:,4:])
 x=dataS[:,4]
 y=dataS[:,5]
 
-attractmV = 15 # mV
-attractFreq = 40e-3 # MHz
-
 #plt.figure(100); plt.clf(); plt.plot(x,y, '.b'); plt.axis('image')
 
 #%% Learn clusters
-
 X=Xbase
-#db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
+db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
-db=SpectralClustering(3,gamma=.2).fit(X)
+#db=SpectralClustering(5,gamma=0.2).fit(X)
 #db=KMeans(n_clusters=7).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
@@ -120,10 +118,8 @@ if 0:
 
 #plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
 plt.figure(301); plt.clf(); plt.jet()
-ax=plt.gca()
-nvtools.nvtools.add_attraction_grid(ax, attractmV, attractFreq)
-df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False, grid=False, zorder=3)
-plt.title('Clustering of jumps', fontsize= 15 )
+df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+
 np.save(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'), labels)
 
 #%% Find dense 0 cluster
@@ -136,11 +132,11 @@ plt.subplot(122)
 plt.scatter(df['yellow jump'],s)
 
 X = X[s<-2.5,:]
-#%% withouth centre
+#%%
 # translate by mean and scale with std
 
 #db = DBSCAN(eps=0.5, min_samples=50).fit(X) # fit centers
-db=SpectralClustering(3,gamma=0.2).fit(X)
+db=SpectralClustering(7,gamma=0.2).fit(X)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
     core_samples_mask[db.core_sample_indices_] = True

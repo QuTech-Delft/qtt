@@ -21,22 +21,18 @@ from keras.optimizers import RMSprop
 from keras.utils.data_utils import get_file
 import numpy as np
 import random
-import sys,os
+import sys
 from theano import tensor as T
 
-from nvtools.nvtools import Trainer
 
 import numpy
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.utils import np_utils
-import sklearn
-import qcodes
-from qtt import pgeometry
 
-labels = np.load(os.path.join("C:/Users/Laurens/Documents/qtech/qdata",'labels.npy'))
-#labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
+
+labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 text=labels
 print('corpus length:', len(labels))
 
@@ -45,9 +41,6 @@ print('corpus length:', len(labels))
 #%% Naive
 #
 # make histogram
-
-encoder = sklearn.preprocessing.LabelEncoder()
-encoder.fit(labels)
 
 from nvtools.nvtools import avg_steps, fmt
 
@@ -109,7 +102,7 @@ print('  avg number of steps: %.3f' % av1)
   
 
 #%% 2-grams
-alphabet=chars
+alphabet=ll
 
 def two_grams(alphabet, textX, normalize=True):
     gg=np.zeros( ( len(alphabet), len(alphabet) ), dtype=float)
@@ -137,7 +130,7 @@ plt.ylabel('Next')
 plt.xticks(range(len(alphabet)), alphabet)    
 plt.yticks(range(len(alphabet)), alphabet)    
 
-pgeometry.tilefigs([100])
+pmatlab.tilefigs([100])
 
 y_pred2 = np.vstack( (prob, gg[:, lx[:-1]].T ) )
 #y_pred2 = np.vstack( (prob, gg[:, lx[1:]].T ) )
