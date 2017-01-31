@@ -84,8 +84,8 @@ yellow = allData[1]
 gate = allData[2]
       
 #%% basic use
-sp=StatsPredictor(10,verbose=True)
-sp.fit(np.vstack((time,yellow,gate)).T)
+#sp=StatsPredictor(10,verbose=True)
+#sp.fit(np.vstack((time,yellow,gate)).T)
 
 sp=StatsPredictor(1,verbose=True)
 sp.fit(np.vstack((time,yellow,gate)).T)

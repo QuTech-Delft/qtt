@@ -53,7 +53,7 @@ os.chdir(qcodes.config['user']['nvDataDir'])
 
 #%%
 print('Generating Data')
-data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
+data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
 if 0:
     plt.figure(300); plt.clf()
@@ -76,8 +76,7 @@ if 0:
 
 #%% Data needs to be scaled for almost any machine learning algorithm to work
 
-#data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
-df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
+data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy')).T
 
 # translate by mean and scale with std
 datascaler= StandardScaler()
@@ -90,13 +89,17 @@ datascalerBase = StandardScaler().fit(data[:,4:])
 x=dataS[:,4]
 y=dataS[:,5]
 
+attractmV = 15 # mV
+attractFreq = 40e-3 # MHz
+
 #plt.figure(100); plt.clf(); plt.plot(x,y, '.b'); plt.axis('image')
 
 #%% Learn clusters
+
 X=Xbase
-db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
+#db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
-#db=SpectralClustering(5,gamma=0.2).fit(X)
+db=SpectralClustering(3,gamma=.2).fit(X)
 #db=KMeans(n_clusters=7).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
@@ -133,11 +136,11 @@ plt.subplot(122)
 plt.scatter(df['yellow jump'],s)
 
 X = X[s<-2.5,:]
-#%%
+#%% withouth centre
 # translate by mean and scale with std
 
 #db = DBSCAN(eps=0.5, min_samples=50).fit(X) # fit centers
-db=SpectralClustering(7,gamma=0.2).fit(X)
+db=SpectralClustering(3,gamma=0.2).fit(X)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
     core_samples_mask[db.core_sample_indices_] = True

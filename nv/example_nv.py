@@ -23,7 +23,7 @@ import qcodes
 
 os.chdir(qcodes.config['user']['nvDataDir'])
 files = []
-NV1 = True
+NV1 = False
 if NV1:
     timestamp_list = ['033735','144747','145532','222427','234411']  
     folder = r'FrequencylogPippinSIL2//'
@@ -94,11 +94,11 @@ jumpSelect=np.append(jumpSelect, False)
 
 xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus[jumpSelect], jumpGate, jumpYellow, jumpIndex) )
 
-if 0:                 
+if 1:                 
     # save data
     #np.save('/home/eendebakpt/tmp/jdata.npy', xx)
-    np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy'), xx)
-    np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata-alldata.npy'), allData)
+    np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy'), xx)
+    np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata-alldata2.npy'), allData)
 
     plt.figure(1); plt.clf()
     plt.plot( xx[0,:], xx[5,:], '.b')

@@ -35,7 +35,8 @@ import sklearn
 import qcodes
 from qtt import pgeometry
 
-labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
+labels = np.load(os.path.join("C:/Users/Laurens/Documents/qtech/qdata",'labels.npy'))
+#labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
 text=labels
 print('corpus length:', len(labels))
 
