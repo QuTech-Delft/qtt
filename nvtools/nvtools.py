@@ -313,17 +313,33 @@ def avg_steps(y_true, y_pred, verbose=0):
     A /= len(y_true)
     return A
 
+def searchLength(heatmap, sort=True, verbose=0):
+    """ Calculate search length based on probabilities """
+    if sort:
+        sh=np.sort(heatmap.flatten() )[::-1]
+    else:
+        sh = heatmap.flatten()
+        
+    Ndensity = 0
+    for i in range(sh.size):
+        #v=(i+1)*sh[i]*np.prod(1-sh[:i])
+        v=(i+1)*sh[i] # *np.prod(1-sh[:i])
+        if verbose:
+            print('searchLength: %d: add %.2f' % (i,v) )
+        Ndensity += v
+    return Ndensity
+    
     
 #%% Visualization
 import matplotlib.ticker as plticker
 
-def add_attraction_grid(ax, attractmV, attractFreq, zorder=0):
+def add_attraction_grid(ax, attractmV, attractFreq, zorder=0, color=(.9,.9,.9) ):
     minorLocator = plticker.MultipleLocator(attractFreq)
     ax.yaxis.set_minor_locator(minorLocator)
     minorLocator = plticker.MultipleLocator(attractmV)
     ax.xaxis.set_minor_locator(minorLocator)
     # Set grid to use minor tick locations. 
-    ax.grid(which = 'minor', linestyle='-', color=(.9,.9,.9), zorder=zorder)
+    ax.grid(which = 'minor', linestyle='-', color=color, zorder=zorder)
 
     
 def nv_plot_callback(plotidx, adata, fig=100, singlefig=True, *args, **kwargs):
