@@ -18,17 +18,9 @@ import re
 from qtpy import QtGui
 from qtpy import QtWidgets
 
-
 import zmq
+import zmq.log.handlers
 from zmq.log.handlers import PUBHandler
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
-parser.add_argument(
-    '-l', '--level', default=logging.DEBUG, help="logging level")
-parser.add_argument('-p', '--port', type=int, default=5800, help="zmq port")
-parser.add_argument('-g', '--gui', type=int, default=1, help="show gui")
-args = parser.parse_args()
 
 
 #%% Util functions
@@ -59,9 +51,6 @@ def tprint(string, dt=1, output=False):
             return
 
 #%% Functions for installing the logger
-
-
-import zmq.log.handlers
 
 
 def removeZMQlogger(name=None, verbose=0):
@@ -129,7 +118,7 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         self._button = QtWidgets.QPushButton(self)
         self._button.setText('Clear')
         self._killbutton = QtWidgets.QPushButton(self)
-        self._killbutton.setText('Kill heartbeat')
+        self._killbutton.setText('Kill processes')
 
         self._levelBox = QtWidgets.QComboBox(self)
         for k in sorted(self.LOG_LEVELS.keys()):
@@ -237,9 +226,19 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
             time.sleep(.06)
             message = ''
             level = None
+        if dlg.nkill > 0:
+            time.sleep(.1)
+            dlg.nkill = max(dlg.nkill - 1, 0)
 
 #%%
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
+    parser.add_argument(
+        '-l', '--level', default=logging.DEBUG, help="logging level")
+    parser.add_argument('-p', '--port', type=int, default=5800, help="zmq port")
+    parser.add_argument('-g', '--gui', type=int, default=1, help="show gui")
+    args = parser.parse_args()
 
     port = args.port
     verbose = args.verbose
