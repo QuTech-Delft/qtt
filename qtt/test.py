@@ -62,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument('-q', '--quiet', action='store_true',
                         help='reduce verbosity (opposite of --verbose)')
 
-    parser.add_argument('-s', '--skip-coverage', action='store_true',
+    parser.add_argument('-s', '--skip-coverage', default=True, type=int,
                         help='skip coverage reporting')
 
     parser.add_argument('-t', '--test_pattern', type=str, default='test*.py',

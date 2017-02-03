@@ -15,10 +15,8 @@ class Test1(TestCase):
         # print(dataset)
         tr = qtt.data.image_transform(dataset, arrayname='z')
         istep = tr.istep()
-        #print(tr)
-    
-if __name__=='__main__':
-    t1=Test1()
+        # print(tr)
+
+if __name__ == '__main__':
+    t1 = Test1()
     t1.test_transform()
-
-

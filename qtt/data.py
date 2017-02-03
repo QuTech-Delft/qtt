@@ -21,6 +21,7 @@ import numpy.linalg
 from qtt import pmatlab
 
 import qtt.tools
+from qtt.tools import deprecated
 
 import matplotlib.pyplot as plt
 
@@ -61,10 +62,12 @@ def getDefaultParameter(data, defname='amplitude'):
 def dataset2image(dataset, mode='pixel'):
     """ Extract image from a dataset
 
-    The image is converted so that it is in conventional coordinates, e.g. the
-    step values (vertical axis) go from low to high (bottom to top).
     Args:
         dataset
+        mode (str): if value is 'pixel' then the image is converted so that 
+        it is in conventional coordinates, e.g. the step values (vertical axis)
+        go from low to high (bottom to top).
+
     Returns:
         im (numpy array)
         tr (image_transform object)
@@ -287,7 +290,14 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 class image_transform:
 
     def __init__(self, dataset=None, arrayname=None, mode='pixel', verbose=0):
-        ''' Class to convert scan coordinate to image coordinates '''
+        """ Class to convert scan coordinate to image coordinates
+        
+        Args:
+            dataset (DataSet):
+            arrayname (str or None)
+            mode (str): 'pixel' or 'raw'
+        
+        """
         self.H = np.eye(3)  # raw image to pixel image transformation
         self.extent = []  # image extent in pixel
         self.verbose = verbose
@@ -314,11 +324,9 @@ class image_transform:
             pass
         else:
             if vsweep[0] > vsweep[1]:
-                # print('flip...')
                 self.flipX = True
                 self.H = Hx.dot(self.H)
             if vstep[0] < vstep[1]:
-                # print('flip...')
                 self.flipY = True
                 self.H = Hy.dot(self.H)
 
@@ -450,23 +458,8 @@ class image_transform:
 
         return ptpixel
 
-        ptx = pmatlab.projectiveTransformation(
-            self.Hi, np.array(pt).astype(float))
 
-        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-            self.dataset, verbose=0)
-        nx = vsweep.size  # zdata.shape[0]
-        ny = vstep.size  # zdata.shape[1]
-
-        xx = extent
-        x = ptx
-        nn = pt.shape[1]
-        ptx = np.zeros((2, nn))
-        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
-        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
-        return ptx
-
-
+@deprecated
 def pix2scan(pt, dd2d):
     """ Convert pixels coordinates to scan coordinates (mV)
     Arguments
@@ -477,7 +470,7 @@ def pix2scan(pt, dd2d):
         contains scan data
 
     """
-#    warnings.warn('use transformation object instead')
+    warnings.warn('use transformation object instead')
     extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
         dd2d, verbose=0)
     # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
@@ -509,7 +502,7 @@ def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
         g0 (string): step gate
         vstep (array): step values
         istep (float)
-        arrayname (string): identifier of the main array 
+        arrayname (string): identifier of the main array
 
     """
 

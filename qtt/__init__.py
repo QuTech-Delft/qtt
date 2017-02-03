@@ -27,6 +27,7 @@ def start_dataviewer():
     dv = DataViewer()
     dv.show()
     return dv
+from qtt.loggingGUI import installZMQlogger
 
 #%% Enhance the qcodes functionality
 

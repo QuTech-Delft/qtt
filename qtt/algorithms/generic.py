@@ -57,6 +57,80 @@ def localMaxima(arr, radius=1, thr=None):
 
 #%%
 
+import cv2
+from qtt import pgeometry
+import numpy as np
+
+def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.INTER_AREA, fig=None):
+    """ Scale image to make pixels at specified resolution
+
+    Arguments
+    ---------
+    im (array): input image
+    imextend: list of 4 floats
+        coordinates of image region (x0, x1, y0, y1)
+    mvx, mvy (float or None)
+        number of units per pixel requested
+
+    Returns
+    -------
+     ims: transformed image
+     H: transformation matrix from units to pixels
+         H is the homogeneous transform from original to scaled image
+     (mvx, mvy, fx, dy) : internal data
+
+    """
+    dxmv = imextent[1] - imextent[0]
+    dymv = imextent[3] - imextent[2]
+
+    dx = im.shape[1]
+    dy = im.shape[0]
+    mvx0 = dxmv / float(dx - 1)     # current unit/pixel
+    mvy0 = dymv / float(dy - 1)
+
+    if mvy is None:
+        if mvx is None:
+            mvx = 1
+        mvy = mvx
+    
+    # scale factors
+    fw = np.abs((float(mvx0) / mvx))
+    fh = np.abs((float(mvy0) / mvy))
+    if verbose:
+        print('rescaleImage: scale factorf x %.4f, factor y %.4f' % (fw, fh))
+        print('rescaleImage: result unit/pixel x %.4f y %.4f' % (mvx, mvy))
+
+    # scale in steps for the horizontal direction
+    if fw < .5:
+        fwx = fw
+        fac = 1
+        ims = im
+        while (fwx < .5):
+            ims = cv2.resize(
+                ims, None, fx=.5, fy=1, interpolation=cv2.INTER_LINEAR)
+            fwx *= 2
+            fac *= 2
+        # print('fw %f, fwx %f, fac %f' % (fw, fwx, fac))
+        ims = cv2.resize(
+            ims, None, fx=fac * fw, fy=fh, interpolation=interpolation)
+    else:
+        ims = cv2.resize(im, None, fx=fw, fy=fh, interpolation=interpolation)
+
+    H = pgeometry.pg_transl2H([-.5, -.5]) .dot(np.diag([fw, fh, 1]).dot(pgeometry.pg_transl2H([.5, .5])))
+
+    if fig is not None:
+        plt.figure(fig); plt.clf()
+        plt.subplot(1,2,1); plt.imshow(im, interpolation='nearest')
+        plt.subplot(1,2,2); plt.imshow(ims, interpolation='nearest')
+        plt.title('scaled')
+    return ims, H, (mvx, mvy, fw, fh)
+
+
+def test_rescale_image():
+    im=np.random.rand( 300,600)
+    _=rescaleImage(im, [0, im.shape[1]-1, 0, im.shape[0]-1], mvx=4, verbose=0, fig=None)
+
+
 def scaleImage(image, display_min=None, display_max=None):
     """ Scale any image into uint8 range
 
