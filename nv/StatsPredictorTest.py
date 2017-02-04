@@ -26,7 +26,7 @@ labels[labels==-1] = 5 #this makes it a bit nicer to handle
 #%% Load raw data
 os.chdir(qcodes.config['user']['nvDataDir'])
 files = []
-NV1 = False
+NV1 = True
 if NV1:
     timestamp_list = ['033735','144747','145532','222427','234411']  
     folder = r'FrequencylogPippinSIL2//'

@@ -30,6 +30,7 @@ from sklearn.metrics import average_precision_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import DBSCAN, SpectralClustering
 from sklearn.neighbors import KernelDensity,KDTree
+from sklearn.decomposition import PCA
 import matplotlib.cm as cm
 
 class StatsPredictor():
@@ -42,11 +43,13 @@ class StatsPredictor():
         cannot be reached, the lookback is lowered for that prediction
     Boolean verbose - Functions might print more if True
     '''
-    def __init__(self,lookback=1, data=[], ignoreZero=True, minimumData=10,verbose=False):
+    def __init__(self,lookback=1, data=[], ignoreZero=True, minimumData=10,verbose=False,attractmV=15,attractFreq=40e-3):
         self.lookback = lookback
         self.ignoreZero=ignoreZero
         self.minimumData = minimumData
         self.verbose = verbose
+        self.attractmV = attractmV
+        self.attractFreq = attractFreq
         self.online = False #Online not currently implemented
         if len(data)>0:
             self.fit(data)
@@ -105,7 +108,6 @@ class StatsPredictor():
             prediction = np.append(prediction,0)
         if self.ignoreZero: #If we ignore 0, always check 0 first, i.e. make it the first prediction
             prediction = np.append(10,prediction)
-        
         return prediction
         
     def foundNextCluster(self, newClust):
@@ -142,7 +144,8 @@ class StatsPredictor():
         sp = StatsPredictor(ignoreZero=ignoreZero)
         sp.fitClustered(self.moveNonCluster(trainLabels))
         
-        hitTime = self.clusterDistanceMetric(jumps,trainCut,clust,sp)            
+        #hitTime = self.clusterDistanceMetric(jumps,trainCut,clust,sp)  
+        hitTime = self.clusterStepsMetric(jumps,trainCut,clust,sp)
         return np.mean(hitTime)
     
     '''
@@ -185,6 +188,39 @@ class StatsPredictor():
             #statsPred.foundNextValue(testJumps[i,:])
         
         return hitTime
+
+    def clusterStepsMetric(self,jumps,trainCut,clust,statsPred):
+        #Change space to step-scale
+        jumps = self.scaleClustSteps(jumps)
+        #For each cluster determine the size, with pca and a rectangle
+        labels = clust.labels_
+        classes = np.unique(labels)
+        clustSteps = np.zeros(classes.shape) #clustSteps essentially holds our weight for each class
+        for i,c in enumerate(classes):
+            #TODO: Find possible gaps in the data to refine size estimate?
+            newData = PCA(n_components=2).fit_transform(jumps[labels==c,:])
+            width = np.max(newData[:,0])-np.min(newData[:,0])
+            height = np.max(newData[:,1])-np.min(newData[:,1])
+            clustSteps[i] = width*height
+#        print(clustSteps)
+        #For each step needed to find the correct cluster *cluster size
+        testLabels = labels[trainCut:]
+        hitTime = np.zeros((len(testLabels),1))
+        for i in range(len(testLabels)):
+            prediction = statsPred.predictNext()
+            for p in np.argsort(prediction):
+                hitTime[i]+=prediction[p]
+                if p==np.argmax(prediction):
+                    break
+        return hitTime
+    
+    '''
+    Returns the jumps scaled by the attraction sizes.
+    '''
+    def scaleClustSteps(self,jumps):
+        jumps[:,0] = jumps[:,0]/self.attractmV
+        jumps[:,1] = jumps[:,1]/self.attractFreq
+        return jumps
     
     def getClusterCentres(self,jumps='auto',clust='auto'):
         if jumps is 'auto':
