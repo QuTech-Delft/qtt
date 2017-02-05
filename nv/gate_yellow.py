@@ -46,7 +46,7 @@ from nvtools.nvtools import labelMapping
 from nvtools.nvtools import showModel
 
 from sklearn.neighbors import KernelDensity
-
+from nvtools.nvtools import add_attraction_grid
 # pip install statsmodels --user
 from statsmodels.graphics.gofplots import qqplot
 
@@ -56,6 +56,9 @@ os.chdir(qcodes.config['user']['nvDataDir'])
 print('Generating Data')
 data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
 df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
+attractmV = 15 # mV
+attractFreq = 40e-3 # MHz
+
 if 0:
     plt.figure(300); plt.clf()
     df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
@@ -95,9 +98,9 @@ y=dataS[:,5]
 
 #%% Learn clusters
 X=Xbase
-db = DBSCAN(eps=0.1, min_samples=10).fit(X) # fit centers
+#db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
-#db=SpectralClustering(5,gamma=10).fit(X)
+db=SpectralClustering(5,gamma=0.1).fit(X)
 #db=KMeans(n_clusters=7).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
@@ -118,8 +121,10 @@ if 0:
 
 #plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
     
-plt.figure(301); plt.clf(); plt.jet()
-df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+fig=plt.figure(301); plt.clf(); plt.jet()
+ax = plt.subplot(111) 
+add_attraction_grid(ax, attractmV, attractFreq, zorder=0)
+df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False, zorder=3)
 
 if 0: #Check 0 clusterlocation
     df0 = df.iloc[labels==0,:]
@@ -128,6 +133,7 @@ if 0: #Check 0 clusterlocation
 np.save(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'), labels)
 
 #%% Find dense 0 cluster
+X=Xbase
 densityKern = KernelDensity().fit(X)
 s = densityKern.score_samples(X)
 plt.figure()
@@ -136,12 +142,13 @@ plt.scatter(df['gate jump'],s)
 plt.subplot(122)
 plt.scatter(df['yellow jump'],s)
 
-X = X[s<-2.5,:]
+densVal=np.sort(s)[::-1][int(len(X)*0.65)]
+X = X[s<densVal,:]
 #%%
 # translate by mean and scale with std
 
 #db = DBSCAN(eps=0.5, min_samples=50).fit(X) # fit centers
-db=SpectralClustering(9,gamma=6).fit(X)
+db=SpectralClustering(3,gamma=.1).fit(X)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
     core_samples_mask[db.core_sample_indices_] = True
@@ -152,9 +159,21 @@ labels = db.labels_
 encoder = sklearn.preprocessing.LabelEncoder()
 encoder.fit(labels)
 
+df2=pd.DataFrame(X,columns=['gate jump','yellow jump'])
+
 plt.figure(301); plt.clf(); plt.jet()
-plt.scatter(X[:,0],X[:,1],c=labels,cmap=cm.jet)
+ax = plt.subplot(111) 
+add_attraction_grid(ax, attractmV, attractFreq, zorder=0)
+#plt.scatter(X[:,0],X[:,1],c=labels,cmap=cm.jet,zorder=3)
+#plt.xlabel('gate jump')
+#plt.ylabel('yellow jump')
+df2.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False, zorder=3)
 #dfNoCentre.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
+
+#Store these labels
+if 1:
+    lbls=np.zeros(df.shape[0])
+    lbls[s<densVal]=labels
 
 #%%
 from nvtools.nvtools import clusterCenters, showTSNE

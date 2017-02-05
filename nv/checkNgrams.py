@@ -83,8 +83,8 @@ for i in range(4):
     p=plt.subplot(2,2,i+1)
     p.set_title('cluster ' + str(i+1) + ' followed by:')
     plt.hist(lbls[prevLbls==(i+1)],bins=np.arange(lblCount+2)-.5,color=colors[i])
-    plt.xlim([1,5])
-    plt.xticks(range(1,lblCount))
+    plt.xlim([0,5])
+    plt.xticks(range(0,lblCount))
     plt.xlim([-1, lblCount])
 
 plt.figure()

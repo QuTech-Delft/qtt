@@ -259,10 +259,10 @@ if interpolated:
 
 fig = plt.figure(figsize=(13,6))
 plt1 = plt.subplot(121)
-plt1.set_title('Yellow frequency lagplot')
+plt1.set_title('Yellow frequency jumps lagplot')
 pd.tools.plotting.lag_plot(laserFreqJump)
 plt2 = plt.subplot(122)
-plt2.set_title('Gate voltage lagplot')
+plt2.set_title('Gate voltage jumps lagplot')
 pd.tools.plotting.lag_plot(gateVJump)
 #How does this plot look with only the non zero jumps?
 

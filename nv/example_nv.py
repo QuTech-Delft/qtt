@@ -18,15 +18,19 @@ import nvtools
 from nvtools.nvtools import extract_data, remove_empty_intervals
 from qtt import pgeometry
 
+import qcodes
 #%% Load data
 
 os.chdir(qcodes.config['user']['nvDataDir'])
 files = []
-NV1 = True
+NV1 = False
 if NV1:
     timestamp_list = ['033735','144747','145532','222427','234411']  
     folder = r'FrequencylogPippinSIL2//'
     gate_scaling = 1
+    
+    attractmV = 15 # mV
+    attractFreq = 40e-3 # MHz
 else:
     timestamp_list = ['115652','132333','145538','160044']
     folder = r'Frequencylog111no2SIL2//'
@@ -61,6 +65,7 @@ ax2.set_xlabel('elapsed time (s)')
 ax2.set_ylabel('Yellow frequency (GHz)')
 plt.show()
 
+#reload(nvtools.nvtools)
 from nvtools.nvtools import plotSection, nv_plot_callback
 
 f = lambda plotidx, **kwargs: nv_plot_callback(plotidx, adata, **kwargs)
@@ -92,8 +97,8 @@ xx=np.vstack( ( time[jumpSelect], gate[jumpSelect], yellow[jumpSelect], newfocus
 if 0:                 
     # save data
     #np.save('/home/eendebakpt/tmp/jdata.npy', xx)
-    np.save('jdata.npy', xx )
-    np.save('jdata-alldata.npy', allData )
+    np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata2.npy'), xx)
+    np.save(os.path.join(qcodes.config['user']['nvDataDir'],'jdata-alldata2.npy'), allData)
 
     plt.figure(1); plt.clf()
     plt.plot( xx[0,:], xx[5,:], '.b')
@@ -117,11 +122,11 @@ plt.plot(time, '.b'); plt.ylabel('Time')
 #%% do we identify jumps correctly?
 #
 # Plot a section to look at the selected jumps
-plot_length = 100
-x = allData[0][:plot_length]
-y = allData[1][:plot_length]
-y2 = allData[2][:plot_length]
-plot_select = jumpSelect & (allData[0]<x[-1]) #[:-1]
+plot_range = [300,600]
+x = allData[0][plot_range[0]:plot_range[1]]
+y = allData[1][plot_range[0]:plot_range[1]]
+y2 = allData[2][plot_range[0]:plot_range[1]]
+plot_select = jumpSelect & (allData[0]<x[-1]) & (allData[0]>x[0])
 fig = plt.figure(figsize=(17,6))
 ax = plt.subplot(211)
 plt.plot(x,y2,'x-')
@@ -137,19 +142,37 @@ ax2.set_xlabel('elapsed time (s)')
 ax2.set_ylabel('Yellow frequency (GHz)')
 plt.show()
 
+#%% Plot scatter between gate and yellow values
+from nvtools.nvtools import add_attraction_grid
+
+fig = plt.figure()
+ax = plt.subplot(111)
+#add_attraction_grid(ax, attractmV, attractFreq, zorder=0)
+
+b = gate/yellow
+plt.plot(gate, yellow, '.', zorder=3)
+plt.xlabel('Gate [mV]');plt.ylabel('Frequency [GHz]')
+
+ax.set_xlabel('Voltage on gate (mV)')
+ax.set_ylabel('Frequency on yellow (GHz)')
+plt.title('Correlation between gate and yellow.')
 
 
 #%% Plot correlations between gate and yellow jumps
-fig=  plt.figure()
+
+fig = plt.figure()
 ax = plt.subplot(111)
+add_attraction_grid(ax, attractmV, attractFreq, zorder=0)
 
 b = jumpGate/jumpYellow
-
-plt.plot(jumpGate, jumpYellow, 'x')
+plt.plot(jumpGate, jumpYellow, '.', zorder=3)
+plt.xlabel('Gate [mV]');plt.ylabel('Frequency jump [GHz]')
 
 ax.set_xlabel('Voltage jump on gate (mV)')
 ax.set_ylabel('Frequency jump on yellow (GHz)')
 plt.title('Correlation between gate and yellow jumps.')
+
+
 
 # green points
 
@@ -157,13 +180,14 @@ xx=np.vstack((jumpGate, jumpYellow) )
 
 from qtt import pmatlab
 from qtt.pmatlab import points_in_polygon
-rr=np.array([[-24.2,7.25],[0.6796,.4297]])
-pmatlab.plotPoints(pmatlab.region2poly(rr), '.-g')
-pp=pmatlab.region2poly(rr)
-idx=points_in_polygon(xx.T, pp.T)==1
-pmatlab.plotPoints(xx[:, idx], '.g')
-
-print('# green: %d' % np.sum(idx==1))
+if 0:
+    rr=np.array([[-24.2,7.25],[0.6796,.4297]])
+    pmatlab.plotPoints(pmatlab.region2poly(rr), '.-g')
+    pp=pmatlab.region2poly(rr)
+    idx=points_in_polygon(xx.T, pp.T)==1
+    pmatlab.plotPoints(xx[:, idx], '.g')
+    
+    print('# green: %d' % np.sum(idx==1))
 
 
 #%% Correlation between a jump and the next jump
@@ -210,7 +234,7 @@ fig=plt.figure(figsize=(16,12))
 for ii in range(16):
     ax=plt.subplot(4,4,ii+1)
     si=smallIdx[ii]
-    plotSection(allData, range(si-offset, si-offset+100), jumpSelect, mode='gate')
+    plotSection(allData, list(range(si-offset, si-offset+100) ), jumpSelect, mode='gate')
     plt.plot(allData[0][si], allData[2][si], '.y', markersize=12)
 
 #%%

@@ -14,14 +14,14 @@ import copy
 from nvtools.nvtools import extract_data
 
 #%% Load data for the jumps
-print('Generating Data')
-data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
-data=data[:,0:6]
-df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
-jumps = df[['gate jump', 'yellow jump']]
-
-labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
-labels[labels==-1] = 5 #this makes it a bit nicer to handle
+#print('Generating Data')
+#data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
+#data=data[:,0:6]
+#df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
+#jumps = df[['gate jump', 'yellow jump']]
+#
+#labels = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'labels.npy'))
+#labels[labels==-1] = 5 #this makes it a bit nicer to handle
 
 #%% Load raw data
 os.chdir(qcodes.config['user']['nvDataDir'])
@@ -82,10 +82,30 @@ for i in range(len(data)):
 time = allData[0]
 yellow = allData[1]
 gate = allData[2]
-      
-#%% basic use
-#sp=StatsPredictor(10,verbose=True)
-#sp.fit(np.vstack((time,yellow,gate)).T)
 
-sp=StatsPredictor(1,verbose=True)
-sp.fit(np.vstack((time,yellow,gate)).T)
+    
+#%% basic use
+d=np.vstack((time,yellow,gate)).T
+trainData=d[:10000,:]
+testData=d[10000:,:]
+propperFitted=False
+
+#%% Test fitting (This takes a while!)
+sp=StatsPredictor(10,verbose=True)
+sp.fit(trainData)
+propperFitted=True
+
+#%% Actual usecase test
+if not propperFitted:
+    sp=StatsPredictor(1,verbose=True)
+    sp.fit(trainData,quick=True)
+
+for i in range(testData.shape[0]):
+    sp.predictNext()
+    #Here you would normally use this prediction to find the new value
+    sp.foundNextValue(testData[i,:])
+
+#%% Find best possible clustering using all data
+sp=StatsPredictor(1)
+sp.fit(d)
+sp.plotClustering()
