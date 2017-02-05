@@ -106,6 +106,6 @@ for i in range(testData.shape[0]):
     sp.foundNextValue(testData[i,:])
 
 #%% Find best possible clustering using all data
-sp=StatsPredictor(1)
+sp=StatsPredictor(1,verbose=True)
 sp.fit(d)
 sp.plotClustering()

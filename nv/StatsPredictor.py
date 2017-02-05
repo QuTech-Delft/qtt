@@ -276,8 +276,8 @@ class StatsPredictor():
         scJumps=jumps.copy()
         scJumps[:,0]=self.scG.inverse_transform(jumps[:,0])
         scJumps[:,1]=self.scY.inverse_transform(jumps[:,1])
-        scJumps[:,0] = jumps[:,0]/self.attractmV
-        scJumps[:,1] = jumps[:,1]/self.attractFreq
+        scJumps[:,0] = scJumps[:,0]/self.attractmV
+        scJumps[:,1] = scJumps[:,1]/self.attractFreq
         return scJumps
     
     '''
@@ -328,6 +328,7 @@ class StatsPredictor():
             clust = SpectralClustering(8,gamma=0.3).fit(jumps0)
             self.clusterer=clust
             self.plotClustering(figNum=201)
+            print(self.evaluate(jumps,clust,False,True))
             return self.getLabel(jumps,self.clusterer.labels_)        
         #Try all DBSCAN
         for e in epsilon:

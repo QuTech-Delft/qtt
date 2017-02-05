@@ -100,7 +100,7 @@ y=dataS[:,5]
 X=Xbase
 #db = DBSCAN(eps=0.2, min_samples=10).fit(X) # fit centers
 #db=Birch(threshold=0.15, branching_factor=3, compute_labels=True).fit(X)
-db=SpectralClustering(5,gamma=0.1).fit(X)
+db=SpectralClustering(9,gamma=0.3).fit(X)
 #db=KMeans(n_clusters=7).fit(X)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
@@ -126,6 +126,13 @@ ax = plt.subplot(111)
 add_attraction_grid(ax, attractmV, attractFreq, zorder=0)
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False, zorder=3)
 
+plt.legend(labels,
+           ('0', '1', '2', '3', '4', '5', '6'),
+           scatterpoints=1,
+           loc='lower left',
+           ncol=3,
+           fontsize=8)
+
 if 0: #Check 0 clusterlocation
     df0 = df.iloc[labels==0,:]
     plt.scatter(df0[['gate jump']],df0[['yellow jump']])
@@ -138,8 +145,14 @@ densityKern = KernelDensity().fit(X)
 s = densityKern.score_samples(X)
 plt.figure()
 plt.subplot(121)
+plt.xlabel('gate jump')
+plt.ylabel('density')
+plt.title('Density over gate jump')
 plt.scatter(df['gate jump'],s)
 plt.subplot(122)
+plt.xlabel('yellow jump')
+plt.ylabel('density')
+plt.title('Density over yellow jump')
 plt.scatter(df['yellow jump'],s)
 
 densVal=np.sort(s)[::-1][int(len(X)*0.65)]
@@ -148,7 +161,7 @@ X = X[s<densVal,:]
 # translate by mean and scale with std
 
 #db = DBSCAN(eps=0.5, min_samples=50).fit(X) # fit centers
-db=SpectralClustering(3,gamma=.1).fit(X)
+db=SpectralClustering(9,gamma=.3).fit(X)
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
     core_samples_mask[db.core_sample_indices_] = True

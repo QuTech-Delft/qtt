@@ -171,6 +171,7 @@ print('Test MSE gate voltage: %.3f' % test_score)
 fig = plt.figure()
 plt.plot(test_y, label='Gate voltage')
 plt.plot(predictions, color='red', label='Prediction')
+plt.title('Results persistance model for gate voltage')
 plt.legend()
 plt.show()
 
@@ -222,6 +223,7 @@ print('Test MSE: %.3f' % error)
 fig = plt.figure()
 plt.plot(test, label='Yellow frequency')
 plt.plot(predictions, color='red', label = 'predictions')
+plt.title('Results autoregression model for yellow frequency')
 plt.legend()
 
 # Store residuals for later plotting

@@ -20,7 +20,7 @@ import nufftpy
 print('Generating Data')
 data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
 
-df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
+df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump','jump index'])
 #plt.figure(300); plt.clf()
 #df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
 
