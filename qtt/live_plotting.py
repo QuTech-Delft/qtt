@@ -243,6 +243,7 @@ class livePlot:
                 dd = self.datafunction()
                 self.update(data=dd)
             except Exception as e:
+                logging.exception(e)
                 print('livePlot: Exception in updatebg')
                 print(e)
                 self.stopreadout()

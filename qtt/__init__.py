@@ -29,6 +29,7 @@ except:
     pass
 try:
     from qtpy.QtCore import Qt
+    from qtpy import QtWidgets
     from qcodes.plots.pyqtgraph import QtPlot
 
     def keyPressEvent(self, e):
