@@ -59,23 +59,24 @@ def getDefaultParameter(data, defname='amplitude'):
 #%%
 
 
-def dataset2image(dataset, mode='pixel'):
+def dataset2image(dataset, arrayname = None, unitsperpixel = None, mode='pixel'):
     """ Extract image from a dataset
 
     Args:
         dataset
+        arrayname (None or str): name of array to select
         mode (str): if value is 'pixel' then the image is converted so that 
-        it is in conventional coordinates, e.g. the step values (vertical axis)
-        go from low to high (bottom to top).
+             it is in conventional coordinates, e.g. the step values
+             (vertical axis) go from low to high (bottom to top).
 
     Returns:
         im (numpy array)
         tr (image_transform object)
 
     """
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-        dataset, verbose=0, arrayname=None)
-    tr = image_transform(dataset, mode=mode)
+    if arrayname is None:
+        arrayname = dataset.default_parameter_name()
+    tr = image_transform(dataset, mode=mode, unitsperpixel = unitsperpixel)
     im = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname].ndarray
@@ -289,12 +290,12 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
 class image_transform:
 
-    def __init__(self, dataset=None, arrayname=None, mode='pixel', verbose=0):
+    def __init__(self, dataset=None, arrayname=None, mode='pixel', unitsperpixel = None, verbose=0):
         """ Class to convert scan coordinate to image coordinates
         
         Args:
             dataset (DataSet):
-            arrayname (str or None)
+            arrayname (str or None): name of array to select from dataset
             mode (str): 'pixel' or 'raw'
         
         """
@@ -330,14 +331,32 @@ class image_transform:
                 self.flipY = True
                 self.H = Hy.dot(self.H)
 
+        self._imraw = dataset.arrays[arrayname].ndarray
+        self._im = self._transform(self._imraw)
+                              
+        if unitsperpixel is not None:
+            ims, Hs, _ = qtt.generic.algorithms.rescaleImage(self._imraw, mvx = unitsperpixel)                                      
+            self._im = ims
+            FIXME: add Hs to self.H
+            FIXME: add tests
+            FIXME: update dataset2image
+            
         # return im
         self.Hi = numpy.linalg.inv(self.H)
 
+    def image(self):
+        return self._im
+    
     def istep(self):
         return self._istep
 
     def scan_image_extent(self):
-        """ Scan extent """
+        """ Scan extent
+        
+        Returns:
+            extentImage (list): x0, x1, y0, y1
+                            x0, y0 is top left
+        """
         vsweep = self.vsweep
         vstep = self.vstep
         extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
@@ -369,10 +388,9 @@ class image_transform:
         self.extent = extentImage
         return extentImage
 
-    def transform(self, im):
+    def _transform(self, im):
         """ Transform raw image to image in pixel coordinates such that the imageExtent is increasing
 
-        TODO: explain        
         """
         if self.flipX:
             im = im[::, ::-1]
@@ -382,7 +400,7 @@ class image_transform:
 
         return im
 
-    def itransform(self, im):
+    def _itransform(self, im):
         if self.flipX:
             im = im[::, ::-1]
         if self.flipY:
@@ -459,6 +477,15 @@ class image_transform:
         return ptpixel
 
 
+def test_image_transform():
+    from qcodes.tests.data_mocks import DataSet2D
+    ds=DataSet2D()
+    tr=image_transform(ds)
+    im=tr.image()
+    
+if __name__=='__main__':
+    test_image_transform()
+    
 @deprecated
 def pix2scan(pt, dd2d):
     """ Convert pixels coordinates to scan coordinates (mV)
@@ -582,7 +609,7 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
 
 if __name__ == '__main__':
     extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-        alldata, array=None)
+        alldata, arrayname=None)
     _ = pix2scan(np.zeros((2, 4)), alldata)
 
 #%%
