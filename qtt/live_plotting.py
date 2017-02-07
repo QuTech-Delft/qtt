@@ -7,6 +7,13 @@ Created on Thu Sep 10 15:55:21 2015
 
 #%%
 import time
+import logging
+import qtpy.QtWidgets as QtWidgets
+import qtpy.QtCore as QtCore
+import scipy.ndimage as ndimage
+
+import qcodes
+
 import qtt
 import qtt.legacy
 from qtt import pmatlab
@@ -14,10 +21,6 @@ import numpy as np
 import pyqtgraph as pg
 from functools import partial
 
-import qtpy.QtWidgets as QtWidgets
-import qtpy.QtCore as QtCore
-import logging
-import scipy.ndimage as ndimage
 import qtt.algorithms.generic
 import qtt
 
@@ -32,14 +35,19 @@ except:
 class rda_t:
 
     def __init__(self):
-        """ Class for simple real-time data access """
+        """ Class for simple real-time data access
+        
+        Every object has a `get` and `set` method to access simple parameters 
+        globally (e.g. across different python sessions).
+        
+        """
 
         # we use redis as backend now
         self.r = redis.Redis(host='127.0.0.1', port=6379)  # , password='test')
 
         try:
-            self.set('dummy', -1)
-            v = self.get_float('dummy')
+            self.set('dummy_rda_t', -1)
+            v = self.get_float('dummy_rda_t')
             if (not v == -1):
                 raise Exception('set not equal to get')
         except Exception as e:
@@ -55,7 +63,11 @@ class rda_t:
         return float(v)
 
     def get_int(self, key, default_value=None):
-        """ Get value by key and convert to an int """
+        """ Get value by key and convert to an int
+        
+        Returns:
+            value (int)
+        """
         v = self.get(key, default_value)
         if v is None:
             return v
@@ -64,9 +76,11 @@ class rda_t:
     def get(self, key, default_value=None):
         """ Get a value
 
-        Arugments:
+        Args:
             key (str): value to be retrieved
             default_value (Anything): value to return if the key is not present
+        Returns:
+            value (str)
         """
         value = self.r.get(key)
         if value is None:
@@ -75,10 +89,69 @@ class rda_t:
             return value
 
     def set(self, key, value):
+        """ Set a value
+        
+        Args:
+            key (str): key 
+            value (str): the value to be set
+        """
+        
         self.r.set(key, value)
         pass
 
+class MeasurementControl(QtWidgets.QMainWindow):
 
+    def __init__(self, name='Measurement Control', **kwargs):
+        """ Simple control for real-time data parameters """
+        super().__init__(**kwargs)
+        w = self
+        w.setWindowTitle(name)
+        vbox = QtWidgets.QVBoxLayout()
+        self.verbose = 0
+        self.name = name
+
+        self.rda = rda_t()
+        
+        self.abortbutton = QtWidgets.QPushButton()
+        self.abortbutton.setText('Abort measurement')
+        self.abortbutton.setStyleSheet("background-color: rgb(255,150,100);");
+        self.abortbutton.clicked.connect(self.abort_measurements)
+        vbox.addWidget(self.abortbutton)
+
+        widget = QtWidgets.QWidget()
+        widget.setLayout(vbox)
+        self.setCentralWidget(widget)
+
+        w.resize( 300,300)
+        #w.setGeometry(1700, 50, 300, 600)
+        #self.update_values()
+        self.show()
+
+    def install_qcodes_hook(self):
+        """ xxx """
+        # patch the qcodes abort function
+        def myabort():
+            return int(self.rda.get('abort_measurements', 0))
+        
+        qcodes.loops.abort_measurements = myabort
+        
+    def enable_measurements(self):
+        """ xxx """
+        self.rda.set('abort_measurements', 0)
+        
+    def abort_measurements(self):
+        """ xxxx """
+        if self.verbose:
+            print('%s: setting abort_measurements to 1' % self.name)
+        
+        self.rda.set('abort_measurements', 1)
+
+
+if __name__=='__main__':
+    mc = MeasurementControl()
+    mc.verbose=1
+    mc.setGeometry(1700, 50, 300, 400)
+    
 class RdaControl(QtWidgets.QMainWindow):
 
     def __init__(self, name='LivePlot Control', boxes=['xrange', 'yrange', 'nx', 'ny'], **kwargs):
