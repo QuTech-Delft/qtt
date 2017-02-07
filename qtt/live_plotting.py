@@ -279,19 +279,39 @@ class LivePlotControl(QtWidgets.QMainWindow):
         
 #%% Liveplot object
 
-
 class livePlot:
 
     """ Class to enable live plotting of data """
 
     def __init__(self, gates, sweepgates, sweepranges, verbose=1):
-        win = pg.GraphicsWindow(title="Live view")
-        win.resize(800, 600)
+        plotwin = pg.GraphicsWindow(title="Live view")
 #        win.move(-900, 10)
 
         # TODO: automatic scaling?
         # TODO: implement FPGA callback in qcodes
         # TODO: implement 2 function plot (for 2 sensing dots)
+
+        win=QtWidgets.QWidget()    
+        win.resize(800, 600)
+        win.setWindowTitle('livePlot')
+        
+        topLayout = QtWidgets.QHBoxLayout()
+        win.start_button = QtWidgets.QPushButton('Start')
+        win.stop_button = QtWidgets.QPushButton('Stop')
+    
+        for b in [win.start_button, win.stop_button]:
+            b.setMaximumHeight(24)
+    
+            #self.reloadbutton.setText('Reload data')
+        topLayout.addWidget(win.start_button)
+        topLayout.addWidget(win.stop_button)
+    
+        vertLayout = QtWidgets.QVBoxLayout()
+        
+        vertLayout.addItem(topLayout)
+        vertLayout.addWidget(plotwin)
+            
+        win.setLayout(vertLayout)
 
         self.win = win
         self.verbose = verbose
@@ -304,14 +324,14 @@ class livePlot:
         self.fps = pmatlab.fps_t(nn=6)
 
         if len(sweepgates) == 1:
-            p1 = win.addPlot(title="Sweep")
+            p1 = plotwin.addPlot(title="Sweep")
             p1.setLabel('left', 'Value')
             p1.setLabel('bottom', self.sweepgates[0], units='mV')
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
         elif len(sweepgates) == 2:
-            p1 = win.addPlot(title='2d scan')
+            p1 = plotwin.addPlot(title='2d scan')
             p1.setLabel('bottom', sweepgates[0], units='mV')
             p1.setLabel('left', sweepgates[1], units='mV')
             self.img = pg.ImageItem()
@@ -322,6 +342,23 @@ class livePlot:
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
+        self.win.show()
+        
+        #from pgeometry import Slot
+        def connect_slot(target):
+            """ Create a slot by dropping signal arguments """
+            #@Slot()
+            def signal_drop_arguments(*args, **kwargs):
+                #print('call %s' % target)
+                target()
+            return signal_drop_arguments
+        
+        
+        win.start_button.clicked.connect(connect_slot(self.startreadout))
+        win.stop_button.clicked.connect(connect_slot(self.stopreadout))
+        #win.start_button.clicked.connect(self.startreadout)
+        #win.stop_button.clicked.connect(self.stopreadout)
+
 
     def resetdata(self):
         self.idx = 0
@@ -378,6 +415,7 @@ class livePlot:
         self.fps.addtime(time.time())
         if self.datafunction is not None:
             try:
+                #print(self.datafunction)
                 dd = self.datafunction()
                 self.update(data=dd)
             except Exception as e:
@@ -391,6 +429,7 @@ class livePlot:
         time.sleep(0.00001)
 
     def startreadout(self, callback=None, rate=10., maxidx=None):
+        #$print('-- startreadout: callback: %s'  % callback)
         if maxidx is not None:
             self.maxidx = maxidx
         if callback is not None:
@@ -403,6 +442,11 @@ class livePlot:
         if self.verbose:
             print('live_plotting: stop readout')
         self.timer.stop()
+
+if __name__=='__main__':
+    lp=livePlot(gates=None, sweepgates=['L', 'R'], sweepranges=[50,50])
+    lp.win.setGeometry(1500,10,400,400)
+    
 
 #%% Some default callbacks
 
