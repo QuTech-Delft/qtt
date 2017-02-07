@@ -79,7 +79,8 @@ if __name__ == '__main__':
     qdatadir = os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')
     qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
     mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
-    mwindows['parameterviewer'].callbacklist.append(mwindows['plotwindow'].update)
+    if mwindows['parameterview'] is not None:
+        mwindows['parameterviewer'].callbacklist.append(mwindows['plotwindow'].update)
     from qtt.parameterviewer import createParameterWidgetRemote, createParameterWidget
     if server_name is None:
         createParameterWidget([gates, ])

@@ -1261,7 +1261,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
     if 1:
         ccim = (np.array(im.shape) / 2 + .5) * istep
-        tmp=np.linalg.norm(ccim - param[0:2])
+        tmp = np.linalg.norm(ccim - param[0:2])
         dcost = 2000 * pgeometry.logistic(tmp, np.mean(ccim), istep)
         if verbose:
             print('  add cost for image cc: %.1f' % dcost)
@@ -1313,12 +1313,13 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
                 lbl = None
             plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-', linewidth=linewidth, color=[0, .7, 0], label=lbl)
             pmatlab.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
-        showIm(modelpatch, fig=fig + 1)
-        plt.title('Model patch: cost %.1f' % cost)
-        showIm(np.abs(dd), fig=fig + 2)
-        plt.title('diff patch: cost %.1f' % cost)
-        plt.colorbar()
-        plt.show()
+        if verbose >= 1:
+            showIm(modelpatch, fig=fig + 1)
+            plt.title('Model patch: cost %.1f' % cost)
+            showIm(np.abs(dd), fig=fig + 2)
+            plt.title('diff patch: cost %.1f' % cost)
+            plt.colorbar()
+            plt.show()
         # plt.pause(1e-6)
         #tilefigs([fig, fig+1], [2,2])
 
@@ -1328,118 +1329,6 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     return cost, patch, cdata, (H, )
     pass
 
-
-def evaluateCrossX(param, im, ksize, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2, usemask=False):
-    """ Calculate cross matching score
-
-    """
-    if isinstance(ksize, list):
-        samplesize = [ksize[0], ksize[1]]
-    else:
-        samplesize = [ksize, ksize]
-
-    pp = np.array(param[0:2]) / istep
-    aa = param[3:]
-
-    H = createH(samplesize, pp, scale=istep / istepmodel)
-    #patch=linetools.sampleImage(im, pp, samplesize, fig=11, clearfig=True, nrsub=1)
-    dsize = (samplesize[0], samplesize[1])
-    patch = cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_NEAREST), cv2.BORDER_CONSTANT, -1)
-
-    modelpatch, cdata = createCross(param, samplesize, istep=istepmodel, verbose=0)
-    (cc, lp, hp, ip, op) = cdata
-
-    # near model mask
-    #mask = (modelpatch>1).astype(int)
-
-    # distance centre mask
-    imtmp = 10 + 0 * modelpatch.copy()
-    imtmp[int(imtmp.shape[1] / 2), int(imtmp.shape[0] / 2)] = 0
-    mask = scipy.ndimage.distance_transform_edt(imtmp)
-    mask = 1 - .75 * mask / mask.max()
-
-    dd = patch - modelpatch
-    if usemask:
-        dd = dd * mask
-
-    # dd=(dd*cf)
-    cost = np.linalg.norm(dd)
-
-    # area of intersection
-    rr = np.array([[0., im.shape[1]], [0, im.shape[0]]])
-    ppx = pmatlab.region2poly(np.array([[0, samplesize[0]], [0., samplesize[1]]]))
-    ppimage = pmatlab.region2poly(rr)
-    pppatch = pmatlab.projectiveTransformation(H, ppimage)
-    ppi = pmatlab.polyintersect(ppx.T, pppatch.T).T
-    A = pmatlab.polyarea(ppi.T)
-    A0 = pmatlab.polyarea(ppx.T)
-
-    # special rules
-    if A / A0 < .85:
-        cost += 4000
-    if aa[0] < 0 or aa[0] > np.pi / 2 - np.deg2rad(5):
-        cost += 10000
-    if aa[1] < np.pi or aa[1] > 3 * np.pi / 2:
-        pass
-        cost += 10000
-    if aa[2] < np.pi or aa[2] > 3 * np.pi / 2:
-        pass
-        cost += 10000
-    if aa[3] < 0 or aa[3] > np.pi / 2:
-        pass
-        cost += 10000
-
-    if pmatlab.angleDiff(aa[0], aa[1]) < np.deg2rad(30):
-        cost += 1000
-    if pmatlab.angleDiff(aa[2], aa[3]) < np.deg2rad(30):
-        cost += 1000
-
-    if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(45):
-        cost += 10000
-    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(45):
-        cost += 10000
-    if param[2] < 0:
-        cost += 10000
-
-    if np.abs(param[2]) > 7.:
-        #print('x deviation!')
-        cost += 10000
-
-    if np.abs(param[2] - 10) > 8:
-        #print('x deviation!')
-        cost += 10000
-
-    if len(param) > 7:
-        if np.abs(angleDiff(param[7], np.pi / 4)) > np.deg2rad(30):
-            #print('psi deviation!')
-            cost += 10000
-
-    if not fig is None:
-        showIm(patch, fig=fig)
-        plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
-        pmatlab.addfigurecopy(fig=fig)
-        plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m', linewidth=linewidth, markersize=10, label='transition line')
-        plt.plot(cc[0], cc[0], '.m', markersize=12)
-        for ii in range(4):
-            if ii == 0:
-                lbl = 'electron line'
-            else:
-                lbl = None
-            plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-', linewidth=linewidth, color=[0, .7, 0], label=lbl)
-            pmatlab.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
-        showIm(modelpatch, fig=fig + 1)
-        plt.title('Model patch: cost %.1f' % cost)
-        showIm(np.abs(dd), fig=fig + 2)
-        plt.title('diff patch: cost %.1f' % cost)
-        plt.colorbar()
-        plt.show()
-        # plt.pause(1e-6)
-        #tilefigs([fig, fig+1], [2,2])
-
-    if verbose:
-        print('evaluateCross: cost %.4f' % cost)
-    return cost, patch, cdata, (H, )
-    pass
 
 
 def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=None, istepmodel=.5, cb=None):
@@ -1635,10 +1524,9 @@ if __name__ == '__main__':
 import scipy
 from scipy.optimize import minimize
 from qtt.deprecated.linetools import costFunctionLine
-figl = 100
 
 
-def fitLine(im, param0=None, fig=None):
+def fitLine(alldata, param0=None, fig=None):
     """ Fit a line local to a model """
     if param0 is None:
         param0 = [0, 0, .5 * np.pi]  # x,y,theta,
@@ -1664,5 +1552,6 @@ def fitLine(im, param0=None, fig=None):
 
 if __name__ == '__main__':
     param0 = [0, 0, .5 * np.pi]  # x,y,theta,
+    figl = 100
 
     fitdata = fitLine(im, param0=None, fig=None)

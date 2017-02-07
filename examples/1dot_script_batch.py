@@ -74,7 +74,7 @@ if __name__ == '__main__':
     app = pyqtgraph.mkQApp()
 
 if __name__ == '__main__':
-    from qcodes.data.hdf5_format import HDF5FormatMetadata as MyFormatter
+    #from qcodes.data.hdf5_format import HDF5FormatMetadata as MyFormatter
     from qcodes.data.gnuplot_format import GNUPlotFormat as MyFormatter
     qcodes.DataSet.default_formatter = MyFormatter()
 
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     one_dots = sample.get_one_dots(sdidx=[])
     full = 0
 
-    sdindices = [2, ]
+    sdindices = [1, ]
     #sdindices = [1,2,]
 
     sddots = sample.get_one_dots(sdidx=sdindices)[-len(sdindices):]
@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     # define the index of the sensing dot to use for double-dot scans
     sdid = 1
-    sdid=2
+#   sdid=2
 
     if not sdid in sdindices:
         raise Exception('are you sure you want this?' )
