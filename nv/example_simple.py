@@ -88,13 +88,29 @@ print('  avg number of steps: %.3f' % avg_steps(lx, y_pred))
 
 #%% Only select 1 and 2 labels
 
+def plotI(labels, i, *args, **kwargs):
+    idx = (labels == i).nonzero()[0]
+    plt.plot(idx, i + 0 * idx, *args, **kwargs)
+    return idx
+
+plt.figure(8)
+plt.clf()
+#plt.plot(labels, '-c')
+plotI(labels, 1, '.r')
+plotI(labels, 2, '.g')
+
 idx = np.logical_or(labels == 1, labels == 2)
 rlabels = labels[labels != 0]
 rlabels = labels[idx]
 
 plt.figure(10)
 plt.clf()
-plt.plot(rlabels, '.-b')
+plt.plot(rlabels, '.-c', alpha=.5)
+plotI(rlabels, 1, '.g')
+plotI(rlabels, 2, '.r')
+plt.xticks([])
+
+#plt.plot(range(len(rlabels)), rlabels==1, '.r')
 
 # note: the 1 and 2 clusters are pretty alternating, let's use this in our prediction
 
@@ -132,23 +148,24 @@ print('  avg number of steps: %.3f' % avg_steps(lx, y_pred))
 
 from nvtools.nvtools import avg_steps, fmt
 
+
 def generate_double2lvl(N, p, q):
     x = np.zeros(N,).astype(int)
-    for ii in range(N-1):
-        if np.random.rand()<=p:
-            x[ii+1] = x[ii] ^1
+    for ii in range(N - 1):
+        if np.random.rand() <= p:
+            x[ii + 1] = x[ii] ^ 1
         else:
-            x[ii+1] = x[ii] ^2
-            
+            x[ii + 1] = x[ii] ^ 2
+
     return x
 
 import time
-nn=50000    
-#nn=100
-p=.35
-t0=time.time()
-print(generate_double2lvl(100, p, 1-p))
-labels=generate_double2lvl(nn, p, 1-p)
+nn = 50000
+# nn=100
+p = .35
+t0 = time.time()
+print(generate_double2lvl(100, p, 1 - p))
+labels = generate_double2lvl(nn, p, 1 - p)
 
 
 encoder = sklearn.preprocessing.LabelEncoder()
@@ -160,10 +177,10 @@ chars = sorted(list(set(labels)))
 print('total chars:', len(chars))
 char_indices = dict((c, i) for i, c in enumerate(chars))
 
-labelsX=[char_indices[c] for c in labels]
+labelsX = [char_indices[c] for c in labels]
 
-bc=np.bincount(labelsX)
-prob=bc/bc.sum()
+bc = np.bincount(labelsX)
+prob = bc / bc.sum()
 
 
 print('probability of each of the classes: %s' % fmt(prob))
@@ -171,37 +188,37 @@ print('probability of each of the classes: %s' % fmt(prob))
 # FIXME: convert from classes to jumps....
 
 from nvtools.nvtools import two_grams
-    
-gg=two_grams(alphabet, labels)
 
-print('dt %.3f' % (time.time()-t0) )
+gg = two_grams(alphabet, labels)
 
-#gg /= (len(text)-1 )    
-plt.figure(100); plt.clf()
+print('dt %.3f' % (time.time() - t0))
+
+#gg /= (len(text)-1 )
+plt.figure(100)
+plt.clf()
 plt.imshow(gg, interpolation='nearest')
 plt.axis('image')
 plt.colorbar()
 plt.xlabel('Class label')
 plt.ylabel('Next')
-    
-plt.xticks(range(len(alphabet)), alphabet)    
-plt.yticks(range(len(alphabet)), alphabet)    
+
+plt.xticks(range(len(alphabet)), alphabet)
+plt.yticks(range(len(alphabet)), alphabet)
 
 pgeometry.tilefigs([100])
 
-y_pred2 = np.vstack( (prob, gg[:, labelsX[:-1]].T ) )
+y_pred2 = np.vstack((prob, gg[:, labelsX[:-1]].T))
 #y_pred2 = np.vstack( (prob, gg[:, labelsX[1:]].T ) )
-y_pred=np.tile( prob, (nn, 1))
+y_pred = np.tile(prob, (nn, 1))
 
-av0=avg_steps(labelsX, (1/len(alphabet))*np.ones( (nn, len(alphabet) )) )    
+av0 = avg_steps(labelsX, (1 / len(alphabet)) * np.ones((nn, len(alphabet))))
 
-av1=avg_steps(labelsX, y_pred, verbose=1)    
+av1 = avg_steps(labelsX, y_pred, verbose=1)
 
-av2=avg_steps(labelsX, y_pred2, verbose=0)    
+av2 = avg_steps(labelsX, y_pred2, verbose=0)
 
-print('dt %.3f' % (time.time()-t0) )
+print('dt %.3f' % (time.time() - t0))
 
 print('  avg number of steps (0-grams): %.5f' % av0)
 print('  avg number of steps (1-grams): %.5f' % av1)
 print('  avg number of steps (2-grams): %.5f' % av2)
-
