@@ -50,6 +50,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         w = self
         w.setGeometry(1700, 50, 300, 600)
         w.setColumnCount(3)
+        self.verbose=1
         header = QtWidgets.QTreeWidgetItem(["Parameter", "Value"])
         w.setHeaderItem(header)
         w.setWindowTitle(name)
@@ -109,15 +110,20 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
-    def setSingleStep(self, instrument_name, value):
+    def setSingleStep(self, value, instrument_name = None):
         """ Set the default step size for parameters in the viewer """
-        lst = self._itemsdict[instrument_name]
-        for p in lst:
-            box = lst[p]
-            try:
-                box.setSingleStep(value)
-            except:
-                pass
+        if instrument_name is None:
+            names = pv._instrumentnames
+        else:
+            names =[instrument_name]
+        for iname in names:
+            lst = self._itemsdict[iname]
+            for p in lst:
+                box = lst[p]
+                try:
+                    box.setSingleStep(value)
+                except:
+                    pass
 
     def valueChanged(self, iname, param, value, *args, **kwargs):
         """ Callback used to update values in an instrument """
@@ -137,7 +143,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         else:
             self._timer = None
 
-    def updatedata(self):
+    def updatedata(self, force_update=False):
         ''' Update data in viewer using station.snapshow '''
         # pp = gates['parameters']
         # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
@@ -161,7 +167,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                     sb.setText(1, str(value))
                 else:
                     # update a float value
-                    if np.abs(sb.value() - value) > 1e-9:
+                    if np.abs(sb.value() - value) > 1e-9 or force_update:
                         if not sb.hasFocus():  # do not update when editing
                             logging.debug('update %s to %s' % (g, value))
                             try:
@@ -179,6 +185,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 logging.debug(str(e))
 
 
+#@qtt.tools.deprecated
 def createParameterWidgetRemote(instruments, doexec=True):
     """ Create a parameter widget in a remote process.
 
@@ -189,7 +196,20 @@ def createParameterWidgetRemote(instruments, doexec=True):
     return p
 
 
-def createParameterWidget(instruments, doexec=True):
+def createParameterWidget(instruments, doexec=True, remote=False):
+    """ Create a parameter widget
+    
+    Args:
+        instruments (list)
+        doexec (bool)
+        remote (bool): if True, then start in a remote process.
+                       Note: this can only be used if all the Instruments are remote instruments.
+    """
+    if remote:
+        p = mp.Process(target=createParameterWidget, args=(instruments, doexec))
+        p.start()
+        return p
+        
     instrumentnames = [i.name for i in instruments]
     app = pyqtgraph.mkQApp()
 
