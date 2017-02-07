@@ -54,7 +54,7 @@ model.compile(loss='mse', optimizer='rmsprop')
 
 #%%
 
-epochs=400
+epochs = 400
 loss = []
 print('Training')
 for i in range(epochs):
@@ -94,12 +94,14 @@ g = sns.FacetGrid(data_df, row='type', aspect=1)
 g.map(plt.hist, 'next_jump', bins=100)
 
 #%%
-plt.figure(100); plt.clf()
-plt.plot(data_df_a['next_jump'].values, data_df_a['predicted_jump'].values, '.b' )
-pmatlab.plot2Dline([1,-1,0], '--g')
-plt.figure(101); plt.clf()
-plt.plot(data_df_b['next_jump'].values, data_df_b['predicted_jump'].values, '.b' )
-pmatlab.plot2Dline([1,-1,0], '--g')
+plt.figure(100)
+plt.clf()
+plt.plot(data_df_a['next_jump'].values, data_df_a['predicted_jump'].values, '.b')
+pmatlab.plot2Dline([1, -1, 0], '--g')
+plt.figure(101)
+plt.clf()
+plt.plot(data_df_b['next_jump'].values, data_df_b['predicted_jump'].values, '.b')
+pmatlab.plot2Dline([1, -1, 0], '--g')
 
 import pmatlab
-pmatlab.tilefigs([0,100,0,101])
+pmatlab.tilefigs([0, 100, 0, 101])

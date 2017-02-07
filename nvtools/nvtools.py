@@ -345,8 +345,8 @@ def add_attraction_grid(ax, attractmV, attractFreq, zorder=0, color=(.9,.9,.9) )
 def nv_plot_callback(plotidx, adata, fig=100, singlefig=True, *args, **kwargs):
     """ Callback function to plot NV centre data """
     verbose = kwargs.get('verbose', 1)
-    if verbose:
-        print('plotidx = %s' % plotidx)
+    if verbose>=2:
+        print('nv_plot_callback: plotidx = %s' % plotidx)
     plt.figure(fig)
     plt.clf()
     if singlefig:

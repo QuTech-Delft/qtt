@@ -7,7 +7,8 @@ Created on Wed Jan  4 23:16:50 2017
 #%% Load packages
 from __future__ import print_function
 from imp import reload
-import os,sys
+import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -45,45 +46,45 @@ from nvtools.nvtools import showModel
 import qcodes
 os.chdir(qcodes.config['user']['nvDataDir'])
 
-labels=np.load('labels.npy')
+labels = np.load('labels.npy')
 
 #%%
 print('Generating Data')
-data = np.load(os.path.join(qcodes.config['user']['nvDataDir'],'jdata.npy')).T
-data=data[:, 0:6]
+data = np.load(os.path.join(qcodes.config['user']['nvDataDir'], 'jdata.npy')).T
+data = data[:, 0:6]
 
-df=pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
+df = pd.DataFrame(data, columns=['time', 'gate', 'yellow', 'new', 'gate jump', 'yellow jump'])
 #plt.figure(300); plt.clf()
 #df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), linewidths=0)
 
 #%% Data needs to be scaled for almost any machine learning algorithm to work
 
 # translate by mean and scale with std
-datascaler= StandardScaler()
+datascaler = StandardScaler()
 dataS = datascaler.fit_transform(data)
-dfS=df.copy()
-dfS[:]=datascaler.transform(df)
+dfS = df.copy()
+dfS[:] = datascaler.transform(df)
 
-Xbase=dataS[:,4:] # base data
-datascalerBase = StandardScaler().fit(data[:,4:])
-x=dataS[:,4]
-y=dataS[:,5]
+Xbase = dataS[:, 4:]  # base data
+datascalerBase = StandardScaler().fit(data[:, 4:])
+x = dataS[:, 4]
+y = dataS[:, 5]
 
 #%% Checking out t-SNE clustering
 
-sklearn.manifold.TSNE(n_components=2)        
+sklearn.manifold.TSNE(n_components=2)
 model = TSNE(n_components=2, random_state=0)
 np.set_printoptions(suppress=True)
-qq=model.fit_transform(Xbase)
+qq = model.fit_transform(Xbase)
 
 absModel = TSNE(n_components=2, random_state=0)
-absoluteQQ=model.fit_transform(dfS[['time','gate','yellow']].values)
+absoluteQQ = model.fit_transform(dfS[['time', 'gate', 'yellow']].values)
 
 #%% cluster on the t-SNE transformation
-#db = DBSCAN(eps=0.8, min_samples=10).fit(qq) # fit centers
+# db = DBSCAN(eps=0.8, min_samples=10).fit(qq) # fit centers
 #db=Birch(threshold=0.4, branching_factor=2, compute_labels=True).fit(qq)
-db=MiniBatchKMeans().fit(qq)
-absDB=MiniBatchKMeans().fit(absoluteQQ)
+db = MiniBatchKMeans().fit(qq)
+absDB = MiniBatchKMeans().fit(absoluteQQ)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 try:
@@ -92,7 +93,7 @@ except:
     pass
 labels = db.labels_
 
-encoder = sklearn.preprocessing.LabelEncoder ()
+encoder = sklearn.preprocessing.LabelEncoder()
 encoder.fit(labels)
 
 core_samples_mask = np.zeros_like(absDB.labels_, dtype=bool)
@@ -102,7 +103,7 @@ except:
     pass
 absLabels = absDB.labels_
 
-encoder = sklearn.preprocessing.LabelEncoder ()
+encoder = sklearn.preprocessing.LabelEncoder()
 encoder.fit(absLabels)
 
 
@@ -112,31 +113,32 @@ if 1:
     print('Estimated number of clusters: %d' % n_clusters_)
     print("Silhouette Coefficient: %0.3f" % metrics.silhouette_score(qq, labels))
 
-#plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
+# plt.rcParams.update(pd.tools.plotting.mpl_stylesheet)
 
-plt.figure(); plt.clf();
+plt.figure()
+plt.clf()
 plt.subplot(121)
 if labels is None:
-    plt.scatter(qq[:,0], qq[:,1])
+    plt.scatter(qq[:, 0], qq[:, 1])
 else:
-    plt.scatter(qq[:,0], qq[:,1], c=labels, cmap=cm.jet)
+    plt.scatter(qq[:, 0], qq[:, 1], c=labels, cmap=cm.jet)
 plt.title('t-SNE plot')
 
 plt.subplot(122)
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=labels, cmap=cm.jet, linewidths=0, colorbar=False)
 
-plt.figure(); plt.clf();
+plt.figure()
+plt.clf()
 plt.subplot(121)
 if absLabels is None:
-    plt.scatter(absoluteQQ[:,0], absoluteQQ[:,1])
+    plt.scatter(absoluteQQ[:, 0], absoluteQQ[:, 1])
 else:
-    plt.scatter(absoluteQQ[:,0], absoluteQQ[:,1], c=absLabels, cmap=cm.jet)
+    plt.scatter(absoluteQQ[:, 0], absoluteQQ[:, 1], c=absLabels, cmap=cm.jet)
 plt.title('t-SNE plot')
 
 plt.subplot(122)
 dfS.plot(kind='scatter', x='gate', y='yellow', ax=plt.gca(), c=absLabels, cmap=cm.jet, linewidths=0, colorbar=False)
 
-#Absolute clusters in t-SNE mapped to the jumps (this doesn't work)
+# Absolute clusters in t-SNE mapped to the jumps (this doesn't work)
 plt.figure()
 df.plot(kind='scatter', x='gate jump', y='yellow jump', ax=plt.gca(), c=absLabels, cmap=cm.jet, linewidths=0, colorbar=False)
-
