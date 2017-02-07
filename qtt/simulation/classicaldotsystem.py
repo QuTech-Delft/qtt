@@ -95,9 +95,9 @@ class ClassicalDotSystem(BaseDotSystem):
                 energy += np.dot(self.add_basis[i], self.Eadd)
                 energies[i] = energy
         else:
-            energies += self.basis.dot(tmp1)
-            energies += self.coulomb_energy.dot(self.W)
-            energies += self.add_basis.dot(self.Eadd)
+            energies += self.basis.dot(tmp1) # chemical potentiol times number of electrons
+            energies += self.coulomb_energy.dot(self.W) # coulomb repulsion
+            energies += self.add_basis.dot(self.Eadd) # addition energy
         return energies
 
     def calculate_ground_state(self, gatevalues):
