@@ -81,7 +81,7 @@ def dataset2image(dataset, arrayname = None, unitsperpixel = None, mode='pixel')
     im = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname].ndarray
-        im = tr.transform(imraw)
+        im = tr._transform(imraw)
     return im, tr
 
 
