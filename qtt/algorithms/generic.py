@@ -70,7 +70,7 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.
     imextend: list of 4 floats
         coordinates of image region (x0, x1, y0, y1)
     mvx, mvy (float or None)
-        number of units per pixel requested
+        number of units per pixel requested. If None then keep unchanged
 
     Returns
     -------
@@ -89,10 +89,13 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.
     mvy0 = dymv / float(dy - 1)
 
     if mvy is None:
-        if mvx is None:
-            mvx = 1
-        mvy = mvx
-    
+        mvy = mvy0
+    if mvx is None:
+            mvx = mvx0
+
+    if im.dtype==np.int64:
+        # opencv cannot handle int64 in resize
+        im=im.astype(np.float)
     # scale factors
     fw = np.abs((float(mvx0) / mvx))
     fh = np.abs((float(mvy0) / mvy))
@@ -393,7 +396,8 @@ def show2Dimage(im, dd, **kwargs):
     return extentImage
 
 if __name__ == '__main__':
-    show2Dimage(im, alldata)
+    pass
+    #show2Dimage(im, alldata)
 
 #%%
 

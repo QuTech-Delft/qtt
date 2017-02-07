@@ -21,6 +21,7 @@ import numpy.linalg
 from qtt import pmatlab
 
 import qtt.tools
+import qtt.algorithms.generic
 from qtt.tools import deprecated
 
 import matplotlib.pyplot as plt
@@ -285,207 +286,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     return xx, vstep, vsweep
 
 
-#%%
-
-
-class image_transform:
-
-    def __init__(self, dataset=None, arrayname=None, mode='pixel', unitsperpixel = None, verbose=0):
-        """ Class to convert scan coordinate to image coordinates
-        
-        Args:
-            dataset (DataSet):
-            arrayname (str or None): name of array to select from dataset
-            mode (str): 'pixel' or 'raw'
-        
-        """
-        self.H = np.eye(3)  # raw image to pixel image transformation
-        self.extent = []  # image extent in pixel
-        self.verbose = verbose
-        self.dataset = dataset
-        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-            dataset, arrayname=arrayname)
-        self.vstep = vstep
-        self.vsweep = vsweep
-
-        self._istep = dataset_get_istep(dataset)
-        nx = len(vsweep)
-        ny = len(vstep)
-        self.flipX = False
-        self.flipY = False
-
-        Hx = np.diag([-1, 1, 1])
-        Hx[0, -1] = nx - 1
-        Hy = np.diag([1, -1, 1])
-        Hy[1, -1] = ny - 1
-        if self.verbose:
-            print('image_transform: vsweep[0] %s' % vsweep[0])
-
-        if mode == 'raw':
-            pass
-        else:
-            if vsweep[0] > vsweep[1]:
-                self.flipX = True
-                self.H = Hx.dot(self.H)
-            if vstep[0] < vstep[1]:
-                self.flipY = True
-                self.H = Hy.dot(self.H)
-
-        self._imraw = dataset.arrays[arrayname].ndarray
-        self._im = self._transform(self._imraw)
-                              
-        if unitsperpixel is not None:
-            ims, Hs, _ = qtt.generic.algorithms.rescaleImage(self._imraw, mvx = unitsperpixel)                                      
-            self._im = ims
-            FIXME: add Hs to self.H
-            FIXME: add tests
-            FIXME: update dataset2image
-            
-        # return im
-        self.Hi = numpy.linalg.inv(self.H)
-
-    def image(self):
-        return self._im
-    
-    def istep(self):
-        return self._istep
-
-    def scan_image_extent(self):
-        """ Scan extent
-        
-        Returns:
-            extentImage (list): x0, x1, y0, y1
-                            x0, y0 is top left
-        """
-        vsweep = self.vsweep
-        vstep = self.vstep
-        extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
-        if self.flipX:
-            extentImage = [extentImage[1], extentImage[
-                0], extentImage[2], extentImage[3]]
-        if self.flipY:
-            extentImage = [extentImage[0], extentImage[
-                1], extentImage[3], extentImage[2]]
-        self.extent = extentImage
-        return extentImage
-
-    def matplotlib_image_extent(self):
-        """ Return matplotlib style image extent
-
-        Returns:
-            extentImage (4 floats): x1, x2, y1, y2
-                        the y1 value is bottom left
-        """
-        vsweep = self.vsweep
-        vstep = self.vstep
-        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]
-        if self.flipX:
-            extentImage = [extentImage[1], extentImage[
-                0], extentImage[2], extentImage[3]]
-        if self.flipY:
-            extentImage = [extentImage[0], extentImage[
-                1], extentImage[3], extentImage[2]]
-        self.extent = extentImage
-        return extentImage
-
-    def _transform(self, im):
-        """ Transform raw image to image in pixel coordinates such that the imageExtent is increasing
-
-        """
-        if self.flipX:
-            im = im[::, ::-1]
-        if self.flipY:
-            im = im[::-1, ::]
-        # im=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
-
-        return im
-
-    def _itransform(self, im):
-        if self.flipX:
-            im = im[::, ::-1]
-        if self.flipY:
-            im = im[::-1, ::]
-        # im=cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
-
-        return im
-
-    def pixel2scan(self, pt):
-        """ Convert pixels coordinates to scan coordinates (mV)
-        Arguments
-        ---------
-        pt : array
-            points in pixel coordinates (x,y)
-        Returns
-        -------
-          ptx (array): point in scan coordinates (sweep, step)
-
-        """
-        ptx = pmatlab.projectiveTransformation(
-            self.Hi, np.array(pt).astype(float))
-
-        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-            self.dataset, arrayname=None, verbose=0)
-        nx = vsweep.size  # zdata.shape[0]
-        ny = vstep.size  # zdata.shape[1]
-
-        xx = extent
-        x = ptx
-        nn = pt.shape[1]
-        ptx = np.zeros((2, nn))
-        # ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
-        # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
-
-        f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
-        ptx[1, :] = f(x[1, :])  # step
-        f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
-        ptx[0, :] = f(x[0, :])  # sweep
-
-        return ptx
-
-    def scan2pixel(self, pt):
-        """ Convert scan coordinates to pixel coordinates 
-        Arguments
-        ---------
-        pt : array
-            points in scan coordinates
-        Returns:
-            ptpixel (ndaray): points in pixel coordinates
-
-        """
-        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-            self.dataset, arrayname=None, verbose=0)
-        # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
-        nx = vsweep.size
-        ny = vstep.size
-
-        xx = extent
-        x = pt
-        nn = pt.shape[1]
-        ptpixel = np.zeros((2, nn))
-        f = scipy.interpolate.interp1d(
-            [xx[2], xx[3]], [0, ny - 1], assume_sorted=False)
-        ptpixel[1, :] = f(x[1, :])
-        f = scipy.interpolate.interp1d(
-            [xx[0], xx[1]], [0, nx - 1], assume_sorted=False)
-        ptpixel[0, :] = f(x[0, :])  # sweep to pixel x
-        # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
-        # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
-
-        ptpixel = pmatlab.projectiveTransformation(
-            self.H, np.array(ptpixel).astype(float))
-
-        return ptpixel
-
-
-def test_image_transform():
-    from qcodes.tests.data_mocks import DataSet2D
-    ds=DataSet2D()
-    tr=image_transform(ds)
-    im=tr.image()
-    
-if __name__=='__main__':
-    test_image_transform()
-    
+#%%    
 @deprecated
 def pix2scan(pt, dd2d):
     """ Convert pixels coordinates to scan coordinates (mV)
@@ -517,7 +318,7 @@ def pix2scan(pt, dd2d):
         ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
     return ptx
 
-#%%
+#%% Extract metadata
 
 
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
@@ -607,10 +408,215 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     return extent, g0, g1, vstep, vsweep, arrayname
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
     extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
         alldata, arrayname=None)
     _ = pix2scan(np.zeros((2, 4)), alldata)
+
+#%%
+
+
+class image_transform:
+
+    def __init__(self, dataset=None, arrayname=None, mode='pixel', unitsperpixel = None, verbose=0):
+        """ Class to convert scan coordinate to image coordinates
+        
+        Args:
+            dataset (DataSet):
+            arrayname (str or None): name of array to select from dataset
+            mode (str): 'pixel' or 'raw'
+        
+        """
+        self.H = np.eye(3)  # raw image to pixel image transformation
+        self.extent = []  # image extent in pixel
+        self.verbose = verbose
+        self.dataset = dataset
+        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+            dataset, arrayname=arrayname)
+        self.vstep = vstep
+        self.vsweep = vsweep
+
+        self._istep = dataset_get_istep(dataset)
+        nx = len(vsweep)
+        ny = len(vstep)
+        self.flipX = False
+        self.flipY = False
+
+        Hx = np.diag([-1, 1, 1])
+        Hx[0, -1] = nx - 1
+        Hy = np.diag([1, -1, 1])
+        Hy[1, -1] = ny - 1
+        if self.verbose:
+            print('image_transform: vsweep[0] %s' % vsweep[0])
+
+        if mode == 'raw':
+            pass
+        else:
+            if vsweep[0] > vsweep[1]:
+                self.flipX = True
+                self.H = Hx.dot(self.H)
+            if vstep[0] < vstep[1]:
+                self.flipY = True
+                self.H = Hy.dot(self.H)
+
+        self._imraw = dataset.arrays[arrayname].ndarray
+        self._im = self._transform(self._imraw)
+                              
+        if unitsperpixel is not None:
+            imextent=self.scan_image_extent()
+            ims, Hs, _ = qtt.algorithms.generic.rescaleImage(self._imraw, imextent, mvx = unitsperpixel[0], mvy=unitsperpixel[1])                                      
+            self._im = ims
+            
+            self.H = Hs @ self.H
+            #FIXME: update dataset2image
+            
+        # return im
+        self.Hi = numpy.linalg.inv(self.H)
+
+    def image(self):
+        return self._im
+    
+    def istep(self):
+        return self._istep
+
+    def scan_image_extent(self):
+        """ Scan extent
+        
+        Returns:
+            extentImage (list): x0, x1, y0, y1
+                            x0, y0 is top left
+        """
+        vsweep = self.vsweep
+        vstep = self.vstep
+        extentImage = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]
+        if self.flipX:
+            extentImage = [extentImage[1], extentImage[
+                0], extentImage[2], extentImage[3]]
+        if self.flipY:
+            extentImage = [extentImage[0], extentImage[
+                1], extentImage[3], extentImage[2]]
+        self.extent = extentImage
+        return extentImage
+
+    def matplotlib_image_extent(self):
+        """ Return matplotlib style image extent
+
+        Returns:
+            extentImage (4 floats): x1, x2, y1, y2
+                        the y1 value is bottom left
+        """
+        vsweep = self.vsweep
+        vstep = self.vstep
+        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]
+        if self.flipX:
+            extentImage = [extentImage[1], extentImage[
+                0], extentImage[2], extentImage[3]]
+        if self.flipY:
+            extentImage = [extentImage[0], extentImage[
+                1], extentImage[3], extentImage[2]]
+        self.extent = extentImage
+        return extentImage
+
+    def _transform(self, im):
+        """ Transform raw image to image in pixel coordinates such that the imageExtent is increasing
+
+        """
+        if self.flipX:
+            im = im[::, ::-1]
+        if self.flipY:
+            im = im[::-1, ::]
+
+        return im
+
+    def _itransform(self, im):
+        if self.flipX:
+            im = im[::, ::-1]
+        if self.flipY:
+            im = im[::-1, ::]
+
+        return im
+
+    def pixel2scan(self, pt):
+        """ Convert pixels coordinates to scan coordinates (mV)
+        Arguments
+        ---------
+        pt : array
+            points in pixel coordinates (x,y)
+        Returns
+        -------
+          ptx (array): point in scan coordinates (sweep, step)
+
+        """
+        ptx = pmatlab.projectiveTransformation(
+            self.Hi, np.array(pt).astype(float))
+
+        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
+            self.dataset, arrayname=None, verbose=0)
+        nx = vsweep.size  # zdata.shape[0]
+        ny = vstep.size  # zdata.shape[1]
+
+        xx = extent
+        x = ptx
+        nn = pt.shape[1]
+        ptx = np.zeros((2, nn))
+        # ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
+        # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
+
+        f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
+        ptx[1, :] = f(x[1, :])  # step
+        f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
+        ptx[0, :] = f(x[0, :])  # sweep
+
+        return ptx
+
+    def scan2pixel(self, pt):
+        """ Convert scan coordinates to pixel coordinates 
+        Arguments
+        ---------
+        pt : array
+            points in scan coordinates
+        Returns:
+            ptpixel (ndaray): points in pixel coordinates
+
+        """
+        extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
+            self.dataset, arrayname=None, verbose=0)
+        # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
+        nx = vsweep.size
+        ny = vstep.size
+
+        xx = extent
+        x = pt
+        nn = pt.shape[1]
+        ptpixel = np.zeros((2, nn))
+        f = scipy.interpolate.interp1d(
+            [xx[2], xx[3]], [0, ny - 1], assume_sorted=False)
+        ptpixel[1, :] = f(x[1, :])
+        f = scipy.interpolate.interp1d(
+            [xx[0], xx[1]], [0, nx - 1], assume_sorted=False)
+        ptpixel[0, :] = f(x[0, :])  # sweep to pixel x
+        # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
+        # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
+
+        ptpixel = pmatlab.projectiveTransformation(
+            self.H, np.array(ptpixel).astype(float))
+
+        return ptpixel
+
+
+def test_image_transform():
+    from qcodes.tests.data_mocks import DataSet2D
+    ds=DataSet2D()
+    tr=image_transform(ds)
+    im=tr.image()
+    print('transform: im.shape %s' % (str(im.shape),) )
+    tr=image_transform(ds, unitsperpixel=[None, 2])
+    im=tr.image()
+    print('transform: im.shape %s' % (str(im.shape),) )
+    
+if __name__=='__main__':
+    import pdb
+    test_image_transform()
 
 #%%
 
@@ -868,11 +874,16 @@ def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
 
 #%%
 
-if __name__ == '__main__':
-    import numpy as np
+def test_numpy_on_dataset():
     import qcodes.tests.data_mocks
     alldata = qcodes.tests.data_mocks.DataSet2D()
     X = alldata.z
-    print(np.array(X))
+    _=np.array(X)
     s = np.linalg.svd(X)
-    print(s)
+    #print(s)
+
+if __name__ == '__main__':
+    import numpy as np
+    import qcodes.tests.data_mocks
+    
+    test_numpy_on_dataset()
