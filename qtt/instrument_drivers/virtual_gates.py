@@ -55,15 +55,15 @@ class virtual_gates(Instrument):
                                vals=Numbers(-2000, 2000))
 
         if sweepgates == None:
-            self.sweepgates = self._virt_gates_list
+            self.sweepgates = self._gates_list
             self.sweepmap = self.map_inv
         else:
             self.sweepgates = sweepgates
             self.sweepmap = dict()
-            for gvirt in self.sweepgates:
-                self.sweepmap[gvirt + '_virt'] = dict()
-                for g in sweepgates:
-                    self.sweepmap[gvirt + '_virt'][g] = self.map_inv[gvirt + '_virt'][g]
+            for gvirt in self.map_inv:
+                self.sweepmap[gvirt] = dict()
+                for sg in sweepgates:
+                    self.sweepmap[gvirt][sg] = self.map_inv[gvirt][sg]
 
     def _get(self, gate):
         gateval = sum([self.map[gate][g] * self.gates[g].get() for g in self.map[gate]])
