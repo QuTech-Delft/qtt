@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
     t0 = time.time()
     for ii in range(5):
-        parfit, _ = fit_pol_all(xx, yy)
+        parfit, _ = fit_pol_all(xx, yy, kT=0.001)
     dt = time.time() - t0
     yyfit = polmod_all_2slopes(xx, parfit, kT=0.001)
     print('dt: %.3f [s]' % dt)
@@ -141,7 +141,6 @@ if __name__ == '__main__':
     plt.legend(numpoints=1)
 
     #%% Quick estimate
-    import qtt
     from qtt import pmatlab as pgeometry
     noise = np.arange(0, .1, .5e-3)
     noise = np.hstack((noise, np.arange(1e-4, 5e-4, 1e-4)))
@@ -151,7 +150,7 @@ if __name__ == '__main__':
     for ii, n in enumerate(noise):
         pgeometry.tprint('quick fit %d/%d' % (ii, len(noise)))
         yyx = yy + n * (np.random.rand(yy.size) - .5)
-        parfit, _ = fit_pol_all(xx, yyx, par_guess=None)
+        parfit, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None)
         pp[ii] = parfit
 
     plt.figure(200)
@@ -164,9 +163,9 @@ if __name__ == '__main__':
 
     #%% Show effect of proper initialization
     yyx = yy + n * (np.random.rand(yy.size) - .5)
-    parfit1, _ = fit_pol_all(xx, yyx, par_guess=par)
-    parfit2, _ = fit_pol_all(xx, yyx, par_guess=None, verbose=2)
-    parfit2i, _ = fit_pol_all(xx, yyx, par_guess=parfit2)
+    parfit1, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=par)
+    parfit2, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None, verbose=2)
+    parfit2i, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=parfit2)
 
     yy1 = polmod_all_2slopes(xx, parfit1, kT=0.001)
     yy2 = polmod_all_2slopes(xx, parfit2, kT=0.001)
@@ -194,7 +193,7 @@ if __name__ == '__main__':
         print('full fit %d/%d' % (ii, len(noise)))
         for j in range(niter):
             yyx = yy + n * (np.random.rand(yy.size) - .5)
-            parfit, _ = fit_pol_all(xx, yyx)
+            parfit, _ = fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
 
     #%% Show uncertainties
@@ -240,7 +239,7 @@ if __name__ == '__main__':
 
         for j in range(niter):
             yyx = yy + Noise * (np.random.rand(yy.size) - .5)
-            parfit, _ = fit_pol_all(xx, yyx)
+            parfit, _ = fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
 #%%
     mean = np.mean(ppall[:, :, 0], axis=1)
