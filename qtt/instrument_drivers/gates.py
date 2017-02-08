@@ -42,14 +42,14 @@ class gates(Instrument):
         self._gate_map = gate_map
         # Create all functions for the gates as defined in self._gate_map
         for gate in self._gate_map.keys():
-            logging.debug('virtual_gates: make gate %s' % gate)
+            logging.debug('gates: make gate %s' % gate)
             self._make_gate(gate)
 
         self.get_all()
 
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
-        IDN = {'vendor': 'QuTech', 'model': 'virtual_gates',
+        IDN = {'vendor': 'QuTech', 'model': 'gates',
                'serial': None, 'firmware': None}
         return IDN
 
@@ -66,12 +66,12 @@ class gates(Instrument):
         return self._instrument_list[gatemap[0]].get(gate)
 
     def _set(self, value, gate):
-        logging.debug('virtualgate._set: gate %s, value %s' % (gate, value))
+        logging.debug('gate._set: gate %s, value %s' % (gate, value))
         value = float(value)
         gatemap = self._gate_map[gate]
         i = self._instrument_list[gatemap[0]]
         gate = 'dac%d' % gatemap[1]
-        logging.debug('virtualgate._set: instrument %s, param %s: value %s' %
+        logging.debug('gate._set: instrument %s, param %s: value %s' %
                       (i.name, gate, value))
         i.set(gate, value)
 
@@ -103,7 +103,7 @@ class gates(Instrument):
 
     def __repr__(self):
         gm = getattr(self, '_gate_map', [])
-        s = 'virtual_gates: %s (%d gates)' % (self.name, len(gm))
+        s = 'gates: %s (%d gates)' % (self.name, len(gm))
 
         return s
 
@@ -154,7 +154,7 @@ class gates(Instrument):
         cgates = graphviz.Digraph('cluster_gates')
         cgates.body.append('color=lightgrey')
         cgates.attr('node', style='filled', color='seagreen1')
-        cgates.body.append('label="%s"' % 'Virtual gates')
+        cgates.body.append('label="%s"' % 'gates')
 
         iclusters = []
         for i, iname in enumerate(inames):
