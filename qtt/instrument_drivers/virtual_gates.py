@@ -14,17 +14,20 @@ import numpy as np
 
 class virtual_gates(Instrument):
     """ Create virtual gates, which are linear combinations of the gates.
-    
+
     The virtual gates are defined, such that when changing one of the virtual 
     gates, the others are not influenced. The virtual gates can be used for
     changing only one physical parameter, e.g. a chemical potentials or a 
     tunnel coupling. Note: They do not (yet?) have an offset relative to the 
-    physical gates.
+    physical gates. 
+    The sweepmap describes a submatrix of the inverse of the virt_gate_map.
 
     Attributes:
         name (string): The name of the object
         gates (Instrument): the physical gates
         virt_gate_map (dict): describes the transformation matrix
+        sweepgates (list): names of the gates that can be swept, e.g. with an 
+            AWG.
     """
     shared_kwargs = ['gates']
 
@@ -50,7 +53,7 @@ class virtual_gates(Instrument):
                                get_cmd=partial(self._get, gate=g),
                                set_cmd=partial(self._set, gate=g),
                                vals=Numbers(-2000, 2000))
-                               
+
         if sweepgates == None:
             self.sweepgates = self._virt_gates_list
             self.sweepmap = self.map_inv
@@ -58,9 +61,9 @@ class virtual_gates(Instrument):
             self.sweepgates = sweepgates
             self.sweepmap = dict()
             for gvirt in self.sweepgates:
-                self.sweepmap[gvirt+'_virt'] = dict()
+                self.sweepmap[gvirt + '_virt'] = dict()
                 for g in sweepgates:
-                    self.sweepmap[gvirt+'_virt'][g] = self.map_inv[gvirt+'_virt'][g]
+                    self.sweepmap[gvirt + '_virt'][g] = self.map_inv[gvirt + '_virt'][g]
 
     def _get(self, gate):
         gateval = sum([self.map[gate][g] * self.gates[g].get() for g in self.map[gate]])
