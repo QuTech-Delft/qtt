@@ -438,6 +438,7 @@ class virtual_gates(Instrument):
             self._make_gate(gate)
 
         self.get_all()
+        print('This code for gates is deprecated. Use gates in qtt/instrument_drivers.')
 
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
