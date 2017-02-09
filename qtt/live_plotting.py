@@ -345,14 +345,14 @@ class livePlot:
             else:
                 self.plot = pg.ImageItem()
                 p1.addItem(self.plot)
-        elif len(self.sweepparams) == 1:
+        elif type(self.sweepparams) == str:
             p1 = plotwin.addPlot(title="1d scan")
             p1.setLabel('left', 'Value')
-            p1.setLabel('bottom', self.sweepparams[0], units='mV')
+            p1.setLabel('bottom', self.sweepparams, units='mV')
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
-        elif len(self.sweepparams) == 2:
+        elif type(self.sweepparams) == list:
             p1 = plotwin.addPlot(title='2d scan')
             p1.setLabel('bottom', self.sweepparams[0], units='mV')
             p1.setLabel('left', self.sweepparams[1], units='mV')
@@ -394,10 +394,9 @@ class livePlot:
                 if None in (self.sweepInstrument, self.sweepparams, self.sweepranges):
                     self.plot.setData(self.data)
                 else:
-                    sweep_param = getattr(self.sweepInstrument, self.sweepparams[0])
+                    sweep_param = getattr(self.sweepInstrument, self.sweepparams)
                     paramval = sweep_param.get_latest()
-                    sweepvalues = np.linspace(paramval - self.sweepranges[0] / 2, self.sweepranges[
-                        0] / 2 + paramval, len(data))
+                    sweepvalues = np.linspace(paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
                     self.plot.setData(sweepvalues, self.data)
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data.T)
@@ -457,10 +456,6 @@ class livePlot:
         if self.verbose:
             print('live_plotting: stop readout')
         self.timer.stop()
-
-if __name__ == '__main__':
-    lp = livePlot(datafunction=MockCallback_2d(), sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50])
-    lp.win.setGeometry(1500, 10, 400, 400)
 
 #%% Some default callbacks
 
@@ -540,3 +535,8 @@ class fpgaCallback_2d:
             im_diff = ndimage.filters.laplace(im_diff, mode='nearest')
 
         return np.array(im_diff)
+
+#%% Example
+if __name__ == '__main__':
+    lp = livePlot(datafunction=MockCallback_2d(), sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50])
+    lp.win.setGeometry(1500, 10, 400, 400)
