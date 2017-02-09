@@ -14,11 +14,11 @@ class VideoMode:
     """ Controls the videomode tuning.
 
     Attributes:
-        station (qcodes station): 
-        sweepparams (string, list or dict)
-        sweepranges (int or list)
-        fpga_ch (int): 
-        resolution (list): 
+        station (qcodes station): contains all the information about the set-up
+        sweepparams (string, 1 x 2 list or dict): the parameter(s) to be swept
+        sweepranges (int or 1 x 2 list): the range(s) to be swept over
+        fpga_ch (int): the channel of the FPGA
+        resolution (1 x 2 list): for 2D the resolution
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
     def __init__(self, station, sweepparams, sweepranges, fpga_ch, Naverage=25, resolution=[90, 90], diff_dir=None):
