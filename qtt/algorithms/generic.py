@@ -61,23 +61,22 @@ import cv2
 from qtt import pgeometry
 import numpy as np
 
+
 def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.INTER_AREA, fig=None):
     """ Scale image to make pixels at specified resolution
 
-    Arguments
-    ---------
-    im (array): input image
-    imextend: list of 4 floats
+    Args:
+      im (array): input image
+      imextend: list of 4 floats
         coordinates of image region (x0, x1, y0, y1)
-    mvx, mvy (float or None)
+      mvx, mvy (float or None)
         number of units per pixel requested. If None then keep unchanged
 
-    Returns
-    -------
-     ims: transformed image
-     H: transformation matrix from units to pixels
+    Returns:
+       ims: transformed image
+       H: transformation matrix from units to pixels
          H is the homogeneous transform from original to scaled image
-     (mvx, mvy, fx, dy) : internal data
+       (mvx, mvy, fx, dy) : internal data
 
     """
     dxmv = imextent[1] - imextent[0]
@@ -91,11 +90,11 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.
     if mvy is None:
         mvy = mvy0
     if mvx is None:
-            mvx = mvx0
+        mvx = mvx0
 
-    if im.dtype==np.int64:
+    if im.dtype == np.int64:
         # opencv cannot handle int64 in resize
-        im=im.astype(np.float)
+        im = im.astype(np.float)
     # scale factors
     fw = np.abs((float(mvx0) / mvx))
     fh = np.abs((float(mvy0) / mvy))
@@ -119,19 +118,24 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.
     else:
         ims = cv2.resize(im, None, fx=fw, fy=fh, interpolation=interpolation)
 
-    H = pgeometry.pg_transl2H([-.5, -.5]) .dot(np.diag([fw, fh, 1]).dot(pgeometry.pg_transl2H([.5, .5])))
+    H = pgeometry.pg_transl2H(
+        [-.5, -.5]) .dot(np.diag([fw, fh, 1]).dot(pgeometry.pg_transl2H([.5, .5])))
 
     if fig is not None:
-        plt.figure(fig); plt.clf()
-        plt.subplot(1,2,1); plt.imshow(im, interpolation='nearest')
-        plt.subplot(1,2,2); plt.imshow(ims, interpolation='nearest')
+        plt.figure(fig)
+        plt.clf()
+        plt.subplot(1, 2, 1)
+        plt.imshow(im, interpolation='nearest')
+        plt.subplot(1, 2, 2)
+        plt.imshow(ims, interpolation='nearest')
         plt.title('scaled')
     return ims, H, (mvx, mvy, fw, fh)
 
 
 def test_rescale_image():
-    im=np.random.rand( 300,600)
-    _=rescaleImage(im, [0, im.shape[1]-1, 0, im.shape[0]-1], mvx=4, verbose=0, fig=None)
+    im = np.random.rand(300, 600)
+    _ = rescaleImage(im, [0, im.shape[1] - 1, 0,
+                          im.shape[0] - 1], mvx=4, verbose=0, fig=None)
 
 
 def scaleImage(image, display_min=None, display_max=None):
@@ -186,7 +190,8 @@ def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
         vis = im8.copy()
         vis[:] = (192 + np.uint32(vis)) / 2
         d = 12
-        points = np.dstack(np.mgrid[int(d / 2):w:d, int(d / 2):h:d]).reshape(-1, 2)
+        points = np.dstack(
+            np.mgrid[int(d / 2):w:d, int(d / 2):h:d]).reshape(-1, 2)
         for x, y in points:
             vx, vy = np.int32(flow[y, x] * d)
             # vx,vy=int(ff*ll[y,x,0]*vx), int(ff*ll[y,x,0]*vy)
@@ -195,7 +200,8 @@ def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
             except:
                 linetype = 16  # older opencv
 
-            cv2.line(vis, (x - vx, y - vy), (x + vx, y + vy), (0, 0, 0), 1, linetype)
+            cv2.line(vis, (x - vx, y - vy), (x + vx, y + vy),
+                     (0, 0, 0), 1, linetype)
         cv2.imshow('input', im8)
         cv2.imshow('flow', vis)
     return flow, ll
@@ -289,7 +295,8 @@ def showCoulombDirection(ptx, ww, im=None, dd=None, fig=100):
         # plt.plot(pts[:,0], pts[:,1], '.m')
     if fig is not None:
         plt.figure(fig)
-        hh = pylab.arrow(pp[0, 0], pp[0, 1], ww[0], ww[1], linewidth=4, fc="k", ec="k", head_width=sigma / 2, head_length=sigma / 2)
+        hh = pylab.arrow(pp[0, 0], pp[0, 1], ww[0], ww[
+                         1], linewidth=4, fc="k", ec="k", head_width=sigma / 2, head_length=sigma / 2)
         hh.set_alpha(0.8)
         # hh=pylab.arrow( ptx[0,0], ptx[0,1],-7,7, fc="g", ec="g", head_width=1.05, head_length=1 )
         # hh.set_alpha(0.4)
@@ -302,7 +309,8 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
     cwidth = 2. * widthmv / np.abs(step)
 
     resizefactor = 2 * np.abs(step)  # resize to .5 mv/pixel
-    flow, ll = flowField(im, fig=None, blocksize=int(1.5 * 2 * widthmv), resizefactor=resizefactor)
+    flow, ll = flowField(im, fig=None, blocksize=int(
+        1.5 * 2 * widthmv), resizefactor=resizefactor)
 
     ptxf = resizefactor * ptx  # [:,::-1]
     val = getValuePixel(flow, ptxf)
@@ -313,7 +321,8 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
 
     # improve estimate by taking a local average
     valr = pmatlab.rot2D(np.pi / 2) .dot(val.reshape((2, 1)))
-    sidesteps = np.arange(-6, 6.01, 3).reshape((-1, 1)) * np.matrix(valr.reshape((1, 2)))
+    sidesteps = np.arange(-6, 6.01, 3).reshape((-1, 1)) * \
+        np.matrix(valr.reshape((1, 2)))
     pts = ptx + .5 * np.array(sidesteps)
     ptsf = ptxf + resizefactor * sidesteps
     valx = np.array([getValuePixel(flow, p) for p in ptsf])
@@ -339,7 +348,8 @@ def extent2fullextent(extent0, im):
     ny = im.shape[0]
     dx = (extent0[1] - extent0[0]) / (nx - 1)
     dy = (extent0[3] - extent0[2]) / (ny - 1)
-    extent = [extent0[0] - dx / 2, extent0[1] + dx / 2, extent0[2] - dy / 2, extent0[3] + dy / 2]
+    extent = [extent0[0] - dx / 2, extent0[1] + dx /
+              2, extent0[2] - dy / 2, extent0[3] + dy / 2]
     return extent
 
 
@@ -358,18 +368,22 @@ def show2Dimage(im, dd, **kwargs):
     return None
 
     try:
-        extentImage, xdata, ydata, imdummy = get2Ddata(dd, fastscan=False, verbose=0, fig=None, midx=midx)
+        extentImage, xdata, ydata, imdummy = get2Ddata(
+            dd, fastscan=False, verbose=0, fig=None, midx=midx)
         mdata = dd
     except:
-        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
-        extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
+        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+            dd, arrayname=None)
+        extentImage = [vsweep[0], vsweep[-1], vstep[-1],
+                       vstep[0]]  # matplotlib extent style
         mdata = dd.metadata
 
     pmatlab.cfigure(fig, facecolor=facecolor)
     plt.clf()
     if verbose >= 2:
         print('show2D: show image')
-    imh = plt.imshow(im, extent=extent2fullextent(extentImage, im), interpolation='nearest')
+    imh = plt.imshow(im, extent=extent2fullextent(
+        extentImage, im), interpolation='nearest')
     # imh=plt.imshow(im, extent=xx, interpolation='nearest')
     if units is not None:
         if 'stepdata' in mdata:
