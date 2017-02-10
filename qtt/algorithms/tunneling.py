@@ -26,7 +26,7 @@ def polmod_all_2slopes(delta, par, kT):
         kT (float): temperature in ueV
 
     Returns:
-        E (float): sensor data, e.g. from a sensing dot or QPC
+        E (array): sensor data, e.g. from a sensing dot or QPC
     """
     delta = delta - par[1]
     Om = np.sqrt(delta**2 + 4 * par[0]**2)
@@ -43,22 +43,14 @@ def polweight_all_2slopes(delta, data, par, kT):
     Args:
         delta (1 x N array): chemical potential difference in ueV
         data (1 x N array): sensor data, e.g. from a sensing dot or QPC
-        par (1 x 6 array): parameters for the model
-            - par[0]: tunnel coupling in ueV
-            - par[1]: offset in delta for center of transition
-            - par[2]: offset in background signal
-            - par[3]: slope of sensor signal on left side
-            - par[4]: slope of sensor signal on right side
-            - par[5]: height of transition, i.e. sensitivity for electron transition
+        par (1 x 6 array): see polmod_all_2slopes
         kT (float): temperature in ueV
 
     Returns:
         total (float): sum of residues
     """
     mod = polmod_all_2slopes(delta, par, kT)
-    diffs = data - mod
-    norms = np.sqrt(np.sum(diffs**2))
-    total = np.sum(norms)
+    total = np.linalg.norm(data - mod)
 
     return total
 
@@ -75,14 +67,8 @@ def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess
         kT (float): temperature in ueV
 
     Returns:
-        par_fit (1 x 6 array): fitted parameters
-            - par[0]: tunnel coupling in ueV
-            - par[1]: offset in delta for center of transition
-            - par[2]: offset in background signal
-            - par[3]: slope of sensor signal on left side
-            - par[4]: slope of sensor signal on right side
-            - par[5]: height of transition, i.e. sensitivity for electron transition
-        par_guess (1 x 6 array): initial guess of parameters for fitting
+        par_fit (1 x 6 array): fitted parameters, see polmod_all_2slopes
+        par_guess (1 x 6 array): initial guess of parameters for fitting, see  polmod_all_2slopes
     """
     if par_guess is None:
         t_guess = 20  # hard-coded guess in ueV
@@ -101,6 +87,10 @@ def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess
 
     return par_fit, par_guess
 
+def test_polFitting():
+    """ Dummy function. """
+    pass
+
 #%% Example fitting
 
 if __name__ == '__main__':
@@ -108,6 +98,9 @@ if __name__ == '__main__':
     """
     import matplotlib.pyplot as plt
     import time
+    from qtt import pmatlab as pgeometry
+    import pandas as pd
+    from pandas import Series
 
     # generate data
     par = np.array([.2, 0, .1, -.0031, -.001, .21])
@@ -141,7 +134,6 @@ if __name__ == '__main__':
     plt.legend(numpoints=1)
 
     #%% Quick estimate
-    from qtt import pmatlab as pgeometry
     noise = np.arange(0, .1, .5e-3)
     noise = np.hstack((noise, np.arange(1e-4, 5e-4, 1e-4)))
     noise.sort()
@@ -197,9 +189,6 @@ if __name__ == '__main__':
             ppall[ii, j] = parfit
 
     #%% Show uncertainties
-    import pandas as pd
-    from pandas import Series
-
     plot_data = False
     plot_bands = True
 
@@ -241,7 +230,7 @@ if __name__ == '__main__':
             yyx = yy + Noise * (np.random.rand(yy.size) - .5)
             parfit, _ = fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
-#%%
+    #%%
     mean = np.mean(ppall[:, :, 0], axis=1)
     mstd = np.std(ppall[:, :, 0], axis=1)
 
