@@ -45,7 +45,7 @@ class VideoMode:
                 waveform, _ = self.station.awg.sweep_2D_virt(self.station.fpga.sampling_frequency.get(), self.sweepparams['gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
             self.datafunction = fpgaCallback_2d(self.station, waveform, self.Naverage, self.fpga_ch, self.resolution, self.diff_dir)
 
-        self.lp = livePlot(self.datafunction, self.station.gates, self.sweeparams, self.sweepranges)
+        self.lp = livePlot(self.datafunction, self.station.gates, self.sweepparams, self.sweepranges)
         self.lp.startreadout()
 
         if hasattr(self.station, 'RF'):
