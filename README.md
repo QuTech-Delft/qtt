@@ -57,7 +57,13 @@ For a general introduction also see
 
 See [Contributing](CONTRIBUTING.md) for information about bug/issue reports, contributing code, style, and testing
 
+## Testing
 
+From the qtt directory (install nose and the nose-exclude packages):
+```
+> python qtt/test.py
+> nosetests  -v -c ./nose.cfg -m "test_*" --exclude-test=qcodes  --exclude-dir=tests  --where ./qtt/ 
+```
 ## License
 
 See [License](LICENSE.txt)
