@@ -22,7 +22,7 @@ def _test_core(test_pattern='test*.py', **kwargs):
     return result.wasSuccessful()
 
 
-def test_part(name):
+def qtt_test_part(name):
     """
     Run part of the qcodes core test suite.
 
@@ -33,7 +33,7 @@ def test_part(name):
             - a test method ('test_loop.TestLoop.test_nesting')
     """
     import unittest
-    fullname = 'qcodes.tests.' + name
+    fullname = 'qtt.tests.' + name
     suite = unittest.defaultTestLoader.loadTestsFromName(fullname)
     return unittest.TextTestRunner().run(suite).wasSuccessful()
 

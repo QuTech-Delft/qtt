@@ -59,11 +59,12 @@ See [Contributing](CONTRIBUTING.md) for information about bug/issue reports, con
 
 ## Testing
 
-From the qtt directory (install nose and the nose-exclude packages):
+Unit tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in the code. To run the tests you can run one of the following commands
 ```
 > python qtt/test.py
-> nosetests  -v -c ./nose.cfg -m "test_*" --exclude-test=qcodes  --exclude-dir=tests  --where ./qtt/ 
+> nosetests  -v -c ./nose.cfg -m "^test_*" qtt/
 ```
+
 ## License
 
 See [License](LICENSE.txt)
