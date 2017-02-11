@@ -85,7 +85,7 @@ class virtual_awg(Instrument):
 
         Example:
         -------
-        >>> sweep_info = sweep_init(waveforms)
+        >> sweep_info = sweep_init(waveforms)
         '''
         sweepgates = [g for g in waveforms]
 
@@ -282,7 +282,7 @@ class virtual_awg(Instrument):
 
         Example:
         -------
-        >>> data_processed = sweep_process(data, waveform, 25)
+            >> data_processed = sweep_process(data, waveform, 25)
         '''
         width = waveform['width']
 

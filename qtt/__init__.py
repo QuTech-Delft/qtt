@@ -2,17 +2,14 @@
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
 import matplotlib
-if 0:
-    try:
-        if qtpy.API_NAME == 'PyQt4 (API v2)':
-            matplotlib.use('Qt4Agg')
-    except:
-        pass
 import qtt.live
 import qtt.tools
 
 import qtt.data
 import qtt.algorithms
+
+import qcodes
+import distutils.version
 
 # todo: remove import *
 from qtt.tools import cfigure, plot2Dline
@@ -27,6 +24,11 @@ def start_dataviewer():
     dv = DataViewer()
     dv.show()
     return dv
+from qtt.loggingGUI import installZMQlogger
+
+_qversion = '0.1.2' # version of qcodes required
+if distutils.version.StrictVersion(qcodes.__version__) < distutils.version.StrictVersion(_qversion):
+    raise Exception('qtt needs qcodes version%s' % _qversion)
 
 #%% Enhance the qcodes functionality
 
@@ -46,6 +48,7 @@ try:
             qtt.tools.addPPTslide(txt='', fig=self)
         super(QtPlot, self).keyPressEvent(e)
 
-    QtPlot.keyPressEvent = keyPressEvent  # update the keypress callback function
+    # update the keypress callback function
+    QtPlot.keyPressEvent = keyPressEvent
 except:
     pass

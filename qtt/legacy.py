@@ -501,7 +501,7 @@ def cmap_discretize(cmap, N, m=1024):
 #%%
 import cv2
 
-
+@qtt.tools.deprecated
 def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.INTER_AREA):
     """ Scale image to make square pixels
 

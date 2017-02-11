@@ -3546,7 +3546,6 @@ def test_geometry(verbose=1, fig=None):
         plt.clf()
         plt.imshow(im, interpolation='nearest')
 
-
 def unittest(verbose=1):
     """ Unittest function for module """
     import doctest
@@ -3562,5 +3561,6 @@ if __name__ == "__main__":
     """
     import doctest
     doctest.testmod()
+
 
 #%% Testing zone

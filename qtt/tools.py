@@ -34,6 +34,25 @@ def dumpstring(txt):
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
 
+import warnings
+import functools
+
+def deprecated(func):
+    '''This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.'''
+
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.warn_explicit(
+            "Call to deprecated function {}.".format(func.__name__),
+            category=DeprecationWarning,
+            filename='?', # func.func_code.co_filename,
+            lineno=-1, # func.func_code.co_firstlineno + 1
+        )
+        return func(*args, **kwargs)
+    return new_func
+
 #%%
 
 
@@ -208,7 +227,7 @@ from qtt import pmatlab
 
 if __name__ == '__main__':
     plot1D(dataset, fig=10)
-    plot1D(dataset.amplitude, fig=12)
+    plot1D(dataset.default_parameter_array(), fig=12)
 
 #%%
 

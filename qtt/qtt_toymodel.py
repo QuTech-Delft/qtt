@@ -319,14 +319,14 @@ class VirtualIVVI(Instrument):
                                    parameter_class=ManualParameter,
                                    initial_value=0,
                                    label='Gate {} (arb. units)'.format(g),
-                                   units='arb. units',
+                                   unit='arb. units',
                                    vals=Numbers(-800, 400))
             else:
                 self.add_parameter(g,
                                    label='Gate {} (mV)'.format(g),
                                    get_cmd=partial(self.get_gate, g),
                                    set_cmd=partial(self.set_gate, g),
-                                   units='arb.units',
+                                   unit='arb.units',
                                    vals=Numbers(-800, 400))
 
         self.add_function('reset', call_cmd='rst')
@@ -465,7 +465,7 @@ class virtual_gates(Instrument):
     def _make_gate(self, gate):
         self.add_parameter(gate,
                            label='%s (mV)' % gate,  # (\u03bcV)',
-                           units='mV',
+                           unit='mV',
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate),
                            vals=Numbers(-2000, 2000), )
