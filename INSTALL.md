@@ -24,7 +24,7 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 ```
 > conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py
 > conda install -c conda-forge pyqtgraph>=0.10
-> conda install -y coverage nose scikit-image qtpy graphviz
+> conda install -y coverage nose scikit-image qtpy graphviz pytest
 > pip install pyvisa
 > conda install -c https://conda.binstar.org/menpo opencv3
 ```

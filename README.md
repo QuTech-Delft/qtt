@@ -59,10 +59,11 @@ See [Contributing](CONTRIBUTING.md) for information about bug/issue reports, con
 
 ## Testing
 
-Unit tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in the code. To run the tests you can run one of the following commands
+Tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in the code. To run the tests you can run one of the commands below. Note that only `pytest` runs also the tests throughout the code while `python qtt/test.py` only runs the ones in the tests directory.
 ```
 > python qtt/test.py
-> nosetests  -v -c ./nose.cfg -m "^test_*" qtt/
+> pytest # (Windows)
+> py.test # (Unix)
 ```
 
 ## License
