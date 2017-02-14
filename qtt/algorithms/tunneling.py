@@ -87,9 +87,15 @@ def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess
 
     return par_fit, par_guess
 
+
 def test_polFitting():
-    """ Dummy function. """
-    pass
+    """ Test the polarization fitting. """
+    delta = np.linspace(-100, 100, 1000)
+    kT = 6.5
+    par_init = np.array([20, 2, 100, -.5, -.45, 300])
+    data = polmod_all_2slopes(delta, par_init, kT)
+    par_fit, _ = fit_pol_all(delta, data, kT, par_guess=par_init)
+    assert np.array_equal(par_fit, par_init)
 
 #%% Example fitting
 
