@@ -48,7 +48,7 @@ class gates(Instrument):
         self.get_all()
 
     def get_idn(self):
-        ''' Overrule because the default VISA command does not work '''
+        """ Overrule because the default VISA command does not work. """
         IDN = {'vendor': 'QuTech', 'model': 'gates',
                'serial': None, 'firmware': None}
         return IDN
@@ -95,6 +95,13 @@ class gates(Instrument):
         return getattr(self._instrument_list[gatemap[0]], 'dac%d' % gatemap[1])
 
     def set_boundaries(self, gate_boundaries):
+        """Set boundaries on the values that can be set on the gates. 
+        
+        Assigns a range of values to the validator of a parameter.
+        
+        Args:
+            gate_boundaries (dict): a range of allowed values per parameter.
+        """
         for g, bnds in gate_boundaries.items():
             logging.debug('gate %s: %s' % (g, bnds))
 
@@ -145,7 +152,7 @@ class gates(Instrument):
             gates.set(g, val)
 
     def visualize(self, fig=1):
-        ''' Create a graphical representation of the system (needs graphviz) '''
+        """ Create a graphical representation of the system (needs graphviz). """
         gates = self
         dot = graphviz.Digraph(name=self.name)
 
