@@ -293,7 +293,7 @@ class livePlot:
         sweepranges: the range over which sweepparams are being swept
     """
 
-    def __init__(self, datafunction, sweepInstrument=None, sweepparams=None, sweepranges=None, verbose=1):
+    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, verbose=1):
         plotwin = pg.GraphicsWindow(title="Live view")
 
         # TODO: automatic scaling?
@@ -337,14 +337,17 @@ class livePlot:
             p1 = plotwin.addPlot(title="Videomode")
             p1.setLabel('left', 'param1')
             p1.setLabel('left', 'param2')
-            data = np.array(self.datafunction())
-            if data.ndim == 1:
-                dd = np.zeros((0,))
-                plot = p1.plot(dd, pen='b')
-                self.plot = plot
+            if self.datafunction is None:
+                raise Exception('Either specify a datafunction or sweepparams.')
             else:
-                self.plot = pg.ImageItem()
-                p1.addItem(self.plot)
+                data = np.array(self.datafunction())
+                if data.ndim == 1:
+                    dd = np.zeros((0,))
+                    plot = p1.plot(dd, pen='b')
+                    self.plot = plot
+                else:
+                    self.plot = pg.ImageItem()
+                    p1.addItem(self.plot)
         elif type(self.sweepparams) == str:
             p1 = plotwin.addPlot(title="1d scan")
             p1.setLabel('left', 'Value')
@@ -456,6 +459,7 @@ class livePlot:
         if self.verbose:
             print('live_plotting: stop readout')
         self.timer.stop()
+        self.win.setWindowTitle('Live view stopped')
 
 #%% Some default callbacks
 

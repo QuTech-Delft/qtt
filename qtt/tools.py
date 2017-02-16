@@ -37,6 +37,7 @@ def dumpstring(txt):
 import warnings
 import functools
 
+
 def deprecated(func):
     '''This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
@@ -47,8 +48,8 @@ def deprecated(func):
         warnings.warn_explicit(
             "Call to deprecated function {}.".format(func.__name__),
             category=DeprecationWarning,
-            filename='?', # func.func_code.co_filename,
-            lineno=-1, # func.func_code.co_firstlineno + 1
+            filename='?',  # func.func_code.co_filename,
+            lineno=-1,  # func.func_code.co_firstlineno + 1
         )
         return func(*args, **kwargs)
     return new_func
@@ -893,3 +894,10 @@ def clickGatevals(plot, drawmode='ro'):
     return gatevals
 
 #%%
+
+
+def connect_slot(target):
+    """ Create a slot by dropping signal arguments. """
+    def signal_drop_arguments(*args, **kwargs):
+        target()
+    return signal_drop_arguments

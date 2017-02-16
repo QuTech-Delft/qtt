@@ -6,6 +6,7 @@ Created on Wed Feb  8 14:43:47 2017
 """
 #%%
 from qtt.live_plotting import livePlot, fpgaCallback_1d, fpgaCallback_2d
+from qtt.tools import connect_slot
 
 #%%
 
@@ -21,6 +22,7 @@ class VideoMode:
         resolution (1 x 2 list): for 2D the resolution
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
+    # TODO: implement virtual gates functionality
     def __init__(self, station, sweepparams, sweepranges, fpga_ch, Naverage=25, resolution=[90, 90], diff_dir=None):
         self.station = station
         self.sweepparams = sweepparams
@@ -29,6 +31,10 @@ class VideoMode:
         self.Naverage = Naverage
         self.resolution = resolution
         self.diff_dir = None
+        self.lp = livePlot(None, self.station.gates, self.sweepparams, self.sweepranges)
+        self.lp.win.start_button.clicked.connect(connect_slot(self.run))
+        self.lp.win.stop_button.clicked.connect(connect_slot(self.stop))
+        self.run()
 
     def run(self):
         """ Programs the AWG, starts the read-out and the plotting. """
@@ -45,11 +51,8 @@ class VideoMode:
                 waveform, _ = self.station.awg.sweep_2D_virt(self.station.fpga.sampling_frequency.get(), self.sweepparams['gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
             self.datafunction = fpgaCallback_2d(self.station, waveform, self.Naverage, self.fpga_ch, self.resolution, self.diff_dir)
 
-        self.lp = livePlot(self.datafunction, self.station.gates, self.sweepparams, self.sweepranges)
+        self.lp.datafunction = self.datafunction
         self.lp.startreadout()
-
-        self.lp.win.start_button.clicked.connect(self.run())
-        self.lp.win.stop_button.clicked.connect(self.stop())
 
         if hasattr(self.station, 'RF'):
             self.station.RF.on()
