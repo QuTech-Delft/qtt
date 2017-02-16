@@ -340,6 +340,14 @@ class VirtualIVVI(Instrument):
         if not mydebug:
             self.get_all()
 
+    def get_idn(self):
+        """
+        Overwrites the get_idn function using constants as the virtual device
+        does not have a proper \*IDN function.
+        """
+        # not all IVVI racks support the version command, so return a dummy
+        return {'firmware': None, 'model': None, 'serial': None, 'vendor': None}
+
     def get_gate(self, gate):
         if self.model is None:
             return 0
