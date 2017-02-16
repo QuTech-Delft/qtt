@@ -48,6 +48,9 @@ class VideoMode:
         self.lp = livePlot(self.datafunction, self.station.gates, self.sweepparams, self.sweepranges)
         self.lp.startreadout()
 
+        self.lp.win.start_button.clicked.connect(self.run())
+        self.lp.win.stop_button.clicked.connect(self.stop())
+
         if hasattr(self.station, 'RF'):
             self.station.RF.on()
 
