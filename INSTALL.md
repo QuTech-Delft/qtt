@@ -23,8 +23,8 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 ## Install necessary packages
 ```
 > conda create -n [yourname] python=3.5
-> conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py
-> pip install pyqtgraph
+> conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py attrs pandas
+> pip install pyqtgraph attrs
 > # old command: conda install -c conda-forge pyqtgraph>=0.10
 > conda install -y coverage nose scikit-image qtpy graphviz pytest
 > pip install pyvisa
