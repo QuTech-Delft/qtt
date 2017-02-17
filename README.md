@@ -14,9 +14,9 @@ QTT is compatible with Python 3.5+.
 QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` (measurement setups).
 
 * Qcodes: the basic framework
-* (qtt)[https://github.com/VandersypenQutech/qtt]: contains additional functionality and algorithms
-* (stations)[https://github.com/VandersypenQutech/stations]: Contains hardware descriptions for experimential setups. There should be only one version of this repository and it should always match the current hardware.
-* (users)[https://github.com/VandersypenQutech/users]: contains scripts and functions written by individual users
+* [qtt](https://github.com/VandersypenQutech/qtt): contains additional functionality and algorithms
+* [stations](https://github.com/VandersypenQutech/stations): Contains hardware descriptions for experimential setups. There should be only one version of this repository and it should always match the current hardware.
+* [users](https://github.com/VandersypenQutech/users): contains scripts and functions written by individual users
 
 ## Installation
 
