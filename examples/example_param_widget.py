@@ -7,60 +7,21 @@ Created on Thu Jul  7 09:48:56 2016
 
 #%% Make update widget
 
-import qtpy.QtCore as QtCore
-import qtpy.QtGui as QtGui
-import qtpy.QtWidgets as QtWidgets
-
-if __name__=='__main__':
-    import multiprocessing as mp
-    try:
-        mp.set_start_method('spawn')
-    except:
-        pass
 
 from qtt.parameterviewer import ParameterViewer, createParameterWidget
+from qtt.qtt_toymodel import VirtualIVVI, VirtualMeter
 
-
-#name='L'
-if 0:
-    p=ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
-
-    p.setGeometry(1700,110,200,40); p.show()
-    self=p
-
-
-#%% Local test
+#%% Create a (virtual) instrument
 
 if __name__=='__main__':
-    server_name='s2'
-    #server_name=None
-    from qtt.qtt_toymodel import FourdotModel, VirtualIVVI, VirtualMeter
-    gates = VirtualIVVI(name='ivvi', model=None, server_name=server_name)
-    #gates=None
+
+    gates = VirtualIVVI(name='ivvi', model=None)
+    print(gates)
 
 
+#%% Create a parameter widget for the instrument
 
-#%% Local option
-
-if __name__=='__main__' and 0:
-    w=createParameterWidget([gates], doexec=False)
+if __name__=='__main__':
+    w=createParameterWidget([gates])
+    w.setGeometry(1600,110,300,540); # p.show()
     
-
-#%% Remote option
-
-#%%
-
-if __name__=='__main__':
-    pass
-  
-    #p=mp.Process(target=createUpdateWidget)
-    #p.start()
-
-    p=mp.Process(target=createParameterWidget, args=([gates],))
-    p.start()
-
-#%% 
-#  FIXME: show2D
-#  FIXME: 1dot_script
-  
-  

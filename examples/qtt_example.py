@@ -33,6 +33,7 @@ import qtt.qtt_toymodel
 import qtt.live
 from qtt.scans import scan1D
 import qtt.gui.dataviewer
+from qtt.parameterviewer import createParameterWidgetRemote, createParameterWidget
 
 # taskkill /F /IM python.exe
 
@@ -40,12 +41,6 @@ if __name__ == '__main__':
     datadir = os.path.join(tempfile.tempdir, 'qdata')
     qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
     
-    
-    try:
-        from qcodes.data.hdf5_format import HDF5Format
-        qcodes.DataSet.default_formatter = HDF5Format()
-    except:
-        pass
 
 #%% Create a virtual model for testing
 #
@@ -81,11 +76,7 @@ if __name__ == '__main__':
     mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
     if mwindows['parameterviewer'] is not None:
         mwindows['parameterviewer'].callbacklist.append(mwindows['plotwindow'].update)
-    from qtt.parameterviewer import createParameterWidgetRemote, createParameterWidget
-    if server_name is None:
-        createParameterWidget([gates, ])
-    else:
-        createParameterWidgetRemote([gates, ])
+    createParameterWidget([gates, ])
     plotQ = mwindows['plotwindow']
     qtt.live.liveplotwindow = plotQ
     qtt.live.mwindows = mwindows
@@ -123,7 +114,7 @@ if __name__ == '__main__':
 
     reload(qtt.scans)
     start=-500
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': start, 'end': start+500, 'step': 4.}), 'instrument': [keithley1.amplitude], 'wait_time': 0.})
+    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': start, 'end': start+500, 'step': 4.}), 'instrument': ['keithley1'], 'wait_time': 0.})
     scanjob['stepdata'] = dict({'gate': 'L', 'start': start, 'end': start+500, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, background=None, liveplotwindow=plotQ)
 
@@ -138,7 +129,6 @@ if __name__ == '__main__':
 
 #%% Fit 2D cross
 if __name__ == '__main__':
-    from qtt.legacy import *
     from qtt.legacy import analyse2dot
     qtt.scans.plotData(data, fig=30)
 
