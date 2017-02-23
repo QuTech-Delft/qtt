@@ -57,6 +57,7 @@ setup(name='qtt',
           #'nose>=1.3',
       ],
       extras_require=extras_require,
+      zip_safe=False,
       )
 
 version_template = '''
