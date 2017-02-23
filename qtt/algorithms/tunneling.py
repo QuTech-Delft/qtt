@@ -71,7 +71,7 @@ def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess
         par_guess (1 x 6 array): initial guess of parameters for fitting, see  polmod_all_2slopes
     """
     if par_guess is None:
-        t_guess = 20  # hard-coded guess in ueV
+        t_guess = (delta[-1] - delta[0]) / 30  # hard-coded guess in ueV
         numpts = round(len(delta) / 10)
         slope_guess = np.polyfit(delta[-numpts:], data[-numpts:], 1)[0]
         dat_noslope = data - slope_guess * (delta - delta[0])
@@ -94,8 +94,9 @@ def test_polFitting():
     kT = 6.5
     par_init = np.array([20, 2, 100, -.5, -.45, 300])
     data = polmod_all_2slopes(delta, par_init, kT)
-    par_fit, _ = fit_pol_all(delta, data, kT, par_guess=par_init)
-    assert np.array_equal(par_fit, par_init)
+    noise = np.random.normal(0, 3, data.shape)
+    par_fit, _ = fit_pol_all(delta, data + noise, kT, par_guess=par_init)
+    assert np.all(np.isclose(par_fit[0], par_init[0], .1))
 
 #%% Example fitting
 

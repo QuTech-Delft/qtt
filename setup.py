@@ -8,19 +8,18 @@ def readme():
         return f.read()
 
 extras = {
-    'Numpy': ('numpy', '1.9'),
-    'MatPlot': ('matplotlib', '1.5'),
-#    'QtPlot': ('pyqtgraph', '0.9.10'),
-    'SciPi': ('scipy', '0.15'),
-    'qcodes': ('qcodes', '0.1'),
-    'scikit-image': ('skimage', '0.11'),
-    'pandas': ('pandas', '0.15'),
-    'Polygon3': ('Polygon', '3.0'),
-    'hickle': ('hickle', '2.0'),
-    'attrs': ('attr', '16.2.0'),
-    'h5py': ('h5py', '0.1'),
+    'Numpy': ('numpy', '1.9', None),
+    'MatPlot': ('matplotlib', '1.5',None),
+    'SciPi': ('scipy', '0.15',None),
+    'qcodes': ('qcodes', '0.1',None),
+    'scikit-image': ('skimage', '0.11', 'scikit-image'),
+    'pandas': ('pandas', '0.15',None),
+    #'Polygon3': ('Polygon', '3.0',None),
+    #'hickle': ('hickle', '2.0', None),
+    'attrs': ('attr', '16.2.0', 'attrs'),
+    'h5py': ('h5py', '0.1',None),
 }
-extras_require = {k: '>='.join(v) for k, v in extras.items()}
+extras_require = {k: '>='.join(v[0:2]) for k,v in extras.items()}
 
 print('packages: %s'  % find_packages() )
 
@@ -75,7 +74,7 @@ missing_template = '''
 '''
 
 # now test the versions of extras
-for extra, (module_name, min_version) in extras.items():
+for extra, (module_name, min_version, pip_name) in extras.items():
     try:
         module = import_module(module_name)
         if StrictVersion(module.__version__) < StrictVersion(min_version):
