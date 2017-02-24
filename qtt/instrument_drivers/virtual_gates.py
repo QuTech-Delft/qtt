@@ -17,7 +17,7 @@ class virtual_gates(Instrument):
 
     The virtual gates are defined, such that when changing one of the virtual 
     gates, the others are not influenced. The virtual gates can be used for
-    changing only one physical parameter, e.g. a chemical potentials or a 
+    changing only one physical parameter, e.g. a chemical potential or a 
     tunnel coupling. Note: They do not (yet?) have an offset relative to the 
     physical gates. 
     The sweepmap describes a submatrix of the inverse of the virt_gate_map.
