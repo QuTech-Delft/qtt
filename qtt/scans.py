@@ -311,6 +311,69 @@ if __name__ == '__main__':
 
     data1d.sync()  # data.arrays
 
+
+#%%
+def scan1Dfast(station, scanjob, wait_time=None, verbose=1):
+    """ 1D scan with AWG. 
+
+    Args:
+        station (object): contains all data on the measurement station
+        scanjob (dict): data for scan range
+
+    Returns:
+        alldata (DataSet)
+    """
+    scanjob['scantype'] = 'scan1Dfast'
+
+    sweepdata = scanjob['sweepdata']
+    Naverage = scanjob.get('Naverage', 20)
+
+    if wait_time is None:
+        wait_time = scanjob.get('wait_time', 0.5)
+
+    gates = station.gates
+    gvs = gates.allvalues()
+
+    sweepgate = sweepdata.get('gate', None)
+    if sweepgate is None:
+        sweepgate = sweepdata.get('gates')[0]
+    sweepparam = getattr(gates, sweepgate)
+
+    def readfunc(waveform, Naverage):
+        fpga_ch = scanjob['sd'].fpga_ch
+        ReadDevice = ['FPGA_ch%d' % fpga_ch]
+        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
+        data = station.awg.sweep_process(data_raw, waveform, Naverage)
+        return data
+
+    sweeprange = (sweepdata['end'] - sweepdata['start'])
+    period = scanjob['sweepdata'].get('period', 1e-3)
+    sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
+
+    waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
+
+    sweepparam.set(float(sweepgate_value))
+
+    data = readfunc(waveform, Naverage)
+    alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+
+    station.awg.stop()
+
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
+
+    # add the station metadata
+    alldata.add_metadata({'station': station.snapshot()})
+
+    alldata.metadata['scanjob'] = scanjob
+    alldata.metadata['allgatevalues'] = gvs
+    alldata.metadata['scantime'] = str(datetime.datetime.now())
+    alldata.metadata['wait_time'] = wait_time
+
+    alldata.write(write_metdata=True)
+
+    return alldata
+
 #%%
 
 
