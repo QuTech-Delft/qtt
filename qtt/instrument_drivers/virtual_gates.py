@@ -28,6 +28,8 @@ class virtual_gates(Instrument):
         virt_gate_map (dict): describes the transformation matrix
         sweepgates (list): names of the gates that can be swept, e.g. with an 
             AWG.
+        sweepmap (dict): describes a sub-matrix of virt_gate_map, for working
+            with sweepable gates.
     """
     shared_kwargs = ['gates']
 
@@ -49,7 +51,7 @@ class virtual_gates(Instrument):
         for g in self._virt_gates_list:
             self.add_parameter(g,
                                label='%s (mV)' % g,
-                               units='mV',
+                               unit='mV',
                                get_cmd=partial(self._get, gate=g),
                                set_cmd=partial(self._set, gate=g),
                                vals=Numbers(-2000, 2000))
