@@ -643,7 +643,7 @@ if __name__ == '__main__':
 
 #%%
 def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None, verbose=1):
-    """Make a 2D scan and create qcodes dataset to store on disk.
+    """ Make a 2D scan and create qcodes dataset to store on disk.
 
     Args:
         station (qcodes.station.Station): contains all data on the measurement station
