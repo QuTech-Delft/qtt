@@ -86,7 +86,9 @@ class virtual_gates(Instrument):
         return dict(vals)
 
     def resetgates(self, activegates, basevalues=None, verbose=2):
-        """ Reset a set of gates to default values.
+        """ Reset a set of gates to new values.
+
+        If no new values are specified the virtual gates will be reset to zero.
 
         Args:
             activegates (list or dict): gates to reset

@@ -18,16 +18,17 @@ except:
 #%%
 
 
-class gates(Instrument):
-    """ Class to map named gates to gates on an instrument.
+class virtual_IVVI(Instrument):
+    """ This class maps the dacs of IVVI('s) to named gates.
 
-    A typical example would be to map the names of gates to the
-    dacs of several IVVI's.
+    The main functionality is the renaming of numbered dacs of one or multiple
+    IVVI instruments to gates, which in general have names describing their
+    main purpose or position on the sample.
 
     Attributes:
-        name (str)
-        instruments (list of qcodes instruments):
-        gate_map (dict)
+        name (str): The name given to the virtual_IVVI object
+        instruments (list):  the qcodes IVVI instruments
+        gate_map (dict): the map between IVVI dac and gate
     """
     shared_kwargs = ['instruments']
 
@@ -54,6 +55,7 @@ class gates(Instrument):
         return IDN
 
     def get_all(self, verbose=0):
+        """ Returns all gate values. """
         for gate in sorted(self._gate_map.keys()):
             self.get(gate)
             if verbose:
@@ -91,14 +93,15 @@ class gates(Instrument):
             self._set_wrap, gate=gate), args=[Numbers()])
 
     def get_instrument_parameter(self, g):
+        """ Returns the dac parameter mapped to this gate. """
         gatemap = self._gate_map[g]
         return getattr(self._instrument_list[gatemap[0]], 'dac%d' % gatemap[1])
 
     def set_boundaries(self, gate_boundaries):
-        """Set boundaries on the values that can be set on the gates. 
-        
+        """ Set boundaries on the values that can be set on the gates. 
+
         Assigns a range of values to the validator of a parameter.
-        
+
         Args:
             gate_boundaries (dict): a range of allowed values per parameter.
         """
@@ -115,27 +118,25 @@ class gates(Instrument):
         return s
 
     def allvalues(self):
-        """ Return all gate values in a simple dict """
+        """ Return all gate values in a simple dict. """
         vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
         return dict(vals)
+
     def allvalues_string(self):
-        """ Return all gate values in string format """
+        """ Return all gate values in string format. """
         vals = self.allvalues()
         s = '{' + ','.join(['\'%s\': %.2f' % (x, vals[x]) for x in vals]) + '}'
         return s
 
     def resetgates(gates, activegates, basevalues=None, verbose=2):
-        """ Reset a set of gates to default values
+        """ Reset a set of gates to new values.
 
-        Arguments
-        ---------
-            activegates : list or dict
-                list of gates to reset
-            basevalues: dict
-                new values for the gates
-            verbose : integer
-                output level
+        If no new values are specified the gates will be reset to zero.
 
+        Args:
+            activegates (list or dict): gates to reset
+            basevalues (dict): new values for the gates
+            verbose (int): output level
         """
         if verbose:
             print('resetgates: setting gates to default values')
