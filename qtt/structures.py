@@ -323,3 +323,27 @@ class sensingdot_t:
                 'sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
 
         return self.sdval[1], alldata
+
+
+#%%
+class LinearCombParameter(qcodes.instrument.parameter.Parameter):
+    """ Create parameter which controls linear combinations.
+
+    Attributes:
+        name (str): the name given to the new parameter
+        comb_map (list): tuples with in the first entry a parameter and in the
+                 second a coefficient
+    """
+    def __init__(self, name, comb_map):
+        super().__init__(name)
+        self.comb_map = comb_map
+        self.coeffs_sum = sum([np.abs(self.comb_map[i][1]) for i in range(len(self.comb_map))])
+
+    def get(self):
+        value = sum([self.comb_map[idg][1] * self.comb_map[idg][0].get() for idg, g in enumerate(self.comb_map)])
+        return value
+
+    def set(self, value):
+        val_diff = value - self.get()
+        for idg, g in enumerate(self.comb_map):
+            self.comb_map[idg][0].set(self.comb_map[idg][0].get() + self.comb_map[idg][1] * val_diff / self.coeffs_sum)
