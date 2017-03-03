@@ -57,7 +57,12 @@ class virtual_gates(Instrument):
                                unit='mV',
                                get_cmd=partial(self._get, gate=g),
                                set_cmd=partial(self._set, gate=g),
-                               vals=Numbers(-2000, 2000))
+                               vals=Numbers()) # TODO: Adjust the validator range based on that of the gates
+
+        for vg in self.map_inv:
+            self.parameters[vg].comb_map = []
+            for g in self.map_inv[vg]:
+                self.parameters[vg].comb_map.append((self.gates.parameters[g], self.map_inv[vg][g]))
 
         if sweepgates == None:
             self.sweepgates = self._gates_list
@@ -65,10 +70,16 @@ class virtual_gates(Instrument):
         else:
             self.sweepgates = sweepgates
             self.sweepmap = dict()
-            for gvirt in self.map_inv:
-                self.sweepmap[gvirt] = dict()
+            for vg in self.map_inv:
+                self.sweepmap[vg] = dict()
                 for sg in sweepgates:
-                    self.sweepmap[gvirt][sg] = self.map_inv[gvirt][sg]
+                    self.sweepmap[vg][sg] = self.map_inv[vg][sg]
+                    
+        for vg in self.sweepmap:
+            self.parameters[vg].comb_map_sweep = []
+            for g in self.sweepmap[vg]:
+                self.parameters[vg].comb_map_sweep.append((self.gates.parameters[g], self.sweepmap[vg][g]))
+
 
     def _get(self, gate):
         gateval = sum([self.map[gate][g] * self.gates[g].get() for g in self.map[gate]])
