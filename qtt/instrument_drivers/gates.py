@@ -83,7 +83,7 @@ class virtual_IVVI(Instrument):
     def _make_gate(self, gate):
         self.add_parameter(gate,
                            label='%s (mV)' % gate,  # (\u03bcV)',
-                           units='mV',
+                           unit='mV',
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate),
                            vals=Numbers(-2000, 2000), )
@@ -110,6 +110,7 @@ class virtual_IVVI(Instrument):
 
             param = self.get_instrument_parameter(g)
             param._vals = Numbers(bnds[0], max_value=bnds[1])
+            self.parameters[g]._vals = Numbers(bnds[0], max_value=bnds[1])
 
     def __repr__(self):
         gm = getattr(self, '_gate_map', [])

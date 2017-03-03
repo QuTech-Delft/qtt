@@ -57,7 +57,7 @@ class virtual_gates(Instrument):
                                unit='mV',
                                get_cmd=partial(self._get, gate=g),
                                set_cmd=partial(self._set, gate=g),
-                               vals=Numbers()) # TODO: Adjust the validator range based on that of the gates
+                               vals=Numbers())  # TODO: Adjust the validator range based on that of the gates
 
         for vg in self.map_inv:
             self.parameters[vg].comb_map = []
@@ -74,12 +74,11 @@ class virtual_gates(Instrument):
                 self.sweepmap[vg] = dict()
                 for sg in sweepgates:
                     self.sweepmap[vg][sg] = self.map_inv[vg][sg]
-                    
+
         for vg in self.sweepmap:
             self.parameters[vg].comb_map_sweep = []
             for g in self.sweepmap[vg]:
                 self.parameters[vg].comb_map_sweep.append((self.gates.parameters[g], self.sweepmap[vg][g]))
-
 
     def _get(self, gate):
         gateval = sum([self.map[gate][g] * self.gates[g].get() for g in self.map[gate]])
@@ -90,9 +89,12 @@ class virtual_gates(Instrument):
         increment = value - self.get(gate)
         gate_vec[self._virt_gates_list.index(gate)] = increment
         set_vec = np.dot(self._matrix_inv, gate_vec)
+
+        for idx, g in enumerate(self._gates_list):
+            self.gates.parameters[g].validate(self.gates.get(g) + set_vec[idx])
+
         for idx, g in enumerate(self._gates_list):
             self.gates.set(g, self.gates.get(g) + set_vec[idx])
-        return
 
     def allvalues(self):
         """ Return all virtual gates values in a dict. """
