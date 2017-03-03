@@ -20,12 +20,15 @@ class virtual_gates(Instrument):
     can be used for changing only one physical parameter, e.g. a chemical 
     potential or a tunnel coupling. Note: They do not (yet?) have an offset 
     relative to the physical parameters. 
-    The sweepmap describes a submatrix of the inverse of the comb_map.
+    The sweepmap describes a submatrix of the inverse of the virt_gate_map.
 
     Attributes:
         name (string): The name of the object
         gates (Instrument): the physical gates
-        virt_gate_map (dict): describes the transformation matrix
+        virt_gate_map (dict): The transformation matrix. Note: this matrix
+                      describes the influence of every gate on the physical
+                      parameter, hence to get and set the physical parameter we
+                      actually need the inverse transormation.
         sweepgates (list): names of the gates that can be swept, e.g. with an 
             AWG.
         sweepmap (dict): describes a sub-matrix of virt_gate_map, for working
