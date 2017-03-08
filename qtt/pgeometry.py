@@ -1752,8 +1752,6 @@ except:
         import shapely
         import shapely.geometry
     except Exception as inst:
-        warnings.warn(
-            'could not load shapely, not all functionality is available')
         pass
 
     def polyintersect(x1, x2):
