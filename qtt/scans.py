@@ -538,7 +538,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
         if ix == len(stepvalues) - 1 or ix % 5 == 0:
             delta, tprev = delta_time(tprev, thr=2)
-            if delta > 2:
+            if delta > 2 and liveplotwindow is not None:
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
 
