@@ -410,6 +410,7 @@ try:
 except:
     pass
 
+import warnings
 
 class virtual_gates(Instrument):
 
@@ -438,6 +439,7 @@ class virtual_gates(Instrument):
             self._make_gate(gate)
 
         self.get_all()
+        warnings.warn('This code for gates is deprecated. Use gates in qtt/instrument_drivers.', DeprecationWarning)
 
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
