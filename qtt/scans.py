@@ -24,6 +24,8 @@ from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 from qcodes.utils.helpers import tprint
 
+from qtt.tools import update_dictionary
+
 #%%
 
 import skimage
@@ -538,7 +540,7 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
         if ix == len(stepvalues) - 1 or ix % 5 == 0:
             delta, tprev = delta_time(tprev, thr=2)
-            if delta > 2:
+            if delta > 2 and liveplotwindow is not None:
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
 
@@ -552,12 +554,10 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
     alldata.add_metadata({'station': station.snapshot()})
 
-    alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gates.allvalues()
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
-    alldata.metadata['dt'] = dt
-    alldata.metadata['wait_time'] = wait_time
-    alldata.metadata['scanparams'] = {'wait_time': wait_time}
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt,
+                      scantime=str(datetime.datetime.now()), wait_time=wait_time)
+    update_dictionary(alldata.metadata, allgatevalues = gates.allvalues(), scanparams={'wait_time': wait_time} )
+    
 
     alldata.write(write_metadata=True)
     # print(type(scanjob['stepdata']['start']))

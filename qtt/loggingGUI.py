@@ -63,7 +63,7 @@ def removeZMQlogger(name=None, verbose=0):
             logger.removeHandler(h)
 
 
-def installZMQlogger(port=5800, name=None, clear=True, level=logging.INFO):
+def installZMQlogger(port=5800, name=None, clear=True, level=None):
     if clear:
         removeZMQlogger(name)
     ctx = zmq.Context()
