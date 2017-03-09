@@ -286,37 +286,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     return xx, vstep, vsweep
 
 
-#%%    
-@deprecated
-def pix2scan(pt, dd2d):
-    """ Convert pixels coordinates to scan coordinates (mV)
-    Arguments
-    ---------
-    pt : array
-        points in pixel coordinates
-    dd2d : dictionary
-        contains scan data
 
-    """
-    warnings.warn('use transformation object instead')
-    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-        dd2d, verbose=0)
-    # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
-    nx = vsweep.size  # zdata.shape[0]
-    ny = vstep.size  # zdata.shape[1]
-
-    xx = extent
-    x = pt
-    if len(pt.shape) == 1:
-        ptx = np.zeros((2, 1))
-        ptx[1] = np.interp(x[1], [0, ny - 1], [xx[3], xx[2]])    # step
-        ptx[0] = np.interp(x[0], [0, nx - 1], [xx[0], xx[1]])    # sweep
-    else:
-        nn = pt.shape[1]
-        ptx = np.zeros((2, nn))
-        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
-        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
-    return ptx
 
 #%% Extract metadata
 
