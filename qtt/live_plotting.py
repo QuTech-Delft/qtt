@@ -8,18 +8,18 @@ Created on Thu Sep 10 15:55:21 2015
 #%%
 import time
 import logging
+from functools import partial
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
+import numpy as np
 import scipy.ndimage as ndimage
+import pyqtgraph as pg
 
 import qcodes
 
 import qtt
 import qtt.legacy
 from qtt import pmatlab
-import numpy as np
-import pyqtgraph as pg
-from functools import partial
 
 import qtt.algorithms.generic
 import qtt
