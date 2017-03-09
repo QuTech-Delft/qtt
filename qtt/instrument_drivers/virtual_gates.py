@@ -13,37 +13,44 @@ import numpy as np
 
 
 class virtual_gates(Instrument):
-    """ A virtual instrument, which has linear combinations of gates.
+    """A virtual instrument, which has linear combinations of gates.
 
     The virtual gates are defined, such that when changing one of the
     virtual gates, the others are not influenced. The virtual gates
     can be used for changing only one physical parameter, e.g. a chemical 
     potential or a tunnel coupling. Note: They do not (yet?) have an offset 
-    relative to the physical parameters. 
+    relative to the physical parameters.
     The sweepmap describes a submatrix of the inverse of the virt_gate_map.
 
     Attributes:
         name (string): The name of the object
         gates (Instrument): the physical gates
-        virt_gate_map (dict): The transformation matrix. Note: this matrix
+        virt_map (dict): The transformation matrix. Note: this matrix
                       describes the influence of every gate on the physical
                       parameter, hence to get and set the physical parameter we
                       actually need the inverse transormation.
-        sweepgates (list): names of the gates that can be swept, e.g. with an 
-            AWG.
-        sweepmap (dict): describes a sub-matrix of virt_gate_map, for working
-            with sweepable gates.
+        map_inv (dict): 
     """
     shared_kwargs = ['gates']
 
-    def __init__(self, name, gates, virt_gate_map, sweepgates=None, **kwargs):
-        super().__init__(name, **kwargs)
+    def __init__(self, name, gates, virt_map, **kwargs):
+        """Initialize a virtual gates object.
 
+        Args:
+            name (string): The name of the object
+            gates (Instrument): the physical gates
+            virt_map (dict): The transformation matrix. Note: this matrix
+                      describes the influence of every gate on the physical
+                      parameter, hence to get and set the physical parameter we
+                      actually need the inverse transormation.
+        """
+        super().__init__(name, **kwargs)
+        self.name = name
         self.gates = gates
-        self.map = virt_gate_map
-        self._gates_list = sorted(list(self.map[list(self.map.keys())[0]].keys()))
-        self._virt_gates_list = sorted(list(self.map.keys()))
-        self._matrix = np.array([[self.map[x].get(y, 0) for y in self._gates_list] for x in self._virt_gates_list])
+        self.virt_map = virt_map
+        self._gates_list = sorted(list(self.virt_map[list(self.virt_map.keys())[0]].keys()))
+        self._virt_gates_list = sorted(list(self.virt_map.keys()))
+        self._matrix = np.array([[self.virt_map[x].get(y, 0) for y in self._gates_list] for x in self._virt_gates_list])
         self._matrix_inv = np.linalg.inv(self._matrix)
         self.map_inv = dict()
         for idvirt, virtg in enumerate(self._virt_gates_list):
@@ -64,24 +71,8 @@ class virtual_gates(Instrument):
             for g in self.map_inv[vg]:
                 self.parameters[vg].comb_map.append((self.gates.parameters[g], self.map_inv[vg][g]))
 
-        if sweepgates == None:
-            self.sweepgates = self._gates_list
-            self.sweepmap = self.map_inv
-        else:
-            self.sweepgates = sweepgates
-            self.sweepmap = dict()
-            for vg in self.map_inv:
-                self.sweepmap[vg] = dict()
-                for sg in sweepgates:
-                    self.sweepmap[vg][sg] = self.map_inv[vg][sg]
-
-        for vg in self.sweepmap:
-            self.parameters[vg].comb_map_sweep = []
-            for g in self.sweepmap[vg]:
-                self.parameters[vg].comb_map_sweep.append((self.gates.parameters[g], self.sweepmap[vg][g]))
-
     def _get(self, gate):
-        gateval = sum([self.map[gate][g] * self.gates[g].get() for g in self.map[gate]])
+        gateval = sum([self.virt_map[gate][g] * self.gates[g].get() for g in self.virt_map[gate]])
         return gateval
 
     def _set(self, value, gate):
@@ -97,12 +88,12 @@ class virtual_gates(Instrument):
             self.gates.set(g, self.gates.get(g) + set_vec[idx])
 
     def allvalues(self):
-        """ Return all virtual gates values in a dict. """
+        """Return all virtual gates values in a dict."""
         vals = [(gate, self.get(gate)) for gate in self._virt_gates_list]
         return dict(vals)
 
     def resetgates(self, activegates, basevalues=None, verbose=2):
-        """ Reset a set of gates to new values.
+        """Reset a set of gates to new values.
 
         If no new values are specified the virtual gates will be reset to zero.
 
