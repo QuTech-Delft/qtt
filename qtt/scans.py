@@ -643,11 +643,12 @@ if __name__ == '__main__':
 
 #%%
 def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None, verbose=1):
-    """ Make a 2D scan and create qcodes dataset to store on disk.
+    """Make a 2D scan and create qcodes dataset to store on disk.
 
     Args:
         station (qcodes.station.Station): contains all data on the measurement station
         scanjob (dict): data for scan range
+
     Returns:
         alldata (qcodes.data.data_set.DataSet): measurement data and metadata
     """
@@ -797,20 +798,30 @@ def plotData(alldata, diff_dir=None, fig=1):
 #%%
 
 
-def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 90], Naverage=1000, verbose=1):
-    """ Perform a very fast 2d scan by varying two physical gates with the AWG.
+def scan2Dturbo(station, scanjob, sweepgates, sweepranges=[40, 40], verbose=1):
+    """Perform a very fast 2d scan by varying two physical gates with the AWG.
+
+    The function assumes the station contains an FPGA with readFPGA function. 
+        The FPGA channel is determined form the sensing dot.
 
     Args:
         station (qcodes.station.Station): contains all data on the measurement station
-        sd (qtt.structures.sensingdot_t): describes the sensing dot
-        sweepgates (2 x 1 list): first the gate to sweep very fast and then the gate to sweep fast
+        scanjob (dict): 
 
     Returns:
         alldata (qcodes.data.data_set.DataSet): measurement data and metadata
-
-    Note: the function assumes the station contains an FPGA with readFPGA function. The FPGA channel  is determined form the sensing dot.
-
     """
+    scanjob['scantype'] = 'scan2Dturbo'
+    stepdata = scanjob['stepdata']
+    sweepdata = scanjob['sweepdata']
+
+    sweepgates = [stepdata['gate'], sweepdata['gate']]
+    sweepranges = [stepdata['end'] - stepdata['start'], sweepdata['end'] - sweepdata['start']]
+
+    sd = scanjob['sd']
+    Naverage = scanjob.get('Naverage', 20)
+    resolution = scanjob.get('resolution', [90, 90])
+
     if verbose:
         print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
 
@@ -828,9 +839,6 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
     dataread = [DataRead_ch1, DataRead_ch2][fpga_ch - 1]
     data = station.awg.sweep_2D_process(dataread, waveform)
     alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges)
-
-    scanjob = {}
-    scanjob['scantype'] = 'scan2Dturbo'
 
     alldata.metadata['allgatevalues'] = station.gates.allvalues()
     alldata.metadata['scantime'] = str(datetime.datetime.now())
