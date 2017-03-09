@@ -9,6 +9,9 @@ import warnings
 import functools
 import pickle
 import tempfile
+from qtt.algorithms.functions import logistic
+from itertools import chain
+
 
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -694,7 +697,6 @@ if __name__ == '__main__' and 0:
 try:
     from qtt.parameterviewer import ParameterViewer
     import qtt.gui
-    #from qtt.gui.dataviewer import DataViewer
 
     def setupMeasurementWindows(station, create_parameter_widget=True, ilist=None):
         ms = monitorSizes()
@@ -744,11 +746,6 @@ def timeProgress(data):
 
 #%%
 
-from qtt.algorithms.functions import logistic
-
-#%%
-
-from itertools import chain
 
 
 def flatten(lst):
