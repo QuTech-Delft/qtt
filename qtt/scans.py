@@ -218,26 +218,25 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     wait_time = scanjob.get('wait_time', 0)
     t0 = time.time()
 
-    # legacy code...
     minstrument = scanjob.get('instrument', None)
     if minstrument is None:
+        # legacy code...
         minstrument = scanjob.get('keithleyidx', None)
     params = getParams(station, minstrument)
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
 
     logging.debug('wait_time: %s' % str(wait_time))
 
     loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
-    print('loop.data_set: %s' % loop.data_set)
+   
     alldata = loop.get_data_set(location=location)
 
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
 
-    dt = time.time() - t0
     if liveplotwindow is not None:
         def myupdate():
             t0 = time.time()
@@ -246,10 +245,10 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
             if verbose >= 2:
                 print('scan1D: myupdate: %.3f ' % (time.time() - t0))
 
-        alldata = loop.with_bg_task(myupdate, min_delay=1.8).run()
-    else:
-        alldata = loop.run()
+        loop = loop.with_bg_task(myupdate, min_delay=1.8)
+    alldata = loop.run()
     alldata.sync()
+    dt = time.time() - t0
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
@@ -378,10 +377,12 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 def delta_time(tprev, thr=2):
     """ Helper function to prevent too many updates """
     t = time.time()
+    update=0
     delta = t - tprev
     if delta > thr:
         tprev = t
-    return delta, tprev
+        update=1
+    return delta, tprev, update
 
 
 def scan2D(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
@@ -452,8 +453,8 @@ def scan2D(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
             alldata.measured.ndarray[ix, iy] = value
 
         if ix == len(stepvalues) - 1 or ix % 5 == 0:
-            delta, tprev = delta_time(tprev, thr=2)
-            if delta > 2 and liveplotwindow is not None:
+            delta, tprev, update = delta_time(tprev, thr=.2)
+            if update and liveplotwindow is not None:
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
 
@@ -571,8 +572,8 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
         qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
         if liveplotwindow is not None:
-            delta, tprev = delta_time(tprev, thr=2)
-            if delta > 2:
+            delta, tprev, update = delta_time(tprev, thr=2)
+            if update:
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
 
