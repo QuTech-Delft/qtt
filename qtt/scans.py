@@ -42,8 +42,8 @@ def checkReversal(im0, verbose=0):
     mval = np.mean(im0)
 
     # meanopen = np.mean(im0[:,:])
-    # fr=thr<mval
-    fr = thr < 0
+    fr=thr<mval
+    #fr = thr < 0
     if verbose:
         print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
     if fr:

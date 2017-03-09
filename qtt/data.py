@@ -460,17 +460,19 @@ class image_transform:
                 self.H = Hy.dot(self.H)
 
         self._imraw = dataset.arrays[arrayname].ndarray
-        self._im = self._transform(self._imraw)
                               
-        if unitsperpixel is not None:
+        if isinstance(unitsperpixel, (float, int)):
+            unitsperpixel=[unitsperpixel,unitsperpixel]
+        self.unitsperpixel=unitsperpixel
+        if self.unitsperpixel is not None:
             imextent=self.scan_image_extent()
+            if self.verbose:
+                print('image_transform: unitsperpixel %s' % (self.unitsperpixel, ))
             ims, Hs, _ = qtt.algorithms.generic.rescaleImage(self._imraw, imextent, mvx = unitsperpixel[0], mvy=unitsperpixel[1])                                      
-            self._im = ims
-            
+            self._im = ims            
             self.H = Hs @ self.H
-            #FIXME: update dataset2image
             
-        # return im
+        self._im = self._transform(self._imraw)
         self.Hi = numpy.linalg.inv(self.H)
 
     def image(self):
@@ -526,7 +528,12 @@ class image_transform:
         if self.flipY:
             im = im[::-1, ::]
 
-        return im
+        if self.unitsperpixel is not None:
+            imextent=self.scan_image_extent()
+            ims, Hs, _ = qtt.algorithms.generic.rescaleImage(self._imraw, imextent, mvx = self.unitsperpixel[0], mvy=self.unitsperpixel[1])                                      
+        else:
+            ims=im
+        return ims
 
     def _itransform(self, im):
         if self.flipX:
