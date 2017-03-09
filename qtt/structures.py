@@ -49,8 +49,7 @@ class sensingdot_t:
         return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
 
     def __getstate__(self):
-        """ Override to make the object pickable
-        """
+        """ Override to make the object pickable."""
         print('sensingdot_t: __getstate__')
         # d=super().__getstate__()
         import copy
@@ -78,17 +77,17 @@ class sensingdot_t:
             gates.set(gg[ii], self.sdval[ii])
 
     def tunegate(self):
-        """ Return the gate used for tuning """
+        """Return the gate used for tuning."""
         return self.gg[1]
 
     def value(self):
-        """ Return current through sensing dot """
+        """Return current through sensing dot."""
         if self.valuefunc is not None:
             return self.valuefunc()
         raise Exception('value function is not defined for this sensing dot object')
 
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
-        """ Make 1D-scan of the sensing dot """
+        """Make 1D-scan of the sensing dot."""
         print('### sensing dot scan')
         keithleyidx = [sd.index]
         gg = sd.gg
@@ -129,7 +128,7 @@ class sensingdot_t:
         return alldata
 
     def scan2D(sd, ds=90, stepsize=-4, fig=None):
-        """ Make 2D-scan of the sensing dot """
+        """Make 2D-scan of the sensing dot."""
         keithleyidx = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
@@ -271,8 +270,7 @@ class sensingdot_t:
         return (sdstart, sdend, sdmiddle)
 
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, fig=201, sleeptime=2, delete=True):
-        ''' Fast tuning of the sensing dot plunger '''
-
+        """Fast tuning of the sensing dot plunger."""
         waveform, sweep_info = self.station.awg.sweep_gate(
             self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
@@ -327,23 +325,35 @@ class sensingdot_t:
 
 #%%
 class LinearCombParameter(qcodes.instrument.parameter.Parameter):
-    """ Create parameter which controls linear combinations.
+    """Create parameter which controls linear combinations.
 
     Attributes:
         name (str): the name given to the new parameter
         comb_map (list): tuples with in the first entry a parameter and in the
                  second a coefficient
+        coeffs_sum (float): the sum of all the coefficients
     """
     def __init__(self, name, comb_map):
+        """Initialize a linear combination parameter."""
         super().__init__(name)
+        self.name = name
         self.comb_map = comb_map
-        self.coeffs_sum = sum([np.abs(self.comb_map[i][1]) for i in range(len(self.comb_map))])
+        self.coeffs_sum = sum([np.abs(coeff) for (param, coeff) in self.comb_map])
 
     def get(self):
-        value = sum([self.comb_map[idg][1] * self.comb_map[idg][0].get() for idg, g in enumerate(self.comb_map)])
+        """Return the value of this parameter."""
+        value = sum([coeff * param.get() for (param, coeff) in self.comb_map])
         return value
 
     def set(self, value):
+        """Set the parameter to value. 
+
+        Note: the set is not unique, i.e. the result of this method depends on
+        the previous value of this parameter.
+
+        Args:
+            value (float): the value to set the parameter to.
+        """
         val_diff = value - self.get()
-        for idg, g in enumerate(self.comb_map):
-            self.comb_map[idg][0].set(self.comb_map[idg][0].get() + self.comb_map[idg][1] * val_diff / self.coeffs_sum)
+        for (param, coeff) in self.comb_map:
+            param.set(param.get() + coeff * val_diff / self.coeffs_sum)
