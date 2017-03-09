@@ -11,7 +11,7 @@ from qtt.data import dataset2Dmetadata, image_transform, dataset2image, dataset2
 #from qtt.tools import *
 import qtt.data
 import scipy
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 try:
     import cv2
 except:

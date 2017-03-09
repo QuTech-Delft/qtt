@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt
 import logging
 
 from qtt.data import dataset2Dmetadata, image_transform, dataset2image, show2D
-#from qtt.tools import *
 import qtt.data
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 import qtt.pgeometry as pgeometry
 import qtt.scans  # import fixReversal, checkReversal
 

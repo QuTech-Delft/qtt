@@ -1,1 +1,0 @@
-from qtt.pgeometry import *

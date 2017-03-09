@@ -26,8 +26,8 @@ from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
 
 
-from qtt import pmatlab
-from qtt.pmatlab import plotPoints, tilefigs
+from qtt import pgeometry as pmatlab
+from qtt.pgeometry import plotPoints, tilefigs
 import matplotlib.pyplot as plt
 import datetime
 

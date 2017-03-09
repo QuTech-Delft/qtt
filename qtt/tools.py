@@ -20,8 +20,8 @@ try:
 except:
     pass
 
-from qtt import pmatlab
-from qtt.pmatlab import mpl2clipboard
+from qtt import pgeometry as pmatlab
+from qtt.pgeometry import mpl2clipboard
 
 # do NOT load any other qtt submodules here
 
@@ -239,8 +239,6 @@ def plot1D(dataset, fig=1):
 
     if fig is not None and array is not None:
         MatPlot(array, num=fig)
-
-from qtt import pmatlab
 
 
 if __name__ == '__main__':

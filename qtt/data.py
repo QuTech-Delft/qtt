@@ -18,7 +18,7 @@ except:
     pass
 
 import numpy.linalg
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 
 import qtt.tools
 import qtt.algorithms.generic
@@ -764,7 +764,6 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('loadExperimentdata %s' % path)
-    from qtt import pmatlab
     dataset = pmatlab.load(path)
 
     dataset = load_data(path)

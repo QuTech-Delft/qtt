@@ -8,10 +8,10 @@ Created on Thu Sep 10 15:55:21 2015
 #%%
 import time
 import logging
+import numpy as np
 from functools import partial
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
-import numpy as np
 import scipy.ndimage as ndimage
 import pyqtgraph as pg
 

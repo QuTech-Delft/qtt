@@ -13,10 +13,11 @@ from __future__ import unicode_literals
 from imp import reload  # python3
 
 import numpy as np
-
 import math
 import scipy.signal
 import scipy.ndimage
+import scipy.optimize
+import scipy.constants
 import scipy.optimize
 import warnings
 import copy
@@ -37,10 +38,8 @@ except Exception as inst:
     pass
 
 #%% Custom packages
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 
-import scipy.constants
-import scipy.optimize
 
 
 def extent2fullextent(extent0, im):
@@ -117,7 +116,7 @@ import scipy.optimize
 
 #%%
 
-from qtt.pmatlab import robustCost
+from qtt.pgeometry import robustCost
 
 
 def barrierScore(xd, yd, pp, weights=None, thr=3e9):
