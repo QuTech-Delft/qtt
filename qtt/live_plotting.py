@@ -8,18 +8,18 @@ Created on Thu Sep 10 15:55:21 2015
 #%%
 import time
 import logging
+from functools import partial
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
+import numpy as np
 import scipy.ndimage as ndimage
+import pyqtgraph as pg
 
 import qcodes
 
 import qtt
 import qtt.legacy
 from qtt import pmatlab
-import numpy as np
-import pyqtgraph as pg
-from functools import partial
 
 import qtt.algorithms.generic
 import qtt
@@ -36,10 +36,10 @@ class rda_t:
 
     def __init__(self):
         """ Class for simple real-time data access
-        
+
         Every object has a `get` and `set` method to access simple parameters 
         globally (e.g. across different python sessions).
-        
+
         """
 
         # we use redis as backend now
@@ -64,7 +64,7 @@ class rda_t:
 
     def get_int(self, key, default_value=None):
         """ Get value by key and convert to an int
-        
+
         Returns:
             value (int)
         """
@@ -90,14 +90,15 @@ class rda_t:
 
     def set(self, key, value):
         """ Set a value
-        
+
         Args:
             key (str): key 
             value (str): the value to be set
         """
-        
+
         self.r.set(key, value)
         pass
+
 
 class MeasurementControl(QtWidgets.QMainWindow):
 
@@ -111,10 +112,10 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.name = name
 
         self.rda = rda_t()
-        
+
         self.abortbutton = QtWidgets.QPushButton()
         self.abortbutton.setText('Abort measurement')
-        self.abortbutton.setStyleSheet("background-color: rgb(255,150,100);");
+        self.abortbutton.setStyleSheet("background-color: rgb(255,150,100);")
         self.abortbutton.clicked.connect(self.abort_measurements)
         vbox.addWidget(self.abortbutton)
 
@@ -122,9 +123,9 @@ class MeasurementControl(QtWidgets.QMainWindow):
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
 
-        w.resize( 300,300)
+        w.resize(300, 300)
         #w.setGeometry(1700, 50, 300, 600)
-        #self.update_values()
+        # self.update_values()
         self.show()
 
     def install_qcodes_hook(self):
@@ -132,26 +133,27 @@ class MeasurementControl(QtWidgets.QMainWindow):
         # patch the qcodes abort function
         def myabort():
             return int(self.rda.get('abort_measurements', 0))
-        
+
         qcodes.loops.abort_measurements = myabort
-        
+
     def enable_measurements(self):
         """ xxx """
         self.rda.set('abort_measurements', 0)
-        
+
     def abort_measurements(self):
         """ xxxx """
         if self.verbose:
             print('%s: setting abort_measurements to 1' % self.name)
-        
+
         self.rda.set('abort_measurements', 1)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     mc = MeasurementControl()
-    mc.verbose=1
+    mc.verbose = 1
     mc.setGeometry(1700, 50, 300, 400)
-    
+
+
 class RdaControl(QtWidgets.QMainWindow):
 
     def __init__(self, name='LivePlot Control', boxes=['xrange', 'yrange', 'nx', 'ny'], **kwargs):
@@ -213,6 +215,7 @@ class RdaControl(QtWidgets.QMainWindow):
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
 #%%
+
 
 class LivePlotControl(QtWidgets.QMainWindow):
 
@@ -276,41 +279,47 @@ class LivePlotControl(QtWidgets.QMainWindow):
         if self.verbose:
             print('valueChanged: %s %s' % (name, value))
         self.rda.set(name, value)
-        
+
 #%% Liveplot object
 
+
 class livePlot:
+    """ Class to enable live plotting of data.
 
-    """ Class to enable live plotting of data """
+    Attributes:
+        datafunction: the function to call for data acquisition
+        sweepInstrument: the instrument to which sweepparams belong
+        sweepparams: the parameter(s) being swept
+        sweepranges: the range over which sweepparams are being swept
+    """
 
-    def __init__(self, gates, sweepgates, sweepranges, verbose=1):
+    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, verbose=1):
         plotwin = pg.GraphicsWindow(title="Live view")
-#        win.move(-900, 10)
 
         # TODO: automatic scaling?
         # TODO: implement FPGA callback in qcodes
         # TODO: implement 2 function plot (for 2 sensing dots)
 
-        win=QtWidgets.QWidget()    
+        win = QtWidgets.QWidget()
         win.resize(800, 600)
         win.setWindowTitle('livePlot')
-        
+
         topLayout = QtWidgets.QHBoxLayout()
         win.start_button = QtWidgets.QPushButton('Start')
         win.stop_button = QtWidgets.QPushButton('Stop')
-    
+
         for b in [win.start_button, win.stop_button]:
             b.setMaximumHeight(24)
-    
+
             #self.reloadbutton.setText('Reload data')
         topLayout.addWidget(win.start_button)
         topLayout.addWidget(win.stop_button)
-    
+
         vertLayout = QtWidgets.QVBoxLayout()
-        
+
         vertLayout.addItem(topLayout)
         vertLayout.addWidget(plotwin)
-            
+
         win.setLayout(vertLayout)
 
         self.win = win
@@ -318,32 +327,48 @@ class livePlot:
         self.idx = 0
         self.maxidx = 1e9
         self.data = None
+        self.sweepInstrument = sweepInstrument
+        self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.gates = gates
-        self.sweepgates = sweepgates
         self.fps = pmatlab.fps_t(nn=6)
+        self.datafunction = datafunction
 
-        if len(sweepgates) == 1:
-            p1 = plotwin.addPlot(title="Sweep")
+        if self.sweepparams is None:
+            p1 = plotwin.addPlot(title="Videomode")
+            p1.setLabel('left', 'param1')
+            p1.setLabel('left', 'param2')
+            if self.datafunction is None:
+                raise Exception('Either specify a datafunction or sweepparams.')
+            else:
+                data = np.array(self.datafunction())
+                if data.ndim == 1:
+                    dd = np.zeros((0,))
+                    plot = p1.plot(dd, pen='b')
+                    self.plot = plot
+                else:
+                    self.plot = pg.ImageItem()
+                    p1.addItem(self.plot)
+        elif type(self.sweepparams) == str:
+            p1 = plotwin.addPlot(title="1d scan")
             p1.setLabel('left', 'Value')
-            p1.setLabel('bottom', self.sweepgates[0], units='mV')
+            p1.setLabel('bottom', self.sweepparams, units='mV')
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
-        elif len(sweepgates) == 2:
+        elif type(self.sweepparams) == list:
             p1 = plotwin.addPlot(title='2d scan')
-            p1.setLabel('bottom', sweepgates[0], units='mV')
-            p1.setLabel('left', sweepgates[1], units='mV')
-            self.img = pg.ImageItem()
-            p1.addItem(self.img)
+            p1.setLabel('bottom', self.sweepparams[0], units='mV')
+            p1.setLabel('left', self.sweepparams[1], units='mV')
+            self.plot = pg.ImageItem()
+            p1.addItem(self.plot)
         else:
             raise Exception(
-                'The number of sweepgates should be either 1 or 2.')
+                'The number of sweep parameters should be either None, 1 or 2.')
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
         self.win.show()
-        
+
         #from pgeometry import Slot
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
@@ -352,13 +377,11 @@ class livePlot:
                 #print('call %s' % target)
                 target()
             return signal_drop_arguments
-        
-        
+
         win.start_button.clicked.connect(connect_slot(self.startreadout))
         win.stop_button.clicked.connect(connect_slot(self.stopreadout))
-        #win.start_button.clicked.connect(self.startreadout)
-        #win.stop_button.clicked.connect(self.stopreadout)
-
+        # win.start_button.clicked.connect(self.startreadout)
+        # win.stop_button.clicked.connect(self.stopreadout)
 
     def resetdata(self):
         self.idx = 0
@@ -368,37 +391,32 @@ class livePlot:
         self.win.setWindowTitle('live view, fps: %.2f' % self.fps.framerate())
         if self.verbose >= 2:
             print('livePlot: update')
-        if len(self.sweepgates) == 1:
-            if data is not None:
-                self.data = np.array(data)
-                gate_param = getattr(self.gates, self.sweepgates[0])
-                gateval = gate_param.get_latest()
-                sweepvalues = np.arange(gateval - self.sweepranges[0] / 2, self.sweepranges[
-                                        0] / 2 + gateval, self.sweepranges[0] / len(data))
-                self.plot.setData(sweepvalues, self.data)
-            else:
-                pass
-        elif len(self.sweepgates) == 2:
-            if data is not None:
-                self.img.setImage(data.T)
-                gate_horz = getattr(self.gates, self.sweepgates[0])
-                value_x = gate_horz.get_latest()
-                value_y = self.gates.get(self.sweepgates[1])
-                gate_vert = getattr(self.gates, self.sweepgates[1])
-                value_y = gate_vert.get_latest()
-                self.horz_low = value_x - self.sweepranges[0] / 2
-                self.horz_range = self.sweepranges[0]
-                self.vert_low = value_y - self.sweepranges[1] / 2
-                self.vert_range = self.sweepranges[1]
-                self.rect = QtCore.QRect(
-                    self.horz_low, self.vert_low, self.horz_range, self.vert_range)
-                self.img.setRect(self.rect)
+        if data is not None:
+            self.data = np.array(data)
+            if self.data.ndim == 1:
+                if None in (self.sweepInstrument, self.sweepparams, self.sweepranges):
+                    self.plot.setData(self.data)
+                else:
+                    sweep_param = getattr(self.sweepInstrument, self.sweepparams)
+                    paramval = sweep_param.get_latest()
+                    sweepvalues = np.linspace(paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
+                    self.plot.setData(sweepvalues, self.data)
+            elif self.data.ndim == 2:
+                self.plot.setImage(self.data.T)
+                if None not in (self.sweepInstrument, self.sweepparams, self.sweepranges):
+                    param_horz = getattr(self.sweepInstrument, self.sweepparams[0])
+                    value_x = param_horz.get_latest()
+                    value_y = self.sweepInstrument.get(self.sweepparams[1])
+                    param_vert = getattr(self.sweepInstrument, self.sweepparams[1])
+                    value_y = param_vert.get_latest()
+                    self.horz_low = value_x - self.sweepranges[0] / 2
+                    self.horz_range = self.sweepranges[0]
+                    self.vert_low = value_y - self.sweepranges[1] / 2
+                    self.vert_range = self.sweepranges[1]
+                    self.rect = QtCore.QRect(self.horz_low, self.vert_low, self.horz_range, self.vert_range)
+                    self.plot.setRect(self.rect)
         else:
-            if self.data is None:
-                self.data = np.array(data).reshape((1, -1))
-            else:
-                self.data = np.vstack((self.data, data))
-            self.img.setImage(self.data.T)
+            pass
 
         self.idx = self.idx + 1
         if self.idx > self.maxidx:
@@ -406,7 +424,6 @@ class livePlot:
             self.timer.stop()
         if processevents:
             QtWidgets.QApplication.processEvents()
-        pass
 
     def updatebg(self):
         if self.idx % 10 == 0:
@@ -415,7 +432,7 @@ class livePlot:
         self.fps.addtime(time.time())
         if self.datafunction is not None:
             try:
-                #print(self.datafunction)
+                # print(self.datafunction)
                 dd = self.datafunction()
                 self.update(data=dd)
             except Exception as e:
@@ -428,7 +445,7 @@ class livePlot:
             dd = None
         time.sleep(0.00001)
 
-    def startreadout(self, callback=None, rate=10., maxidx=None):
+    def startreadout(self, callback=None, rate=1000, maxidx=None):
         #$print('-- startreadout: callback: %s'  % callback)
         if maxidx is not None:
             self.maxidx = maxidx
@@ -442,11 +459,7 @@ class livePlot:
         if self.verbose:
             print('live_plotting: stop readout')
         self.timer.stop()
-
-if __name__=='__main__':
-    lp=livePlot(gates=None, sweepgates=['L', 'R'], sweepranges=[50,50])
-    lp.win.setGeometry(1500,10,400,400)
-    
+        self.win.setWindowTitle('Live view stopped')
 
 #%% Some default callbacks
 
@@ -526,3 +539,8 @@ class fpgaCallback_2d:
             im_diff = ndimage.filters.laplace(im_diff, mode='nearest')
 
         return np.array(im_diff)
+
+#%% Example
+if __name__ == '__main__':
+    lp = livePlot(datafunction=MockCallback_2d(), sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50])
+    lp.win.setGeometry(1500, 10, 400, 400)
