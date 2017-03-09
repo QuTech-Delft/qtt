@@ -16,6 +16,6 @@ Also see the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs
 * [Virtual gate space]() TODO
 * [example_fermi_fitting.ipynb](example_fermi_fitting.ipynb) Automatically fit a Fermi distribution
 * [example_polFitting.ipynb](example_polFitting.ipynb) Automatically fit a polarization line
-* [classical_dot_simulation.ipynb] Simulat quantum dot systems
+* [example_classical_dot_simulation.ipynb] Simulate quantum dot systems
 
 
