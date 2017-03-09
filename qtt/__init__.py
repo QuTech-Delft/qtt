@@ -1,14 +1,16 @@
 # set up the qtt namespace
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
+import copy
 import matplotlib
+import qcodes
+
 import qtt.live
 import qtt.tools
 
 import qtt.data
 import qtt.algorithms
 
-import qcodes
 import distutils.version
 
 # todo: remove import *
@@ -29,6 +31,16 @@ from qtt.loggingGUI import installZMQlogger
 _qversion = '0.1.2' # version of qcodes required
 if distutils.version.StrictVersion(qcodes.__version__) < distutils.version.StrictVersion(_qversion):
     raise Exception('qtt needs qcodes version%s' % _qversion)
+
+#%%
+
+def _copy_to_str(x, memo):
+    return str( x )
+
+# black magic to make qcodes objects work with deepcopy
+from qcodes import Parameter, Instrument, StandardParameter, ManualParameter
+for c in [ Parameter, Instrument, StandardParameter, ManualParameter]:
+    copy._deepcopy_dispatch[c] = _copy_to_str
 
 #%% Enhance the qcodes functionality
 
