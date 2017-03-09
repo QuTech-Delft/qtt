@@ -185,7 +185,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 logging.debug(str(e))
 
 
-@qtt.tools.deprecated
 def createParameterWidgetRemote(instruments, doexec=True):
     """ Create a parameter widget in a remote process.
 

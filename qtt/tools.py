@@ -9,7 +9,7 @@ import warnings
 import functools
 import pickle
 import tempfile
-from qtt.algorithms.functions import logistic
+#import qtt.algorithms.functions
 from itertools import chain
 
 
@@ -693,7 +693,7 @@ if __name__ == '__main__' and 0:
 
 #%%
 try:
-    from qtt.parameterviewer import ParameterViewer
+    import qtt.parameterviewer
     import qtt.gui
 
     def setupMeasurementWindows(station, create_parameter_widget=True, ilist=None):
@@ -704,7 +704,7 @@ try:
             ilist = [station.gates]
         w = None
         if create_parameter_widget:
-            w = ParameterViewer(ilist)
+            w = qtt.parameterviewer.ParameterViewer(ilist)
             w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
             w.updatecallback()
 
@@ -716,7 +716,9 @@ try:
         app.processEvents()
 
         return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None})
-except:
+except Exception as ex:
+    logging.exception(ex)
+    print('fail!')
     pass
 
 import time

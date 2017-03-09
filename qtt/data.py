@@ -22,7 +22,7 @@ from qtt import pgeometry as pmatlab
 
 import qtt.tools
 import qtt.algorithms.generic
-from qtt.tools import deprecated
+
 
 import matplotlib.pyplot as plt
 
