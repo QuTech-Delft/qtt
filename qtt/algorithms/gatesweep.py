@@ -7,7 +7,7 @@ import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qtt.data import dataset2Dmetadata, pix2scan, image_transform, dataset2image, dataset2image2
+from qtt.data import dataset2Dmetadata, image_transform, dataset2image, dataset2image2
 #from qtt.tools import *
 import qtt.data
 import scipy
