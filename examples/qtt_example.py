@@ -33,7 +33,7 @@ import qtt.qtt_toymodel
 import qtt.live
 from qtt.scans import scan1D
 import qtt.gui.dataviewer
-from qtt.parameterviewer import createParameterWidgetRemote, createParameterWidget
+from qtt.parameterviewer import createParameterWidget
 
 # taskkill /F /IM python.exe
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     reload(qtt.scans)
     scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': 1.}), 'instrument': [keithley3.amplitude], 'wait_time': .000})
-    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=False, verbose=2)
+    data1d = qtt.scans.scan1D(station, scanjob, location=None, verbose=2)
 
     data1d.sync()  # data.arrays
 
@@ -114,9 +114,9 @@ if __name__ == '__main__':
 
     reload(qtt.scans)
     start=-500
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': start, 'end': start+500, 'step': 4.}), 'instrument': ['keithley1'], 'wait_time': 0.})
+    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': start, 'end': start+500, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
     scanjob['stepdata'] = dict({'gate': 'L', 'start': start, 'end': start+500, 'step': 5.})
-    data = qtt.scans.scan2D(station, scanjob, background=None, liveplotwindow=plotQ)
+    data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
 

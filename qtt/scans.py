@@ -255,10 +255,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot)
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot() )
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
+
 
     alldata.write(write_metadata=True)
 
@@ -570,7 +571,7 @@ def scan2D(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot)
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot() )
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
     
     alldata.write(write_metadata=True)
