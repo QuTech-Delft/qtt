@@ -24,6 +24,8 @@ from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 from qcodes.utils.helpers import tprint
 
+from qtt.tools import update_dictionary
+
 #%%
 
 import skimage
@@ -552,12 +554,10 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
 
     alldata.add_metadata({'station': station.snapshot()})
 
-    alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gates.allvalues()
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
-    alldata.metadata['dt'] = dt
-    alldata.metadata['wait_time'] = wait_time
-    alldata.metadata['scanparams'] = {'wait_time': wait_time}
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt,
+                      scantime=str(datetime.datetime.now()), wait_time=wait_time)
+    update_dictionary(alldata.metadata, allgatevalues = gates.allvalues(), scanparams={'wait_time': wait_time} )
+    
 
     alldata.write(write_metadata=True)
     # print(type(scanjob['stepdata']['start']))
@@ -572,6 +572,8 @@ if __name__ == '__main__':
     scanjob['stepdata'] = dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 3.})
     data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
 
+    
+    
 
 #%%
 def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None, verbose=1):
@@ -582,10 +584,21 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         scanjob (dict): data for scan range
     Returns:
         alldata (qcodes.data.data_set.DataSet): measurement data and metadata
-    """
-    scanjob['scantype'] = 'scan2Dfast'
-
-    stepdata = scanjob['stepdata']
+    """ 
+    
+    def readfunc(waveform, Naverage):
+        fpga_ch = scanjob['sd'].fpga_ch
+        ReadDevice = ['FPGA_ch%d' % fpga_ch]
+        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
+        data = station.awg.sweep_process(data_raw, waveform, Naverage)
+        return data
+    
+    if 'scantype' not in scanjob:
+        raise Exception("no 'scantype' in scanjob")
+        
+    scantype = scanjob['scantype']    
+    
+    stepdata = scanjob['stepdata']  # Can be frequency stepdata
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
 
@@ -595,26 +608,24 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     wait_time_startloop = scanjob.get('wait_time_startloop', 2.0 + 4 * wait_time)
 
     gates = station.gates
-    gvs = gates.allvalues()
+    allgatevalues = gates.allvalues()
 
     sweepgate = sweepdata.get('gate', None)
     if sweepgate is None:
         sweepgate = sweepdata.get('gates')[0]
     sweepparam = getattr(gates, sweepgate)
 
-    stepgate = stepdata.get('gate', None)
-    if stepgate is None:
-        stepgate = stepdata.get('gates')[0]
-
-    stepparam = getattr(gates, stepgate)
-
-    def readfunc(waveform, Naverage):
-        fpga_ch = scanjob['sd'].fpga_ch
-        ReadDevice = ['FPGA_ch%d' % fpga_ch]
-        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
-        data = station.awg.sweep_process(data_raw, waveform, Naverage)
-        return data
-
+    if scantype == 'PAT':
+        steppowers = scanjob['stepdata']['powers']
+        powerparam = scanjob['mwsource'].power
+        stepparam = scanjob['mwsource'].frequency
+    else:    
+        stepgate = stepdata.get('gate', None)
+        if stepgate is None:
+            stepgate = stepdata.get('gates')[0]
+    
+        stepparam = getattr(gates, stepgate)
+        
     sweeprange = (sweepdata['end'] - sweepdata['start'])
     # sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 60)  # FIXME
     period = scanjob['sweepdata'].get('period', 1e-3)
@@ -633,17 +644,21 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     else:
         stepparam.set(stepdata['start'])
         sweepparam.set(float(sweepgate_value))
-
+        
+    if scantype == 'PAT':
+        powerparam.set(steppowers[0])
+        scanjob['mwsource'].rfstatus.set('on')            
+        
     qtt.time.sleep(wait_time_startloop)
 
     data = readfunc(waveform, Naverage)
-    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange*scanjob['gates_horz'][sweepgate], sweepgate_value=sweepgate_value, fig=None)
 
     sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
 
-    logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
-    logging.info('scan2D: wait_time %f' % wait_time)
+    logging.info('scan2D %s: %d %d' % (scantype, len(stepvalues), len(sweepvalues)))
+    logging.info('scan2D %s: wait_time %f' % (scantype, wait_time))
 
     t0 = qtt.time.time()
 
@@ -661,12 +676,15 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     tprev = time.time()
 
     for ix, x in enumerate(stepvalues):
-        tprint('scan2Dfast: %d/%d: setting %s to %.3f' % (ix, len(stepvalues), stepvalues.name, x), dt=.5)
+        tprint('scan2D %s: %d/%d: setting %s to %.3f' % (scantype, ix, len(stepvalues), stepvalues.name, x), dt=.5)
         if 'gates_vert' in scanjob:
             for g in scanjob['gates_vert']:
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
         else:
             stepvalues.set(x)
+        if scantype == 'PAT':
+            powerparam.set(steppowers[ix])         
+            
         qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
         if liveplotwindow is not None:
@@ -676,6 +694,9 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
                 pg.mkQApp().processEvents()
 
     station.awg.stop()
+    
+    if scantype == 'PAT':
+        scanjob['mwsource'].rfstatus.set('off')
 
     dt = qtt.time.time() - t0
 
@@ -688,11 +709,12 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     # add the station metadata
     alldata.add_metadata({'station': station.snapshot()})
 
-    alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gvs
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
-    alldata.metadata['dt'] = dt
-    alldata.metadata['wait_time'] = wait_time
+    # add scan settings metadata
+    scantime = str(datetime.datetime.now())
+    
+    update_dictionary(alldata.metadata, scanjob = scanjob, dt = dt,
+                      scantime = scantime, wait_time = wait_time, 
+                      allgatevalues = allgatevalues)
 
     alldata.write(write_metadata=True)
 
