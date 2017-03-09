@@ -19,7 +19,6 @@ from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot  # import onedotGetBalanceFine
 import qtt.live
 
-#from qtt.data import *
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 from qcodes.utils.helpers import tprint
@@ -374,111 +373,6 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 
 #%%
 
-
-def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False, verbose=1):
-    """ Make a 2D scan and create dictionary to store on disk.
-
-    Args:
-        station (object): contains all data on the measurement station
-        scanjob (dict): data for scan range
-    """
-    stepdata = scanjob['stepdata']
-    sweepdata = scanjob['sweepdata']
-    minstrument = scanjob.get('instrument', None)
-    if minstrument is None:
-        minstrument = scanjob.get('keithleyidx', None)
-
-    if verbose:
-        logging.info('scan2D: todo: implement compensategates')
-        logging.info('scan2D: todo: implement wait_time')
-
-    delay = scanjob.get('delay', 0.0)
-    if wait_time is not None:
-        delay = wait_time
-
-    gates = station.gates
-
-    sweepgate = sweepdata.get('gate', None)
-    if sweepgate is None:
-        sweepgate = sweepdata.get('gates')[0]
-
-    stepgate = stepdata.get('gate', None)
-    if stepgate is None:
-        stepgate = stepdata.get('gates')[0]
-    param = getattr(gates, sweepgate)
-    stepparam = getattr(gates, stepgate)
-
-    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
-    stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
-
-    logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
-    logging.info('scan2D: delay %f' % delay)
-    steploop = qc.Loop(stepvalues, delay=delay, progress_interval=2)
-
-    t0 = time.time()
-    fullloop = steploop.loop(sweepvalues, delay=delay)
-
-    params = getParams(station, minstrument)
-    loop = fullloop.each(*params)
-
-    if background is None:
-        try:
-            gates._server_name
-            background = True
-        except:
-            background = False
-
-    if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
-
-    if background:
-        if verbose >= 2:
-            print('background %s, data_manager %s' % (background, '[default]'))
-        # alldata=loop.get_data_set() # use default data_manager
-        alldata = loop.run(background=background, data_manager=True)
-
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(alldata))
-        alldata.background_functions = dict({'qt': pg.mkQApp().processEvents})
-        alldata.complete(delay=.5)
-        #print('complete: %.3f' % alldata.fraction_complete() )
-        wait_bg_finish(verbose=verbose >= 2)
-    else:
-        data_manager = False
-        alldata = loop.get_data_set(data_manager=data_manager)
-
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(alldata))
-
-        def myupdate():
-            t0 = time.time()
-            liveplotwindow.update()
-            # plt.pause(1e-5)
-
-            # QtWidgets.QApplication.processEvents()
-            if verbose >= 2:
-                print('myupdate: %.3f ' % (time.time() - t0))
-
-        alldata = loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
-
-    dt = time.time() - t0
-
-    if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
-
-    alldata.add_metadata({'station': station.snapshot()})
-
-    alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gates.allvalues()
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
-    alldata.metadata['dt'] = dt
-    alldata.metadata['wait_time'] = wait_time
-
-    alldata.write()
-
-    return alldata
 
 
 def delta_time(tprev, thr=2):
