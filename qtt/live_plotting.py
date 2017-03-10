@@ -19,7 +19,7 @@ import qcodes
 
 import qtt
 import qtt.legacy
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 
 import qtt.algorithms.generic
 import qtt
