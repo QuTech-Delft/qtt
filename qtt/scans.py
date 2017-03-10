@@ -219,7 +219,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     wait_time = scanjob.get('wait_time', 0)
     t0 = time.time()
 
-    minstrument = scanjob.get('instrument', None)
+    minstrument = scanjob.get('minstrument', None)
     if minstrument is None:
         # legacy code...
         minstrument = scanjob.get('keithleyidx', None)
@@ -254,7 +254,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot() )
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
@@ -330,10 +330,10 @@ def scan1Dfast(station, scanjob, verbose=1):
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot)
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
-    alldata.write(write_metdata=True)
+    alldata.write(write_metadata=True)
 
     return alldata
 
@@ -468,7 +468,7 @@ def scan2D(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot() )
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
     
     alldata.write(write_metadata=True)
@@ -589,7 +589,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot)
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
     
     alldata.write(write_metadata=True)
@@ -677,7 +677,7 @@ def scan2Dturbo(station, scanjob, verbose=1):
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot)
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
     alldata.write(write_metadata=True)
