@@ -230,7 +230,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
     loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
    
-    alldata = loop.get_data_set(location=location)
+    alldata = loop.get_data_set(location=location, loc_record={'label': 'scan1D'})
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
@@ -320,7 +320,8 @@ def scan1Dfast(station, scanjob, verbose=1):
     sweepparam.set(float(sweepgate_value))
 
     data = readfunc(waveform, Naverage)
-    alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+    alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
+                                   fig=None, loc_record={'label': 'scan1Dfast'})
 
     station.awg.stop()
 
@@ -425,7 +426,7 @@ def scan2D(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
     logging.info('scan2D: wait_time %f' % wait_time)
 
     params = getParams(station, minstrument)
-    alldata = makeDataSet2D(stepvalues, sweepvalues)
+    alldata = makeDataSet2D(stepvalues, sweepvalues, loc_record={'label': 'scan2D'})
 
     t0 = qtt.time.time()
 
@@ -543,7 +544,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, diff_dir=None, verbose=1):
     qtt.time.sleep(wait_time_startscan)
 
     data = readfunc(waveform, Naverage)
-    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None, loc_record={'label': 'scan2Dfast'})
 
     sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
@@ -669,7 +670,7 @@ def scan2Dturbo(station, scanjob, verbose=1):
 
     dataread = [DataRead_ch1, DataRead_ch2][fpga_ch - 1]
     data = station.awg.sweep_2D_process(dataread, waveform)
-    alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges)
+    alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges, loc_record={'label': 'scan2Dturbo'})
 
     dt = qtt.time.time() - t0
 
@@ -819,7 +820,7 @@ from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 #%%
 
 
-def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None):
+def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None, loc_record=None):
     ''' Convert the data of a 1D sweep to a DataSet
 
     Note: sweepvalues are only an approximation
@@ -833,7 +834,8 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=N
             raise Exception('No gates supplied')
 
     sweepvalues = np.linspace(sweepgate_value - sweeprange / 2, sweepgate_value + sweeprange / 2, len(data))
-    dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured', y=data)
+    dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
+                                 y=data, loc_record=loc_record)
 
     if fig is None:
         return dataset, None
