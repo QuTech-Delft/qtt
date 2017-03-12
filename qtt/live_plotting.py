@@ -102,7 +102,7 @@ class rda_t:
 
 class MeasurementControl(QtWidgets.QMainWindow):
 
-    def __init__(self, name='Measurement Control', **kwargs):
+    def __init__(self, name='Measurement Control', rda_variable='qtt_abort_running_measurement', **kwargs):
         """ Simple control for real-time data parameters """
         super().__init__(**kwargs)
         w = self
@@ -110,8 +110,13 @@ class MeasurementControl(QtWidgets.QMainWindow):
         vbox = QtWidgets.QVBoxLayout()
         self.verbose = 0
         self.name = name
-
+        self.rda_variable = rda_variable
         self.rda = rda_t()
+
+
+        self.text = QtWidgets.QLabel()
+        self.updateStatus()
+        vbox.addWidget(self.text)
 
         self.abortbutton = QtWidgets.QPushButton()
         self.abortbutton.setText('Abort measurement')
@@ -119,40 +124,74 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.abortbutton.clicked.connect(self.abort_measurements)
         vbox.addWidget(self.abortbutton)
 
+        self.enable_button = QtWidgets.QPushButton()
+        self.enable_button.setText('Enable measurements')
+        self.enable_button.setStyleSheet("background-color: rgb(255,150,100);")
+        self.enable_button.clicked.connect(self.enable_measurements)
+        vbox.addWidget(self.enable_button)
+
         widget = QtWidgets.QWidget()
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
 
         w.resize(300, 300)
-        #w.setGeometry(1700, 50, 300, 600)
-        # self.update_values()
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.updateStatus) # this also works
+        self.timer.start(1000)
         self.show()
 
-    def install_qcodes_hook(self):
+    def updateStatus(self):
+        if self.verbose>=2:
+            print('updateStatus...' )
+        value= int(self.rda.get(self.rda_variable, 0)) 
+        self.text.setText('%s: %d' % (self.rda_variable, value)  )
+    def _install_qcodes_hook(self):
         """ xxx """
         # patch the qcodes abort function
         def myabort():
-            return int(self.rda.get('abort_measurements', 0))
+            return int(self.rda.get(self.rda_variable, 0))
 
         qcodes.loops.abort_measurements = myabort
 
     def enable_measurements(self):
-        """ xxx """
-        self.rda.set('abort_measurements', 0)
+        """ Enable measurements """
+        if self.verbose:
+            print('%s: setting %s to 0' % (self.name, self.rda_variable))
+        self.rda.set(self.rda_variable, 0)
+        self.updateStatus()
 
     def abort_measurements(self):
-        """ xxxx """
+        """ Abort the current measurement """
         if self.verbose:
-            print('%s: setting abort_measurements to 1' % self.name)
+            print('%s: setting %s to 1' % (self.name, self.rda_variable))
 
-        self.rda.set('abort_measurements', 1)
+        self.rda.set(self.rda_variable, 1)
+        self.updateStatus()
 
 
 if __name__ == '__main__':
+    app=pg.mkQApp()
+    
     mc = MeasurementControl()
     mc.verbose = 1
     mc.setGeometry(1700, 50, 300, 400)
+    
+import pyqtgraph.multiprocess as mp
 
+def start_measurement_control():
+    """ Start measurement control GUI """    
+    #import warnings
+    #from pyqtgraph.multiprocess.remoteproxy import RemoteExceptionWarning
+    #warnings.simplefilter('ignore', RemoteExceptionWarning)    
+    proc = mp.QtProcess()
+    lp = proc._import('qtt.live_plotting')
+    mc = lp.MeasurementControl()
+    
+    qtt._dummy_mc += mc
+    #return mc    
+
+
+#%%
 
 class RdaControl(QtWidgets.QMainWindow):
 
