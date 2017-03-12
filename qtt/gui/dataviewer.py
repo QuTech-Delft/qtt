@@ -230,9 +230,11 @@ class DataViewer(QtWidgets.QWidget):
                     # load with default formatter
                     from qcodes.data.gnuplot_format import GNUPlotFormat
                     hformatter = GNUPlotFormat()
-                    print('trying GNUPlotFormat')
-                    print('tag: %s' % tag)
-                    print(ex)
+                    if verbose:
+                        if verbose>=2:
+                            print('failed with format:' )
+                            print(ex)
+                        print('trying GNUPlotFormat: tag %s' % tag)
                     data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
                     logging.debug('loaded GNUPlotFormat datasett %s' % tag)
 

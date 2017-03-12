@@ -59,6 +59,7 @@ qtt._dummy_mc = []
 #%% Override default location formatter
 
 from qcodes.data.location import FormatLocation
+FormatLocation.default_fmt = '{date}/{time}_{name}_{label}'
 qcodes.DataSet.location_provider = FormatLocation(fmt='{date}/{time}_{name}_{label}', record={'name':'qtt', 'label': 'generic'})
 
 def set_location_name(name, verbose=1):

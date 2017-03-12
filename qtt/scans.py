@@ -219,6 +219,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     wait_time = scanjob.get('wait_time', 0)
     t0 = time.time()
 
+    # LEGACY
+    instrument = scanjob.get('instrument', None)
+    if instrument is not None:
+        raise Exception('legacy argument instrument: use minstrument instead!')
+
     minstrument = scanjob.get('minstrument', None)
     if minstrument is None:
         # legacy code...
