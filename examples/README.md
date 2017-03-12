@@ -25,9 +25,15 @@ Viewer from instrument parameters:
 > qtt.parameterviewer.createParameterWidget([gates])
 ```
 
-
 Start measurement control unit:
 ```
 > qtt.live_plotting.start_measurement_control()
 ```
+
+Start data viewer:
+```
+import qtt.gui.dataviewer
+dv=qtt.gui.dataviewer.DataViewer(datadir=r'P:\data')
+```
+
 
