@@ -187,7 +187,7 @@ def start_measurement_control():
     lp = proc._import('qtt.live_plotting')
     mc = lp.MeasurementControl()
     
-    qtt._dummy_mc += mc
+    qtt._dummy_mc = mc
     #return mc    
 
 
