@@ -9,31 +9,21 @@ from imp import reload
 import sys
 import os
 import numpy as np
-import time; time.sleep(1e-3)
+import matplotlib
+import time;
 import pyqtgraph as pg
 import tempfile
 
-import multiprocessing as mp
-if __name__ == '__main__':
-    try:
-        mp.set_start_method('spawn')
-    except:
-        pass
-
 import qcodes
 import qcodes as qc
-import matplotlib
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
 
-
 import qtt
 import qtt.scans
-import qtt.qtt_toymodel
-import qtt.live
-from qtt.scans import scan1D
 import qtt.gui.dataviewer
 from qtt.parameterviewer import createParameterWidget
+from qtt.algorithms.gatesweep import analyseGateSweep
 
 # taskkill /F /IM python.exe
 
@@ -70,17 +60,12 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     qtapp = pg.mkQApp()
-
     qdatadir = os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')
     qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
     mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
-    if mwindows['parameterviewer'] is not None:
-        mwindows['parameterviewer'].callbacklist.append(mwindows['plotwindow'].update)
-    createParameterWidget([gates, ])
+    pv = createParameterWidget([gates, ])
     plotQ = mwindows['plotwindow']
-    qtt.live.liveplotwindow = plotQ
-    qtt.live.mwindows = mwindows
-
+    
     logviewer = qtt.gui.dataviewer.DataViewer()
     logviewer.show()
 
@@ -99,14 +84,11 @@ if __name__ == '__main__':
     scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .8, 'wait_time': 1e-3}), 'minstrument': [keithley3.amplitude]})
     data1d = qtt.scans.scan1D(station, scanjob, location=None, verbose=1)
 
-    data1d.sync()  # data.arrays
-
 
 #%% Print the scanned data
 
 if __name__ == '__main__':
-    p = qtt.scans.getDefaultParameter(data1d)
-    print(p)
+    print( data1d.default_parameter_name() )
 
 
 #%% Make a 2D scan
@@ -114,15 +96,13 @@ if __name__ == '__main__':
 
     reload(qtt.scans)
     start=-500
-    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': start, 'end': start+500, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-    scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start+500, 'step': 5.})
+    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': start, 'end': start+400, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+    scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start+400, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
 
 #%% Fit 1D pinch-off scan:
-
-from qtt.scans import analyseGateSweep
 
 if __name__ == '__main__':
     adata = analyseGateSweep(data1d, fig=100)
@@ -133,9 +113,6 @@ if __name__ == '__main__':
     qtt.scans.plotData(data, fig=30)
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
-
-    # TODO:
-    #def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
 
     
 #%% Send data to powerpoint

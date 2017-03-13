@@ -712,6 +712,8 @@ try:
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
 
+        qtt.live.liveplotwindow=plotQ
+        
         app = QtWidgets.QApplication.instance()
         app.processEvents()
 

@@ -91,8 +91,8 @@ if __name__ == '__main__':
             ''' Funny ... '''
             return False
     else:
-        import virtualV2 as msetup
-        from virtualV2 import sample
+        #import virtualV2 as msetup
+        #from virtualV2 import sample
         import virtualDot as msetup
         from virtualDot import sample
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-3-13c'
+    basetag = 'batch-2017-3-13d'
     Tvalues = np.array([-390])
 
     b = True
@@ -445,7 +445,7 @@ for ii, Tvalue in enumerate(Tvalues):
         basename = '%s-sweep-2d' % (od['name'])
         basenameplunger = '%s-sweep-plunger' % (od['name'])
         efileplunger = experimentFile(outputdir, tag='one_dot', dstr=basenameplunger)
-                
+
         if cache and os.path.exists(efileplunger) and 1:
             print('  skipping 2D and plunger scan of %s' % od['name'])
             continue
@@ -818,7 +818,3 @@ if __name__ == '__main__':
 
     print('##### 1dot_script_batch: generation of double-dot report complete...')
 
-#%%
-if __name__ == '__main__':
-
-    end(noerror=True)

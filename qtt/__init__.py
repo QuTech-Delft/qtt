@@ -2,12 +2,10 @@
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
 import copy
-import matplotlib
 import qcodes
 
 import qtt.live
 import qtt.tools
-
 import qtt.data
 import qtt.algorithms
 
