@@ -332,7 +332,7 @@ for ii, Tvalue in enumerate(Tvalues):
     #%% Perform sanity check on the channels
 
     for gate in qtt.tools.flatten([o['gates'] for o in one_dots]):
-        alldata = qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
+        alldata = qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, minstrument=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
 
     for od in sddots:
         ki = od['instrument']

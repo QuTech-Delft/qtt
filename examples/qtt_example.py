@@ -114,8 +114,8 @@ if __name__ == '__main__':
 
     reload(qtt.scans)
     start=-500
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': start, 'end': start+500, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-    scanjob['stepdata'] = dict({'gate': 'L', 'start': start, 'end': start+500, 'step': 5.})
+    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': start, 'end': start+500, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+    scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start+500, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))

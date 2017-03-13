@@ -82,17 +82,50 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 
     """
     stepdata = dict(
-        {'gates': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
+        {'param': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
     scanjob = dict({'stepdata': stepdata, 'keithleyidx': keithleyidx})
     if not g2 is None:
         sweepdata = dict(
-            {'gates': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
+            {'param': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
         scanjob['sweepdata'] = sweepdata
 
     return scanjob
 
 #%%
 
+from qcodes import StandardParameter, ManualParameter
+
+def parse_stepdata(stepdata):
+    """ Helper function for legacy code """
+    if not isinstance(stepdata, dict):
+        raise Exception('stepdata should be dict structure')
+
+    v = stepdata.get('gates', None)
+    if v is not None:
+        raise Exception('please use param instead of gates' )
+    v = stepdata.get('gate', None)
+    if v is not None:
+        warnings.warn('please use param instead of gates', DeprecationWarning )
+        stepdata['param']=stepdata['gate']
+        
+    v = stepdata.get('param', None)
+    if isinstance(v, (str, StandardParameter, ManualParameter) ):
+        pass
+    elif isinstance(v, list):
+        warnings.warn('please use string or Instrument instead of list' )
+        stepdata['param']=stepdata['param'][0]
+    
+     
+    return stepdata
+        
+def get_param(gates, sweepgate):
+    if isinstance(sweepgate, str):
+        return getattr(gates, sweepgate)
+    else:
+        # assume the argument already is a parameter
+        return sweepgate
+
+    
 from qtt.algorithms.generic import findCoulombDirection
 from qtt.data import dataset2Dmetadata, dataset2image
 
@@ -209,11 +242,13 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
     gates = station.gates
     gatevals = gates.allvalues()
-    sweepdata = scanjob['sweepdata']
-    gate = sweepdata.get('gate', None)
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
+    gate = sweepdata.get('param', None)
     if gate is None:
-        gate = sweepdata.get('gates')[0]
-    param = getattr(gates, gate)
+        raise Exception('set param in scanjob')
+
+    param = get_param(gates, gate)
+        
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
     wait_time = scanjob.get('wait_time', 0)
@@ -295,17 +330,14 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     """
     scanjob['scantype'] = 'scan1Dfast'
 
-    sweepdata = scanjob['sweepdata']
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
     Naverage = scanjob.get('Naverage', 20)
 
     gates = station.gates
     gatevals = gates.allvalues()
 
-    sweepgate = sweepdata.get('gate', None)
-    if sweepgate is None:
-        warnings.warn('This functionality is deprecated. Use gate as key.', DeprecationWarning)
-        sweepgate = sweepdata.get('gates')[0]
-    sweepparam = getattr(gates, sweepgate)
+    sweepgate = sweepdata['param']
+    sweepparam = get_param(gates, sweepgate)
 
     def readfunc(waveform, Naverage):
         fpga_ch = scanjob['sd'].fpga_ch
@@ -404,23 +436,21 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
     """
     scanjob['scantype'] = 'scan2D'
 
-    stepdata = scanjob['stepdata']
-    sweepdata = scanjob['sweepdata']
+    stepdata = parse_stepdata( scanjob['stepdata'] )
+    sweepdata = parse_stepdata( scanjob['sweepdata'] )
     minstrument = scanjob.get('minstrument', None)
     if minstrument is None:
+        warnings.warn('use minstrument instead of keithleyidx')
         minstrument = scanjob.get('keithleyidx', None)
 
     gates = station.gates
     gatevals = gates.allvalues()
-    sweepgate = sweepdata.get('gate', None)
-    if sweepgate is None:
-        sweepgate = sweepdata.get('gates')[0]
+    sweepgate = sweepdata.get('param', None)
 
-    stepgate = stepdata.get('gate', None)
-    if stepgate is None:
-        stepgate = stepdata.get('gates')[0]
-    param = getattr(gates, sweepgate)
-    stepparam = getattr(gates, stepgate)
+    stepgate = stepdata.get('param', None)
+    
+    param = get_param(gates, sweepgate)
+    stepparam = get_param(gates, stepgate)
 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
@@ -654,10 +684,10 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     """
     scanjob['scantype'] = 'scan2Dturbo'
     gatevals = station.gates.allvalues()
-    stepdata = scanjob['stepdata']
-    sweepdata = scanjob['sweepdata']
+    stepdata = parse_stepdata(scanjob['stepdata'])
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
 
-    sweepgates = [stepdata['gate'], sweepdata['gate']]
+    sweepgates = [stepdata['param'], sweepdata['param']]
     sweepranges = [stepdata['end'] - stepdata['start'], sweepdata['end'] - sweepdata['start']]
 
     sd = scanjob['sd']
@@ -770,7 +800,7 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
-def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
+def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
@@ -790,18 +820,17 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
     else:
         b = basevalues[gate]
     sweepdata = dict(
-        {'gates': [gate], 'start': max(b, 0), 'end': -750, 'step': -2})
+        {'param': gate, 'start': max(b, 0), 'end': -750, 'step': -2})
     if full == 0:
         sweepdata['step'] = -6
 
     scanjob = dict(
-        {'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'wait_time': stepdelay})
+        {'sweepdata': sweepdata, 'minstrument': minstrument, 'wait_time': stepdelay})
 
     station.gates.set(gate, sweepdata['start'])  # set gate to starting value
     time.sleep(stepdelay)
 
-    alldata = scan1D(scanjob, station, title_comment='scan gate %s' %
-                     gate, background=background)
+    alldata = scan1D(station, scanjob=scanjob)
 
     station.gates.set(gate, basevalues[gate])  # reset gate to base value
 
