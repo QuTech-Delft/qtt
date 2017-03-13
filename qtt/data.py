@@ -398,7 +398,7 @@ class image_transform:
         
         """
         self.H = np.eye(3)  # raw image to pixel image transformation
-        self.extent = []  # image extent in pixel
+        self.extent = None  # image extent in pixel
         self.verbose = verbose
         self.dataset = dataset
         extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -489,6 +489,9 @@ class image_transform:
         self.extent = extentImage
         return extentImage
 
+    def transform_image(self, im):
+        return self._transform(im)
+        
     def _transform(self, im):
         """ Transform raw image to image in pixel coordinates such that the imageExtent is increasing
 

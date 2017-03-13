@@ -178,7 +178,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-23b'
+    basetag = 'batch-2017-3-13c'
     Tvalues = np.array([-390])
 
     b = True
@@ -264,7 +264,7 @@ if __name__ == '__main__':
 from qtt.legacy import onedotPlungerScan
 
 
-#alldataplunger=onedotPlungerScan(station, od, verbose=1)
+#alldataplunger=onedotPlungerScan(station, obasenamedotd, verbose=1)
 
 def stop_AWG(station):
     print('this is a dummy function!')
@@ -429,6 +429,7 @@ for ii, Tvalue in enumerate(Tvalues):
         od = loadExperimentData(outputdir, tag='one_dot', dstr=basenamedot)
 
         ww = getODbalancepoint(od)
+        print('gate %s: basevalue to %.1f' % (od['gates'][0], ww[1]))
         basevaluesS[od['gates'][0]] = float(ww[1])
         basevaluesS[od['gates'][2]] = float(ww[0])
 
@@ -444,6 +445,7 @@ for ii, Tvalue in enumerate(Tvalues):
         basename = '%s-sweep-2d' % (od['name'])
         basenameplunger = '%s-sweep-plunger' % (od['name'])
         efileplunger = experimentFile(outputdir, tag='one_dot', dstr=basenameplunger)
+                
         if cache and os.path.exists(efileplunger) and 1:
             print('  skipping 2D and plunger scan of %s' % od['name'])
             continue
