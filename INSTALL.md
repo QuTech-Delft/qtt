@@ -64,10 +64,10 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-(temporary) Go to the Qcodes directory and checkout the branch `sq3`
+(temporary) Go to the Qcodes directory and checkout the branch `sq8`
 ```
 > cd [MYLOCALDIR]/Qcodes
-> git checkout sq3
+> git checkout sq8
 ```
 
 ## Install packages
