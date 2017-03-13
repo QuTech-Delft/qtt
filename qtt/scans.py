@@ -42,7 +42,7 @@ def checkReversal(im0, verbose=0):
     mval = np.mean(im0)
 
     # meanopen = np.mean(im0[:,:])
-    fr=thr<mval
+    fr = thr < mval
     #fr = thr < 0
     if verbose:
         print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
@@ -234,7 +234,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     Args:
         station (object): contains all data on the measurement station
         scanjob (dict): data for scan
-        
+
     Returns:
         alldata (DataSet): contains the measurement data and metadata
     """
@@ -251,7 +251,8 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
         
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
-    wait_time = scanjob.get('wait_time', 0)
+    wait_time = sweepdata.get('wait_time', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     t0 = time.time()
 
     # LEGACY
@@ -265,11 +266,10 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
         minstrument = scanjob.get('keithleyidx', None)
     params = getParams(station, minstrument)
 
-
     logging.debug('wait_time: %s' % str(wait_time))
 
     loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
-   
+
     alldata = loop.get_data_set(location=location, loc_record={'label': 'scan1D'})
 
     if liveplotwindow is None:
@@ -287,6 +287,9 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
                 print('scan1D: myupdate: %.3f ' % (time.time() - t0))
 
         loop = loop.with_bg_task(myupdate, min_delay=1.8)
+
+    gates.set(gate, sweepdata['start'])
+    qtt.time.sleep(wait_time_startscan)
     alldata = loop.run()
     alldata.sync()
     dt = time.time() - t0
@@ -298,7 +301,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
-
 
     alldata.write(write_metadata=True)
 
@@ -355,6 +357,8 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
 
     sweepparam.set(float(sweepgate_value))
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
+    qtt.time.sleep(wait_time_startscan)
 
     data = readfunc(waveform, Naverage)
     alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
@@ -412,15 +416,14 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 #%%
 
 
-
 def delta_time(tprev, thr=2):
     """ Helper function to prevent too many updates """
     t = time.time()
-    update=0
+    update = 0
     delta = t - tprev
     if delta > thr:
         tprev = t
-        update=1
+        update = 1
     return delta, tprev, update
 
 
@@ -455,10 +458,12 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
 
-    wait_time = scanjob.get('wait_time', 0)
-    wait_time_step = scanjob.get('wait_time_step', 4 * wait_time)
+    wait_time_sweep = sweepdata.get('wait_time', 0)
+    wait_time_step = stepdata.get('wait_time', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
-    logging.info('scan2D: wait_time %f' % wait_time)
+    logging.info('scan2D: wait_time_sweep %f' % wait_time_sweep)
+    logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
     params = getParams(station, minstrument)
     alldata = makeDataSet2D(stepvalues, sweepvalues, location=location, loc_record={'label': 'scan2D'})
@@ -479,12 +484,15 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
         else:
             stepvalues.set(x)
-
         for iy, y in enumerate(sweepvalues):
             sweepvalues.set(y)
             if iy == 0:
-                qtt.time.sleep(wait_time_step)
-            time.sleep(wait_time)
+                if ix == 0:
+                    qtt.time.sleep(wait_time_startscan)
+                else:
+                    qtt.time.sleep(wait_time_step)
+            else:
+                time.sleep(wait_time_sweep)
 
             value = params[0].get()
             alldata.measured.ndarray[ix, iy] = value
@@ -502,13 +510,13 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
 
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
-        
+
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
-    
+
     alldata.write(write_metadata=True)
 
     return alldata
@@ -527,7 +535,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     Args:
         station (object): contains all the instruments
         scanjob (dict): data for scan
-        
+
     Returns:
         alldata (DataSet): contains the measurement data and metadata
     """
@@ -537,8 +545,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
 
-    wait_time = scanjob.get('wait_time', 0)
-    wait_time_startscan = scanjob.get('wait_time_startscan', 2.0 + 4 * wait_time)
+    wait_time = stepdata.get('wait_time', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
     gates = station.gates
     gatevals = gates.allvalues()
@@ -576,10 +584,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
             gates.set(g, gates.get(g) + (stepdata['start'] - stepdata['end']) * scanjob['gates_vert'][g] / 2)
             scanjob['gates_vert_init'][g] = gates.get(g)
     else:
-        stepparam.set(stepdata['start'])
         sweepparam.set(float(sweepgate_value))
-
-    qtt.time.sleep(wait_time_startscan)
 
     data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
@@ -609,7 +614,10 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
         else:
             stepvalues.set(x)
-        qtt.time.sleep(wait_time)
+        if ix == 0:
+            qtt.time.sleep(wait_time_startscan)
+        else:
+            qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
 
         if liveplotwindow is not None:
@@ -633,7 +641,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
-    
+
     alldata.write(write_metadata=True)
 
     return alldata
@@ -687,8 +695,8 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     stepdata = parse_stepdata(scanjob['stepdata'])
     sweepdata = parse_stepdata(scanjob['sweepdata'])
 
-    sweepgates = [stepdata['param'], sweepdata['param']]
-    sweepranges = [stepdata['end'] - stepdata['start'], sweepdata['end'] - sweepdata['start']]
+    sweepgates = [sweepdata['param'], stepdata['param']]
+    sweepranges = [sweepdata['end'] - sweepdata['start'], stepdata['end'] - stepdata['start']]
 
     sd = scanjob['sd']
     Naverage = scanjob.get('Naverage', 20)
@@ -702,7 +710,13 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
 
     t0 = qtt.time.time()
 
+    station.gates.set(stepdata['gate'], (stepdata['end'] + stepdata['start']) / 2)
+    station.gates.set(sweepdata['gate'], (sweepdata['end'] + sweepdata['start']) / 2)
+
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
+
     waveform, sweep_info = station.awg.sweep_2D(fpga_samp_freq, sweepgates, sweepranges, resolution)
+    qtt.time.sleep(wait_time_startscan)
     waittime = resolution[0] * resolution[1] * Naverage / fpga_samp_freq
 
     ReadDevice = ['FPGA_ch%d' % fpga_ch]
@@ -727,6 +741,7 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     return alldata
 
 #%%
+
 
 @deprecated
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):

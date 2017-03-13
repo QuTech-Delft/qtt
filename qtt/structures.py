@@ -269,17 +269,16 @@ class sensingdot_t:
 
         return (sdstart, sdend, sdmiddle)
 
-    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, fig=201, sleeptime=2, delete=True):
+    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None, fig=201, sleeptime=2, delete=True):
         """Fast tuning of the sensing dot plunger."""
         waveform, sweep_info = self.station.awg.sweep_gate(
             self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
-        # time for AWG to settle
+        # time for AWG signal to reach the sample
         qtt.time.sleep(sleeptime)
 
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
-            Naverage=Naverage, ReadDevice=ReadDevice)
+        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
 
         self.station.awg.stop()
 
@@ -291,10 +290,9 @@ class sensingdot_t:
 
         sdplg = getattr(self.station.gates, self.gg[1])
         initval = sdplg.get()
-        sweepvalues = sdplg[initval - sweeprange /
-                            2:sweeprange / 2 + initval:sweeprange / len(data)]
+        sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
 
-        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data)
+        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
         alldata.add_metadata({'scanjob': None})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
