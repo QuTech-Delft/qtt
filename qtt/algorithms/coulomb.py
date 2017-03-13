@@ -4,11 +4,11 @@ import qcodes
 from qtt.scans import scan1D
 import qtt.data
 
-import qtt.pmatlab as pmatlab
+import qtt.pgeometry as pmatlab
 import matplotlib.pyplot as plt
 from qtt.algorithms.generic import *
 from qtt.algorithms.generic import issorted
-from qtt.tools import logistic
+from qtt.algorithms.functions import logistic
 
 #%%
 

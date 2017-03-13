@@ -42,9 +42,9 @@ except:
         #warnings.warn('module descartes not found')
         _linetoolswarn = True
 
-from qtt import pmatlab
-from qtt.pmatlab import *
-from qtt import pmatlab as pgeometry
+from qtt import pgeometry as pmatlab
+from qtt.pgeometry import *
+from qtt import pgeometry
 import cv2
 
 try:

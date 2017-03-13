@@ -99,8 +99,7 @@ def defaultVmatrix(n):
     return VmatrixF
 
 #%% FIXME: move into other submodule
-# import pmatlab # FIXME
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 
 
 class GateTransform:

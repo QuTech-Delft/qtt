@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 from qtt.tools import tilefigs
 import qtt.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
-import qtt.algorithms.onedot # import onedotGetBalanceFine
+import qtt.algorithms.onedot  # import onedotGetBalanceFine
 import qtt.live
+from qtt.tools import deprecated
 
-#from qtt.data import *
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 from qcodes.utils.helpers import tprint
@@ -42,7 +42,7 @@ def checkReversal(im0, verbose=0):
     mval = np.mean(im0)
 
     # meanopen = np.mean(im0[:,:])
-    fr=thr<mval
+    fr = thr < mval
     #fr = thr < 0
     if verbose:
         print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
@@ -82,17 +82,51 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 
     """
     stepdata = dict(
-        {'gates': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
-    scanjob = dict({'stepdata': stepdata, 'keithleyidx': keithleyidx})
+        {'param': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
+    scanjob = dict({'stepdata': stepdata, 'minstrument': keithleyidx})
     if not g2 is None:
         sweepdata = dict(
-            {'gates': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
+            {'param': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
         scanjob['sweepdata'] = sweepdata
 
     return scanjob
 
 #%%
 
+from qcodes import StandardParameter, ManualParameter
+
+def parse_stepdata(stepdata):
+    """ Helper function for legacy code """
+    if not isinstance(stepdata, dict):
+        raise Exception('stepdata should be dict structure')
+
+    v = stepdata.get('gates', None)
+    if v is not None:
+        raise Exception('please use param instead of gates' )
+    v = stepdata.get('gate', None)
+    if v is not None:
+        warnings.warn('please use param instead of gates', DeprecationWarning )
+        stepdata['param']=stepdata['gate']
+        
+    v = stepdata.get('param', None)
+    if isinstance(v, (str, StandardParameter, ManualParameter) ):
+        pass
+    elif isinstance(v, list):
+        warnings.warn('please use string or Instrument instead of list' )
+        stepdata['param']=stepdata['param'][0]
+    
+    # TODO: implement range argument
+    
+    return stepdata
+        
+def get_param(gates, sweepgate):
+    if isinstance(sweepgate, str):
+        return getattr(gates, sweepgate)
+    else:
+        # assume the argument already is a parameter
+        return sweepgate
+
+    
 from qtt.algorithms.generic import findCoulombDirection
 from qtt.data import dataset2Dmetadata, dataset2image
 
@@ -108,14 +142,15 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     keithleyidx = [od['instrument']]
     scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
                               'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
-    scanjobhi['keithleyidx'] = keithleyidx
+    scanjobhi['minstrument'] = keithleyidx
     scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], -780)
     scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
 
     wait_time = qtt.scans.waitTime(od['gates'][2], station=station)
-    scanjobhi['wait_time_step'] = qtt.scans.waitTime(None, station) + 3 * wait_time
+    scanjobhi['sweepdata']['wait_time'] = wait_time
+    scanjobhi['stepdata']['wait_time'] = qtt.scans.waitTime(None, station) + 3 * wait_time
 
-    alldatahi = qtt.scans.scan2D(station, scanjobhi, wait_time=wait_time, background=False)
+    alldatahi = qtt.scans.scan2D(station, scanjobhi)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         alldatahi, verbose=0, arrayname=None)
     impixel, tr = dataset2image(alldatahi, mode='pixel')
@@ -195,104 +230,83 @@ def getDefaultParameter(data):
 #%%
 
 
-def scan1D(scanjob, station, location=None, liveplotwindow=None, background=False, title_comment=None, wait_time=None, verbose=1):
-    ''' Simple 1D scan '''
-    gates = station.gates
-    sweepdata = scanjob['sweepdata']
-    gate = sweepdata.get('gate', None)
-    if gate is None:
-        gate = sweepdata.get('gates')[0]
-    param = getattr(gates, gate)
-    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
+    """Simple 1D scan. 
 
+    Args:
+        station (object): contains all data on the measurement station
+        scanjob (dict): data for scan
+
+    Returns:
+        alldata (DataSet): contains the measurement data and metadata
+    """
     scanjob['scantype'] = 'scan1D'
 
-    if wait_time is None:
-        wait_time = scanjob.get('wait_time', 0)
+    gates = station.gates
+    gatevals = gates.allvalues()
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
+    gate = sweepdata.get('param', None)
+    if gate is None:
+        raise Exception('set param in scanjob')
+
+    param = get_param(gates, gate)
+        
+    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+
+    wait_time = sweepdata.get('wait_time', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     t0 = time.time()
 
-    # legacy code...
-    minstrument = scanjob.get('instrument', None)
+    # LEGACY
+    instrument = scanjob.get('instrument', None)
+    if instrument is not None:
+        raise Exception('legacy argument instrument: use minstrument instead!')
+
+    minstrument = scanjob.get('minstrument', None)
     if minstrument is None:
+        # legacy code...
         minstrument = scanjob.get('keithleyidx', None)
     params = getParams(station, minstrument)
 
-    # station.set_measurement(*params)
+    logging.debug('wait_time: %s' % str(wait_time))
 
-    if background:
-        data_manager = True
-    else:
-        data_manager = False
-        background = False
+    loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
+
+    alldata = loop.get_data_set(location=location, loc_record={'label': 'scan1D'})
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
+    if liveplotwindow is not None:
+        liveplotwindow.clear()
+        liveplotwindow.add(alldata.default_parameter_array())
 
-    logging.debug('wait_time: %s' % str(wait_time))
-    if verbose:
-        print('scan1D: starting Loop (background %s)' % background)
+    if liveplotwindow is not None:
+        def myupdate():
+            t0 = time.time()
+            liveplotwindow.update()
+            # QtWidgets.QApplication.processEvents()
+            if verbose >= 2:
+                print('scan1D: myupdate: %.3f ' % (time.time() - t0))
 
-    if background:
-        if verbose >= 2:
-            print('scan1D: background %s, data_manager %s' % (background, data_manager))
-        loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
-        loop.background_functions = dict({'qt': pg.mkQApp().processEvents})
-        data = loop.run(location=location, data_manager=data_manager, background=background)
-        if liveplotwindow is not None:
-            time.sleep(.1)
-            data.sync()  # wait for at least 1 data point
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(data))
-        data.complete(delay=.25)
-        data.sync()
-        dt = -1
-        if qcodes.get_bg() is not None:
-            logging.info('background measurement not completed')
-            time.sleep(.1)
+        loop = loop.with_bg_task(myupdate, min_delay=1.8)
 
-        logging.info('scan1D: running %s' % (str(data.location),))
-    else:
-        # run with live plotting loop
-        loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
-        print('loop.data_set: %s' % loop.data_set)
-        print('background: %s, data_managr %s' % (background, data_manager))
-        data = loop.get_data_set(data_manager=data_manager, location=location)
+    gates.set(gate, sweepdata['start'])
+    qtt.time.sleep(wait_time_startscan)
+    alldata = loop.run()
+    alldata.sync()
+    dt = time.time() - t0
 
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(data.default_parameter_array())
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
 
-        dt = time.time() - t0
-        if liveplotwindow is not None:
-            def myupdate():
-                t0 = time.time()
-                liveplotwindow.update()
-                # QtWidgets.QApplication.processEvents()
-                if verbose >= 2:
-                    print('scan1D: myupdate: %.3f ' % (time.time() - t0))
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
-            data = loop.with_bg_task(myupdate, min_delay=1.8).run(background=background)
-        else:
-            data = loop.run(background=background)
-        data.sync()
+    logging.info('scan1D: done %s' % (str(alldata.location),))
 
-    if not hasattr(data, 'metadata'):
-        data.metadata = dict()
+    alldata.write(write_metadata=True)
 
-    # add metadata
-    metadata = data.metadata
-    metadata['allgatevalues'] = gates.allvalues()
-    metadata['scantime'] = str(datetime.datetime.now())
-    metadata['dt'] = dt
-    metadata['scanparams'] = {'wait_time': wait_time}
-    metadata['scanjob'] = scanjob
-    metadata['scanjob']['instrument'] = 'dummy'  # FIXME
-
-    logging.info('scan1D: done %s' % (str(data.location),))
-
-    data.write(write_metadata=True)
-
-    return data
+    return alldata
 
 
 if __name__ == '__main__':
@@ -305,6 +319,66 @@ if __name__ == '__main__':
     data1d = qtt.scans.scan1D(scanjob, station, location=None, background=None)
 
     data1d.sync()  # data.arrays
+
+
+#%%
+def scan1Dfast(station, scanjob, location=None, verbose=1):
+    """Fast 1D scan. 
+
+    Args:
+        station (object): contains all data on the measurement station
+        scanjob (dict): data for scan
+
+    Returns:
+        alldata (DataSet): contains the measurement data and metadata
+    """
+    scanjob['scantype'] = 'scan1Dfast'
+
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
+    Naverage = scanjob.get('Naverage', 20)
+
+    gates = station.gates
+    gatevals = gates.allvalues()
+
+    sweepgate = sweepdata['param']
+    sweepparam = get_param(gates, sweepgate)
+
+    def readfunc(waveform, Naverage):
+        fpga_ch = scanjob['sd'].fpga_ch
+        ReadDevice = ['FPGA_ch%d' % fpga_ch]
+        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
+        data = station.awg.sweep_process(data_raw, waveform, Naverage)
+        return data
+
+    sweeprange = (sweepdata['end'] - sweepdata['start'])
+    period = scanjob['sweepdata'].get('period', 1e-3)
+    sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
+
+    t0 = qtt.time.time()
+
+    waveform, sweep_info = station.awg.sweep_gate(sweepgate, sweeprange, period)
+
+    sweepparam.set(float(sweepgate_value))
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
+    qtt.time.sleep(wait_time_startscan)
+
+    data = readfunc(waveform, Naverage)
+    alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
+                                   fig=None, location=location, loc_record={'label': 'scan1Dfast'})
+
+    station.awg.stop()
+
+    dt = time.time() - t0
+
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
+
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
+
+    alldata.write(write_metadata=True)
+
+    return alldata
 
 #%%
 
@@ -344,175 +418,59 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 #%%
 
 
-def scan2Dold(station, scanjob, title_comment='', liveplotwindow=None, wait_time=None, background=False, verbose=1):
-    """ Make a 2D scan and create dictionary to store on disk
-
-    Args:
-        station (object): contains all data on the measurement station
-        scanjob (dict): data for scan range
-    """
-
-    stepdata = scanjob['stepdata']
-    sweepdata = scanjob['sweepdata']
-    minstrument = scanjob.get('instrument', None)
-    if minstrument is None:
-        minstrument = scanjob.get('keithleyidx', None)
-
-    if verbose:
-        logging.info('scan2D: todo: implement compensategates')
-        logging.info('scan2D: todo: implement wait_time')
-
-    delay = scanjob.get('delay', 0.0)
-    if wait_time is not None:
-        delay = wait_time
-
-    gates = station.gates
-
-    sweepgate = sweepdata.get('gate', None)
-    if sweepgate is None:
-        sweepgate = sweepdata.get('gates')[0]
-
-    stepgate = stepdata.get('gate', None)
-    if stepgate is None:
-        stepgate = stepdata.get('gates')[0]
-    param = getattr(gates, sweepgate)
-    stepparam = getattr(gates, stepgate)
-
-    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
-    stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
-
-    logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
-    logging.info('scan2D: delay %f' % delay)
-    steploop = qc.Loop(stepvalues, delay=delay, progress_interval=2)
-
-    t0 = time.time()
-    fullloop = steploop.loop(sweepvalues, delay=delay)
-
-    params = getParams(station, minstrument)
-    loop = fullloop.each(*params)
-
-    if background is None:
-        try:
-            gates._server_name
-            background = True
-        except:
-            background = False
-
-    if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
-
-    if background:
-        if verbose >= 2:
-            print('background %s, data_manager %s' % (background, '[default]'))
-        # alldata=loop.get_data_set() # use default data_manager
-        alldata = loop.run(background=background, data_manager=True)
-
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(alldata))
-        alldata.background_functions = dict({'qt': pg.mkQApp().processEvents})
-        alldata.complete(delay=.5)
-        #print('complete: %.3f' % alldata.fraction_complete() )
-        wait_bg_finish(verbose=verbose >= 2)
-    else:
-        data_manager = False
-        alldata = loop.get_data_set(data_manager=data_manager)
-
-        if liveplotwindow is not None:
-            liveplotwindow.clear()
-            liveplotwindow.add(getDefaultParameter(alldata))
-
-        def myupdate():
-            t0 = time.time()
-            liveplotwindow.update()
-            # plt.pause(1e-5)
-
-            # QtWidgets.QApplication.processEvents()
-            if verbose >= 2:
-                print('myupdate: %.3f ' % (time.time() - t0))
-
-        alldata = loop.with_bg_task(myupdate, min_delay=.4).run(background=background)
-
-    dt = time.time() - t0
-
-    if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
-
-    alldata.add_metadata({'station': station.snapshot()})
-
-    alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gates.allvalues()
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
-    alldata.metadata['dt'] = dt
-    alldata.metadata['wait_time'] = wait_time
-
-    alldata.write()
-
-    return alldata
-
-
 def delta_time(tprev, thr=2):
     """ Helper function to prevent too many updates """
     t = time.time()
+    update = 0
     delta = t - tprev
     if delta > thr:
         tprev = t
-    return delta, tprev
+        update = 1
+    return delta, tprev, update
 
 
-def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=False, diff_dir=None, verbose=1):
-    """ Make a 2D scan and create dictionary to store on disk
+def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
+    """Make a 2D scan and create dictionary to store on disk.
 
     Args:
-        station (object): contains all data on the measurement station
-        scanjob (dict): data for scan range
+        station (object): contains all the instruments
+        scanjob (dict): data for scan
 
     Returns:
-        alldata (DataSet)
+        alldata (DataSet): contains the measurement data and metadata
     """
-
     scanjob['scantype'] = 'scan2D'
 
-    stepdata = scanjob['stepdata']
-    sweepdata = scanjob['sweepdata']
-    minstrument = scanjob.get('instrument', None)
+    stepdata = parse_stepdata( scanjob['stepdata'] )
+    sweepdata = parse_stepdata( scanjob['sweepdata'] )
+    minstrument = scanjob.get('minstrument', None)
     if minstrument is None:
+        warnings.warn('use minstrument instead of keithleyidx')
         minstrument = scanjob.get('keithleyidx', None)
 
     gates = station.gates
-    # get the gates to step and sweep
-    sweepgate = sweepdata.get('gate', None)
-    if sweepgate is None:
-        sweepgate = sweepdata.get('gates')[0]
+    gatevals = gates.allvalues()
+    sweepgate = sweepdata.get('param', None)
 
-    stepgate = stepdata.get('gate', None)
-    if stepgate is None:
-        stepgate = stepdata.get('gates')[0]
-    param = getattr(gates, sweepgate)
-    stepparam = getattr(gates, stepgate)
+    stepgate = stepdata.get('param', None)
+    
+    param = get_param(gates, sweepgate)
+    stepparam = get_param(gates, stepgate)
 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
 
-    # get the delays
-    if wait_time is None:
-        wait_time = scanjob.get('wait_time', None)
-        if wait_time is None:
-            wait_time = waitTime(sweepgate) / 2.
-            wait_time = waitTime(sweepgate, station=station) / 8.
-
-    wait_time_step = scanjob.get('wait_time_step', 4 * wait_time)
+    wait_time_sweep = sweepdata.get('wait_time', 0)
+    wait_time_step = stepdata.get('wait_time', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
-    logging.info('scan2D: wait_time %f' % wait_time)
+    logging.info('scan2D: wait_time_sweep %f' % wait_time_sweep)
+    logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
     params = getParams(station, minstrument)
-
-    alldata = makeDataSet2D(stepvalues, sweepvalues)
+    alldata = makeDataSet2D(stepvalues, sweepvalues, location=location, loc_record={'label': 'scan2D'})
 
     t0 = qtt.time.time()
-
-    if background:
-        warnings.warn('scan2D: background running not implemented, running in foreground')
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
@@ -528,41 +486,40 @@ def scan2D(station, scanjob, liveplotwindow=None, wait_time=None, background=Fal
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
         else:
             stepvalues.set(x)
-
         for iy, y in enumerate(sweepvalues):
             sweepvalues.set(y)
             if iy == 0:
-                qtt.time.sleep(wait_time_step)
-            time.sleep(wait_time)
+                if ix == 0:
+                    qtt.time.sleep(wait_time_startscan)
+                else:
+                    qtt.time.sleep(wait_time_step)
+            else:
+                time.sleep(wait_time_sweep)
 
             value = params[0].get()
             alldata.measured.ndarray[ix, iy] = value
 
         if ix == len(stepvalues) - 1 or ix % 5 == 0:
-            delta, tprev = delta_time(tprev, thr=2)
-            if delta > 2 and liveplotwindow is not None:
+            delta, tprev, update = delta_time(tprev, thr=.2)
+            if update and liveplotwindow is not None:
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
 
+        if qtt.abort_measurements():
+            print('  aborting measurement loop')
+            break
     dt = qtt.time.time() - t0
-
-    if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
 
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
 
-    alldata.add_metadata({'station': station.snapshot()})
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt,
-                      scantime=str(datetime.datetime.now()), wait_time=wait_time)
-    update_dictionary(alldata.metadata, allgatevalues = gates.allvalues(), scanparams={'wait_time': wait_time} )
-    
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
     alldata.write(write_metadata=True)
-    # print(type(scanjob['stepdata']['start']))
-    # print(type(alldata.metadata['scanjob']['stepdata']['start']))
-    # return alldata, alldata.metadata['scanjob']['stepdata']['start']
 
     return alldata
 
@@ -574,14 +531,15 @@ if __name__ == '__main__':
 
 
 #%%
-def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background=None, diff_dir=None, verbose=1):
-    """ Make a 2D scan and create qcodes dataset to store on disk
+def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
+    """Make a 2D scan and create qcodes dataset to store on disk.
 
-    Arguments:
-        station (qcodes.station.Station): contains all data on the measurement station
-        scanjob (dict): data for scan range
+    Args:
+        station (object): contains all the instruments
+        scanjob (dict): data for scan
+
     Returns:
-        alldata (qcodes.data.data_set.DataSet): measurement data and metadata
+        alldata (DataSet): contains the measurement data and metadata
     """
     scanjob['scantype'] = 'scan2Dfast'
 
@@ -589,13 +547,11 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
     sweepdata = scanjob['sweepdata']
     Naverage = scanjob.get('Naverage', 20)
 
-    if wait_time is None:
-        wait_time = scanjob.get('wait_time', 0.5)
-
-    wait_time_startloop = scanjob.get('wait_time_startloop', 2.0 + 4 * wait_time)
+    wait_time = stepdata.get('wait_time', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
     gates = station.gates
-    gvs = gates.allvalues()
+    gatevals = gates.allvalues()
 
     sweepgate = sweepdata.get('gate', None)
     if sweepgate is None:
@@ -616,7 +572,6 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
         return data
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
-    # sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 60)  # FIXME
     period = scanjob['sweepdata'].get('period', 1e-3)
     sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
 
@@ -631,10 +586,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
             gates.set(g, gates.get(g) + (stepdata['start'] - stepdata['end']) * scanjob['gates_vert'][g] / 2)
             scanjob['gates_vert_init'][g] = gates.get(g)
     else:
-        stepparam.set(stepdata['start'])
         sweepparam.set(float(sweepgate_value))
-
-    qtt.time.sleep(wait_time_startloop)
 
     data = readfunc(waveform, Naverage)
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
@@ -647,10 +599,7 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
 
     t0 = qtt.time.time()
 
-    if background:
-        warnings.warn('scan2D: background running not implemented, running in foreground')
-
-    alldata = makeDataSet2D(stepvalues, sweepvalues)
+    alldata = makeDataSet2D(stepvalues, sweepvalues, location=location, loc_record={'label': 'scan2Dfast'})
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
@@ -667,32 +616,33 @@ def scan2Dfast(station, scanjob, liveplotwindow=None, wait_time=None, background
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
         else:
             stepvalues.set(x)
-        qtt.time.sleep(wait_time)
+        if ix == 0:
+            qtt.time.sleep(wait_time_startscan)
+        else:
+            qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
+
         if liveplotwindow is not None:
-            delta, tprev = delta_time(tprev, thr=2)
-            if delta > 2:
+            delta, tprev, update = delta_time(tprev, thr=2)
+            if update:
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
+        if qtt.abort_measurements():
+            print('  aborting measurement loop')
+            break
 
     station.awg.stop()
 
     dt = qtt.time.time() - t0
 
-    if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
-
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
 
-    # add the station metadata
-    alldata.add_metadata({'station': station.snapshot()})
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
 
-    alldata.metadata['scanjob'] = scanjob
-    alldata.metadata['allgatevalues'] = gvs
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
-    alldata.metadata['dt'] = dt
-    alldata.metadata['wait_time'] = wait_time
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
     alldata.write(write_metadata=True)
 
@@ -729,27 +679,46 @@ def plotData(alldata, diff_dir=None, fig=1):
 #%%
 
 
-def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 90], Naverage=1000, verbose=1):
-    """ Perform a very fast 2d scan by varying two physical gates with the AWG.
+def scan2Dturbo(station, scanjob, location=None, verbose=1):
+    """Perform a very fast 2d scan by varying two physical gates with the AWG.
+
+    The function assumes the station contains an FPGA with readFPGA function. 
+        The FPGA channel is determined form the sensing dot.
 
     Args:
-        station (qcodes.station.Station): contains all data on the measurement station
-        sd (qtt.structures.sensingdot_t): describes the sensing dot
-        sweepgates (2 x 1 list): first the gate to sweep very fast and then the gate to sweep fast
+        station (object): contains all the instruments
+        scanjob (dict): data for scan
 
     Returns:
-        alldata (qcodes.data.data_set.DataSet): measurement data and metadata
-
-    Note: the function assumes the station contains an FPGA with readFPGA function. The FPGA channel  is determined form the sensing dot.
-
+        alldata (DataSet): contains the measurement data and metadata
     """
+    scanjob['scantype'] = 'scan2Dturbo'
+    gatevals = station.gates.allvalues()
+    stepdata = parse_stepdata(scanjob['stepdata'])
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
+
+    sweepgates = [sweepdata['param'], stepdata['param']]
+    sweepranges = [sweepdata['end'] - sweepdata['start'], stepdata['end'] - stepdata['start']]
+
+    sd = scanjob['sd']
+    Naverage = scanjob.get('Naverage', 20)
+    resolution = scanjob.get('resolution', [90, 90])
+
     if verbose:
         print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
 
     fpga_ch = sd.fpga_ch
     fpga_samp_freq = station.fpga.get_sampling_frequency()
 
+    t0 = qtt.time.time()
+
+    station.gates.set(stepdata['gate'], (stepdata['end'] + stepdata['start']) / 2)
+    station.gates.set(sweepdata['gate'], (sweepdata['end'] + sweepdata['start']) / 2)
+
+    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
+
     waveform, sweep_info = station.awg.sweep_2D(fpga_samp_freq, sweepgates, sweepranges, resolution)
+    qtt.time.sleep(wait_time_startscan)
     waittime = resolution[0] * resolution[1] * Naverage / fpga_samp_freq
 
     ReadDevice = ['FPGA_ch%d' % fpga_ch]
@@ -759,22 +728,24 @@ def scan2Dturbo(station, sd, sweepgates, sweepranges=[40, 40], resolution=[90, 9
 
     dataread = [DataRead_ch1, DataRead_ch2][fpga_ch - 1]
     data = station.awg.sweep_2D_process(dataread, waveform)
-    alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges)
+    alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges, location=location, loc_record={'label': 'scan2Dturbo'})
 
-    scanjob = {}
-    scanjob['scantype'] = 'scan2Dturbo'
+    dt = qtt.time.time() - t0
 
-    alldata.metadata['allgatevalues'] = station.gates.allvalues()
-    alldata.metadata['scantime'] = str(datetime.datetime.now())
-    alldata.metadata['fpga_samp_freq'] = fpga_samp_freq
-    alldata.metadata['scanjob'] = scanjob
-    alldata.write()
+    if not hasattr(alldata, 'metadata'):
+        alldata.metadata = dict()
+
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
+
+    alldata.write(write_metadata=True)
 
     return alldata
 
 #%%
 
 
+@deprecated
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 
@@ -846,7 +817,7 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
-def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
+def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
@@ -866,18 +837,17 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, keithleyidx=[1], s
     else:
         b = basevalues[gate]
     sweepdata = dict(
-        {'gates': [gate], 'start': max(b, 0), 'end': -750, 'step': -2})
+        {'param': gate, 'start': max(b, 0), 'end': -750, 'step': -2})
     if full == 0:
         sweepdata['step'] = -6
 
     scanjob = dict(
-        {'sweepdata': sweepdata, 'keithleyidx': keithleyidx, 'wait_time': stepdelay})
+        {'sweepdata': sweepdata, 'minstrument': minstrument, 'wait_time': stepdelay})
 
     station.gates.set(gate, sweepdata['start'])  # set gate to starting value
     time.sleep(stepdelay)
 
-    alldata = scan1D(scanjob, station, title_comment='scan gate %s' %
-                     gate, background=background)
+    alldata = scan1D(station, scanjob=scanjob)
 
     station.gates.set(gate, basevalues[gate])  # reset gate to base value
 
@@ -908,12 +878,12 @@ from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 #%%
 
 
-def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None):
-    ''' Convert the data of a 1D sweep to a DataSet
+def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None, location=None, loc_record=None):
+    """Convert the data of a 1D sweep to a DataSet.
 
     Note: sweepvalues are only an approximation
 
-    '''
+    """
     if sweepgate_value is None:
         if gates is not None:
             sweepgate_param = gates.getattr(sweepgate)
@@ -922,7 +892,8 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=N
             raise Exception('No gates supplied')
 
     sweepvalues = np.linspace(sweepgate_value - sweeprange / 2, sweepgate_value + sweeprange / 2, len(data))
-    dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured', y=data)
+    dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
+                                 y=data, location=location, loc_record=loc_record)
 
     if fig is None:
         return dataset, None
@@ -931,8 +902,8 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=N
         return dataset, plot
 
 
-def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
-    ''' Convert the data of a 2D sweep to a DataSet '''
+def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, location=None, loc_record=None, fig=None):
+    """Convert the data of a 2D sweep to a DataSet."""
 
     gate_horz = getattr(gates, sweepgates[0])
     gate_vert = getattr(gates, sweepgates[1])
@@ -945,7 +916,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, fig=None):
     sweep_vert = gate_vert[initval_vert - sweepranges[1] /
                            2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
 
-    dataset = makeDataSet2D(sweep_vert, sweep_horz, preset_data=data)
+    dataset = makeDataSet2D(sweep_vert, sweep_horz, location=location, loc_record=loc_record, preset_data=data)
 
     if fig is None:
         return dataset, None

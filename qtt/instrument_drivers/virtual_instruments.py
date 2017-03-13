@@ -6,7 +6,6 @@
 
 #%% Load packages
 
-import numpy as np
 from functools import partial
 
 import qcodes as qc
@@ -33,7 +32,8 @@ class VirtualMeter(Instrument):
 
         g = 'amplitude'
         self.add_parameter(g,
-                           label='%s Current (nA)' % name,
+                           label='%s amplitude' % name,
+                           unit='a.u.',
                            get_cmd=partial(self.get_gate, g),
                            )
         self.add_parameter('readnext', get_cmd=partial(self.get, 'amplitude'), label=name)

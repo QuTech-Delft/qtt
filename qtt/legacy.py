@@ -26,8 +26,8 @@ from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
 
 
-from qtt import pmatlab
-from qtt.pmatlab import plotPoints, tilefigs
+from qtt import pgeometry as pmatlab
+from qtt.pgeometry import plotPoints, tilefigs
 import matplotlib.pyplot as plt
 import datetime
 
@@ -78,8 +78,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
     pv2 = float(od['pinchvalues'][2]) + 0
     stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, 90))
     sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, 90))
-    stepdata = dict({'gates': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': step})
-    sweepdata = dict({'gates': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
+    stepdata = dict({'param': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': step})
+    sweepdata = dict({'param': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
     wait_time_base = qtt.scans.waitTime(None, station=station)
@@ -93,10 +93,10 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
         sweepdata['step'] = -42
         wait_time = 0
 
-    scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'keithleyidx': keithleyidx})
-    scanjob['wait_time_step'] = wait_time_base + 3 * wait_time
-    scanjob['wait_time_sweep'] = wait_time_sweep
-    alldata = qtt.scans.scan2D(station, scanjob, wait_time=wait_time_sweep, background=False)
+    scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
+    scanjob['stepdata']['wait_time'] = wait_time_base + 3 * wait_time
+    scanjob['sweepdata']['wait_time'] = wait_time_sweep
+    alldata = qtt.scans.scan2D(station, scanjob )
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
 
@@ -116,17 +116,18 @@ def onedotPlungerScan(station, od, verbose=1):
 
     pv = od['pinchvalues'][1]
 
-    scanjob = dict({'keithleyidx': [od['instrument']]})
-    scanjob['sweepdata'] = dict({'gates': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
+    scanjob = dict({'minstrument': [od['instrument']]})
+    scanjob['sweepdata'] = dict({'param': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
 
     gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
     gates.set(gg[0], ptv[1, 0] + 20)
     gates.set(gg[1], scanjob['sweepdata']['start'])
 
     wait_time = qtt.scans.waitTime(gg[1], station=station)
+    scanjob['sweepdata']['wait_time']=wait_time / 4.
     time.sleep(wait_time)
 
-    alldata = scan1D(scanjob, station, wait_time=wait_time / 4., title_comment='sweep of plunger')
+    alldata = scan1D(station, scanjob=scanjob)
     alldata.metadata['od'] = od
     stripDataset(alldata)
     scandata = dict(dataset=alldata, od=od)
@@ -143,7 +144,7 @@ def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=
     keithleyidx = [od['instrument']]
 
     for jj, g in enumerate(od['gates']):
-        alldata = scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, keithleyidx=keithleyidx, cache=cache, full=full)
+        alldata = scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, minstrument=keithleyidx, cache=cache, full=full)
 
         adata = alldata.metadata['adata']
         od['pinchvalue'][jj] = adata['pinchvalue']
@@ -985,7 +986,7 @@ def getPinchvalues(od, xdir, verbose=1):
 
         dd, metadata = qtt.data.loadDataset(pfile)
 
-        adata = qtt.algorithms.analyseGateSweep(dd, fig=0, minthr=100, maxthr=800, verbose=0)
+        adata = qtt.algorithms.gatesweep.analyseGateSweep(dd, fig=0, minthr=100, maxthr=800, verbose=0)
         if verbose:
             print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchvalue']))
         od['pinchvalues'][jj] = adata['pinchvalue']
@@ -1090,10 +1091,10 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             e2 = float(np.maximum(basevaluesTD[p2] - sweeprange / 2, e2))
             s1 = basevaluesTD[p1] + sweeprange / 2
             s2 = basevaluesTD[p2] + sweeprange / 2
-            scanjob['stepdata'] = dict({'gates': [p1], 'start': s1, 'end': e1, 'step': -2})
-            scanjob['sweepdata'] = dict({'gates': [p2], 'start': s2, 'end': e2, 'step': -4})
+            scanjob['stepdata'] = dict({'param': [p1], 'start': s1, 'end': e1, 'step': -2})
+            scanjob['sweepdata'] = dict({'param': [p2], 'start': s2, 'end': e2, 'step': -4})
 
-            scanjob['keithleyidx'] = sdinstruments
+            scanjob['minstrument'] = sdinstruments
             scanjob['basename'] = 'doubledot-2d'
             scanjob['basevalues'] = basevaluesTD
             scanjob['td'] = td
@@ -1101,7 +1102,6 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
         except Exception as e:
-            import logging
             logging.exception("error with double-dot job!")
             # print(e)
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])

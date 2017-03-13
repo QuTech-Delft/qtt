@@ -5,7 +5,13 @@ import scipy
 import matplotlib
 import logging
 import qcodes
+import warnings
+import functools
 import pickle
+import tempfile
+#import qtt.algorithms.functions
+from itertools import chain
+
 
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -14,11 +20,10 @@ try:
 except:
     pass
 
-from qtt import pmatlab
-from qtt.pmatlab import mpl2clipboard
+from qtt import pgeometry as pmatlab
+from qtt.pgeometry import mpl2clipboard
 
 # do NOT load any other qtt submodules here
-import tempfile
 
 try:
     import qtpy.QtGui as QtGui
@@ -34,8 +39,6 @@ def dumpstring(txt):
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
 
-import warnings
-import functools
 
 
 def deprecated(func):
@@ -56,13 +59,14 @@ def deprecated(func):
 
 #%%
 
+
 def update_dictionary(alldata, **kwargs):
     """ Update elements of a dictionary
-    
+
     Args:
         alldata (dict)
         kwargs (dict): keyword arguments
-    
+
     """
     for k in kwargs:
         alldata[k] = kwargs[k]
@@ -177,9 +181,11 @@ def diffImageSmooth(im, dy='x', sigma=2., size=None):
         imx = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
     if dy == 1 or dy == 'y':
-        imx = ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
+        imx = ndimage.gaussian_filter1d(
+            im, axis=0, sigma=sigma, order=1, mode='nearest')
     if dy == -1:
-        imx = -ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
+        imx = -ndimage.gaussian_filter1d(im, axis=0,
+                                         sigma=sigma, order=1, mode='nearest')
     if dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2':
         imx0 = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
@@ -233,8 +239,6 @@ def plot1D(dataset, fig=1):
 
     if fig is not None and array is not None:
         MatPlot(array, num=fig)
-
-from qtt import pmatlab
 
 
 if __name__ == '__main__':
@@ -459,7 +463,8 @@ def pythonVersion():
         ipversion = 'None'
 
     pversion = '.'.join('%s' % x for x in sys.version_info[0:3])
-    print('python %s, ipython %s, notebook %s' % (pversion, ipversion, in_ipynb()))
+    print('python %s, ipython %s, notebook %s' %
+          (pversion, ipversion, in_ipynb()))
 
 #%%
 
@@ -554,16 +559,19 @@ try:
             else:
                 if verbose:
                     print('figure is of an unknown type')
-            slide.Shapes.AddPicture(FileName=fname, LinkToFile=False, SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
+            slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
+                                    SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
 
-        txtbox = slide.Shapes.AddTextbox(1, Left=100, Top=100, Width=500, Height=300)
+        txtbox = slide.Shapes.AddTextbox(
+            1, Left=100, Top=100, Width=500, Height=300)
         txtbox.Name = 'text'
 
         if txt is not None:
             txtbox.TextFrame.TextRange.Text = txt
 
         if notes is not None:
-            slide.notespage.shapes.placeholders[2].textframe.textrange.insertafter(notes)
+            slide.notespage.shapes.placeholders[
+                2].textframe.textrange.insertafter(notes)
 
         # ActivePresentation.Slides(ActiveWindow.View.Slide.SlideNumber).
         # s=Application.ActiveWindow.Selection
@@ -605,9 +613,11 @@ try:
         text = 'Dataset location: %s' % dataset.location
 
         if notes is None:
-            notes = 'Dataset metadata: %s' % reshape_metadata(dataset, printformat=printformat)
+            notes = 'Dataset metadata: %s' % reshape_metadata(
+                dataset, printformat=printformat)
 
-        ppt, slide = addPPTslide(title=title, fig=temp_fig, txt=text, notes=notes, show=show, verbose=verbose, **kwargs)
+        ppt, slide = addPPTslide(title=title, fig=temp_fig, txt=text,
+                                 notes=notes, show=show, verbose=verbose, **kwargs)
 
         return ppt, slide
 
@@ -642,7 +652,8 @@ def reshape_metadata(dataset, printformat='dict'):
     for x in sorted(all_md.keys()):
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
-            metadata[x]['IDN'] = dict({'name': 'IDN', 'value': all_md[x]['parameters']['IDN']['value']})
+            metadata[x]['IDN'] = dict({'name': 'IDN', 'value': all_md[
+                                      x]['parameters']['IDN']['value']})
             metadata[x]['IDN']['units'] = ''
         for y in all_md[x]['parameters'].keys():
             if y != 'IDN':
@@ -650,12 +661,14 @@ def reshape_metadata(dataset, printformat='dict'):
                 param_md = all_md[x]['parameters'][y]
                 metadata[x][y]['name'] = y
                 if isinstance(param_md['value'], float):
-                    metadata[x][y]['value'] = float(format(param_md['value'], '.3f'))
+                    metadata[x][y]['value'] = float(
+                        format(param_md['value'], '.3f'))
                 metadata[x][y]['units'] = param_md['units']
                 metadata[x][y]['label'] = param_md['label']
 
     if printformat == 'dict':
-        ss = str(metadata).replace('(', '').replace(')', '').replace('OrderedDict', '')
+        ss = str(metadata).replace('(', '').replace(
+            ')', '').replace('OrderedDict', '')
     else:
         ss = ''
         for k in metadata:
@@ -665,7 +678,8 @@ def reshape_metadata(dataset, printformat='dict'):
             for p in s:
                 pp = s[p]
                 print('  --- %s' % p)
-                ss += '%s: %s %s' % (pp['name'], pp['value'], pp.get('units', ''))
+                ss += '%s: %s %s' % (pp['name'],
+                                     pp['value'], pp.get('units', ''))
                 ss += '\n'
             # ss+=str(s)
 
@@ -679,9 +693,8 @@ if __name__ == '__main__' and 0:
 
 #%%
 try:
-    from qtt.parameterviewer import ParameterViewer
+    import qtt.parameterviewer
     import qtt.gui
-    #from qtt.gui.dataviewer import DataViewer
 
     def setupMeasurementWindows(station, create_parameter_widget=True, ilist=None):
         ms = monitorSizes()
@@ -691,7 +704,7 @@ try:
             ilist = [station.gates]
         w = None
         if create_parameter_widget:
-            w = ParameterViewer(ilist)
+            w = qtt.parameterviewer.ParameterViewer(ilist)
             w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
             w.updatecallback()
 
@@ -699,11 +712,15 @@ try:
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
 
+        qtt.live.liveplotwindow=plotQ
+        
         app = QtWidgets.QApplication.instance()
         app.processEvents()
 
         return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None})
-except:
+except Exception as ex:
+    logging.exception(ex)
+    print('fail!')
     pass
 
 import time
@@ -731,11 +748,6 @@ def timeProgress(data):
 
 #%%
 
-from qtt.algorithms.functions import logistic
-
-#%%
-
-from itertools import chain
 
 
 def flatten(lst):
@@ -872,7 +884,8 @@ def clickGatevals(plot, drawmode='ro'):
     '''
     # TODO: implement for virtual gates
     if type(plot) != qcodes.plots.qcmatplotlib.MatPlot:
-        raise Exception('The plot object is not based on the MatPlot class from qcodes.')
+        raise Exception(
+            'The plot object is not based on the MatPlot class from qcodes.')
 
     ax = plt.gca()
     ax.set_autoscale_on(False)

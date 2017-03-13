@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import cv2
 import scipy
 
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 
 from qtt.data import *
 

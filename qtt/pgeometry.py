@@ -175,7 +175,10 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib
     # needed for 3d plot points, do not remove!
-    from mpl_toolkits.mplot3d import Axes3D
+    try:
+        from mpl_toolkits.mplot3d import Axes3D
+    except:
+        pass
 except Exception as inst:
     # print(inst)
     warnings.warn(

@@ -18,11 +18,11 @@ except:
     pass
 
 import numpy.linalg
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 
 import qtt.tools
 import qtt.algorithms.generic
-from qtt.tools import deprecated
+
 
 import matplotlib.pyplot as plt
 
@@ -104,7 +104,7 @@ def dataset2image2(dataset):
     impixel = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname]
-        impixel = tr.transform(imraw)
+        impixel = tr._transform(imraw)
 
     return imraw, impixel, tr
 
@@ -206,7 +206,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     if impixel is None:
         if im is None:
             im = np.array(array)
-            impixel = tr.transform(im)
+            impixel = tr._transform(im)
 
         else:
             pass
@@ -286,37 +286,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     return xx, vstep, vsweep
 
 
-#%%    
-@deprecated
-def pix2scan(pt, dd2d):
-    """ Convert pixels coordinates to scan coordinates (mV)
-    Arguments
-    ---------
-    pt : array
-        points in pixel coordinates
-    dd2d : dictionary
-        contains scan data
 
-    """
-    warnings.warn('use transformation object instead')
-    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-        dd2d, verbose=0)
-    # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
-    nx = vsweep.size  # zdata.shape[0]
-    ny = vstep.size  # zdata.shape[1]
-
-    xx = extent
-    x = pt
-    if len(pt.shape) == 1:
-        ptx = np.zeros((2, 1))
-        ptx[1] = np.interp(x[1], [0, ny - 1], [xx[3], xx[2]])    # step
-        ptx[0] = np.interp(x[0], [0, nx - 1], [xx[0], xx[1]])    # sweep
-    else:
-        nn = pt.shape[1]
-        ptx = np.zeros((2, nn))
-        ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[3], xx[2]])    # step
-        ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
-    return ptx
 
 #%% Extract metadata
 
@@ -428,7 +398,7 @@ class image_transform:
         
         """
         self.H = np.eye(3)  # raw image to pixel image transformation
-        self.extent = []  # image extent in pixel
+        self.extent = None  # image extent in pixel
         self.verbose = verbose
         self.dataset = dataset
         extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -519,6 +489,9 @@ class image_transform:
         self.extent = extentImage
         return extentImage
 
+    def transform_image(self, im):
+        return self._transform(im)
+        
     def _transform(self, im):
         """ Transform raw image to image in pixel coordinates such that the imageExtent is increasing
 
@@ -794,7 +767,6 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('loadExperimentdata %s' % path)
-    from qtt import pmatlab
     dataset = pmatlab.load(path)
 
     dataset = load_data(path)
@@ -807,7 +779,7 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
     write_data(path, dataset)
 
 
-def makeDataSet1Dplain(xname, x, yname, y, location=None):
+def makeDataSet1Dplain(xname, x, yname, y, location=None, loc_record=None):
     ''' Make DataSet with one 1D array and one setpoint array
 
     Arguments:
@@ -820,14 +792,14 @@ def makeDataSet1Dplain(xname, x, yname, y, location=None):
     yy = np.array(y)
     x = DataArray(name=xname, array_id=xname, preset_data=xx, is_setpoint=True)
     y = DataArray(name=yname, array_id=yname, preset_data=yy, set_arrays=(x,))
-    dd = new_data(arrays=(), location=location)
+    dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
     dd.add_array(y)
 
     return dd
 
 
-def makeDataSet1D(x, yname='measured', y=None, location=None):
+def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None):
     ''' Make DataSet with one 1D array and one setpoint array
 
     Arguments:
@@ -837,7 +809,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None):
     yy = np.ones(xx.size)
     x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, preset_data=xx, is_setpoint=True)
     ytmp = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
-    dd = new_data(arrays=(), location=location)
+    dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
     dd.add_array(ytmp)
 
@@ -847,7 +819,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None):
     return dd
 
 
-def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
+def makeDataSet2D(p1, p2, mname='measured', location=None, loc_record=None, preset_data=None):
     """ Make DataSet with one 2D array and two setpoint arrays
 
     Args:
@@ -866,7 +838,7 @@ def makeDataSet2D(p1, p2, mname='measured', location=None, preset_data=None):
     x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, preset_data=xx, is_setpoint=True)
     y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label, preset_data=yy, set_arrays=(x,), is_setpoint=True)
     z = DataArray(name=mname, array_id=mname, label=mname, preset_data=zz, set_arrays=(x, y))
-    dd = new_data(arrays=(), location=location)
+    dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(z)
     dd.add_array(x)
     dd.add_array(y)

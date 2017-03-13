@@ -102,13 +102,6 @@ class sensingdot_t:
         endval = sdval[1] - scanrange
         endval = np.maximum(endval, -700)
 
-        scanjob1 = dict()
-        scanjob1['sweepdata'] = dict(
-            {'gates': [gg[1]], 'start': startval, 'end': endval, 'step': step})
-        scanjob1['keithleyidx'] = keithleyidx
-        scanjob1['compensateGates'] = []
-        scanjob1['gate_values_corners'] = [[]]
-
         wait_time = .8
         try:
             wait_time = sd.station.gate_settle(gg[1])
@@ -116,11 +109,18 @@ class sensingdot_t:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
 
+        scanjob1 = dict()
+        scanjob1['sweepdata'] = dict(
+            {'param': [gg[1]], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
+        scanjob1['minstrument'] = keithleyidx
+        scanjob1['compensateGates'] = []
+        scanjob1['gate_values_corners'] = [[]]
+
+
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
-        alldata = scan1D(
-            scanjob1, sd.station, title_comment='plunger', wait_time=wait_time)
+        alldata = scan1D(sd.station, scanjob= scanjob1 )
 
         # if not outputdir == None:
         #    saveCoulombData(outputdir, alldata)
@@ -137,14 +137,14 @@ class sensingdot_t:
 
         scanjob = dict()
         scanjob['stepdata'] = dict(
-            {'gates': [gg[0]], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
+            {'param': [gg[0]], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
         scanjob['sweepdata'] = dict(
-            {'gates': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
-        scanjob['keithleyidx'] = keithleyidx
+            {'param': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
+        scanjob['minstrument'] = keithleyidx
         scanjob['compensateGates'] = []
         scanjob['gate_values_corners'] = [[]]
 
-        alldata = qtt.scans.scan2D(scanjob, TitleComment='2D', wait_time=0.1)
+        alldata = qtt.scans.scan2D(scanjob)
 
         if fig is not None:
             qtt.scans.plotData(alldata, fig=fig)
@@ -194,7 +194,7 @@ class sensingdot_t:
         # set sweep to center
         gates = sd.station.gates
         gates.set(
-            sweepdata['gates'][0], (sweepdata['start'] + sweepdata['end']) / 2)
+            sweepdata['param'][0], (sweepdata['start'] + sweepdata['end']) / 2)
         if not stepdata is None:
             if mode == 'end':
                 # set sweep to center
@@ -205,7 +205,7 @@ class sensingdot_t:
             else:
                 # set sweep to center
                 gates.set(
-                    stepdata['gates'][0], (stepdata['start'] + stepdata['end']) / 2)
+                    stepdata['param'][0], (stepdata['start'] + stepdata['end']) / 2)
 
     def fineTune(sd, fig=300, stephalfmv=8):
         g = sd.tunegate()
@@ -230,7 +230,7 @@ class sensingdot_t:
             sweepdata = scanjob['sweepdata']
             stepdata = scanjob.get('stepdata', None)
         g = sd.tunegate()
-        gt = stepdata['gates'][0]
+        gt = stepdata['param'][0]
         cdata = stepdata
         factor = sdInfluenceFactor(sd.index, gt)
         d = factor * (cdata['start'] - cdata['end'])
@@ -240,7 +240,7 @@ class sensingdot_t:
             print('autoTuneFine: factor %.2f, delta %.1f' % (factor, d))
 
         # set sweep to center
-        set_gate(sweepdata['gates'][0], (sweepdata[
+        set_gate(sweepdata['param'][0], (sweepdata[
                  'start'] + sweepdata['end']) / 2)
 
         sdmiddle = sd.sdval[1]
@@ -269,17 +269,16 @@ class sensingdot_t:
 
         return (sdstart, sdend, sdmiddle)
 
-    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, fig=201, sleeptime=2, delete=True):
+    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None, fig=201, sleeptime=2, delete=True):
         """Fast tuning of the sensing dot plunger."""
         waveform, sweep_info = self.station.awg.sweep_gate(
             self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
-        # time for AWG to settle
+        # time for AWG signal to reach the sample
         qtt.time.sleep(sleeptime)
 
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
-            Naverage=Naverage, ReadDevice=ReadDevice)
+        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
 
         self.station.awg.stop()
 
@@ -291,10 +290,9 @@ class sensingdot_t:
 
         sdplg = getattr(self.station.gates, self.gg[1])
         initval = sdplg.get()
-        sweepvalues = sdplg[initval - sweeprange /
-                            2:sweeprange / 2 + initval:sweeprange / len(data)]
+        sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
 
-        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data)
+        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
         alldata.add_metadata({'scanjob': None})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
