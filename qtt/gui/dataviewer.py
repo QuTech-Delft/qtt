@@ -230,9 +230,11 @@ class DataViewer(QtWidgets.QWidget):
                     # load with default formatter
                     from qcodes.data.gnuplot_format import GNUPlotFormat
                     hformatter = GNUPlotFormat()
-                    print('trying GNUPlotFormat')
-                    print('tag: %s' % tag)
-                    print(ex)
+                    if self.verbose:
+                        if self.verbose>=2:
+                            print('failed with format:' )
+                            print(ex)
+                        print('trying GNUPlotFormat: tag %s' % tag)
                     data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
                     logging.debug('loaded GNUPlotFormat datasett %s' % tag)
 
@@ -256,7 +258,7 @@ class DataViewer(QtWidgets.QWidget):
                     logging.info('could not find parameter for DataSet')
             except Exception as e:
                 print('logCallback! error ...')
-                print(e)
+                logging.exception(e)
                 logging.warning(e)
         pass
 
@@ -286,7 +288,7 @@ if __name__ == '__main__':
     dataviewer.show()
     self = dataviewer
 
-    app.exec()
+    #app.exec()
 
 
 #%%

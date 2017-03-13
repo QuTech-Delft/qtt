@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     reload(qtt.scans)
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': 1.}), 'instrument': [keithley3.amplitude], 'wait_time': .000})
+    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': 1.}), 'minstrument': [keithley3.amplitude], 'wait_time': .000})
     data1d = qtt.scans.scan1D(station, scanjob, location=None, verbose=2)
 
     data1d.sync()  # data.arrays

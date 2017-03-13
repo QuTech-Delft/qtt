@@ -220,6 +220,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     t0 = time.time()
 
+    # LEGACY
+    instrument = scanjob.get('instrument', None)
+    if instrument is not None:
+        raise Exception('legacy argument instrument: use minstrument instead!')
+
     minstrument = scanjob.get('minstrument', None)
     if minstrument is None:
         # legacy code...
@@ -468,6 +473,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
 
+        if qtt.abort_measurements():
+            print('  aborting measurement loop')
+            break
     dt = qtt.time.time() - t0
 
     if diff_dir is not None:
@@ -581,11 +589,15 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
         else:
             qtt.time.sleep(wait_time)
         alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
+
         if liveplotwindow is not None:
             delta, tprev, update = delta_time(tprev, thr=2)
             if update:
                 liveplotwindow.update_plot()
                 pg.mkQApp().processEvents()
+        if qtt.abort_measurements():
+            print('  aborting measurement loop')
+            break
 
     station.awg.stop()
 
