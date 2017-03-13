@@ -83,7 +83,7 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
     """
     stepdata = dict(
         {'param': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
-    scanjob = dict({'stepdata': stepdata, 'keithleyidx': keithleyidx})
+    scanjob = dict({'stepdata': stepdata, 'minstrument': keithleyidx})
     if not g2 is None:
         sweepdata = dict(
             {'param': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
@@ -142,14 +142,15 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     keithleyidx = [od['instrument']]
     scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
                               'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
-    scanjobhi['keithleyidx'] = keithleyidx
+    scanjobhi['minstrument'] = keithleyidx
     scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], -780)
     scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
 
     wait_time = qtt.scans.waitTime(od['gates'][2], station=station)
-    scanjobhi['wait_time_step'] = qtt.scans.waitTime(None, station) + 3 * wait_time
+    scanjobhi['sweepdata']['wait_time'] = wait_time
+    scanjobhi['stepdata']['wait_time'] = qtt.scans.waitTime(None, station) + 3 * wait_time
 
-    alldatahi = qtt.scans.scan2D(station, scanjobhi, wait_time=wait_time, background=False)
+    alldatahi = qtt.scans.scan2D(station, scanjobhi)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         alldatahi, verbose=0, arrayname=None)
     impixel, tr = dataset2image(alldatahi, mode='pixel')

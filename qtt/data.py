@@ -104,7 +104,7 @@ def dataset2image2(dataset):
     impixel = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname]
-        impixel = tr.transform(imraw)
+        impixel = tr._transform(imraw)
 
     return imraw, impixel, tr
 
@@ -206,7 +206,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     if impixel is None:
         if im is None:
             im = np.array(array)
-            impixel = tr.transform(im)
+            impixel = tr._transform(im)
 
         else:
             pass

@@ -6,7 +6,6 @@
 
 #%% Load packages
 
-import numpy as np
 from functools import partial
 
 import qcodes as qc
