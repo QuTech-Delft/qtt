@@ -36,4 +36,7 @@ import qtt.gui.dataviewer
 dv=qtt.gui.dataviewer.DataViewer(datadir=r'P:\data')
 ```
 
-
+Copy dataset to Powerpoint
+```
+qtt.tools.addPPT_dataset(data);
+```

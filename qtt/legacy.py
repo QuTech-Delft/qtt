@@ -143,7 +143,7 @@ def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=
     keithleyidx = [od['instrument']]
 
     for jj, g in enumerate(od['gates']):
-        alldata = scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, keithleyidx=keithleyidx, cache=cache, full=full)
+        alldata = scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, minstrument=keithleyidx, cache=cache, full=full)
 
         adata = alldata.metadata['adata']
         od['pinchvalue'][jj] = adata['pinchvalue']

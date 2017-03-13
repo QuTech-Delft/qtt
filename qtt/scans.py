@@ -115,7 +115,8 @@ def parse_stepdata(stepdata):
         warnings.warn('please use string or Instrument instead of list' )
         stepdata['param']=stepdata['param'][0]
     
-     
+    # TODO: implement range argument
+    
     return stepdata
         
 def get_param(gates, sweepgate):

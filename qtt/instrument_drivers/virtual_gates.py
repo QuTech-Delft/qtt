@@ -60,7 +60,7 @@ class virtual_gates(Instrument):
 
         for g in self._virt_gates_list:
             self.add_parameter(g,
-                               label='%s (mV)' % g,
+                               label='%s' % g,
                                unit='mV',
                                get_cmd=partial(self._get, gate=g),
                                set_cmd=partial(self._set, gate=g),

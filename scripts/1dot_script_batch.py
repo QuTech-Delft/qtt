@@ -337,7 +337,7 @@ for ii, Tvalue in enumerate(Tvalues):
     for od in sddots:
         ki = od['instrument']
         for gate in od['gates']:
-            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, stepdelay=stepDelay(gate), full=full)
+            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, minstrument=[ki], cache=cache, stepdelay=stepDelay(gate), full=full)
             gates.resetgates(activegates, basevalues, verbose=0)
 
     ww = one_dots
