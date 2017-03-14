@@ -48,7 +48,10 @@ except:
 
 def _abort_measurement():
     """ Return True if the currently running measurement should be aborted """
-    return int(_redis_connection.get('qtt_abort_running_measurement'))
+    v=_redis_connection.get('qtt_abort_running_measurement')
+    if v is None:
+        v=0
+    return int(v)
 
 abort_measurements = _abort_measurement
 # patch the qcodes abort function

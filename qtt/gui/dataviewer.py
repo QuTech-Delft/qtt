@@ -16,24 +16,7 @@ from qcodes.plots.pyqtgraph import QtPlot
 
 import qtt
 
-#%% Helper functions
 
-
-def findfilesR(p, patt):
-    """ Get a list of files (recursive)
-
-    Arguments
-    ---------
-
-    p (string): directory
-    patt (string): pattern to match
-
-    """
-    lst = []
-    rr = re.compile(patt)
-    for root, _, files in os.walk(p, topdown=False):
-        lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
-    return lst
 
 #%% Main class
 
@@ -156,7 +139,7 @@ class DataViewer(QtWidgets.QWidget):
         model = self._treemodel
         dd = []
         for e in self.extensions:
-            dd += findfilesR(self.datadir, '.*%s' % e, show_progress=True)
+            dd += qtt.pgeometry.findfilesR(self.datadir, '.*%s' % e, show_progress=True)
         if self.verbose:
             print('found %d files' % (len(dd)))
 
