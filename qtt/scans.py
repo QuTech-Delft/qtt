@@ -712,8 +712,8 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
 
     t0 = qtt.time.time()
 
-    station.gates.set(stepdata['gate'], (stepdata['end'] + stepdata['start']) / 2)
-    station.gates.set(sweepdata['gate'], (sweepdata['end'] + sweepdata['start']) / 2)
+    station.gates.set(stepdata['param'], (stepdata['end'] + stepdata['start']) / 2)
+    station.gates.set(sweepdata['param'], (sweepdata['end'] + sweepdata['start']) / 2)
 
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
