@@ -8,7 +8,8 @@ Created on Wed Feb  8 14:43:47 2017
 from qtt.live_plotting import livePlot, fpgaCallback_1d, fpgaCallback_2d
 from qtt.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
-from qtt.scans import scan1Dfast, scan2Dturbo
+from qtt.scans import plotData, scan1Dfast, scan2Dturbo, makeDataset_sweep, makeDataset_sweep_2D
+import datetime
 
 #%%
 
@@ -77,31 +78,27 @@ class VideoMode:
                 self.station.RF.off()
 
     def single(self):
-        """Do a single scan with 1000 averaging.
+        """Do a single scan with a lot averaging.
 
-        Do a single scan at high averaging. Note: this does not yet support the
-        usage of linear combinations of gates (a.k.a. virtual gates).    
+        Note: this does not yet support the usage of linear combinations of 
+        gates (a.k.a. virtual gates).
         """
-        scanjob = {'Naverage': 1000}
-        class dummy(object):
-            pass
-        dummy_sd = dummy()
-        dummy_sd.fpga_ch = self.fpga_ch
-        scanjob['sd'] = dummy_sd
-        if type(self.sweepparams) is str:
-            scanjob['sweepdata'] = {'param': self.sweepparams}
-            scanjob['sweepdata']['start'] = self.station.gates.get(self.sweepparams) - self.sweepranges / 2
-            scanjob['sweepdata']['end'] = scanjob['sweepdata']['start'] + self.sweepranges
-            self.alldata = scan1Dfast(self.station, scanjob)
-        if type(self.sweepparams) is list:
-            scanjob['stepdata'] = {'param': self.sweepparams[0]}
-            scanjob['stepdata']['start'] = self.station.gates.get(self.sweepparams[0]) - self.sweepranges[0] / 2
-            scanjob['stepdata']['end'] = scanjob['stepdata']['start'] + self.sweepranges[0]
-            scanjob['sweepdata'] = {'param': self.sweepparams[1]}
-            scanjob['sweepdata']['start'] = self.station.gates.get(self.sweepparams[1]) - self.sweepranges[1] / 2
-            scanjob['sweepdata']['end'] = scanjob['sweepdata']['start'] + self.sweepranges[1]
-            scanjob['resolution'] = self.resolution
-            self.alldata = scan2Dturbo(self.station, scanjob)
-
-        if type(self.sweepparams) is dict:
-            raise NotImplementedError('Single scan with linear combinations of gates is not implemented.')
+        Naverage = 1000
+        Naverage_old = self.lp.datafunction.Naverage
+        waittime_old = self.lp.datafunction.waittime
+        self.lp.datafunction.waittime = Naverage * self.lp.data.size / self.station.fpga.sampling_frequency.get()
+        self.lp.datafunction.Naverage = Naverage
+        self.data = self.lp.datafunction()
+        self.lp.datafunction.Naverage = Naverage_old
+        self.lp.datafunction.waittime = waittime_old
+        if self.data.ndim == 1:
+            alldata, _ = makeDataset_sweep(self.data, self.sweepparams, self.sweepranges, gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
+        if self.data.ndim == 2:
+            alldata, _ = makeDataset_sweep_2D(self.data, self.station.gates, self.sweepparams, self.sweepranges, loc_record={'label': 'videomode_2d_single'})
+        alldata.metadata = {'scantime': str(datetime.datetime.now()), 'station': self.station.snapshot(), 'allgatevalues': self.station.gates.allvalues()}
+        alldata.metadata['Naverage'] = Naverage
+        if hasattr(self.lp.datafunction, 'diff_dir'):
+            alldata.metadata['diff_dir'] = self.lp.datafunction.diff_dir
+        alldata.write(write_metadata=True)
+        plotData(alldata, fig=None)
+        self.alldata = alldata
