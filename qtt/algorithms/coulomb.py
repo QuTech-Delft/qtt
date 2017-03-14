@@ -226,6 +226,7 @@ def filterPeaks(x, y, peaks, verbose=1, minheight=None):
         print('filterPeaks: %d -> %d good peaks' % (len(peaks), ngoodpeaks))
     return goodpeaks
 
+#%%
 
 def peakFindBottom(x, y, peaks, fig=None, verbose=1):
     """ Find the left bottom of a detected peak """
@@ -307,6 +308,10 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
     return peaks
 
+if __name__=='__main__':
+    px= peakFindBottom(x, y, peaks, fig=300, verbose=3)
+    peak=px[0]
+    
 #%%
 
 
@@ -392,7 +397,9 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
         if not peak['valid']:
             peak['score'] = 0
             continue
-        h = peak['height']
+        h = peak['height'] # original height
+        h = peak['y']-peak['ybottoml'] # diff between top and bottom left
+        
         h2 = 2 * (peak['y'] - peak['yhalfl'])
         if (h2 / h) < .3:
             # special case
