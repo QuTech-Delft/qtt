@@ -37,14 +37,14 @@ class VideoMode:
         self.lp = livePlot(None, self.station.gates, self.sweepparams, self.sweepranges)
         self.lp.win.start_button.clicked.connect(connect_slot(self.run))
         self.lp.win.stop_button.clicked.connect(connect_slot(self.stop))
-        self.run()
 
-        # Add single button
         self.lp.win.single_button = QtWidgets.QPushButton('Single')
-        self.lp.win.single_button.clicked.connect(connect_slot(self.single))
         self.lp.win.layout().children()[0].removeWidget(self.lp.win.stop_button)
         self.lp.win.layout().children()[0].addWidget(self.lp.win.single_button)
         self.lp.win.layout().children()[0].addWidget(self.lp.win.stop_button)
+        self.lp.win.single_button.clicked.connect(connect_slot(self.single))
+
+        self.run()
 
     def run(self):
         """ Programs the AWG, starts the read-out and the plotting. """
