@@ -21,6 +21,7 @@ class VideoMode:
         sweepparams (string, 1 x 2 list or dict): the parameter(s) to be swept
         sweepranges (int or 1 x 2 list): the range(s) to be swept over
         fpga_ch (int): the channel of the FPGA
+        Naverage (int): the number of times the FPGA averages
         resolution (1 x 2 list): for 2D the resolution
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
@@ -37,11 +38,13 @@ class VideoMode:
         self.lp.win.start_button.clicked.connect(connect_slot(self.run))
         self.lp.win.stop_button.clicked.connect(connect_slot(self.stop))
         self.run()
-        
+
         # Add single button
         self.lp.win.single_button = QtWidgets.QPushButton('Single')
         self.lp.win.single_button.clicked.connect(connect_slot(self.single))
-
+        self.lp.win.layout().children()[0].removeWidget(self.lp.win.stop_button)
+        self.lp.win.layout().children()[0].addWidget(self.lp.win.single_button)
+        self.lp.win.layout().children()[0].addWidget(self.lp.win.stop_button)
 
     def run(self):
         """ Programs the AWG, starts the read-out and the plotting. """
@@ -75,7 +78,7 @@ class VideoMode:
 
     def single(self):
         """Do a single scan with 1000 averaging.
-        
+
         Do a single scan at high averaging. Note: this does not yet support the
         usage of linear combinations of gates (a.k.a. virtual gates).    
         """
@@ -91,7 +94,7 @@ class VideoMode:
             scanjob['sweepdata']['end'] = scanjob['sweepdata']['start'] + self.sweepranges
             self.alldata = scan1Dfast(self.station, scanjob)
         if type(self.sweepparams) is list:
-            scanjob['stepdata'] = {'param': self.sweepparams[0]} 
+            scanjob['stepdata'] = {'param': self.sweepparams[0]}
             scanjob['stepdata']['start'] = self.station.gates.get(self.sweepparams[0]) - self.sweepranges[0] / 2
             scanjob['stepdata']['end'] = scanjob['stepdata']['start'] + self.sweepranges[0]
             scanjob['sweepdata'] = {'param': self.sweepparams[1]}
