@@ -553,16 +553,11 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     gates = station.gates
     gatevals = gates.allvalues()
 
-    sweepgate = sweepdata.get('gate', None)
-    if sweepgate is None:
-        sweepgate = sweepdata.get('gates')[0]
-    sweepparam = getattr(gates, sweepgate)
+    sweepgate = sweepdata.get('param', None)
+    sweepparam = get_param(gates, sweepgate)
 
-    stepgate = stepdata.get('gate', None)
-    if stepgate is None:
-        stepgate = stepdata.get('gates')[0]
-
-    stepparam = getattr(gates, stepgate)
+    stepgate = stepdata.get('param', None)
+    stepparam = get_param(gates, stepgate)
 
     def readfunc(waveform, Naverage):
         fpga_ch = scanjob['sd'].fpga_ch

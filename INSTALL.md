@@ -107,7 +107,7 @@ call activate %USERNAME%
 d:
 cd d:\users\%USERNAME%
 
-spyder --show-console --new-instance -w d:\users\%USERNAME% --window-title %USERNAME%
+spyder --show-console --new-instance -p d:\users\%username% -w d:\users\%USERNAME% --window-title %USERNAME%
 
 #echo "Press ..."
 pause
