@@ -356,7 +356,7 @@ class livePlot:
 
         vertLayout = QtWidgets.QVBoxLayout()
 
-        vertLayout.addItem(topLayout)
+        vertLayout.addLayout(topLayout)
         vertLayout.addWidget(plotwin)
 
         win.setLayout(vertLayout)
