@@ -303,8 +303,11 @@ class sensingdot_t:
         alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
         alldata.add_metadata({'scanjob': None})
+        alldata.add_metadata({'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
 
+        alldata.write(write_metadata=True)
+        
         y = np.array(alldata.arrays['measured'])
         x = alldata.arrays[self.gg[1]]
         x, y = peakdataOrientation(x, y)

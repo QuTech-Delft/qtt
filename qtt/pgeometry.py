@@ -1831,21 +1831,46 @@ def finddirectories(p, patt):
     lst = [l for l in lst if os.path.isdir(os.path.join(p, l))]
     return lst
 
+def _walk_calc_progress(progress, root, dirs):
+    """ Helper function """
+    prog_start, prog_end, prog_slice = 0.0, 1.0, 1.0
 
-def findfilesR(p, patt):
+    current_progress = 0.0
+    parent_path, current_name = os.path.split(root)
+    data = progress.get(parent_path)
+    if data:
+        prog_start, prog_end, subdirs = data
+        i = subdirs.index(current_name)
+        prog_slice = (prog_end - prog_start) / len(subdirs)
+        current_progress = prog_slice * i + prog_start
+
+        if i == (len(subdirs) - 1):
+            del progress[parent_path]
+
+    if dirs:
+        progress[root] = (current_progress, current_progress+prog_slice, dirs)
+
+    return current_progress
+
+def findfilesR(p, patt, show_progress=False):
     """ Get a list of files (recursive)
 
-    Arguments
-    ---------
-
-    p (string): directory
-    patt (string): pattern to match
-
+    Args:
+        
+        p (string): directory
+        patt (string): pattern to match
+        show_progress (bool)
+    Returns:
+        lst (list of str)               
     """
     lst = []
     rr = re.compile(patt)
-    for root, dirs, files in os.walk(p, topdown=False):
-        lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
+    progress = {}
+    for root, dirs, files in os.walk(p, topdown=True):
+         frac=_walk_calc_progress(progress, root, dirs)
+         if show_progress:
+           tprint('findfilesR: %s: %.1f%%' % (p, 100*frac))
+         lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
     return lst
 
 

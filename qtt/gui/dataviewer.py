@@ -40,16 +40,16 @@ def findfilesR(p, patt):
 
 class DataViewer(QtWidgets.QWidget):
 
-    ''' Simple viewer for Qcodes data
-
-    Arugments
-    ---------
-
-        datadir (string or None): directory to scan for experiments
-        default_parameter (string): name of default parameter to plot
-    '''
 
     def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5']):
+        ''' Simple viewer for Qcodes data
+    
+        Arugments
+        ---------
+    
+            datadir (string or None): directory to scan for experiments
+            default_parameter (string): name of default parameter to plot
+        '''
         super(DataViewer, self).__init__()
         self.verbose=1 # for debugging
         self.default_parameter = default_parameter
@@ -124,6 +124,8 @@ class DataViewer(QtWidgets.QWidget):
         self.updateLogs()
         self.datatag = None
 
+        self.show()
+        
     def setDatadir(self, datadir):
         self.datadir = datadir
         self.io = qcodes.DiskIO(datadir)
@@ -154,7 +156,7 @@ class DataViewer(QtWidgets.QWidget):
         model = self._treemodel
         dd = []
         for e in self.extensions:
-            dd += findfilesR(self.datadir, '.*%s' % e)
+            dd += findfilesR(self.datadir, '.*%s' % e, show_progress=True)
         if self.verbose:
             print('found %d files' % (len(dd)))
 
