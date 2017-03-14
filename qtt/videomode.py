@@ -7,6 +7,8 @@ Created on Wed Feb  8 14:43:47 2017
 #%%
 from qtt.live_plotting import livePlot, fpgaCallback_1d, fpgaCallback_2d
 from qtt.tools import connect_slot
+import qtpy.QtWidgets as QtWidgets
+from qtt.scans import scan1Dfast, scan2Dturbo
 
 #%%
 
@@ -35,6 +37,11 @@ class VideoMode:
         self.lp.win.start_button.clicked.connect(connect_slot(self.run))
         self.lp.win.stop_button.clicked.connect(connect_slot(self.stop))
         self.run()
+        
+        # Add single button
+        self.lp.win.single_button = QtWidgets.QPushButton('Single')
+        self.lp.win.single_button.clicked.connect(connect_slot(self.single))
+
 
     def run(self):
         """ Programs the AWG, starts the read-out and the plotting. """
@@ -58,10 +65,40 @@ class VideoMode:
             self.station.RF.on()
 
     def stop(self):
-        """ Stops the plotting, AWG(s) and possibly RF. """
+        """ Stops the plotting, AWG(s) and if available RF. """
         self.lp.stopreadout()
         if self.station is not None:
             if hasattr(self.station, 'awg'):
                 self.station.awg.stop()
             if hasattr(self.station, 'RF'):
                 self.station.RF.off()
+
+    def single(self):
+        """Do a single scan with 1000 averaging.
+        
+        Do a single scan at high averaging. Note: this does not yet support the
+        usage of linear combinations of gates (a.k.a. virtual gates).    
+        """
+        scanjob = {'Naverage': 1000}
+        class dummy(object):
+            pass
+        dummy_sd = dummy()
+        dummy_sd.fpga_ch = self.fpga_ch
+        scanjob['sd'] = dummy_sd
+        if type(self.sweepparams) is str:
+            scanjob['sweepdata'] = {'param': self.sweepparams}
+            scanjob['sweepdata']['start'] = self.station.gates.get(self.sweepparams) - self.sweepranges / 2
+            scanjob['sweepdata']['end'] = scanjob['sweepdata']['start'] + self.sweepranges
+            self.alldata = scan1Dfast(self.station, scanjob)
+        if type(self.sweepparams) is list:
+            scanjob['stepdata'] = {'param': self.sweepparams[0]} 
+            scanjob['stepdata']['start'] = self.station.gates.get(self.sweepparams[0]) - self.sweepranges[0] / 2
+            scanjob['stepdata']['end'] = scanjob['stepdata']['start'] + self.sweepranges[0]
+            scanjob['sweepdata'] = {'param': self.sweepparams[1]}
+            scanjob['sweepdata']['start'] = self.station.gates.get(self.sweepparams[1]) - self.sweepranges[1] / 2
+            scanjob['sweepdata']['end'] = scanjob['sweepdata']['start'] + self.sweepranges[1]
+            scanjob['resolution'] = self.resolution
+            self.alldata = scan2Dturbo(self.station, scanjob)
+
+        if type(self.sweepparams) is dict:
+            raise NotImplementedError('Single scan with linear combinations of gates is not implemented.')
