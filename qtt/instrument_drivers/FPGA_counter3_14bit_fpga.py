@@ -259,49 +259,49 @@ class FPGA_counter3_14bit_fpga(Instrument):
             
         # Add parameters        
         self.add_parameter('hysteresis', type=int,
-            flags=Instrument.FLAG_GETSET, units='', format='')
+            flags=Instrument.FLAG_GETSET, unit='', format='')
         self.add_parameter('number_traces', type=int,
-            flags=Instrument.FLAG_GETSET, units='', format='')
+            flags=Instrument.FLAG_GETSET, unit='', format='')
         self.add_parameter('number_events', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')
+            flags=Instrument.FLAG_GET, unit='', format='')
         self.add_parameter('measure_done', type=int,
-            flags=Instrument.FLAG_GET, units='', format='')
+            flags=Instrument.FLAG_GET, unit='', format='')
         self.add_parameter('threshold', type=int,
-            flags=Instrument.FLAG_GETSET, units='mV', format='')
+            flags=Instrument.FLAG_GETSET, unit='mV', format='')
         self.add_parameter('absolute_threshold', type=int,
-            flags=Instrument.FLAG_GETSET, units='mV', format='')
+            flags=Instrument.FLAG_GETSET, unit='mV', format='')
         self.add_parameter('clock_speed', type=int,
-            flags=Instrument.FLAG_GETSET, units='', format='')
+            flags=Instrument.FLAG_GETSET, unit='', format='')
         self.add_parameter('PSB_mode', type=int,
-            flags=Instrument.FLAG_GETSET, units='', format='')
+            flags=Instrument.FLAG_GETSET, unit='', format='')
         # self.add_parameter('peak_value_of_noise', type=types.IntType,
             # flags=Instrument.FLAG_GET, units='mV', format='')           
         self.add_parameter('amount_of_packets', type=int,
-            flags=Instrument.FLAG_GET, units='', format='')            
+            flags=Instrument.FLAG_GET, unit='', format='')            
         self.add_parameter('cycle_number', type=int,
-            flags=Instrument.FLAG_GET, units='', format='')                
+            flags=Instrument.FLAG_GET, unit='', format='')                
         self.add_parameter('timing_data', type=list,
             flags=Instrument.FLAG_GET, units='', format='')
         self.add_parameter('PSB_results', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')
+            flags=Instrument.FLAG_GET, unit='', format='')
         self.add_parameter('pulse_detection_data', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')                         
+            flags=Instrument.FLAG_GET, unit='', format='')                         
         self.add_parameter('pulse_detection_data_binary', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')                             
+            flags=Instrument.FLAG_GET, unit='', format='')                             
         self.add_parameter('pulse_detection_data_decimal', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')                         
+            flags=Instrument.FLAG_GET, unit='', format='')                         
         self.add_parameter('average', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')  
+            flags=Instrument.FLAG_GET, unit='', format='')  
         self.add_parameter('Npoints_in_a_window', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')  
+            flags=Instrument.FLAG_GET, unit='', format='')  
         self.add_parameter('average_check_points', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')  
+            flags=Instrument.FLAG_GET, unit='', format='')  
         self.add_parameter('min', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')  
+            flags=Instrument.FLAG_GET, unit='', format='')  
         self.add_parameter('max', type=list,
-            flags=Instrument.FLAG_GET, units='', format='')     
+            flags=Instrument.FLAG_GET, unit='', format='')     
         self.add_parameter('first_point_detection_mode', type=int,
-            flags=Instrument.FLAG_GETSET, units='', format='')            
+            flags=Instrument.FLAG_GETSET, unit='', format='')            
         
         self.add_function('wait_till_measurement_is_done')
         self.add_function('set_number_traces')
@@ -315,7 +315,7 @@ class FPGA_counter3_14bit_fpga(Instrument):
             
         
         self.add_parameter('invert', type=int,
-            flags=Instrument.FLAG_GETSET, units='', format='')  
+            flags=Instrument.FLAG_GETSET, unit='', format='')  
             
         Nchannels=2*len(address)
         

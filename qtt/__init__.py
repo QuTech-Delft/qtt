@@ -20,6 +20,8 @@ from qtt.algorithms.functions import logistic
 import qtt.live_plotting
 import qtt.parameterviewer
 
+from qtt.gui.dataviewer import DataViewer
+
 #%%
 
 def start_dataviewer():
@@ -73,6 +75,7 @@ def _copy_to_str(x, memo):
 from qcodes import Parameter, Instrument, StandardParameter, ManualParameter
 for c in [ Parameter, Instrument, StandardParameter, ManualParameter]:
     copy._deepcopy_dispatch[c] = _copy_to_str
+
 
 #%% Enhance the qcodes functionality
 

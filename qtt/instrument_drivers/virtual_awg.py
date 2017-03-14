@@ -30,7 +30,7 @@ class virtual_awg(Instrument):
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
         self.corr = .02e-6
         self.maxdatapts = 8189
-        qcodes.utils.loggingGUI.installZMQlogger()
+        qtt.loggingGUI.installZMQlogger()
         logging.info('virtual_awg: setup')
 
         if len(self._awgs) == 0 and self.verbose:
