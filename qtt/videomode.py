@@ -55,7 +55,7 @@ class VideoMode:
         box.setDecimals(0)
         box.setMaximumWidth(120)
         box.valueChanged.connect(self.Naverage_changed)
-        self.lp.win.layout().children[0].addWidget(box)
+        self.lp.win.layout().children()[0].addWidget(box)
 
         self.run()
 
