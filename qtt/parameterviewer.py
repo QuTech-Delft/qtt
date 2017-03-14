@@ -12,7 +12,7 @@ from qtpy.QtCore import Qt
 from qtpy import QtWidgets
 from qtpy import QtGui
 import pyqtgraph
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 from functools import partial
 
 
@@ -185,7 +185,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 logging.debug(str(e))
 
 
-#@qtt.tools.deprecated
 def createParameterWidgetRemote(instruments, doexec=True):
     """ Create a parameter widget in a remote process.
 

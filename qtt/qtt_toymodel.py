@@ -382,27 +382,15 @@ class VirtualMeter(Instrument):
     shared_kwargs = ['model']
 
     def __init__(self, name, model=None, **kwargs):
-        super().__init__(name, **kwargs)
-        self.model = model
-
-        g = 'amplitude'
-        self.add_parameter(g,
-                           label='%s Current (nA)' % name,
-                           get_cmd=partial(self.get_gate, g),
-                           )
-        self.add_parameter('readnext', get_cmd=partial(self.get, 'amplitude'), label=name)
-
-    def get_gate(self, gate):
-        # need a remote get...
-        return self.model.get(self.name + '_' + gate)
-
-        # logging.debug('%s: get_gate %s' % (self.name,gate) )
-       # return 0
-
-    def set_gate(self, gate, value):
-        self.model.set(self.name + '_' + gate, value)
-        return
-
+        """ Virtual instrument with a parameter
+        
+        Args:
+            name (str)
+            model (object): class that provides a `.get` function
+            
+        """
+        raise Exception('please import from qtt.instrument_drivers.virtual_instruments instead')
+    
 #%%
 
 try:
@@ -410,6 +398,7 @@ try:
 except:
     pass
 
+import warnings
 
 class virtual_gates(Instrument):
 
@@ -438,10 +427,11 @@ class virtual_gates(Instrument):
             self._make_gate(gate)
 
         self.get_all()
+        warnings.warn('This code for gates is deprecated. Use gates in qtt/instrument_drivers.', DeprecationWarning)
 
     def get_idn(self):
-        ''' Overrule because the default VISA command does not work '''
-        IDN = {'vendor': 'QuTech', 'model': 'virtual_gates',
+        """ Overrule because the default VISA command does not work """
+        IDN = {'vendor': 'QuTech', 'model': self.name,
                'serial': None, 'firmware': None}
         return IDN
 

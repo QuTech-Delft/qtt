@@ -2,16 +2,15 @@
 
 import scipy
 import scipy.ndimage
-from qtt.tools import cfigure, plot2Dline
+from qtt.pgeometry import cfigure, plot2Dline
 import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
-from qtt.data import dataset2Dmetadata, pix2scan, image_transform, dataset2image, dataset2image2
-#from qtt.tools import *
 import qtt.data
+from qtt.data import dataset2Dmetadata, image_transform, dataset2image, dataset2image2
 import scipy
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 try:
     import cv2
 except:

@@ -12,10 +12,31 @@ Also see the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs
 
 ## More advanced topics
 
-* [Videomode]() TODO
+* [example_videomode.ipynb](example_videomode.ipynb) Videomode tuning
 * [Virtual gate space]() TODO
 * [example_fermi_fitting.ipynb](example_fermi_fitting.ipynb) Automatically fit a Fermi distribution
 * [example_polFitting.ipynb](example_polFitting.ipynb) Automatically fit a polarization line
-* [classical_dot_simulation.ipynb] Simulat quantum dot systems
+* [example_classical_dot_simulation.ipynb](example_classical_dot_simulation.ipynb) Simulate quantum dot systems
 
+## Code snippets
 
+Viewer from instrument parameters:
+```
+> qtt.parameterviewer.createParameterWidget([gates])
+```
+
+Start measurement control unit:
+```
+> qtt.live_plotting.start_measurement_control()
+```
+
+Start data viewer:
+```
+import qtt.gui.dataviewer
+dv=qtt.gui.dataviewer.DataViewer(datadir=r'P:\data')
+```
+
+Copy dataset to Powerpoint
+```
+qtt.tools.addPPT_dataset(data);
+```

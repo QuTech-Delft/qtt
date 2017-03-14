@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import cv2
 import scipy
 
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 
 from qtt.data import *
 
@@ -92,9 +92,9 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.
     if mvx is None:
         mvx = mvx0
 
-    if im.dtype == np.int64:
-        # opencv cannot handle int64 in resize
-        im = im.astype(np.float)
+    if im.dtype == np.int64 or im.dtype==np.int32 :
+        # opencv cannot handle int32 or int64 in resize
+        im = im.astype(np.float32)
     # scale factors
     fw = np.abs((float(mvx0) / mvx))
     fh = np.abs((float(mvy0) / mvy))

@@ -91,8 +91,8 @@ if __name__ == '__main__':
             ''' Funny ... '''
             return False
     else:
-        import virtualV2 as msetup
-        from virtualV2 import sample
+        #import virtualV2 as msetup
+        #from virtualV2 import sample
         import virtualDot as msetup
         from virtualDot import sample
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         basevalues[g] = 0
 
     #basetag = 'batch-2017-1-12'
-    basetag = 'batch-2017-1-23b'
+    basetag = 'batch-2017-3-13d'
     Tvalues = np.array([-390])
 
     b = True
@@ -264,7 +264,7 @@ if __name__ == '__main__':
 from qtt.legacy import onedotPlungerScan
 
 
-#alldataplunger=onedotPlungerScan(station, od, verbose=1)
+#alldataplunger=onedotPlungerScan(station, obasenamedotd, verbose=1)
 
 def stop_AWG(station):
     print('this is a dummy function!')
@@ -332,12 +332,12 @@ for ii, Tvalue in enumerate(Tvalues):
     #%% Perform sanity check on the channels
 
     for gate in qtt.tools.flatten([o['gates'] for o in one_dots]):
-        alldata = qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
+        alldata = qtt.scans.scanPinchValue(station, outputdir, gate, basevalues=basevalues, minstrument=[3], stepdelay=stepDelay(gate), cache=cache, full=full)
 
     for od in sddots:
         ki = od['instrument']
         for gate in od['gates']:
-            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, keithleyidx=[ki], cache=cache, stepdelay=stepDelay(gate), full=full)
+            scanPinchValue(station, outputdir, gate=gate, basevalues=basevalues, minstrument=[ki], cache=cache, stepdelay=stepDelay(gate), full=full)
             gates.resetgates(activegates, basevalues, verbose=0)
 
     ww = one_dots
@@ -429,6 +429,7 @@ for ii, Tvalue in enumerate(Tvalues):
         od = loadExperimentData(outputdir, tag='one_dot', dstr=basenamedot)
 
         ww = getODbalancepoint(od)
+        print('gate %s: basevalue to %.1f' % (od['gates'][0], ww[1]))
         basevaluesS[od['gates'][0]] = float(ww[1])
         basevaluesS[od['gates'][2]] = float(ww[0])
 
@@ -444,6 +445,7 @@ for ii, Tvalue in enumerate(Tvalues):
         basename = '%s-sweep-2d' % (od['name'])
         basenameplunger = '%s-sweep-plunger' % (od['name'])
         efileplunger = experimentFile(outputdir, tag='one_dot', dstr=basenameplunger)
+
         if cache and os.path.exists(efileplunger) and 1:
             print('  skipping 2D and plunger scan of %s' % od['name'])
             continue
@@ -615,7 +617,7 @@ for ii, Tvalue in enumerate(Tvalues):
         g = sd.tunegate()
         cvalstart = sd.sdval[1]
 
-        if scanjob['sweepdata']['gates'][0] == 'P2':
+        if scanjob['sweepdata']['param'][0] == 'P2':
             # swap!
             print('swapping step and sweep gate!!!')
             scanjob['sweepdata'], scanjob['stepdata'] = scanjob['stepdata'], scanjob['sweepdata']
@@ -645,7 +647,7 @@ for ii, Tvalue in enumerate(Tvalues):
 
         scanjob['compensateGates'] = compensateGates
         scanjob['gate_values_corners'] = gate_values_corners
-        gates.set(sweepdata['gates'][0], sweepdata['start'])
+        gates.set(sweepdata['param'][0], sweepdata['start'])
 
         if not simulation():  # fast scan, qcodes
             sd.initialize(setPlunger=True)
@@ -663,7 +665,7 @@ for ii, Tvalue in enumerate(Tvalues):
 
             scanjob['stepdata']['step'] = -4
             scanjob['sweepdata']['step'] = -4
-            scanjob['wait_time_step'] = 0
+            scanjob['stepdata']['wait_time'] = 0
 
             ds = 90
             scanjob['sweepdata']['start'] += ds
@@ -674,7 +676,7 @@ for ii, Tvalue in enumerate(Tvalues):
             qtt.live.liveplotwindow.clear()
             sd.initialize(setPlunger=True)
             defaultactivegates = []
-            alldata = scan2D(station, scanjob, wait_time=None, background=False)
+            alldata = scan2D(station, scanjob, )
             dstr = 'doubledot-%s-gc' % scanjob['td']['name']
             alldata.metadata['sd'] = str(sd)
             saveExperimentData(outputdir2d, alldata, tag='doubledot', dstr=dstr)
@@ -816,7 +818,3 @@ if __name__ == '__main__':
 
     print('##### 1dot_script_batch: generation of double-dot report complete...')
 
-#%%
-if __name__ == '__main__':
-
-    end(noerror=True)

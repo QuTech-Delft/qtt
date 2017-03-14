@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt
 import logging
 
 from qtt.data import dataset2Dmetadata, image_transform, dataset2image, show2D
-#from qtt.tools import *
 import qtt.data
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 import qtt.pgeometry as pgeometry
 import qtt.scans  # import fixReversal, checkReversal
 
@@ -181,10 +180,12 @@ if __name__ == '__main__':
 def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     """ Cost function for simple fit of one-dot open area
 
-    Arguments:
-        a,b (float): position along axis (a: x-axis)
+    Args:
+        a,b (float): position along axis (a is the x-axis)
         pt (numpy array): point in image
 
+    Returns:
+        cost (float)
     """
     pts = np.array(
         [[a, 0], pt, [ww.shape[1] - 1, b], [ww.shape[1] - 1, 0], [a, 0]])
@@ -193,6 +194,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     cv2.fillConvexPoly(imx, pts, color=[1])
     # tmp=fillPoly(imx, pts)
 
+    area=np.abs(pgeometry.polyarea(pts.reshape( (-1,2))))
+    
     cost = -(imx == ww).sum()
 
     # add penalty for moving out of range
@@ -200,6 +203,7 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     cost += (.025 * ww.size) * np.maximum(-a, 0) / ww.shape[1]
 
     cost += (.025 * ww.size) * 2 * (pts[2, 0, 1] < 0)
+    cost += 1e-3*area
 
     if verbose:
         print('costscore %.2f' % cost)
@@ -209,8 +213,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
         return cost
 
 #%%
-#from qtt.legacy import fixReversal, checkReversal
 import warnings
+import copy
 
 
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
@@ -218,17 +222,20 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     # XX = dd['data_array']
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
-    im, impixel, tr = qtt.data.dataset2image2(dd)
+    #im, impixel, tr = qtt.data.dataset2image2(dd)
+    im, tr = qtt.data.dataset2image(dd)
 
-    r = qtt.scans.checkReversal(im, verbose=verbose >= 2)
-    if r == -1:
-        warnings.warn('image sign is not correct!?')
-        im = qtt.scans.fixReversal(im)
-        impixel = r * impixel
+    if 0:
+        r = qtt.scans.checkReversal(im, verbose=verbose >= 2)
+        if r == -1:
+            warnings.warn('image sign is not correct!?')
+            im = qtt.scans.fixReversal(im)
+            #impixel = r * impixel
 
-    extentImage = [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
+    extentImage = copy.deepcopy(tr.scan_image_extent() ) # [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
+    mextentImage = tr.matplotlib_image_extent()
 
-    ims = impixel.copy()
+    ims = im.copy()
     kk = np.ones((3, 3)) / 9.
     for ii in range(2):
         ims = scipy.ndimage.convolve(ims, kk, mode='nearest', cval=0.0)
@@ -295,7 +302,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     od['balancepointpixel'] = pt
     od['balancepointpolygon'] = tr.pixel2scan(pt)
     od['balancepoint'] = tr.pixel2scan(pt)
-    od['balancefitpixel'] = pts.reshape((-1, 2)).T
+    od['balancefitpixel'] = pts.reshape((-1, 2)).T.copy()
     od['balancefit'] = tr.pixel2scan(od['balancefitpixel'])
     od['balancefit1'] = tr.pixel2scan(balancefitpixel0)
     od['setpoint'] = od['balancepoint'] + 8
@@ -311,22 +318,34 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         print('onedotGetBalance: balance point at: %.1f %.1f [mV]' % (
             od['balancepoint'][0, 0], od['balancepoint'][1, 0]))
 
+    if verbose>=3:
+        #%
+        plt.figure(9); plt.clf(); plt.imshow(extentims, interpolation='nearest');
+        pgeometry.plotPoints(balancefitpixel0, '.-r')
+        pgeometry.plotLabels(balancefitpixel0)
+        pgeometry.plotPoints(od['balancefitpixel'], '.-m')
+        pgeometry.plotLabels(od['balancefitpixel'])
+        
+        cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True, verbose=1)
+        
+        #%
     if fig is not None:
-
+        #print('######\n %s' % extentImage)
         qtt.tools.showImage(im, extentImage, fig=fig)
 
-        plt.axis('image')
         if verbose >= 2 or drawpoly:
             pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
         if verbose >= 2:
             pmatlab.plotPoints(od['balancepoint0'], '.r', markersize=13, label='balancepoint0')
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=17, label='balancepoint')
+        plt.axis('image')
 
         plt.title('image')
         plt.xlabel('%s (mV)' % g2)
-        plt.ylabel('%s (mV)' % g0)
+        plt.ylabel('%s (mV)' % g0)  
+        
 
-        qtt.tools.showImage(tr.itransform(ims), extentImage, fig=fig + 1)
+        qtt.tools.showImage((ims), extentImage, fig=fig + 1) # XX
         plt.axis('image')
         plt.title('Smoothed image')
         pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16, label='balancepoint')
@@ -360,5 +379,6 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 if __name__ == '__main__':
     from imp import reload
     reload(qtt.data)
+    #from qtt.algorithms.onedot import *
     dd = alldata
     od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)

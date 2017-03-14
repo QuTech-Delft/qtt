@@ -199,6 +199,8 @@ class virtual_awg(Instrument):
         tt = np.arange(0, period * repetitionnr + samplerate, samplerate)
         v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
         wave_raw = (v_wave / 2) * scipy.signal.sawtooth(2 * np.pi * tt / period, width=width)
+#        idx_zero = np.argmin(np.abs(wave_raw))
+#        wave_raw = np.roll(wave_raw, wave_raw.size-idx_zero)
 
         return wave_raw
 

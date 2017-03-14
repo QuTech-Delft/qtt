@@ -49,8 +49,7 @@ class sensingdot_t:
         return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
 
     def __getstate__(self):
-        """ Override to make the object pickable
-        """
+        """ Override to make the object pickable."""
         print('sensingdot_t: __getstate__')
         # d=super().__getstate__()
         import copy
@@ -78,17 +77,17 @@ class sensingdot_t:
             gates.set(gg[ii], self.sdval[ii])
 
     def tunegate(self):
-        """ Return the gate used for tuning """
+        """Return the gate used for tuning."""
         return self.gg[1]
 
     def value(self):
-        """ Return current through sensing dot """
+        """Return current through sensing dot."""
         if self.valuefunc is not None:
             return self.valuefunc()
         raise Exception('value function is not defined for this sensing dot object')
 
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
-        """ Make 1D-scan of the sensing dot """
+        """Make 1D-scan of the sensing dot."""
         print('### sensing dot scan')
         keithleyidx = [sd.index]
         gg = sd.gg
@@ -103,13 +102,6 @@ class sensingdot_t:
         endval = sdval[1] - scanrange
         endval = np.maximum(endval, -700)
 
-        scanjob1 = dict()
-        scanjob1['sweepdata'] = dict(
-            {'gates': [gg[1]], 'start': startval, 'end': endval, 'step': step})
-        scanjob1['keithleyidx'] = keithleyidx
-        scanjob1['compensateGates'] = []
-        scanjob1['gate_values_corners'] = [[]]
-
         wait_time = .8
         try:
             wait_time = sd.station.gate_settle(gg[1])
@@ -117,11 +109,18 @@ class sensingdot_t:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
 
+        scanjob1 = dict()
+        scanjob1['sweepdata'] = dict(
+            {'param': [gg[1]], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
+        scanjob1['minstrument'] = keithleyidx
+        scanjob1['compensateGates'] = []
+        scanjob1['gate_values_corners'] = [[]]
+
+
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
-        alldata = scan1D(
-            scanjob1, sd.station, title_comment='plunger', wait_time=wait_time)
+        alldata = scan1D(sd.station, scanjob= scanjob1 )
 
         # if not outputdir == None:
         #    saveCoulombData(outputdir, alldata)
@@ -129,7 +128,7 @@ class sensingdot_t:
         return alldata
 
     def scan2D(sd, ds=90, stepsize=-4, fig=None):
-        """ Make 2D-scan of the sensing dot """
+        """Make 2D-scan of the sensing dot."""
         keithleyidx = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
@@ -138,14 +137,14 @@ class sensingdot_t:
 
         scanjob = dict()
         scanjob['stepdata'] = dict(
-            {'gates': [gg[0]], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
+            {'param': [gg[0]], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
         scanjob['sweepdata'] = dict(
-            {'gates': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
-        scanjob['keithleyidx'] = keithleyidx
+            {'param': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
+        scanjob['minstrument'] = keithleyidx
         scanjob['compensateGates'] = []
         scanjob['gate_values_corners'] = [[]]
 
-        alldata = qtt.scans.scan2D(scanjob, TitleComment='2D', wait_time=0.1)
+        alldata = qtt.scans.scan2D(scanjob)
 
         if fig is not None:
             qtt.scans.plotData(alldata, fig=fig)
@@ -195,7 +194,7 @@ class sensingdot_t:
         # set sweep to center
         gates = sd.station.gates
         gates.set(
-            sweepdata['gates'][0], (sweepdata['start'] + sweepdata['end']) / 2)
+            sweepdata['param'][0], (sweepdata['start'] + sweepdata['end']) / 2)
         if not stepdata is None:
             if mode == 'end':
                 # set sweep to center
@@ -206,7 +205,7 @@ class sensingdot_t:
             else:
                 # set sweep to center
                 gates.set(
-                    stepdata['gates'][0], (stepdata['start'] + stepdata['end']) / 2)
+                    stepdata['param'][0], (stepdata['start'] + stepdata['end']) / 2)
 
     def fineTune(sd, fig=300, stephalfmv=8):
         g = sd.tunegate()
@@ -231,7 +230,7 @@ class sensingdot_t:
             sweepdata = scanjob['sweepdata']
             stepdata = scanjob.get('stepdata', None)
         g = sd.tunegate()
-        gt = stepdata['gates'][0]
+        gt = stepdata['param'][0]
         cdata = stepdata
         factor = sdInfluenceFactor(sd.index, gt)
         d = factor * (cdata['start'] - cdata['end'])
@@ -241,7 +240,7 @@ class sensingdot_t:
             print('autoTuneFine: factor %.2f, delta %.1f' % (factor, d))
 
         # set sweep to center
-        set_gate(sweepdata['gates'][0], (sweepdata[
+        set_gate(sweepdata['param'][0], (sweepdata[
                  'start'] + sweepdata['end']) / 2)
 
         sdmiddle = sd.sdval[1]
@@ -270,18 +269,16 @@ class sensingdot_t:
 
         return (sdstart, sdend, sdmiddle)
 
-    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, fig=201, sleeptime=2, delete=True):
-        ''' Fast tuning of the sensing dot plunger '''
-
+    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None, fig=201, sleeptime=2, delete=True):
+        """Fast tuning of the sensing dot plunger."""
         waveform, sweep_info = self.station.awg.sweep_gate(
             self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
-        # time for AWG to settle
+        # time for AWG signal to reach the sample
         qtt.time.sleep(sleeptime)
 
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
-            Naverage=Naverage, ReadDevice=ReadDevice)
+        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
 
         self.station.awg.stop()
 
@@ -293,10 +290,9 @@ class sensingdot_t:
 
         sdplg = getattr(self.station.gates, self.gg[1])
         initval = sdplg.get()
-        sweepvalues = sdplg[initval - sweeprange /
-                            2:sweeprange / 2 + initval:sweeprange / len(data)]
+        sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
 
-        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data)
+        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
         alldata.add_metadata({'scanjob': None})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
@@ -323,3 +319,39 @@ class sensingdot_t:
                 'sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
 
         return self.sdval[1], alldata
+
+
+#%%
+class LinearCombParameter(qcodes.instrument.parameter.Parameter):
+    """Create parameter which controls linear combinations.
+
+    Attributes:
+        name (str): the name given to the new parameter
+        comb_map (list): tuples with in the first entry a parameter and in the
+                 second a coefficient
+        coeffs_sum (float): the sum of all the coefficients
+    """
+    def __init__(self, name, comb_map):
+        """Initialize a linear combination parameter."""
+        super().__init__(name)
+        self.name = name
+        self.comb_map = comb_map
+        self.coeffs_sum = sum([np.abs(coeff) for (param, coeff) in self.comb_map])
+
+    def get(self):
+        """Return the value of this parameter."""
+        value = sum([coeff * param.get() for (param, coeff) in self.comb_map])
+        return value
+
+    def set(self, value):
+        """Set the parameter to value. 
+
+        Note: the set is not unique, i.e. the result of this method depends on
+        the previous value of this parameter.
+
+        Args:
+            value (float): the value to set the parameter to.
+        """
+        val_diff = value - self.get()
+        for (param, coeff) in self.comb_map:
+            param.set(param.get() + coeff * val_diff / self.coeffs_sum)

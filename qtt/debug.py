@@ -13,7 +13,7 @@ import pickle
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
 
-from qtt import pmatlab
+from qtt import pgeometry as pmatlab
 import tempfile
 
 #%% Debugging
