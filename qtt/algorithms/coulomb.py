@@ -35,16 +35,36 @@ def gauss(x, p):
     return p[2] * 1.0 / (p[1] * np.sqrt(2 * np.pi)) * np.exp(-(x - p[0])**2 / (2 * p[1]**2))
 
 
-def show1Dpeaks(alldata, fig=100, verbose=1):
-    x = alldata['data_array'][:, 0]
-    y = alldata['data_array'][:, 2]
+# OLD code
+#def show1Dpeaks(alldata, fig=100, verbose=1):
+#    x = alldata['data_array'][:, 0]
+#    y = alldata['data_array'][:, 2]
+#    x, y = peakdataOrientation(x, y)
+#
+#    istep = np.abs(alldata['sweepdata']['step'])
+#    goodpeaks = findSensingDotPosition(x, y, verbose=1, fig=fig, istep=istep, plotLabels=True, plotScore=True, plothalf=False, useslopes=True)
+#
+#    return goodpeaks
+
+def analyseCoulombPeaks(alldata, fig=None):
+    """ Find Coulomb peaks in a 1D dataset 
+    
+    Args:
+        alldata (DataSet)
+        fig (int or None): figure handle to plot
+    Returns
+        peaks (list): fitted peaks
+    """
+    x, y = qtt.data.dataset1Ddata(alldata)
+
+    istep = qtt.data.dataset_get_istep(alldata)
+    #istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
     x, y = peakdataOrientation(x, y)
 
-    istep = np.abs(alldata['sweepdata']['step'])
-    goodpeaks = findSensingDotPosition(x, y, verbose=1, fig=fig, istep=istep, plotLabels=True, plotScore=True, plothalf=False, useslopes=True)
+    goodpeaks = coulombPeaks(
+        x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
 
     return goodpeaks
-
 
 def fitCoulombPeaks(x, y, lowvalue=None, verbose=1, fig=None, istep=1):
     """ Fit Coulumb peaks in a measurement series 

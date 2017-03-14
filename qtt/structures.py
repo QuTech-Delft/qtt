@@ -270,7 +270,15 @@ class sensingdot_t:
         return (sdstart, sdend, sdmiddle)
 
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None, fig=201, sleeptime=2, delete=True):
-        """Fast tuning of the sensing dot plunger."""
+        """Fast tuning of the sensing dot plunger.
+        
+        Args:
+            fig (int or None): window for plotting results
+            ...
+        Returns:
+            value (float): value of plunger
+            alldata (dataset): measured data
+        """
         waveform, sweep_info = self.station.awg.sweep_gate(
             self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
