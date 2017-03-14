@@ -36,6 +36,7 @@ class VideoMode:
         self.resolution = resolution
         self.diff_dir = None
         self.lp = livePlot(None, self.station.gates, self.sweepparams, self.sweepranges)
+
         self.lp.win.start_button.clicked.connect(connect_slot(self.run))
         self.lp.win.stop_button.clicked.connect(connect_slot(self.stop))
 
@@ -44,6 +45,17 @@ class VideoMode:
         self.lp.win.layout().children()[0].addWidget(self.lp.win.single_button)
         self.lp.win.layout().children()[0].addWidget(self.lp.win.stop_button)
         self.lp.win.single_button.clicked.connect(connect_slot(self.single))
+
+        box = QtWidgets.QDoubleSpinBox()
+        box.setKeyboardTracking(False)  # do not emit signals when still editing
+        box.setMinimum(1)
+        box.setMaximum(1023)
+        box.setSingleStep(1)
+        box.setPrefix('Naverage: ')
+        box.setDecimals(0)
+        box.setMaximumWidth(120)
+        box.valueChanged.connect(self.Naverage_changed)
+        self.lp.win.layout().children[0].addWidget(box)
 
         self.run()
 
@@ -102,3 +114,7 @@ class VideoMode:
         alldata.write(write_metadata=True)
         plotData(alldata, fig=None)
         self.alldata = alldata
+
+    def Naverage_changed(self, value):
+        """Set the value of Naverage."""
+        self.lp.datafunction.Naverage = value
