@@ -85,8 +85,7 @@ class virtual_IVVI(Instrument):
                            label='%s (mV)' % gate,  # (\u03bcV)',
                            unit='mV',
                            get_cmd=partial(self._get, gate=gate),
-                           set_cmd=partial(self._set, gate=gate),
-                           vals=Numbers(-2000, 2000), )
+                           set_cmd=partial(self._set, gate=gate))
         self.add_function(
             'get_{}'.format(gate), call_cmd=partial(self.get, param_name=gate))
         self.add_function('set_{}'.format(gate), call_cmd=partial(
@@ -108,9 +107,11 @@ class virtual_IVVI(Instrument):
         for g, bnds in gate_boundaries.items():
             logging.debug('gate %s: %s' % (g, bnds))
 
+            instrument = self._instrument_list[self._gate_map[g][0]]
             param = self.get_instrument_parameter(g)
             param._vals = Numbers(bnds[0], max_value=bnds[1])
-            self.parameters[g]._vals = Numbers(bnds[0], max_value=bnds[1])
+            if hasattr(instrument, 'adjust_validator_resolution'):
+                instrument.adjust_validator_resolution(param)
 
     def __repr__(self):
         gm = getattr(self, '_gate_map', [])
