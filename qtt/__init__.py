@@ -4,6 +4,7 @@
 import copy
 import qcodes
 
+import warnings
 import qtt.live
 import qtt.tools
 import qtt.data
@@ -24,6 +25,11 @@ from qtt.gui.dataviewer import DataViewer
 
 #%%
 
+if qcodes.config['user'].get('deprecation_warnings', True):
+    # enable deprecation warnings
+    warnings.simplefilter("default", DeprecationWarning)
+
+#%%
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()

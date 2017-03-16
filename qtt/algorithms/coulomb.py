@@ -132,7 +132,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     stdY = np.std(y)
     pmatlab.cfigure(fig)
     plt.clf()
-    h = plt.plot(x, y, plotmarker)
+    h = plt.plot(x, y, plotmarker) # , label='data points')
     if plotsmooth:
         plt.plot(x, ys, 'g')
     # plt.plot(x,w)
@@ -144,7 +144,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
             ypos = peak['y']
 
             if showPeaks:
-                plt.plot(xpos, ypos, '.r', markersize=15)
+                plt.plot(xpos, ypos, '.r', markersize=15, label='peaks')
             if plotLabels:
                 tp = peak.get('type', 'peak')
                 lbl = '%s %d' % (tp, jj)
@@ -156,13 +156,13 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     halfhandle = []
     if plothalf:
         for p in peaks:
-            hh = plt.plot(p['xhalfl'], p['yhalfl'], '.m', markersize=12)
+            hh = plt.plot(p['xhalfl'], p['yhalfl'], '.m', markersize=12, label='peak half height')
             halfhandle += [hh[0]]
     if plotbottom:
         for p in peaks:
             if p['valid']:
                 plt.plot(
-                    p['xbottoml'], p['ybottoml'], '.', color=[.5, 1, .5], markersize=12)
+                    p['xbottoml'], p['ybottoml'], '.', color=[.5, 1, .5], markersize=12, label='peak bottom left')
 
     th = plt.title('Local maxima')
     return dict({'linehandle': h, 'title': th, 'labelh': labelh, 'halfhandle': halfhandle})
