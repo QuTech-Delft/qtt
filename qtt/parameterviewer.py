@@ -195,12 +195,12 @@ def createParameterWidgetRemote(instruments, doexec=True):
     return p
 
 
-def createParameterWidget(instruments, doexec=True, remote=False):
+def createParameterWidget(instruments, doexec=False, remote=False):
     """ Create a parameter widget
     
     Args:
         instruments (list)
-        doexec (bool)
+        doexec (bool): if True execute as a standalone Qt app
         remote (bool): if True, then start in a remote process.
                        Note: this can only be used if all the Instruments are remote instruments.
     """

@@ -766,7 +766,11 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
     if fig is not None:
         ims, (fw, fh, mvx, mvy, _) = straightenImage(imc, imextent, mvx=1, verbose=0)
         show2D(alldata, ims, fig=fig, verbose=0)
-        scaleCmap(ims)
+        try:
+            scaleCmap(ims)
+        except:
+            # ipython workaround
+            pass    
         plt.axis('image')
         plt.title('zero-zero point (zoom)')
 

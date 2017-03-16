@@ -16,15 +16,13 @@ from qcodes.plots.pyqtgraph import QtPlot
 
 import qtt
 
-
-
 #%% Main class
 
 
 class DataViewer(QtWidgets.QWidget):
 
 
-    def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5']):
+    def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5'], verbose=1):
         ''' Simple viewer for Qcodes data
     
         Arugments
@@ -34,7 +32,7 @@ class DataViewer(QtWidgets.QWidget):
             default_parameter (string): name of default parameter to plot
         '''
         super(DataViewer, self).__init__()
-        self.verbose=1 # for debugging
+        self.verbose=verbose # for debugging
         self.default_parameter = default_parameter
         if datadir is None:
             datadir = qcodes.DataSet.default_io.base_location
@@ -102,11 +100,12 @@ class DataViewer(QtWidgets.QWidget):
         self.reloadbutton.clicked.connect(self.updateLogs)
         self.pptbutton.clicked.connect(self.pptCallback)
         self.clipboardbutton.clicked.connect(self.clipboardCallback)
-
+        if self.verbose>=2:
+            print('created gui...')
         # get logs from disk
         self.updateLogs()
         self.datatag = None
-
+        
         self.show()
         
     def setDatadir(self, datadir):
@@ -141,7 +140,7 @@ class DataViewer(QtWidgets.QWidget):
         for e in self.extensions:
             dd += qtt.pgeometry.findfilesR(self.datadir, '.*%s' % e, show_progress=True)
         if self.verbose:
-            print('found %d files' % (len(dd)))
+            print('DataViewer: found %d files' % (len(dd)))
 
         self.datafiles = sorted(dd)
         self.datafiles = [os.path.join(self.datadir, d) for d in self.datafiles]
@@ -160,6 +159,8 @@ class DataViewer(QtWidgets.QWidget):
                 pass
         self.logs = logs
 
+        if self.verbose:
+            print('DataViewer: create gui elements' )
         for i, datetag in enumerate(sorted(logs.keys())[::-1]):
             parent1 = QtGui.QStandardItem(datetag)
             for j, logtag in enumerate(sorted(logs[datetag])):
@@ -173,6 +174,8 @@ class DataViewer(QtWidgets.QWidget):
             # span container columns
             self.logtree.setFirstColumnSpanned(
                 i, self.logtree.rootIndex(), True)
+        if self.verbose:
+            print('DataViewer: updateLogs done' )
 
     def plot_parameter(self, data):
         ''' Return parameter to be plotted '''
