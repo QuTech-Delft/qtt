@@ -214,7 +214,7 @@ def createParameterWidget(instruments, doexec=False, remote=False):
 
     ms = pmatlab.monitorSizes()[-1]
     p = ParameterViewer(instruments=instruments, instrumentnames=instrumentnames)
-    p.setGeometry(ms[0] + ms[2] - 280, 20, 260, 600)
+    p.setGeometry(ms[0] + ms[2] - 320, 30, 300, 600)
     p.show()
     p.updatecallback()
 

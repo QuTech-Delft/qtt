@@ -86,7 +86,7 @@ class DataViewer(QtWidgets.QWidget):
         self.setLayout(vertLayout)
 
         self.setWindowTitle(window_title)
-        self.logtree.header().resizeSection(0, 240)
+        self.logtree.header().resizeSection(0, 280)
 
         # disable edit
         self.logtree.setEditTriggers(
@@ -121,7 +121,7 @@ class DataViewer(QtWidgets.QWidget):
             return
         qtt.tools.addPPT_dataset(self.dataset)
     def clipboardCallback(self):
-        dataviewer.plotwindow.copyToClipboard()
+        self.qplot.copyToClipboard()
 
     def selectDirectory(self):
         from qtpy.QtWidgets import QFileDialog
@@ -271,7 +271,7 @@ if __name__ == '__main__':
     app = pg.mkQApp()
 
     dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
-    dataviewer.setGeometry(1280, 60, 700, 800)
+    dataviewer.setGeometry(1280, 60, 700, 900)
     dataviewer.plotwindow.setMaximumHeight(400)
     dataviewer.show()
     self = dataviewer
