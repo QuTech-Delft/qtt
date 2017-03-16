@@ -16,15 +16,13 @@ from qcodes.plots.pyqtgraph import QtPlot
 
 import qtt
 
-
-
 #%% Main class
 
 
 class DataViewer(QtWidgets.QWidget):
 
 
-    def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5']):
+    def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5'], verbose=1):
         ''' Simple viewer for Qcodes data
     
         Arugments
@@ -34,7 +32,7 @@ class DataViewer(QtWidgets.QWidget):
             default_parameter (string): name of default parameter to plot
         '''
         super(DataViewer, self).__init__()
-        self.verbose=1 # for debugging
+        self.verbose=verbose # for debugging
         self.default_parameter = default_parameter
         if datadir is None:
             datadir = qcodes.DataSet.default_io.base_location
@@ -88,7 +86,7 @@ class DataViewer(QtWidgets.QWidget):
         self.setLayout(vertLayout)
 
         self.setWindowTitle(window_title)
-        self.logtree.header().resizeSection(0, 240)
+        self.logtree.header().resizeSection(0, 280)
 
         # disable edit
         self.logtree.setEditTriggers(
@@ -102,11 +100,12 @@ class DataViewer(QtWidgets.QWidget):
         self.reloadbutton.clicked.connect(self.updateLogs)
         self.pptbutton.clicked.connect(self.pptCallback)
         self.clipboardbutton.clicked.connect(self.clipboardCallback)
-
+        if self.verbose>=2:
+            print('created gui...')
         # get logs from disk
         self.updateLogs()
         self.datatag = None
-
+        
         self.show()
         
     def setDatadir(self, datadir):
@@ -122,7 +121,7 @@ class DataViewer(QtWidgets.QWidget):
             return
         qtt.tools.addPPT_dataset(self.dataset)
     def clipboardCallback(self):
-        dataviewer.plotwindow.copyToClipboard()
+        self.qplot.copyToClipboard()
 
     def selectDirectory(self):
         from qtpy.QtWidgets import QFileDialog
@@ -141,7 +140,7 @@ class DataViewer(QtWidgets.QWidget):
         for e in self.extensions:
             dd += qtt.pgeometry.findfilesR(self.datadir, '.*%s' % e, show_progress=True)
         if self.verbose:
-            print('found %d files' % (len(dd)))
+            print('DataViewer: found %d files' % (len(dd)))
 
         self.datafiles = sorted(dd)
         self.datafiles = [os.path.join(self.datadir, d) for d in self.datafiles]
@@ -160,6 +159,8 @@ class DataViewer(QtWidgets.QWidget):
                 pass
         self.logs = logs
 
+        if self.verbose>=2:
+            print('DataViewer: create gui elements' )
         for i, datetag in enumerate(sorted(logs.keys())[::-1]):
             parent1 = QtGui.QStandardItem(datetag)
             for j, logtag in enumerate(sorted(logs[datetag])):
@@ -173,6 +174,8 @@ class DataViewer(QtWidgets.QWidget):
             # span container columns
             self.logtree.setFirstColumnSpanned(
                 i, self.logtree.rootIndex(), True)
+        if self.verbose>=2:
+            print('DataViewer: updateLogs done' )
 
     def plot_parameter(self, data):
         ''' Return parameter to be plotted '''
@@ -186,8 +189,7 @@ class DataViewer(QtWidgets.QWidget):
 
     def logCallback(self, index):
         ''' Function called when a log entry is selected '''
-        logging.info('logCallback!')
-        logging.debug('logCallback: index %s' % str(index))
+        logging.info('logCallback: index %s' % str(index))
         self.__debug['last'] = index
         pp = index.parent()
         row = index.row()
@@ -197,13 +199,13 @@ class DataViewer(QtWidgets.QWidget):
 
         # load data
         if tag is not None:
-            if self.verbose:
-                print('logCallback! tag %s' % tag)
+            if self.verbose>=2:
+                print('DataViewer: logCallback: tag %s' % tag)
             try:
-                logging.debug('load tag %s' % tag)
+                logging.debug('DataViewer: load tag %s' % tag)
 
                 try:
-                    if self.verbose>=2:
+                    if self.verbose>=3:
                                 print('trying HDF5')
                                 print('tag: %s' % tag)
                     from qcodes.data.hdf5_format import HDF5Format
@@ -219,7 +221,9 @@ class DataViewer(QtWidgets.QWidget):
                         if self.verbose>=2:
                             print('failed with format:' )
                             print(ex)
-                        print('trying GNUPlotFormat: tag %s' % tag)
+                            
+                        if self.verbose>=3:
+                            logging.info('trying GNUPlotFormat: tag %s' % tag)
                     data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
                     logging.debug('loaded GNUPlotFormat datasett %s' % tag)
 
@@ -244,7 +248,6 @@ class DataViewer(QtWidgets.QWidget):
             except Exception as e:
                 print('logCallback! error ...')
                 logging.exception(e)
-                logging.warning(e)
         pass
 
 
@@ -268,7 +271,7 @@ if __name__ == '__main__':
     app = pg.mkQApp()
 
     dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
-    dataviewer.setGeometry(1280, 60, 700, 800)
+    dataviewer.setGeometry(1280, 60, 700, 900)
     dataviewer.plotwindow.setMaximumHeight(400)
     dataviewer.show()
     self = dataviewer

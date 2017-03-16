@@ -4,6 +4,7 @@
 import copy
 import qcodes
 
+import warnings
 import qtt.live
 import qtt.tools
 import qtt.data
@@ -24,6 +25,11 @@ from qtt.gui.dataviewer import DataViewer
 
 #%%
 
+if qcodes.config['user'].get('deprecation_warnings', True):
+    # enable deprecation warnings
+    warnings.simplefilter("default", DeprecationWarning)
+
+#%%
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()
@@ -44,10 +50,14 @@ try:
     _redis_connection = redis.Redis(host='127.0.0.1', port=6379)
     _redis_connection.set('qtt_abort_running_measurement', 0)
 except:
+    _redis_connection = None
+    
     pass
 
 def _abort_measurement():
     """ Return True if the currently running measurement should be aborted """
+    if _redis_connection is None:
+        return 0
     v=_redis_connection.get('qtt_abort_running_measurement')
     if v is None:
         v=0
@@ -102,3 +112,14 @@ try:
     QtPlot.keyPressEvent = keyPressEvent
 except:
     pass
+
+#%%
+import pyqtgraph as pg
+
+def _copyToClipboard(self):
+        ''' Copy the current image to a the system clipboard '''
+        app = pg.mkQApp()
+        clipboard = app.clipboard()
+        clipboard.setPixmap(pg.QtGui.QPixmap.grabWidget(self))
+        
+QtPlot.copyToClipboard=_copyToClipboard        

@@ -480,7 +480,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
 
     tprev = time.time()
     for ix, x in enumerate(stepvalues):
-        tprint('scan2D: %d/%d: time %.1f: setting %s to %.3f' % (ix, len(stepvalues), time.time() - t0, stepvalues.name, x), dt=.5)
+        tprint('scan2D: %d/%d: time %.1f: setting %s to %.3f' % (ix, len(stepvalues), time.time() - t0, stepvalues.name, x), dt=1.5)
         if 'gates_vert' in scanjob:
             for g in scanjob['gates_vert']:
                 gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])

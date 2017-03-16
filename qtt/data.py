@@ -808,7 +808,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None):
     xx = np.array(x)
     yy = np.ones(xx.size)
     x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, preset_data=xx, is_setpoint=True)
-    ytmp = DataArray(name=yname, array_id=yname, label=yname, preset_data=yy, set_arrays=(x,))
+    ytmp = DataArray(name=yname, array_id=yname, label=yname, unit='a.u.', preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
     dd.add_array(ytmp)

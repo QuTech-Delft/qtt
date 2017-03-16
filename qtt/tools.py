@@ -520,7 +520,7 @@ try:
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
-        if verbose:
+        if verbose>=2:
             print('num of open PPTs: %d' % Application.presentations.Count)
 
         # ppt = Application.Presentations.Add()
@@ -534,7 +534,7 @@ try:
             Application.Visible = True  # shows what's happening, not required, but helpful for now
 
         if verbose:
-            print('name: %s' % ppt.Name)
+            print('addPPTslide: name: %s' % ppt.Name)
 
         ppLayoutTitleOnly = 11
         layout = ppLayoutTitleOnly
@@ -547,7 +547,7 @@ try:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
         if fig is not None:
-            fname = tempfile.mktemp(prefix='qcodesimagetem', suffix='.png')
+            fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
             if isinstance(fig, matplotlib.figure.Figure):
                 fig.savefig(fname)
             elif isinstance(fig, int):
@@ -556,9 +556,14 @@ try:
             elif isinstance(fig, QtWidgets.QWidget):
                 figtemp = QtGui.QPixmap.grabWidget(fig)
                 figtemp.save(fname)
+            elif isinstance(fig, qcodes.plots.pyqtgraph.QtPlot):
+                #figtemp = QtGui.QPixmap.grabWidget(fig.win)
+                fig.save(fname)
             else:
                 if verbose:
-                    print('figure is of an unknown type')
+                    raise Exception('figure is of an unknown type %s' % (type(fig), ) )
+            if verbose>=2:
+                print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
                                     SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
 
@@ -580,7 +585,8 @@ try:
 
         if activate_slide:
             idx = int(slide.SlideIndex)
-            print('goto slide %d' % idx)
+            if verbose>=1:
+                print('addPPTslide: goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
@@ -634,7 +640,7 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict'):
+def reshape_metadata(dataset, printformat='dict', verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
@@ -654,7 +660,7 @@ def reshape_metadata(dataset, printformat='dict'):
         if 'IDN' in all_md[x]['parameters']:
             metadata[x]['IDN'] = dict({'name': 'IDN', 'value': all_md[
                                       x]['parameters']['IDN']['value']})
-            metadata[x]['IDN']['units'] = ''
+            metadata[x]['IDN']['unit'] = ''
         for y in all_md[x]['parameters'].keys():
             if y != 'IDN':
                 metadata[x][y] = OrderedDict()
@@ -663,7 +669,7 @@ def reshape_metadata(dataset, printformat='dict'):
                 if isinstance(param_md['value'], float):
                     metadata[x][y]['value'] = float(
                         format(param_md['value'], '.3f'))
-                metadata[x][y]['units'] = param_md['units']
+                metadata[x][y]['unit'] = param_md['unit']
                 metadata[x][y]['label'] = param_md['label']
 
     if printformat == 'dict':
@@ -672,14 +678,16 @@ def reshape_metadata(dataset, printformat='dict'):
     else:
         ss = ''
         for k in metadata:
-            print('--- %s' % k)
+            if verbose:
+                print('--- %s' % k)
             s = metadata[k]
             ss += '\n## %s:\n' % k
             for p in s:
                 pp = s[p]
-                print('  --- %s' % p)
+                if verbose:
+                    print('  --- %s' % p)
                 ss += '%s: %s %s' % (pp['name'],
-                                     pp['value'], pp.get('units', ''))
+                                     pp['value'], pp.get('unit', ''))
                 ss += '\n'
             # ss+=str(s)
 
@@ -690,6 +698,11 @@ if __name__ == '__main__' and 0:
     print(x)
     x = reshape_metadata(data, printformat='dict')
     print(x)
+
+def test_reshape_metadata():
+    param=qcodes.ManualParameter('dummy')
+    dataset=qcodes.Loop(param[0:1:10]).each(param).run()
+    _=reshape_metadata(dataset, printformat='dict')
 
 #%%
 try:

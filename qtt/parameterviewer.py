@@ -195,12 +195,12 @@ def createParameterWidgetRemote(instruments, doexec=True):
     return p
 
 
-def createParameterWidget(instruments, doexec=True, remote=False):
+def createParameterWidget(instruments, doexec=False, remote=False):
     """ Create a parameter widget
     
     Args:
         instruments (list)
-        doexec (bool)
+        doexec (bool): if True execute as a standalone Qt app
         remote (bool): if True, then start in a remote process.
                        Note: this can only be used if all the Instruments are remote instruments.
     """
@@ -214,7 +214,7 @@ def createParameterWidget(instruments, doexec=True, remote=False):
 
     ms = pmatlab.monitorSizes()[-1]
     p = ParameterViewer(instruments=instruments, instrumentnames=instrumentnames)
-    p.setGeometry(ms[0] + ms[2] - 280, 20, 260, 600)
+    p.setGeometry(ms[0] + ms[2] - 320, 30, 300, 600)
     p.show()
     p.updatecallback()
 
