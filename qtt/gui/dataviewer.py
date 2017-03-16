@@ -159,7 +159,7 @@ class DataViewer(QtWidgets.QWidget):
                 pass
         self.logs = logs
 
-        if self.verbose:
+        if self.verbose>=2:
             print('DataViewer: create gui elements' )
         for i, datetag in enumerate(sorted(logs.keys())[::-1]):
             parent1 = QtGui.QStandardItem(datetag)
@@ -174,7 +174,7 @@ class DataViewer(QtWidgets.QWidget):
             # span container columns
             self.logtree.setFirstColumnSpanned(
                 i, self.logtree.rootIndex(), True)
-        if self.verbose:
+        if self.verbose>=2:
             print('DataViewer: updateLogs done' )
 
     def plot_parameter(self, data):
@@ -189,8 +189,7 @@ class DataViewer(QtWidgets.QWidget):
 
     def logCallback(self, index):
         ''' Function called when a log entry is selected '''
-        logging.info('logCallback!')
-        logging.debug('logCallback: index %s' % str(index))
+        logging.info('logCallback: index %s' % str(index))
         self.__debug['last'] = index
         pp = index.parent()
         row = index.row()
@@ -200,13 +199,13 @@ class DataViewer(QtWidgets.QWidget):
 
         # load data
         if tag is not None:
-            if self.verbose:
-                print('logCallback! tag %s' % tag)
+            if self.verbose>=2:
+                print('DataViewer: logCallback: tag %s' % tag)
             try:
-                logging.debug('load tag %s' % tag)
+                logging.debug('DataViewer: load tag %s' % tag)
 
                 try:
-                    if self.verbose>=2:
+                    if self.verbose>=3:
                                 print('trying HDF5')
                                 print('tag: %s' % tag)
                     from qcodes.data.hdf5_format import HDF5Format
@@ -222,7 +221,9 @@ class DataViewer(QtWidgets.QWidget):
                         if self.verbose>=2:
                             print('failed with format:' )
                             print(ex)
-                        print('trying GNUPlotFormat: tag %s' % tag)
+                            
+                        if self.verbose>=3:
+                            logging.info('trying GNUPlotFormat: tag %s' % tag)
                     data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
                     logging.debug('loaded GNUPlotFormat datasett %s' % tag)
 
@@ -247,7 +248,6 @@ class DataViewer(QtWidgets.QWidget):
             except Exception as e:
                 print('logCallback! error ...')
                 logging.exception(e)
-                logging.warning(e)
         pass
 
 

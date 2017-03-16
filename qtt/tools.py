@@ -520,7 +520,7 @@ try:
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
-        if verbose:
+        if verbose>=2:
             print('num of open PPTs: %d' % Application.presentations.Count)
 
         # ppt = Application.Presentations.Add()
@@ -534,7 +534,7 @@ try:
             Application.Visible = True  # shows what's happening, not required, but helpful for now
 
         if verbose:
-            print('name: %s' % ppt.Name)
+            print('addPPTslide: name: %s' % ppt.Name)
 
         ppLayoutTitleOnly = 11
         layout = ppLayoutTitleOnly
@@ -585,7 +585,8 @@ try:
 
         if activate_slide:
             idx = int(slide.SlideIndex)
-            print('goto slide %d' % idx)
+            if verbose>=1:
+                print('addPPTslide: goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
@@ -639,7 +640,7 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict'):
+def reshape_metadata(dataset, printformat='dict', verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
@@ -677,12 +678,14 @@ def reshape_metadata(dataset, printformat='dict'):
     else:
         ss = ''
         for k in metadata:
-            print('--- %s' % k)
+            if verbose:
+                print('--- %s' % k)
             s = metadata[k]
             ss += '\n## %s:\n' % k
             for p in s:
                 pp = s[p]
-                print('  --- %s' % p)
+                if verbose:
+                    print('  --- %s' % p)
                 ss += '%s: %s %s' % (pp['name'],
                                      pp['value'], pp.get('unit', ''))
                 ss += '\n'
