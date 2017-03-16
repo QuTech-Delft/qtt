@@ -50,10 +50,14 @@ try:
     _redis_connection = redis.Redis(host='127.0.0.1', port=6379)
     _redis_connection.set('qtt_abort_running_measurement', 0)
 except:
+    _redis_connection = None
+    
     pass
 
 def _abort_measurement():
     """ Return True if the currently running measurement should be aborted """
+    if _redis_connection is None:
+        return 0
     v=_redis_connection.get('qtt_abort_running_measurement')
     if v is None:
         v=0
