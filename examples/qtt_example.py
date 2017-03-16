@@ -15,17 +15,12 @@ import pyqtgraph as pg
 import tempfile
 
 import qcodes
-import qcodes as qc
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt
-import qtt.scans
-import qtt.gui.dataviewer
 from qtt.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
-
-# taskkill /F /IM python.exe
 
 if __name__ == '__main__':
     datadir = os.path.join(tempfile.tempdir, 'qdata')
@@ -41,15 +36,10 @@ import virtualDot
 
 if __name__ == '__main__':
     nr_dots = 2
-
-    #virtualDot.close()
-    server_name = 'testv%d' % np.random.randint(1000)  # needs to be set for background loops to work
-    server_name = None
-    station = virtualDot.initialize(server_name=server_name, nr_dots=nr_dots)
+    station = virtualDot.initialize(server_name=None, nr_dots=nr_dots)
 
     keithley1 = station.keithley1
     keithley3 = station.keithley3
-    ivvi1 = station.ivvi1
 
     # virtual gates for the model
     gates = station.gates
@@ -59,16 +49,12 @@ if __name__ == '__main__':
 
 
 if __name__ == '__main__':
-    qtapp = pg.mkQApp()
-    qdatadir = os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')
-    qcodes.DataSet.default_io = qcodes.DiskIO(qdatadir)
     mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
     pv = createParameterWidget([gates, ])
     plotQ = mwindows['plotwindow']
     
     logviewer = qtt.gui.dataviewer.DataViewer()
     logviewer.show()
-
 
 #%% Read out instruments
 if __name__ == '__main__':
@@ -78,10 +64,8 @@ if __name__ == '__main__':
 
 #%% Simple 1D scan loop
 
-
 if __name__ == '__main__':
-    reload(qtt.scans)
-    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': -500, 'end': 1, 'step': .8, 'wait_time': 1e-3}), 'minstrument': [keithley3.amplitude]})
+    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
     data1d = qtt.scans.scan1D(station, scanjob, location=None, verbose=1)
 
 
