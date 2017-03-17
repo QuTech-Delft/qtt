@@ -10,6 +10,8 @@ from qtt.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
 from qtt.scans import plotData, scan1Dfast, scan2Dturbo, makeDataset_sweep, makeDataset_sweep_2D
 import datetime
+from qcodes.instrument.parameter import StandardParameter
+from qcodes.utils.validators import Numbers
 
 #%%
 
@@ -32,7 +34,8 @@ class VideoMode:
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
         self.fpga_ch = fpga_ch
-        self.Naverage = Naverage
+        self.Naverage = StandardParameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
+        self._Naverage_val = Naverage
         self.resolution = resolution
         self.diff_dir = None
         self.lp = livePlot(None, self.station.gates, self.sweepparams, self.sweepranges)
@@ -46,16 +49,16 @@ class VideoMode:
         self.lp.win.layout().children()[0].addWidget(self.lp.win.stop_button)
         self.lp.win.single_button.clicked.connect(connect_slot(self.single))
 
-        box = QtWidgets.QDoubleSpinBox()
+        box = QtWidgets.QSpinBox()
+        box.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
         box.setKeyboardTracking(False)  # do not emit signals when still editing
         box.setMinimum(1)
         box.setMaximum(1023)
-        box.setSingleStep(1)
         box.setPrefix('Naverage: ')
-        box.setDecimals(0)
         box.setMaximumWidth(120)
-        box.valueChanged.connect(self.Naverage_changed)
-        self.lp.win.layout().children()[0].addWidget(box)
+        box.valueChanged.connect(self.Naverage.set)
+        self.box = box
+        self.lp.win.layout().children()[0].addWidget(self.box)
 
         self.run()
 
@@ -66,13 +69,13 @@ class VideoMode:
                 waveform, _ = self.station.awg.sweep_gate(self.sweepparams, self.sweepranges, period=1e-3)
             elif type(self.sweepparams) is dict:
                 waveform, _ = self.station.awg.sweep_gate_virt(self.sweepparams, self.sweeprange, period=1e-3)
-            self.datafunction = fpgaCallback_1d(self.station, waveform, self.Naverage, self.fpga_ch)
+            self.datafunction = fpgaCallback_1d(self.station, waveform, self.Naverage.get(), self.fpga_ch)
         elif type(self.sweepranges) is list:
             if type(self.sweepparams) is list:
                 waveform, _ = self.station.awg.sweep_2D(self.station.fpga.sampling_frequency.get(), self.sweepparams, self.sweepranges, self.resolution)
             elif type(self.sweepparams) is dict:
                 waveform, _ = self.station.awg.sweep_2D_virt(self.station.fpga.sampling_frequency.get(), self.sweepparams['gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
-            self.datafunction = fpgaCallback_2d(self.station, waveform, self.Naverage, self.fpga_ch, self.resolution, self.diff_dir)
+            self.datafunction = fpgaCallback_2d(self.station, waveform, self.Naverage.get(), self.fpga_ch, self.resolution, self.diff_dir)
 
         self.lp.datafunction = self.datafunction
         self.lp.startreadout()
@@ -96,12 +99,12 @@ class VideoMode:
         gates (a.k.a. virtual gates).
         """
         Naverage = 1000
-        Naverage_old = self.lp.datafunction.Naverage
+        Naverage_old = self.Naverage.get()
         waittime_old = self.lp.datafunction.waittime
         self.lp.datafunction.waittime = Naverage * self.lp.data.size / self.station.fpga.sampling_frequency.get()
-        self.lp.datafunction.Naverage = Naverage
+        self.Naverage.set(Naverage)
         self.data = self.lp.datafunction()
-        self.lp.datafunction.Naverage = Naverage_old
+        self.Naverage.set(Naverage_old)
         self.lp.datafunction.waittime = waittime_old
         if self.data.ndim == 1:
             alldata, _ = makeDataset_sweep(self.data, self.sweepparams, self.sweepranges, gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
@@ -115,6 +118,10 @@ class VideoMode:
         plotData(alldata, fig=None)
         self.alldata = alldata
 
-    def Naverage_changed(self, value):
-        """Set the value of Naverage."""
+    def _get_Naverage(self):
+        return self._Naverage_val
+
+    def _set_Naverage(self, value):
+        self._Naverage_val = value
         self.lp.datafunction.Naverage = value
+        self.box.setValue(value)
