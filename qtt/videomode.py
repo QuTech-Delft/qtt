@@ -79,6 +79,7 @@ class VideoMode:
 
         self.lp.datafunction = self.datafunction
         self.lp.startreadout()
+        self.box.setValue(self.Naverage.get())
 
         if hasattr(self.station, 'RF'):
             self.station.RF.on()
