@@ -340,7 +340,9 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     sweepgate = sweepdata['param']
     sweepparam = get_param(gates, sweepgate)
 
-    
+    if 'sd' in scanjob:
+        warnings.warn('sd argument is not supported in scan1Dfast')
+        
     fpga_ch = scanjob['minstrument']
     if isinstance(fpga_ch, int):
         fpga_ch=[fpga_ch]
