@@ -1,10 +1,11 @@
 import numpy as np
-import qcodes
-
+import time
 import warnings
 
+import qcodes
+
+import qtt
 from qtt.scans import scan1D
-import qtt.data
 from qtt.algorithms.coulomb import *
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
@@ -16,12 +17,14 @@ from qtt.tools import freezeclass
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, ggv, sdvalv=None, station=None, RFfreq=None, index=None, fpga_ch=None):
+    def __init__(self, ggv, sdvalv=None, station=None, index=None, fpga_ch=None):
         """ Class representing a sensing dot 
 
         Arguments:
             ggv (list): gates to be used
             sdvalv (array or None): values to be set on the gates
+            station (Qcodes station)
+            fpga_ch (int): index of FPGA channel to use for readout
         """
         self.verbose = 1
         self.gg = ggv
@@ -31,7 +34,6 @@ class sensingdot_t:
         self.targetvalue = 800
         self.goodpeaks = None
         self.station = station
-        self.RFfreq = RFfreq  # ?
         self.index = index
         self.instrument = 'keithley%d' % index
         if fpga_ch is None:
@@ -40,7 +42,6 @@ class sensingdot_t:
             self.fpga_ch = fpga_ch
 
         # values for measurement
-        # RFfreq = None
         if index is not None:
             self.valuefunc = station.components[
                 'keithley%d' % index].amplitude.get
@@ -302,8 +303,9 @@ class sensingdot_t:
 
         alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
-        alldata.add_metadata({'scanjob': None})
-        alldata.add_metadata({'scantype': 'fastTune'})
+        alldata= qtt.scans.scan1Dfast(station, scanjob, location=location)
+                     
+        alldata.add_metadata({'scanjob': None, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
 
         alldata.write(write_metadata=True)

@@ -340,11 +340,18 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     sweepgate = sweepdata['param']
     sweepparam = get_param(gates, sweepgate)
 
+    
+    fpga_ch = scanjob['minstrument']
+    if isinstance(fpga_ch, int):
+        fpga_ch=[fpga_ch]
+
     def readfunc(waveform, Naverage):
-        fpga_ch = scanjob['sd'].fpga_ch
-        ReadDevice = ['FPGA_ch%d' % fpga_ch]
-        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
-        data = station.awg.sweep_process(data_raw, waveform, Naverage)
+        #fpga_ch = scanjob['sd'].fpga_ch
+        ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
+        devicedata=station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
+        #print(devicedata[0].shape)
+        data_raw = [devicedata[ii] for ii in fpga_ch] 
+        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw  ] )
         return data
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
@@ -361,6 +368,7 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
 
     data = readfunc(waveform, Naverage)
     alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
+                                   ynames=['measured%d' % i for i in fpga_ch],
                                    fig=None, location=location, loc_record={'label': 'scan1Dfast'})
 
     station.awg.stop()
@@ -886,7 +894,8 @@ from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 #%%
 
 
-def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None, location=None, loc_record=None):
+def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
+                      ynames=None, gates=None, fig=None, location=None, loc_record=None):
     """Convert the data of a 1D sweep to a DataSet.
 
     Note: sweepvalues are only an approximation
@@ -900,7 +909,11 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=N
             raise Exception('No gates supplied')
 
     sweepvalues = np.linspace(sweepgate_value - sweeprange / 2, sweepgate_value + sweeprange / 2, len(data))
-    dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
+    if ynames is None:
+        dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
+                                 y=data, location=location, loc_record=loc_record)
+    else:
+        dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname=ynames,
                                  y=data, location=location, loc_record=loc_record)
 
     if fig is None:

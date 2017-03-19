@@ -785,16 +785,21 @@ def makeDataSet1Dplain(xname, x, yname, y, location=None, loc_record=None):
     Arguments:
         xname (string): the name of the setpoint array
         x (array): the setpoint data
-        yname (string): the name of the measured array
+        yname (str or list): the name of the measured array
         y (array): the measured data
     '''
     xx = np.array(x)
     yy = np.array(y)
     x = DataArray(name=xname, array_id=xname, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=yname, array_id=yname, preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
-    dd.add_array(y)
+    if isinstance(yname, str):
+        y = DataArray(name=yname, array_id=yname, preset_data=yy, set_arrays=(x,))
+        dd.add_array(y)
+    else:
+        for ii, name in enumerate(yname):
+            y = DataArray(name=name, array_id=name, preset_data=yy[ii], set_arrays=(x,))
+            dd.add_array(y)
 
     return dd
 
@@ -872,7 +877,11 @@ def test_makeDataSet2D():
     p2 = ManualParameter('dummy2')
     ds=makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1' , 'm2' ])    
 
-
+def test_makeDataSet1Dplain():
+    x=np.arange(0,10)
+    y=np.vstack( (x-1, x+10) )
+    ds=makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
+    
 #%%
 
 def test_numpy_on_dataset():
