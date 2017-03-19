@@ -210,10 +210,10 @@ if __name__ == '__main__':
 import time
 
 
-def getParams(station, keithleyidx):
-    """ Get qcodes parameters from an index or string """
+def get_measurement_params(station, mparams):
+    """ Get qcodes parameters from an index or string or parameter """
     params = []
-    for x in keithleyidx:
+    for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
         else:
@@ -263,10 +263,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
         raise Exception('legacy argument instrument: use minstrument instead!')
 
     minstrument = scanjob.get('minstrument', None)
-    if minstrument is None:
-        # legacy code...
-        minstrument = scanjob.get('keithleyidx', None)
-    params = getParams(station, minstrument)
+    params = get_measurement_params(station, minstrument)
 
     logging.debug('wait_time: %s' % str(wait_time))
 
@@ -428,6 +425,15 @@ def delta_time(tprev, thr=2):
         update = 1
     return delta, tprev, update
 
+def parse_minstrument(scanjob):
+    """ Extract the parameters to be measured from the scanjob """
+    minstrument = scanjob.get('minstrument', None)
+    if minstrument is None:
+        warnings.warn('use minstrument instead of keithleyidx')
+        minstrument = scanjob.get('keithleyidx', None)
+
+    return minstrument
+        
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
@@ -443,10 +449,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
 
     stepdata = parse_stepdata( scanjob['stepdata'] )
     sweepdata = parse_stepdata( scanjob['sweepdata'] )
-    minstrument = scanjob.get('minstrument', None)
-    if minstrument is None:
-        warnings.warn('use minstrument instead of keithleyidx')
-        minstrument = scanjob.get('keithleyidx', None)
+    minstrument = parse_minstrument( scanjob)
+    params = get_measurement_params(station, minstrument)
 
     gates = station.gates
     gatevals = gates.allvalues()
@@ -467,9 +471,17 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
     logging.info('scan2D: wait_time_sweep %f' % wait_time_sweep)
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
-    params = getParams(station, minstrument)
-    alldata = makeDataSet2D(stepvalues, sweepvalues, location=location, loc_record={'label': 'scan2D'})
+    alldata, (set_names, measure_names)= makeDataSet2D(stepvalues, sweepvalues,
+             measure_names=params, location=location, loc_record={'label': 'scan2D'},
+                 return_names=True)
+    #p.full_name
+    if verbose>=2:
+        #print(alldata)
+        print('scan2D: created dataset')
+        print('  set_names: %s '% ( set_names,))
+        print('  measure_names: %s '% ( measure_names,))
 
+    
     t0 = qtt.time.time()
 
     if liveplotwindow is None:
@@ -496,8 +508,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
             else:
                 time.sleep(wait_time_sweep)
 
-            value = params[0].get()
-            alldata.measured.ndarray[ix, iy] = value
+            for ii, p in enumerate(params):
+                value = p.get()
+                alldata.arrays[measure_names[ii]].ndarray[ix, iy] = value
 
         if ix == len(stepvalues) - 1 or ix % 5 == 0:
             delta, tprev, update = delta_time(tprev, thr=.2)
