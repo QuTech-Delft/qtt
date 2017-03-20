@@ -2375,7 +2375,7 @@ try:
             cb = QtWidgets.QApplication.clipboard()
             r, tmpfile = tempfile.mkstemp(suffix='.bmp')
             cv2.imwrite(tmpfile, im)
-            qim = QtWidgets.QPixmap(tmpfile)
+            qim = QtGui.QPixmap(tmpfile)
             cb.setPixmap(qim)
 
             if 0:

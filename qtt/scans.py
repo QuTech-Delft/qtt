@@ -392,6 +392,8 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
 
 def wait_bg_finish(verbose=0):
     """ Wait for background job to finish """
+    if not hasattr(qcodes, 'get_bg'):
+        return True
     for ii in range(10):
         m = qcodes.get_bg()
         if verbose:
