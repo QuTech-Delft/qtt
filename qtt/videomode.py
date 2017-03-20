@@ -23,17 +23,17 @@ class VideoMode:
         station (qcodes station): contains all the information about the set-up
         sweepparams (string, 1 x 2 list or dict): the parameter(s) to be swept
         sweepranges (int or 1 x 2 list): the range(s) to be swept over
-        fpga_ch (int): the channel of the FPGA
+        minstrument (int): the channel of the FPGA
         Naverage (int): the number of times the FPGA averages
         resolution (1 x 2 list): for 2D the resolution
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
     # TODO: implement virtual gates functionality
-    def __init__(self, station, sweepparams, sweepranges, fpga_ch, Naverage=25, resolution=[90, 90], diff_dir=None):
+    def __init__(self, station, sweepparams, sweepranges, minstrument, Naverage=25, resolution=[90, 90], diff_dir=None):
         self.station = station
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.fpga_ch = fpga_ch
+        self.fpga_ch = minstrument
         self.Naverage = StandardParameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
         self._Naverage_val = Naverage
         self.resolution = resolution
