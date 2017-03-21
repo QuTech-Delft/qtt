@@ -515,17 +515,18 @@ class MockCallback_2d:
 
 class fpgaCallback_1d:
 
-    def __init__(self, station, waveform, Naverage=4, fpga_ch=1):
+    def __init__(self, station, waveform, Naverage=4, fpga_ch=1, waittime=0):
         self.station = station
         self.waveform = waveform
         self.Naverage = Naverage
         self.fpga_ch = fpga_ch
+        self.waittime = waittime
 
     def __call__(self, verbose=0):
         ''' Callback function to read a single line of data from the FPGA '''
         ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
         totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
-            Naverage=self.Naverage, ReadDevice=ReadDevice)
+            Naverage=self.Naverage, ReadDevice=ReadDevice, waittime=self.waittime)
 
         if 'FPGA_ch1' in ReadDevice:
             data = DataRead_ch1
