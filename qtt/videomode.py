@@ -44,9 +44,7 @@ class VideoMode:
         self.lp.win.stop_button.clicked.connect(connect_slot(self.stop))
 
         self.lp.win.single_button = QtWidgets.QPushButton('Single')
-        self.lp.win.layout().children()[0].removeWidget(self.lp.win.stop_button)
-        self.lp.win.layout().children()[0].addWidget(self.lp.win.single_button)
-        self.lp.win.layout().children()[0].addWidget(self.lp.win.stop_button)
+        self.lp.win.layout().children()[0].insertWidget(self.lp.win.single_button)
         self.lp.win.single_button.clicked.connect(connect_slot(self.single))
 
         box = QtWidgets.QSpinBox()
