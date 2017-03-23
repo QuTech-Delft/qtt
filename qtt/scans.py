@@ -263,11 +263,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
         raise Exception('legacy argument instrument: use minstrument instead!')
 
     minstrument = scanjob.get('minstrument', None)
-    params = get_measurement_params(station, minstrument)
+    mparams = get_measurement_params(station, minstrument)
 
     logging.debug('wait_time: %s' % str(wait_time))
 
-    loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
+    loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*mparams)
 
     alldata = loop.get_data_set(location=location, loc_record={'label': 'scan1D'})
 
@@ -462,7 +462,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
     stepdata = parse_stepdata( scanjob['stepdata'] )
     sweepdata = parse_stepdata( scanjob['sweepdata'] )
     minstrument = parse_minstrument( scanjob)
-    params = get_measurement_params(station, minstrument)
+    mparams = get_measurement_params(station, minstrument)
 
     gates = station.gates
     gatevals = gates.allvalues()
@@ -484,7 +484,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
     alldata, (set_names, measure_names)= makeDataSet2D(stepvalues, sweepvalues,
-             measure_names=params, location=location, loc_record={'label': 'scan2D'},
+             measure_names=mparams, location=location, loc_record={'label': 'scan2D'},
                  return_names=True)
     #p.full_name
     if verbose>=2:
@@ -520,7 +520,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
             else:
                 time.sleep(wait_time_sweep)
 
-            for ii, p in enumerate(params):
+            for ii, p in enumerate(mparams):
                 value = p.get()
                 alldata.arrays[measure_names[ii]].ndarray[ix, iy] = value
 
