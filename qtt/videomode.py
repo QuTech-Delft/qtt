@@ -13,6 +13,8 @@ import datetime
 from qcodes.instrument.parameter import StandardParameter
 from qcodes.utils.validators import Numbers
 
+import threading
+
 #%%
 
 
@@ -29,8 +31,9 @@ class VideoMode:
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
     # TODO: implement virtual gates functionality
-    def __init__(self, station, sweepparams, sweepranges, minstrument, Naverage=25, resolution=[90, 90], diff_dir=None):
+    def __init__(self, station, sweepparams, sweepranges, minstrument, Naverage=25, resolution=[90, 90], diff_dir=None, verbose=1):
         self.station = station
+        self.verbose=verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
         self.fpga_ch = minstrument
@@ -57,9 +60,24 @@ class VideoMode:
         box.valueChanged.connect(self.Naverage.set)
         self.box = box
         self.lp.win.layout().children()[0].addWidget(self.box)
-
+        
         self.run()
+        
+        self.datalock = threading.Lock()
 
+    def close(self):
+        self.lp.close()
+        
+    def get_dataset(self, run=False):
+        """ Return latest recorded dataset """
+        with self.datalock:
+            if run:
+                data=self.lp.datafunction()
+            else:
+                data=self.lp.datafunction_result
+            self.alldata = self.makeDataset(data, Naverage=None)
+            #self.alldata.metadata['idx']=self.lp.idx
+            return self.alldata
     def run(self):
         """ Programs the AWG, starts the read-out and the plotting. """
         if type(self.sweepranges) is int:
@@ -105,18 +123,25 @@ class VideoMode:
         self.data = self.lp.datafunction()
         self.Naverage.set(Naverage_old)
         self.lp.datafunction.waittime = waittime_old
-        if self.data.ndim == 1:
-            alldata, _ = makeDataset_sweep(self.data, self.sweepparams, self.sweepranges, gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
-        if self.data.ndim == 2:
-            alldata, _ = makeDataset_sweep_2D(self.data, self.station.gates, self.sweepparams, self.sweepranges, loc_record={'label': 'videomode_2d_single'})
+        alldata = self.makeDataset(self.data, Naverage=Naverage)
+        alldata.write(write_metadata=True)
+        plotData(alldata, fig=None)
+        with self.datalock:
+            self.alldata = alldata
+        if self.verbose:
+            print('videomode: recorded single shot measurement')
+            
+    def makeDataset(self, data, Naverage=None):
+        if data.ndim == 1:
+            alldata, _ = makeDataset_sweep(data, self.sweepparams, self.sweepranges, gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
+        if data.ndim == 2:
+            alldata, _ = makeDataset_sweep_2D(data, self.station.gates, self.sweepparams, self.sweepranges, loc_record={'label': 'videomode_2d_single'})
         alldata.metadata = {'scantime': str(datetime.datetime.now()), 'station': self.station.snapshot(), 'allgatevalues': self.station.gates.allvalues()}
         alldata.metadata['Naverage'] = Naverage
         if hasattr(self.lp.datafunction, 'diff_dir'):
             alldata.metadata['diff_dir'] = self.lp.datafunction.diff_dir
-        alldata.write(write_metadata=True)
-        plotData(alldata, fig=None)
-        self.alldata = alldata
-
+        return alldata
+    
     def _get_Naverage(self):
         return self._Naverage_val
 

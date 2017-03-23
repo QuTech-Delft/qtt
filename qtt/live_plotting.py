@@ -422,6 +422,14 @@ class livePlot:
         # win.start_button.clicked.connect(self.startreadout)
         # win.stop_button.clicked.connect(self.stopreadout)
 
+        self.datafunction_result = None
+
+    def close(self):
+        if self.verbose:
+            print('LivePlot.close()')
+        self.stopreadout()
+        self.win.close()
+        
     def resetdata(self):
         self.idx = 0
         self.data = None
@@ -473,6 +481,7 @@ class livePlot:
             try:
                 # print(self.datafunction)
                 dd = self.datafunction()
+                self.datafunction_result = dd
                 self.update(data=dd)
             except Exception as e:
                 logging.exception(e)
