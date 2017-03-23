@@ -303,7 +303,7 @@ class sensingdot_t:
 
         alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
-        alldata= qtt.scans.scan1Dfast(station, scanjob, location=location)
+        #alldata= qtt.scans.scan1Dfast(self.station, scanjob, location=location)
                      
         alldata.add_metadata({'scanjob': None, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
