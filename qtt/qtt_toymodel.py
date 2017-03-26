@@ -428,7 +428,7 @@ class virtual_gates(Instrument):
 
         self.get_all()
         warnings.warn('This code for gates is deprecated. Use gates in qtt/instrument_drivers.', DeprecationWarning)
-
+        
     def get_idn(self):
         """ Overrule because the default VISA command does not work """
         IDN = {'vendor': 'QuTech', 'model': self.name,

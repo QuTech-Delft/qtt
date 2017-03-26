@@ -210,10 +210,10 @@ if __name__ == '__main__':
 import time
 
 
-def getParams(station, keithleyidx):
-    """ Get qcodes parameters from an index or string """
+def get_measurement_params(station, mparams):
+    """ Get qcodes parameters from an index or string or parameter """
     params = []
-    for x in keithleyidx:
+    for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
         else:
@@ -263,14 +263,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
         raise Exception('legacy argument instrument: use minstrument instead!')
 
     minstrument = scanjob.get('minstrument', None)
-    if minstrument is None:
-        # legacy code...
-        minstrument = scanjob.get('keithleyidx', None)
-    params = getParams(station, minstrument)
+    mparams = get_measurement_params(station, minstrument)
 
     logging.debug('wait_time: %s' % str(wait_time))
 
-    loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*params)
+    loop = qc.Loop(sweepvalues, delay=wait_time, progress_interval=1).each(*mparams)
 
     alldata = loop.get_data_set(location=location, loc_record={'label': 'scan1D'})
 
@@ -343,11 +340,20 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     sweepgate = sweepdata['param']
     sweepparam = get_param(gates, sweepgate)
 
+    if 'sd' in scanjob:
+        warnings.warn('sd argument is not supported in scan1Dfast')
+        
+    fpga_ch = scanjob['minstrument']
+    if isinstance(fpga_ch, int):
+        fpga_ch=[fpga_ch]
+
     def readfunc(waveform, Naverage):
-        fpga_ch = scanjob['sd'].fpga_ch
-        ReadDevice = ['FPGA_ch%d' % fpga_ch]
-        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
-        data = station.awg.sweep_process(data_raw, waveform, Naverage)
+        #fpga_ch = scanjob['sd'].fpga_ch
+        ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
+        devicedata=station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
+        #print(devicedata[0].shape)
+        data_raw = [devicedata[ii] for ii in fpga_ch] 
+        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw  ] )
         return data
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
@@ -364,6 +370,7 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
 
     data = readfunc(waveform, Naverage)
     alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
+                                   ynames=['measured%d' % i for i in fpga_ch],
                                    fig=None, location=location, loc_record={'label': 'scan1Dfast'})
 
     station.awg.stop()
@@ -385,6 +392,8 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
 
 def wait_bg_finish(verbose=0):
     """ Wait for background job to finish """
+    if not hasattr(qcodes, 'get_bg'):
+        return True
     for ii in range(10):
         m = qcodes.get_bg()
         if verbose:
@@ -428,6 +437,15 @@ def delta_time(tprev, thr=2):
         update = 1
     return delta, tprev, update
 
+def parse_minstrument(scanjob):
+    """ Extract the parameters to be measured from the scanjob """
+    minstrument = scanjob.get('minstrument', None)
+    if minstrument is None:
+        warnings.warn('use minstrument instead of keithleyidx')
+        minstrument = scanjob.get('keithleyidx', None)
+
+    return minstrument
+        
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
@@ -443,10 +461,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
 
     stepdata = parse_stepdata( scanjob['stepdata'] )
     sweepdata = parse_stepdata( scanjob['sweepdata'] )
-    minstrument = scanjob.get('minstrument', None)
-    if minstrument is None:
-        warnings.warn('use minstrument instead of keithleyidx')
-        minstrument = scanjob.get('keithleyidx', None)
+    minstrument = parse_minstrument( scanjob)
+    mparams = get_measurement_params(station, minstrument)
 
     gates = station.gates
     gatevals = gates.allvalues()
@@ -467,9 +483,17 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
     logging.info('scan2D: wait_time_sweep %f' % wait_time_sweep)
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
-    params = getParams(station, minstrument)
-    alldata = makeDataSet2D(stepvalues, sweepvalues, location=location, loc_record={'label': 'scan2D'})
+    alldata, (set_names, measure_names)= makeDataSet2D(stepvalues, sweepvalues,
+             measure_names=mparams, location=location, loc_record={'label': 'scan2D'},
+                 return_names=True)
+    #p.full_name
+    if verbose>=2:
+        #print(alldata)
+        print('scan2D: created dataset')
+        print('  set_names: %s '% ( set_names,))
+        print('  measure_names: %s '% ( measure_names,))
 
+    
     t0 = qtt.time.time()
 
     if liveplotwindow is None:
@@ -496,8 +520,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
             else:
                 time.sleep(wait_time_sweep)
 
-            value = params[0].get()
-            alldata.measured.ndarray[ix, iy] = value
+            for ii, p in enumerate(mparams):
+                value = p.get()
+                alldata.arrays[measure_names[ii]].ndarray[ix, iy] = value
 
         if ix == len(stepvalues) - 1 or ix % 5 == 0:
             delta, tprev, update = delta_time(tprev, thr=.2)
@@ -873,7 +898,8 @@ from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 #%%
 
 
-def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=None, fig=None, location=None, loc_record=None):
+def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
+                      ynames=None, gates=None, fig=None, location=None, loc_record=None):
     """Convert the data of a 1D sweep to a DataSet.
 
     Note: sweepvalues are only an approximation
@@ -887,7 +913,11 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None, gates=N
             raise Exception('No gates supplied')
 
     sweepvalues = np.linspace(sweepgate_value - sweeprange / 2, sweepgate_value + sweeprange / 2, len(data))
-    dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
+    if ynames is None:
+        dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
+                                 y=data, location=location, loc_record=loc_record)
+    else:
+        dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname=ynames,
                                  y=data, location=location, loc_record=loc_record)
 
     if fig is None:
