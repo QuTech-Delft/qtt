@@ -113,7 +113,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     def setSingleStep(self, value, instrument_name = None):
         """ Set the default step size for parameters in the viewer """
         if instrument_name is None:
-            names = pv._instrumentnames
+            names = self._instrumentnames
         else:
             names =[instrument_name]
         for iname in names:
@@ -228,7 +228,10 @@ def createParameterWidget(instruments, doexec=False, remote=False):
 
 if __name__ == '__main__':
     import qcodes
-    p = ParameterViewer(instruments=[gates], instrumentnames=['ivvi'])
+    from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+    
+    ivvi=VirtualIVVI(name='dummyivvi', model=None )
+    p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi'])
     p.show()
     self = p
     p.updatecallback()
@@ -237,7 +240,7 @@ if __name__ == '__main__':
 
 
 #%%
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
     box = QtWidgets.QDoubleSpinBox()
     box.setMaximum(10)
     qq = self.topLevelItem(0).child(2)
