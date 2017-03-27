@@ -24,8 +24,8 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 ```
 > conda create -n [yourname] python=3.5
 > activate [yourname]
-> conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py attrs pandas
-> pip install pyqtgraph pyvisa
+> conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py pandas
+> pip install pyqtgraph pyvisa attrs
 > # old command: conda install -c conda-forge pyqtgraph>=0.10
 > conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
 > conda install -c https://conda.binstar.org/menpo opencv3
@@ -88,6 +88,11 @@ Note: the following does NOT work with anaconda
 * (Virtual COM port driver)[http://www.ftdichip.com/Drivers/VCP.htm]
 * (GPIB USB interface)[http://www.ni.com/download/ni-488.2-16.0.0/6132/en/]
 
+## Spyder
+
+* Use a IPython console and set the IPhyton backend graphics option to QT5. This ensures
+ correctly displaying the Paramater viewer and DataBrowser
+* In Tools->Preferences->Console->Advanced settings uncheck the box Enable UMR
 
 ## Create startup shortcuts
 
@@ -155,4 +160,11 @@ git config credential.helper cache
 git config credential.helper store	# stores passwords in plain text!
 ```
 
+## Python warnings
+
+```
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+```
 
