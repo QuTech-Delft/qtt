@@ -66,8 +66,11 @@ class VirtualIVVI(Instrument):
 
         Args:
             name (str)
-            model (object)
-            gates (lis of gate names)
+            model (object): the model should implement functions get and set 
+                  which can get and set variables of the form INSTR_PARAM
+                  Here INSTR is the name of the VirtualIVVI, PARAM is the name
+                  of the gate
+            gates (list of gate names)
         """
         super().__init__(name, **kwargs)
 
