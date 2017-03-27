@@ -25,13 +25,12 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 > conda create -n [yourname] python=3.5
 > activate [yourname]
 > conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py attrs pandas
-> pip install pyqtgraph attrs
+> pip install pyqtgraph pyvisa
 > # old command: conda install -c conda-forge pyqtgraph>=0.10
 > conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
-> pip install pyvisa
 > conda install -c https://conda.binstar.org/menpo opencv3
 ```
-There is a bug in qtconsole, see[qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
+There is a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
 ```
 > pip install git+https://github.com/jupyter/qtconsole.git
 ```
@@ -65,10 +64,10 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-(temporary) Go to the Qcodes directory and checkout the branch `sq8`
+(optional) Go to the Qcodes directory and checkout the latest spin-qubit devel branch `sq10`
 ```
 > cd [MYLOCALDIR]/Qcodes
-> git checkout sq8
+> git checkout sq10
 ```
 
 ## Install packages
