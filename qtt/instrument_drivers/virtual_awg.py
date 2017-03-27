@@ -44,7 +44,7 @@ class virtual_awg(Instrument):
             self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0] + 1) % 2]
             self.awg_seq.set('run_mode', 'SEQ')
             self.awg_seq.sequence_length.set(1)
-            self.awg_seq.set_sqel_trigger_wait(1,0)
+            self.awg_seq.set_sqel_trigger_wait(1, 0)
             self.delay_AWG = self.hardware.parameters['delay_AWG'].get()
         else:
             raise Exception(
