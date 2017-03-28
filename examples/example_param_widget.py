@@ -13,7 +13,7 @@ from qtt.qtt_toymodel import VirtualIVVI, VirtualMeter
 
 #%% Create a (virtual) instrument
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
     gates = VirtualIVVI(name='ivvi', model=None)
     print(gates)
@@ -21,7 +21,6 @@ if __name__=='__main__':
 
 #%% Create a parameter widget for the instrument
 
-if __name__=='__main__':
-    w=createParameterWidget([gates])
-    w.setGeometry(1600,110,300,540); # p.show()
-    
+if __name__ == '__main__':
+    w = createParameterWidget([gates])
+    w.setGeometry(1600, 110, 300, 540)  # p.show()

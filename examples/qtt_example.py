@@ -10,7 +10,7 @@ import sys
 import os
 import numpy as np
 import matplotlib
-import time;
+import time
 import pyqtgraph as pg
 import tempfile
 
@@ -25,7 +25,7 @@ from qtt.algorithms.gatesweep import analyseGateSweep
 if __name__ == '__main__':
     datadir = os.path.join(tempfile.tempdir, 'qdata')
     qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
-    
+
 
 #%% Create a virtual model for testing
 #
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
     pv = createParameterWidget([gates, ])
     plotQ = mwindows['plotwindow']
-    
+
     logviewer = qtt.gui.dataviewer.DataViewer()
     logviewer.show()
 
@@ -72,16 +72,16 @@ if __name__ == '__main__':
 #%% Print the scanned data
 
 if __name__ == '__main__':
-    print( data1d.default_parameter_name() )
+    print(data1d.default_parameter_name())
 
 
 #%% Make a 2D scan
 if __name__ == '__main__':
 
     reload(qtt.scans)
-    start=-500
-    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': start, 'end': start+400, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-    scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start+400, 'step': 5.})
+    start = -500
+    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': start, 'end': start + 400, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+    scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start + 400, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
@@ -98,13 +98,10 @@ if __name__ == '__main__':
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
-    
+
 #%% Send data to powerpoint
 if __name__ == '__main__':
     print('add copy data to Powerpoint use the following:')
     print('   qtt.tools.addPPT_dataset(data);')
     if 0:
         qtt.tools.addPPT_dataset(data)
-
-
-
