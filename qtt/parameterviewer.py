@@ -34,12 +34,12 @@ class QCodesTimer(threading.Thread):
 
 
 class ParameterViewer(QtWidgets.QTreeWidget):
+    """ Simple class to show qcodes parameters """
 
     shared_kwargs = ['station', 'instrumentnames']
 
-    ''' Simple class to show qcodes parameters '''
-
-    def __init__(self, instruments, instrumentnames=None, name='QuTech Parameter Viewer', **kwargs):
+    def __init__(self, instruments, instrumentnames=None,
+                 name='QuTech Parameter Viewer', **kwargs):
         """ Simple class to show qcodes parameters
 
         Args:
@@ -143,10 +143,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         else:
             self._timer = None
 
-    update_field = Signal(str, str, object)
+    update_field = Signal(str, str, object, bool)
 
-    @Slot(str, str, object)
-    def _set_field(self, iname, g, value):
+    @Slot(str, str, object, bool)
+    def _set_field(self, iname, g, value, force_update):
         """ Helper function
 
         Update field of parameter viewer with a string value
@@ -170,9 +170,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                         pass
 
     def updatedata(self, force_update=False):
-        ''' Update data in viewer using station.snapshow '''
-        # pp = gates['parameters']
-        # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
+        """ Update data in viewer using station.snapshow """
         logging.debug('ParameterViewer: update values')
         for iname in self._instrumentnames:
             instr = self._instruments[self._instrumentnames.index(iname)]
@@ -187,7 +185,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 value = pp[g].get()
                 sys.setswitchinterval(si)
 
-                self.update_field.emit(iname, g, value)
+                self.update_field.emit(iname, g, value, force_update)
 
         for f in self.callbacklist:
             try:
@@ -225,7 +223,8 @@ def createParameterWidget(instruments, doexec=False, remote=False):
     app = pyqtgraph.mkQApp()
 
     ms = pmatlab.monitorSizes()[-1]
-    p = ParameterViewer(instruments=instruments, instrumentnames=instrumentnames)
+    p = ParameterViewer(instruments=instruments,
+                        instrumentnames=instrumentnames)
     p.setGeometry(ms[0] + ms[2] - 320, 30, 300, 600)
     p.show()
     p.updatecallback()
@@ -240,6 +239,8 @@ def createParameterWidget(instruments, doexec=False, remote=False):
 
 if __name__ == '__main__':
     import qcodes
+    import time
+    import pdb
     from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 
     ivvi = VirtualIVVI(name='dummyivvi', model=None)
@@ -250,6 +251,10 @@ if __name__ == '__main__':
 
     p.setGeometry(1640, 60, 240, 600)
 
+    time.sleep(.1)
+    ivvi.dac1.set(101)
+
+    ivvi.dac2.set(102)
 
 #%%
 if __name__ == '__main__' and 0:
