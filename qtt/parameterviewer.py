@@ -52,7 +52,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         w = self
         w.setGeometry(1700, 50, 300, 600)
         w.setColumnCount(3)
-        self.verbose=1
+        self.verbose = 1
         header = QtWidgets.QTreeWidgetItem(["Parameter", "Value"])
         w.setHeaderItem(header)
         w.setWindowTitle(name)
@@ -71,10 +71,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.callbacklist = []
 
         self.update_field.connect(self._set_field)
-        
+
     def init(self):
         """ Initialize parameter viewer
-        
+
         This function created all the GUI elements.
         """
         for ii, iname in enumerate(self._instrumentnames):
@@ -110,12 +110,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.expandAll()
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
-    def setSingleStep(self, value, instrument_name = None):
+    def setSingleStep(self, value, instrument_name=None):
         """ Set the default step size for parameters in the viewer """
         if instrument_name is None:
             names = self._instrumentnames
         else:
-            names =[instrument_name]
+            names = [instrument_name]
         for iname in names:
             lst = self._itemsdict[iname]
             for p in lst:
@@ -147,28 +147,28 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     @Slot(str, str, object)
     def _set_field(self, iname, g, value):
-                """ Helper function
-                
-                Update field of parameter viewer with a string value
-                """
-                if self.verbose>=2:
-                    print('_set_field: %s %s: %s'  % (iname, g, str(value)))
-                sb = self._itemsdict[iname][g]
+        """ Helper function
 
-                if isinstance(sb, QtWidgets.QTreeWidgetItem):
-                    sb.setText(1, str(value))
-                else:
-                    # update a float value
-                    if np.abs(sb.value() - value) > 1e-9 or force_update:
-                        if not sb.hasFocus():  # do not update when editing
-                            logging.debug('update %s to %s' % (g, value))
-                            try:
-                                oldstate = sb.blockSignals(True)
-                                sb.setValue(value)
-                                sb.blockSignals(oldstate)
-                            except Exception as e:
-                                pass
-    
+        Update field of parameter viewer with a string value
+        """
+        if self.verbose >= 2:
+            print('_set_field: %s %s: %s' % (iname, g, str(value)))
+        sb = self._itemsdict[iname][g]
+
+        if isinstance(sb, QtWidgets.QTreeWidgetItem):
+            sb.setText(1, str(value))
+        else:
+            # update a float value
+            if np.abs(sb.value() - value) > 1e-9 or force_update:
+                if not sb.hasFocus():  # do not update when editing
+                    logging.debug('update %s to %s' % (g, value))
+                    try:
+                        oldstate = sb.blockSignals(True)
+                        sb.setValue(value)
+                        sb.blockSignals(oldstate)
+                    except Exception as e:
+                        pass
+
     def updatedata(self, force_update=False):
         ''' Update data in viewer using station.snapshow '''
         # pp = gates['parameters']
@@ -186,9 +186,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 sys.setswitchinterval(100)  # hack to make this semi thread-safe
                 value = pp[g].get()
                 sys.setswitchinterval(si)
-                
+
                 self.update_field.emit(iname, g, value)
-                
+
         for f in self.callbacklist:
             try:
                 f()
@@ -209,7 +209,7 @@ def createParameterWidgetRemote(instruments, doexec=True):
 
 def createParameterWidget(instruments, doexec=False, remote=False):
     """ Create a parameter widget
-    
+
     Args:
         instruments (list)
         doexec (bool): if True execute as a standalone Qt app
@@ -220,7 +220,7 @@ def createParameterWidget(instruments, doexec=False, remote=False):
         p = mp.Process(target=createParameterWidget, args=(instruments, doexec))
         p.start()
         return p
-        
+
     instrumentnames = [i.name for i in instruments]
     app = pyqtgraph.mkQApp()
 
@@ -241,8 +241,8 @@ def createParameterWidget(instruments, doexec=False, remote=False):
 if __name__ == '__main__':
     import qcodes
     from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-    
-    ivvi=VirtualIVVI(name='dummyivvi', model=None )
+
+    ivvi = VirtualIVVI(name='dummyivvi', model=None)
     p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi'])
     p.show()
     self = p
