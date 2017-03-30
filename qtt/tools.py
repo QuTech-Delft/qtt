@@ -687,7 +687,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                 if verbose:
                     print('  --- %s' % p)
                 ss += '%s: %s %s' % (pp['name'],
-                                     pp['value'], pp.get('unit', ''))
+                                     pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'
             # ss+=str(s)
 
