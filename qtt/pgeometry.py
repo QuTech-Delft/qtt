@@ -2653,8 +2653,14 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, v
     for ii, f in enumerate(lst):
         if isinstance(f, matplotlib.figure.Figure):
             fignum = f.number
-        else:
+        elif isinstance(f, (int) ):
             fignum = f
+        else:
+            # try
+            try:
+                fignum=f.fig.number
+            except:
+                fignum=-1
         if not plt.fignum_exists(fignum):
             if verbose >= 2:
                 print('tilefigs: fignum: %s' % str(fignum))
@@ -2679,7 +2685,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, v
         if be == 'agg':
             fig.canvas.manager.window.SetPosition((x, y))
             fig.canvas.manager.window.resize(w, h)
-        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg':
+        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg' or be=='Qt5Agg':
             # assume Qt canvas
             try:
                 fig.canvas.manager.window.move(x, y)
