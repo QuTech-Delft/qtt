@@ -82,7 +82,7 @@ class virtual_IVVI(Instrument):
 
     def _make_gate(self, gate):
         self.add_parameter(gate,
-                           label='%s (mV)' % gate,  # (\u03bcV)',
+                           label='%s' % gate,  # (\u03bcV)',
                            unit='mV',
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate))
