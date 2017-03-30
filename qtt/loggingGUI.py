@@ -230,6 +230,18 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
             time.sleep(.1)
             dlg.nkill = max(dlg.nkill - 1, 0)
 
+import pyqtgraph.multiprocess as mp
+import qtt
+
+def start_logging_gui():
+    """ Start logging GUI in the background """
+    proc = mp.QtProcess()
+    lp = proc._import('qtt.loggingGUI')
+    mc = lp.zmqLoggingGUI(); mc.show()
+    
+    qtt._dummy_logging_gui = mc
+    #return mc    
+
 #%%
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
