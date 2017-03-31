@@ -812,7 +812,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None):
     '''
     xx = np.array(x)
     yy = np.ones(xx.size)
-    x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, preset_data=xx, is_setpoint=True)
+    x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, unit=x.parameter.unit, preset_data=xx, is_setpoint=True)
     ytmp = DataArray(name=yname, array_id=yname, label=yname, unit='a.u.', preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
@@ -844,8 +844,8 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     yy = np.tile(yy0, [xx.size, 1])
     zz = np.NaN * np.ones((xx.size, yy0.size))
     set_names = [p1.name, p2.name]
-    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label, preset_data=yy, set_arrays=(x,), is_setpoint=True)
+    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, unit=p1.parameter.unit, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label, unit=p2.parameter.unit, preset_data=yy, set_arrays=(x,), is_setpoint=True)
     if isinstance(measure_names, str):
         measure_names=[measure_names]
     mnamesx=measure_names; measure_names=[]
