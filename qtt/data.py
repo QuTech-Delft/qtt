@@ -158,12 +158,20 @@ def uniqueArrayName(dataset, name0):
 from qcodes.plots.qcmatplotlib import MatPlot
 
 
-def diffDataset(alldata, diff_dir='y', fig=None):
-    """ Differentiate a dataset and plot the result """
-    imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
+    """ Differentiate a dataset and plot the result.
+    
+    Args:
+        alldata (qcodes DataSet)
+        diff_dir (str): direction to differentiate in
+        meas_arr_name (str): name of the measured array to be differentiated
+        fig (int): the number for the figure to plot
+    """
+    meas_array = alldata.arrays[meas_arr_name]
+    imx = qtt.diffImageSmooth(meas_array.ndarray, dy=diff_dir)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
-    data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=alldata.measured.set_arrays, preset_data=imx)
+    data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=meas_array.set_arrays, preset_data=imx)
 
     alldata.add_array(data_arr)
 
