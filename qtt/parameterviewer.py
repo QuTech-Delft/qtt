@@ -11,6 +11,7 @@ import multiprocessing as mp
 from qtpy.QtCore import Qt
 from qtpy import QtWidgets
 from qtpy import QtGui
+from qtpy.QtCore import Signal, Slot
 import pyqtgraph
 from qtt import pgeometry as pmatlab
 from functools import partial
@@ -33,24 +34,25 @@ class QCodesTimer(threading.Thread):
 
 
 class ParameterViewer(QtWidgets.QTreeWidget):
+    """ Simple class to show qcodes parameters """
 
     shared_kwargs = ['station', 'instrumentnames']
 
-    ''' Simple class to show qcodes parameters '''
+    def __init__(self, instruments, instrumentnames=None,
+                 name='QuTech Parameter Viewer', **kwargs):
+        """ Simple class to show qcodes parameters
 
-    def __init__(self, instruments, instrumentnames=None, name='QuTech Parameter Viewer', **kwargs):
-        ''' Simple class to show qcodes parameters
-
-        Arguments:
+        Args:
             instruments (list): list of Qcodes Instruments to show
-            name (str): string used in the window title
+            instrumentnames (None or list): optional list of names to show
+            name (str, optional): string used in the window title
 
-        '''
+        """
         super().__init__(**kwargs)
         w = self
         w.setGeometry(1700, 50, 300, 600)
         w.setColumnCount(3)
-        self.verbose=1
+        self.verbose = 1
         header = QtWidgets.QTreeWidgetItem(["Parameter", "Value"])
         w.setHeaderItem(header)
         w.setWindowTitle(name)
@@ -63,28 +65,29 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         for i in instrumentnames:
             self._itemsdict[i] = dict()
         self._timer = None
-        # self._station = station
         self.init()
         self.show()
 
         self.callbacklist = []
 
+        self.update_field.connect(self._set_field)
+
     def init(self):
-        ''' Initialize parameter viewer '''
+        """ Initialize parameter viewer
+
+        This function created all the GUI elements.
+        """
         for ii, iname in enumerate(self._instrumentnames):
             instr = self._instruments[ii]
-            # pp=instr.parameters.keys()
             pp = instr.parameters
             ppnames = sorted(instr.parameters.keys())
 
             ppnames = [p for p in ppnames if instr.parameters[p].has_get]
-            # pp = dd['instruments'][iname]['parameters']
             gatesroot = QtWidgets.QTreeWidgetItem(self, [iname])
             for g in ppnames:
                 # ww=['gates', g]
                 si = min(sys.getswitchinterval(), 0.1)  # hack to make this semi thread-safe
                 sys.setswitchinterval(100)  # hack to make this semi thread-safe
-                #value = pp[g].get()
                 sys.setswitchinterval(si)  # hack to make this semi thread-safe
                 box = QtWidgets.QDoubleSpinBox()
                 box.setKeyboardTracking(False)  # do not emit signals when still editing
@@ -92,10 +95,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box.setMaximum(1000)
                 box.setSingleStep(5)
 
-                # A = QtGui.QTreeWidgetItem(gatesroot, [g, box])
                 v = ''
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
-                # qq=self.topLevelItem(0).child(2)
                 self._itemsdict[iname][g] = A
 
                 if pp[g].has_set:
@@ -107,15 +108,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         self.setSortingEnabled(True)
         self.expandAll()
-
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
-    def setSingleStep(self, value, instrument_name = None):
+    def setSingleStep(self, value, instrument_name=None):
         """ Set the default step size for parameters in the viewer """
         if instrument_name is None:
             names = self._instrumentnames
         else:
-            names =[instrument_name]
+            names = [instrument_name]
         for iname in names:
             lst = self._itemsdict[iname]
             for p in lst:
@@ -143,10 +143,34 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         else:
             self._timer = None
 
+    update_field = Signal(str, str, object, bool)
+
+    @Slot(str, str, object, bool)
+    def _set_field(self, iname, g, value, force_update):
+        """ Helper function
+
+        Update field of parameter viewer with a string value
+        """
+        if self.verbose >= 2:
+            print('_set_field: %s %s: %s' % (iname, g, str(value)))
+        sb = self._itemsdict[iname][g]
+
+        if isinstance(sb, QtWidgets.QTreeWidgetItem):
+            sb.setText(1, str(value))
+        else:
+            # update a float value
+            if np.abs(sb.value() - value) > 1e-9 or force_update:
+                if not sb.hasFocus():  # do not update when editing
+                    logging.debug('update %s to %s' % (g, value))
+                    try:
+                        oldstate = sb.blockSignals(True)
+                        sb.setValue(value)
+                        sb.blockSignals(oldstate)
+                    except Exception as e:
+                        pass
+
     def updatedata(self, force_update=False):
-        ''' Update data in viewer using station.snapshow '''
-        # pp = gates['parameters']
-        # gatesroot = QtGui.QTreeWidgetItem(w, ["gates"])
+        """ Update data in viewer using station.snapshow """
         logging.debug('ParameterViewer: update values')
         for iname in self._instrumentnames:
             instr = self._instruments[self._instrumentnames.index(iname)]
@@ -160,22 +184,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 sys.setswitchinterval(100)  # hack to make this semi thread-safe
                 value = pp[g].get()
                 sys.setswitchinterval(si)
-                # value = pp[g]['value']
-                sb = self._itemsdict[iname][g]
 
-                if isinstance(sb, QtWidgets.QTreeWidgetItem):
-                    sb.setText(1, str(value))
-                else:
-                    # update a float value
-                    if np.abs(sb.value() - value) > 1e-9 or force_update:
-                        if not sb.hasFocus():  # do not update when editing
-                            logging.debug('update %s to %s' % (g, value))
-                            try:
-                                oldstate = sb.blockSignals(True)
-                                sb.setValue(value)
-                                sb.blockSignals(oldstate)
-                            except Exception as e:
-                                pass
+                self.update_field.emit(iname, g, value, force_update)
 
         for f in self.callbacklist:
             try:
@@ -197,7 +207,7 @@ def createParameterWidgetRemote(instruments, doexec=True):
 
 def createParameterWidget(instruments, doexec=False, remote=False):
     """ Create a parameter widget
-    
+
     Args:
         instruments (list)
         doexec (bool): if True execute as a standalone Qt app
@@ -208,12 +218,13 @@ def createParameterWidget(instruments, doexec=False, remote=False):
         p = mp.Process(target=createParameterWidget, args=(instruments, doexec))
         p.start()
         return p
-        
+
     instrumentnames = [i.name for i in instruments]
     app = pyqtgraph.mkQApp()
 
     ms = pmatlab.monitorSizes()[-1]
-    p = ParameterViewer(instruments=instruments, instrumentnames=instrumentnames)
+    p = ParameterViewer(instruments=instruments,
+                        instrumentnames=instrumentnames)
     p.setGeometry(ms[0] + ms[2] - 320, 30, 300, 600)
     p.show()
     p.updatecallback()
@@ -228,9 +239,11 @@ def createParameterWidget(instruments, doexec=False, remote=False):
 
 if __name__ == '__main__':
     import qcodes
+    import time
+    import pdb
     from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-    
-    ivvi=VirtualIVVI(name='dummyivvi', model=None )
+
+    ivvi = VirtualIVVI(name='dummyivvi', model=None)
     p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi'])
     p.show()
     self = p
@@ -238,6 +251,10 @@ if __name__ == '__main__':
 
     p.setGeometry(1640, 60, 240, 600)
 
+    time.sleep(.1)
+    ivvi.dac1.set(101)
+
+    ivvi.dac2.set(102)
 
 #%%
 if __name__ == '__main__' and 0:
