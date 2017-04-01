@@ -1183,7 +1183,8 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
 
 @pmatlab.static_var("scaling0", np.diag([1., 1, 1]))
-def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2, usemask=False):
+def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2,
+                  usemask=False, use_abs=False):
     """ Calculate cross matching score
 
     Args:
@@ -1213,7 +1214,10 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     modelpatch, cdata = createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose >= 2)
     (cc, lp, hp, ip, op, _, _, _) = cdata
 
-    dd = patch - modelpatch
+    if use_abs:
+        dd = np.abs(patch) - modelpatch
+    else:
+        dd = patch - modelpatch
 
     if usemask:
         # near model mask
@@ -1275,9 +1279,9 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
             print('  add cost for angle diff')
         cost += 1000
 
-    if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(45):
+    if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(15):
         cost += 10000
-    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(45):
+    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(15):
         cost += 10000
     if param[2] < 0:
         if verbose:
@@ -1331,12 +1335,13 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
 
 
-def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=None, istepmodel=.5, cb=None):
+def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=None, 
+             istepmodel=.5, cb=None, use_abs=False):
     """ Fit model of an anti-crossing """
     samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
     #costfun = lambda param0: evaluateCrossX(param0, imx, samplesize, fig=None, istepmodel=istepmodel, istep=istep)[0]
-    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False, istep=istep)[0]
+    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
 
     #costfun = lambda x0: costFunction(x0, pglobal, ims)
     vv = []

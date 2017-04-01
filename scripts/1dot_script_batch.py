@@ -13,6 +13,7 @@ import platform
 import pdb
 import logging
 import numpy as np
+from functools import partial
 import pdb
 import qtpy
 import logging
@@ -38,12 +39,7 @@ import matplotlib.pyplot as plt
 import qcodes
 from qcodes.plots.qcmatplotlib import MatPlot
 
-from functools import partial
-import qtt.scans
-
-
 import qtt
-import qtt.scans
 from qtt.scans import experimentFile
 from qtt import pgeometry
 from qtt.data import write_data

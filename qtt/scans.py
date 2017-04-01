@@ -213,6 +213,8 @@ import time
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
+    if isinstance(mparams, (int,str)):
+        mparams=[mparams]
     for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
