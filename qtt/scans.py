@@ -121,6 +121,7 @@ def parse_stepdata(stepdata):
     return stepdata
         
 def get_param(gates, sweepgate):
+    """ Get qcodes parameter from scanjob argument """
     if isinstance(sweepgate, str):
         return getattr(gates, sweepgate)
     else:
@@ -255,7 +256,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     gate = sweepdata.get('param', None)
     if gate is None:
         raise Exception('set param in scanjob')
-
     param = get_param(gates, gate)
         
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
@@ -294,7 +294,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
         loop = loop.with_bg_task(myupdate, min_delay=1.8)
 
-    gates.set(gate, sweepdata['start'])
+    param.set(sweepdata['start'])
     qtt.time.sleep(wait_time_startscan)
     alldata = loop.run()
     alldata.sync()
