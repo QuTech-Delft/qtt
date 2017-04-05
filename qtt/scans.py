@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import scipy
 import os
@@ -5,13 +6,17 @@ import sys
 import copy
 import logging
 import time
-import qcodes
-import qcodes as qc
 import datetime
 import warnings
 import pyqtgraph as pg
-
+import skimage
+import skimage.filters
 import matplotlib.pyplot as plt
+
+import qcodes
+import qcodes as qc
+from qcodes.utils.helpers import tprint
+from qcodes.instrument.parameter import Parameter, StandardParameter, ManualParameter
 
 from qtt.tools import tilefigs
 import qtt.tools
@@ -22,14 +27,11 @@ from qtt.tools import deprecated
 
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
-from qcodes.utils.helpers import tprint
 
 from qtt.tools import update_dictionary
 
 #%%
 
-import skimage
-import skimage.filters
 
 
 def checkReversal(im0, verbose=0):
@@ -93,7 +95,6 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
 
 #%%
 
-from qcodes import StandardParameter, ManualParameter
 
 def parse_stepdata(stepdata):
     """ Helper function for legacy code """
@@ -207,14 +208,18 @@ if __name__ == '__main__':
 
 #%%
 
-import time
 
 
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
-    if isinstance(mparams, (int,str)):
+    if isinstance(mparams, (int,str, Parameter)):
+        # for convenience
         mparams=[mparams]
+    elif isinstance(mparams, (list, tuple)):
+        pass
+    else:
+        warnings.warn('unknown argument type')
     for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
