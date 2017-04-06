@@ -352,13 +352,11 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
         
     fpga_ch = scanjob['minstrument']
     if isinstance(fpga_ch, int):
-        fpga_ch=[fpga_ch]
+        fpga_ch = [fpga_ch]
 
     def readfunc(waveform, Naverage):
-        #fpga_ch = scanjob['sd'].fpga_ch
         ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
-        devicedata=station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
-        #print(devicedata[0].shape)
+        devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
         data_raw = [devicedata[ii] for ii in fpga_ch] 
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw  ] )
         return data
@@ -591,11 +589,18 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     stepgate = stepdata.get('param', None)
     stepparam = get_param(gates, stepgate)
 
+    if 'sd' in scanjob:
+        warnings.warn('sd argument is not supported in scan2Dfast')
+        
+    fpga_ch = scanjob['minstrument']
+    if isinstance(fpga_ch, int):
+        fpga_ch = [fpga_ch]
+
     def readfunc(waveform, Naverage):
-        fpga_ch = scanjob['sd'].fpga_ch
-        ReadDevice = ['FPGA_ch%d' % fpga_ch]
-        data_raw = np.array(station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)[fpga_ch])
-        data = station.awg.sweep_process(data_raw, waveform, Naverage)
+        ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
+        devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
+        data_raw = [devicedata[ii] for ii in fpga_ch]
+        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw  ] )
         return data
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
@@ -626,13 +631,18 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
 
     t0 = qtt.time.time()
 
-    alldata = makeDataSet2D(stepvalues, sweepvalues, location=location, loc_record={'label': 'scan2Dfast'})
+    if len(fpga_ch) == 1:
+        measure_names = ['measured']
+    else:
+        measure_names = ['FPGA_ch%d' % c for c in fpga_ch]
+    alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names, location=location, loc_record={'label': 'scan2Dfast'})
 
+    # TODO: Allow liveplotting for multiple read-out channels
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
+        liveplotwindow.add(alldata.default_parameter_array(paramname=measure_names[0]))
 
     tprev = time.time()
 
@@ -647,7 +657,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
             qtt.time.sleep(wait_time_startscan)
         else:
             qtt.time.sleep(wait_time)
-        alldata.measured.ndarray[ix] = readfunc(waveform, Naverage)
+        data = readfunc(waveform, Naverage)
+        for idm, mname in enumerate(measure_names):
+            alldata.arrays[mname].ndarray[ix] = data[idm]
 
         if liveplotwindow is not None:
             delta, tprev, update = delta_time(tprev, thr=2)
@@ -663,7 +675,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     dt = qtt.time.time() - t0
 
     if diff_dir is not None:
-        alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
+        for mname in measure_names:
+            alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None, meas_arr_name=mname)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
