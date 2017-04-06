@@ -600,7 +600,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
         ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
         devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
         data_raw = [devicedata[ii] for ii in fpga_ch]
-        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw  ] )
+        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
         return data
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
@@ -723,7 +723,7 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     """Perform a very fast 2d scan by varying two physical gates with the AWG.
 
     The function assumes the station contains an FPGA with readFPGA function. 
-        The FPGA channel is determined form the sensing dot.
+        The number of the FPGA channel is supplied via the minstrument field in the scanjob.
 
     Args:
         station (object): contains all the instruments
@@ -740,14 +740,19 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     sweepgates = [sweepdata['param'], stepdata['param']]
     sweepranges = [sweepdata['end'] - sweepdata['start'], stepdata['end'] - stepdata['start']]
 
-    sd = scanjob['sd']
+    if 'sd' in scanjob:
+        warnings.warn('sd argument is not supported in scan2Dturbo')
+
     Naverage = scanjob.get('Naverage', 20)
     resolution = scanjob.get('resolution', [90, 90])
 
     if verbose:
         print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
 
-    fpga_ch = sd.fpga_ch
+    fpga_ch = scanjob['minstrument']
+    if isinstance(fpga_ch, int):
+        fpga_ch = [fpga_ch]
+
     fpga_samp_freq = station.fpga.get_sampling_frequency()
 
     t0 = qtt.time.time()
@@ -761,14 +766,17 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     qtt.time.sleep(wait_time_startscan)
     waittime = resolution[0] * resolution[1] * Naverage / fpga_samp_freq
 
-    ReadDevice = ['FPGA_ch%d' % fpga_ch]
-    _, DataRead_ch1, DataRead_ch2 = station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
-
+    ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
+    devicedata = station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
     station.awg.stop()
+    data_raw = [devicedata[ii] for ii in fpga_ch]
+    data = np.vstack([station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
 
-    dataread = [DataRead_ch1, DataRead_ch2][fpga_ch - 1]
-    data = station.awg.sweep_2D_process(dataread, waveform)
-    alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges, location=location, loc_record={'label': 'scan2Dturbo'})
+    if len(fpga_ch) == 1:
+        measure_names = ['measured']
+    else:
+        measure_names = ['FPGA_ch%d' % c for c in fpga_ch]
+    alldata, _ = makeDataset_sweep_2D(data, station.gates, sweepgates, sweepranges, measure_names=measure_names, location=location, loc_record={'label': 'scan2Dturbo'})
 
     dt = qtt.time.time() - t0
 
@@ -947,7 +955,7 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
         return dataset, plot
 
 
-def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, location=None, loc_record=None, fig=None):
+def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='measured', location=None, loc_record=None, fig=None):
     """Convert the data of a 2D sweep to a DataSet."""
 
     gate_horz = getattr(gates, sweepgates[0])
@@ -961,7 +969,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, location=None, lo
     sweep_vert = gate_vert[initval_vert - sweepranges[1] /
                            2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
 
-    dataset = makeDataSet2D(sweep_vert, sweep_horz, location=location, loc_record=loc_record, preset_data=data)
+    dataset = makeDataSet2D(sweep_vert, sweep_horz, measure_names=measure_names, location=location, loc_record=loc_record, preset_data=data)
 
     if fig is None:
         return dataset, None
