@@ -621,7 +621,12 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
         sweepparam.set(float(sweepgate_value))
 
     data = readfunc(waveform, Naverage)
-    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+    if len(fpga_ch) == 1:
+        measure_names = ['measured']
+    else:
+        measure_names = ['FPGA_ch%d' % c for c in fpga_ch]
+    
+    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, ynames=measure_names, fig=None)
 
     sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
@@ -631,10 +636,6 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
 
     t0 = qtt.time.time()
 
-    if len(fpga_ch) == 1:
-        measure_names = ['measured']
-    else:
-        measure_names = ['FPGA_ch%d' % c for c in fpga_ch]
     alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names, location=location, loc_record={'label': 'scan2Dfast'})
 
     # TODO: Allow liveplotting for multiple read-out channels
