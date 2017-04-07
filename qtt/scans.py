@@ -771,7 +771,7 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     devicedata = station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
     station.awg.stop()
     data_raw = [devicedata[ii] for ii in fpga_ch]
-    data = np.vstack([station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
+    data = np.array([station.awg.sweep_2D_process(d, waveform) for d in data_raw])
 
     if len(fpga_ch) == 1:
         measure_names = ['measured']
@@ -970,10 +970,15 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
     initval_horz = gate_horz.get()
     initval_vert = gate_vert.get()
 
+    if type(measure_names) is list:
+        data_measured = data[0]
+    else:
+        data_measured = data
+
     sweep_horz = gate_horz[initval_horz - sweepranges[0] /
-                           2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data[0])]
+                           2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data_measured[0])]
     sweep_vert = gate_vert[initval_vert - sweepranges[1] /
-                           2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data)]
+                           2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data_measured)]
 
     dataset = makeDataSet2D(sweep_vert, sweep_horz, measure_names=measure_names, location=location, loc_record=loc_record, preset_data=data)
 

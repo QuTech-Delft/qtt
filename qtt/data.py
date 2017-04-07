@@ -864,11 +864,11 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
             # assume p is a Parameter
             measure_names+=[p.full_name]
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
-    for mname in measure_names:
+    for idm, mname in enumerate(measure_names):
         z = DataArray(name=mname, array_id=mname, label=mname, preset_data=np.copy(zz), set_arrays=(x, y))
         dd.add_array(z)
         if preset_data is not None:
-            getattr(dd, mname).ndarray = np.array(preset_data)
+            getattr(dd, mname).ndarray = np.array(preset_data[idm])
     dd.add_array(x)
     dd.add_array(y)
 
