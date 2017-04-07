@@ -91,8 +91,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 sys.setswitchinterval(si)  # hack to make this semi thread-safe
                 box = QtWidgets.QDoubleSpinBox()
                 box.setKeyboardTracking(False)  # do not emit signals when still editing
-                box.setMinimum(-1000)
-                box.setMaximum(1000)
+                box.setMinimum(-10000)
+                box.setMaximum(10000)
                 box.setSingleStep(5)
 
                 v = ''
