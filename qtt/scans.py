@@ -940,7 +940,12 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
         else:
             raise Exception('No gates supplied')
 
-    sweepvalues = np.linspace(sweepgate_value - sweeprange / 2, sweepgate_value + sweeprange / 2, len(data))
+    if type(ynames) is list:
+        sweeplength = len(data[0])
+    else:
+        sweeplength = len(data)
+    sweepvalues = np.linspace(sweepgate_value - sweeprange / 2, sweepgate_value + sweeprange / 2, sweeplength)
+
     if ynames is None:
         dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
                                  y=data, location=location, loc_record=loc_record)
