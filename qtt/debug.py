@@ -19,7 +19,7 @@ import tempfile
 #%% Debugging
 
 
-def dumpstring(txt, tag='dump'):
+def dumpstring(txt, tag='dump', showfile=False):
     """ Dump a text string to temperary file on disk """
     tfile = os.path.join(tempfile.tempdir, 'qtt-%s.txt' % tag)
     dumpstring.tfile = tfile  # store temporary file in object
