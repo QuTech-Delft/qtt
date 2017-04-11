@@ -108,7 +108,7 @@ class VirtualIVVI(Instrument):
     def get_idn(self):
         """
         Overwrites the get_idn function using constants as the virtual device
-        does not have a proper \*IDN function.
+        does not have a proper `*IDN` function.
         """
         # not all IVVI racks support the version command, so return a dummy
         return {'firmware': None, 'model': None, 'serial': None, 'vendor': None}
