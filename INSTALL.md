@@ -30,7 +30,7 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 > conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
 > conda install -c https://conda.binstar.org/menpo opencv3
 ```
-There is a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
+[OLD] There is a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
 ```
 > pip install git+https://github.com/jupyter/qtconsole.git
 ```
@@ -111,9 +111,11 @@ call activate %USERNAME%
 d:
 cd d:\users\%USERNAME%
 
+rem set SPYDER_DEBUG=1
 spyder --show-console --new-instance -p d:\users\%username% -w d:\users\%USERNAME% --window-title %USERNAME%
+rem --multithread 
 
-#echo "Press ..."
+rem echo "Press ..."
 pause
 
 call deactivate %USERNAME%
