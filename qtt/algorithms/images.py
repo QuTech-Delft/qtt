@@ -46,7 +46,7 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
         print('straightenImage: fx %.4f fy %.4f' % (fw, fh))
         print('straightenImage: result mvx %.4f mvy %.4f' % (mvx, mvy))
 
-    if fw < .5 and 1:
+    if fw < .5:
         fwx = fw
         fac = 1
         ims = im
