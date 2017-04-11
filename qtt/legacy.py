@@ -8,8 +8,9 @@ import matplotlib
 import sys
 import os
 import logging
-import qcodes
+import cv2
 
+import qcodes
 # explicit import
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -500,64 +501,7 @@ def cmap_discretize(cmap, N, m=1024):
     return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d" % m, cdict, m)
 
 #%%
-import cv2
-
-@qtt.tools.deprecated
-def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.INTER_AREA):
-    """ Scale image to make square pixels
-
-    Arguments
-    ---------
-    im: array
-        input image
-    imextend: list of 4 floats
-        coordinates of image region (x0, x1, y0, y1)
-    mvx, mvy : float
-        number of mV per pixel requested
-
-    Returns
-    -------
-     ims: transformed image
-     (fw, fh, mvx, mvy, H) : data
-         H is the homogeneous transform from original to straightened image
-
-    """
-    dxmv = imextent[1] - imextent[0]
-    dymv = imextent[3] - imextent[2]
-
-    dx = im.shape[1]
-    dy = im.shape[0]
-    mvx0 = dxmv / float(dx - 1)     # mv/pixel
-    mvy0 = dymv / float(dy - 1)
-
-    if mvy is None:
-        mvy = mvx
-
-    fw = np.abs((float(mvx0) / mvx))
-    fh = np.abs((float(mvy0) / mvy))
-    if verbose:
-        print('straightenImage: fx %.4f fy %.4f' % (fw, fh))
-        print('straightenImage: result mvx %.4f mvy %.4f' % (mvx, mvy))
-
-    if fw < .5 and 1:
-        fwx = fw
-        fac = 1
-        ims = im
-        while (fwx < .5):
-            ims = cv2.resize(
-                ims, None, fx=.5, fy=1, interpolation=cv2.INTER_LINEAR)
-            fwx *= 2
-            fac *= 2
-        # print('fw %f, fwx %f, fac %f' % (fw, fwx, fac))
-        ims = cv2.resize(
-            ims, None, fx=fac * fw, fy=fh, interpolation=interpolation)
-    else:
-        ims = cv2.resize(im, None, fx=fw, fy=fh, interpolation=interpolation)
-
-    H = pmatlab.pg_transl2H([-.5, -.5]) .dot(np.diag([fw, fh, 1]).dot(pmatlab.pg_transl2H([.5, .5])))
-
-    return ims, (fw, fh, mvx, mvy, H)
-
+from qtt.algorithms.images import straightenImage
 
 #%%
 
@@ -742,7 +686,7 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
 
     im = fixReversal(im, verbose=0)
     imc = cleanSensingImage(im, sigma=.93, verbose=0)
-    imtmp, (fw, fh, mvx, mvy, H) = straightenImage(imc, imextent, mvx=istep, verbose=verbose >= 2, interpolation=cv2.INTER_AREA)  # cv2.INTER_NEAREST
+    imtmp, (fw, fh, mvx, mvy, H) = straightenImage(imc, imextent, mvx=istep, verbose=verbose >= 2,)  # cv2.INTER_NEAREST
     imx = imtmp.astype(np.float64)
 
     ksize0 = int(math.ceil(31. / istep))
