@@ -22,20 +22,27 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 
 ## Install necessary packages
 ```
-> conda create -n [yourname] python=3.5 numpy matplotlib scipy spyder jupyter pyqt h5py pandas
+> conda create -n [yourname] python=3.6 numpy matplotlib scipy spyder jupyter pyqt h5py pandas
 > activate [yourname]
 > pip install pyqtgraph pyvisa attrs pyserial
 > conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
-> conda install -c https://conda.binstar.org/menpo opencv3
+> # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
+> pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
+
 ```
 ### Old commands
-There is a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
+There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
 ```
 > pip install git+https://github.com/jupyter/qtconsole.git
 ```
 Custom pyqtgraph:
 ```
 > # old command: conda install -c conda-forge pyqtgraph>=0.10
+```
+
+The menpo opencv package is not yet available for python 3.6. For older versions:
+```
+> conda install -c https://conda.binstar.org/menpo opencv3
 ```
 
 For Mac OS with anaconda type from the command line:
