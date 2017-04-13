@@ -22,18 +22,22 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 
 ## Install necessary packages
 ```
-> conda create -n [yourname] python=3.5
+> conda create -n [yourname] python=3.5 numpy matplotlib scipy spyder jupyter pyqt h5py pandas
 > activate [yourname]
-> conda install -y numpy matplotlib scipy spyder jupyter pyqt h5py pandas
-> pip install pyqtgraph pyvisa attrs
-> # old command: conda install -c conda-forge pyqtgraph>=0.10
+> pip install pyqtgraph pyvisa attrs pyserial
 > conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
 > conda install -c https://conda.binstar.org/menpo opencv3
 ```
-[OLD] There is a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
+### Old commands
+There is a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
 ```
 > pip install git+https://github.com/jupyter/qtconsole.git
 ```
+Custom pyqtgraph:
+```
+> # old command: conda install -c conda-forge pyqtgraph>=0.10
+```
+
 For Mac OS with anaconda type from the command line:
 ```
 > cd [MYLOCALDIR]/qtt
@@ -115,7 +119,11 @@ rem set SPYDER_DEBUG=1
 spyder --show-console --new-instance -p d:\users\%username% -w d:\users\%USERNAME% --window-title %USERNAME%
 rem --multithread 
 
+<<<<<<< Updated upstream
 rem echo "Press ..."
+=======
+@echo "Press any key to continue ..."
+>>>>>>> Stashed changes
 pause
 
 call deactivate %USERNAME%
