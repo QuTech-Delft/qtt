@@ -107,7 +107,11 @@ class virtual_IVVI(Instrument):
         for g, bnds in gate_boundaries.items():
             logging.debug('gate %s: %s' % (g, bnds))
 
-            instrument = self._instrument_list[self._gate_map[g][0]]
+            gx=self._gate_map.get(g, None)
+            if gx is None:
+                # gate is not connected
+                continue
+            instrument = self._instrument_list[gx[0]]
             param = self.get_instrument_parameter(g)
             param._vals = Numbers(bnds[0], max_value=bnds[1])
             if hasattr(instrument, 'adjust_validator_resolution'):
