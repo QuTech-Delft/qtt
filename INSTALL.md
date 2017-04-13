@@ -24,7 +24,7 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 ```
 > conda create -n [yourname] python=3.6 numpy matplotlib scipy spyder jupyter pyqt h5py pandas
 > activate [yourname]
-> pip install pyqtgraph pyvisa attrs pyserial
+> pip install pyqtgraph pyvisa attrs pyserial redis
 > conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
 > # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
 > pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
