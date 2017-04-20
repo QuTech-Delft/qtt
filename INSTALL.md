@@ -85,7 +85,7 @@ The git commands are:
 
 - Register the repositories with Python. For each of the repositories run this from the root directory:
 ```
-> conda develop .  (for Anaconda)
+> python setup.py develop (Anaconda, while in your environment)
 > python setup.py develop --user  (for other systems)
 ```
 
