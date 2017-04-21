@@ -834,7 +834,10 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None):
 
 def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=None, 
                   preset_data=None, return_names=False):
-    """ Make DataSet with one 2D array and two setpoint arrays
+    """ Make DataSet with one or multiple 2D array and two setpoint arrays.
+
+    If the preset_data is used for multiple 2D arrays, then the order of 
+    measure_names should match the order of preset_data.
 
     Args:
         p1 (array): first setpoint array of data
@@ -855,7 +858,9 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, unit=p1.parameter.unit, preset_data=xx, is_setpoint=True)
     y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label, unit=p2.parameter.unit, preset_data=yy, set_arrays=(x,), is_setpoint=True)
     if isinstance(measure_names, str):
-        measure_names=[measure_names]
+        measure_names = [measure_names]
+        if preset_data is not None:
+            preset_data = [preset_data]
     mnamesx=measure_names; measure_names=[]
     for p in mnamesx:
         if isinstance(p, str):
@@ -864,11 +869,11 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
             # assume p is a Parameter
             measure_names+=[p.full_name]
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
-    for mname in measure_names:
+    for idm, mname in enumerate(measure_names):
         z = DataArray(name=mname, array_id=mname, label=mname, preset_data=np.copy(zz), set_arrays=(x, y))
         dd.add_array(z)
         if preset_data is not None:
-            getattr(dd, mname).ndarray = np.array(preset_data)
+            getattr(dd, mname).ndarray = np.array(preset_data[idm])
     dd.add_array(x)
     dd.add_array(y)
 
