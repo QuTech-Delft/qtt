@@ -235,6 +235,7 @@ def package_versions(verbose=1):
     
     print('numpy.__version__ %s' % numpy.__version__)
     print('scipy.__version__ %s' % scipy.__version__)
+    print('matplotlib.__version__ %s' % matplotlib.__version__)
     try:
         import cv2
         print('cv2.__version__ %s' % cv2.__version__)
