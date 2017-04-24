@@ -126,11 +126,7 @@ rem set SPYDER_DEBUG=1
 spyder --show-console --new-instance -p d:\users\%username% -w d:\users\%USERNAME% --window-title %USERNAME%
 rem --multithread 
 
-<<<<<<< Updated upstream
 rem echo "Press ..."
-=======
-@echo "Press any key to continue ..."
->>>>>>> Stashed changes
 pause
 
 call deactivate %USERNAME%
