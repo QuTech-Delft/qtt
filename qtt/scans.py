@@ -559,6 +559,13 @@ if __name__ == '__main__':
     scanjob['stepdata'] = dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 3.})
     data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
 
+#%%
+def readfunc(waveform, Naverage, fastreadout, fpga_ch):
+    ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
+    devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
+    data_raw = [devicedata[ii] for ii in fpga_ch]
+    data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
+    return data
 
 #%%
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
@@ -591,17 +598,12 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
 
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan2Dfast')
-        
-    fpga_ch = scanjob['minstrument']
-    if isinstance(fpga_ch, int):
-        fpga_ch = [fpga_ch]
-
-    def readfunc(waveform, Naverage):
-        ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
-        devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
-        data_raw = [devicedata[ii] for ii in fpga_ch]
-        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
-        return data
+    
+    fastreadout = getattr(station, scanjob.get('fastreadout', 'fpga'))
+    
+    read_ch = scanjob['minstrument']
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
     period = scanjob['sweepdata'].get('period', 1e-3)
@@ -621,10 +623,10 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
         sweepparam.set(float(sweepgate_value))
 
     data = readfunc(waveform, Naverage)
-    if len(fpga_ch) == 1:
+    if len(read_ch) == 1:
         measure_names = ['measured']
     else:
-        measure_names = ['FPGA_ch%d' % c for c in fpga_ch]
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
     
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, ynames=measure_names, fig=None)
 
