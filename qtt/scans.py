@@ -238,7 +238,7 @@ def getDefaultParameter(data):
 #%%
 
 
-def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
+def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1):
     """Simple 1D scan. 
 
     Args:
@@ -282,7 +282,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array())
+        liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     if liveplotwindow is not None:
         def myupdate():
@@ -350,16 +350,11 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan1Dfast')
         
-    fpga_ch = scanjob['minstrument']
-    if isinstance(fpga_ch, int):
-        fpga_ch = [fpga_ch]
-
-    def readfunc(waveform, Naverage):
-        ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
-        devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
-        data_raw = [devicedata[ii] for ii in fpga_ch] 
-        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw  ] )
-        return data
+    fastreadout = getattr(station, scanjob.get('fastreadout', 'fpga'))
+        
+    read_ch = scanjob['minstrument']
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
     period = scanjob['sweepdata'].get('period', 1e-3)
@@ -373,9 +368,9 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     qtt.time.sleep(wait_time_startscan)
 
-    data = readfunc(waveform, Naverage)
+    data = readfunc(waveform, Naverage, fastreadout, read_ch)
     alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
-                                   ynames=['measured%d' % i for i in fpga_ch],
+                                   ynames=['measured%d' % i for i in read_ch],
                                    fig=None, location=location, loc_record={'label': 'scan1Dfast'})
 
     station.awg.stop()
@@ -452,7 +447,7 @@ def parse_minstrument(scanjob):
     return minstrument
         
 
-def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
+def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
 
     Args:
@@ -505,7 +500,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
+        liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     tprev = time.time()
     for ix, x in enumerate(stepvalues):
@@ -560,11 +555,18 @@ if __name__ == '__main__':
     data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
 
 #%%
-def readfunc(waveform, Naverage, fastreadout, fpga_ch):
-    ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
-    devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
-    data_raw = [devicedata[ii] for ii in fpga_ch]
-    data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
+def readfunc(waveform, Naverage, fastreadout, read_ch):
+    if fastreadout.name == 'fpga':
+        ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
+        devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
+        data_raw = [devicedata[ii] for ii in read_ch]
+        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
+    elif fastreadout.name == 'digitizer':
+        digitizer.initialize_channels(read_ch, mV_range=1000)
+        data, _ = digitizer.blockavg_hardware_trigger_acquisition(mV_range=1000, nr_averages=Naverage)
+        # TO DO: Process data when several channels are used
+    else:
+        raise Exception('Unrecognized fast readout instrument')
     return data
 
 #%%
@@ -622,7 +624,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     else:
         sweepparam.set(float(sweepgate_value))
 
-    data = readfunc(waveform, Naverage)
+    data = readfunc(waveform, Naverage, fastreadout, read_ch)
     if len(read_ch) == 1:
         measure_names = ['measured']
     else:
