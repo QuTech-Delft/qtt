@@ -371,12 +371,9 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     qtt.time.sleep(wait_time_startscan)
 
     data = readfunc(waveform, Naverage, station, fastreadout, read_ch)
-#    alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
-#                                   ynames=['measured%d' % i for i in read_ch],
-#                                   fig=None, location=location, loc_record={'label': 'scan1Dfast'})
-# TO DO: fix for multichannel compatibility
     alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
-                                  fig=None, location=location, loc_record={'label': 'scan1Dfast'})
+                                   ynames=['measured%d' % i for i in read_ch],
+                                   fig=None, location=location, loc_record={'label': 'scan1Dfast'})
     
     station.awg.stop()
 
@@ -568,7 +565,8 @@ def readfunc(waveform, Naverage, station, fastreadout, read_ch):
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
     elif fastreadout.name == 'digitizer':
         fastreadout.initialize_channels(read_ch, mV_range=1000)
-        data, _ = fastreadout.blockavg_hardware_trigger_acquisition(mV_range=1000, nr_averages=Naverage)
+        dataraw, _ = fastreadout.blockavg_hardware_trigger_acquisition(mV_range=1000, nr_averages=Naverage)
+        data = np.vstack([dataraw])
         # TO DO: Process data when several channels are used
     else:
         raise Exception('Unrecognized fast readout instrument')
@@ -635,9 +633,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     else:
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
     
-#    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, ynames=measure_names, fig=None)
-# TO DO: fix makeDataset_sweep for compatibility with both fpga and digitizer with multichannels
-    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, fig=None)
+    ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, ynames=measure_names, fig=None)
 
     sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]

@@ -74,7 +74,7 @@ class virtual_awg(Instrument):
         if verbose:
             print('Stopped AWGs')
 
-    def sweep_init(self, waveforms, period, delete=True):
+    def sweep_init(self, waveforms, period=1e-3, delete=True):
         ''' Send waveform(s) to gate(s)
 
         Arguments:
@@ -232,7 +232,7 @@ class virtual_awg(Instrument):
             waveform[gate]['name'] = 'sweep_%s' % gate
         else:
             waveform[gate]['name'] = wave_name
-        sweep_info = self.sweep_init(waveform, delete)
+        sweep_info = self.sweep_init(waveform, period, delete)
         self.sweep_run(sweep_info)
         waveform['width'] = width
         waveform['sweeprange'] = sweeprange
