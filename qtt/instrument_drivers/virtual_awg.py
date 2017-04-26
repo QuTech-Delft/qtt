@@ -74,7 +74,7 @@ class virtual_awg(Instrument):
         if verbose:
             print('Stopped AWGs')
 
-    def sweep_init(self, waveforms, delete=True):
+    def sweep_init(self, waveforms, period, delete=True):
         ''' Send waveform(s) to gate(s)
 
         Arguments:
@@ -111,8 +111,9 @@ class virtual_awg(Instrument):
 
         # fpga marker
         fpga_marker = np.zeros(wave_len)
-        fpga_marker[int(self.delay_FPGA * self.AWG_clock):(
-            int(self.delay_FPGA * self.AWG_clock) + wave_len // 20)] = 1.0
+#        fpga_marker[int(self.delay_FPGA * self.AWG_clock):(
+#            int(self.delay_FPGA * self.AWG_clock) + wave_len // 20)] = 1.0
+        fpga_marker[int(period/2 * self.AWG_clock):(int(period/2 * self.AWG_clock) + wave_len // 20)] = 1.0
 
         if fpga_info[:2] not in sweep_info:
             sweep_info[fpga_info[:2]] = dict()

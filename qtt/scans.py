@@ -224,11 +224,13 @@ def get_measurement_params(station, mparams):
     for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
-        else:
-            if isinstance(x, str):
-                params += [getattr(station, x).amplitude]
+        elif isinstance(x, str):
+            if x.startswith('digitizer'):
+                params += [getattr(station.digitizer, 'channel_%c' % x[-1])]
             else:
-                params += [x]
+                params += [getattr(station, x).amplitude]
+        else:
+            params += [x]
     return params
 
 
