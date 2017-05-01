@@ -79,6 +79,7 @@ class virtual_awg(Instrument):
 
         Arguments:
             waveforms (dict): the waveforms with the gates as keys
+            period: period of the waveform in seconds
 
         Returns:
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
@@ -94,8 +95,14 @@ class virtual_awg(Instrument):
                 awg.delete_all_waveforms_from_list()
 
         awgs = [self._awgs[self.awg_map[g][0]] for g in sweepgates]
-        fpga_info = self.awg_map['fpga_mk']
-        awgs.append(self._awgs[fpga_info[0]])
+        if 'fpga_mk' in self.awg_map:
+            marker_info = self.awg_map['fpga_mk']
+            marker_delay = self.delay_FPGA
+        elif 'm4i_mk' in self.awg_map:
+            marker_info = self.awg_map['m4i_mk']
+            marker_delay = period/2
+    
+        awgs.append(self._awgs[marker_info[0]])
 
         sweep_info = dict()
         wave_len = len(waveforms[sweepgates[0]]['wave'])
@@ -109,27 +116,25 @@ class virtual_awg(Instrument):
             else:
                 sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
 
-        # fpga marker
-        fpga_marker = np.zeros(wave_len)
-#        fpga_marker[int(self.delay_FPGA * self.AWG_clock):(
-#            int(self.delay_FPGA * self.AWG_clock) + wave_len // 20)] = 1.0
-        fpga_marker[int(period/2 * self.AWG_clock):(int(period/2 * self.AWG_clock) + wave_len // 20)] = 1.0
+        # marker points
+        marker_points = np.zeros(wave_len)
+        marker_points[int(marker_delay * self.AWG_clock):(int(marker_delay * self.AWG_clock) + wave_len // 20)] = 1.0
 
-        if fpga_info[:2] not in sweep_info:
-            sweep_info[fpga_info[:2]] = dict()
-            sweep_info[fpga_info[:2]]['waveform'] = np.zeros(wave_len)
-            sweep_info[fpga_info[:2]]['marker1'] = np.zeros(wave_len)
-            sweep_info[fpga_info[:2]]['marker2'] = np.zeros(wave_len)
+        if marker_info[:2] not in sweep_info:
+            sweep_info[marker_info[:2]] = dict()
+            sweep_info[marker_info[:2]]['waveform'] = np.zeros(wave_len)
+            sweep_info[marker_info[:2]]['marker1'] = np.zeros(wave_len)
+            sweep_info[marker_info[:2]]['marker2'] = np.zeros(wave_len)
             fpga_mk_name = 'fpga_mk'
             for g in sweepgates:
                 fpga_mk_name += '_%s' % g
-            sweep_info[fpga_info[:2]]['name'] = fpga_mk_name
+            sweep_info[marker_info[:2]]['name'] = fpga_mk_name
 
-        sweep_info[fpga_info[:2]]['marker%d' % fpga_info[2]] = fpga_marker
-        self._awgs[fpga_info[0]].set(
-            'ch%i_m%i_low' % (fpga_info[1], fpga_info[2]), 0)
-        self._awgs[fpga_info[0]].set(
-            'ch%i_m%i_high' % (fpga_info[1], fpga_info[2]), 2.6)
+        sweep_info[marker_info[:2]]['marker%d' % marker_info[2]] = marker_points
+        self._awgs[marker_info[0]].set(
+            'ch%i_m%i_low' % (marker_info[1], marker_info[2]), 0)
+        self._awgs[marker_info[0]].set(
+            'ch%i_m%i_high' % (marker_info[1], marker_info[2]), 2.6)
 
         # awg marker
         if hasattr(self, 'awg_seq'):
