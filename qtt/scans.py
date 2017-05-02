@@ -110,7 +110,7 @@ def parse_stepdata(stepdata):
         stepdata['param']=stepdata['gate']
         
     v = stepdata.get('param', None)
-    if isinstance(v, (str, StandardParameter, ManualParameter) ):
+    if isinstance(v, (str, StandardParameter, ManualParameter, dict) ):
         pass
     elif isinstance(v, list):
         warnings.warn('please use string or Instrument instead of list' )
@@ -513,11 +513,11 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     tprev = time.time()
     for ix, x in enumerate(stepvalues):
         tprint('scan2D: %d/%d: time %.1f: setting %s to %.3f' % (ix, len(stepvalues), time.time() - t0, stepvalues.name, x), dt=1.5)
-        if 'gates_vert' in scanjob:
-            for g in scanjob['gates_vert']:
-                gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
-        else:
-            stepvalues.set(x)
+#        if 'gates_vert' in scanjob:
+#            for g in scanjob['gates_vert']:
+#                gates.set(g, scanjob['gates_vert_init'][g] + ix * stepdata['step'] * scanjob['gates_vert'][g])
+#        else:
+        stepvalues.set(x)
         for iy, y in enumerate(sweepvalues):
             sweepvalues.set(y)
             if iy == 0:
