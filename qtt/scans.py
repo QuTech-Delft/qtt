@@ -35,7 +35,6 @@ from qtt.structures import LinearCombParameter
 #%%
 
 
-
 def checkReversal(im0, verbose=0):
     """ Check sign of a current scan
 
@@ -105,23 +104,24 @@ def parse_stepdata(stepdata):
 
     v = stepdata.get('gates', None)
     if v is not None:
-        raise Exception('please use param instead of gates' )
+        raise Exception('please use param instead of gates')
     v = stepdata.get('gate', None)
     if v is not None:
-        warnings.warn('please use param instead of gates', DeprecationWarning )
-        stepdata['param']=stepdata['gate']
-        
+        warnings.warn('please use param instead of gates', DeprecationWarning)
+        stepdata['param'] = stepdata['gate']
+
     v = stepdata.get('param', None)
-    if isinstance(v, (str, StandardParameter, ManualParameter, dict) ):
+    if isinstance(v, (str, StandardParameter, ManualParameter, dict)):
         pass
     elif isinstance(v, list):
-        warnings.warn('please use string or Instrument instead of list' )
-        stepdata['param']=stepdata['param'][0]
-    
+        warnings.warn('please use string or Instrument instead of list')
+        stepdata['param'] = stepdata['param'][0]
+
     # TODO: implement range argument
-    
+
     return stepdata
-        
+
+
 def get_param(gates, sweepgate):
     """ Get qcodes parameter from scanjob argument """
     if isinstance(sweepgate, str):
@@ -130,7 +130,7 @@ def get_param(gates, sweepgate):
         # assume the argument already is a parameter
         return sweepgate
 
-    
+
 from qtt.algorithms.generic import findCoulombDirection
 from qtt.data import dataset2Dmetadata, dataset2image
 
@@ -184,6 +184,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     return scandata, od
     # saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
 
+
 if __name__ == '__main__':
     scandata, od = onedotHiresScan(station, od, dv=70, verbose=1)
 
@@ -206,19 +207,19 @@ def plot1D(data, fig=100, mstyle='-b'):
         MatPlot(getattr(data, val), interval=None, num=fig)
         # plt.show()
 
+
 if __name__ == '__main__':
     plot1D(alldata, fig=100)
 
 #%%
 
 
-
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
-    if isinstance(mparams, (int,str, Parameter)):
+    if isinstance(mparams, (int, str, Parameter)):
         # for convenience
-        mparams=[mparams]
+        mparams = [mparams]
     elif isinstance(mparams, (list, tuple)):
         pass
     else:
@@ -261,7 +262,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if gate is None:
         raise Exception('set param in scanjob')
     param = get_param(gates, gate)
-        
+
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
     wait_time = sweepdata.get('wait_time', 0)
@@ -447,6 +448,7 @@ def delta_time(tprev, thr=2):
         update = 1
     return delta, tprev, update
 
+
 def parse_minstrument(scanjob):
     """ Extract the parameters to be measured from the scanjob """
     minstrument = scanjob.get('minstrument', None)
@@ -455,7 +457,7 @@ def parse_minstrument(scanjob):
         minstrument = scanjob.get('keithleyidx', None)
 
     return minstrument
-        
+
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
@@ -467,15 +469,15 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     Returns:
         alldata (DataSet): contains the measurement data and metadata
     """
-    stepdata = parse_stepdata( scanjob['stepdata'])
-    sweepdata = parse_stepdata( scanjob['sweepdata'])
-    
+    stepdata = parse_stepdata(scanjob['stepdata'])
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
+
     if (type(stepdata['param']) is dict) or (type(sweepdata['param']) is dict):
         scanjob['scantype'] = 'scan2Dvec'
     else:
         scanjob['scantype'] = 'scan2D'
 
-    minstrument = parse_minstrument( scanjob)
+    minstrument = parse_minstrument(scanjob)
     mparams = get_measurement_params(station, minstrument)
 
     gates = station.gates
@@ -491,7 +493,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     else:
         stepgate = stepdata.get('param', None)
         stepparam = get_param(gates, stepgate)
-    
+
     if type(sweepdata['param']) is dict:
         param = LinearCombParameter(name='sweepparam', comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
         params.update(list(sweepdata['param'].keys()))
@@ -513,16 +515,16 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.info('scan2D: wait_time_sweep %f' % wait_time_sweep)
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
-    alldata, (set_names, measure_names)= makeDataSet2D(stepvalues, sweepvalues,
-             measure_names=mparams, location=location, loc_record={'label': scanjob['scantype']},
-                 return_names=True)
+    alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
+                                                        measure_names=mparams, location=location, loc_record={'label': scanjob['scantype']},
+                                                        return_names=True)
 
-    #p.full_name
-    if verbose>=2:
-        #print(alldata)
+    # p.full_name
+    if verbose >= 2:
+        # print(alldata)
         print('scan2D: created dataset')
-        print('  set_names: %s '% ( set_names,))
-        print('  measure_names: %s '% ( measure_names,))
+        print('  set_names: %s ' % (set_names,))
+        print('  measure_names: %s ' % (measure_names,))
 
     t0 = qtt.time.time()
 
@@ -542,9 +544,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         for iy, y in enumerate(sweepvalues):
             if scanjob['scantype'] is 'scan2Dvec':
                 for param in params:
-                    paramval = param_init[param] + ix*stepdata['step']*stepdata['param'][param] + iy*sweepdata['step']*sweepdata['param'][param]
+                    paramval = param_init[param] + ix * stepdata['step'] * stepdata['param'][param] + iy * sweepdata['step'] * sweepdata['param'][param]
                     gates.set(param, paramval)
-                    params_vals[param][ix,iy] = paramval
+                    params_vals[param][ix, iy] = paramval
             else:
                 sweepvalues.set(y)
             if iy == 0:
@@ -588,6 +590,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     alldata.write(write_metadata=True)
 
     return alldata
+
 
 if __name__ == '__main__':
     import logging
@@ -722,7 +725,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
         if plotparam == 'measured':
             plotparam = measure_names[0]
-    
+
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, ynames=measure_names, fig=None)
 
     sweepvalues = sweepparam[list(ds0.arrays[sweepgate])]
@@ -1012,6 +1015,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
  #   pmatlab.save(outputfile, alldata)
     return alldata
 
+
 if __name__ == '__main__':
     gate = 'L'
     alldataX = qtt.scans.scanPinchValue(
@@ -1054,10 +1058,10 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
 
     if ynames is None:
         dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname='measured',
-                                 y=data, location=location, loc_record=loc_record)
+                                     y=data, location=location, loc_record=loc_record)
     else:
         dataset = makeDataSet1Dplain(sweepgate, sweepvalues, yname=ynames,
-                                 y=data, location=location, loc_record=loc_record)
+                                     y=data, location=location, loc_record=loc_record)
 
     if fig is None:
         return dataset, None
