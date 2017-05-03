@@ -371,6 +371,7 @@ class LinearCombParameter(qcodes.instrument.parameter.Parameter):
         super().__init__(name)
         self.name = name
         self.comb_map = comb_map
+        self.unit = self.comb_map[0][0].unit
         self.coeffs_sum = sum([np.abs(coeff) for (param, coeff) in self.comb_map])
 
     def get(self):
