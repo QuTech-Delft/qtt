@@ -558,18 +558,18 @@ if __name__ == '__main__':
 
 #%%
 def measuresegment(waveform, Naverage, station, minstrhandle, read_ch):
-    if minstrhandle == 'fpga':
-        minstrhandle = station.fpga
-        
-    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
+#    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
+    if minstrhandle.name == 'fpga':
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
         devicedata = minstrhandle.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
         data_raw = [devicedata[ii] for ii in read_ch]
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
-    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i):
+#    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i):
+    elif minstrhandle.name == 'digitizer':
         minstrhandle.initialize_channels(read_ch, mV_range=1000)
         dataraw, _ = minstrhandle.blockavg_hardware_trigger_acquisition(mV_range=1000, nr_averages=Naverage)
-        data = np.vstack([dataraw])
+        data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
+#        data = np.vstack([datatemp])
         # TO DO: Process data when several channels are used
     else:
         raise Exception('Unrecognized fast readout instrument')
