@@ -9,7 +9,7 @@ import warnings
 import qcodes
 
 import qtt
-from qtt.scans import scan1D
+import qtt.scans
 from qtt.algorithms.coulomb import *
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
@@ -129,7 +129,7 @@ class sensingdot_t:
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
-        alldata = scan1D(sd.station, scanjob=scanjob1)
+        alldata = qtt.scans.scan1D(sd.station, scanjob=scanjob1)
 
         # if not outputdir == None:
         #    saveCoulombData(outputdir, alldata)
