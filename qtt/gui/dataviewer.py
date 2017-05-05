@@ -162,14 +162,21 @@ class DataViewer(QtWidgets.QWidget):
         if self.verbose>=2:
             print('DataViewer: create gui elements' )
         for i, datetag in enumerate(sorted(logs.keys())[::-1]):
+            if self.verbose>=2:
+                print('DataViewer: datetag %s ' % datetag )
+            
             parent1 = QtGui.QStandardItem(datetag)
             for j, logtag in enumerate(sorted(logs[datetag])):
+                filename = logs[datetag][logtag]
                 child1 = QtGui.QStandardItem(logtag)
                 child2 = QtGui.QStandardItem('info about plot')
                 if self.verbose>=2:
                     print('datetag %s, logtag %s' % (datetag, logtag))
+                    #print('   %s'  % filename)
                 child3 = QtGui.QStandardItem(os.path.join(datetag, logtag))
-                parent1.appendRow([child1, child2, child3])
+                child4 = QtGui.QStandardItem(filename)
+                #child3 = QtGui.QStandardItem(os.path.join(datetag, logtag))
+                parent1.appendRow([child1, child2, child3, child4])
             model.appendRow(parent1)
             # span container columns
             self.logtree.setFirstColumnSpanned(
@@ -188,19 +195,21 @@ class DataViewer(QtWidgets.QWidget):
         return self.datatag
 
     def logCallback(self, index):
-        ''' Function called when a log entry is selected '''
+        """ Function called when a log entry is selected """
         logging.info('logCallback: index %s' % str(index))
         self.__debug['last'] = index
         pp = index.parent()
         row = index.row()
 
         tag = pp.child(row, 2).data()
+        filename = pp.child(row, 3).data()
         self.datatag = tag
+        self.filename = filename
 
         # load data
         if tag is not None:
             if self.verbose>=2:
-                print('DataViewer: logCallback: tag %s' % tag)
+                print('DataViewer: logCallback: tag %s, filename %s' % (tag,filename))
             try:
                 logging.debug('DataViewer: load tag %s' % tag)
 
@@ -210,7 +219,7 @@ class DataViewer(QtWidgets.QWidget):
                                 print('tag: %s' % tag)
                     from qcodes.data.hdf5_format import HDF5Format
                     hformatter = HDF5Format()
-                    data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
+                    data = qcodes.load_data(filename, formatter=hformatter, io=self.io)
                     logging.debug('loaded HDF5 dataset %s' % tag)
                     print(data)
                 except Exception as ex:
@@ -224,7 +233,7 @@ class DataViewer(QtWidgets.QWidget):
                             
                         if self.verbose>=3:
                             logging.info('trying GNUPlotFormat: tag %s' % tag)
-                    data = qcodes.load_data(tag, formatter=hformatter, io=self.io)
+                    data = qcodes.load_data(filename, formatter=hformatter, io=self.io)
                     logging.debug('loaded GNUPlotFormat datasett %s' % tag)
 
                 if self.verbose:
