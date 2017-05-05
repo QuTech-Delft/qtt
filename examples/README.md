@@ -14,6 +14,7 @@ Also see the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs
 
 * [example_videomode.ipynb](example_videomode.ipynb) Videomode tuning
 * [Virtual gate space]() TODO
+* [example_coulomb_peak.ipynb](example_coulomb_peak.ipynb) Fitting a Coulomb peak
 * [example_fermi_fitting.ipynb](example_fermi_fitting.ipynb) Automatically fit a Fermi distribution
 * [example_polFitting.ipynb](example_polFitting.ipynb) Automatically fit a polarization line
 * [example_classical_dot_simulation.ipynb](example_classical_dot_simulation.ipynb) Simulate quantum dot systems
