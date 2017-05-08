@@ -563,6 +563,26 @@ if __name__ == '__main__':
     data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
 
 #%%
+
+def select_digitizer_memsize(digitizer, period, verbose=1):
+    """ Select suitable memory size for a given period
+    
+    Args:
+        digitizer (object)
+        period (float)
+    Returns:
+        memsize (int)
+    """
+    drate=digitizer.sample_rate()
+    npoints = period    *drate
+    e = int(np.ceil(np.log(npoints)/np.log(2)))
+    memsize = pow(2, np.ceil(np.log(npoints)/np.log(2)));
+    if verbose:
+        print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period/1e3))
+        print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
+    digitizer.data_memory_size.set(2**e)
+
+
 def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=1000):
 #    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
     if minstrhandle.name == 'fpga':
