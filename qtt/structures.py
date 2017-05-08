@@ -310,7 +310,7 @@ class sensingdot_t:
 
         alldata.write(write_metadata=True)
         
-        y = np.array(alldata.arrays['measured'])
+        y = np.array(alldata.arrays[alldata.default_parameter_name('measured')])
         x = alldata.arrays[self.gg[1]]
         x, y = peakdataOrientation(x, y)
 
