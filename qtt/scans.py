@@ -564,6 +564,30 @@ if __name__ == '__main__':
 
 #%%
 
+def process_digitizer_trace(data, width, period, samplerate, padding=0):
+    """ Process data from the M4i and a sawtooth trace 
+    
+    This is done to remove the extra padded data of the digitized and to 
+    extract the forward trace of the sawtooth.
+    
+    Args:
+        data (Nxk array)
+        width (float): with of the sawtooth
+        period (float)
+        samplerate (float)
+    Returns
+        processed_data (Nxk array): processed data
+        rr (tuple)
+    """
+    npoints = period    *samplerate # expected number of points
+
+    npoints2=width*npoints
+    npoints2=npoints2-(npoints2%2)
+    r1=int(data.shape[0]/2-npoints2/2)-padding
+    r2=int(data.shape[0]/2+npoints2/2)+padding
+    processed_data=data[ r1:r2,:]
+    return processed_data, (r1, r2)
+
 def select_digitizer_memsize(digitizer, period, verbose=1):
     """ Select suitable memory size for a given period
     
