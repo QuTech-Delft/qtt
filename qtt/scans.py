@@ -938,6 +938,14 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
     """Convert the data of a 1D sweep to a DataSet.
 
     Note: sweepvalues are only an approximation
+    
+     Args:
+        data (1D array or kxN array)
+        sweepgate (str)
+        sweeprange (float)
+        
+    Returns:
+        dataset
 
     """
     if sweepgate_value is None:
@@ -947,7 +955,7 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
         else:
             raise Exception('No gates supplied')
 
-    if type(ynames) is list:
+    if isinstance(ynames, list):
         sweeplength = len(data[0])
     else:
         sweeplength = len(data)
