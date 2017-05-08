@@ -563,7 +563,7 @@ if __name__ == '__main__':
     data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
 
 #%%
-def measuresegment(waveform, Naverage, station, minstrhandle, read_ch):
+def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=1000):
 #    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
     if minstrhandle.name == 'fpga':
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
@@ -572,8 +572,8 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch):
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
 #    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i):
     elif minstrhandle.name == 'digitizer':
-        minstrhandle.initialize_channels(read_ch, mV_range=1000)
-        dataraw = minstrhandle.blockavg_hardware_trigger_acquisition(mV_range=1000, nr_averages=Naverage)
+        minstrhandle.initialize_channels(read_ch, mV_range=mV_range)
+        dataraw = minstrhandle.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage)
         if isinstance(dataraw, tuple):
             dataraw=dataraw[0]
         data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
