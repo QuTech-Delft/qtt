@@ -326,7 +326,7 @@ if __name__ == '__main__':
 
 
 #%%
-def scan1Dfast(station, scanjob, location=None, verbose=1):
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     """Fast 1D scan. 
 
     Args:
@@ -379,6 +379,12 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
                                    fig=None, location=location, loc_record={'label': 'scan1Dfast'})
 
     station.awg.stop()
+
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
+    if liveplotwindow is not None:
+        liveplotwindow.clear()
+        liveplotwindow.add(alldata.default_parameter_array())
 
     dt = time.time() - t0
 
