@@ -39,7 +39,7 @@ def gauss(x, p):
 
 def analyseCoulombPeaks(alldata, fig=None):
     """ Find Coulomb peaks in a 1D dataset 
-    
+
     Args:
         alldata (DataSet)
         fig (int or None): figure handle to plot
@@ -56,6 +56,7 @@ def analyseCoulombPeaks(alldata, fig=None):
         x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
 
     return goodpeaks
+
 
 def fitCoulombPeaks(x, y, lowvalue=None, verbose=1, fig=None, istep=1):
     """ Fit Coulumb peaks in a measurement series 
@@ -123,7 +124,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     stdY = np.std(y)
     pmatlab.cfigure(fig)
     plt.clf()
-    h = plt.plot(x, y, plotmarker) # , label='data points')
+    h = plt.plot(x, y, plotmarker)  # , label='data points')
     if plotsmooth:
         plt.plot(x, ys, 'g')
     # plt.plot(x,w)
@@ -147,7 +148,8 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     halfhandle = []
     if plothalf:
         for p in peaks:
-            hh = plt.plot(p['xhalfl'], p['yhalfl'], '.m', markersize=12, label='peak half height')
+            hh = plt.plot(p['xhalfl'], p['yhalfl'], '.m',
+                          markersize=12, label='peak half height')
             halfhandle += [hh[0]]
     if plotbottom:
         for p in peaks:
@@ -219,6 +221,7 @@ def filterPeaks(x, y, peaks, verbose=1, minheight=None):
 
 #%%
 
+
 def peakFindBottom(x, y, peaks, fig=None, verbose=1):
     """ Find the left bottom of a detected peak """
     kk = np.ones(3) / 3.
@@ -258,7 +261,8 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
         peak['pbottomlow'] = bidx
 
         w = w0 * (dy > 0)   # we need to be rising
-        w = w * ((ys) < ys[bidx] + .1 * (ys[peak['p']] - ys[bidx]))  # we need to be above 10% of absolute low value
+        # we need to be above 10% of absolute low value
+        w = w * ((ys) < ys[bidx] + .1 * (ys[peak['p']] - ys[bidx]))
         w = w * (r >= peak['pbottomlow'])
         ww = w.nonzero()[0]
         if ww.size == 0:
@@ -286,23 +290,27 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
             plt.clf()
             plt.plot(x[ind], 0 * np.array(ind) + 1, '.b', label='ind')
             plt.plot(x[range(y.size)], w, 'or', label='w')
-            plt.plot(x[range(y.size)], dy < 0, 'dg', markersize=12, label='dy<0')
+            plt.plot(x[range(y.size)], dy < 0, 'dg',
+                     markersize=12, label='dy<0')
             pmatlab.enlargelims()
             pmatlab.plot2Dline([-1, 0, peak['x']], '--c', label='x')
-            pmatlab.plot2Dline([-1, 0, x[peak['phalf0']]], '--y', label='phalf0')
+            pmatlab.plot2Dline([-1, 0, x[peak['phalf0']]],
+                               '--y', label='phalf0')
 
-            pmatlab.plot2Dline([-1, 0, x[peak['pbottomlow']]], ':k', label='pbottomlow')
+            pmatlab.plot2Dline([-1, 0, x[peak['pbottomlow']]],
+                               ':k', label='pbottomlow')
 
-            pmatlab.plot2Dline([-1, 0, peak['xbottoml']], '--y', label='xbottoml')
+            pmatlab.plot2Dline([-1, 0, peak['xbottoml']],
+                               '--y', label='xbottoml')
 
             plt.legend(loc=0)
 
     return peaks
 
-if __name__=='__main__':
-    px= peakFindBottom(x, y, peaks, fig=300, verbose=3)
-    peak=px[0]
-    
+if __name__ == '__main__':
+    px = peakFindBottom(x, y, peaks, fig=300, verbose=3)
+    peak = px[0]
+
 #%%
 
 
@@ -388,9 +396,9 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
         if not peak['valid']:
             peak['score'] = 0
             continue
-        h = peak['height'] # original height
-        h = peak['y']-peak['ybottoml'] # diff between top and bottom left
-        
+        h = peak['height']  # original height
+        h = peak['y'] - peak['ybottoml']  # diff between top and bottom left
+
         h2 = 2 * (peak['y'] - peak['yhalfl'])
         if (h2 / h) < .3:
             # special case
@@ -508,7 +516,8 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
         if doplot >= 2:
             plt.plot(
                 peak['xhalfl'], yhalfl, '.', color=[1, 1, 0], markersize=11)
-            pmatlab.plot2Dline([-1, 0, x[p] - 3 * typicalhalfwidth / istep], ':c', label='3*thw')
+            pmatlab.plot2Dline(
+                [-1, 0, x[p] - 3 * typicalhalfwidth / istep], ':c', label='3*thw')
             pmatlab.plot2Dline([-1, 0, peak['xfoot']], ':y', label='xfoot')
 
         pratio = np.abs(
@@ -670,7 +679,8 @@ def findSensingDotPosition(x, y, verbose=1, fig=None, plotLabels=True, plotScore
         list of detected positions
 
     """
-    goodpeaks = coulombPeaks(x, y, verbose=1, fig=None, istep=istep, plothalf=False)
+    goodpeaks = coulombPeaks(x, y, verbose=1, fig=None,
+                             istep=istep, plothalf=False)
 
     if len(goodpeaks) == 0 or useslopes:
         slopes, (dy, minder) = findBestSlope(x, y, fig=None)

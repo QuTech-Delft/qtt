@@ -94,7 +94,7 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.
     if mvx is None:
         mvx = mvx0
 
-    if im.dtype == np.int64 or im.dtype==np.int32 :
+    if im.dtype == np.int64 or im.dtype == np.int32:
         # opencv cannot handle int32 or int64 in resize
         im = im.astype(np.float32)
     # scale factors
