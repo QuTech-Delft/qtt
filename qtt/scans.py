@@ -1,3 +1,9 @@
+""" Basic scan functions
+
+This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
+This is part of qtt. 
+"""
+
 import time
 import numpy as np
 import scipy
@@ -19,8 +25,8 @@ from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter, ManualParameter
 from qcodes import DataArray
 
-from qtt.tools import tilefigs
 import qtt.tools
+from qtt.tools import tilefigs
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot  # import onedotGetBalanceFine
 import qtt.live
@@ -241,13 +247,6 @@ def getDefaultParameter(data):
     return data.default_parameter_name()
 
 #%%
-lin_comb_arg = dict()
-
-def physical_gates_values(scanjob, ):
-    params_vals = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
-    params_vals[param][ix, iy] = paramval
-    return params_vals
-
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1):
     """Simple 1D scan. 
 
@@ -463,6 +462,59 @@ def parse_minstrument(scanjob):
 
     return minstrument
 
+def convert_scanjob_vec(station, scanjob):
+    """ Adjust the scanjob for vector scans. 
+    
+    Args:
+        station (object): contains all the instruments
+        scanjob (dict): data for scan
+        
+    Returns:
+        scanjob (dict): updated data for scan
+        params_vals (dict): values of physical gates for scan
+    """
+    gates = station.gates
+
+    stepdata = parse_stepdata(scanjob['stepdata'])
+    sweepdata = parse_stepdata(scanjob['sweepdata'])
+
+    if scanjob['scantype'] is 'scan2Dvec':
+        params = set()
+        vec_check = {'stepdata': isinstance(stepdata['param'], qtt.scans.lin_comb_type), 'sweepdata': isinstance(sweepdata['param'], qtt.scans.lin_comb_type)}
+        for scaninfo in vec_check:
+            if vec_check[scaninfo] is False:
+                scanjob[scaninfo]['param'] = {scanjob[scaninfo]['param']: 1}
+        params.update(list(stepdata['param'].keys()))
+        params.update(list(sweepdata['param'].keys()))
+        for param in params:
+            if param not in stepdata['param']:
+                stepdata['param'][param] = 0
+            if param not in sweepdata['param']:
+                sweepdata['param'][param] = 0
+        stepparam = VectorParameter(name='stepparam', comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
+        param = VectorParameter(name='sweepparam', comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
+    elif scanjob['scantype'] is 'scan2D':
+        stepgate = scanjob['stepdata'].get('param', None)
+        stepparam = get_param(gates, stepgate)
+        sweepgate = scanjob['sweepdata'].get('param', None)
+        param = get_param(gates, sweepgate)
+
+    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+    stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
+
+    param_init = {param: gates.get(param) for param in params}
+    phys_gates_vals = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
+    step_array2d = np.tile(np.array(stepvalues))
+    sweep_array2d = np.tile(np.array(sweepvalues))
+    for param in params:
+        phys_gates_vals[param] = param_init[param] + step_array2d * stepdata['step'] * stepdata['param'][param] + sweep_array2d * sweepdata['step'] * sweepdata['param'][param]
+
+    scanjob['stepdata'] = stepdata
+    scanjob['sweepdata'] = sweepdata
+
+    return scanjob, phys_gates_vals, stepvalues, sweepvalues
+
+lin_comb_type = dict 
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
@@ -474,44 +526,21 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     Returns:
         alldata (DataSet): contains the measurement data and metadata
     """
-    stepdata = parse_stepdata(scanjob['stepdata'])
-    sweepdata = parse_stepdata(scanjob['sweepdata'])
-
-    if isinstance(stepdata['param'], qtt.scans.lincomb_arg) or isinstance(sweepdata['param'], qtt.scans.lincomb_arg):
+    gates = station.gates
+    gatevals = gates.allvalues()
+    
+    minstrument = parse_minstrument(scanjob)
+    mparams = get_measurement_params(station, minstrument)
+    
+    if isinstance(scanjob['stepdata']['param'], qtt.scans.lin_comb_type) or isinstance(scanjob['sweepdata']['param'], qtt.scans.lin_comb_type):
         scanjob['scantype'] = 'scan2Dvec'
     else:
         scanjob['scantype'] = 'scan2D'
 
-    minstrument = parse_minstrument(scanjob)
-    mparams = get_measurement_params(station, minstrument)
+    scanjob, phys_gates_vals, sweepvalues, stepvalues = convert_scanjob_vec(station, scanjob)
 
-    gates = station.gates
-    gatevals = gates.allvalues()
-    sweepgate = sweepdata.get('param', None)
-
-    stepgate = stepdata.get('param', None)
-
-    params = set()
-    if isinstance(stepdata['param'], qtt.scans.lincomb_arg):
-        stepparam = VectorParameter(name='stepparam', comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
-        params.update(list(stepdata['param'].keys()))
-    else:
-        stepgate = stepdata.get('param', None)
-        stepparam = get_param(gates, stepgate)
-
-    if isinstance(sweepdata['param'], qtt.scans.lincomb_arg):
-        param = VectorParameter(name='sweepparam', comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
-        params.update(list(sweepdata['param'].keys()))
-    else:
-        sweepgate = sweepdata.get('param', None)
-        param = get_param(gates, sweepgate)
-
-    sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
-    stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
-
-    if scanjob['scantype'] is 'scan2Dvec':
-        param_init = {param: gates.get(param) for param in params}
-        params_vals = physical_gates_values(params, param_init, scanjob)
+    stepdata = scanjob['stepdata']
+    sweepdata = scanjob['sweepdata']
 
     wait_time_sweep = sweepdata.get('wait_time', 0)
     wait_time_step = stepdata.get('wait_time', 0)
@@ -548,9 +577,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             stepvalues.set(x)
         for iy, y in enumerate(sweepvalues):
             if scanjob['scantype'] is 'scan2Dvec':
-                for param in params:
-                    paramval = param_init[param] + ix * stepdata['step'] * stepdata['param'][param] + iy * sweepdata['step'] * sweepdata['param'][param]
-                    gates.set(param, paramval)
+                for param in phys_gates_vals:
+                    gates.set(param, phys_gates_vals[ix, iy])
             else:
                 sweepvalues.set(y)
             if iy == 0:
