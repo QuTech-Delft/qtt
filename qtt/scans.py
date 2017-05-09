@@ -241,7 +241,12 @@ def getDefaultParameter(data):
     return data.default_parameter_name()
 
 #%%
+lin_comb_arg = dict()
 
+def physical_gates_values(scanjob, ):
+    params_vals = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
+    params_vals[param][ix, iy] = paramval
+    return params_vals
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1):
     """Simple 1D scan. 
@@ -472,8 +477,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     stepdata = parse_stepdata(scanjob['stepdata'])
     sweepdata = parse_stepdata(scanjob['sweepdata'])
 
-    if (type(stepdata['param']) is dict) or (type(sweepdata['param']) is dict):
-        scanjob['scantype'] = 'scan2Dvirt'
+    if isinstance(stepdata['param'], qtt.scans.lincomb_arg) or isinstance(sweepdata['param'], qtt.scans.lincomb_arg):
+        scanjob['scantype'] = 'scan2Dvec'
     else:
         scanjob['scantype'] = 'scan2D'
 
@@ -487,14 +492,14 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     stepgate = stepdata.get('param', None)
 
     params = set()
-    if type(stepdata['param']) is dict:
+    if isinstance(stepdata['param'], qtt.scans.lincomb_arg):
         stepparam = VectorParameter(name='stepparam', comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
         params.update(list(stepdata['param'].keys()))
     else:
         stepgate = stepdata.get('param', None)
         stepparam = get_param(gates, stepgate)
 
-    if type(sweepdata['param']) is dict:
+    if isinstance(sweepdata['param'], qtt.scans.lincomb_arg):
         param = VectorParameter(name='sweepparam', comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
         params.update(list(sweepdata['param'].keys()))
     else:
@@ -506,7 +511,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if scanjob['scantype'] is 'scan2Dvec':
         param_init = {param: gates.get(param) for param in params}
-        params_vals = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
+        params_vals = physical_gates_values(params, param_init, scanjob)
 
     wait_time_sweep = sweepdata.get('wait_time', 0)
     wait_time_step = stepdata.get('wait_time', 0)
@@ -546,7 +551,6 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 for param in params:
                     paramval = param_init[param] + ix * stepdata['step'] * stepdata['param'][param] + iy * sweepdata['step'] * sweepdata['param'][param]
                     gates.set(param, paramval)
-                    params_vals[param][ix, iy] = paramval
             else:
                 sweepvalues.set(y)
             if iy == 0:
