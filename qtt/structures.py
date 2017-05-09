@@ -17,14 +17,18 @@ from qtt.tools import freezeclass
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, ggv, sdvalv=None, station=None, index=None, fpga_ch=None):
+    def __init__(self, ggv, sdvalv=None, station=None, index=None, minstrument=None, fpga_ch=None):
         """ Class representing a sensing dot 
 
         Arguments:
             ggv (list): gates to be used
             sdvalv (array or None): values to be set on the gates
             station (Qcodes station)
-            fpga_ch (int): index of FPGA channel to use for readout
+            minstrument ( tuple): measurement instrument to use. tuple of
+                        instrument and channel index
+
+            index (None or int): deprecated
+            fpga_ch (deprecated, int): index of FPGA channel to use for readout
         """
         self.verbose = 1
         self.gg = ggv
@@ -35,6 +39,7 @@ class sensingdot_t:
         self.goodpeaks = None
         self.station = station
         self.index = index
+        self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
         if fpga_ch is None:
             self.fpga_ch = int(self.gg[1][2])
@@ -280,13 +285,16 @@ class sensingdot_t:
             value (float): value of plunger
             alldata (dataset): measured data
         """
-        if hasattr(self.station, 'digitizer'): 
+        
+        if self.minstrument is not None:
+            instrument = self.minstrument[0]
+            channel =  self.minstrument[1]
             gate=self.gg[1]
             cc=self.station.gates.get(gate)
             scanjob={'Naverage': Naverage,}
-            scanjob['sweepdata'] = {'param':  'X1', 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4, 'wait_time': 1e-4}
-            scanjob['minstrument'] = [1]
-            scanjob['minstrhandle'] = 'digitizer'
+            scanjob['sweepdata'] = {'param':  gate, 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4}
+            scanjob['minstrument'] = [channel]
+            scanjob['minstrhandle'] = instrument
             scanjob['wait_time_startscan']=sleeptime
             alldata = qtt.scans.scan1Dfast(self.station, scanjob)
         else:                           

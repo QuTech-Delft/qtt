@@ -276,7 +276,7 @@ class virtual_awg(Instrument):
         return waveform, sweep_info
 
     def sweep_process(self, data, waveform, Naverage=1, direction='forwards', start_offset=1):
-        '''Process the data returned by reading out based on the shape of
+        """ Process the data returned by reading out based on the shape of
         the sawtooth send with the AWG.
 
         Args:
@@ -291,7 +291,7 @@ class virtual_awg(Instrument):
         Example:
         -------
             >> data_processed = sweep_process(data, waveform, 25)
-        '''
+        """
         width = waveform['width']
 
         if isinstance(data, list):
