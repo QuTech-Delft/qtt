@@ -30,7 +30,7 @@ from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 
 from qtt.tools import update_dictionary
-from qtt.structures import LinearCombParameter
+from qtt.structures import VectorParameter
 
 #%%
 
@@ -473,7 +473,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     sweepdata = parse_stepdata(scanjob['sweepdata'])
 
     if (type(stepdata['param']) is dict) or (type(sweepdata['param']) is dict):
-        scanjob['scantype'] = 'scan2Dvec'
+        scanjob['scantype'] = 'scan2Dvirt'
     else:
         scanjob['scantype'] = 'scan2D'
 
@@ -488,14 +488,14 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     params = set()
     if type(stepdata['param']) is dict:
-        stepparam = LinearCombParameter(name='stepparam', comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
+        stepparam = VectorParameter(name='stepparam', comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
         params.update(list(stepdata['param'].keys()))
     else:
         stepgate = stepdata.get('param', None)
         stepparam = get_param(gates, stepgate)
 
     if type(sweepdata['param']) is dict:
-        param = LinearCombParameter(name='sweepparam', comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
+        param = VectorParameter(name='sweepparam', comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
         params.update(list(sweepdata['param'].keys()))
     else:
         sweepgate = sweepdata.get('param', None)

@@ -356,7 +356,7 @@ class sensingdot_t:
 
 
 #%%
-class LinearCombParameter(qcodes.instrument.parameter.Parameter):
+class VectorParameter(qcodes.instrument.parameter.Parameter):
     """Create parameter which controls linear combinations.
 
     Attributes:
