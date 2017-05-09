@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Nov 11 17:11:56 2016
+""" Functionaty for anylysing tunnel barrier frequencies
 
 @author: diepencjv
 """

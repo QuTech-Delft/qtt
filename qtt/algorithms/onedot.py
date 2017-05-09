@@ -1,19 +1,23 @@
+""" Functionality for analysis of single dots
+
+"""
 #%%
 
 import scipy
 import scipy.ndimage
 from qtt import cfigure, plot2Dline
-import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
-
+import warnings
+import copy
 import logging
 
+import qcodes
 from qtt.data import dataset2Dmetadata, image_transform, dataset2image, show2D
 import qtt.data
 from qtt import pgeometry as pmatlab
 import qtt.pgeometry as pgeometry
-import qtt.scans  # import fixReversal, checkReversal
+import qtt.scans 
 
 from qtt.algorithms.generic import getValuePixel
 from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
@@ -213,8 +217,6 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
         return cost
 
 #%%
-import warnings
-import copy
 
 
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):

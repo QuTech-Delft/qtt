@@ -1,3 +1,5 @@
+""" Mathematical functions and models """
+
 import numpy as np
 
 

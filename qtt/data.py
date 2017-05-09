@@ -1,4 +1,4 @@
-
+""" Utilities to work with data and datasets """
 import numpy as np
 import scipy
 import os

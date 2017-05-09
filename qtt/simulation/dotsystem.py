@@ -1,3 +1,6 @@
+""" Simulation of a coupled dot system
+
+"""
 #%% Load packages
 import numpy as np
 from numpy import linalg as la

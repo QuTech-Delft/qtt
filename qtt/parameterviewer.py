@@ -1,5 +1,6 @@
-#%%
-
+"""
+Contains code for viewing Parameters in a separate gui
+"""
 import time
 import threading
 import logging
@@ -16,6 +17,7 @@ import pyqtgraph
 from qtt import pgeometry as pmatlab
 from functools import partial
 
+#%%
 
 class QCodesTimer(threading.Thread):
 

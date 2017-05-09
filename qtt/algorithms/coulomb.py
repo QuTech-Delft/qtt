@@ -1,3 +1,5 @@
+""" Functions to fit and analyse Coulomb peaks """
+
 import numpy as np
 import qcodes
 
@@ -34,17 +36,6 @@ def gauss(x, p):
     """
     return p[2] * 1.0 / (p[1] * np.sqrt(2 * np.pi)) * np.exp(-(x - p[0])**2 / (2 * p[1]**2))
 
-
-# OLD code
-#def show1Dpeaks(alldata, fig=100, verbose=1):
-#    x = alldata['data_array'][:, 0]
-#    y = alldata['data_array'][:, 2]
-#    x, y = peakdataOrientation(x, y)
-#
-#    istep = np.abs(alldata['sweepdata']['step'])
-#    goodpeaks = findSensingDotPosition(x, y, verbose=1, fig=fig, istep=istep, plotLabels=True, plotScore=True, plothalf=False, useslopes=True)
-#
-#    return goodpeaks
 
 def analyseCoulombPeaks(alldata, fig=None):
     """ Find Coulomb peaks in a 1D dataset 

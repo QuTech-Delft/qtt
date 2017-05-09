@@ -35,7 +35,7 @@ if __name__ == '__main__':
 import virtualDot
 
 if __name__ == '__main__':
-    nr_dots = 2
+    nr_dots = 3
     station = virtualDot.initialize(server_name=None, nr_dots=nr_dots)
 
     keithley1 = station.keithley1

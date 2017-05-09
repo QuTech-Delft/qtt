@@ -1,3 +1,7 @@
+"""
+Contains code for various structures
+
+"""
 import numpy as np
 import time
 import warnings

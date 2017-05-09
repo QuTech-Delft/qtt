@@ -1,6 +1,6 @@
-import qtpy
-# print(qtpy.API_NAME)
-
+""" 
+Contains functions to generate reports of scanned data
+"""
 import numpy as np
 import scipy
 import os
@@ -11,9 +11,7 @@ import time
 import qcodes
 import qcodes as qc
 import datetime
-
-# import qtpy.QtGui as QtGui
-# import qtpy.QtWidgets as QtWidgets
+import qtpy
 
 import matplotlib.pyplot as plt
 
@@ -33,6 +31,7 @@ import qtt.live
 from qtt.data import experimentFile
 from qtt.algorithms.coulomb import coulombPeaks
 from qtt.legacy import saveImage, analyse2dot
+from qtt.legacy import singleElectronCheck, singleRegion
 
 import webbrowser
 import dateutil
@@ -265,9 +264,6 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
 
 
 #%%
-
-from qtt.legacy import singleElectronCheck, singleRegion
-
 
 def generateDoubleDotReport(two_dots, resultsdir, tag=None, verbose=1, sdidx=1):
     """ Generate a report on scanned one-dots

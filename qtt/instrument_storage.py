@@ -1,3 +1,4 @@
+""" Functionality to store instrument data in a configuration file """
 import numpy as np
 import json
 import numbers
