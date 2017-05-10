@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Functionaty for anylysing tunnel barrier frequencies
+""" Functionality for analysing inter-dot tunnel frequencies
 
 @author: diepencjv
 """
