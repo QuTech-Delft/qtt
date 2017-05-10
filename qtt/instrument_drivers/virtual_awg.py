@@ -269,12 +269,12 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
 
-    def sweep_process(self, data, waveform, Naverage, direction='forwards'):
+    def sweep_process(self, data, waveform, Naverage=1, direction='forwards', start_offset=1):
         '''Process the data returned by reading out based on the shape of
         the sawtooth send with the AWG.
 
-        Arguments:
-            data (list): the data
+        Args:
+            data (list or Nxk array): the data (N is the number of samples)
             waveform (dict): contains the wave and the sawtooth width
             Naverage (int): number of times the signal was averaged
             direction (string): option to use backwards signal i.o. forwards
@@ -288,11 +288,14 @@ class virtual_awg(Instrument):
         '''
         width = waveform['width']
 
+        if isinstance(data, list):
+            data=np.array(data)
+
         if direction == 'forwards':
-            end = int(np.floor(width * len(data) - 1))
-            data_processed = data[1:end]
+            end = int(np.floor(width * data.shape[0] - 1))
+            data_processed = data[start_offset:end]
         elif direction == 'backwards':
-            begin = int(np.ceil(width * len(data) + 1))
+            begin = int(np.ceil(width * data.shape[0] + 1))
             data_processed = data[begin:]
             data_processed = data_processed[::-1]
 

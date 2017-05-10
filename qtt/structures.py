@@ -284,28 +284,38 @@ class sensingdot_t:
             value (float): value of plunger
             alldata (dataset): measured data
         """
-        waveform, sweep_info = self.station.awg.sweep_gate(
-            self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
-
-        # time for AWG signal to reach the sample
-        qtt.time.sleep(sleeptime)
-
-        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
-
-        self.station.awg.stop()
-
-        if self.fpga_ch == 1:
-            datr = DataRead_ch1
-        else:
-            datr = DataRead_ch2
-        data = self.station.awg.sweep_process(datr, waveform, Naverage)
-
-        sdplg = getattr(self.station.gates, self.gg[1])
-        initval = sdplg.get()
-        sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
-
-        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
+        if hasattr(self.station, 'digitizer'): 
+            gate=self.gg[1]
+            cc=self.station.gates.get(gate)
+            scanjob={'Naverage': Naverage,}
+            scanjob['sweepdata'] = {'param':  'X1', 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4, 'wait_time': 1e-4}
+            scanjob['minstrument'] = [1]
+            scanjob['minstrhandle'] = 'digitizer'
+            scanjob['wait_time_startscan']=sleeptime
+            alldata = qtt.scans.scan1Dfast(self.station, scanjob)
+        else:                           
+            waveform, sweep_info = self.station.awg.sweep_gate(
+                self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
+    
+            # time for AWG signal to reach the sample
+            qtt.time.sleep(sleeptime)
+    
+            ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
+            _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
+    
+            self.station.awg.stop()
+    
+            if self.fpga_ch == 1:
+                datr = DataRead_ch1
+            else:
+                datr = DataRead_ch2
+            data = self.station.awg.sweep_process(datr, waveform, Naverage)
+    
+            sdplg = getattr(self.station.gates, self.gg[1])
+            initval = sdplg.get()
+            sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
+    
+            alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
         #alldata= qtt.scans.scan1Dfast(self.station, scanjob, location=location)
                      
@@ -314,7 +324,7 @@ class sensingdot_t:
 
         alldata.write(write_metadata=True)
         
-        y = np.array(alldata.arrays['measured'])
+        y = np.array(alldata.arrays[alldata.default_parameter_name('measured')])
         x = alldata.arrays[self.gg[1]]
         x, y = peakdataOrientation(x, y)
 

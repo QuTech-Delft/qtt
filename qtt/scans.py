@@ -326,7 +326,7 @@ if __name__ == '__main__':
 
 
 #%%
-def scan1Dfast(station, scanjob, location=None, verbose=1):
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     """Fast 1D scan. 
 
     Args:
@@ -379,6 +379,12 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
                                    fig=None, location=location, loc_record={'label': 'scan1Dfast'})
 
     station.awg.stop()
+
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
+    if liveplotwindow is not None:
+        liveplotwindow.clear()
+        liveplotwindow.add(alldata.default_parameter_array())
 
     dt = time.time() - t0
 
@@ -932,6 +938,14 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
     """Convert the data of a 1D sweep to a DataSet.
 
     Note: sweepvalues are only an approximation
+    
+     Args:
+        data (1D array or kxN array)
+        sweepgate (str)
+        sweeprange (float)
+        
+    Returns:
+        dataset
 
     """
     if sweepgate_value is None:
@@ -941,7 +955,7 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
         else:
             raise Exception('No gates supplied')
 
-    if type(ynames) is list:
+    if isinstance(ynames, list):
         sweeplength = len(data[0])
     else:
         sweeplength = len(data)
