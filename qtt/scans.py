@@ -492,8 +492,13 @@ def convert_scanjob_vec(station, scanjob):
                 stepdata['param'][param] = 0
             if param not in sweepdata['param']:
                 sweepdata['param'][param] = 0
-        stepparam = VectorParameter(name='stepparam', comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
-        param = VectorParameter(name='sweepparam', comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
+        stepname = 'stepparam'
+        sweepname = 'sweepparam'
+        if not (np.dot(list(stepdata['param'].values()), [sweepdata['param'][x] for x in stepdata['param'].keys()]) == 0):
+            stepname = stepname + '*'
+            sweepname= sweepname + '*'
+        stepparam = VectorParameter(name=stepname, comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
+        param = VectorParameter(name=sweepname, comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
     elif scanjob['scantype'] is 'scan2D':
         stepgate = scanjob['stepdata'].get('param', None)
         stepparam = get_param(gates, stepgate)
@@ -531,10 +536,10 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     """
     gates = station.gates
     gatevals = gates.allvalues()
-    
+
     minstrument = parse_minstrument(scanjob)
     mparams = get_measurement_params(station, minstrument)
-    
+
     if isinstance(scanjob['stepdata']['param'], qtt.scans.lin_comb_type) or isinstance(scanjob['sweepdata']['param'], qtt.scans.lin_comb_type):
         scanjob['scantype'] = 'scan2Dvec'
     else:
