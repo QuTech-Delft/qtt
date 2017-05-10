@@ -472,6 +472,7 @@ def convert_scanjob_vec(station, scanjob):
     Returns:
         scanjob (dict): updated data for scan
         params_vals (dict): values of physical gates for scan
+        scanvalues (array): contains the values for parameters to scan over
     """
     gates = station.gates
 
@@ -501,18 +502,20 @@ def convert_scanjob_vec(station, scanjob):
 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
+    scanvalues = np.array(stepvalues, sweepvalues)
 
     param_init = {param: gates.get(param) for param in params}
     phys_gates_vals = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
-    step_array2d = np.tile(np.array(stepvalues))
-    sweep_array2d = np.tile(np.array(sweepvalues))
+    step_array2d = np.tile(np.arange(0, stepdata['end']-stepdata['start'], stepdata['step'])[::-1].reshape((len(stepvalues)), 1), (1, len(sweepvalues)))
+    sweep_array2d = np.tile(np.arange(0, sweepdata['end']-sweepdata['start'], sweepdata['step']), (len(stepvalues), 1))
+
     for param in params:
-        phys_gates_vals[param] = param_init[param] + step_array2d * stepdata['step'] * stepdata['param'][param] + sweep_array2d * sweepdata['step'] * sweepdata['param'][param]
+        phys_gates_vals[param] = param_init[param] + step_array2d * stepdata['param'][param] + sweep_array2d * sweepdata['param'][param]
 
     scanjob['stepdata'] = stepdata
     scanjob['sweepdata'] = sweepdata
 
-    return scanjob, phys_gates_vals, stepvalues, sweepvalues
+    return scanjob, phys_gates_vals, scanvalues
 
 lin_comb_type = dict 
 
@@ -537,7 +540,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     else:
         scanjob['scantype'] = 'scan2D'
 
-    scanjob, phys_gates_vals, sweepvalues, stepvalues = convert_scanjob_vec(station, scanjob)
+    scanjob, phys_gates_vals, scanvalues = convert_scanjob_vec(station, scanjob)
+    stepvalues = scanvalues[0]
+    sweepvalues = scanvalues[1]
 
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
