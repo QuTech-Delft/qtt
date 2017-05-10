@@ -1,3 +1,4 @@
+""" Functionality to analyse pinch-off scans """
 #%% Load packages
 
 import scipy
@@ -11,10 +12,6 @@ import qtt.data
 from qtt.data import dataset2Dmetadata, image_transform, dataset2image, dataset2image2
 import scipy
 from qtt import pgeometry as pmatlab
-try:
-    import cv2
-except:
-    pass
 
 #%%
 
@@ -244,8 +241,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         adata['ww'] = ww
 
     return adata
-
-#%%
 
 
 #%% Testing

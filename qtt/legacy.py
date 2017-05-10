@@ -1,5 +1,4 @@
-# import qtpy
-# print(qtpy.API_NAME)
+""" Legacy functions (do not use) """
 import copy
 
 import numpy as np

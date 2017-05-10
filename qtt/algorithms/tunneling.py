@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Nov 11 17:11:56 2016
+""" Functionality for analysing inter-dot tunnel frequencies
 
 @author: diepencjv
 """

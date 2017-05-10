@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb  8 14:43:47 2017
+Contains code to do live plotting 
 
-@author: diepencjv
 """
 #%%
 from qtt.live_plotting import livePlot, fpgaCallback_1d, fpgaCallback_2d
