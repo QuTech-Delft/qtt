@@ -471,7 +471,7 @@ def convert_scanjob_vec(station, scanjob):
         
     Returns:
         scanjob (dict): updated data for scan
-        params_vals (dict): values of physical gates for scan
+        phys_gates_vals (dict): values of physical gates for scan
         scanvalues (array): contains the values for parameters to scan over
     """
     gates = station.gates
@@ -616,9 +616,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         alldata.metadata = dict()
 
     if scanjob['scantype'] is 'scan2Dvec':
-        for param in params:
+        for param in phys_gates_vals:
             parameter = gates.parameters[param]
-            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=params_vals[param], set_arrays=(alldata.stepparam, alldata.sweepparam))
+            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=phys_gates_vals[param], set_arrays=(alldata.stepparam, alldata.sweepparam))
             alldata.add_array(arr)
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
