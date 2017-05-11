@@ -294,7 +294,7 @@ class sensingdot_t:
             channel =  self.minstrument[1]
             gate=self.gg[1]
             cc=self.station.gates.get(gate)
-            scanjob={'Naverage': Naverage,}
+            scanjob=qtt.scans.scanjob_t({'Naverage': Naverage,})
             scanjob['sweepdata'] = {'param':  gate, 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4}
             scanjob['minstrument'] = [channel]
             scanjob['minstrhandle'] = instrument
