@@ -252,7 +252,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     Args:
         station (object): contains all data on the measurement station
-        scanjob (dict): data for scan
+        scanjob (scanjob_t): data for scan
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -340,7 +340,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
     Args:
         station (object): contains all data on the measurement station
-        scanjob (dict): data for scan
+        scanjob (scanjob_t): data for scan
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -723,7 +723,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     Args:
         station (object): contains all the instruments
-        scanjob (dict): data for scan
+        scanjob (scanjob_t): data for scan
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -882,7 +882,7 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
 
     Args:
         station (object): contains all the instruments
-        scanjob (dict): data for scan
+        scanjob (scanjob_t): data for scan
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
