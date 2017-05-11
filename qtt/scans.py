@@ -519,7 +519,7 @@ def convert_scanjob_vec(station, scanjob):
 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
-    scanvalues = np.array(stepvalues, sweepvalues)
+    scanvalues = [stepvalues, sweepvalues]
 
     param_init = {param: gates.get(param) for param in params}
     phys_gates_vals = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
