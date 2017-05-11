@@ -1202,6 +1202,20 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
 
 #%% Testing
 
+from qcodes import ManualParameter
+from qcodes.instrument_drivers.devices import VoltageDivider
+from qtt.instrument_drivers.gates import virtual_IVVI
+
+def test_scan2D():
+    p = ManualParameter('p'); q = ManualParameter('q')
+    R=VoltageDivider(p, 4)
+    gates=virtual_IVVI(name='gates', instruments=[], gate_map={})
+    station = qcodes.Station(gates)
+
+    scanjob = scanjob_t({'sweepdata': dict({'param':p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob['stepdata'] = dict({'param': q, 'start': 24, 'end': 30, 'step': 1.})
+    data = scan2D(station, scanjob, liveplotwindow=None, verbose=0)
+    
 if __name__ == '__main__':
     import qtt.scans
     reload(qtt.scans)
