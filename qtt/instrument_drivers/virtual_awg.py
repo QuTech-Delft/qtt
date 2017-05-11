@@ -79,7 +79,7 @@ class virtual_awg(Instrument):
 
         Arguments:
             waveforms (dict): the waveforms with the gates as keys
-            period: period of the waveform in seconds
+            period (float): period of the waveform in seconds
 
         Returns:
             sweep_info (dict): the keys are tuples of the awgs and channels to activate

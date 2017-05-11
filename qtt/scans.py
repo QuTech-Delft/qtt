@@ -446,9 +446,18 @@ class scanjob_t(dict):
     
     A typical scanjob contains the following fields:
         
+    Fields:
         sweepdata (dict):
         stepdata (dict)
         minstrument (str, Parameter or tuple)
+    
+    The sweepdata and stepdata are structures with the following fields:
+        
+        param (str, Parameter or dict): parameter to vary
+        start, end, step (float)
+        wait_time (float)
+        
+    If the param field 
     
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
