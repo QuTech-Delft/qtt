@@ -441,6 +441,18 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 
 #%%
 
+class scanjob_t(dict):
+    """ Structure that contains information about a scan 
+    
+    A typical scanjob contains the following fields:
+        
+        sweepdata (dict):
+        stepdata (dict)
+        minstrument (str, Parameter or tuple)
+    
+    Note: currently the scanjob_t is a thin wrapper around a dict.
+    """
+    pass
 
 def delta_time(tprev, thr=2):
     """ Helper function to prevent too many updates """
