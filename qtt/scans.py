@@ -479,11 +479,10 @@ def convert_scanjob_vec(station, scanjob):
     
     Args:
         station (object): contains all the instruments
-        scanjob (dict): data for scan
+        scanjob (scanjob_t): data for scan
         
     Returns:
-        scanjob (dict): updated data for scan
-        phys_gates_vals (dict): values of physical gates for scan
+        scanjob (scanjob_t): updated data for scan
         scanvalues (array): contains the values for parameters to scan over
     """
     gates = station.gates
@@ -519,20 +518,21 @@ def convert_scanjob_vec(station, scanjob):
 
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
+
+    if scanjob['scantype'] is 'scan2Dvec':
+        param_init = {param: gates.get(param) for param in params}
+        scanjob['phys_gates_vals'] = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
+        step_array2d = np.tile(np.arange(0, stepdata['end']-stepdata['start'], stepdata['step'])[::-1].reshape((len(stepvalues)), 1), (1, len(sweepvalues)))
+        sweep_array2d = np.tile(np.arange(0, sweepdata['end']-sweepdata['start'], sweepdata['step']), (len(stepvalues), 1))   
+        for param in params:
+            scanjob['phys_gates_vals'][param] = param_init[param] + step_array2d * stepdata['param'][param] + sweep_array2d * sweepdata['param'][param]
+
     scanvalues = [stepvalues, sweepvalues]
-
-    param_init = {param: gates.get(param) for param in params}
-    phys_gates_vals = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
-    step_array2d = np.tile(np.arange(0, stepdata['end']-stepdata['start'], stepdata['step'])[::-1].reshape((len(stepvalues)), 1), (1, len(sweepvalues)))
-    sweep_array2d = np.tile(np.arange(0, sweepdata['end']-sweepdata['start'], sweepdata['step']), (len(stepvalues), 1))
-
-    for param in params:
-        phys_gates_vals[param] = param_init[param] + step_array2d * stepdata['param'][param] + sweep_array2d * sweepdata['param'][param]
 
     scanjob['stepdata'] = stepdata
     scanjob['sweepdata'] = sweepdata
 
-    return scanjob, phys_gates_vals, scanvalues
+    return scanjob, scanvalues
 
 lin_comb_type = dict 
 
@@ -541,7 +541,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     Args:
         station (object): contains all the instruments
-        scanjob (dict): data for scan
+        scanjob (scanjob_t): data for scan
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -557,7 +557,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     else:
         scanjob['scantype'] = 'scan2D'
 
-    scanjob, phys_gates_vals, scanvalues = convert_scanjob_vec(station, scanjob)
+    scanjob, scanvalues = convert_scanjob_vec(station, scanjob)
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
 
@@ -599,8 +599,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             stepvalues.set(x)
         for iy, y in enumerate(sweepvalues):
             if scanjob['scantype'] is 'scan2Dvec':
-                for param in phys_gates_vals:
-                    gates.set(param, phys_gates_vals[ix, iy])
+                for param in scanjob['phys_gates_vals']:
+                    gates.set(param, scanjob['phys_gates_vals'][ix, iy])
             else:
                 sweepvalues.set(y)
             if iy == 0:
