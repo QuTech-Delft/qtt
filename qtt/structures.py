@@ -21,14 +21,18 @@ from qtt.tools import freezeclass
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, ggv, sdvalv=None, station=None, index=None, fpga_ch=None):
+    def __init__(self, ggv, sdvalv=None, station=None, index=None, minstrument=None, fpga_ch=None):
         """ Class representing a sensing dot 
 
         Arguments:
             ggv (list): gates to be used
             sdvalv (array or None): values to be set on the gates
             station (Qcodes station)
-            fpga_ch (int): index of FPGA channel to use for readout
+            minstrument ( tuple): measurement instrument to use. tuple of
+                        instrument and channel index
+
+            index (None or int): deprecated
+            fpga_ch (deprecated, int): index of FPGA channel to use for readout
         """
         self.verbose = 1
         self.gg = ggv
@@ -39,6 +43,7 @@ class sensingdot_t:
         self.goodpeaks = None
         self.station = station
         self.index = index
+        self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
         if fpga_ch is None:
             self.fpga_ch = int(self.gg[1][2])
@@ -284,28 +289,41 @@ class sensingdot_t:
             value (float): value of plunger
             alldata (dataset): measured data
         """
-        waveform, sweep_info = self.station.awg.sweep_gate(
-            self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
-
-        # time for AWG signal to reach the sample
-        qtt.time.sleep(sleeptime)
-
-        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
-
-        self.station.awg.stop()
-
-        if self.fpga_ch == 1:
-            datr = DataRead_ch1
-        else:
-            datr = DataRead_ch2
-        data = self.station.awg.sweep_process(datr, waveform, Naverage)
-
-        sdplg = getattr(self.station.gates, self.gg[1])
-        initval = sdplg.get()
-        sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
-
-        alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
+        
+        if self.minstrument is not None:
+            instrument = self.minstrument[0]
+            channel =  self.minstrument[1]
+            gate=self.gg[1]
+            cc=self.station.gates.get(gate)
+            scanjob={'Naverage': Naverage,}
+            scanjob['sweepdata'] = {'param':  gate, 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4}
+            scanjob['minstrument'] = [channel]
+            scanjob['minstrhandle'] = instrument
+            scanjob['wait_time_startscan']=sleeptime
+            alldata = qtt.scans.scan1Dfast(self.station, scanjob)
+        else:                           
+            waveform, sweep_info = self.station.awg.sweep_gate(
+                self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
+    
+            # time for AWG signal to reach the sample
+            qtt.time.sleep(sleeptime)
+    
+            ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
+            _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
+    
+            self.station.awg.stop()
+    
+            if self.fpga_ch == 1:
+                datr = DataRead_ch1
+            else:
+                datr = DataRead_ch2
+            data = self.station.awg.sweep_process(datr, waveform, Naverage)
+    
+            sdplg = getattr(self.station.gates, self.gg[1])
+            initval = sdplg.get()
+            sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
+    
+            alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
         #alldata= qtt.scans.scan1Dfast(self.station, scanjob, location=location)
                      
@@ -314,7 +332,7 @@ class sensingdot_t:
 
         alldata.write(write_metadata=True)
         
-        y = np.array(alldata.arrays['measured'])
+        y = np.array(alldata.arrays[alldata.default_parameter_name('measured')])
         x = alldata.arrays[self.gg[1]]
         x, y = peakdataOrientation(x, y)
 

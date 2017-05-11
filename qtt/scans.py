@@ -224,11 +224,13 @@ def get_measurement_params(station, mparams):
     for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
-        else:
-            if isinstance(x, str):
-                params += [getattr(station, x).amplitude]
+        elif isinstance(x, str):
+            if x.startswith('digitizer'):
+                params += [getattr(station.digitizer, 'channel_%c' % x[-1])]
             else:
-                params += [x]
+                params += [getattr(station, x).amplitude]
+        else:
+            params += [x]
     return params
 
 
@@ -238,7 +240,7 @@ def getDefaultParameter(data):
 #%%
 
 
-def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
+def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1):
     """Simple 1D scan. 
 
     Args:
@@ -282,7 +284,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, verbose=1):
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array())
+        liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     if liveplotwindow is not None:
         def myupdate():
@@ -326,7 +328,7 @@ if __name__ == '__main__':
 
 
 #%%
-def scan1Dfast(station, scanjob, location=None, verbose=1):
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     """Fast 1D scan. 
 
     Args:
@@ -350,16 +352,11 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan1Dfast')
         
-    fpga_ch = scanjob['minstrument']
-    if isinstance(fpga_ch, int):
-        fpga_ch = [fpga_ch]
-
-    def readfunc(waveform, Naverage):
-        ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
-        devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
-        data_raw = [devicedata[ii] for ii in fpga_ch] 
-        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw  ] )
-        return data
+    minstrhandle = getattr(station, scanjob.get('minstrhandle', 'fpga'))
+        
+    read_ch = scanjob['minstrument']
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
     period = scanjob['sweepdata'].get('period', 1e-3)
@@ -373,12 +370,18 @@ def scan1Dfast(station, scanjob, location=None, verbose=1):
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     qtt.time.sleep(wait_time_startscan)
 
-    data = readfunc(waveform, Naverage)
+    data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch)
     alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
-                                   ynames=['measured%d' % i for i in fpga_ch],
+                                   ynames=['measured%d' % i for i in read_ch],
                                    fig=None, location=location, loc_record={'label': 'scan1Dfast'})
-
+    
     station.awg.stop()
+
+    if liveplotwindow is None:
+        liveplotwindow = qtt.live.livePlot()
+    if liveplotwindow is not None:
+        liveplotwindow.clear()
+        liveplotwindow.add(alldata.default_parameter_array())
 
     dt = time.time() - t0
 
@@ -452,7 +455,7 @@ def parse_minstrument(scanjob):
     return minstrument
         
 
-def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
+def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
 
     Args:
@@ -505,7 +508,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, 
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array(paramname='measured'))
+        liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     tprev = time.time()
     for ix, x in enumerate(stepvalues):
@@ -559,6 +562,70 @@ if __name__ == '__main__':
     scanjob['stepdata'] = dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 3.})
     data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
 
+#%%
+
+def process_digitizer_trace(data, width, period, samplerate, padding=0):
+    """ Process data from the M4i and a sawtooth trace 
+    
+    This is done to remove the extra padded data of the digitized and to 
+    extract the forward trace of the sawtooth.
+    
+    Args:
+        data (Nxk array)
+        width (float): with of the sawtooth
+        period (float)
+        samplerate (float)
+    Returns
+        processed_data (Nxk array): processed data
+        rr (tuple)
+    """
+    npoints = period    *samplerate # expected number of points
+
+    npoints2=width*npoints
+    npoints2=npoints2-(npoints2%2)
+    r1=int(data.shape[0]/2-npoints2/2)-padding
+    r2=int(data.shape[0]/2+npoints2/2)+padding
+    processed_data=data[ r1:r2,:]
+    return processed_data, (r1, r2)
+
+def select_digitizer_memsize(digitizer, period, verbose=1):
+    """ Select suitable memory size for a given period
+    
+    Args:
+        digitizer (object)
+        period (float)
+    Returns:
+        memsize (int)
+    """
+    drate=digitizer.sample_rate()
+    npoints = period    *drate
+    e = int(np.ceil(np.log(npoints)/np.log(2)))
+    memsize = pow(2, np.ceil(np.log(npoints)/np.log(2)));
+    if verbose:
+        print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period/1e3))
+        print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
+    digitizer.data_memory_size.set(2**e)
+
+
+def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=1000):
+#    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
+    if minstrhandle.name == 'fpga':
+        ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
+        devicedata = minstrhandle.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
+        data_raw = [devicedata[ii] for ii in read_ch]
+        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
+#    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i):
+    elif minstrhandle.name == 'digitizer':
+        minstrhandle.initialize_channels(read_ch, mV_range=mV_range)
+        dataraw = minstrhandle.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage)
+        if isinstance(dataraw, tuple):
+            dataraw=dataraw[0]
+        data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
+#        data = np.vstack([datatemp])
+        # TO DO: Process data when several channels are used
+    else:
+        raise Exception('Unrecognized fast readout instrument')
+    return data
 
 #%%
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
@@ -591,17 +658,12 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
 
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan2Dfast')
-        
-    fpga_ch = scanjob['minstrument']
-    if isinstance(fpga_ch, int):
-        fpga_ch = [fpga_ch]
-
-    def readfunc(waveform, Naverage):
-        ReadDevice = ['FPGA_ch%d' % c for c in fpga_ch]
-        devicedata = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
-        data_raw = [devicedata[ii] for ii in fpga_ch]
-        data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
-        return data
+    
+    minstrhandle = getattr(station, scanjob.get('minstrhandle', 'fpga'))
+    
+    read_ch = scanjob['minstrument']
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
 
     sweeprange = (sweepdata['end'] - sweepdata['start'])
     period = scanjob['sweepdata'].get('period', 1e-3)
@@ -620,11 +682,11 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
     else:
         sweepparam.set(float(sweepgate_value))
 
-    data = readfunc(waveform, Naverage)
-    if len(fpga_ch) == 1:
+    data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch)
+    if len(read_ch) == 1:
         measure_names = ['measured']
     else:
-        measure_names = ['FPGA_ch%d' % c for c in fpga_ch]
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
     
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, ynames=measure_names, fig=None)
 
@@ -658,7 +720,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
             qtt.time.sleep(wait_time_startscan)
         else:
             qtt.time.sleep(wait_time)
-        data = readfunc(waveform, Naverage)
+        data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch)
         for idm, mname in enumerate(measure_names):
             alldata.arrays[mname].ndarray[ix] = data[idm]
 
@@ -932,6 +994,14 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
     """Convert the data of a 1D sweep to a DataSet.
 
     Note: sweepvalues are only an approximation
+    
+     Args:
+        data (1D array or kxN array)
+        sweepgate (str)
+        sweeprange (float)
+        
+    Returns:
+        dataset
 
     """
     if sweepgate_value is None:
@@ -941,7 +1011,7 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
         else:
             raise Exception('No gates supplied')
 
-    if type(ynames) is list:
+    if isinstance(ynames, list):
         sweeplength = len(data[0])
     else:
         sweeplength = len(data)
