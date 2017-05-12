@@ -504,7 +504,7 @@ def convert_scanjob_vec(station, scanjob):
         vec_check = {'stepdata': isinstance(stepdata['param'], qtt.scans.lin_comb_type), 'sweepdata': isinstance(sweepdata['param'], qtt.scans.lin_comb_type)}
         for scaninfo in vec_check:
             if vec_check[scaninfo] is False:
-                scanjob[scaninfo]['param'] = {scanjob[scaninfo]['param']: 1}
+                eval(scaninfo)['param'] = {eval(scaninfo)['param']: 1}
         params.update(list(stepdata['param'].keys()))
         params.update(list(sweepdata['param'].keys()))
         for param in params:
@@ -609,7 +609,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         for iy, y in enumerate(sweepvalues):
             if scanjob['scantype'] is 'scan2Dvec':
                 for param in scanjob['phys_gates_vals']:
-                    gates.set(param, scanjob['phys_gates_vals'][ix, iy])
+                    gates.set(param, scanjob['phys_gates_vals'][param][ix, iy])
             else:
                 sweepvalues.set(y)
             if iy == 0:
@@ -642,9 +642,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         alldata.metadata = dict()
 
     if scanjob['scantype'] is 'scan2Dvec':
-        for param in phys_gates_vals:
+        for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
-            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=phys_gates_vals[param], set_arrays=(alldata.stepparam, alldata.sweepparam))
+            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.stepparam, alldata.sweepparam))
             alldata.add_array(arr)
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
