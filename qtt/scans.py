@@ -483,7 +483,7 @@ def parse_minstrument(scanjob):
 
     return minstrument
 
-def convert_scanjob_vec(station, scanjob):
+def _convert_scanjob_vec(station, scanjob):
     """ Adjust the scanjob for vector scans. 
     
     Args:
@@ -524,7 +524,9 @@ def convert_scanjob_vec(station, scanjob):
         stepparam = get_param(gates, stepgate)
         sweepgate = scanjob['sweepdata'].get('param', None)
         param = get_param(gates, sweepgate)
-
+    else:
+        raise Exception('unknown scantype')
+        
     sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
     stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
 
@@ -566,7 +568,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     else:
         scanjob['scantype'] = 'scan2D'
 
-    scanjob, scanvalues = convert_scanjob_vec(station, scanjob)
+    scanjob, scanvalues = _convert_scanjob_vec(station, scanjob)
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
 
