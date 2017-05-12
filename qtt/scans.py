@@ -28,10 +28,11 @@ from qcodes import DataArray
 import qtt.tools
 from qtt.tools import tilefigs
 from qtt.algorithms.gatesweep import analyseGateSweep
-import qtt.algorithms.onedot  # import onedotGetBalanceFine
+import qtt.algorithms.onedot  
 import qtt.live
 from qtt.tools import deprecated
 
+from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 
@@ -165,7 +166,6 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
         alldatahi, verbose=0, arrayname=None)
     impixel, tr = dataset2image(alldatahi, mode='pixel')
 
-    #_,_,_, im = get2Ddata(alldatahi)
     ptv, fimg, tmp = qtt.algorithms.onedot.onedotGetBalanceFine(
         impixel, alldatahi, verbose=1, fig=fig)
 
@@ -203,8 +203,6 @@ from qcodes.plots.qcmatplotlib import MatPlot
 def plot1D(data, fig=100, mstyle='-b'):
     """ Show result of a 1D gate scan """
 
-    # kk=list(data.arrays.keys())
-
     val = data.default_parameter_name()
 
     if fig is not None:
@@ -212,7 +210,6 @@ def plot1D(data, fig=100, mstyle='-b'):
         plt.clf()
         MatPlot(getattr(data, val), interval=None, num=fig)
         # plt.show()
-
 
 if __name__ == '__main__':
     plot1D(alldata, fig=100)
@@ -244,6 +241,7 @@ def get_measurement_params(station, mparams):
 
 
 def getDefaultParameter(data):
+    """ Return name of the main array in the dataset """
     return data.default_parameter_name()
 
 #%%
@@ -297,7 +295,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         def myupdate():
             t0 = time.time()
             liveplotwindow.update()
-            # QtWidgets.QApplication.processEvents()
             if verbose >= 2:
                 print('scan1D: myupdate: %.3f ' % (time.time() - t0))
 
@@ -320,18 +317,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     alldata.write(write_metadata=True)
 
     return alldata
-
-
-if __name__ == '__main__':
-
-    loop3 = qc.Loop(gates.R[-15:15:1], 0.1).each(keithley1.amplitude)
-    data = loop3.get_data_set(data_manager=False)
-
-    reload(qtt.scans)
-    scanjob = dict({'sweepdata': dict({'gate': 'R', 'start': -500, 'end': 1, 'step': .2}), 'instrument': [keithley3.amplitude], 'delay': .000})
-    data1d = qtt.scans.scan1D(scanjob, station, location=None, background=None)
-
-    data1d.sync()  # data.arrays
 
 
 #%%
@@ -587,9 +572,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                                                         measure_names=mparams, location=location, loc_record={'label': scanjob['scantype']},
                                                         return_names=True)
 
-    # p.full_name
     if verbose >= 2:
-        # print(alldata)
         print('scan2D: created dataset')
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
@@ -1069,16 +1052,12 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
     # show results
     if fig is not None:
         plot1D(alldata, fig=fig)
-        # plt.savefig(figfile)
 
     adata = analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None)
     alldata.metadata['adata'] = adata
-    #  alldata['adata'] = adata
 
     alldata = qtt.tools.stripDataset(alldata)
     writeDataset(outputfile, alldata)
-    # alldata.write_to_disk(outputfile)
- #   pmatlab.save(outputfile, alldata)
     return alldata
 
 
@@ -1087,9 +1066,6 @@ if __name__ == '__main__':
     alldataX = qtt.scans.scanPinchValue(
         station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
     adata = analyseGateSweep(alldataX, fig=10, minthr=None, maxthr=None)
-
-#%%
-from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
 
 #%%
 
@@ -1188,7 +1164,6 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
 
         pfile = os.path.join(outputdir, 'one_dot', basename)
         alldata, mdata = loadDataset(pfile)
-        # alldata,=pmatlab.load(pfile);  # alldata=alldata[0]
         if alldata is None:
             raise Exception('could not load file %s' % pfile)
         adata = analyseGateSweep(
@@ -1199,8 +1174,6 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
         pv[ii] = adata['pinchvalue']
     od['pinchvalues'] = pv
     return od
-
-#%%
 
 
 #%% Testing
@@ -1225,11 +1198,4 @@ if __name__ == '__main__':
     od = qtt.scans.loadOneDotPinchvalues(od, outputdir, verbose=1)
 
 
-#%%
 
-
-if __name__ == '__main__':
-    # ,'SD1a', 'SD1b', ''SD2a','SD]:
-    for gate in ['L', 'D1', 'D2', 'D3', 'R'] + ['P1', 'P2', 'P3', 'P4']:
-        alldata = scanPinchValue(station, outputdir, gate, basevalues=basevalues, keithleyidx=[
-                                 3], cache=cache, full=full)
