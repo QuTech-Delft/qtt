@@ -545,7 +545,8 @@ def _convert_scanjob_vec(station, scanjob):
 
     return scanjob, scanvalues
 
-lin_comb_type = dict 
+
+lin_comb_type = dict # Class to represent linear combinations of parameters 
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
