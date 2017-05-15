@@ -15,11 +15,11 @@ import pyqtgraph as pg
 import tempfile
 
 import qcodes
-from qcodes.plots.pyqtgraph import QtPlot
-from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes import QtPlot
+from qcodes import MatPlot
 
 import qtt
-from qtt.parameterviewer import createParameterWidget
+from qtt import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 
 if __name__ == '__main__':

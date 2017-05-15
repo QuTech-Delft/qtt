@@ -19,7 +19,8 @@ from qtt.algorithms import *
 from qtt.algorithms.functions import logistic
 
 import qtt.live_plotting
-import qtt.parameterviewer
+import qtt.gui.parameterviewer
+from qtt.gui.parameterviewer import createParameterWidget
 
 from qtt.gui.dataviewer import DataViewer
 
