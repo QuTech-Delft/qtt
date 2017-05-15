@@ -14,8 +14,6 @@ extras = {
     'qcodes': ('qcodes', '0.1', None),
     'scikit-image': ('skimage', '0.11', 'scikit-image'),
     'pandas': ('pandas', '0.15', None),
-    #'Polygon3': ('Polygon', '3.0',None),
-    #'hickle': ('hickle', '2.0', None),
     'attrs': ('attr', '16.2.0', 'attrs'),
     'h5py': ('h5py', '0.1', None),
 }
@@ -36,18 +34,17 @@ setup(name='qtt',
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
-          'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
           'Topic :: Scientific/Engineering'
       ],
       license='Private',
       # if we want to install without tests:
       # packages=find_packages(exclude=["*.tests", "tests"]),
       packages=find_packages(),
-      requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy'], install_requires=[
+      requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'nose'], install_requires=[
           'numpy>=1.10',
           'scipy',
           'IPython>=0.1',
