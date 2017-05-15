@@ -130,14 +130,8 @@ call deactivate %USERNAME%
 
 ## Install redis
 
-For Windows install Chocolately and then do
-```
-> choco install redis-64
-> pip install redis
-```
-To start the redis server use `redis-server.exe` from the command line.
-There are also methods/packages to install the redis server as a service, see
-??? .
+For Windows install redis from https://github.com/MSOpenTech/redis.
+To start the redis server use `redis-server.exe` from the command line (if this is not done automatically).
 
 For Unix systems follow the instructions of your OS. For Ubuntu it is:
 ```
@@ -185,4 +179,10 @@ The menpo opencv package is not yet available for python 3.6. For older versions
 > # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
 > pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
 > python -c "import wget;"
+```
+
+Redis from [chocolately](https://chocolatey.org/)
+```
+> choco install redis-64
+> pip install redis
 ```
