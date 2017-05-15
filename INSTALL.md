@@ -12,49 +12,6 @@ If you want a GUI you can use either
 * https://tortoisegit.org/
 * https://desktop.github.com/
 
-
-## Create a working Python environment
-
-You need 3.4+, but we recommand Python 3.5+. For Unix python is installed by default, for windows 
-we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows you need admin rights, or create
- your [own environment](http://conda.pydata.org/docs/using/envs.html).
-
-
-## Install necessary packages
-```
-> conda create -n [yourname] python=3.6 numpy matplotlib scipy spyder jupyter pyqt h5py pandas
-> activate [yourname]
-> pip install pyqtgraph pyvisa attrs pyserial redis
-> conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
-> # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
-> pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
-
-```
-### Old commands
-There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
-```
-> pip install git+https://github.com/jupyter/qtconsole.git
-```
-Custom pyqtgraph:
-```
-> # old command: conda install -c conda-forge pyqtgraph>=0.10
-```
-
-The menpo opencv package is not yet available for python 3.6. For older versions:
-```
-> conda install -c https://conda.binstar.org/menpo opencv3
-```
-
-For Mac OS with anaconda type from the command line:
-```
-> cd [MYLOCALDIR]/qtt
-> conda install --file requirements_mac.txt
-> conda install -c menpo opencv3
-> conda install -c nmearl pyqtgraph
-> pip install pyvisa
-```
-(For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
-
 ## Clone the necessary GIT repositories
 
 All code is hosted on GitHub. If you are unfamiliar with git, read an [introduction](https://guides.github.com/activities/hello-world/) first.
@@ -75,11 +32,34 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/stations.git
 ```
 
-(optional) Go to the Qcodes directory and checkout the latest spin-qubit devel branch `sq10`
+## Create a working Python environment
+
+You need 3.4, but we recommand Python 3.6+. For Unix python is installed by default, for windows 
+we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows you need admin rights, or create
+ your [own environment](http://conda.pydata.org/docs/using/envs.html).
+
+
+## Install necessary packages
+
+Go to the location `[MYLOCALDIR]`/qtt and run
 ```
-> cd [MYLOCALDIR]/Qcodes
-> git checkout sq10
+> conda env create -n [yourname] -f environment.yml
+> activate [yourname]
+> # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
+> pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
 ```
+
+For Mac OS with anaconda type from the command line:
+```
+> cd [MYLOCALDIR]/qtt
+> conda install --file requirements_mac.txt
+> conda install -c menpo opencv3
+> conda install -c nmearl pyqtgraph
+> pip install pyvisa
+```
+(For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
+
+
 
 ## Install packages
 
@@ -90,14 +70,16 @@ The git commands are:
 ```
 
 Note: the following does NOT work with anaconda
- > python setup.py develop --user
-
+```
+> python setup.py develop --user
+```
 
 ## Hardware 
 
 - If necessary install the drivers for your hardware. Some links:
-* (Virtual COM port driver)[http://www.ftdichip.com/Drivers/VCP.htm]
-* (GPIB USB interface)[http://www.ni.com/download/ni-488.2-16.0.0/6132/en/]
+* [Virtual COM port driver](http://www.ftdichip.com/Drivers/VCP.htm)
+* [GPIB USB interface](http://www.ni.com/download/ni-488.2-16.0.0/6132/en/)
+* [Spectrum M4i](http://spectrum-instrumentation.com/en/m4i-platform-overview)
 
 ## Spyder
 
@@ -181,3 +163,26 @@ git config credential.helper store	# stores passwords in plain text!
             warnings.simplefilter("ignore")
 ```
 
+### Old commands
+There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
+```
+> pip install git+https://github.com/jupyter/qtconsole.git
+```
+Custom pyqtgraph:
+```
+> # old command: conda install -c conda-forge pyqtgraph>=0.10
+```
+
+The menpo opencv package is not yet available for python 3.6. For older versions:
+```
+> conda install -c https://conda.binstar.org/menpo opencv3
+```
+```
+> conda create -n [yourname] python=3.6 numpy matplotlib scipy spyder jupyter pyqt h5py pandas pyqtgraph
+> activate [yourname]
+> pip install pyvisa attrs pyserial redis
+> conda install -y coverage nose scikit-image qtpy graphviz pytest pywin32
+> # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
+> pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
+> python -c "import wget;"
+```
