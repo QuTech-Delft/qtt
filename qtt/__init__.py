@@ -14,6 +14,12 @@ import qtt.utilities.markup as markup
 
 import distutils.version
 
+<<<<<<< HEAD
+=======
+from qtt.version import __version__
+
+# todo: remove import *
+>>>>>>> make 1dotscript work; update version
 from qtt.tools import cfigure, plot2Dline
 from qtt.data import *
 from qtt.algorithms import *
@@ -42,10 +48,12 @@ def start_dataviewer():
     return dv
 from qtt.loggingGUI import installZMQlogger
 
-#%% Check versions
-_qversion = '0.1.2' # version of qcodes required
-if distutils.version.StrictVersion(qcodes.__version__) < distutils.version.StrictVersion(_qversion):
-    raise Exception('qtt needs qcodes version%s' % _qversion)
+def check_version(version, module=qcodes):
+    if distutils.version.StrictVersion(module.__version__) < distutils.version.StrictVersion(version):
+        raise Exception(' from %s need version %s' % (module, version) )
+
+_qversion = '0.1.3' # version of qcodes required
+check_version(_qversion)
 
 #%% Add hook to abort measurement
 

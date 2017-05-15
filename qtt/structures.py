@@ -4,6 +4,7 @@ Contains code for various structures
 """
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 import warnings
 
 import qcodes
@@ -13,10 +14,43 @@ import qtt.measurements.scans
 from qtt.algorithms.coulomb import *
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
-import matplotlib.pyplot as plt
 
 from qtt.tools import freezeclass
 
+
+#%%
+
+
+@freezeclass
+class onedot_t:
+    """ Class representing a single quantum dot """ 
+
+    def __init__(self, name, gates, station=None):
+        """
+        
+        Args:
+            gates (list): names of gates to use for left barrier, plunger and right barrier
+            station (obj): object with references to instruments
+        
+        """
+        self.name = name
+        self.gates = gates
+        self.station=station
+    
+
+    def __repr__(self):
+        s = '%s: %s at 0x%x' % (o.__class__.__name__, self.name, id(o))
+        return s
+    
+def test_spin_structures():
+    
+    o = onedot_t('dot1', ['L', 'P1', 'D1'])
+    print(o)
+    
+if __name__=='__main__':
+    test_spin_structures()
+    
+#%%    
 
 @freezeclass
 class sensingdot_t:

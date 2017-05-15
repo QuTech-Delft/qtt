@@ -1317,8 +1317,10 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
     figfile = os.path.join(outputdir, 'one_dot', basename + '.png')
 
     if cache and os.path.exists(outputfile):
-        print('  skipping pinch-off scans for gate %s' % (gate))
-        print(outputfile)
+        if verbose:
+            print('  cached data: skipping pinch-off scans for gate %s' % (gate))
+            if verbose>=2:
+                print(outputfile)
         alldata = qcodes.load_data(outputfile)
         return alldata
 
