@@ -11,7 +11,6 @@ import qcodes
 
 import qtt
 import qtt.measurements.scans
-from qtt.algorithms.coulomb import *
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
 
@@ -25,28 +24,49 @@ from qtt.tools import freezeclass
 class onedot_t:
     """ Class representing a single quantum dot """ 
 
-    def __init__(self, name, gates, station=None):
-        """
+    def __init__(self, gates, name=None, data=None, station=None):
+        """ Class to represent a single quantum dot
         
         Args:
             gates (list): names of gates to use for left barrier, plunger and right barrier
+            name (str): for for the object
+            data (dict or None): data for internal storage
             station (obj): object with references to instruments
         
         """
-        self.name = name
         self.gates = gates
         self.station=station
+        if name is None:
+            name = 'dot-%s' % ('-'.join(gates))
+        self.name = name
     
+        if data is None:
+            data={}
+        self.data=data
 
     def __repr__(self):
-        s = '%s: %s at 0x%x' % (o.__class__.__name__, self.name, id(o))
+        s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name, id(self))
         return s
     
+    def __getstate__(self):
+        """ Helper function to allow pickling of object """
+        d={}
+        import copy
+        for k, v in self.__dict__.items():
+            #print('deepcopy %s' % k)
+            if k not in ['station']:
+                d[k]=copy.deepcopy(v)
+        return d
+    
 def test_spin_structures():
+    import pickle
+    #station=qcodes.Station()
+    o = onedot_t('dot1', ['L', 'P1', 'D1'], station=station)
+    #print(o)
+    _=pickle.dumps(o)
     
-    o = onedot_t('dot1', ['L', 'P1', 'D1'])
-    print(o)
-    
+
+
 if __name__=='__main__':
     test_spin_structures()
     

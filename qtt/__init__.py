@@ -14,12 +14,8 @@ import qtt.utilities.markup as markup
 
 import distutils.version
 
-<<<<<<< HEAD
-=======
 from qtt.version import __version__
 
-# todo: remove import *
->>>>>>> make 1dotscript work; update version
 from qtt.tools import cfigure, plot2Dline
 from qtt.data import *
 from qtt.algorithms import *
@@ -99,8 +95,8 @@ def _copy_to_str(x, memo):
     return str( x )
 
 # black magic to make qcodes objects work with deepcopy
-from qcodes import Parameter, Instrument, StandardParameter, ManualParameter
-for c in [ Parameter, Instrument, StandardParameter, ManualParameter]:
+from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, Station
+for c in [ Parameter, Instrument, StandardParameter, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str
 
 
