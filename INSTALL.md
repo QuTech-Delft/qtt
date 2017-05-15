@@ -43,7 +43,7 @@ we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows y
 
 Go to the location `[MYLOCALDIR]`/qtt and run
 ```
-> conda env create -n [yourname] -f environment.yml
+> conda env create -n [yourname] -f condalist.yml
 > activate [yourname]
 > # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
 > pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
