@@ -450,12 +450,17 @@ class scanjob_t(dict):
     def _convert_scanjob_vec(self, station):
         """ Adjust the scanjob for vector scans. 
 
+        Note: For vector scans the range field in stepdata and sweepdata is 
+        used by default. If only start and end are given a range will be 
+        calculated from those, but only the difference between them is used for
+        vector scans.
+
         Args:
             station (object): contains all the instruments
 
         Returns:
             scanjob (scanjob_t): updated data for scan
-            scanvalues (array): contains the values for parameters to scan over
+            scanvalues (list): contains the values for parameters to scan over
         """
         gates = station.gates
 
@@ -477,27 +482,34 @@ class scanjob_t(dict):
                     sweepdata['param'][param] = 0
             stepname = 'stepparam'
             sweepname = 'sweepparam'
-            if not (np.dot(list(stepdata['param'].values()), [sweepdata['param'][x] for x in stepdata['param'].keys()]) == 0):
-                stepname = stepname + '*'
-                sweepname= sweepname + '*'
+            if not (np.dot(list(stepdata['param'].values()), [sweepdata['param'][x] for x in stepdata['param']]) == 0):
+                stepname = stepname + '_v'
+                sweepname= sweepname + '_v'
+            range_check = [(stepdata, 'range' in stepdata), (sweepdata, 'range' in sweepdata)]
+            for scaninfo, boolean in range_check:
+                if boolean is False:
+                    scaninfo['range'] = scaninfo['end'] - scaninfo['start']
+                    warnings.warn('Start and end are converted to a range to scan around the current dc values.')
+            scaninfo['start'] = -scaninfo['range']/2
+            scaninfo['end'] = scaninfo['range']/2
             stepparam = VectorParameter(name=stepname, comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
-            param = VectorParameter(name=sweepname, comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
+            sweepparam = VectorParameter(name=sweepname, comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
         elif self['scantype'] is 'scan2D':
             stepgate = stepdata.get('param', None)
             stepparam = get_param(gates, stepgate)
             sweepgate = sweepdata.get('param', None)
-            param = get_param(gates, sweepgate)
+            sweepparam = get_param(gates, sweepgate)
         else:
             raise Exception('unknown scantype')
 
-        sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+        sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
         stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
 
         if self['scantype'] is 'scan2Dvec':
             param_init = {param: gates.get(param) for param in params}
             self['phys_gates_vals'] = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
-            step_array2d = np.tile(np.arange(0, stepdata['end']-stepdata['start'], stepdata['step'])[::-1].reshape((len(stepvalues)), 1), (1, len(sweepvalues)))
-            sweep_array2d = np.tile(np.arange(0, sweepdata['end']-sweepdata['start'], sweepdata['step']), (len(stepvalues), 1))   
+            step_array2d = np.tile(np.arange(-stepdata['range']/2, stepdata['range']/2, stepdata['step']).reshape((len(stepvalues)), 1), (1, len(sweepvalues)))
+            sweep_array2d = np.tile(np.arange(-sweepdata['range']/2, sweepdata['range']/2, sweepdata['step']), (len(stepvalues), 1))   
             for param in params:
                 self['phys_gates_vals'][param] = param_init[param] + step_array2d * stepdata['param'][param] + sweep_array2d * sweepdata['param'][param]
 
@@ -628,7 +640,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if scanjob['scantype'] is 'scan2Dvec':
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
-            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.stepparam, alldata.sweepparam))
+            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
             alldata.add_array(arr)
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
