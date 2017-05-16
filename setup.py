@@ -9,22 +9,20 @@ def readme():
 
 extras = {
     'Numpy': ('numpy', '1.9', None),
-    'MatPlot': ('matplotlib', '1.5',None),
-    'SciPi': ('scipy', '0.15',None),
-    'qcodes': ('qcodes', '0.1',None),
+    'MatPlot': ('matplotlib', '1.5', None),
+    'SciPi': ('scipy', '0.15', None),
+    'qcodes': ('qcodes', '0.1', None),
     'scikit-image': ('skimage', '0.11', 'scikit-image'),
-    'pandas': ('pandas', '0.15',None),
-    #'Polygon3': ('Polygon', '3.0',None),
-    #'hickle': ('hickle', '2.0', None),
+    'pandas': ('pandas', '0.15', None),
     'attrs': ('attr', '16.2.0', 'attrs'),
-    'h5py': ('h5py', '0.1',None),
+    'h5py': ('h5py', '0.1', None),
 }
-extras_require = {k: '>='.join(v[0:2]) for k,v in extras.items()}
+extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
-print('packages: %s'  % find_packages() )
+print('packages: %s' % find_packages())
 
 setup(name='qtt',
-      version='0.1.1',
+      version='0.1.3',
       use_2to3=False,
       author='Pieter Eendebak',
       author_email='pieter.eendebak@tno.nl',
@@ -36,22 +34,21 @@ setup(name='qtt',
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
- 	  'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
           'Topic :: Scientific/Engineering'
       ],
       license='Private',
       # if we want to install without tests:
       # packages=find_packages(exclude=["*.tests", "tests"]),
       packages=find_packages(),
-      requires=['numpy', 'matplotlib', 'scipy'], # 'pandas', 'pyqt', 
-
-      install_requires=[
+      requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'nose'], install_requires=[
           'numpy>=1.10',
+          'scipy',
           'IPython>=0.1',
+          'qcodes>=1.3'
           # nose is only for tests, but we'd like to encourage people to run tests!
           #'nose>=1.3',
       ],
@@ -81,4 +78,3 @@ for extra, (module_name, min_version, pip_name) in extras.items():
             print(version_template.format(module_name, min_version, extra))
     except ImportError:
         print(missing_template.format(module_name, extra))
-
