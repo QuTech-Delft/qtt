@@ -77,9 +77,10 @@ Note: the following does NOT work with anaconda
 ## Hardware 
 
 - If necessary install the drivers for your hardware. Some links:
-* [Virtual COM port driver](http://www.ftdichip.com/Drivers/VCP.htm)
+* [Virtual COM port driver (used for the IVVI-rack)](http://www.ftdichip.com/Drivers/VCP.htm)
 * [GPIB USB interface](http://www.ni.com/download/ni-488.2-16.0.0/6132/en/)
 * [Spectrum M4i](http://spectrum-instrumentation.com/en/m4i-platform-overview)
+* [SPI-rack](https://github.com/Rubenknex/SPI-rack)
 
 ## Spyder
 
