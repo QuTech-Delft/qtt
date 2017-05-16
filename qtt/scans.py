@@ -546,6 +546,9 @@ lin_comb_type = dict # Class to represent linear combinations of parameters
 def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
 
+    For 2D vector scans see also the documentation of the _convert_scanjob_vec
+    method of the scanjob_t class.
+
     Args:
         station (object): contains all the instruments
         scanjob (scanjob_t): data for scan
