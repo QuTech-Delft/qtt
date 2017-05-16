@@ -327,34 +327,6 @@ def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
     return extent, g0, vstep, istep, arrayname
 
 
-def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
-    """ Extract metadata from a 2D scan
-
-    Returns:
-
-        extent (list): x1,x2
-        g0 (string): step gate
-        vstep (array): step values
-        istep (float)
-        arrayname (string): identifier of the main array 
-
-    """
-
-    if arrayname is None:
-        arrayname = alldata.default_parameter_name()
-
-    A = alldata.arrays[arrayname]
-
-    g0 = A.set_arrays[0].name
-    vstep = np.array(A.set_arrays[0])
-    extent = [vstep[0], vstep[-1]]  # change order?
-
-    istep = np.abs(np.mean(np.diff(vstep)))
-    if verbose:
-        print('1D scan: gates %s %s' % (g0,))
-    return extent, g0, vstep, istep, arrayname
-
-
 def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     """ Extract metadata from a 2D scan
 
@@ -894,7 +866,28 @@ def test_makeDataSet1Dplain():
     x=np.arange(0,10)
     y=np.vstack( (x-1, x+10) )
     ds=makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
+
+#%%
+def comparedatasets(dataset1, dataset2, metakey = 'allgatevalues'):
+    """ Compare metadata from two different datasets.
     
+    Outputs the differences from dataset1 to dataset2.
+    For now, only comparisons for the key 'allgatevalues' has been implemented.
+    
+    Args:
+        dataset1 (DataSet): first dataset to compare
+        dataset2 (DataSet): second dataset to compare
+        metakey (str): key in the DataSet dictionary to compare
+    """
+    if metakey == 'allgatevalues':
+        for ikey in dataset1.metadata[metakey]:
+            if ikey in dataset2.metadata[metakey]:
+                if dataset1.metadata[metakey][ikey] != dataset2.metadata[metakey][ikey]:
+                    print('Gate %s from %.1f to %.1f' % (ikey, dataset1.metadata[metakey][ikey], dataset2.metadata[metakey][ikey]))
+            else:
+                print('Gate %s not in second dataset' % (ikey))
+    else:
+        raise Exception('metadata key not yet supported')    
 #%%
 
 def test_numpy_on_dataset():

@@ -628,7 +628,7 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
     return data
 
 #%%
-def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=None, verbose=1):
+def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create qcodes dataset to store on disk.
 
     Args:
@@ -687,6 +687,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
         measure_names = ['measured']
     else:
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
+        if plotparam == 'measured':
+            plotparam = measure_names[0]
     
     ds0, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value, ynames=measure_names, fig=None)
 
@@ -705,7 +707,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, diff_dir=No
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow is not None:
         liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array(paramname=measure_names[0]))
+        liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     tprev = time.time()
 
