@@ -492,7 +492,7 @@ try:
     import win32com
     import win32com.client
 
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=(), show=False, verbose=1, activate_slide=True):
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None, show=False, verbose=1, activate_slide=True):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
@@ -563,7 +563,7 @@ try:
             else:
                 if verbose:
                     raise Exception('figure is of an unknown type %s' % (type(fig), ) )
-            if figsize:
+            if figsize is not None:
                 left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
                 width = figsize[0]
                 height = figsize[1]
