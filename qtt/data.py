@@ -900,6 +900,9 @@ def comparedatasets(dataset1, dataset2, metakey='allgatevalues'):
         dataset2 (DataSet): second dataset to compare
         metakey (str): key in the DataSet metadata to compare
     """
+    if (metakey not in dataset1.metadata) or  (metakey not in dataset2.metadata):
+        print('key %s not in dataset metadata' % metakey)
+        return
     if metakey == 'allgatevalues':
         for ikey, value1 in dataset1.metadata[metakey].items():
             if ikey in dataset2.metadata[metakey]:
@@ -910,6 +913,13 @@ def comparedatasets(dataset1, dataset2, metakey='allgatevalues'):
                 print('Gate %s not in second dataset' % (ikey))
     else:
         raise Exception('metadata key not yet supported')
+        
+
+def test_compare():
+    import qcodes.tests.data_mocks
+    ds = qcodes.tests.data_mocks.DataSet2D()
+    comparedatasets(ds, ds)
+        
 #%%
 
 
