@@ -491,7 +491,7 @@ try:
     import win32com
     import win32com.client
 
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1, activate_slide=True):
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None, show=False, verbose=1, activate_slide=True):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
@@ -500,6 +500,7 @@ try:
                 figure added to slide
             txt (string): text in textbox added to slide
             notes (string): notes added to slide
+            figsize (list): size (width,height) of figurebox to add to powerpoint
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
         Returns:
@@ -561,10 +562,18 @@ try:
             else:
                 if verbose:
                     raise Exception('figure is of an unknown type %s' % (type(fig), ) )
+            if figsize is not None:
+                left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
+                width = figsize[0]
+                height = figsize[1]
+            else:
+                left = 100
+                width = 560
+                height = 350
             if verbose>=2:
                 print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
-                                    SaveWithDocument=True, Left=100, Top=160, Width=560, Height=350)
+                                    SaveWithDocument=True, Left=left, Top=100, Width=width, Height=height)
 
         txtbox = slide.Shapes.AddTextbox(
             1, Left=100, Top=100, Width=500, Height=300)

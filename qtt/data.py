@@ -60,7 +60,7 @@ def getDefaultParameter(data, defname='amplitude'):
 #%%
 
 
-def dataset2image(dataset, arrayname = None, unitsperpixel = None, mode='pixel'):
+def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
     """ Extract image from a dataset
 
     Args:
@@ -77,7 +77,7 @@ def dataset2image(dataset, arrayname = None, unitsperpixel = None, mode='pixel')
     """
     if arrayname is None:
         arrayname = dataset.default_parameter_name()
-    tr = image_transform(dataset, mode=mode, unitsperpixel = unitsperpixel)
+    tr = image_transform(dataset, mode=mode, unitsperpixel=unitsperpixel)
     im = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname].ndarray
@@ -117,7 +117,8 @@ def dataset_get_istep(alldata, mode=None):
         istep = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
     except:
         try:
-            extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(alldata, verbose=0, arrayname=None)
+            extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+                alldata, verbose=0, arrayname=None)
             istep = np.abs(np.nanmean(np.diff(vstep)))
         except:
             _, _, _, istep, _ = dataset1Dmetadata(alldata)
@@ -155,12 +156,13 @@ def uniqueArrayName(dataset, name0):
             raise Exception('too many arrays in DataSet')
     return name
 
+
 from qcodes.plots.qcmatplotlib import MatPlot
 
 
 def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
     """ Differentiate a dataset and plot the result.
-    
+
     Args:
         alldata (qcodes DataSet)
         diff_dir (str): direction to differentiate in
@@ -171,7 +173,8 @@ def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
     imx = qtt.diffImageSmooth(meas_array.ndarray, dy=diff_dir)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
-    data_arr = qcodes.DataArray(name=name, label=name, array_id=name, set_arrays=meas_array.set_arrays, preset_data=imx)
+    data_arr = qcodes.DataArray(
+        name=name, label=name, array_id=name, set_arrays=meas_array.set_arrays, preset_data=imx)
 
     alldata.add_array(data_arr)
 
@@ -294,8 +297,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     return xx, vstep, vsweep
 
 
-
-
 #%% Extract metadata
 
 
@@ -309,34 +310,6 @@ def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
         vstep (array): step values
         istep (float)
         arrayname (string): identifier of the main array
-
-    """
-
-    if arrayname is None:
-        arrayname = alldata.default_parameter_name()
-
-    A = alldata.arrays[arrayname]
-
-    g0 = A.set_arrays[0].name
-    vstep = np.array(A.set_arrays[0])
-    extent = [vstep[0], vstep[-1]]  # change order?
-
-    istep = np.abs(np.mean(np.diff(vstep)))
-    if verbose:
-        print('1D scan: gates %s %s' % (g0,))
-    return extent, g0, vstep, istep, arrayname
-
-
-def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
-    """ Extract metadata from a 2D scan
-
-    Returns:
-
-        extent (list): x1,x2
-        g0 (string): step gate
-        vstep (array): step values
-        istep (float)
-        arrayname (string): identifier of the main array 
 
     """
 
@@ -396,14 +369,14 @@ if __name__ == '__main__' and 0:
 
 class image_transform:
 
-    def __init__(self, dataset=None, arrayname=None, mode='pixel', unitsperpixel = None, verbose=0):
+    def __init__(self, dataset=None, arrayname=None, mode='pixel', unitsperpixel=None, verbose=0):
         """ Class to convert scan coordinate to image coordinates
-        
+
         Args:
             dataset (DataSet):
             arrayname (str or None): name of array to select from dataset
             mode (str): 'pixel' or 'raw'
-        
+
         """
         self.H = np.eye(3)  # raw image to pixel image transformation
         self.extent = None  # image extent in pixel
@@ -438,30 +411,32 @@ class image_transform:
                 self.H = Hy.dot(self.H)
 
         self._imraw = dataset.arrays[arrayname].ndarray
-                              
+
         if isinstance(unitsperpixel, (float, int)):
-            unitsperpixel=[unitsperpixel,unitsperpixel]
-        self.unitsperpixel=unitsperpixel
+            unitsperpixel = [unitsperpixel, unitsperpixel]
+        self.unitsperpixel = unitsperpixel
         if self.unitsperpixel is not None:
-            imextent=self.scan_image_extent()
+            imextent = self.scan_image_extent()
             if self.verbose:
-                print('image_transform: unitsperpixel %s' % (self.unitsperpixel, ))
-            ims, Hs, _ = qtt.algorithms.generic.rescaleImage(self._imraw, imextent, mvx = unitsperpixel[0], mvy=unitsperpixel[1])                                      
-            self._im = ims            
+                print('image_transform: unitsperpixel %s' %
+                      (self.unitsperpixel, ))
+            ims, Hs, _ = qtt.algorithms.generic.rescaleImage(
+                self._imraw, imextent, mvx=unitsperpixel[0], mvy=unitsperpixel[1])
+            self._im = ims
             self.H = Hs @ self.H
-            
+
         self._im = self._transform(self._imraw)
         self.Hi = numpy.linalg.inv(self.H)
 
     def image(self):
         return self._im
-    
+
     def istep(self):
         return self._istep
 
     def scan_image_extent(self):
         """ Scan extent
-        
+
         Returns:
             extentImage (list): x0, x1, y0, y1
                             x0, y0 is top left
@@ -499,7 +474,7 @@ class image_transform:
 
     def transform_image(self, im):
         return self._transform(im)
-        
+
     def _transform(self, im):
         """ Transform raw image to image in pixel coordinates such that the imageExtent is increasing
 
@@ -510,10 +485,11 @@ class image_transform:
             im = im[::-1, ::]
 
         if self.unitsperpixel is not None:
-            imextent=self.scan_image_extent()
-            ims, Hs, _ = qtt.algorithms.generic.rescaleImage(self._imraw, imextent, mvx = self.unitsperpixel[0], mvy=self.unitsperpixel[1])                                      
+            imextent = self.scan_image_extent()
+            ims, Hs, _ = qtt.algorithms.generic.rescaleImage(
+                self._imraw, imextent, mvx=self.unitsperpixel[0], mvy=self.unitsperpixel[1])
         else:
-            ims=im
+            ims = im
         return ims
 
     def _itransform(self, im):
@@ -548,11 +524,14 @@ class image_transform:
         nn = pt.shape[1]
         ptx = np.zeros((2, nn))
         # ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
-        # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    # sweep
+        # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    #
+        # sweep
 
-        f = scipy.interpolate.interp1d([0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
+        f = scipy.interpolate.interp1d(
+            [0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
         ptx[1, :] = f(x[1, :])  # step
-        f = scipy.interpolate.interp1d([0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
+        f = scipy.interpolate.interp1d(
+            [0, nx - 1], [xx[0], xx[1]], assume_sorted=False, fill_value='extrapolate')
         ptx[0, :] = f(x[0, :])  # sweep
 
         return ptx
@@ -594,15 +573,16 @@ class image_transform:
 
 def test_image_transform():
     from qcodes.tests.data_mocks import DataSet2D
-    ds=DataSet2D()
-    tr=image_transform(ds)
-    im=tr.image()
-    print('transform: im.shape %s' % (str(im.shape),) )
-    tr=image_transform(ds, unitsperpixel=[None, 2])
-    im=tr.image()
-    print('transform: im.shape %s' % (str(im.shape),) )
-    
-if __name__=='__main__':
+    ds = DataSet2D()
+    tr = image_transform(ds)
+    im = tr.image()
+    print('transform: im.shape %s' % (str(im.shape),))
+    tr = image_transform(ds, unitsperpixel=[None, 2])
+    im = tr.image()
+    print('transform: im.shape %s' % (str(im.shape),))
+
+
+if __name__ == '__main__':
     import pdb
     test_image_transform()
 
@@ -626,7 +606,8 @@ def pickleload(pkl_file):
             data2 = pickle.load(output)
     except:
         if sys.version_info.major >= 3:
-            # if pickle file was saved in python2 we might fix issues with a different encoding
+            # if pickle file was saved in python2 we might fix issues with a
+            # different encoding
             with open(pkl_file, 'rb') as output:
                 data2 = pickle.load(output, encoding='latin')
             # pickle.load(pkl_file, fix_imports=True, encoding="ASCII", errors="strict")
@@ -802,11 +783,13 @@ def makeDataSet1Dplain(xname, x, yname, y, location=None, loc_record=None):
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
     if isinstance(yname, str):
-        y = DataArray(name=yname, array_id=yname, preset_data=yy, set_arrays=(x,))
+        y = DataArray(name=yname, array_id=yname,
+                      preset_data=yy, set_arrays=(x,))
         dd.add_array(y)
     else:
         for ii, name in enumerate(yname):
-            y = DataArray(name=name, array_id=name, preset_data=yy[ii], set_arrays=(x,))
+            y = DataArray(name=name, array_id=name,
+                          preset_data=yy[ii], set_arrays=(x,))
             dd.add_array(y)
 
     return dd
@@ -820,8 +803,10 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None):
     '''
     xx = np.array(x)
     yy = np.ones(xx.size)
-    x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label, unit=x.parameter.unit, preset_data=xx, is_setpoint=True)
-    ytmp = DataArray(name=yname, array_id=yname, label=yname, unit='a.u.', preset_data=yy, set_arrays=(x,))
+    x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label,
+                  unit=x.parameter.unit, preset_data=xx, is_setpoint=True)
+    ytmp = DataArray(name=yname, array_id=yname, label=yname,
+                     unit='a.u.', preset_data=yy, set_arrays=(x,))
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
     dd.add_array(ytmp)
@@ -832,7 +817,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None):
     return dd
 
 
-def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=None, 
+def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=None,
                   preset_data=None, return_names=False):
     """ Make DataSet with one or multiple 2D array and two setpoint arrays.
 
@@ -855,22 +840,26 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     yy = np.tile(yy0, [xx.size, 1])
     zz = np.NaN * np.ones((xx.size, yy0.size))
     set_names = [p1.name, p2.name]
-    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label, unit=p1.parameter.unit, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label, unit=p2.parameter.unit, preset_data=yy, set_arrays=(x,), is_setpoint=True)
+    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label,
+                  unit=p1.parameter.unit, preset_data=xx, is_setpoint=True)
+    y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label,
+                  unit=p2.parameter.unit, preset_data=yy, set_arrays=(x,), is_setpoint=True)
     if isinstance(measure_names, str):
         measure_names = [measure_names]
         if preset_data is not None:
             preset_data = [preset_data]
-    mnamesx=measure_names; measure_names=[]
+    mnamesx = measure_names
+    measure_names = []
     for p in mnamesx:
         if isinstance(p, str):
-            measure_names+=[p]
+            measure_names += [p]
         else:
             # assume p is a Parameter
-            measure_names+=[p.full_name]
+            measure_names += [p.full_name]
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     for idm, mname in enumerate(measure_names):
-        z = DataArray(name=mname, array_id=mname, label=mname, preset_data=np.copy(zz), set_arrays=(x, y))
+        z = DataArray(name=mname, array_id=mname, label=mname,
+                      preset_data=np.copy(zz), set_arrays=(x, y))
         dd.add_array(z)
         if preset_data is not None:
             getattr(dd, mname).ndarray = np.array(preset_data[idm])
@@ -884,30 +873,68 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     else:
         return dd
 
+
 def test_makeDataSet2D():
     from qcodes import ManualParameter
     p = ManualParameter('dummy')
     p2 = ManualParameter('dummy2')
-    ds=makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1' , 'm2' ])    
+    ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
+
 
 def test_makeDataSet1Dplain():
-    x=np.arange(0,10)
-    y=np.vstack( (x-1, x+10) )
-    ds=makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
-    
+    x = np.arange(0, 10)
+    y = np.vstack((x - 1, x + 10))
+    ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
+
 #%%
+
+
+def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues'):
+    """ Compare metadata from two different datasets.
+
+    Outputs the differences in metadata from dataset1 to dataset2.
+    For now, only comparisons for the key 'allgatevalues' has been implemented.
+
+    Args:
+        dataset1 (DataSet): first dataset to compare
+        dataset2 (DataSet): second dataset to compare
+        metakey (str): key in the DataSet metadata to compare
+    """
+    if (metakey not in dataset1.metadata) or  (metakey not in dataset2.metadata):
+        print('key %s not in dataset metadata' % metakey)
+        return
+    if metakey == 'allgatevalues':
+        for ikey, value1 in dataset1.metadata[metakey].items():
+            if ikey in dataset2.metadata[metakey]:
+                value2 = dataset2.metadata[metakey][ikey]
+                if value1 != value2:
+                    print('Gate %s from %.1f to %.1f' % (ikey, value1, value2))
+            else:
+                print('Gate %s not in second dataset' % (ikey))
+    else:
+        raise Exception('metadata key not yet supported')
+        
+
+def test_compare():
+    import qcodes.tests.data_mocks
+    ds = qcodes.tests.data_mocks.DataSet2D()
+    compare_dataset_metadata(ds, ds)
+        
+#%%
+
 
 def test_numpy_on_dataset():
     import qcodes.tests.data_mocks
     alldata = qcodes.tests.data_mocks.DataSet2D()
     X = alldata.z
-    _=np.array(X)
+    _ = np.array(X)
     s = np.linalg.svd(X)
-    #print(s)
+    # print(s)
+
 
 if __name__ == '__main__':
     import numpy as np
     import qcodes.tests.data_mocks
-    
+
     test_numpy_on_dataset()
     test_makeDataSet2D()
