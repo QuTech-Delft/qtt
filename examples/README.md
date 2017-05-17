@@ -23,7 +23,7 @@ Also see the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs
 
 Viewer from instrument parameters:
 ```
-> qtt.parameterviewer.createParameterWidget([gates])
+> qtt.createParameterWidget([gates])
 ```
 
 Start measurement control unit:

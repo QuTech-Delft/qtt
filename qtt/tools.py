@@ -9,12 +9,11 @@ import warnings
 import functools
 import pickle
 import tempfile
-#import qtt.algorithms.functions
 from itertools import chain
 
 
 # explicit import
-from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes import MatPlot
 try:
     from qcodes.plots.pyqtgraph import QtPlot
 except:
@@ -706,7 +705,7 @@ def test_reshape_metadata():
 
 #%%
 try:
-    import qtt.parameterviewer
+    import qtt.gui.parameterviewer
     import qtt.gui
 
     def setupMeasurementWindows(station, create_parameter_widget=True, ilist=None):
@@ -717,9 +716,10 @@ try:
             ilist = [station.gates]
         w = None
         if create_parameter_widget:
-            w = qtt.parameterviewer.ParameterViewer(ilist)
+            w = qtt.createParameterWidget(ilist)
+            #w = qtt.parameterviewer.ParameterViewer(ilist)
             w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
-            w.updatecallback()
+            #w.updatecallback()
 
         plotQ = QtPlot(window_title='Live plot', interval=.5)
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
