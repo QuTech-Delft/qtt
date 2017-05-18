@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 import qcodes
 import qcodes as qc
+import qcodes.instrument
 from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter, ManualParameter
 
@@ -239,6 +240,30 @@ def getDefaultParameter(data):
 
 #%%
 
+# Returns a new scanjob dictonary, with the qcodes parameters replaced by
+# their name, in order to be easily pickled
+def pickle_scanjob(scanjob):
+    new_scanjob = dict()
+    for key, value in scanjob.items():
+        new_scanjob[key] = _pickle_item(value)
+    return new_scanjob
+
+def _pickle_scanjoblist(scanjob):
+    new_scanjob = list()
+    for value in scanjob:
+        new_scanjob.append(_pickle_item(value))
+    return new_scanjob
+
+def _pickle_item(value):
+    if isinstance(value, qc.instrument.parameter.Parameter) or isinstance(value, qc.instrument.base.Instrument):
+        return value.name
+    elif isinstance(value, dict):
+        return pickle_scanjob(value)
+    elif isinstance(value, list):
+        return _pickle_scanjoblist(value)
+    else:
+        return value
+
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1):
     """Simple 1D scan. 
@@ -305,7 +330,8 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    pscanjob = pickle_scanjob(scanjob)
+    update_dictionary(alldata.metadata, scanjob=pscanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
