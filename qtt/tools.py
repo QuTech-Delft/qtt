@@ -81,6 +81,11 @@ def stripDataset(dataset):
         dataset.formatter.close_file(dataset)
     except:
         pass
+
+    if 'scanjob' in dataset.metadata:
+        if 'minstrumenthandle' in  dataset.metadata['scanjob']:
+            dataset.metadata['scanjob']['minstrumenthandle']=str(dataset.metadata['scanjob']['minstrumenthandle'])
+            
     return dataset
 
 #%%

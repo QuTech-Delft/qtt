@@ -362,7 +362,8 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
     qtt.time.sleep(wait_time_startscan)
 
-    data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch)
+    data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch,
+                          period=period, sawtooth_width=waveform['width' ])
     alldata, _ = makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=sweepgate_value,
                                    ynames=['measured%d' % i for i in read_ch],
                                    fig=None, location=location, loc_record={'label': 'scan1Dfast'})
@@ -382,6 +383,8 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
+
+    alldata = qtt.tools.stripDataset(alldata)
 
     alldata.write(write_metadata=True)
 
@@ -666,7 +669,7 @@ if __name__ == '__main__':
 
 #%%
 
-def process_digitizer_trace(data, width, period, samplerate, padding=0):
+def process_digitizer_trace(data, width, period, samplerate, padding=0, fig=None):
     """ Process data from the M4i and a sawtooth trace 
     
     This is done to remove the extra padded data of the digitized and to 
@@ -674,20 +677,38 @@ def process_digitizer_trace(data, width, period, samplerate, padding=0):
     
     Args:
         data (Nxk array)
-        width (float): with of the sawtooth
+        width (float): fractional width of the sawtooth 
         period (float)
-        samplerate (float)
+        samplerate (float): samplerate of the M4i
+        fig (None or integer): show results of processing
     Returns
         processed_data (Nxk array): processed data
         rr (tuple)
     """
     npoints = period    *samplerate # expected number of points
-
+    rwidth=1-width # width of downward slope (fraction)
     npoints2=width*npoints
     npoints2=npoints2-(npoints2%2)
     r1=int(data.shape[0]/2-npoints2/2)-padding
     r2=int(data.shape[0]/2+npoints2/2)+padding
     processed_data=data[ r1:r2,:]
+    if fig is not None:
+        plt.figure(fig); plt.clf(); plt.plot(data, label='raw data' )
+        plt.title('Processing of digitizer trace' )
+        plt.axis('tight')
+        cc=data.shape[0]*(.5-rwidth/2)
+        dcc=int(data.shape[0]/2)
+        cc=dcc
+        
+        qtt.pgeometry.plot2Dline([-1,0,dcc], ':g', linewidth=3, label='trigger' )        
+        qtt.pgeometry.plot2Dline([0,-1,0,], '-', color=(0,1,0,.41),linewidth=.8 )
+        
+        qtt.pgeometry.plot2Dline([-1,0,r1], ':k', label='range of forward slope')
+        qtt.pgeometry.plot2Dline([-1,0,r2], ':k')
+    
+        qtt.pgeometry.plot2Dline([-1,0,cc+samplerate*period*(width/2+rwidth)], '--m')
+        qtt.pgeometry.plot2Dline([-1,0,cc+samplerate*period*-(width/2+rwidth) ], '--m')
+        plt.legend(numpoints=1)
     return processed_data, (r1, r2)
 
 def select_digitizer_memsize(digitizer, period, verbose=1):
@@ -707,9 +728,36 @@ def select_digitizer_memsize(digitizer, period, verbose=1):
         print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period/1e3))
         print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
     digitizer.data_memory_size.set(2**e)
+    
 
+def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width=None):
+    """ Measure block data with M4i
+    
+    Args:
+        width (None or float): if a float, then process data
+    Returns:
+        data (numpy array)
+    
+    """
+    if period is None:
+        raise Exception('please set period for block measurements')
+    memsize=select_digitizer_memsize(digitizer, period, verbose=0)
+    digitizer.initialize_channels(read_ch, mV_range=mV_range)
+    dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage)
+    if isinstance(dataraw, tuple):
+        dataraw=dataraw[0]
+    data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
+    # TO DO: Process data when several channels are used
+    
+    print('processing data: width %s, data shape %s, memsize %s' % (width, data.shape, digitizer.data_memory_size() ) )
+    if width is not None:
+        samplerate=digitizer.sample_rate()
+        data, (r1, r2) = process_digitizer_trace(data.T, width, period, samplerate, padding=0, fig=300)
+        print('processing data: r1 %s, r2 %s' % (r1, r2) )
+        data=data.T
+    return data
 
-def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=1000):
+def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=1000, period=None, sawtooth_width=None):
 #    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
     if minstrhandle.name == 'fpga':
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
@@ -718,13 +766,7 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
 #    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i):
     elif minstrhandle.name == 'digitizer':
-        minstrhandle.initialize_channels(read_ch, mV_range=mV_range)
-        dataraw = minstrhandle.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage)
-        if isinstance(dataraw, tuple):
-            dataraw=dataraw[0]
-        data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
-#        data = np.vstack([datatemp])
-        # TO DO: Process data when several channels are used
+        data= measuresegment_m4i(minstrhandle, read_ch, mV_range, period, Naverage, width=sawtooth_width)
     else:
         raise Exception('Unrecognized fast readout instrument')
     return data
@@ -784,7 +826,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     else:
         sweepparam.set(float(sweepgate_value))
 
-    data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch)
+    data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch, period=period, sawtooth_width=waveform['width' ])
     if len(read_ch) == 1:
         measure_names = ['measured']
     else:
@@ -824,7 +866,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             qtt.time.sleep(wait_time_startscan)
         else:
             qtt.time.sleep(wait_time)
-        data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch)
+        data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch, period=period, sawtooth_width=waveform['width' ])
         for idm, mname in enumerate(measure_names):
             alldata.arrays[mname].ndarray[ix] = data[idm]
 
