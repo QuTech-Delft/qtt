@@ -567,6 +567,10 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     else:
         scanjob['scantype'] = 'scan2D'
 
+    if type(scanjob) is dict:
+        warnings.warn('Use the scanjob_t class.', DeprecationWarning)
+        scanjob = scanjob_t(scanjob)
+    
     scanvalues = scanjob._convert_scanjob_vec(station)
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
