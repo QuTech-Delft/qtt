@@ -48,7 +48,7 @@ setup(name='qtt',
           'numpy>=1.10',
           'scipy',
           'IPython>=0.1',
-          'qcodes>=1.3'
+          'qcodes>=0.1.3'
           # nose is only for tests, but we'd like to encourage people to run tests!
           #'nose>=1.3',
       ],
