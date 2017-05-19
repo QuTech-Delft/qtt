@@ -669,7 +669,8 @@ if __name__ == '__main__':
 
 #%%
 
-def process_digitizer_trace(data, width, period, samplerate, padding=0, fig=None):
+def process_digitizer_trace(data, width, period, samplerate, padding=0,
+                            fig=None, pre_trigger=None):
     """ Process data from the M4i and a sawtooth trace 
     
     This is done to remove the extra padded data of the digitized and to 
@@ -677,41 +678,52 @@ def process_digitizer_trace(data, width, period, samplerate, padding=0, fig=None
     
     Args:
         data (Nxk array)
-        width (float): fractional width of the sawtooth 
+        width (float): width of the sawtooth
         period (float)
-        samplerate (float): samplerate of the M4i
-        fig (None or integer): show results of processing
+        samplerate (float)
     Returns
         processed_data (Nxk array): processed data
         rr (tuple)
     """
+    
     npoints = period    *samplerate # expected number of points
-    rwidth=1-width # width of downward slope (fraction)
+    rwidth=1-width
+    if pre_trigger is None:
+        # assume trigger is in middle of trace
+        cctrigger=data.shape[0]/2 # position of trigger in signal
+    else:
+        cctrigger=pre_trigger # position of trigger in signal
+    
+    
+    cc = data.shape[1]/2 # centre of sawtooth
+    cc = cctrigger + width*npoints/2+0
     npoints2=width*npoints
     npoints2=npoints2-(npoints2%2)
-    r1=int(data.shape[0]/2-npoints2/2)-padding
-    r2=int(data.shape[0]/2+npoints2/2)+padding
+    r1=int(cc-npoints2/2)-padding
+    r2=int(cc+npoints2/2)+padding
     processed_data=data[ r1:r2,:]
     if fig is not None:
-        plt.figure(fig); plt.clf(); plt.plot(data, label='raw data' )
+        plt.figure(fig); plt.clf();
+        plt.plot(data, label='raw data' )
         plt.title('Processing of digitizer trace' )
         plt.axis('tight')
-        cc=data.shape[0]*(.5-rwidth/2)
-        dcc=int(data.shape[0]/2)
-        cc=dcc
+        #cc=data.shape[0]*(.5-rwidth/2)
+        #dcc=int(data.shape[0]/2)
+        #cc=dcc
         
-        qtt.pgeometry.plot2Dline([-1,0,dcc], ':g', linewidth=3, label='trigger' )        
+        qtt.pgeometry.plot2Dline([-1,0,cctrigger], ':g', linewidth=3, label='trigger' )        
+        qtt.pgeometry.plot2Dline([-1,0,cc], '-c', linewidth=1, label='centre of sawtooth', zorder=-10 )        
         qtt.pgeometry.plot2Dline([0,-1,0,], '-', color=(0,1,0,.41),linewidth=.8 )
         
         qtt.pgeometry.plot2Dline([-1,0,r1], ':k', label='range of forward slope')
         qtt.pgeometry.plot2Dline([-1,0,r2], ':k')
     
-        qtt.pgeometry.plot2Dline([-1,0,cc+samplerate*period*(width/2+rwidth)], '--m')
+        qtt.pgeometry.plot2Dline([-1,0,cc+samplerate*period*(width/2+rwidth)], '--m', label='?')
         qtt.pgeometry.plot2Dline([-1,0,cc+samplerate*period*-(width/2+rwidth) ], '--m')
         plt.legend(numpoints=1)
     return processed_data, (r1, r2)
 
-def select_digitizer_memsize(digitizer, period, verbose=1):
+def select_digitizer_memsize(digitizer, period, verbose=1, pre_trigger=None):
     """ Select suitable memory size for a given period
     
     Args:
@@ -723,14 +735,22 @@ def select_digitizer_memsize(digitizer, period, verbose=1):
     drate=digitizer.sample_rate()
     npoints = period    *drate
     e = int(np.ceil(np.log(npoints)/np.log(2)))
-    memsize = pow(2, np.ceil(np.log(npoints)/np.log(2)));
-    if verbose:
-        print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period/1e3))
-        print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
+    #e +=1
+    memsize = pow(2, e);
     digitizer.data_memory_size.set(2**e)
-    
+    if pre_trigger is None:
+        spare=np.ceil((memsize-npoints)/16)*16
+        pre_trigger=min(spare/2, 512)
+        #pre_trigger=512
+    digitizer.posttrigger_memory_size(memsize-pre_trigger)
+    digitizer.pretrigger_memory_size(pre_trigger)
+    if verbose:
+        print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period*1e3))
+        print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
+        print('%s: pre and post trigger: %d %d'  % (digitizer.name,digitizer.pretrigger_memory_size(), digitizer.posttrigger_memory_size() ))
+       
 
-def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width=None):
+def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width=None, post_trigger=None, verbose=0):
     """ Measure block data with M4i
     
     Args:
@@ -741,19 +761,24 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     """
     if period is None:
         raise Exception('please set period for block measurements')
-    memsize=select_digitizer_memsize(digitizer, period, verbose=0)
+    #memsize=select_digitizer_memsize(digitizer, period, verbose=0)
+    
     digitizer.initialize_channels(read_ch, mV_range=mV_range)
-    dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage)
+    dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
     if isinstance(dataraw, tuple):
         dataraw=dataraw[0]
     data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
     # TO DO: Process data when several channels are used
     
-    print('processing data: width %s, data shape %s, memsize %s' % (width, data.shape, digitizer.data_memory_size() ) )
+    if verbose:
+        print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (width, data.shape, digitizer.data_memory_size() ) )
     if width is not None:
         samplerate=digitizer.sample_rate()
-        data, (r1, r2) = process_digitizer_trace(data.T, width, period, samplerate, padding=0, fig=300)
-        print('processing data: r1 %s, r2 %s' % (r1, r2) )
+        pre_trigger=digitizer.pretrigger_memory_size()
+        data, (r1, r2) = process_digitizer_trace(data.T, width, period, samplerate, padding=0,
+              fig=300, pre_trigger=pre_trigger)
+        if verbose:
+            print('measuresegment_m4i: processing data: r1 %s, r2 %s' % (r1, r2) )
         data=data.T
     return data
 
@@ -765,8 +790,10 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
         data_raw = [devicedata[ii] for ii in read_ch]
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
 #    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i):
-    elif minstrhandle.name == 'digitizer':
-        data= measuresegment_m4i(minstrhandle, read_ch, mV_range, period, Naverage, width=sawtooth_width)
+    elif 'digitizer' in minstrhandle.name:
+        post_trigger=minstrhandle.posttrigger_memory_size()
+        data= measuresegment_m4i(minstrhandle, read_ch, mV_range, period, Naverage,
+                                 width=sawtooth_width, post_trigger=post_trigger)
     else:
         raise Exception('Unrecognized fast readout instrument')
     return data
