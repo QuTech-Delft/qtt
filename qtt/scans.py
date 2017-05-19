@@ -216,7 +216,34 @@ if __name__ == '__main__':
 
 #%%
 
+from qcodes import Instrument
 
+<<<<<<< HEAD
+=======
+def get_instrument(instr, station=None):
+    """ Return handle to instrument
+    
+    Args:
+        instr (str, Instrument ): name of instrument or handle
+    """
+    
+    if isinstance(instr, Instrument):
+        return instr
+    
+    if not isinstance(instr, str):
+        raise Exception('could not find instrument %s' % str(instr))
+    try:
+        ref = Instrument.find_instrument(instr)
+        return ref
+    except:
+        pass
+    if station is not None:
+        if instr in station.components:
+            ref=station.conponents[instr]
+            return ref
+    raise Exception('could not find instrument %s' % str(instr))
+
+>>>>>>> rename minstrhandle to minstrumenthandle
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
@@ -344,7 +371,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan1Dfast')
         
-    minstrhandle = getattr(station, scanjob.get('minstrhandle', 'fpga'))
+    minstrhandle = get_instrument(scanjob.get('minstrumenthandle', 'fpga'), station=station)
         
     read_ch = scanjob['minstrument']
     if isinstance(read_ch, int):

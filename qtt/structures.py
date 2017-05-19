@@ -293,12 +293,14 @@ class sensingdot_t:
             instrument = self.minstrument[0]
             channel =  self.minstrument[1]
             gate=self.gg[1]
+            sdplg = getattr(self.station.gates, gate)
             cc=self.station.gates.get(gate)
             scanjob=qtt.scans.scanjob_t({'Naverage': Naverage,})
             scanjob['sweepdata'] = {'param':  gate, 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4}
             scanjob['minstrument'] = [channel]
-            scanjob['minstrhandle'] = instrument
+            scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan']=sleeptime
+           
             alldata = qtt.scans.scan1Dfast(self.station, scanjob)
         else:                           
             waveform, sweep_info = self.station.awg.sweep_gate(
