@@ -16,7 +16,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-import qtt.algorithms.onedot  # import onedotGetBalance
+import qtt.algorithms.onedot 
 
 
 #%%
@@ -625,7 +625,16 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
 
 
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
-    """ Clean up image from sensing dot """
+    """ Clean up image from sensing dot
+    
+    Args:
+        im (numpy array)
+        dy (int or str): direction for differentiation
+        order (int)
+        fixreversal (bool)
+        removeoutliers (bool)
+    
+    """
     verbose = int(verbose)
     removeoutliers = bool(removeoutliers)
     im = np.array(im)
@@ -687,7 +696,7 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
 
     ksize0 = int(math.ceil(31. / istep))
     ksize0 += (ksize0 - 1) % 2
-    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=2.25)
+    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=3.8)
 
     # Select best point
     bestidx = np.argsort(pts[0] - pts[1])[0]
