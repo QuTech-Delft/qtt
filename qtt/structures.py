@@ -18,34 +18,39 @@ from qtt.tools import freezeclass
 
 
 #%%
-
-
+        
 @freezeclass
-class onedot_t:
+class onedot_t(dict):
     """ Class representing a single quantum dot """ 
 
-    def __init__(self, gates, name=None, data=None, station=None):
+    def __init__(self, gates, name=None, data=None, station=None, transport_instrument=None):
         """ Class to represent a single quantum dot
         
         Args:
             gates (list): names of gates to use for left barrier, plunger and right barrier
             name (str): for for the object
+            transport_instrument (str or Instrument): instrument to use for transport measurements
             data (dict or None): data for internal storage
             station (obj): object with references to instruments
         
         """
-        self.gates = gates
+        self['gates']= gates
         self.station=station
+        self['transport_instrument'] = transport_instrument
+        self['instrument'] = transport_instrument # legacy code
         if name is None:
             name = 'dot-%s' % ('-'.join(gates))
-        self.name = name
+        self['name'] = name
     
         if data is None:
             data={}
         self.data=data
 
+    def name(self):
+        return self['name']
+    
     def __repr__(self):
-        s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name, id(self))
+        s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name(), id(self))
         return s
     
     def __getstate__(self):
@@ -60,11 +65,12 @@ class onedot_t:
     
 def test_spin_structures():
     import pickle
+    import json
     #station=qcodes.Station()
     o = onedot_t('dot1', ['L', 'P1', 'D1'], station=station)
     #print(o)
     _=pickle.dumps(o)
-    
+    #x=json.dumps(o)
 
 
 if __name__=='__main__':

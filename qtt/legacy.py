@@ -83,8 +83,8 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
     pv2 = float(od['pinchvalues'][2]) + 0
     stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, 90))
     sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, 90))
-    stepdata = dict({'param': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': step})
-    sweepdata = dict({'param': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
+    stepdata = dict({'param': gg[0], 'start': stepstart, 'end': pv1 - 10, 'step': step})
+    sweepdata = dict({'param': gg[2], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
     wait_time_base = qtt.scans.waitTime(None, station=station)
@@ -122,7 +122,7 @@ def onedotPlungerScan(station, od, verbose=1):
     pv = od['pinchvalues'][1]
 
     scanjob = dict({'minstrument': [od['instrument']]})
-    scanjob['sweepdata'] = dict({'param': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
+    scanjob['sweepdata'] = dict({'param': gg[1], 'start': 50, 'end': pv, 'step': -1})
 
     gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
     gates.set(gg[0], ptv[1, 0] + 20)
@@ -961,10 +961,10 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             od1 = [x for x in one_dots if x['name'] == od1][0]
             od2 = 'dot-' + '-'.join(td['gates'][3:6])
             od2 = [x for x in one_dots if x['name'] == od2][0]
-        except Exception as e:
+        except Exception as ex:
             print('createDoubleDotJobs: no one-dot data available for %s' %
                   td['name'])
-            print(e)
+            print(ex)
             continue
             pass
 
@@ -1044,8 +1044,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             e2 = float(np.maximum(basevaluesTD[p2] - sweeprange / 2, e2))
             s1 = basevaluesTD[p1] + sweeprange / 2
             s2 = basevaluesTD[p2] + sweeprange / 2
-            scanjob['stepdata'] = dict({'param': [p1], 'start': s1, 'end': e1, 'step': -2})
-            scanjob['sweepdata'] = dict({'param': [p2], 'start': s2, 'end': e2, 'step': -4})
+            scanjob['stepdata'] = dict({'param': p1, 'start': s1, 'end': e1, 'step': -2})
+            scanjob['sweepdata'] = dict({'param': p2, 'start': s2, 'end': e2, 'step': -4})
 
             scanjob['minstrument'] = sdinstruments
             scanjob['basename'] = 'doubledot-2d'
