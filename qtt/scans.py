@@ -490,8 +490,8 @@ class scanjob_t(dict):
                 if boolean is False:
                     scaninfo['range'] = scaninfo['end'] - scaninfo['start']
                     warnings.warn('Start and end are converted to a range to scan around the current dc values.')
-            scaninfo['start'] = -scaninfo['range']/2
-            scaninfo['end'] = scaninfo['range']/2
+                scaninfo['start'] = -scaninfo['range']/2
+                scaninfo['end'] = scaninfo['range']/2
             stepparam = VectorParameter(name=stepname, comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
             sweepparam = VectorParameter(name=sweepname, comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
         elif self['scantype'] is 'scan2D':
