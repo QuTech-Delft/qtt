@@ -788,7 +788,7 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     """
     if period is None:
         raise Exception('please set period for block measurements')
-    memsize=select_digitizer_memsize(digitizer, period, verbose=1)
+    memsize=select_digitizer_memsize(digitizer, period, verbose=verbose>=1)
     
     digitizer.initialize_channels(read_ch, mV_range=mV_range)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
