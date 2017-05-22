@@ -857,7 +857,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan2Dfast')
     
-    minstrhandle = getattr(station, scanjob.get('minstrhandle', 'fpga'))
+    minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
     
     read_ch = scanjob['minstrument']
     if isinstance(read_ch, int):
