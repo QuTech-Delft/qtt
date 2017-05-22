@@ -13,7 +13,7 @@ from itertools import chain
 
 
 # explicit import
-from qcodes import MatPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 try:
     from qcodes.plots.pyqtgraph import QtPlot
 except:
