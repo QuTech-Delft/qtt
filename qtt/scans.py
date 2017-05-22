@@ -788,7 +788,7 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     """
     if period is None:
         raise Exception('please set period for block measurements')
-    #memsize=select_digitizer_memsize(digitizer, period, verbose=0)
+    memsize=select_digitizer_memsize(digitizer, period, verbose=1)
     
     digitizer.initialize_channels(read_ch, mV_range=mV_range)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
@@ -809,7 +809,7 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
         data=data.T
     return data
 
-def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=1000, period=None, sawtooth_width=None):
+def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=5000, period=None, sawtooth_width=None):
 #    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
     if minstrhandle.name == 'fpga':
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
