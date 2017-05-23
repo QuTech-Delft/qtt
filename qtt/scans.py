@@ -810,14 +810,12 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     return data
 
 def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=5000, period=None, sawtooth_width=None):
-#    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave):
-    if minstrhandle.name == 'fpga':
+    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave):
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
         devicedata = minstrhandle.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
         data_raw = [devicedata[ii] for ii in read_ch]
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
-#    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i):
-    elif 'digitizer' in minstrhandle.name:
+    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
         post_trigger=minstrhandle.posttrigger_memory_size()
         data= measuresegment_m4i(minstrhandle, read_ch, mV_range, period, Naverage,
                                  width=sawtooth_width, post_trigger=post_trigger)
