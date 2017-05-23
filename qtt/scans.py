@@ -218,8 +218,6 @@ if __name__ == '__main__':
 
 from qcodes import Instrument
 
-<<<<<<< HEAD
-=======
 def get_instrument(instr, station=None):
     """ Return handle to instrument
     
@@ -243,7 +241,6 @@ def get_instrument(instr, station=None):
             return ref
     raise Exception('could not find instrument %s' % str(instr))
 
->>>>>>> rename minstrhandle to minstrumenthandle
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
