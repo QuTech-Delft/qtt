@@ -508,7 +508,7 @@ class scanjob_t(dict):
         if self['scantype'] is 'scan2Dvec':
             param_init = {param: gates.get(param) for param in params}
             self['phys_gates_vals'] = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in params}
-            step_array2d = np.tile(np.arange(-stepdata['range']/2, stepdata['range']/2, stepdata['step']).reshape((len(stepvalues)), 1), (1, len(sweepvalues)))
+            step_array2d = np.tile(np.arange(-stepdata['range']/2, stepdata['range']/2, stepdata['step']).reshape(len(stepvalues), 1), (1, len(sweepvalues)))
             sweep_array2d = np.tile(np.arange(-sweepdata['range']/2, sweepdata['range']/2, sweepdata['step']), (len(stepvalues), 1))   
             for param in params:
                 self['phys_gates_vals'][param] = param_init[param] + step_array2d * stepdata['param'][param] + sweep_array2d * sweepdata['param'][param]
