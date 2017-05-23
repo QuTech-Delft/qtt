@@ -785,7 +785,7 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     """
     if period is None:
         raise Exception('please set period for block measurements')
-    memsize=select_digitizer_memsize(digitizer, period, verbose=verbose>=1)
+    select_digitizer_memsize(digitizer, period, verbose=verbose>=1)
     
     digitizer.initialize_channels(read_ch, mV_range=mV_range)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
@@ -807,12 +807,20 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     return data
 
 def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=5000, period=None, sawtooth_width=None):
-    if isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave):
+    try:
+       isfpga = isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
+    except:
+       isfpga = False
+    try:
+       ism4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+    except:
+       ism4i = False
+    if isfpga:
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
         devicedata = minstrhandle.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
         data_raw = [devicedata[ii] for ii in read_ch]
         data = np.vstack( [station.awg.sweep_process(d, waveform, Naverage) for d in data_raw])
-    elif isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+    elif ism4i:
         post_trigger=minstrhandle.posttrigger_memory_size()
         data= measuresegment_m4i(minstrhandle, read_ch, mV_range, period, Naverage,
                                  width=sawtooth_width, post_trigger=post_trigger)
