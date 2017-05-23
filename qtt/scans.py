@@ -812,7 +812,8 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
     except:
        isfpga = False
     try:
-       ism4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+       import qcodes.instrument_drivers.Spectrum.M4i
+       ism4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)                  
     except:
        ism4i = False
     if isfpga:
@@ -825,7 +826,7 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
         data= measuresegment_m4i(minstrhandle, read_ch, mV_range, period, Naverage,
                                  width=sawtooth_width, post_trigger=post_trigger)
     else:
-        raise Exception('Unrecognized fast readout instrument')
+        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
     return data
 
 #%%
