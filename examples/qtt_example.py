@@ -21,6 +21,7 @@ from qcodes import MatPlot
 import qtt
 from qtt import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
+from qtt.scans import scanjob_t
 
 if __name__ == '__main__':
     datadir = os.path.join(tempfile.tempdir, 'qdata')
@@ -35,8 +36,8 @@ if __name__ == '__main__':
 import virtualDot
 
 if __name__ == '__main__':
-    nr_dots = 3
-    station = virtualDot.initialize(server_name=None, nr_dots=nr_dots)
+    nr_dots = 2
+    station = virtualDot.initialize(reinit=True, nr_dots=nr_dots)
 
     keithley1 = station.keithley1
     keithley3 = station.keithley3
@@ -65,7 +66,7 @@ if __name__ == '__main__':
 #%% Simple 1D scan loop
 
 if __name__ == '__main__':
-    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
+    scanjob = scanjob_t({'sweepdata': dict({'param': 'R', 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
     data1d = qtt.scans.scan1D(station, scanjob, location=None, verbose=1)
 
 
@@ -80,7 +81,7 @@ if __name__ == '__main__':
 
     reload(qtt.scans)
     start = -500
-    scanjob = dict({'sweepdata': dict({'param': 'R', 'start': start, 'end': start + 400, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': 'R', 'start': start, 'end': start + 400, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
     scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start + 400, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 

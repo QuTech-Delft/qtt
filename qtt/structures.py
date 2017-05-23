@@ -9,7 +9,7 @@ import warnings
 import qcodes
 
 import qtt
-from qtt.scans import scan1D
+import qtt.scans
 from qtt.algorithms.coulomb import *
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
@@ -126,11 +126,10 @@ class sensingdot_t:
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
-
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
-        alldata = scan1D(sd.station, scanjob= scanjob1 )
+        alldata = qtt.scans.scan1D(sd.station, scanjob=scanjob1)
 
         # if not outputdir == None:
         #    saveCoulombData(outputdir, alldata)
@@ -281,7 +280,7 @@ class sensingdot_t:
 
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None, fig=201, sleeptime=2, delete=True):
         """Fast tuning of the sensing dot plunger.
-        
+
         Args:
             fig (int or None): window for plotting results
             ...
@@ -295,7 +294,7 @@ class sensingdot_t:
             channel =  self.minstrument[1]
             gate=self.gg[1]
             cc=self.station.gates.get(gate)
-            scanjob={'Naverage': Naverage,}
+            scanjob=qtt.scans.scanjob_t({'Naverage': Naverage,})
             scanjob['sweepdata'] = {'param':  gate, 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4}
             scanjob['minstrument'] = [channel]
             scanjob['minstrhandle'] = instrument
@@ -326,7 +325,7 @@ class sensingdot_t:
             alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
 
         #alldata= qtt.scans.scan1Dfast(self.station, scanjob, location=location)
-                     
+
         alldata.add_metadata({'scanjob': None, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
 
@@ -357,7 +356,7 @@ class sensingdot_t:
 
 
 #%%
-class LinearCombParameter(qcodes.instrument.parameter.Parameter):
+class VectorParameter(qcodes.instrument.parameter.Parameter):
     """Create parameter which controls linear combinations.
 
     Attributes:
@@ -371,6 +370,7 @@ class LinearCombParameter(qcodes.instrument.parameter.Parameter):
         super().__init__(name)
         self.name = name
         self.comb_map = comb_map
+        self.unit = self.comb_map[0][0].unit
         self.coeffs_sum = sum([np.abs(coeff) for (param, coeff) in self.comb_map])
 
     def get(self):
