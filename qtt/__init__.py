@@ -30,7 +30,10 @@ if qcodes.config['user'].get('deprecation_warnings', True):
     # enable deprecation warnings
     warnings.simplefilter("default", DeprecationWarning)
 
-#%%
+#%% Load often used constructions
+
+from qtt.live_plotting import start_measurement_control
+
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()
@@ -38,6 +41,7 @@ def start_dataviewer():
     return dv
 from qtt.loggingGUI import installZMQlogger
 
+#%% Check versions
 _qversion = '0.1.2' # version of qcodes required
 if distutils.version.StrictVersion(qcodes.__version__) < distutils.version.StrictVersion(_qversion):
     raise Exception('qtt needs qcodes version%s' % _qversion)

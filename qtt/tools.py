@@ -13,7 +13,7 @@ from itertools import chain
 
 
 # explicit import
-from qcodes import MatPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 try:
     from qcodes.plots.pyqtgraph import QtPlot
 except:
@@ -81,6 +81,11 @@ def stripDataset(dataset):
         dataset.formatter.close_file(dataset)
     except:
         pass
+
+    if 'scanjob' in dataset.metadata:
+        if 'minstrumenthandle' in  dataset.metadata['scanjob']:
+            dataset.metadata['scanjob']['minstrumenthandle']=str(dataset.metadata['scanjob']['minstrumenthandle'])
+            
     return dataset
 
 #%%
