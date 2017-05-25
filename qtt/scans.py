@@ -349,7 +349,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if scanjob['scantype'] is 'scan1Dvec':
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
-            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=alldata.arrays[sweepvalues.parameter.name])
+            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[sweepvalues.parameter.name],))
             alldata.add_array(arr)
 
     if not hasattr(alldata, 'metadata'):
@@ -574,7 +574,7 @@ class scanjob_t(dict):
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 sweepname = 'sweepparam'
                 sweepparam = VectorParameter(name=sweepname, comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
-                if sweeplenght is not None:
+                if sweeplength is not None:
                     sweepdata['step'] = sweepdata['range'] / sweeplength
             else:
                 sweepparam = gates.parameters[sweepdata['param']]
@@ -582,9 +582,9 @@ class scanjob_t(dict):
             scanvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 param_init = {param: gates.get(param) for param in sweepdata['param']}
-                self['phys_gates_vals'] = {param: np.zeros(len(sweepvalues)) for param in params}
+                self['phys_gates_vals'] = {param: np.zeros(len(scanvalues)) for param in sweepdata['param']}
                 sweep_array = np.arange(-sweepdata['range']/2, sweepdata['range']/2, sweepdata['step'])  
-                for param in params:
+                for param in sweepdata['param']:
                     self['phys_gates_vals'][param] = param_init[param] + sweep_array * sweepdata['param'][param]
 
         elif self['scantype'][:6] == 'scan2D':
