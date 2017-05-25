@@ -829,7 +829,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
 
     for idm, mname in enumerate(measure_names):
         ytmp = DataArray(name=mname, array_id=mname, label=mname,
-                      preset_data=np.copy(yy), set_arrays=x)
+                      preset_data=np.copy(yy), set_arrays=(x,))
         dd.add_array(ytmp)
         if y is not None:
             getattr(dd, mname).ndarray = np.array(preset_data[idm])
