@@ -141,6 +141,7 @@ class virtual_gates(Instrument):
             print('',*self._gates_list,sep='\t')
             for vg in self._virts_list:
                 print(vg,*(self.crosscap_map[vg][g] for g in self.crosscap_map[vg]),sep='\t')
+        self._update_rest(self.crosscap_map)
 
     def _update_rest(self, updated_var):
         """Updates rest of the virtual gate variables"""
