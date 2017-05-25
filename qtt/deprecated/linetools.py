@@ -53,8 +53,8 @@ except:
     if not _linetoolswarn:
         pass
 
+import qtt.legacy
 
-from qtt.legacy import cmap_discretize
 from qtt.algorithms.generic import scaleImage, smoothImage, localMaxima
 
 try:
@@ -723,7 +723,7 @@ def plotNetPatches(net, bidx=None, cc=None, drawvertices=False, drawedges=False)
         bidx = range(len(cc))
 
     cm = pylab.get_cmap('jet')
-    mycmap = cmap_discretize(cm, N=6, m=6)
+    mycmap = qtt.legacy.cmap_discretize(cm, N=6, m=6)
 
     elist = net.g.get_edgelist()
 
@@ -782,7 +782,7 @@ def plotNetPatches(net, bidx=None, cc=None, drawvertices=False, drawedges=False)
         print('cycle %d: len %d' % (jj, len(ed)))
 
         if drawedges:
-            mycmapE = cmap_discretize(cm, N=4, m=4)
+            mycmapE = qtt.legacy.cmap_discretize(cm, N=4, m=4)
 
             for ii, x in enumerate(ed):
                 plotPoints(x.getXY().T, '-', color=mycmapE(ii), linewidth=4)
