@@ -795,26 +795,51 @@ def makeDataSet1Dplain(xname, x, yname, y, location=None, loc_record=None):
     return dd
 
 
-def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None):
-    ''' Make DataSet with one 1D array and one setpoint array
+def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, return_names=False):
+    ''' Make DataSet with one or multiple 1D arrays and one setpoint array.
 
     Arguments:
         x (array): the setpoint array of data
+        yname (str or list): name(s) of measured array(s)
+        y (array or None): optional array to fill the DataSet
+        location (str or None): location for the DataSet
+        loc_record (dict): will be added to the location
+        return_names (bool): if True return array names in output
     '''
     xx = np.array(x)
-    yy = np.ones(xx.size)
+    yy = np.NaN*np.ones(xx.size)
     x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label,
                   unit=x.parameter.unit, preset_data=xx, is_setpoint=True)
-    ytmp = DataArray(name=yname, array_id=yname, label=yname,
-                     unit='a.u.', preset_data=yy, set_arrays=(x,))
+    if isinstance(yname, str):
+        measure_names = [yname]
+        if y is not None:
+            preset_data = [y]
+    else:
+        measure_names = yname
+    mnamesx = measure_names
+    measure_names = []
+    for p in mnamesx:
+        if isinstance(p, str):
+            measure_names += [p]
+        else:
+            # assume p is a Parameter
+            measure_names += [p.full_name]
+
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
+
+    for idm, mname in enumerate(measure_names):
+        ytmp = DataArray(name=mname, array_id=mname, label=mname,
+                      preset_data=np.copy(yy), set_arrays=x)
+        dd.add_array(ytmp)
+        if y is not None:
+            getattr(dd, mname).ndarray = np.array(preset_data[idm])
     dd.add_array(x)
-    dd.add_array(ytmp)
 
-    if y is not None:
-        dd.measured.ndarray = np.array(y)
-
-    return dd
+    if return_names:
+        set_names = x.name
+        return dd, (set_names, measure_names)
+    else:
+        return dd
 
 
 def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=None,
