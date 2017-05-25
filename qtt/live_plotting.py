@@ -18,7 +18,7 @@ import pyqtgraph as pg
 import qcodes
 
 import qtt
-import qtt.legacy
+#import qtt.legacy
 from qtt import pgeometry as pmatlab
 
 import qtt.algorithms.generic

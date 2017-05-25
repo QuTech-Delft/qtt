@@ -10,6 +10,8 @@ import qtt.tools
 import qtt.data
 import qtt.algorithms
 
+import qtt.measurements.scans as scans
+
 import distutils.version
 
 # todo: remove import *

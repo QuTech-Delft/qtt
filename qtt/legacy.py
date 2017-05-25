@@ -19,9 +19,8 @@ from qtt.data import loadExperimentData
 import qtt.algorithms.onedot  # import onedotGetBalance
 
 
-#from qtt.algorithms.onedot import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
-from qtt.scans import pinchoffFilename
+from qtt.measurements.scans import pinchoffFilename
 from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
 
