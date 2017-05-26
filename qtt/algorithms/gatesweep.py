@@ -146,8 +146,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         # pmid = np.polyval(fit, midpoint2)
         p0 = np.polyval(fit, xleft[-1])
         pmid = np.polyval(fit, xleft[0])
-        if verbose:
-            print('p0 %.1f, pmid %.1f, leftval[0] %.1f' % (p0, pmid, leftval[0]))
+        if verbose>=2:
+            print('analyseGateSweep: p0 %.1f, pmid %.1f, leftval[0] %.1f' % (p0, pmid, leftval[0]))
 
         if pmid + (pmid - p0) * .25 > leftval[0]:
             midpoint1 = np.percentile(x, .5)
