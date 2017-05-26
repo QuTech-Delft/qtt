@@ -96,7 +96,7 @@ class virtual_gates(Instrument):
         vals = [(gate, self.get(gate)) for gate in self._virts_list]
         return dict(vals)
 
-    def resetgates(self, activegates, basevalues=None, verbose=2):
+    def resetgates(self, activegates, basevalues=None, verbose=0):
         """Reset a set of gates to new values.
 
         If no new values are specified the virtual gates will be reset to zero.
@@ -120,7 +120,7 @@ class virtual_gates(Instrument):
                 print('  setting gate %s to %.1f [mV]' % (g, val))
             self.set(g, val)
 
-    def update_crosscap(self, crosscap_dict, verbose=2):
+    def update_crosscap(self, crosscap_dict, verbose=0):
         """Update cross capacitance values for the specified gate cobinations.
         
         Args:
@@ -138,28 +138,37 @@ class virtual_gates(Instrument):
                     print('  setting cross capacitance between %s and %s from %.3f to %.3f' % (vg, g, self.crosscap_map[vg][g], val))
                 self.crosscap_map[vg][g] = val
         if verbose >= 2:
-            print('',*self._gates_list,sep='\t')
-            for vg in self._virts_list:
-                print(vg,*(self.crosscap_map[vg][g] for g in self.crosscap_map[vg]),sep='\t')
-        self._update_rest(self.crosscap_map)
+            self.print_transformation_map(self.crosscap_map)
+        self._update_rest(self.crosscap_map, verbose)
 
-    def _update_rest(self, updated_var):
+    def print_transformation_map(self, transformation_map):
+        """Show map as table.
+        
+        Args:
+            transformation_map (dict): Map of what to show. Either a crosscap_map
+                    or a crosscap_map_inv.
+        """
+        print('',*self._gates_list,sep='\t')
+        for vg in self._virts_list:
+            print('\t'.join([vg] + [('%.3f' % value).rstrip('0').rstrip('.') for g, value in transformation_map[vg].items() ] ) )
+
+    def _update_rest(self, updated_var, verbose=0):
         """Updates rest of the virtual gate variables"""
         if updated_var == self.crosscap_map:
-            self._crosscap_matrix = self._update_crosscap_matrix(self.crosscap_map)
+            self._crosscap_matrix = self._update_crosscap_matrix(self.crosscap_map, verbose)
             self._crosscap_matrix_inv = np.linalg.inv(self._crosscap_matrix)
-            self.crosscap_map_inv = self._update_crosscap_map_inv(self._crosscap_matrix_inv)
-            self._update_virt_parameters(self.crosscap_map_inv)
+            self.crosscap_map_inv = self._update_crosscap_map_inv(self._crosscap_matrix_inv, verbose)
+            self._update_virt_parameters(self.crosscap_map_inv, verbose)
             self.allvalues()
 
-    def _update_crosscap_matrix(self, crosscap_map, verbose=1):
+    def _update_crosscap_matrix(self, crosscap_map, verbose=0):
         """Internal update of cc_matrix from cc_map"""
         crosscap_matrix = np.array([[crosscap_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
         if verbose >= 2:
             print('  updating crosscap_matrix')
         return crosscap_matrix
 
-    def _update_crosscap_map_inv(self, crosscap_matrix_inv, verbose=2):
+    def _update_crosscap_map_inv(self, crosscap_matrix_inv, verbose=0):
         """Internal update of cc_map_inv"""
         crosscap_map_inv = dict()
         for idvirt, virtg in enumerate(self._virts_list):
@@ -174,7 +183,7 @@ class virtual_gates(Instrument):
                     print(vg,*(crosscap_map_inv[vg][g] for g in crosscap_map_inv[vg]),sep='\t')
         return crosscap_map_inv
 
-    def _update_virt_parameters(self, crosscap_map_inv, verbose=1):
+    def _update_virt_parameters(self, crosscap_map_inv, verbose=0):
         """Redefining the cross capacitance values in the virts Parameter"""
         for vg in crosscap_map_inv:
             self.parameters[vg].comb_map = []
