@@ -212,9 +212,10 @@ class virtual_gates(Instrument):
         updated_map = base_map
         for vg in replace_map:
             for g in replace_map[vg]:
+                preivious_val = base_map[vg][g]
                 updated_map[vg][g] = replace_map[vg][g]
                 if verbose >= 2:
-                    print('  setting between %s and %s from %.3f to %.3f' % (vg, g, base_map[vg][g], updated_map[vg][g]))
+                    print('  setting %s-%s, %.3f to %.3f' % (vg, g, preivious_val, updated_map[vg][g]))
         if verbose >= 2:
             self.print_map(updated_map)
         return updated_map
