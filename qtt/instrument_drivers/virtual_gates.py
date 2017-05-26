@@ -82,11 +82,10 @@ class virtual_gates(Instrument):
 #        self._crosscap_matrix = np.array([[self._crosscap_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
 #        self._crosscap_matrix_inv = np.linalg.inv(self._crosscap_matrix)
 
-        self._crosscap_map_inv = dict()
+        self._crosscap_map_inv = OrderedDict()
         for idvirt, virtg in enumerate(self._virts_list):
-            self._crosscap_map_inv[virtg] = dict()
+            self._crosscap_map_inv[virtg] = OrderedDict()
             for idg, g in enumerate(self._gates_list):
-#                self._crosscap_map_inv[virtg][g] = self._crosscap_matrix_inv[idg][idvirt]
                 self._crosscap_map_inv[virtg][g] = np.linalg.inv(self.get_crosscap_matrix())[idg][idvirt]
 
         for g in self._virts_list:
@@ -243,9 +242,9 @@ class virtual_gates(Instrument):
         if base_map == self._crosscap_map:
 #            self._crosscap_matrix = self._update_crosscap_matrix(self._crosscap_map, verbose)
 #            self._crosscap_matrix_inv = np.linalg.inv(self._crosscap_matrix)
-            crosscap_map_inv = dict()
+            crosscap_map_inv = OrderedDict()
             for idvirt, virtg in enumerate(self._virts_list):
-                crosscap_map_inv[virtg] = dict()
+                crosscap_map_inv[virtg] = OrderedDict()
                 for idg, g in enumerate(self._gates_list):
                     crosscap_map_inv[virtg][g] = np.linalg.inv(self.get_crosscap_matrix())[idg][idvirt]
             if verbose:
@@ -256,9 +255,9 @@ class virtual_gates(Instrument):
             self._update_virt_parameters(self._crosscap_map_inv, verbose)
             self.allvalues()
         elif base_map == self._crosscap_map_inv:
-            crosscap_map = dict()
+            crosscap_map = OrderedDict()
             for idvirt, virtg in enumerate(self._virts_list):
-                crosscap_map[virtg] = dict()
+                crosscap_map[virtg] = OrderedDict()
                 for idg, g in enumerate(self._gates_list):
                     crosscap_map[virtg][g] = np.linalg.inv(self.get_crosscap_matrix_inv())[idg][idvirt]
             if verbose:
