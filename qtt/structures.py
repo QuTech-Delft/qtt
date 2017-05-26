@@ -106,7 +106,7 @@ class sensingdot_t:
         self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
         if fpga_ch is None:
-            self.fpga_ch = int(self.gg[1][2])
+            self.fpga_ch = None # int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
 

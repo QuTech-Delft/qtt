@@ -189,7 +189,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
 
     wait_time = waitTime(od['gates'][2], station=station)
     scanjobhi['sweepdata']['wait_time'] = wait_time
-    scanjobhi['stepdata']['wait_time'] = waitTime(None, station) + 3 * wait_time
+    scanjobhi['stepdata']['wait_time'] = 2*waitTime(None, station) + 3 * wait_time
 
     alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -1292,6 +1292,9 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose
 
 
 def waitTime(gate, station=None, gate_settle=None):
+    """ Return settle times for gates on a station """
+    if gate is None:
+        return 0.001
     if gate_settle is not None:
         return gate_settle(gate)
     if station is not None:

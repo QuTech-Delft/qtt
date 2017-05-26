@@ -14,6 +14,8 @@ import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
 import scipy.ndimage as ndimage
 import pyqtgraph as pg
+import pyqtgraph
+import pyqtgraph.multiprocess as mp
 
 import qcodes
 
@@ -176,10 +178,13 @@ if __name__ == '__main__':
     mc.verbose = 1
     mc.setGeometry(1700, 50, 300, 400)
     
-import pyqtgraph.multiprocess as mp
 
-def start_measurement_control():
-    """ Start measurement control GUI """    
+def start_measurement_control(doexec=False):
+    """ Start measurement control GUI
+    
+    Args:
+        doexec(bool): if True run the event loop
+    """    
     #import warnings
     #from pyqtgraph.multiprocess.remoteproxy import RemoteExceptionWarning
     #warnings.simplefilter('ignore', RemoteExceptionWarning)    
@@ -188,6 +193,11 @@ def start_measurement_control():
     mc = lp.MeasurementControl()
     
     qtt._dummy_mc = mc
+    
+    app = pyqtgraph.mkQApp()
+    if doexec:
+        app.exec()
+
     #return mc    
 
 
