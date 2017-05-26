@@ -10,6 +10,7 @@ from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
 import numpy as np
+from collections import OrderedDict
 
 
 class virtual_gates(Instrument):
@@ -38,9 +39,18 @@ class virtual_gates(Instrument):
         Args:
             name (string): The name of the object (used for?)
             gates_instr (Instrument): The instrument of physical gates
-            crosscap_map (dict): Full map of cross capacitance matrix defined
+            crosscap_map (OrderedDict/dict): Full map of cross capacitance matrix defined
                     as a dictionary labeled between dot parameters and gates.
                     Name of dot parameters are initially defined in this dict.
+                    Use OrderedDict form when the order is important.
+                    
+                    Example:
+                        crosscap_map = OrderedDict((
+                    ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
+                    ('VP2', OrderedDict((('P1', 0.5), ('P2', 1), ('P3', 0)))),
+                    ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+                    ))
+
                     Note: this matrix describes the influence of each physical
                     gate on the dotparameters, hence to get and set the dot
                     parameter using a combination of physical gates we need
@@ -50,9 +60,25 @@ class virtual_gates(Instrument):
         super().__init__(name, **kwargs)
         self.name = name
         self.gates = gates_instr
-        self._crosscap_map = crosscap_map
-        self._gates_list = sorted(list(self._crosscap_map[list(self._crosscap_map.keys())[0]].keys()))
-        self._virts_list = sorted(list(self._crosscap_map.keys()))
+        if isinstance(crosscap_map, OrderedDict):
+            self._crosscap_map = crosscap_map
+            for vg in list(crosscap_map.keys()):
+                for g in list(crosscap_map[list(crosscap_map.keys())[0]].keys()):
+                    try:
+                        self._crosscap_map[vg][g]
+                    except:
+                        raise NameError('missing physical gate "%s" in virtual gate "%s"' %(g, vg))
+        elif isinstance(crosscap_map, dict):
+            self._crosscap_map = OrderedDict()
+            for vg in sorted(list(crosscap_map.keys())):
+                self._crosscap_map[vg] = OrderedDict()
+                for g in sorted(list(crosscap_map[list(crosscap_map.keys())[0]].keys())):
+                    self._crosscap_map[vg][g] = crosscap_map[vg][g]
+        else:
+            raise ValueError('cross-capacitance map must be in an OrdereDict or dict form')
+
+        self._gates_list = list(self._crosscap_map[list(self._crosscap_map.keys())[0]].keys())
+        self._virts_list = list(self._crosscap_map.keys())
 #        self._crosscap_matrix = np.array([[self._crosscap_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
 #        self._crosscap_matrix_inv = np.linalg.inv(self._crosscap_matrix)
 
