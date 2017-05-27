@@ -101,7 +101,19 @@ if __name__ == '__main__':
 
 #%% Make virtual gates
 
+from collections import OrderedDict
+from qtt.instrument_drivers.virtual_gates import virtual_gates
 
+crosscap_map = OrderedDict((
+('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
+('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
+('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+))
+virts = virtual_gates(None, gates, crosscap_map)
+
+scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc-200, 'end': cc + 200, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+scanjob['stepdata'] = dict({'param': virts.VP3, 'start': cc - 200, 'end': cc + 200, 'step': 5.})
+data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
 #%% Send data to powerpoint
 if __name__ == '__main__':
