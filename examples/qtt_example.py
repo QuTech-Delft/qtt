@@ -99,6 +99,9 @@ if __name__ == '__main__':
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
+#%% Make virtual gates
+
+
 
 #%% Send data to powerpoint
 if __name__ == '__main__':
