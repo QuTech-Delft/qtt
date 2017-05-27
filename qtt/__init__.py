@@ -11,10 +11,10 @@ import qtt.data
 import qtt.algorithms
 
 import qtt.measurements.scans as scans
+import qtt.utilities.markup as markup
 
 import distutils.version
 
-# todo: remove import *
 from qtt.tools import cfigure, plot2Dline
 from qtt.data import *
 from qtt.algorithms import *
