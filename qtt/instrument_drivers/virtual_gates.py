@@ -269,14 +269,6 @@ class virtual_gates(Instrument):
             self._update_virt_parameters(self._crosscap_map_inv, verbose)
             self.allvalues()
 
-#    def _update_crosscap_matrix(self, crosscap_map, verbose=0):
-#        """Internal update of cc_matrix from cc_map"""
-#        crosscap_matrix = np.array([[crosscap_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
-#        if verbose >= 2:
-#            print('  updating crosscap_matrix')
-#        return crosscap_matrix
-#
-
     def get_crosscap_matrix(self):
         """Gets the current cross-capacitance matrix."""
         return np.array([[self._crosscap_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
@@ -284,9 +276,6 @@ class virtual_gates(Instrument):
     def get_crosscap_matrix_inv(self):
         """Gets the current inverse of cross-capacitance matrix."""
         return np.array([[self._crosscap_map_inv[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
-
-#    def set_crosscap_matrix(self):
-#    def set_crosscap_matrix_inv(self):
 
     def _update_virt_parameters(self, crosscap_map_inv, verbose=0):
         """Redefining the cross capacitance values in the virts Parameter.
