@@ -123,7 +123,7 @@ class virtual_gates(Instrument):
         gate_vec = np.zeros(len(self._virts_list))
         increment = value - self.get(gate)
         gate_vec[self._virts_list.index(gate)] = increment
-        set_vec = np.dot(self._crosscap_matrix_inv, gate_vec)
+        set_vec = np.dot(self.get_crosscap_matrix_inv(), gate_vec)
 
         for idx, g in enumerate(self._gates_list):
             self.gates.parameters[g].validate(self.gates.get(g) + set_vec[idx])
