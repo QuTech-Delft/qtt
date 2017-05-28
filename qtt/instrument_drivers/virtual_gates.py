@@ -79,7 +79,7 @@ class virtual_gates(Instrument):
 
         self._gates_list = list(self._crosscap_map[list(self._crosscap_map.keys())[0]].keys())
         self._virts_list = list(self._crosscap_map.keys())
-        self._crosscap_map_inv = np.linalg.inv(self.convert_matrix_to_map(self.get_crosscap_matrix()))
+        self._crosscap_map_inv = self.convert_matrix_to_map(np.linalg.inv(self.get_crosscap_matrix()))
 
         for g in self._virts_list:
             self.add_parameter(g,
@@ -293,10 +293,10 @@ class virtual_gates(Instrument):
 
         """
         converted_map = OrderedDict()
-            for idvirt, virtg in enumerate(self._virts_list):
-                converted_map[virtg] = OrderedDict()
-                for idg, g in enumerate(self._gates_list):
-                    converted_map[virtg][g] = base_matrix[idg][idvirt]
+        for idvirt, virtg in enumerate(self._virts_list):
+            converted_map[virtg] = OrderedDict()
+            for idg, g in enumerate(self._gates_list):
+                converted_map[virtg][g] = base_matrix[idg][idvirt]
         return converted_map
 
     def _update_virt_parameters(self, crosscap_map_inv, verbose=0):
