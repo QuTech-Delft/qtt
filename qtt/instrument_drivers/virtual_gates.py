@@ -79,14 +79,7 @@ class virtual_gates(Instrument):
 
         self._gates_list = list(self._crosscap_map[list(self._crosscap_map.keys())[0]].keys())
         self._virts_list = list(self._crosscap_map.keys())
-#        self._crosscap_matrix = np.array([[self._crosscap_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
-#        self._crosscap_matrix_inv = np.linalg.inv(self._crosscap_matrix)
-
-        self._crosscap_map_inv = OrderedDict()
-        for idvirt, virtg in enumerate(self._virts_list):
-            self._crosscap_map_inv[virtg] = OrderedDict()
-            for idg, g in enumerate(self._gates_list):
-                self._crosscap_map_inv[virtg][g] = np.linalg.inv(self.get_crosscap_matrix())[idg][idvirt]
+        self._crosscap_map_inv = np.linalg.inv(self.convert_matrix_to_map(self.get_crosscap_matrix()))
 
         for g in self._virts_list:
             self.add_parameter(g,
@@ -271,11 +264,40 @@ class virtual_gates(Instrument):
 
     def get_crosscap_matrix(self):
         """Gets the current cross-capacitance matrix."""
-        return np.array([[self._crosscap_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
+        return self.convert_map_to_matrix(self._crosscap_map)
 
     def get_crosscap_matrix_inv(self):
         """Gets the current inverse of cross-capacitance matrix."""
-        return np.array([[self._crosscap_map_inv[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
+        return self.convert_map_to_matrix(self._crosscap_map_inv)
+
+    def convert_map_to_matrix(self, base_map):
+        """Convert map of the crosscap form to matrix
+        
+        Args:
+            base_map (OrderedDict): Crosscap map or its inverse.
+
+        Return:
+            converted_matrix (array): Matrix with its elements orderd with given gate order.
+
+        """
+        return np.array([[base_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
+
+    def convert_matrix_to_map(self, base_matrix):
+        """Convert ordered matrix to map.
+
+        Args:
+            base_matrix (array): Matrix with its elements orderd with given gate order.
+
+        Return:
+            converted_map (OrderedDict): Map after conversion.
+
+        """
+        converted_map = OrderedDict()
+            for idvirt, virtg in enumerate(self._virts_list):
+                converted_map[virtg] = OrderedDict()
+                for idg, g in enumerate(self._gates_list):
+                    converted_map[virtg][g] = base_matrix[idg][idvirt]
+        return converted_map
 
     def _update_virt_parameters(self, crosscap_map_inv, verbose=0):
         """Redefining the cross capacitance values in the virts Parameter.
