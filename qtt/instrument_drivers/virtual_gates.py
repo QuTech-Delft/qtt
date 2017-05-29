@@ -11,7 +11,7 @@ from functools import partial
 from qcodes.utils.validators import Numbers
 import numpy as np
 from collections import OrderedDict
-
+import warnings
 
 class virtual_gates(Instrument):
     """A virtual gate instrument to control linear combinations of gates.
@@ -200,23 +200,21 @@ class virtual_gates(Instrument):
                     or a crosscap_map_inv.
 
         """
-        updated_map = base_map
+        import copy
+        updated_map = copy.deepcopy(base_map)
         for vg in replace_map:
             for g in replace_map[vg]:
                 try:
-                    preivious_val = base_map[vg][g]
-                except:
-                    preivious_val = base_map[g][vg]
-                try:
+                    previous_val = base_map[vg][g]
                     new_val = replace_map[vg][g]
-                except:
-                    new_val = replace_map[g][vg]
-                try:
                     updated_map[vg][g] = new_val
                 except:
+                    warnings.warn('are you sure you want this?')
+                    previous_val = base_map[g][vg]
+                    new_val = replace_map[g][vg]
                     updated_map[g][vg] = new_val
                 if verbose >= 2:
-                    print('  setting %s-%s, %.3f to %.3f' % (vg, g, preivious_val, new_val))
+                    print('  setting %s-%s, %.3f to %.3f' % (vg, g, previous_val, new_val))
         if verbose >= 2:
             self.print_map(updated_map)
         return updated_map
