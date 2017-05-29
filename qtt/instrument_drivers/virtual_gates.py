@@ -311,3 +311,25 @@ class virtual_gates(Instrument):
                 self.parameters[vg].comb_map.append((self.gates.parameters[g], crosscap_map_inv[vg][g]))
         if verbose >= 2:
             print('  updating virt parameters')
+
+
+def test_virtual_gates():
+    """ Test for virtual gates object """
+    gates = VirtualIVVI(name='ivvi', model=None, gates=['P1', 'P2', 'P3'])
+    
+    crosscap_map = OrderedDict((
+    ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
+    ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
+    ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+    ))
+    virts = virtual_gates('vgates', gates, crosscap_map)
+    
+    v=virts.VP1()
+    print('before set: VP1 %s' % (v,) )
+    virts.VP1.set(10)
+    v=virts.VP1()
+    print('after set: VP1 %s' % (v,) )
+    virts.VP1.set(10)
+    v=virts.VP1()
+    print('after second set: VP1 %s' % (v,) )
+    
