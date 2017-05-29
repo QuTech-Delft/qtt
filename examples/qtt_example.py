@@ -102,23 +102,8 @@ if __name__ == '__main__':
     gates.L.set(float(resultsfine['ptmv'][0]) )
     gates.R.set(float( resultsfine['ptmv'][1]) )
     
-#%%
-
-from qtt.scans import instrumentName
-
-print(instrumentName('vgates'))
-virts = virtual_gates(instrumentName('vgates'), gates, crosscap_map)
-
-
-#%%
-
-gv=gates.allvalues()
-scanjob = scanjob_t({'sweepdata': dict({'param': {'P1': 1}, 'range': 200, 'step': 2.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-scanjob['stepdata'] = dict({'param':  {'P2': 1}, 'range': 200, 'step': 2.})
-data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
+ 
     
-gates.resetgates(gv, gv)
-
 #%% Make virtual gates
 
 from collections import OrderedDict
@@ -145,3 +130,7 @@ if __name__ == '__main__':
     print('   qtt.tools.addPPT_dataset(data);')
     if 0:
         qtt.tools.addPPT_dataset(data)
+
+#%% Test scans
+
+qtt.scans.test_scan2D()
