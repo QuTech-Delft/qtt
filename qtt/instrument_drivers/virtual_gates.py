@@ -313,23 +313,27 @@ class virtual_gates(Instrument):
             print('  updating virt parameters')
 
 
-def test_virtual_gates():
+def test_virtual_gates(verbose=0):
     """ Test for virtual gates object """
-    gates = VirtualIVVI(name='ivvi', model=None, gates=['P1', 'P2', 'P3'])
+    import qtt.instrument_drivers.virtual_instruments
+    gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(name=qtt.scans.instrumentName('testivvi'), model=None, gates=['P1', 'P2', 'P3'])
     
     crosscap_map = OrderedDict((
     ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
     ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
     ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
     ))
-    virts = virtual_gates('vgates', gates, crosscap_map)
+    virts = virtual_gates(qtt.scans.instrumentName('testvgates'), gates, crosscap_map)
     
     v=virts.VP1()
-    print('before set: VP1 %s' % (v,) )
+    if verbose:
+        print('before set: VP1 %s' % (v,) )
     virts.VP1.set(10)
     v=virts.VP1()
-    print('after set: VP1 %s' % (v,) )
+    if verbose:
+        print('after set: VP1 %s' % (v,) )
     virts.VP1.set(10)
     v=virts.VP1()
-    print('after second set: VP1 %s' % (v,) )
+    if verbose:
+        print('after second set: VP1 %s' % (v,) )
     
