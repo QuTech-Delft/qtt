@@ -344,7 +344,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             if verbose >= 2:
                 print('scan1D: myupdate: %.3f ' % (time.time() - t0))
 
+    tprev=time.time()
     for ix, x in enumerate(sweepvalues):
+        if verbose:
+            tprint('scan1D: %d/%d: time %.1f' % (ix, len(sweepvalues), time.time() - t0), dt=1.5)
+
         if scanjob['scantype'] == 'scan1Dfastvec':
             for param in scanjob['phys_gates_vals']:
                 gates.set(param, scanjob['phys_gates_vals'][param][ix])
@@ -357,10 +361,13 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         for ii, p in enumerate(mparams):
             value = p.get()
             alldata.arrays[measure_names[ii]].ndarray[ix] = value
-        if liveplotwindow is not None:
+      
+        
+        delta, tprev, update_plot = delta_time(tprev, thr=.5)
+        if (liveplotwindow is not None) and update_plot:
             myupdate()
-            pg.mkQApp().processEvents()
 
+    myupdate()
     dt = time.time() - t0
 
     if scanjob['scantype'] is 'scan1Dvec':
