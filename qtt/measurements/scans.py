@@ -93,30 +93,25 @@ def instrumentName(namebase):
              name = namebase+'%d' % ii   
     raise Exception('could not find unique name for instrument with base %s' % namebase)
     
-def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
+def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
     """ Create a scan job
 
     Arguments
     ---------
-    g1 : string
-        Step gate
-    r1 : array, list
-        Range to step
-    g2 : string, optional
-        Sweep gate
-    r2 : array, list
-        Range to step
-    step : integer, optional
-        Step value
+    g1 (str): sweep gate
+    r1 (array, list): Range to sweep
+    g2 (str, optional): step gate
+    r2 (array, list): Range to step
+    step (int, optional): Step value (default is -1)
 
     """
     stepdata = scanjob_t(
         {'param': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
-    scanjob = dict({'stepdata': stepdata, 'minstrument': keithleyidx})
+    scanjob = dict({'sweepdata': sweepdata, 'minstrument': keithleyidx})
     if not g2 is None:
-        sweepdata = dict(
+        stepdata = dict(
             {'param': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
-        scanjob['sweepdata'] = sweepdata
+        scanjob['stepdata'] = stepdata
 
     return scanjob
 

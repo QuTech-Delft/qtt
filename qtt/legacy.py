@@ -1026,7 +1026,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             # Create scan job
 
-            scanjob = dict({'mode': '2d'})
+            scanjob = qtt.scans.scanjob_t({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
 
@@ -1056,11 +1056,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
         except Exception as e:
             logging.exception("error with double-dot job!")
-            # print(e)
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])
-            # pdb.set_trace()
             continue
-            pass
 
     return jobs
 
