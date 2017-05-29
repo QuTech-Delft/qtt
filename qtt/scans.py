@@ -74,6 +74,23 @@ def fixReversal(im0, verbose=0):
 #%%
 
 
+def instrumentName(namebase):
+    """ Return name for qcodes instrument that is available
+    
+    Args:
+        namebase (str)
+    Returns:
+        name (str)
+    """
+    inames=qcodes.Instrument._all_instruments
+    name=namebase
+    for ii in range(10000):
+        if not( name in inames):
+            return name
+        else:
+             name = namebase+'%d' % ii   
+    raise Exception('could not find unique name for instrument with base %s' % namebase)
+    
 def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
     """ Create a scan job
 
@@ -91,7 +108,7 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx=[1]):
         Step value
 
     """
-    stepdata = dict(
+    stepdata = scanjob_t(
         {'param': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
     scanjob = dict({'stepdata': stepdata, 'minstrument': keithleyidx})
     if not g2 is None:
