@@ -79,7 +79,7 @@ class virtual_gates(Instrument):
 
         self._gates_list = list(self._crosscap_map[list(self._crosscap_map.keys())[0]].keys())
         self._virts_list = list(self._crosscap_map.keys())
-        self._crosscap_map_inv = self.convert_matrix_to_map(np.linalg.inv(self.get_crosscap_matrix()))
+        self._crosscap_map_inv = self.convert_matrix_to_map(np.linalg.inv(self.get_crosscap_matrix()), gates=self._virts_list, vgates=self._gates_list)
 
         for g in self._virts_list:
             self.add_parameter(g,
@@ -90,10 +90,7 @@ class virtual_gates(Instrument):
                                vals=Numbers())  # TODO: Adjust the validator range based on that of the gates
 
         # comb_map: crosscap_map defined using gate Parameters
-        for vg in self._crosscap_map_inv:
-            self.parameters[vg].comb_map = []
-            for g in self._crosscap_map_inv[vg]:
-                self.parameters[vg].comb_map.append((self.gates.parameters[g], self._crosscap_map_inv[vg][g]))
+        self._update_virt_parameters()
 
     def _get(self, gate):
         """Get the value of virtual gate voltage in mV
@@ -237,10 +234,12 @@ class virtual_gates(Instrument):
 #            self._crosscap_matrix = self._update_crosscap_matrix(self._crosscap_map, verbose)
 #            self._crosscap_matrix_inv = np.linalg.inv(self._crosscap_matrix)
             crosscap_map_inv = OrderedDict()
+            cmatrix = self.get_crosscap_matrix()
+            cmatrix_inv=np.linalg.inv(cmatrix)
             for idvirt, virtg in enumerate(self._virts_list):
                 crosscap_map_inv[virtg] = OrderedDict()
                 for idg, g in enumerate(self._gates_list):
-                    crosscap_map_inv[virtg][g] = np.linalg.inv(self.get_crosscap_matrix())[idg][idvirt]
+                    crosscap_map_inv[virtg][g] = cmatrix_inv[idg][idvirt]
             if verbose:
                 print('  updating crosscap_map_inv')
                 if verbose >= 2:
@@ -249,11 +248,8 @@ class virtual_gates(Instrument):
             self._update_virt_parameters(self._crosscap_map_inv, verbose)
             self.allvalues()
         elif base_map == self._crosscap_map_inv:
-            crosscap_map = OrderedDict()
-            for idvirt, virtg in enumerate(self._virts_list):
-                crosscap_map[virtg] = OrderedDict()
-                for idg, g in enumerate(self._gates_list):
-                    crosscap_map[virtg][g] = np.linalg.inv(self.get_crosscap_matrix_inv())[idg][idvirt]
+            cmatrix = np.linalg.inv(self.get_crosscap_matrix_inv())
+            crosscap_map = self.convert_matrix_to_map(base_map)
             if verbose:
                 print('  updating crosscap_map')
                 if verbose >= 2:
@@ -268,47 +264,60 @@ class virtual_gates(Instrument):
 
     def get_crosscap_matrix_inv(self):
         """Gets the current inverse of cross-capacitance matrix."""
-        return self.convert_map_to_matrix(self._crosscap_map_inv)
+        return self.convert_map_to_matrix(self._crosscap_map_inv, gates=self._virts_list, vgates=self._gates_list)
 
-    def convert_map_to_matrix(self, base_map):
+    def convert_map_to_matrix(self, base_map, gates=None, vgates=None ):
         """Convert map of the crosscap form to matrix
         
         Args:
             base_map (OrderedDict): Crosscap map or its inverse.
-
+             gates (list or None): list of gate names (columns of matrix)
+             vgates (list or None): list of virtual gate names (rows of matrix)
         Return:
             converted_matrix (array): Matrix with its elements orderd with given gate order.
 
         """
-        return np.array([[base_map[x].get(y, 0) for y in self._gates_list] for x in self._virts_list])
+        if gates is None:
+            gates = self._gates_list
+        if vgates is None:
+            vgates = self._virts_list
+        return np.array([[base_map[x].get(y, 0) for y in gates] for x in vgates])
 
-    def convert_matrix_to_map(self, base_matrix):
+    def convert_matrix_to_map(self, base_matrix, gates=None, vgates=None):
         """Convert ordered matrix to map.
 
         Args:
-            base_matrix (array): Matrix with its elements orderd with given gate order.
+            base_matrix (array): Matrix with its elements ordered with given gate order.
+             gates (list or None): list of gate names (columns of matrix)
+             vgates (list or None): list of virtual gate names (rows of matrix)
 
         Return:
             converted_map (OrderedDict): Map after conversion.
 
         """
+        if gates is None:
+            gates = self._gates_list
+        if vgates is None:
+            vgates = self._virts_list
         converted_map = OrderedDict()
-        for idvirt, virtg in enumerate(self._virts_list):
+        for idvirt, virtg in enumerate(vgates):
             converted_map[virtg] = OrderedDict()
-            for idg, g in enumerate(self._gates_list):
-                converted_map[virtg][g] = base_matrix[idg][idvirt]
+            for idg, g in enumerate(gates):
+                converted_map[virtg][g] = base_matrix[idvirt][idg]
         return converted_map
 
-    def _update_virt_parameters(self, crosscap_map_inv, verbose=0):
+    def _update_virt_parameters(self, crosscap_map_inv = None, verbose=0):
         """Redefining the cross capacitance values in the virts Parameter.
         
         Needs the crosscap_map_inv information as an input.
 
         """
-        for vg in crosscap_map_inv:
+        if crosscap_map_inv is None:
+            crosscap_map_inv = self.get_crosscap_map_inv()
+        for vg in self._virts_list:
             self.parameters[vg].comb_map = []
-            for g in crosscap_map_inv[vg]:
-                self.parameters[vg].comb_map.append((self.gates.parameters[g], crosscap_map_inv[vg][g]))
+            for g in self._gates_list:
+                self.parameters[vg].comb_map.append((self.gates.parameters[g], crosscap_map_inv[g][vg]))
         if verbose >= 2:
             print('  updating virt parameters')
 
@@ -337,3 +346,8 @@ def test_virtual_gates(verbose=0):
     if verbose:
         print('after second set: VP1 %s' % (v,) )
     
+    virts.convert_matrix_to_map(virts.convert_map_to_matrix(crosscap_map))
+
+    c=virts.get_crosscap_matrix()
+    assert(c[0][0]==1)    
+    assert(c[0][1]==.6)
