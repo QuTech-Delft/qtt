@@ -99,6 +99,26 @@ if __name__ == '__main__':
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
+    gates.L.set(float(resultsfine['ptmv'][0]) )
+    gates.R.set(float( resultsfine['ptmv'][1]) )
+    
+#%%
+
+from qtt.scans import instrumentName
+
+print(instrumentName('vgates'))
+virts = virtual_gates(instrumentName('vgates'), gates, crosscap_map)
+
+
+#%%
+
+gv=gates.allvalues()
+scanjob = scanjob_t({'sweepdata': dict({'param': {'P1': 1}, 'range': 200, 'step': 2.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+scanjob['stepdata'] = dict({'param':  {'P2': 1}, 'range': 200, 'step': 2.})
+data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
+    
+gates.resetgates(gv, gv)
+
 #%% Make virtual gates
 
 from collections import OrderedDict
@@ -106,14 +126,18 @@ from qtt.instrument_drivers.virtual_gates import virtual_gates
 
 crosscap_map = OrderedDict((
 ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
+('VP2', OrderedDict((('P1', 0.7), ('P2', 1), ('P3', 0.3)))),
 ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
 ))
-virts = virtual_gates(None, gates, crosscap_map)
+virts = virtual_gates(qtt.scans.instrumentName('vgates'), gates, crosscap_map)
 
-scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc-200, 'end': cc + 200, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-scanjob['stepdata'] = dict({'param': virts.VP3, 'start': cc - 200, 'end': cc + 200, 'step': 5.})
+cc1= virts.VP1()
+ccx= virts.VP2()
+gv=gates.allvalues()
+scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc1-100, 'end': cc1 + 100, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+scanjob['stepdata'] = dict({'param': virts.VP2, 'start': ccx - 100, 'end': ccx + 100, 'step': 2.})
 data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
+gates.resetgates(gv, gv)
 
 #%% Send data to powerpoint
 if __name__ == '__main__':
