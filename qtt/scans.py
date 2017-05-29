@@ -816,6 +816,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             break
     dt = qtt.time.time() - t0
 
+    if liveplotwindow:
+        liveplotwindow.update_plot()
+
     if diff_dir is not None:
         alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None)
 

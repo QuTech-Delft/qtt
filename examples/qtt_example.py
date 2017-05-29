@@ -85,6 +85,9 @@ if __name__ == '__main__':
     scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start + 400, 'step': 5.})
     data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
+    gates.R.set(-300); gates.L.set(-300)
+    gv=gates.allvalues()
+
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
 
 #%% Fit 1D pinch-off scan:
@@ -99,8 +102,8 @@ if __name__ == '__main__':
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
-    gates.L.set(float(resultsfine['ptmv'][0]) )
-    gates.R.set(float( resultsfine['ptmv'][1]) )
+    #gates.L.set(float(resultsfine['ptmv'][0]) )
+    #gates.R.set(float( resultsfine['ptmv'][1]) )
     
  
     
@@ -115,12 +118,12 @@ crosscap_map = OrderedDict((
 ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
 ))
 virts = virtual_gates(qtt.scans.instrumentName('vgates'), gates, crosscap_map)
+gates.resetgates(gv, gv)
 
 cc1= virts.VP1()
 ccx= virts.VP2()
-gv=gates.allvalues()
 scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc1-100, 'end': cc1 + 100, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-scanjob['stepdata'] = dict({'param': virts.VP2, 'start': ccx - 100, 'end': ccx + 100, 'step': 2.})
+scanjob['stepdata'] = dict({'param': virts.VP2, 'start': ccx - 100, 'end': ccx +100, 'step': 2.})
 data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 gates.resetgates(gv, gv)
 
