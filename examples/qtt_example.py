@@ -134,6 +134,7 @@ if __name__ == '__main__':
     if 0:
         qtt.tools.addPPT_dataset(data)
 
-#%% Test scans
+#%% Test objects
 
+qtt.instrument_drivers.virtual_gates.test_virtual_gates()
 qtt.scans.test_scan2D()

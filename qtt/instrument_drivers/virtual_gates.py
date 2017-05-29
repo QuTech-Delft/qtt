@@ -167,7 +167,7 @@ class virtual_gates(Instrument):
                     arbitrary part of the dict inside the full map. Order of 
                     gates does not matter.
                     
-                    Example: {'P2': {'VP2': 0.4}, 'VP2': {'P1': 0.4, 'P3': 0.1}}
+                    Example: {'VP2': {'P2': 0.4}, 'VP2': {'P1': 0.4, 'P3': 0.1}}
 
         """
         self._crosscap_map = self._update_map(replace_map, self._crosscap_map, verbose)
@@ -183,7 +183,7 @@ class virtual_gates(Instrument):
                     arbitrary part of the dict inside the full map. Order of 
                     gates does not matter.
                     
-                    Example: {'VP1': {'P2': -0.4}, 'VP2': {'P1': -0.4, 'P3': -0.1}}
+                    Example: {'P1': {'VP2': -0.4}, 'P2': {'VP1': -0.4, 'VP3': -0.1}}
 
         """
         self._crosscap_map_inv = self._update_map(replace_map, self._crosscap_map_inv, verbose)
