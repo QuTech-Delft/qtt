@@ -89,7 +89,6 @@ class virtual_gates(Instrument):
                                set_cmd=partial(self._set, gate=g),
                                vals=Numbers())  # TODO: Adjust the validator range based on that of the gates
 
-        # comb_map: crosscap_map defined using gate Parameters
         self._update_virt_parameters()
 
     def _get(self, gate):
@@ -165,9 +164,10 @@ class virtual_gates(Instrument):
         
         Args:
             replace_map (dict): Map containing replacing values. Uses an
-                    arbitrary part of the dict inside the full map.
+                    arbitrary part of the dict inside the full map. Order of 
+                    gates does not matter.
                     
-                    Example: {'VP1': {'P2': 0.4}, 'VP2': {'P1': 0.4, 'P3': 0.1}}
+                    Example: {'P2': {'VP2': 0.4}, 'VP2': {'P1': 0.4, 'P3': 0.1}}
 
         """
         self._crosscap_map = self._update_map(replace_map, self._crosscap_map, verbose)
@@ -180,7 +180,8 @@ class virtual_gates(Instrument):
         
         Args:
             replace_map (dict): Map containing replacing values. Uses an
-                    arbitrary part of the dict inside the full map.
+                    arbitrary part of the dict inside the full map. Order of 
+                    gates does not matter.
                     
                     Example: {'VP1': {'P2': -0.4}, 'VP2': {'P1': -0.4, 'P3': -0.1}}
 
@@ -202,10 +203,20 @@ class virtual_gates(Instrument):
         updated_map = base_map
         for vg in replace_map:
             for g in replace_map[vg]:
-                preivious_val = base_map[vg][g]
-                updated_map[vg][g] = replace_map[vg][g]
+                try:
+                    preivious_val = base_map[vg][g]
+                except:
+                    preivious_val = base_map[g][vg]
+                try:
+                    new_val = replace_map[vg][g]
+                except:
+                    new_val = replace_map[g][vg]
+                try:
+                    updated_map[vg][g] = new_val
+                except:
+                    updated_map[g][vg] = new_val
                 if verbose >= 2:
-                    print('  setting %s-%s, %.3f to %.3f' % (vg, g, preivious_val, updated_map[vg][g]))
+                    print('  setting %s-%s, %.3f to %.3f' % (vg, g, preivious_val, new_val))
         if verbose >= 2:
             self.print_map(updated_map)
         return updated_map
@@ -218,8 +229,8 @@ class virtual_gates(Instrument):
                     or a crosscap_map_inv.
 
         """
-        print('',*self._gates_list,sep='\t')
-        for vg in self._virts_list:
+        print('',*list(list(base_map.values())[0].keys()),sep='\t')
+        for vg in list(base_map.keys()):
             print('\t'.join([vg] + [('%.3f' % value).rstrip('0').rstrip('.') for g, value in base_map[vg].items() ] ) )
 
     def _update_rest(self, base_map, verbose=0):
@@ -236,10 +247,7 @@ class virtual_gates(Instrument):
             crosscap_map_inv = OrderedDict()
             cmatrix = self.get_crosscap_matrix()
             cmatrix_inv=np.linalg.inv(cmatrix)
-            for idvirt, virtg in enumerate(self._virts_list):
-                crosscap_map_inv[virtg] = OrderedDict()
-                for idg, g in enumerate(self._gates_list):
-                    crosscap_map_inv[virtg][g] = cmatrix_inv[idg][idvirt]
+            crosscap_map_inv = self.convert_matrix_to_map(cmatrix_inv, gates=self._virts_list, vgates=self._gates_list)
             if verbose:
                 print('  updating crosscap_map_inv')
                 if verbose >= 2:
@@ -249,7 +257,7 @@ class virtual_gates(Instrument):
             self.allvalues()
         elif base_map == self._crosscap_map_inv:
             cmatrix = np.linalg.inv(self.get_crosscap_matrix_inv())
-            crosscap_map = self.convert_matrix_to_map(base_map)
+            crosscap_map = self.convert_matrix_to_map(cmatrix)
             if verbose:
                 print('  updating crosscap_map')
                 if verbose >= 2:
