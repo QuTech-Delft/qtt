@@ -279,7 +279,12 @@ def freezeclass(cls):
 
 
 def static_var(varname, value):
-    """ Helper function to create a static variable """
+    """ Helper function to create a static variable
+    
+    Args:
+        varname (str)
+        value (anything)
+    """
     def decorate(func):
         setattr(func, varname, value)
         return func

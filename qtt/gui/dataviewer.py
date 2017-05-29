@@ -214,18 +214,20 @@ class DataViewer(QtWidgets.QWidget):
                 logging.debug('DataViewer: load tag %s' % tag)
 
                 try:
+                    location=os.path.split(filename)[0]
                     if self.verbose>=3:
                                 print('trying HDF5')
                                 print('tag: %s' % tag)
                     from qcodes.data.hdf5_format import HDF5Format
                     hformatter = HDF5Format()
-                    data = qcodes.load_data(filename, formatter=hformatter, io=self.io)
+                    data = qcodes.load_data(location, formatter=hformatter, io=self.io)
                     logging.debug('loaded HDF5 dataset %s' % tag)
                     print(data)
                 except Exception as ex:
                     # load with default formatter
                     from qcodes.data.gnuplot_format import GNUPlotFormat
                     hformatter = GNUPlotFormat()
+                    location=os.path.split(filename)[0]
                     if self.verbose:
                         if self.verbose>=2:
                             print('failed with format:' )
@@ -233,7 +235,7 @@ class DataViewer(QtWidgets.QWidget):
                             
                         if self.verbose>=3:
                             logging.info('trying GNUPlotFormat: tag %s' % tag)
-                    data = qcodes.load_data(filename, formatter=hformatter, io=self.io)
+                    data = qcodes.load_data(location, formatter=hformatter, io=self.io)
                     logging.debug('loaded GNUPlotFormat datasett %s' % tag)
 
                 if self.verbose:
