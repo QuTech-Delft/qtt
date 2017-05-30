@@ -202,7 +202,7 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
 
             if dlg.nkill > 0:
                 print('check pid')
-                m = re.match('pid (\d*): heartbeat', message)
+                m = re.match(r'pid (\d*): heartbeat', message)
                 dlg.nkill = dlg.nkill - 1
                 if m is not None:
                     pid = int(m.group(1))
