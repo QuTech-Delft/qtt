@@ -5,7 +5,6 @@
 
 import scipy
 import scipy.ndimage
-from qtt import cfigure, plot2Dline
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
@@ -17,7 +16,8 @@ from qtt.data import dataset2Dmetadata, image_transform, dataset2image, show2D
 import qtt.data
 from qtt import pgeometry as pmatlab
 import qtt.pgeometry as pgeometry
-import qtt.scans 
+from qtt.pgeometry import plot2Dline
+#import qtt.measurements.scans
 
 from qtt.algorithms.generic import getValuePixel
 from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid

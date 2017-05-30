@@ -19,9 +19,14 @@ from qtt.data import loadExperimentData
 import qtt.algorithms.onedot  # import onedotGetBalance
 
 
-#from qtt.algorithms.onedot import onedotGetBalance
+#%%
+
+from qtt.deprecated import linetools
+# from qtt.legacy import scaleCmap, plotCircle
+from qtt.data import dataset2Dmetadata, dataset2image
+
 from qtt.algorithms.onedot import onedotGetBalanceFine
-from qtt.scans import pinchoffFilename
+from qtt.measurements.scans import pinchoffFilename, fixReversal
 from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
 
@@ -33,7 +38,7 @@ import datetime
 
 #%%
 
-from qtt.scans import scan2D, scan1D
+from qtt.measurements.scans import scan2D, scan1D
 from qtt.tools import stripDataset
 
 
@@ -135,7 +140,7 @@ def onedotPlungerScan(station, od, verbose=1):
 
 #%%
 
-from qtt.scans import scanPinchValue
+from qtt.measurements.scans import scanPinchValue
 
 
 def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=0, verbose=1):
@@ -637,14 +642,6 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
         ww = fixReversal(ww, verbose=verbose)
     return ww
 
-from qtt.scans import fixReversal
-
-
-#%%
-
-from qtt.deprecated import linetools
-# from qtt.legacy import scaleCmap, plotCircle
-from qtt.data import dataset2Dmetadata, dataset2image
 
 
 def showIm(ims, fig=1, title='', showz=False):

@@ -9,7 +9,7 @@ import warnings
 import qcodes
 
 import qtt
-import qtt.scans
+import qtt.measurements.scans
 from qtt.algorithms.coulomb import *
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 

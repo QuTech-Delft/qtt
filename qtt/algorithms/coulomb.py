@@ -3,7 +3,7 @@
 import numpy as np
 import qcodes
 
-import qtt.scans
+import qtt.measurements.scans
 import qtt.data
 
 import qtt.pgeometry as pmatlab

@@ -21,7 +21,7 @@ from qcodes import MatPlot
 import qtt
 from qtt import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
-from qtt.scans import scanjob_t
+from qtt.measurements.scans import scanjob_t
 
 if __name__ == '__main__':
     datadir = os.path.join(tempfile.tempdir, 'qdata')
