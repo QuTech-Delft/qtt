@@ -6,7 +6,7 @@ Please contact Pieter Eendebak pieter.eendebak@tno.nl
 
 ### Code style
 
-* Try to follow the (PEP 8)[https://www.python.org/dev/peps/pep-0008/] style guide. Many editors support (autopep8)[https://pypi.python.org/pypi/autopep8] that can help with coding style.
+* Try to follow the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide. Many editors support [autopep8](https://pypi.python.org/pypi/autopep8) that can help with coding style.
 * Document your functions
 * For more guidelines see the Qcodes documentation
 
