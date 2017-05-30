@@ -15,8 +15,10 @@ QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` 
 
 * Qcodes: the basic framework
 * [qtt](https://github.com/VandersypenQutech/qtt): contains additional functionality and algorithms
-* [stations](https://github.com/VandersypenQutech/stations): Contains hardware descriptions for experimential setups. There should be only one version of this repository and it should always match the current hardware.
-* [users](https://github.com/VandersypenQutech/users): contains scripts and functions written by individual users
+* [spin-projects](https://github.com/VandersypenQutech/spin-projects): Contains hardware descriptions for experimential setups and project data.
+  
+* (OLD) [stations](https://github.com/VandersypenQutech/stations): Contains hardware descriptions for experimential setups. There should be only one version of this repository and it should always match the current hardware.
+* (OLD) [users](https://github.com/VandersypenQutech/users): contains scripts and functions written by individual users
 
 ## Installation
 
@@ -31,8 +33,7 @@ As the project is still private, install it directly from this repository:
 > cd [MYLOCALDIR]
 > git clone https://github.com/VandersypenQutech/Qcodes.git
 > git clone https://github.com/VandersypenQutech/qtt.git
-> git clone https://github.com/VandersypenQutech/users.git
-> git clone https://github.com/VandersypenQutech/stations.git
+> git clone https://github.com/VandersypenQutech/spin-projects.git
 ```
 
 - Install necessary python dependencies and install the python packages.

@@ -28,8 +28,7 @@ The git commands are:
 > cd [MYLOCALDIR]
 > git clone https://github.com/VandersypenQutech/Qcodes.git
 > git clone https://github.com/VandersypenQutech/qtt.git
-> git clone https://github.com/VandersypenQutech/users.git
-> git clone https://github.com/VandersypenQutech/stations.git
+> git clone https://github.com/VandersypenQutech/spin-projects.git
 ```
 
 ## Create a working Python environment
