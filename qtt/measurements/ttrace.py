@@ -12,7 +12,7 @@ from collections import OrderedDict
 
 import qcodes
 import qtt
-import qtt.scans
+#import qtt.measurement.scans
 
 from pycqed.measurement.waveform_control.pulse import Pulse
 from pycqed.measurement.waveform_control import pulse

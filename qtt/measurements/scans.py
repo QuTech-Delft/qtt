@@ -187,11 +187,11 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
     scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], -780)
     scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
 
-    wait_time = qtt.scans.waitTime(od['gates'][2], station=station)
+    wait_time = waitTime(od['gates'][2], station=station)
     scanjobhi['sweepdata']['wait_time'] = wait_time
-    scanjobhi['stepdata']['wait_time'] = qtt.scans.waitTime(None, station) + 3 * wait_time
+    scanjobhi['stepdata']['wait_time'] = waitTime(None, station) + 3 * wait_time
 
-    alldatahi = qtt.scans.scan2D(station, scanjobhi)
+    alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
         alldatahi, verbose=0, arrayname=None)
     impixel, tr = dataset2image(alldatahi, mode='pixel')
@@ -309,7 +309,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     scanjob.parse_stepdata('sweepdata')
 
-    if isinstance(scanjob['sweepdata']['param'], qtt.scans.lin_comb_type):
+    if isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan1Dvec'
         scanjob._start_end_to_range()
     else:
@@ -419,7 +419,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
-    if isinstance(scanjob['sweepdata']['param'], qtt.scans.lin_comb_type):
+    if isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan1Dfastvec'
         scanjob._start_end_to_range()
     else:
@@ -589,7 +589,7 @@ class scanjob_t(dict):
         stepdata = self['stepdata']
         sweepdata = self['sweepdata']
         params = set()
-        vec_check = [(stepdata, isinstance(stepdata['param'], qtt.scans.lin_comb_type)), (sweepdata, isinstance(sweepdata['param'], qtt.scans.lin_comb_type))]
+        vec_check = [(stepdata, isinstance(stepdata['param'], lin_comb_type)), (sweepdata, isinstance(sweepdata['param'], lin_comb_type))]
         for scaninfo, boolean in vec_check:
             if boolean is False:
                 scaninfo['param'] = {scaninfo['param']: 1}
@@ -703,7 +703,8 @@ def parse_minstrument(scanjob):
     return minstrument
 
 
-lin_comb_type = dict # Class to represent linear combinations of parameters 
+lin_comb_type = dict
+""" Class to represent linear combinations of parameters  """
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
@@ -731,7 +732,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     stepdata = parse_stepdata(scanjob['stepdata'])
     sweepdata = parse_stepdata(scanjob['sweepdata'])
 
-    if isinstance(scanjob['stepdata']['param'], qtt.scans.lin_comb_type) or isinstance(scanjob['sweepdata']['param'], qtt.scans.lin_comb_type):
+    if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dvec'
         scanjob._start_end_to_range()
         scanjob._parse_2Dvec()
@@ -997,7 +998,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
-    if isinstance(scanjob['stepdata']['param'], qtt.scans.lin_comb_type) or isinstance(scanjob['sweepdata']['param'], qtt.scans.lin_comb_type):
+    if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dfastvec'
         scanjob._start_end_to_range()
     else:
@@ -1161,7 +1162,7 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
-    if isinstance(scanjob['stepdata']['param'], qtt.scans.lin_comb_type) or isinstance(scanjob['sweepdata']['param'], qtt.scans.lin_comb_type):
+    if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dturbovec'
         scanjob._start_end_to_range()
     else:
@@ -1474,9 +1475,10 @@ from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 def test_scan2D(verbose=0):
     import qcodes
     import qtt.measurements.scans
+    from qtt.measurements.scans import scanjob_t
     p = ManualParameter('p'); q = ManualParameter('q')
     R=VoltageDivider(p, 4)
-    gates=VirtualIVVI(name=qtt.scans.instrumentName('gates'), model=None)
+    gates=VirtualIVVI(name=qtt.measurements.scans.instrumentName('gates'), model=None)
     station = qcodes.Station(gates)
     station.gates=gates
 
@@ -1490,13 +1492,13 @@ def test_scan2D(verbose=0):
     scanjob['stepdata'] = dict({'param': {'dac2': 1}, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
     data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
-    scanjob = qtt.scans.scanjob_t({'sweepdata': dict({'param': p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
  
-    scanjob = qtt.scans.scanjob_t({'sweepdata': dict({'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
 
-    scanjob = qtt.scans.scanjob_t({'sweepdata': dict({'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
     
     gates.close()
