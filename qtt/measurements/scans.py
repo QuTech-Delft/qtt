@@ -24,6 +24,8 @@ import qcodes as qc
 from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter, ManualParameter
 from qcodes import DataArray
+from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes import Instrument
 
 import qtt.tools
 from qtt.tools import tilefigs
@@ -216,16 +218,9 @@ def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
 
     scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
     return scandata, od
-    # saveExperimentData(outputdir, alldatahi, tag='one_dot', dstr='%s-sweep-2d-hires' % (od['name']))
-
-
-if __name__ == '__main__':
-    scandata, od = onedotHiresScan(station, od, dv=70, verbose=1)
 
 
 #%%
-
-from qcodes.plots.qcmatplotlib import MatPlot
 
 
 def plot1D(data, fig=100, mstyle='-b'):
@@ -237,14 +232,9 @@ def plot1D(data, fig=100, mstyle='-b'):
         plt.figure(fig)
         plt.clf()
         MatPlot(getattr(data, val), interval=None, num=fig)
-        # plt.show()
-
-if __name__ == '__main__':
-    plot1D(alldata, fig=100)
 
 #%%
 
-from qcodes import Instrument
 
 def get_instrument(instr, station=None):
     """ Return handle to instrument
@@ -839,12 +829,6 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     return alldata
 
 
-if __name__ == '__main__':
-    import logging
-    import datetime
-    scanjob['stepdata'] = dict({'gate': 'L', 'start': -340, 'end': 250, 'step': 3.})
-    data = scan2D(station, scanjob, background=True, verbose=2, liveplotwindow=plotQ)
-
 #%%
 
 def process_digitizer_trace(data, width, period, samplerate, padding=0,
@@ -1371,12 +1355,6 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
     return alldata
 
 
-if __name__ == '__main__':
-    gate = 'L'
-    alldataX = qtt.scans.scanPinchValue(
-        station, outputdir, gate, basevalues=basevalues, keithleyidx=[3], cache=cache, full=full)
-    adata = analyseGateSweep(alldataX, fig=10, minthr=None, maxthr=None)
-
 #%%
 
 
@@ -1493,15 +1471,17 @@ from qcodes.instrument_drivers.devices import VoltageDivider
 from qtt.instrument_drivers.gates import virtual_IVVI
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 
-def test_scan2D():
+def test_scan2D(verbose=0):
     import qcodes
-    import qtt.scans
+    import qtt.measurements.scans
     p = ManualParameter('p'); q = ManualParameter('q')
     R=VoltageDivider(p, 4)
     gates=VirtualIVVI(name=qtt.scans.instrumentName('gates'), model=None)
     station = qcodes.Station(gates)
     station.gates=gates
 
+    if verbose:
+        print('test_scan2D: running scan2D')
     scanjob = scanjob_t({'sweepdata': dict({'param':p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
     scanjob['stepdata'] = dict({'param': q, 'start': 24, 'end': 30, 'step': 1.})
     data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
