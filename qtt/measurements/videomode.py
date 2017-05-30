@@ -4,15 +4,15 @@ Contains code to do live plotting
 
 """
 #%%
+import datetime
+import threading
+from qcodes.instrument.parameter import StandardParameter
+from qcodes.utils.validators import Numbers
 from qtt.live_plotting import livePlot, fpgaCallback_1d, fpgaCallback_2d
 from qtt.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
-from qtt.scans import plotData, scan1Dfast, scan2Dturbo, makeDataset_sweep, makeDataset_sweep_2D
-import datetime
-from qcodes.instrument.parameter import StandardParameter
-from qcodes.utils.validators import Numbers
+from qtt.measurements.scans import plotData, makeDataset_sweep, makeDataset_sweep_2D
 
-import threading
 
 #%%
 

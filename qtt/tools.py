@@ -245,10 +245,6 @@ def plot1D(dataset, fig=1):
         MatPlot(array, num=fig)
 
 
-if __name__ == '__main__':
-    plot1D(dataset, fig=10)
-    plot1D(dataset.default_parameter_array(), fig=12)
-
 #%%
 
 
@@ -665,7 +661,11 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
     if not 'station' in dataset.metadata:
         return 'dataset %s: no metadata available' % (str(dataset.location), )
 
-    all_md = dataset.metadata['station']['instruments']
+    tmp = dataset.metadata.get('station', None)
+    if tmp is None:
+        all_md={}
+    else:
+        all_md =  tmp['instruments']
     metadata = dict()
 
     for x in sorted(all_md.keys()):
@@ -714,8 +714,13 @@ if __name__ == '__main__' and 0:
 
 def test_reshape_metadata():
     param=qcodes.ManualParameter('dummy')
-    dataset=qcodes.Loop(param[0:1:10]).each(param).run()
-    _=reshape_metadata(dataset, printformat='dict')
+    try:
+        dataset=qcodes.Loop(param[0:1:10]).each(param).run()
+    except:
+        dataset = None
+        pass
+    if dataset is not None:
+        _=reshape_metadata(dataset, printformat='dict')
 
 #%%
 try:

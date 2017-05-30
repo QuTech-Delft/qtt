@@ -9,7 +9,6 @@ import copy
 import logging
 import time
 import qcodes
-import qcodes as qc
 import datetime
 import qtpy
 
@@ -35,7 +34,7 @@ from qtt.legacy import singleElectronCheck, singleRegion
 
 import webbrowser
 import dateutil
-import qtt.markup as markup
+import qtt.utilities.markup as markup
 import copy
 import traceback
 

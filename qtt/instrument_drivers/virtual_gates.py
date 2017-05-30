@@ -331,14 +331,14 @@ class virtual_gates(Instrument):
 def test_virtual_gates(verbose=0):
     """ Test for virtual gates object """
     import qtt.instrument_drivers.virtual_instruments
-    gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(name=qtt.scans.instrumentName('testivvi'), model=None, gates=['P1', 'P2', 'P3'])
+    gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(name=qtt.measurements.scans.instrumentName('testivvi'), model=None, gates=['P1', 'P2', 'P3'])
     
     crosscap_map = OrderedDict((
     ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
     ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
     ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
     ))
-    virts = virtual_gates(qtt.scans.instrumentName('testvgates'), gates, crosscap_map)
+    virts = virtual_gates(qtt.measurements.scans.instrumentName('testvgates'), gates, crosscap_map)
     
     v=virts.VP1()
     if verbose:

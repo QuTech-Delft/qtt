@@ -4,7 +4,9 @@ import qcodes
 import qcodes.tests.data_mocks
 
 import qtt.data
-from qtt.qtt_toymodel import virtual_gates, VirtualIVVI
+import qtt.measurements.scans
+from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+from qtt.instrument_drivers.gates import virtual_IVVI as virtual_gates
 from qtt.simulation.dotsystem import TripleDot
 
 
@@ -18,8 +20,8 @@ class TestVirtualGates(TestCase):
             'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4),
             'L': (0, 5), 'D1': (0, 6), 'R': (0, 7)}
 
-        self.ivvi = VirtualIVVI('ivvi', model=None, server_name=None)
-        self.gates = virtual_gates('gates', instruments=[self.ivvi], gate_map=gate_map, server_name=None)
+        self.ivvi = VirtualIVVI(qtt.measurements.scans.instrumentName('ivvi'), model=None)
+        self.gates = virtual_gates(qtt.measurements.scans.instrumentName('gates'), instruments=[self.ivvi], gate_map=gate_map)
 
     def tearDown(self):
         self.gates.close()

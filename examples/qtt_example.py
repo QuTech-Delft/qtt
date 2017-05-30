@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     scanjob = scanjob_t({'sweepdata': dict({'param': 'R', 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
-    data1d = qtt.scans.scan1D(station, scanjob, location=None, verbose=1)
+    data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 
 
 #%% Print the scanned data
@@ -78,12 +78,10 @@ if __name__ == '__main__':
 
 #%% Make a 2D scan
 if __name__ == '__main__':
-
-    reload(qtt.scans)
     start = -500
     scanjob = scanjob_t({'sweepdata': dict({'param': 'R', 'start': start, 'end': start + 400, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
     scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start + 400, 'step': 5.})
-    data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
+    data = qtt.measurements.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
     gates.R.set(-300); gates.L.set(-300)
     gv=gates.allvalues()
@@ -98,7 +96,7 @@ if __name__ == '__main__':
 #%% Fit 2D cross
 if __name__ == '__main__':
     from qtt.legacy import analyse2dot
-    qtt.scans.plotData(data, fig=30)
+    qtt.measurements.scans.plotData(data, fig=30)
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
@@ -117,14 +115,14 @@ crosscap_map = OrderedDict((
 ('VP2', OrderedDict((('P1', 0.7), ('P2', 1), ('P3', 0.3)))),
 ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
 ))
-virts = virtual_gates(qtt.scans.instrumentName('vgates'), gates, crosscap_map)
+virts = virtual_gates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
 gates.resetgates(gv, gv)
 
 cc1= virts.VP1()
 ccx= virts.VP2()
 scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc1-100, 'end': cc1 + 100, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
 scanjob['stepdata'] = dict({'param': virts.VP2, 'start': ccx - 100, 'end': ccx +100, 'step': 2.})
-data = qtt.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
+data = qtt.measurements.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 gates.resetgates(gv, gv)
 
 #%% Send data to powerpoint
@@ -137,4 +135,4 @@ if __name__ == '__main__':
 #%% Test objects
 
 qtt.instrument_drivers.virtual_gates.test_virtual_gates()
-qtt.scans.test_scan2D()
+qtt.measurements.scans.test_scan2D()

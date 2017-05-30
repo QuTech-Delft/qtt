@@ -9,8 +9,7 @@ import qtt.live
 import qtt.tools
 import qtt.data
 import qtt.algorithms
-
-import qtt.measurements.scans as scans
+import qtt.measurements
 import qtt.utilities.markup as markup
 
 import distutils.version
