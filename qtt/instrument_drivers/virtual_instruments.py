@@ -128,6 +128,9 @@ class VirtualIVVI(Instrument):
         logger.debug('set_gate %s: %s' % (gate, value))
         return
 
+    def allvalues(self):
+        return dict([(g, self.get(g) ) for g in self.parameters])
+    
     def get_all(self):
         ''' Get all parameters in instrument '''
         for g in self._gates:
