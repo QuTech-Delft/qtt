@@ -62,21 +62,22 @@ For Mac OS with anaconda type from the command line:
 
 ## Install packages
 
-- Register the repositories with Python. For each of the repositories run this from the root directory:
+- Register the qcodes, qtt and spin-projects repositories with Python. Open a command prompt, change to your environment and run the following command
+in the directories `Qcodes`, `qtt` and `spin-projects/stations`.
 ```
-> python setup.py develop (Anaconda, while in your environment)
-> python setup.py develop --user  (for other systems)
+> python setup.py develop    (Anaconda, while in your environment)
 ```
 
 Note: the following does NOT work with anaconda
 ```
 > python setup.py develop --user
 ```
+For Unix systems the proper command is `python setup.py develop --user`.
 
 ## Hardware 
 
 - If necessary install the drivers for your hardware. Some links:
-* [Virtual COM port driver (used for the IVVI-rack)](http://www.ftdichip.com/Drivers/VCP.htm)
+* [Virtual COM port driver](http://www.ftdichip.com/Drivers/VCP.htm) (used for the IVVI-rack)
 * [GPIB USB interface](http://www.ni.com/download/ni-488.2-16.0.0/6132/en/)
 * [Spectrum M4i](http://spectrum-instrumentation.com/en/m4i-platform-overview)
 * [SPI-rack](https://github.com/Rubenknex/SPI-rack)
