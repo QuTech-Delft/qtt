@@ -1012,7 +1012,6 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         scanjob._parse_2Dvec()
         waveform, sweep_info = station.awg.sweep_gate_virt(sweepdata['param'], sweepdata['range'], period)
     else:
-        scanjob._parse_2Dvec()
         sweeprange = (sweepdata['end'] - sweepdata['start'])    
         waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period)
         sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
