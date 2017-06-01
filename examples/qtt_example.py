@@ -13,6 +13,7 @@ import matplotlib
 import time
 import pyqtgraph as pg
 import tempfile
+from collections import OrderedDict
 
 import qcodes
 from qcodes import QtPlot
@@ -22,6 +23,7 @@ import qtt
 from qtt import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
+from qtt.instrument_drivers.virtual_gates import virtual_gates
 
 if __name__ == '__main__':
     datadir = os.path.join(tempfile.tempdir, 'qdata')
@@ -36,7 +38,7 @@ if __name__ == '__main__':
 import virtualDot
 
 if __name__ == '__main__':
-    nr_dots = 2
+    nr_dots = 3
     station = virtualDot.initialize(reinit=True, nr_dots=nr_dots)
 
     keithley1 = station.keithley1
@@ -66,7 +68,9 @@ if __name__ == '__main__':
 #%% Simple 1D scan loop
 
 if __name__ == '__main__':
-    scanjob = scanjob_t({'sweepdata': dict({'param': 'R', 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
+    param_left=station.model.bottomgates[0]
+    param_right=station.model.bottomgates[-1]
+    scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
     data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 
 
@@ -79,11 +83,11 @@ if __name__ == '__main__':
 #%% Make a 2D scan
 if __name__ == '__main__':
     start = -500
-    scanjob = scanjob_t({'sweepdata': dict({'param': 'R', 'start': start, 'end': start + 400, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-    scanjob['stepdata'] = dict({'param': 'L', 'start': start, 'end': start + 400, 'step': 5.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': start, 'end': start + 400, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley1']})
+    scanjob['stepdata'] = dict({'param': param_left, 'start': start, 'end': start + 400, 'step': 5.})
     data = qtt.measurements.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
-    gates.R.set(-300); gates.L.set(-300)
+    gates.set(param_right, -300); gates.set(param_left, -300)
     gv=gates.allvalues()
 
     #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
@@ -107,13 +111,11 @@ if __name__ == '__main__':
     
 #%% Make virtual gates
 
-from collections import OrderedDict
-from qtt.instrument_drivers.virtual_gates import virtual_gates
 
 crosscap_map = OrderedDict((
-('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-('VP2', OrderedDict((('P1', 0.7), ('P2', 1), ('P3', 0.3)))),
-('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+('VP1', OrderedDict((('P1', 1), ('P2', 0.26), ('P3', 0)))),
+('VP2', OrderedDict((('P1', 0.57), ('P2', 1), ('P3', 0.3)))),
+('VP3', OrderedDict((('P1', -0.21), ('P2', -0.12), ('P3', 1))))
 ))
 virts = virtual_gates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
 gates.resetgates(gv, gv)

@@ -16,7 +16,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 from qtt.data import loadExperimentData
-import qtt.algorithms.onedot  # import onedotGetBalance
+import qtt.algorithms.onedot 
 
 
 #%%
@@ -83,11 +83,11 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
     pv2 = float(od['pinchvalues'][2]) + 0
     stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, 90))
     sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, 90))
-    stepdata = dict({'param': [gg[0]], 'start': stepstart, 'end': pv1 - 10, 'step': step})
-    sweepdata = dict({'param': [gg[2]], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
+    stepdata = dict({'param': gg[0], 'start': stepstart, 'end': pv1 - 10, 'step': step})
+    sweepdata = dict({'param': gg[2], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
-    wait_time_base = qtt.scans.waitTime(None, station=station)
+    wait_time_base = qtt.scans.waitTime(gg[0], station=station)
     wait_time_sweep = np.minimum(wait_time / 6., .15)
 
     if full == 0:
@@ -98,7 +98,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
         sweepdata['step'] = -42
         wait_time = 0
 
-    scanjob = dict({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
+    scanjob = qtt.scans.scanjob_t({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
     scanjob['stepdata']['wait_time'] = wait_time_base + 3 * wait_time
     scanjob['sweepdata']['wait_time'] = wait_time_sweep
     alldata = qtt.scans.scan2D(station, scanjob )
@@ -122,7 +122,7 @@ def onedotPlungerScan(station, od, verbose=1):
     pv = od['pinchvalues'][1]
 
     scanjob = dict({'minstrument': [od['instrument']]})
-    scanjob['sweepdata'] = dict({'param': [gg[1]], 'start': 50, 'end': pv, 'step': -1})
+    scanjob['sweepdata'] = dict({'param': gg[1], 'start': 50, 'end': pv, 'step': -1})
 
     gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
     gates.set(gg[0], ptv[1, 0] + 20)
@@ -625,7 +625,16 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
 
 
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
-    """ Clean up image from sensing dot """
+    """ Clean up image from sensing dot
+    
+    Args:
+        im (numpy array)
+        dy (int or str): direction for differentiation
+        order (int)
+        fixreversal (bool)
+        removeoutliers (bool)
+    
+    """
     verbose = int(verbose)
     removeoutliers = bool(removeoutliers)
     im = np.array(im)
@@ -687,7 +696,7 @@ def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
 
     ksize0 = int(math.ceil(31. / istep))
     ksize0 += (ksize0 - 1) % 2
-    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=2.25)
+    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=3.8)
 
     # Select best point
     bestidx = np.argsort(pts[0] - pts[1])[0]
@@ -952,10 +961,10 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             od1 = [x for x in one_dots if x['name'] == od1][0]
             od2 = 'dot-' + '-'.join(td['gates'][3:6])
             od2 = [x for x in one_dots if x['name'] == od2][0]
-        except Exception as e:
+        except Exception as ex:
             print('createDoubleDotJobs: no one-dot data available for %s' %
                   td['name'])
-            print(e)
+            print(ex)
             continue
             pass
 
@@ -1017,7 +1026,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             # Create scan job
 
-            scanjob = dict({'mode': '2d'})
+            scanjob = qtt.scans.scanjob_t({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
 
@@ -1035,8 +1044,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             e2 = float(np.maximum(basevaluesTD[p2] - sweeprange / 2, e2))
             s1 = basevaluesTD[p1] + sweeprange / 2
             s2 = basevaluesTD[p2] + sweeprange / 2
-            scanjob['stepdata'] = dict({'param': [p1], 'start': s1, 'end': e1, 'step': -2})
-            scanjob['sweepdata'] = dict({'param': [p2], 'start': s2, 'end': e2, 'step': -4})
+            scanjob['stepdata'] = dict({'param': p1, 'start': s1, 'end': e1, 'step': -2})
+            scanjob['sweepdata'] = dict({'param': p2, 'start': s2, 'end': e2, 'step': -4})
 
             scanjob['minstrument'] = sdinstruments
             scanjob['basename'] = 'doubledot-2d'
@@ -1047,11 +1056,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
         except Exception as e:
             logging.exception("error with double-dot job!")
-            # print(e)
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])
-            # pdb.set_trace()
             continue
-            pass
 
     return jobs
 

@@ -4,29 +4,89 @@ Contains code for various structures
 """
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 import warnings
 
 import qcodes
 
 import qtt
 import qtt.measurements.scans
-from qtt.algorithms.coulomb import *
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
-import matplotlib.pyplot as plt
 
 from qtt.tools import freezeclass
 
 
+#%%
+        
+@freezeclass
+class onedot_t(dict):
+    """ Class representing a single quantum dot """ 
+
+    def __init__(self, gates, name=None, data=None, station=None, transport_instrument=None):
+        """ Class to represent a single quantum dot
+        
+        Args:
+            gates (list): names of gates to use for left barrier, plunger and right barrier
+            name (str): for for the object
+            transport_instrument (str or Instrument): instrument to use for transport measurements
+            data (dict or None): data for internal storage
+            station (obj): object with references to instruments
+        
+        """
+        self['gates']= gates
+        self.station=station
+        self['transport_instrument'] = transport_instrument
+        self['instrument'] = transport_instrument # legacy code
+        if name is None:
+            name = 'dot-%s' % ('-'.join(gates))
+        self['name'] = name
+    
+        if data is None:
+            data={}
+        self.data=data
+
+    def name(self):
+        return self['name']
+    
+    def __repr__(self):
+        s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name(), id(self))
+        return s
+    
+    def __getstate__(self):
+        """ Helper function to allow pickling of object """
+        d={}
+        import copy
+        for k, v in self.__dict__.items():
+            #print('deepcopy %s' % k)
+            if k not in ['station']:
+                d[k]=copy.deepcopy(v)
+        return d
+    
+def test_spin_structures():
+    import pickle
+    import json
+    #station=qcodes.Station()
+    o = onedot_t('dot1', ['L', 'P1', 'D1'], station=station)
+    #print(o)
+    _=pickle.dumps(o)
+    #x=json.dumps(o)
+
+
+if __name__=='__main__':
+    test_spin_structures()
+    
+#%%    
+
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, ggv, sdvalv=None, station=None, index=None, minstrument=None, fpga_ch=None):
+    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None):
         """ Class representing a sensing dot 
 
-        Arguments:
-            ggv (list): gates to be used
-            sdvalv (array or None): values to be set on the gates
+        Args:
+            gate_names (list): gates to be used
+            gate_values (array or None): values to be set on the gates
             station (Qcodes station)
             minstrument ( tuple): measurement instrument to use. tuple of
                         instrument and channel index
@@ -35,10 +95,10 @@ class sensingdot_t:
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
         """
         self.verbose = 1
-        self.gg = ggv
-        if sdvalv is None:
-            sdvalv = [station.gates.get(g) for g in ggv]
-        self.sdval = sdvalv
+        self.gg = gate_names
+        if gate_values is None:
+            gate_values = [station.gates.get(g) for g in self.gg]
+        self.sdval = gate_values
         self.targetvalue = 800
         self.goodpeaks = None
         self.station = station
@@ -46,7 +106,7 @@ class sensingdot_t:
         self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
         if fpga_ch is None:
-            self.fpga_ch = int(self.gg[1][2])
+            self.fpga_ch = None # int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
 
@@ -200,21 +260,24 @@ class sensingdot_t:
     def autoTuneInit(sd, scanjob, mode='center'):
         stepdata = scanjob.get('stepdata', None)
         sweepdata = scanjob['sweepdata']
+        
+        stepparam= sweepdata['param']
+        sweepparam= sweepdata['param']
+        
         # set sweep to center
         gates = sd.station.gates
         gates.set(
-            sweepdata['param'][0], (sweepdata['start'] + sweepdata['end']) / 2)
+            sweepparam, (sweepdata['start'] + sweepdata['end']) / 2)
         if not stepdata is None:
             if mode == 'end':
                 # set sweep to center
-                gates.set(stepdata['gates'][0], (stepdata['end']))
+                gates.set(stepparam, (stepdata['end']))
             elif mode == 'start':
                 # set sweep to center
-                gates.set(stepdata['gates'][0], (stepdata['start']))
+                gates.set(stepparam, (stepdata['start']))
             else:
                 # set sweep to center
-                gates.set(
-                    stepdata['param'][0], (stepdata['start'] + stepdata['end']) / 2)
+                gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
 
     def fineTune(sd, fig=300, stephalfmv=8):
         g = sd.tunegate()

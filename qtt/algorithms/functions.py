@@ -2,6 +2,20 @@
 
 import numpy as np
 
+def exp_function(x, a, b, c):
+    """ Model for exponential function
+    
+       $$y = a + b * np.exp(-c * x)$$
+    
+    Args:
+        x (array): data points
+        a, b, c: parameters
+    Returns:
+        y (array)
+        
+    """
+    y = a + b * np.exp(-c * x)
+    return y
 
 def linear_function(x, a, b):
     """ Linear function with offset"""
