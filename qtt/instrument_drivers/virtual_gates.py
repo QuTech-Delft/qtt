@@ -120,11 +120,14 @@ class virtual_gates(Instrument):
         set_vec = np.dot(self.get_crosscap_matrix_inv(), gate_vec)
 
         if self._fast_readout:
+            gatevalue=[None]*len(self._gates_list)
             for idx, g in enumerate(self._gates_list):
-                self.gates.parameters[g].validate(self.gates.get(g) + set_vec[idx])
+                gatevalue[idx]=self.gates.parameters[g].get_latest()
+                
+                self.gates.parameters[g].validate(gatevalue[idx] + set_vec[idx])
     
             for idx, g in enumerate(self._gates_list):
-                self.gates.set(g, self.gates.get(g) + set_vec[idx])
+                self.gates.set(g, gatevalue[idx] + set_vec[idx])
         else:
             gatevalue=[None]*len(self._gates_list)
             for idx, g in enumerate(self._gates_list):

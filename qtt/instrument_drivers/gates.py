@@ -128,7 +128,7 @@ class virtual_IVVI(Instrument):
         """ Return all gate values in a simple dict. """
         if self._fast_readout:
             # or: do a get on each first gate of an instrument and get_latest on all subsequent ones
-            vals = [(gate, self.get_latest(gate)) for gate in sorted(self._gate_map)]
+            vals = [(gate, self.parameters[gate].get_latest()) for gate in sorted(self._gate_map)]
         else:
             vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
         return dict(vals)
