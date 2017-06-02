@@ -1483,21 +1483,32 @@ def test_scan2D(verbose=0):
 
     if verbose:
         print('test_scan2D: running scan2D')
-    scanjob = scanjob_t({'sweepdata': dict({'param':p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param':p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = dict({'param': q, 'start': 24, 'end': 30, 'step': 1.})
     data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
-    scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1, 'dac2': .1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1, 'dac2': .1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = dict({'param': {'dac2': 1}, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
     data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
-    scanjob = scanjob_t({'sweepdata': dict({'param': p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    # not supported:
+    try:
+        scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
+        scanjob['stepdata'] = dict({'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
+        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+    except:
+        if verbose:
+            print('combination of Parameter and vector argument not supported')
+
+    if verbose:
+        print('test_scan2D: running scan1D')
+    scanjob = scanjob_t({'sweepdata': dict({'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
  
-    scanjob = scanjob_t({'sweepdata': dict({'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
 
-    scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R], 'wait_time': 0.})
+    scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
     
     gates.close()
