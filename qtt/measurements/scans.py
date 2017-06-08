@@ -536,12 +536,12 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
-    def parse_stepdata(self, field):
+    def parse_stepdata(self, field, gates=None):
         """ Helper function for legacy code """
         stepdata = self[field]
         if not isinstance(stepdata, dict):
             raise Exception('%s should be dict structure' % field)
-    
+
         v = stepdata.get('gates', None)
         if v is not None:
             raise Exception('please use param instead of gates')
@@ -549,19 +549,45 @@ class scanjob_t(dict):
         if v is not None:
             warnings.warn('please use param instead of gates', DeprecationWarning)
             stepdata['param'] = stepdata['gate']
-    
+
         v = stepdata.get('param', None)
-        if isinstance(v, (str, StandardParameter, ManualParameter, dict)):
-            pass
-        elif isinstance(v, list):
+        if isinstance(v, list):
             warnings.warn('please use string or Instrument instead of list')
             stepdata['param'] = stepdata['param'][0]
+        elif isinstance(v, str):
+            if gates is not None:
+                stepdata['param'] = getattr(gates, v)
+            else:
+                pass
+        elif isinstance(v, (StandardParameter, ManualParameter, dict)):
+            pass
+
         self[field] = stepdata
 
-    def _start_end_to_range(self):
-        """ Add range to stepdata and/or sweepdata in scanjob. """
+    def _determine_scantype_2Dfast(self):
+        """ Determine scantype based on format of scanjob. """
+        if isinstance(self['stepdata']['param'], lin_comb_type):
+            self['scantype'] = 'scan2Dfastvec'
+        elif self['stepdata'['param']].full_name == 'mwsource_frequency':
+            if isinstance(self['sweepdata']['param'], lin_comb_type):
+                self['scantype'] = 'scan2Dfastvec_PAT'
+            else:
+                self['scantype'] = 'scan2Dfast_PAT'
+        else:
+            if isinstance(self['sweepdata']['param'], lin_comb_type):
+                self['scantype'] = 'scan2Dfastvec'
+            else:
+                self['scantype'] = 'scan2Dfast'
+        
+            
 
-        scanfields = ['stepdata', 'sweepdata']
+    def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata']):
+        """ Add range to stepdata and/or sweepdata in scanjob.
+        
+        Note: This function also converts the start and end fields.        
+        """
+        if isinstance(scanfields, str):
+            scanfields = [scanfields]
 
         for scanfield in scanfields:
             if scanfield in self:
@@ -642,36 +668,41 @@ class scanjob_t(dict):
         elif self['scantype'][:6] == 'scan2D':
             stepdata = self['stepdata']
             sweepdata = self['sweepdata']
-            if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
-                stepname = 'stepparam'
+            if 'vec' in self['scantype']:
                 sweepname = 'sweepparam'
-                if not (np.dot(list(stepdata['param'].values()), [sweepdata['param'][x] for x in stepdata['param']]) == 0):
-                    stepname = stepname + '_v'
-                    sweepname= sweepname + '_v'
-                stepparam = VectorParameter(name=stepname, comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
+                if 'PAT' in self['scantype']:
+                    stepparam = stepdata['param']
+                else:
+                    stepname = 'stepparam'
+                    if not (np.dot(list(stepdata['param'].values()), [sweepdata['param'][x] for x in stepdata['param']]) == 0):
+                        stepname = stepname + '_v'
+                        sweepname= sweepname + '_v'
+                    stepparam = VectorParameter(name=stepname, comb_map=[(gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
                 sweepparam = VectorParameter(name=sweepname, comb_map=[(gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan2D', 'scan2Dfast', 'scan2Dturbo']:
-                stepgate = stepdata.get('param', None)
-                stepparam = get_param(gates, stepgate)
-                sweepgate = sweepdata.get('param', None)
-                sweepparam = get_param(gates, sweepgate)
+                stepparam = stepdata['param']
+                sweepparam = sweepdata['param']
             else:
                 raise Exception('unknown scantype')
             if sweeplength is not None:
                 sweepdata['step'] = (sweepdata['end'] - sweepdata['start']) / sweeplength
             if steplength is not None:
                 stepdata['step'] = (stepdata['end'] - stepdata['start']) / steplength
-                        
+
             sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
             stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
             scanvalues = [stepvalues, sweepvalues]
-            if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
+            if 'vec' in self['scantype']:
                 param_init = {param: gates.get(param) for param in sweepdata['param']}
                 self['phys_gates_vals'] = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in sweepdata['param']}
-                step_array2d = np.tile(np.arange(-stepdata['range']/2, stepdata['range']/2, stepdata['step']).reshape(-1, 1), (1, len(sweepvalues)))
                 sweep_array2d = np.tile(np.arange(-sweepdata['range']/2, sweepdata['range']/2, sweepdata['step']), (len(stepvalues), 1))   
-                for param in sweepdata['param']:
-                    self['phys_gates_vals'][param] = param_init[param] + step_array2d * stepdata['param'][param] + sweep_array2d * sweepdata['param'][param]    
+                if 'PAT' in self['scantype']:
+                    for param in sweepdata['param']:
+                        self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * sweepdata['param'][param]
+                else:
+                    step_array2d = np.tile(np.arange(-stepdata['range']/2, stepdata['range']/2, stepdata['step']).reshape(-1, 1), (1, len(sweepvalues)))
+                    for param in sweepdata['param']:
+                        self['phys_gates_vals'][param] = param_init[param] + step_array2d * stepdata['param'][param] + sweep_array2d * sweepdata['param'][param]
             self['stepdata'] = stepdata
             self['sweepdata'] = sweepdata
 
@@ -724,8 +755,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    stepdata = parse_stepdata(scanjob['stepdata'])
-    sweepdata = parse_stepdata(scanjob['sweepdata'])
+    scanjob.parse_stepdata('stepdata', gates=gates)
+    scanjob.parse_stepdata('sweepdata', gates=gates)
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dvec'
@@ -984,8 +1015,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata')
-    scanjob.parse_stepdata('sweepdata')
+    scanjob.parse_stepdata('stepdata', gates=gates)
+    scanjob.parse_stepdata('sweepdata', gates=gates)
 
     minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
 
@@ -993,11 +1024,12 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
-    if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
-        scanjob['scantype'] = 'scan2Dfastvec'
+    scanjob._determine_scantype_2dfast()
+
+    if scanjob['scantype'] == 'scan2Dfastvec':
         scanjob._start_end_to_range()
-    else:
-        scanjob['scantype'] = 'scan2Dfast'
+    elif scanjob['scantype'] == 'scan2Dfastvec_PAT':
+        scanjob._start_end_to_range(scanfields=['sweepdata'])
 
     Naverage = scanjob.get('Naverage', 20)
 
@@ -1008,14 +1040,15 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     wait_time = stepdata.get('wait_time', 0)
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
-    if scanjob['scantype'] == 'scan2Dfastvec':
-        scanjob._parse_2Dvec()
+    if 'vec' in scanjob['scantype']:
+        if scanjob['scantype'] == 'scan2Dfastvec':
+            scanjob._parse_2Dvec()
         waveform, sweep_info = station.awg.sweep_gate_virt(sweepdata['param'], sweepdata['range'], period)
     else:
         sweeprange = (sweepdata['end'] - sweepdata['start'])    
-        waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period)
+        waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'].name, sweeprange, period)
         sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
-        gates.set(sweepdata['param'], float(sweepgate_value))
+        sweepdata['param'].set(float(sweepgate_value))
 
     data = measuresegment(waveform, Naverage, station, minstrhandle, read_ch, period=period, sawtooth_width=waveform['width' ])
     if len(read_ch) == 1:
@@ -1147,8 +1180,8 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata')
-    scanjob.parse_stepdata('sweepdata')
+    scanjob.parse_stepdata('stepdata', gates=gates)
+    scanjob.parse_stepdata('sweepdata', gates=gates)
 
     minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
 
@@ -1173,15 +1206,15 @@ def scan2Dturbo(station, scanjob, location=None, verbose=1):
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
     if scanjob['scantype'] == 'scan2Dturbo':
-        gates.set(stepdata['param'], (stepdata['end'] + stepdata['start']) / 2)
-        gates.set(sweepdata['param'], (sweepdata['end'] + sweepdata['start']) / 2)
+        stepdata['param'].set((stepdata['end'] + stepdata['start']) / 2)
+        sweepdata['param'].set((sweepdata['end'] + sweepdata['start']) / 2)
         sweepranges = [sweepdata['end'] - sweepdata['start'], stepdata['end'] - stepdata['start']]
     else:
         sweepranges = [sweepdata['range'], stepdata['range']]
 
     fpga_samp_freq = station.fpga.get_sampling_frequency()
     if scanjob['scantype'] == 'scan2Dturbo':
-        sweepgates = [sweepdata['param'], stepdata['param']]
+        sweepgates = [sweepdata['param'].name, stepdata['param'].name]
         waveform, sweep_info = station.awg.sweep_2D(fpga_samp_freq, sweepgates, sweepranges, resolution)
         if verbose:
             print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
