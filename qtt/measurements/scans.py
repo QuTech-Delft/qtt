@@ -568,7 +568,7 @@ class scanjob_t(dict):
         """ Determine scantype based on format of scanjob. """
         if isinstance(self['stepdata']['param'], lin_comb_type):
             self['scantype'] = 'scan2Dfastvec'
-        elif self['stepdata'['param']].full_name == 'mwsource_frequency':
+        elif self['stepdata']['param'].full_name == 'mwsource_frequency':
             if isinstance(self['sweepdata']['param'], lin_comb_type):
                 self['scantype'] = 'scan2Dfastvec_PAT'
             else:
@@ -1024,7 +1024,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
-    scanjob._determine_scantype_2dfast()
+    scanjob._determine_scantype_2Dfast()
 
     if scanjob['scantype'] == 'scan2Dfastvec':
         scanjob._start_end_to_range()
