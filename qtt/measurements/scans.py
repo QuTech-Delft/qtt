@@ -527,7 +527,7 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
-    def parse_stepdata(self, field):
+    def parse_stepdata(self, field, gates=None):
         """ Helper function for legacy code """
         stepdata = self[field]
         if not isinstance(stepdata, dict):
@@ -543,11 +543,16 @@ class scanjob_t(dict):
             stepdata['param'] = stepdata['gate']
 
         v = stepdata.get('param', None)
-        if isinstance(v, (str, StandardParameter, ManualParameter, dict)):
-            pass
-        elif isinstance(v, list):
+        if isinstance(v, list):
             warnings.warn('please use string or Instrument instead of list')
             stepdata['param'] = stepdata['param'][0]
+        elif isinstance(v, str):
+            if gates is not None:
+                stepdata['param'] = getattr(gates, v)
+            else:
+                pass
+        elif isinstance(v, (StandardParameter, ManualParameter, dict)):
+            pass
         self[field] = stepdata
 
     def parse_param(self, field, station, paramtype='slow'):
@@ -586,10 +591,13 @@ class scanjob_t(dict):
             self[field]['paramname'] = '_'.join(
                 ['%s(%s)' % (key, value) for (key, value) in param.items()])
 
-    def _start_end_to_range(self):
-        """ Add range to stepdata and/or sweepdata in scanjob. """
-
-        scanfields = ['stepdata', 'sweepdata']
+    def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata']):
+        """ Add range to stepdata and/or sweepdata in scanjob.
+        
+        Note: This function also converts the start and end fields.        
+        """
+        if isinstance(scanfields, str):
+            scanfields = [scanfields]
 
         for scanfield in scanfields:
             if scanfield in self:
@@ -720,10 +728,8 @@ class scanjob_t(dict):
                 sweepparam = VectorParameter(name=sweepname, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan2D', 'scan2Dfast', 'scan2Dturbo']:
-                stepgate = stepdata.get('param', None)
-                stepparam = get_param(gates, stepgate)
-                sweepgate = sweepdata.get('param', None)
-                sweepparam = get_param(gates, sweepgate)
+                stepparam = stepdata['param']
+                sweepparam = sweepdata['param']
             else:
                 raise Exception('unknown scantype')
             if sweeplength is not None:
@@ -1222,8 +1228,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata')
-    scanjob.parse_stepdata('sweepdata')
+    scanjob.parse_stepdata('stepdata', gates=gates)
+    scanjob.parse_stepdata('sweepdata', gates=gates)
 
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     scanjob.parse_param('stepdata', station, paramtype='slow')
@@ -1430,8 +1436,8 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata')
-    scanjob.parse_stepdata('sweepdata')
+    scanjob.parse_stepdata('stepdata', gates=gates)
+    scanjob.parse_stepdata('sweepdata', gates=gates)
 
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     scanjob.parse_param('stepdata', station, paramtype='fast')
@@ -1460,12 +1466,10 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
-    if scanjob['scantype'] == 'scan2Dturbo' and 'start' in sweepdata:
-        gates.set(stepdata['param'], (stepdata['end'] + stepdata['start']) / 2)
-        gates.set(sweepdata['param'],
-                  (sweepdata['end'] + sweepdata['start']) / 2)
-        sweepranges = [sweepdata['end'] - sweepdata['start'],
-                       stepdata['end'] - stepdata['start']]
+    if scanjob['scantype'] == 'scan2Dturbo':
+        stepdata['param'].set((stepdata['end'] + stepdata['start']) / 2)
+        sweepdata['param'].set((sweepdata['end'] + sweepdata['start']) / 2)
+        sweepranges = [sweepdata['end'] - sweepdata['start'], stepdata['end'] - stepdata['start']]
     else:
         sweepranges = [sweepdata['range'], stepdata['range']]
 
