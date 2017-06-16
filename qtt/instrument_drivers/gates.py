@@ -62,11 +62,14 @@ class virtual_IVVI(Instrument):
             if verbose:
                 print('%s: %f' % (gate, self.get(gate)))
 
-    def _get(self, gate):
+    def _get(self, gate, fast_readout = False):
         gatemap = self._gate_map[gate]
         gate = 'dac%d' % gatemap[1]
         logging.debug('_get: %s %s' % (gatemap[0], gate))
-        return self._instrument_list[gatemap[0]].get(gate)
+        if fast_readout:
+            return self._instrument_list[gatemap[0]].get_latest(gate)
+        else:
+            return self._instrument_list[gatemap[0]].get(gate)
 
     def _set(self, value, gate):
         logging.debug('gate._set: gate %s, value %s' % (gate, value))
@@ -207,3 +210,5 @@ class virtual_IVVI(Instrument):
             dot.edge(str(g), str(ix))
 
         return dot
+    
+    
