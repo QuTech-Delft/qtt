@@ -60,6 +60,7 @@ class virtual_gates(Instrument):
         super().__init__(name, **kwargs)
         self.name = name
         self.gates = gates_instr
+        self._fast_readout=False
         if isinstance(crosscap_map, OrderedDict):
             self._crosscap_map = crosscap_map
             for vg in list(crosscap_map.keys()):
@@ -90,6 +91,8 @@ class virtual_gates(Instrument):
                                vals=Numbers())  # TODO: Adjust the validator range based on that of the gates
 
         self._update_virt_parameters()
+        self.allvalues()
+        self._fast_readout=True
 
     def _get(self, gate):
         """Get the value of virtual gate voltage in mV
@@ -98,9 +101,40 @@ class virtual_gates(Instrument):
             gate (string): Name of virtual gate.
 
         """
-        gateval = sum([self._crosscap_map[gate][g] * self.gates[g].get() for g in self._crosscap_map[gate]])
+        if self._fast_readout:
+            gateval = sum([self._crosscap_map[gate][g] * self.gates[g].get_latest() for g in self._crosscap_map[gate]])
+        else:
+            gateval = sum([self._crosscap_map[gate][g] * self.gates[g].get() for g in self._crosscap_map[gate]])
         return gateval
 
+    def multi_set(self, increment_map):
+        """ Update multiple parameters at once
+        
+        Args:
+            increment_map (dict): dictionary with keys the gate names and values the increments
+        """
+
+        # get current gate values        
+        gatevalue=[None]*len(self._gates_list)
+        for idx, g in enumerate(self._gates_list):
+            if self._fast_readout:
+                gatevalue[idx]=self.gates.parameters[g].get_latest()
+            else:
+                gatevalue[idx]=self.gates.parameters[g].get()
+
+        gate_vec = np.zeros(len(self._virts_list))
+        for g, increment in increment_map.items():
+            gate_vec[self._virts_list.index(g)] += increment                     
+        set_vec = np.dot(self.get_crosscap_matrix_inv(), gate_vec)
+
+        # check the values            
+        for idx, g in enumerate(self._gates_list):
+            self.gates.parameters[g].validate(gatevalue[idx] + set_vec[idx])
+    
+        # update the values            
+        for idx, g in enumerate(self._gates_list):
+            self.gates.set(g, gatevalue[idx] + set_vec[idx])
+        
     def _set(self, value, gate):
         """Set the value of virtual gate voltage in mV
         
@@ -109,20 +143,35 @@ class virtual_gates(Instrument):
             gate (string): Name of virtual gate.
 
         """
-        gate_vec = np.zeros(len(self._virts_list))
+        
         increment = value - self.get(gate)
+        #self.multi_set({gate: increment})
+        gate_vec = np.zeros(len(self._virts_list))
         gate_vec[self._virts_list.index(gate)] = increment
         set_vec = np.dot(self.get_crosscap_matrix_inv(), gate_vec)
 
+        if self._fast_readout:
+            gatevalue=[None]*len(self._gates_list)
+            for idx, g in enumerate(self._gates_list):
+                gatevalue[idx]=self.gates.parameters[g].get_latest()
+                
+                self.gates.parameters[g].validate(gatevalue[idx] + set_vec[idx])
+        else:
+            gatevalue=[None]*len(self._gates_list)
+            for idx, g in enumerate(self._gates_list):
+                gatevalue[idx]=self.gates.get(g)
+                
+                self.gates.parameters[g].validate(gatevalue[idx] + set_vec[idx])
+    
         for idx, g in enumerate(self._gates_list):
-            self.gates.parameters[g].validate(self.gates.get(g) + set_vec[idx])
+            self.gates.set(g, gatevalue[idx] + set_vec[idx])
 
-        for idx, g in enumerate(self._gates_list):
-            self.gates.set(g, self.gates.get(g) + set_vec[idx])
-
-    def allvalues(self):
+    def allvalues(self, get_latest = False):
         """Return all virtual gate voltage values in a dict."""
-        vals = [(gate, self.get(gate)) for gate in self._virts_list]
+        if get_latest:
+            vals = [(gate, self.parameters[gate].get_latest()) for gate in self._virts_list]
+        else:
+            vals = [(gate, self.get(gate)) for gate in self._virts_list]
         return dict(vals)
 
     def resetgates(self, activegates, basevalues=None, verbose=0):
@@ -352,7 +401,10 @@ def test_virtual_gates(verbose=0):
     if verbose:
         print('after second set: VP1 %s' % (v,) )
     
-    virts.convert_matrix_to_map(virts.convert_map_to_matrix(crosscap_map))
+    od = virts.convert_matrix_to_map(virts.convert_map_to_matrix(crosscap_map))
+
+    virts.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
+    av = virts.allvalues()
 
     c=virts.get_crosscap_matrix()
     assert(c[0][0]==1)    

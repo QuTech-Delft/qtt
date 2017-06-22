@@ -41,6 +41,7 @@ class virtual_IVVI(Instrument):
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
+        self._fast_readout = True
         # Create all functions for the gates as defined in self._gate_map
         for gate in self._gate_map.keys():
             logging.debug('gates: make gate %s' % gate)
@@ -61,11 +62,14 @@ class virtual_IVVI(Instrument):
             if verbose:
                 print('%s: %f' % (gate, self.get(gate)))
 
-    def _get(self, gate):
+    def _get(self, gate, fast_readout = False):
         gatemap = self._gate_map[gate]
         gate = 'dac%d' % gatemap[1]
         logging.debug('_get: %s %s' % (gatemap[0], gate))
-        return self._instrument_list[gatemap[0]].get(gate)
+        if fast_readout:
+            return self._instrument_list[gatemap[0]].get_latest(gate)
+        else:
+            return self._instrument_list[gatemap[0]].get(gate)
 
     def _set(self, value, gate):
         logging.debug('gate._set: gate %s, value %s' % (gate, value))
@@ -125,7 +129,11 @@ class virtual_IVVI(Instrument):
 
     def allvalues(self):
         """ Return all gate values in a simple dict. """
-        vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
+        if self._fast_readout:
+            # or: do a get on each first gate of an instrument and get_latest on all subsequent ones
+            vals = [(gate, self.parameters[gate].get_latest()) for gate in sorted(self._gate_map)]
+        else:
+            vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
         return dict(vals)
 
     def allvalues_string(self):
@@ -202,3 +210,5 @@ class virtual_IVVI(Instrument):
             dot.edge(str(g), str(ix))
 
         return dot
+    
+    
