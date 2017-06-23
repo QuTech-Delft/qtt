@@ -47,16 +47,29 @@ sq_pulse_marker = pulse.SquarePulse(
     channel='ch1_marker1', name='A square pulse on MW pmod')
 lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
 
-
 def create_virtual_matrix_dict(cc_basis, physical_gates, c, verbose=1):
-    """ Convert matrix to mapping notation """
-
-    virtual_matrix = OrderedDict()
-    for ii, k in enumerate(cc_basis):
+    """ Converts the virtual gate matrix into a virtual gate mapping """
+    virtual_matrix = OrderedDict()                                                                                            
+    for ii,k in enumerate(cc_basis):
         if verbose:
             print('create_virtual_matrix_dict: adding %s ' % (k,))
-        tmp = OrderedDict(zip(physical_gates, c[ii, :]))
-        tmp[physical_gates[ii]] = 1
+        tmp=OrderedDict( zip(physical_gates, c[ii,:] ) )   
+        tmp[ physical_gates[ii]] = 1
+        exec('%s = %s'  % (k, str(tmp) ))
+        virtual_matrix[k] = tmp
+    return virtual_matrix
+
+def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
+    """ Converts the virtual gate matrix into a virtual gate mapping """
+    invc=np.linalg.inv(c)                                                                                    
+    virtual_matrix = OrderedDict()                                                                                            
+    for ii,k in enumerate(cc_basis):
+        if verbose:
+            print('create_virtual_matrix_dict: adding %s ' % (k,))
+        tmp=OrderedDict( zip(physical_gates, invc[:,ii] ) )    #changed to test!!
+        if 1:
+            # needed?
+            exec('%s = %s'  % (k, str(tmp) ))
         virtual_matrix[k] = tmp
     return virtual_matrix
 
