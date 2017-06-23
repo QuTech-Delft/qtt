@@ -824,7 +824,68 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     return alldata
 
+def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None,start=0):
+    """ TODO: document, put in qtt.scans """  
+    if sweeporstepdata is None:
+        sweeporstepdata = {}
+    if hasattr(virtual_parameter, 'comb_map'):
+        pp=dict( [ (p.name, r) for p, r in virtual_parameter.comb_map if round(r,5) != 0])
+    else:
+        pp={virtual_parameter.name: 1}
+    sweeporstepdata={'start': start, 'range':g_range, 'end': start+g_range, 'param': pp}
+    return sweeporstepdata
 
+
+def scan2D_virt(gg,vgvg, tlines, station, gates, startgv, virt_gates, scanjob, plotQ, iteration=None, mode='real', wait_time_sweep2D=0.2, wait_time_step=1.3, rang=100, nsteps=60):
+    """Makes 2D slices, charge stability diagrams, of virtual gate space along two virtual gate axes """
+    start_time=time.clock()
+    transitionline='center'
+    
+    startgv[gg[0]]=tlines[transitionline][gg[0]]
+    startgv[gg[1]]=tlines[transitionline][gg[1]]
+    gates.resetgates(startgv, startgv)
+    
+    startsweep = virt_gates.get(vgvg[0])-rang/2
+    startstep = virt_gates.get(vgvg[1])-rang/2
+    step=rang/nsteps
+    
+    scanjob['Naverage'] = 200
+    
+    if mode=='real':       
+        scanjob['sweepdata']=create_vectorscan(virt_gates.parameters[vgvg[0]], g_range=rang)
+        scanjob['sweepdata']['wait_time']=wait_time_sweep2D
+        scanjob['sweepdata']['step']=0.2
+        scanjob['stepdata']=create_vectorscan(virt_gates.parameters[vgvg[1]], g_range=rang)
+        scanjob['stepdata']['step']=step
+        scanjob['stepdata']['wait_time']=wait_time_step
+        data = qtt.measurements.scans.scan2Dfast(station, scanjob, liveplotwindow=plotQ)
+        default_parameter_array_key='measured'
+    
+    if mode=='sim':       
+        scanjob['sweepdata']=create_vectorscan(virt_gates.parameters[vgvg[0]], g_range=rang)
+        scanjob['sweepdata']['wait_time']=wait_time_sweep2D
+        scanjob['sweepdata']['step']=0.2
+        scanjob['stepdata']=create_vectorscan(virt_gates.parameters[vgvg[1]], g_range=rang)
+        scanjob['stepdata']['step']=step
+        scanjob['stepdata']['wait_time']=wait_time_step
+    gates.resetgates(startgv, startgv)
+    
+    virtsweep1D=virt_gates[vgvg[0]][startsweep:(startsweep+rang):rang/np.size(data.arrays[default_parameter_array_key],1)]
+    virtstep1D=virt_gates[vgvg[1]][startstep:(startstep+rang):step]
+    virtdata=makeDataSet2D( virtstep1D,virtsweep1D,preset_data=data.arrays[default_parameter_array_key][:,:])
+    
+    MatPlot(virtdata.measured)
+    if iteration is None and vgvg==[w.replace('P', 'mu') for w in list(tlines['mu1'].keys())]:
+        for k in list(tlines.keys()):
+            plt.plot(tlines[k][gg[0]],tlines[k][gg[1]] , '.m' , markersize=14)
+    plt.plot(virt_gates.get(vgvg[0]),virt_gates.get(vgvg[1]),'.y' , markersize=14)
+    
+    scan2Dtime_v=round(time.clock() - start_time,2)
+    print("virtual 2D scan time %s" % scan2Dtime_v)
+    qtt.tools.addPPTslide(fig=plt.gcf().number)
+    if mode=='real':
+        qtt.tools.addPPT_dataset(data)
+    return(virtdata)
 #%%
 
 def process_digitizer_trace(data, width, period, samplerate, padding=0,
