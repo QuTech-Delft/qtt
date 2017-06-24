@@ -875,17 +875,17 @@ def scan2D_virt(gg,vgvg, tlines, station, gates, startgv, virt_gates, scanjob, p
     virtdata=makeDataSet2D( virtstep1D,virtsweep1D,preset_data=data.arrays[default_parameter_array_key][:,:])
     
     MatPlot(virtdata.measured)
-    if iteration is None and vgvg==[w.replace('P', 'mu') for w in list(tlines['mu1'].keys())]:
-        for k in list(tlines.keys()):
-            plt.plot(tlines[k][gg[0]],tlines[k][gg[1]] , '.m' , markersize=14)
-    plt.plot(virt_gates.get(vgvg[0]),virt_gates.get(vgvg[1]),'.y' , markersize=14)
+#    if iteration is None and vgvg==[w.replace('P', 'mu') for w in list(tlines['mu1'].keys())]:
+#        for k in list(tlines.keys()):
+#            plt.plot(tlines[k][gg[0]],tlines[k][gg[1]] , '.m' , markersize=14)
+#    plt.plot(virt_gates.get(vgvg[0]),virt_gates.get(vgvg[1]),'.y' , markersize=14)
     
     scan2Dtime_v=round(time.clock() - start_time,2)
     print("virtual 2D scan time %s" % scan2Dtime_v)
     qtt.tools.addPPTslide(fig=plt.gcf().number)
-    if mode=='real':
-        qtt.tools.addPPT_dataset(data)
     return(virtdata)
+
+
 #%%
 
 def process_digitizer_trace(data, width, period, samplerate, padding=0,
