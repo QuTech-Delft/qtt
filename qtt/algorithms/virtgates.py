@@ -131,7 +131,7 @@ def ttrace_transitions(CC,startgv, station, gates, virt_gates, cc_basis, normal_
     print("ttraceC time%s" % ttraceC)  
     return(CC)
 #%%
-def cc_from_scan1D(CC,physical_gates, cc_basis, dGstep, datadir_CC, iteration=1,mode='real',mph=0.5,mpd=80, single_scan1D='off',analysis=True):
+def cc_from_scan1D(CC,physical_gates, cc_basis, dGstep, datadir_CC, iteration=1,mode='real',mph=0.5,mpd=80, single_scan1D='off',analysis=True,valley=True):
     """Computes cross-capacitance matrix from 1D transitions scans"""
     default_parameter_array_key='measured1'
     meas_arr_name=CC['iteration %d'%iteration]['sweepgate mu1']['stepgate tL']['sweep1']['scan'].default_parameter_name(default_parameter_array_key)
@@ -170,7 +170,7 @@ def cc_from_scan1D(CC,physical_gates, cc_basis, dGstep, datadir_CC, iteration=1,
                             transition=False
                             polarisation=True
 #                        peaks_i=detect_peaks(ds.diff_dir_y,mph=0.1*max(ds.diff_dir_y),mpd=100,show=False, valley=polarisation)#best if 0.8
-                        peaks_i=detect_peaks(ds.diff_dir_y,mph=mph*max(ds.diff_dir_y),mpd=mpd,show=False, valley=transition)#best if 0.8
+                        peaks_i=detect_peaks(ds.diff_dir_y,mph=mph*max(ds.diff_dir_y),mpd=mpd,show=False, valley=valley)#best if 0.8
                         peaks_sweep=scan.arrays[setpoints][peaks_i]
                         peaks_a=scan.default_parameter_array(default_parameter_array_key)[peaks_i]
                         peaks_da=ds.diff_dir_y[peaks_i]
@@ -221,22 +221,22 @@ def cc_from_scan1D(CC,physical_gates, cc_basis, dGstep, datadir_CC, iteration=1,
         if h==(len(cc_basis)-1)/2-1 or single_scan1D=='on': 
             break
     CC['iteration %d' %iteration]['cc_corr']=c
-    CC['iteration %d' %iteration]['cc']=c@CC['iteration %d' %(iteration-1)]['cc']
+    CC['iteration %d' %iteration]['cc']=c@CC['iteration %d' %(1)]['cc']
     print(CC['iteration %d' %iteration]['cc'])
     
     s=strftime('%d_%m_%H%M', gmtime())
     qtt.write_data(datadir_CC%s,CC)
     return(CC)
 #%%
-def plot_scan1D_transitions(CC,physical_gates, cc_basis, iteration=1,mode='real',single_scan1D='off'):
+def plot_scan1D_transitions(CC,physical_gates, cc_basis, title_add=None, iteration=1,mode='real',single_scan1D='off'):
     """Plots the 1D transitions scans and analysis"""
     default_parameter_array_key='measured1'
     if single_scan1D=='on':
         fig, axarr = plt.subplots(1,1)
-        fig.suptitle('Transition step')
+        fig.suptitle('Transition step for %s' %title_add)
     else:
         fig, axarr = plt.subplots(int((len(cc_basis)-1)/2),int(len(cc_basis)))
-        fig.suptitle('Transition step')
+        fig.suptitle('Differentiated transition step for %s' %title_add)
     if 'analysis' in CC['iteration %d'%iteration]['sweepgate mu1']['stepgate tL']['sweep1']:
         if single_scan1D=='on':
             figd, axarrd = plt.subplots(1,1)

@@ -190,6 +190,7 @@ def create_ttrace(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, marke
 def set_awg_trace(vawg, awgs, clock=10e6):
     """  Set the awg in correct operation mode for the ttraces """
     vawg.AWG_clock = clock
+    vawg.awg.AWG_clock=clock
     for a in awgs:
         a.clock_freq(clock)
 
@@ -417,7 +418,7 @@ def activate_ttraces(station, dotmodule, location, vg, amplitudes, virt_map_for_
 #                'SD1b', hw.awg_to_SD1b()), ('SD2b', hw.awg_to_SD2b())])
     elif location=='3dot':
         vgates = ['mu1', 'mu2', 'mu3']; pgates = ['P1', 'P2', 'P3']
-        hw=dotmodule.hardware3dot
+        hw=station.hardware3dot#for now changed!!
         awg_to_plunger_plungers=dict( [('P1', hw.awg_to_P1()), ('P2', hw.awg_to_P2()), ('P3',hw.awg_to_P3() )])
     else:
         vgates = ['mu1', 'mu2', 'mu3']; pgates = ['P1', 'P2', 'P3'] # virtual dot
@@ -460,6 +461,12 @@ def activate_ttraces(station, dotmodule, location, vg, amplitudes, virt_map_for_
         seq = Sequence('8dot_sequence_awg%d' % ii)
         seq.append(name='toivotrace', wfname=t.name, trigger_wait=False,)    
         
+        elts = [t]
+    
+        # program the Sequence
+        pulsar = pulsar_objects[ii]
+        ss = pulsar.program_awg(seq, *elts)
+    
       
     #"""Really run the awg"""
     awgs=station.awg._awgs
