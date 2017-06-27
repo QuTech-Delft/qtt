@@ -348,5 +348,5 @@ def plot_scan1D_transitions(CC, cc_basis, title_add=None, iteration=1,mode='real
         if h==(len(cc_basis)-1)/2-1 or single_scan1D=='on':
             break  
     qtt.tools.addPPTslide(fig=fig.number)
-    if 'analysis' in CC['iteration %d'%iteration]['sweepgate mu1']['stepgate tL']['sweep1']:
+    if analyses==True:
         qtt.tools.addPPTslide(fig=figd.number)
