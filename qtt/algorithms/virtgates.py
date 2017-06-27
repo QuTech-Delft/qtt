@@ -11,12 +11,13 @@ import numpy
 import numpy as np
 from time import gmtime, strftime
 np.set_printoptions(precision=2,suppress=True, threshold=100)
-
-
+from qtt.measurements.scans import create_vectorscan
 import matplotlib.pyplot as plt
 
 import qtt
-from users.houckm.detect_peaks import detect_peaks
+import os
+os.chdir(r'C:\BEP\spin-projects\projects\visuals_virtgates_1D')
+from detect_peaks import detect_peaks
 
 from qtt.algorithms.generic import smoothImage
 
@@ -24,7 +25,6 @@ import qtt.instrument_drivers.virtual_gates
 import qtt.measurements.videomode
 import qtt.structures
 from qtt.data import makeDataSet1Dplain
-from qtt.measurements.scans import create_vectorscan
 
 from qtt.measurements.ttrace import dummy_read,parse_data
 
@@ -297,14 +297,14 @@ def plot_scan1D_transitions(CC, cc_basis, title_add=None, iteration=1,mode='real
         fig.suptitle('Transition step for %s' %title_add)
     else:
         fig, axarr = plt.subplots(int((len(cc_basis)-1)/2),int(len(cc_basis)))
-        fig.suptitle('Differentiated transition step for %s' %title_add)
+        fig.suptitle('Transition step for %s' %title_add)
     if analyses==True:
         if single_scan1D=='on':
             figd, axarrd = plt.subplots(1,1)
-            figd.suptitle('Transition step')
+            figd.suptitle('Differntiated ransition step for %s' %title_add)
         else:
             figd, axarrd =  plt.subplots(int((len(cc_basis)-1)/2),int(len(cc_basis)))
-            figd.suptitle('Transition step')
+            figd.suptitle('Differntiated ransition step for %s' %title_add)
     for h,l in enumerate(cc_basis,0):
         i=2*h+1
         sweepgate=cc_basis[i]

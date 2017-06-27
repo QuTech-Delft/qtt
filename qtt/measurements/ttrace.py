@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Code for creating and parsting t-traces
 
-@author: eendebakpt
+@author: eendebakpt (houckm)
 """
 
 #%% Load packages
@@ -11,8 +11,11 @@ from collections import OrderedDict
 import pyqtgraph as pg
 
 import qtt
-#import qtt.measurement.scans
 
+import sys
+sys.path.append("D:\\Users\\houckm\\PycQED_py3") #TODO: needed to install PycQED on computer, ugly
+
+import pycqed
 from pycqed.measurement.waveform_control import pulse
 from pycqed.measurement.waveform_control import pulsar as ps
 
