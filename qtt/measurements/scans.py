@@ -1110,7 +1110,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         for mname in measure_names:
             alldata = diffDataset(alldata, diff_dir=diff_dir, fig=None, meas_arr_name=mname)
 
-    if scanjob['scantype'] is 'scan2Dfastvec':
+    if 'vec' in scanjob['scantype']:
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
             arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
