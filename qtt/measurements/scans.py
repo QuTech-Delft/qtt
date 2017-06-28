@@ -658,7 +658,7 @@ class scanjob_t(dict):
 
                 param_init = {param: gates.get(param) for param in sweepdata['param']}
                 self['phys_gates_vals'] = {param: np.zeros(len(scanvalues)) for param in sweepdata['param']}
-                sweep_array = np.arange(-sweepdata['range']/2, sweepdata['range']/2, sweepdata['step'])  
+                sweep_array = np.linspace(-sweepdata['range']/2, sweepdata['range']/2, len(scanvalues))  
                 for param in sweepdata['param']:
                     self['phys_gates_vals'][param] = param_init[param] + sweep_array * sweepdata['param'][param]
             else:
@@ -695,7 +695,7 @@ class scanjob_t(dict):
             if 'vec' in self['scantype']:
                 param_init = {param: gates.get(param) for param in sweepdata['param']}
                 self['phys_gates_vals'] = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in sweepdata['param']}
-                sweep_array2d = np.tile(np.arange(-sweepdata['range']/2, sweepdata['range']/2, sweepdata['step']), (len(stepvalues), 1))   
+                sweep_array2d = np.tile(np.linspace(-sweepdata['range']/2, sweepdata['range']/2, len(sweepvalues)), (len(stepvalues), 1))   
                 if 'PAT' in self['scantype']:
                     for param in sweepdata['param']:
                         self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * sweepdata['param'][param]
