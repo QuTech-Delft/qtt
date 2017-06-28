@@ -673,16 +673,12 @@ class scanjob_t(dict):
                 sweepdata['step'] = (sweepdata['end'] -
                                      sweepdata['start']) / sweeplength
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
-                last = sweepdata['start'] + sweepdata['range']
-                scanvalues = sweepparam[sweepdata['start']
-                    :last:sweepdata['step']]
+                last = sweepdata['start']+sweepdata['range']
+                scanvalues = sweepparam[sweepdata['start']:last:sweepdata['step']]
 
-                param_init = {param: gates.get(param)
-                              for param in sweepdata['param']}
-                self['phys_gates_vals'] = {param: np.zeros(
-                    len(scanvalues)) for param in sweepdata['param']}
-                sweep_array = np.arange(-sweepdata['range'] / 2,
-                                        sweepdata['range'] / 2, sweepdata['step'])
+                param_init = {param: gates.get(param) for param in sweepdata['param']}
+                self['phys_gates_vals'] = {param: np.zeros(len(scanvalues)) for param in sweepdata['param']}
+                sweep_array = np.linspace(-sweepdata['range']/2, sweepdata['range']/2, len(scanvalues))  
                 for param in sweepdata['param']:
                     self['phys_gates_vals'][param] = param_init[param] + \
                         sweep_array * sweepdata['param'][param]
