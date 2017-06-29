@@ -138,7 +138,9 @@ def resampleImage(im):
     
     Args:
         im (numpy array): input image
-        setpoints (tuple of 2 arrays): setpoint arrays from input image
+    Returns:
+        im (numpy array): resampled image
+        setpoints (list of 2 numpy arrays): setpoint arrays from resampled image
     """
     setpoints = im.set_arrays
     mVrange = [abs(setpoints[0][-1]-setpoints[0][0]), abs(setpoints[1][0,-1]-setpoints[1][0,0])]
