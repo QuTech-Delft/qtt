@@ -150,7 +150,9 @@ def resampleImage(im):
         axis = int(samprates[0] - samprates[1] < 0)
         if axis == 0:
             facrem = im.shape[0] % factor
-            im = im[:-facrem,:]
+            if facrem > 0:
+                im = im[:-facrem,:]
+            facrem = facrem + 1
             im = im.reshape(im.shape[0]//factor,factor,im.shape[1]).mean(1)
             spy = np.linspace(setpoints[0][0],setpoints[0][-facrem],im.shape[0])
             spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-1],im.shape[1]),0),im.shape[0])
@@ -161,7 +163,9 @@ def resampleImage(im):
             setpoints = [setpointy, setpointx]
         else:
             facrem = im.shape[1] % factor
-            im = im[:,:-facrem]
+            if facrem > 0:
+                im = im[:,:-facrem]
+            facrem = facrem + 1
             im = im.reshape(im.shape[0],im.shape[1]//factor,factor).mean(-1)
             spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-facrem],im.shape[1]),0),[im.shape[0],1])           
             setpointx = DataArray(name='Resampled_'+setpoints[1].array_id, array_id='Resampled_'+setpoints[1].array_id, label=setpoints[1].label,
