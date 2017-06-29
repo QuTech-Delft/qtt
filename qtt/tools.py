@@ -10,6 +10,7 @@ import pickle
 import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
+from qcodes import DataArray
 
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -132,6 +133,40 @@ def freezeclass(cls):
 
 #%%
 
+def resampleImage(im):
+    """ Resample the image so it has the similar sample rates (samples/mV) in both axis
+    
+    Args:
+        im (numpy array): input image
+        setpoints (tuple of 2 arrays): setpoint arrays from input image
+    """
+    setpoints = im.set_arrays
+    mVrange = [abs(setpoints[0][-1]-setpoints[0][0]), abs(setpoints[1][0,-1]-setpoints[1][0,0])]
+    samprates = [im.shape[0]//mVrange[0], im.shape[1]//mVrange[1]]
+    factor = int(max(samprates)//min(samprates))
+    if factor >= 2:
+        axis = int(samprates[0] - samprates[1] < 0)
+        if axis == 0:
+            facrem = im.shape[0] % factor
+            im = im[:-facrem,:]
+            im = im.reshape(im.shape[0]//factor,factor,im.shape[1]).mean(1)
+            spy = np.linspace(setpoints[0][0],setpoints[0][-facrem],im.shape[0])
+            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-1],im.shape[1]),0),im.shape[0])
+            setpointy = DataArray(name='Resampled_'+setpoints[0].array_id, array_id='Resampled_'+setpoints[0].array_id, label=setpoints[0].label,
+                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
+            setpointx = DataArray(name='Resampled_'+setpoints[1].array_id, array_id='Resampled_'+setpoints[1].array_id, label=setpoints[1].label,
+                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            setpoints = [setpointy, setpointx]
+        else:
+            facrem = im.shape[1] % factor
+            im = im[:,:-facrem]
+            im = im.reshape(im.shape[0],im.shape[1]//factor,factor).mean(-1)
+            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-facrem],im.shape[1]),0),[im.shape[0],1])           
+            setpointx = DataArray(name='Resampled_'+setpoints[1].array_id, array_id='Resampled_'+setpoints[1].array_id, label=setpoints[1].label,
+                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            setpoints = [setpoints[0], setpointx]
+                
+    return im, setpoints
         
 def diffImage(im, dy, size=None):
     """ Simple differentiation of an image
@@ -901,6 +936,27 @@ def slopeClick(drawmode='r--', **kwargs):
 
     return coords, signedslope
 
+def clickLeverarm(drawmode='r--', bias=1, **kwargs):
+    ''' Click three sets of two points to define triangle region:
+        1st line: addition line of dot more coupled to axis 0
+        2nd line: addition line of dor more coupled to axis 1
+        3rd line: interdot transition
+    Will return 
+    Works with matplotlib but not with pyqtgraph. Uses the currently active 
+    figure.
+
+    Arguments:
+        drawmode (string): plotting style
+        bias (float): applied bias in uV
+
+    Returns:
+        leverarms (list of 2 floats): lever-arms (in V/eV) for gate in each
+        axis to their respective more coupled dots.
+    '''
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+    coords = pmatlab.ginput(2, drawmode, **kwargs)
+    plt.pause(1e-6)
 
 def clickGatevals(plot, drawmode='ro'):
     ''' Get gate values for all gates at clicked point in a heatmap.
