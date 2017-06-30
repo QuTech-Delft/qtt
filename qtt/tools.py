@@ -244,7 +244,18 @@ def diffImageSmooth(im, dy='x', sigma=2):
 
     return imx
 
+def test_image_operations(verbose=0):    
+    import qcodes.tests.data_mocks    
+    ds=qcodes.tests.data_mocks.DataSet2D()
+    
+    if verbose:
+        print('testing resampleImage')
+    v=qtt.tools.resampleImage(ds.z)
 
+    if verbose:
+        print('testing diffImage')
+    d=diffImage(ds.z, dy='x')
+    
 #%%
 
 import dateutil
