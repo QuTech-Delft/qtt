@@ -24,6 +24,7 @@ from qtt import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates
+from qtt import save_state, load_state
 
 if __name__ == '__main__':
     datadir = os.path.join(tempfile.tempdir, 'qdata')
@@ -37,102 +38,100 @@ if __name__ == '__main__':
 
 import virtualDot
 
-if __name__ == '__main__':
-    nr_dots = 3
-    station = virtualDot.initialize(reinit=True, nr_dots=nr_dots)
+nr_dots = 3
+station = virtualDot.initialize(reinit=True, nr_dots=nr_dots)
 
-    keithley1 = station.keithley1
-    keithley3 = station.keithley3
+keithley1 = station.keithley1
+keithley3 = station.keithley3
 
-    # virtual gates for the model
-    gates = station.gates
-    model = station.model
+# virtual gates for the model
+gates = station.gates
+model = station.model
 
 #%% Setup measurement windows
 
 
-if __name__ == '__main__':
-    mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
-    pv = createParameterWidget([gates, ])
-    plotQ = mwindows['plotwindow']
+mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
+pv = createParameterWidget([gates, ])
+plotQ = mwindows['plotwindow']
 
-    logviewer = qtt.gui.dataviewer.DataViewer()
-    logviewer.show()
+logviewer = qtt.gui.dataviewer.DataViewer()
+logviewer.show()
 
 #%% Read out instruments
-if __name__ == '__main__':
-    print('value: %f' % keithley3.readnext())
-    snapshotdata = station.snapshot()
+print('value: %f' % keithley3.readnext())
+snapshotdata = station.snapshot()
 
 
 #%% Simple 1D scan loop
 
-if __name__ == '__main__':
-    param_left=station.model.bottomgates[0]
-    param_right=station.model.bottomgates[-1]
-    scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
-    data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
+param_left=station.model.bottomgates[0]
+param_right=station.model.bottomgates[-1]
+scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 1, 'step': .8, 'wait_time': 5e-3}), 'minstrument': [keithley3.amplitude]})
+data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 
+
+#%% Save the current state of the system to disk
+
+save_state(station)
 
 #%% Print the scanned data
 
-if __name__ == '__main__':
-    print(data1d.default_parameter_name())
+print(data1d.default_parameter_name())
 
 
 #%% Make a 2D scan
-if __name__ == '__main__':
-    start = -500
-    scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': start, 'end': start + 400, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley1']})
-    scanjob['stepdata'] = dict({'param': param_left, 'start': start, 'end': start + 400, 'step': 5.})
-    data = qtt.measurements.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
+start = -500
+scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': start, 'end': start + 400, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley1']})
+scanjob['stepdata'] = dict({'param': param_left, 'start': start, 'end': start + 400, 'step': 5.})
+data = qtt.measurements.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 
-    gates.set(param_right, -300); gates.set(param_left, -300)
-    gv=gates.allvalues()
+gates.set(param_right, -300); gates.set(param_left, -300)
+gv=gates.allvalues()
 
-    #plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
+#plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
 
 #%% Fit 1D pinch-off scan:
 
-if __name__ == '__main__':
-    adata = analyseGateSweep(data1d, fig=100)
+adata = analyseGateSweep(data1d, fig=100)
 
 #%% Fit 2D cross
-if __name__ == '__main__':
-    from qtt.legacy import analyse2dot
-    qtt.measurements.scans.plotData(data, fig=30)
+from qtt.legacy import analyse2dot
+qtt.measurements.scans.plotData(data, fig=30)
 
-    pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
+pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
 
-    #gates.L.set(float(resultsfine['ptmv'][0]) )
-    #gates.R.set(float( resultsfine['ptmv'][1]) )
-    
- 
     
 #%% Make virtual gates
-
+np.set_printoptions(precision=2, suppress=True)
 
 crosscap_map = OrderedDict((
-('VP1', OrderedDict((('P1', 1), ('P2', 0.26), ('P3', 0)))),
-('VP2', OrderedDict((('P1', 0.57), ('P2', 1), ('P3', 0.3)))),
-('VP3', OrderedDict((('P1', -0.21), ('P2', -0.12), ('P3', 1))))
+('VP1', OrderedDict((('P1', 1), ('P2', 0.56), ('P3', 0.15)))),
+('VP2', OrderedDict((('P1', 0.62), ('P2', 1), ('P3', 0.593)))),
+('VP3', OrderedDict((('P1', 0.14), ('P2', 0.62), ('P3', 1))))
 ))
 virts = virtual_gates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
-gates.resetgates(gv, gv)
+gates.resetgates(gv, gv, verbose=0)
+virts.VP2.set(-60)
 
 cc1= virts.VP1()
-ccx= virts.VP2()
+cc2=virts.VP2()
+r=80
 scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc1-100, 'end': cc1 + 100, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
-scanjob['stepdata'] = dict({'param': virts.VP2, 'start': ccx - 100, 'end': ccx +100, 'step': 2.})
+scanjob['stepdata'] = dict({'param': virts.VP2, 'start': cc2 - r, 'end': cc2 +r, 'step': 2.})
 data = qtt.measurements.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
-gates.resetgates(gv, gv)
+gates.resetgates(gv, gv, verbose=0)
+
+
+print('virtual and physical gates: ' + ','.join( '%.2f' % x for x in [virts.VP1(),virts.VP2(),virts.VP3(), gates.P1(), gates.P2(), gates.P3() ]) )
+
+
 
 #%% Send data to powerpoint
-if __name__ == '__main__':
-    print('add copy data to Powerpoint use the following:')
-    print('   qtt.tools.addPPT_dataset(data);')
-    if 0:
-        qtt.tools.addPPT_dataset(data)
+print('add copy data to Powerpoint use the following:')
+print('   qtt.tools.addPPT_dataset(data);')
+if 0:
+    qtt.tools.addPPT_dataset(data)
 
 #%% Test objects
 
