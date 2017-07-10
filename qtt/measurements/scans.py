@@ -1379,7 +1379,16 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
-def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
+class sample_data_t (dict):
+    """ Hold all kind of sample specific data """
+    pass
+
+    def gate_boundaries(self, gate):
+        bnds = self.get('gate_boundaries', {})
+        b = bnds.get(gate, (-700, 100))
+        return b
+    
+def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
@@ -1400,12 +1409,15 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
         b = 0
     else:
         b = basevalues[gate]
+        
+    minimum_gate_value = sample_data['gate_boundaries'].get(gate, [-700, 100] )[0]
+    
     sweepdata = dict(
-        {'param': gate, 'start': max(b, 0), 'end': -750, 'step': -2})
+        {'param': gate, 'start': max(b, 0), 'end': minimum_gate_value, 'step': -2})
     if full == 0:
         sweepdata['step'] = -6
 
-    scanjob = dict(
+    scanjob = scanjob_t(
         {'sweepdata': sweepdata, 'minstrument': minstrument, 'wait_time': stepdelay})
 
     station.gates.set(gate, sweepdata['start'])  # set gate to starting value

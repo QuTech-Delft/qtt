@@ -59,8 +59,9 @@ def positionScanjob(scanjob, pt):
 
     return scanjob
 
+from qtt.measurements.scans import sample_data_t
 
-def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, step=-8, full=1):
+def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample_data_t(), scanrange=500, step=-8, full=1):
     """ Scan a one-dot
 
     Arguments
@@ -79,12 +80,20 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, scanrange=500, ste
     gates = station.gates
     gates.set(gg[1], float(basevalues[gg[1]] - 0))    # plunger
 
-    pv1 = float(od['pinchvalues'][0]) + 0
-    pv2 = float(od['pinchvalues'][2]) + 0
-    stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, 90))
-    sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, 90))
-    stepdata = dict({'param': gg[0], 'start': stepstart, 'end': pv1 - 10, 'step': step})
-    sweepdata = dict({'param': gg[2], 'start': sweepstart, 'end': pv2 - 10, 'step': step})
+    pv1 = float(od['pinchvalues'][0]) 
+    pv2 = float(od['pinchvalues'][2]) 
+    
+    r1=sample_data.gate_boundaries(gg[0])
+    r2=sample_data.gate_boundaries(gg[2])
+    
+    stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, r1[1]))
+    sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, r2[1]))
+    
+    stepend = np.maximum(pv1-10, r1[0])
+    sweepend = np.maximum(pv2-10, r2[0])
+    
+    stepdata = dict({'param': gg[0], 'start': stepstart, 'end': stepend, 'step': step})
+    sweepdata = dict({'param': gg[2], 'start': sweepstart, 'end': sweepend, 'step': step})
 
     wait_time = qtt.scans.waitTime(gg[2], station=station)
     wait_time_base = qtt.scans.waitTime(gg[0], station=station)
@@ -143,13 +152,13 @@ def onedotPlungerScan(station, od, verbose=1):
 from qtt.measurements.scans import scanPinchValue
 
 
-def onedotScanPinchValues(station, od, basevalues, outputdir, cache=False, full=0, verbose=1):
+def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, cache=False, full=0, verbose=1):
     """ Scan the pinch-off values for the 3 main gates of a 1-dot """
     od['pinchvalue'] = np.zeros((3, 1))
     keithleyidx = [od['instrument']]
 
     for jj, g in enumerate(od['gates']):
-        alldata = scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, minstrument=keithleyidx, cache=cache, full=full)
+        alldata = scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, sample_data=sample_data, minstrument=keithleyidx, cache=cache, full=full)
 
         adata = alldata.metadata['adata']
         od['pinchvalue'][jj] = adata['pinchvalue']

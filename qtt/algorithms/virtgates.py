@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 
 import qtt
 import os
-os.chdir(r'C:\BEP\spin-projects\projects\visuals_virtgates_1D')
 from detect_peaks import detect_peaks
 
 from qtt.algorithms.generic import smoothImage
