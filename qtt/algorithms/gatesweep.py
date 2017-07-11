@@ -41,7 +41,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         value = data.default_parameter_name()  # e.g. 'amplitude'
 
         x = data.arrays[g]
-        value = data.arrays[value]
+        value = np.array(data.arrays[value])
 
         # detect direction of scan
         scandirection = np.sign(x[-1] - x[0])

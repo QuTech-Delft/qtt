@@ -112,6 +112,7 @@ crosscap_map = OrderedDict((
 ))
 virts = virtual_gates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
 gates.resetgates(gv, gv, verbose=0)
+
 virts.VP2.set(-60)
 
 cc1= virts.VP1()

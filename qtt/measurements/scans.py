@@ -105,12 +105,12 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
     step (int, optional): Step value (default is -1)
 
     """
-    stepdata = scanjob_t(
-        {'param': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
+    sweepdata = scanjob_t(
+        {'param': g1, 'start': r1[0], 'end': r1[1], 'step': step})
     scanjob = dict({'sweepdata': sweepdata, 'minstrument': keithleyidx})
     if not g2 is None:
-        stepdata = dict(
-            {'param': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
+        stepdata = scanjob_t(
+            {'param': g2, 'start': r2[0], 'end': r2[1], 'step': step})
         scanjob['stepdata'] = stepdata
 
     return scanjob

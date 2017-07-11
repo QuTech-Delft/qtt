@@ -8,6 +8,7 @@ import sys
 import os
 import logging
 import cv2
+import time
 
 import qcodes
 # explicit import
@@ -17,6 +18,9 @@ from qcodes.plots.qcmatplotlib import MatPlot
 import qtt.data
 from qtt.data import loadExperimentData
 import qtt.algorithms.onedot 
+from qtt.measurements.scans import scanjob_t
+import matplotlib.pyplot as plt
+import datetime
 
 
 #%%
@@ -29,17 +33,15 @@ from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.measurements.scans import pinchoffFilename, fixReversal
 from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
+from qtt.measurements.scans import scan2D, scan1D
+from qtt.tools import stripDataset
 
 
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import plotPoints, tilefigs
-import matplotlib.pyplot as plt
-import datetime
 
 #%%
 
-from qtt.measurements.scans import scan2D, scan1D
-from qtt.tools import stripDataset
 
 
 def positionScanjob(scanjob, pt):
@@ -118,8 +120,6 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample
 
     return alldata, od
 
-import time
-
 
 def onedotPlungerScan(station, od, verbose=1):
     """ Make a scan with the plunger of a one-dot """
@@ -130,7 +130,7 @@ def onedotPlungerScan(station, od, verbose=1):
 
     pv = od['pinchvalues'][1]
 
-    scanjob = dict({'minstrument': [od['instrument']]})
+    scanjob = scanjob_t({'minstrument': [od['instrument']]})
     scanjob['sweepdata'] = dict({'param': gg[1], 'start': 50, 'end': pv, 'step': -1})
 
     gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
