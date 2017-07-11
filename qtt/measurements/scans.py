@@ -167,53 +167,6 @@ from qtt.algorithms.generic import findCoulombDirection
 from qtt.data import dataset2Dmetadata, dataset2image
 
 
-def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
-    """ Make high-resolution scan of a one-dot """
-    if verbose:
-        print('onedotHiresScan: one-dot: %s' % od['name'])
-
-    # od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=None)
-    if ptv is None:
-        ptv = od['balancepoint']
-    keithleyidx = [od['instrument']]
-    scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
-                              'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
-    scanjobhi['minstrument'] = keithleyidx
-    scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], -780)
-    scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
-
-    wait_time = waitTime(od['gates'][2], station=station)
-    scanjobhi['sweepdata']['wait_time'] = wait_time
-    scanjobhi['stepdata']['wait_time'] = 2*waitTime(None, station) + 3 * wait_time
-
-    alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-        alldatahi, verbose=0, arrayname=None)
-    impixel, tr = dataset2image(alldatahi, mode='pixel')
-
-    ptv, fimg, tmp = qtt.algorithms.onedot.onedotGetBalanceFine(
-        impixel, alldatahi, verbose=1, fig=fig)
-
-    if tmp['accuracy'] < .2:
-        logging.info('use old data point!')
-        # use normal balance point (fixme)
-        ptv = od['balancepoint']
-        ptx = od['balancepointpixel'].reshape(1, 2)
-    else:
-        ptx = tmp['ptpixel'].copy()
-    step = scanjobhi['stepdata']['step']
-    val = findCoulombDirection(
-        impixel, ptx, step, widthmv=8, fig=None, verbose=1)
-    od['coulombdirection'] = val
-
-    od['balancepointfine'] = ptv
-    od['setpoint'] = ptv + 10
-
-    alldatahi.metadata['od'] = od
-
-    scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
-    return scandata, od
-
 
 #%%
 
@@ -514,6 +467,16 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
     return sj
 
 #%%
+
+class sample_data_t (dict):
+    """ Hold all kind of sample specific data """
+    pass
+
+    def gate_boundaries(self, gate):
+        bnds = self.get('gate_boundaries', {})
+        b = bnds.get(gate, (-700, 100))
+        return b
+    
 
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
@@ -1322,15 +1285,6 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
-class sample_data_t (dict):
-    """ Hold all kind of sample specific data """
-    pass
-
-    def gate_boundaries(self, gate):
-        bnds = self.get('gate_boundaries', {})
-        b = bnds.get(gate, (-700, 100))
-        return b
-    
 def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
@@ -1541,4 +1495,55 @@ def test_scan2D(verbose=0):
     gates.close()
 
 
+
+def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), fig=4000, ptv=None):
+    """ Make high-resolution scan of a one-dot """
+    if verbose:
+        print('onedotHiresScan: one-dot: %s' % od['name'])
+
+    # od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=None)
+    if ptv is None:
+        ptv = od['balancepoint']
+    keithleyidx = [od['instrument']]
+    scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
+                              'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
+    
+    bstep = sample_data.gate_boundaries(od['gates'][0])
+    bsweep = sample_data.gate_boundaries(od['gates'][2])
+    
+    scanjobhi['minstrument'] = keithleyidx
+    scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], bstep[0])
+    scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], bsweep[0])
+
+    wait_time = waitTime(od['gates'][2], station=station)
+    scanjobhi['sweepdata']['wait_time'] = wait_time
+    scanjobhi['stepdata']['wait_time'] = 2*waitTime(None, station) + 3 * wait_time
+
+    alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
+    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+        alldatahi, verbose=0, arrayname=None)
+    impixel, tr = dataset2image(alldatahi, mode='pixel')
+
+    ptv, fimg, tmp = qtt.algorithms.onedot.onedotGetBalanceFine(
+        impixel, alldatahi, verbose=1, fig=fig)
+
+    if tmp['accuracy'] < .2:
+        logging.info('use old data point!')
+        # use normal balance point (fixme)
+        ptv = od['balancepoint']
+        ptx = od['balancepointpixel'].reshape(1, 2)
+    else:
+        ptx = tmp['ptpixel'].copy()
+    step = scanjobhi['stepdata']['step']
+    val = findCoulombDirection(
+        impixel, ptx, step, widthmv=8, fig=None, verbose=1)
+    od['coulombdirection'] = val
+
+    od['balancepointfine'] = ptv
+    od['setpoint'] = ptv + 10
+
+    alldatahi.metadata['od'] = od
+
+    scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
+    return scandata, od
 
