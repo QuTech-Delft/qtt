@@ -16,7 +16,6 @@ from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
 from qtt.tools import freezeclass
 
-
 #%%
         
 @freezeclass
@@ -179,7 +178,7 @@ class sensingdot_t:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
 
-        scanjob1 = dict()
+        scanjob1 = qtt.measurements.scans.scanjob_t()
         scanjob1['sweepdata'] = dict(
             {'param': [gg[1]], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
         scanjob1['minstrument'] = keithleyidx
@@ -189,10 +188,7 @@ class sensingdot_t:
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
-        alldata = qtt.scans.scan1D(sd.station, scanjob=scanjob1)
-
-        # if not outputdir == None:
-        #    saveCoulombData(outputdir, alldata)
+        alldata = qtt.measurements.scans.scan1D(sd.station, scanjob=scanjob1)
 
         return alldata
 

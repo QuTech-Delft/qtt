@@ -59,7 +59,7 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c, verbose=1):
     virtual_matrix = OrderedDict()                                                                                            
     for ii, vname in enumerate(virt_basis):
         if verbose:
-            print('create_virtual_matrix_dict: adding %s ' % (k,))
+            print('create_virtual_matrix_dict: adding %s ' % (vname,))
         tmp=OrderedDict( zip(physical_gates, c[ii,:] ) )           
         virtual_matrix[vname] = tmp
     return virtual_matrix
