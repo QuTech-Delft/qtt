@@ -1384,7 +1384,7 @@ def Vtrace(cdata, param, fig=None):
     pp = np.array(np.hstack((p1, cc, p2)))
     pp = np.array(np.hstack((p1, p2)))
     if fig is not None:
-        plt.figure(25)
+        plt.figure(fig)
 
         pmatlab.plotPoints(pp, '--k', markersize=20, linewidth=3, label='scan line')
         pmatlab.plotPoints(pp, '.y', markersize=20)
