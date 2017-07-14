@@ -4,6 +4,32 @@ from datetime import datetime
 import qcodes
 import os
 import h5py
+import logging
+
+#%%
+
+def list_states(verbose=1):
+    """ List available states of the system
+    
+    Args:
+        verbose (int)
+    
+    Returns:
+        states (list): List of string tags
+        
+    See also:
+        load_state
+    """
+    statefile=qcodes.config.get('statefile', None)
+    if statefile is None:
+        statefile=os.path.join(os.path.expanduser('~'), 'statefile.hdf5')
+    tags=[]
+    with h5py.File(statefile, 'r') as h5group:
+        tags=list( h5group.keys() )
+    if verbose:
+        print('states on system from file %s: ' % (statefile, ), end='' )
+        print(', '.join([str(x) for x in tags]) )
+    return tags
 
 #%%
 def load_state(tag = None, station=None, verbose=1):
@@ -29,11 +55,14 @@ def load_state(tag = None, station=None, verbose=1):
             raise Exception('tag %s not in file' % tag)
         obj = hickle.load(  h5group, path=tag)
     if station is not None:
-        gv=obj.get('gatevalues')
-        if gv is not None:
-            if verbose>=1:
-                print('load_state: resetting gate values')
-            station.gates.resetgates(gv, gv, verbose=verbose>=2)
+        try:
+            gv=obj.get('gatevalues')
+            if gv is not None:
+                if verbose>=1:
+                    print('load_state: resetting gate values')
+                station.gates.resetgates(gv, gv, verbose=verbose>=2)
+        except Exception as ex:
+            logging.exception(ex)
     return obj
             
 def save_state(station, tag = None, overwrite=False, verbose=1):
