@@ -80,7 +80,7 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
     """
     if arrayname is None:
         arrayname = dataset.default_parameter_name()
-    tr = image_transform(dataset, mode=mode, unitsperpixel=unitsperpixel)
+    tr = image_transform(dataset, arrayname=arrayname, mode=mode, unitsperpixel=unitsperpixel)
     im = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname].ndarray
@@ -88,7 +88,7 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
     return im, tr
 
 
-def dataset2image2(dataset):
+def dataset2image2(dataset, arrayname=None):
     """ Extract image from dataset
 
     Arguments
@@ -101,7 +101,7 @@ def dataset2image2(dataset):
     See also: dataset2image
     """
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-        dataset, verbose=0, arrayname=None)
+        dataset, verbose=0, arrayname=arrayname)
     tr = image_transform(dataset, mode='pixel')
     imraw = None
     impixel = None
@@ -392,8 +392,9 @@ class image_transform:
         self.extent = None  # image extent in pixel
         self.verbose = verbose
         self.dataset = dataset
+        self.arrayname = arrayname
         extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-            dataset, arrayname=arrayname)
+            dataset, arrayname=self.arrayname)
         self.vstep = vstep
         self.vsweep = vsweep
 
@@ -525,7 +526,7 @@ class image_transform:
             self.Hi, np.array(pt).astype(float))
 
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-            self.dataset, arrayname=None, verbose=0)
+            self.dataset, arrayname=self.arrayname, verbose=0)
         nx = vsweep.size  # zdata.shape[0]
         ny = vstep.size  # zdata.shape[1]
 
@@ -557,7 +558,7 @@ class image_transform:
 
         """
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-            self.dataset, arrayname=None, verbose=0)
+            self.dataset, arrayname=self.arrayname, verbose=0)
         # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
         nx = vsweep.size
         ny = vstep.size
