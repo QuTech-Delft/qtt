@@ -598,7 +598,8 @@ class scanjob_t(dict):
                     scaninfo['start'] = -scaninfo['range']/2
                     scaninfo['end'] = scaninfo['range']/2
                 else:
-                    pass
+                    scaninfo['start'] = -scaninfo['range']/2
+                    scaninfo['end'] = scaninfo['range']/2
 
     def _parse_2Dvec(self):
         """ Adjust the parameter field in the step- and sweepdata for 2D vector scans.
@@ -685,9 +686,15 @@ class scanjob_t(dict):
             else:
                 raise Exception('unknown scantype')
             if sweeplength is not None:
-                sweepdata['step'] = (sweepdata['end'] - sweepdata['start']) / sweeplength
+                if 'range' in sweepdata:
+                    sweepdata['step'] = sweepdata['range'] / sweeplength
+                else:
+                    sweepdata['step'] = (sweepdata['end'] - sweepdata['start']) / sweeplength
             if steplength is not None:
-                stepdata['step'] = (stepdata['end'] - stepdata['start']) / steplength
+                if 'range' in stepdata:
+                    stepdata['step'] = stepdata['range'] / steplength
+                else:
+                    stepdata['step'] = (stepdata['end'] - stepdata['start']) / steplength
 
             sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
             stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
