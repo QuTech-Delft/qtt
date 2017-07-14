@@ -44,7 +44,7 @@ setup(name='qtt',
       # if we want to install without tests:
       # packages=find_packages(exclude=["*.tests", "tests"]),
       packages=find_packages(),
-      requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'nose'], install_requires=[
+      requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'], install_requires=[
           'numpy>=1.10',
           'scipy',
           'IPython>=0.1',
