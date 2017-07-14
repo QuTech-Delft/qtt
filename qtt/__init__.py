@@ -18,8 +18,8 @@ from qtt.version import __version__
 
 from qtt.tools import cfigure, plot2Dline
 from qtt.data import *
-from qtt.algorithms import *
 from qtt.algorithms.functions import logistic
+from qtt.measurements.storage import save_state, load_state 
 
 import qtt.live_plotting
 import qtt.gui.parameterviewer
