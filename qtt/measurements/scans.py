@@ -874,6 +874,8 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     """ Measure block data with M4i
     
     Args:
+        digitizer (handle to instrument)
+        read_ch (int): channel to read
         width (None or float): if a float, then process data
     Returns:
         data (numpy array)
@@ -903,6 +905,12 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     return data
 
 def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=5000, period=None, sawtooth_width=None):
+    if isinstance(minstrhandle, str):
+        try:
+            instrument=getattr(station, minstrhandle)
+            minstrhandle=instrument            
+        except:
+            pass
     try:
        isfpga = isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
     except:
@@ -912,6 +920,7 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
        ism4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)                  
     except:
        ism4i = False
+        
     if isfpga:
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
         devicedata = minstrhandle.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
@@ -923,6 +932,9 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
                                  width=sawtooth_width, post_trigger=post_trigger)
     else:
         raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+    if data.size==0:
+        raise Exception('Data acquisition on %s failed' % minstrhandle)
+        
     return data
 
 #%%

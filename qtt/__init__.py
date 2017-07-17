@@ -99,7 +99,6 @@ from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, St
 for c in [ Parameter, Instrument, StandardParameter, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str
 
-
 #%% Enhance the qcodes functionality
 
 try:
