@@ -210,7 +210,7 @@ def get_instrument(instr, station=None):
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
-    if isinstance(mparams, (int, str, Parameter)):
+    if isinstance(mparams, (int, str, Parameter, tuple)):
         # for convenience
         mparams = [mparams]
     elif isinstance(mparams, (list, tuple)):
@@ -220,6 +220,12 @@ def get_measurement_params(station, mparams):
     for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
+        elif isinstance(x, tuple):
+            # pair of instrument and channel
+            instrument =get_instrument(x[0])
+            
+            params += [getattr(instrument, 'channel_%d' % x[1])]
+            
         elif isinstance(x, str):
             if x.startswith('digitizer'):
                 params += [getattr(station.digitizer, 'channel_%c' % x[-1])]
@@ -315,6 +321,10 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         delta, tprev, update_plot = delta_time(tprev, thr=.5)
         if (liveplotwindow) and update_plot:
             myupdate()
+
+        if qtt.abort_measurements():
+            print('  aborting measurement loop')
+            break
 
     myupdate()
     dt = time.time() - t0
@@ -430,25 +440,6 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     return alldata
 
 #%%
-
-
-def wait_bg_finish(verbose=0):
-    """ Wait for background job to finish """
-    if not hasattr(qcodes, 'get_bg'):
-        return True
-    for ii in range(10):
-        m = qcodes.get_bg()
-        if verbose:
-            print('wait_bg_finish: loop %d: bg %s ' % (ii, m))
-        if m is None:
-            break
-        time.sleep(0.05)
-    m = qcodes.get_bg()
-    if verbose:
-        print('wait_bg_finish: final: bg %s ' % (m, ))
-    if m is not None:
-        logging.info('background job not finished')
-    return m is None
 
 
 def makeScanjob(sweepgates, values, sweepranges, resolution):

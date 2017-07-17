@@ -155,6 +155,9 @@ class sensingdot_t:
                 d[name] = str(d[name])
         return d
 
+    def gates(self):
+        return self.sdval
+    
     def show(self):
         gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
