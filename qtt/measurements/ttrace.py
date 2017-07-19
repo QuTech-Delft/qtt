@@ -77,14 +77,17 @@ def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
     return create_virtual_matrix_dict(cc_basis, physical_gates, invc, verbose=1)
 
 
-def create_ttrace(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, markeridx=1):
+def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, markeridx=1):
     """ Create a Toivo trace
 
     Args:
-        ttrace (dict)
+        ttrace (ttrace_t)
         pulsars (list): list of Pulsar objects
         markeridx (int): index of Pular to use for marker 
 
+    Returns:
+        ttraces (waveforms)
+        ttrace
     """
 
     fillperiod = ttrace['fillperiod']
@@ -188,12 +191,6 @@ def create_ttrace(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, marke
 #%%
 
 
-def set_awg_trace(vawg, awgs, clock=10e6):
-    """  Set the awg in correct operation mode for the ttraces """
-    vawg.AWG_clock = clock
-    vawg.awg.AWG_clock=clock
-    for a in awgs:
-        a.clock_freq(clock)
 
 def define_awg5014_channels(pulsar, marker1highs=.25):
     """ Helper function """
@@ -221,6 +218,38 @@ def define_awg5014_channels(pulsar, marker1highs=.25):
                               delay=0, active=True)
 
 
+def set_awg_trace(virtualawg, clock=10e6):
+    """ Set the virtual awg in ttrace mode
+    
+    Args:
+        virtualawg (virtual awg object)
+        clock (float): clock speed to set    
+    """
+    
+    virtualawg.AWG_clock=clock
+    for a in virtualawg._awgs:
+        a.clock_freq(clock)
+
+def init_ttrace(station, awgclock=10e6):    
+    pulsar_objects =[]
+    
+    set_awg_trace(station.awg, awgclock)
+    for ii,a in enumerate(station.awg._awgs):
+        print('init_ttrace: creating Pulsar %d' % ii)
+        a.clock_freq.set(awgclock)
+
+        p = ps.Pulsar()
+        p.clock = awgclock
+        setattr(station, 'pulsar%d' % ii, p)
+        p.AWG=a        
+
+
+        define_awg5014_channels(p, marker1highs=2.6)
+        
+        pulsar_objects+=[p]
+
+    return pulsar_objects
+        
 def lastpulse(filler_element):
     """ Return last pulse from a sequence """
     keys = list(filler_element.pulses.keys())
