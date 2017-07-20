@@ -824,7 +824,6 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     return alldata
 
-
 #%%
 
 def process_digitizer_trace(data, width, period, samplerate, padding=0,
@@ -1092,6 +1091,79 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     alldata.write(write_metadata=True)
 
     return alldata
+
+def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None,start=0):
+    """Converts the sweepdata or stepdata of a scanjob in those needed for virtual vector scans
+    Inputs:
+        virtual_parameter: parameter of the virtual gate which is varied
+        g_range (float): scan range
+        start (float): start if the scanjob data 
+    Outputs:
+        sweeporstepdata (dict): sweepdata or stepdata needed in the scanjob for virtual vector scans"""  
+    if sweeporstepdata is None:
+        sweeporstepdata = {}
+    if hasattr(virtual_parameter, 'comb_map'):
+        pp=dict( [ (p.name, r) for p, r in virtual_parameter.comb_map if round(r,5) != 0])
+    else:
+        pp={virtual_parameter.name: 1}
+    sweeporstepdata={'start': start, 'range':g_range, 'end': start+g_range, 'param': pp}
+    return sweeporstepdata
+
+def scan2D_virt(station,scanjob,virt_gates,vgvg, plotQ, center=None, mode='real', wait_time_sweep2D=0.2, wait_time_step=1.3, rang=100, nsteps=60):#TODO:merge with the above scan2Dfast code
+    """Makes 2D slices, charge stability diagrams, of virtual gate space along two virtual gate axes 
+    Inputs:
+        station (station): station containing parameters needed for the scan
+        scanjob (scanjob_t): information needed to do the scans
+        virt_gates (virtual_gates instrument): virtual gates used in the scans
+        vgvg (list of 2 strings): two virtual gate dimensions to scan
+        plotQ (QtPlot): liveplotwindow
+        center (list of two floats): virtual gate coordinates of the center of the scan
+        mode (string): if you are using af real or simulated setup
+        wait_time_sweep2D (float): wait time before each sweep
+        wait_time_step (float): wait time before each step
+        rang (float): range of each dimension in the scan
+        nsteps (float): number of steps done in the scan"""
+    start_time=time.clock()
+    if center is not None:
+        virt_gates.set(vgvg[0],center[0])
+        virt_gates.set(vgvg[1],center[1])
+    startvgvg=virt_gates.allvalues()
+    
+    startsweep = virt_gates.get(vgvg[0])-rang/2
+    startstep = virt_gates.get(vgvg[1])-rang/2
+    step=rang/nsteps
+    
+    scanjob['Naverage'] = 200
+    
+    if mode=='real':       
+        scanjob['sweepdata']=create_vectorscan(virt_gates.parameters[vgvg[0]], g_range=rang)
+        scanjob['sweepdata']['wait_time']=wait_time_sweep2D
+        scanjob['sweepdata']['step']=0.2
+        scanjob['stepdata']=create_vectorscan(virt_gates.parameters[vgvg[1]], g_range=rang)
+        scanjob['stepdata']['step']=step
+        scanjob['stepdata']['wait_time']=wait_time_step
+        data = qtt.measurements.scans.scan2Dfast(station, scanjob, liveplotwindow=plotQ)
+        default_parameter_array_key='measured'
+    
+    if mode=='sim':       
+        scanjob['sweepdata']=create_vectorscan(virt_gates.parameters[vgvg[0]], g_range=rang)
+        scanjob['sweepdata']['wait_time']=wait_time_sweep2D
+        scanjob['sweepdata']['step']=0.2
+        scanjob['stepdata']=create_vectorscan(virt_gates.parameters[vgvg[1]], g_range=rang)
+        scanjob['stepdata']['step']=step
+        scanjob['stepdata']['wait_time']=wait_time_step
+    virt_gates.resetgates(startvgvg, startvgvg)
+    
+    virtsweep1D=virt_gates[vgvg[0]][startsweep:(startsweep+rang):rang/np.size(data.arrays[default_parameter_array_key],1)]
+    virtstep1D=virt_gates[vgvg[1]][startstep:(startstep+rang):step]
+    virtdata=makeDataSet2D( virtstep1D,virtsweep1D,preset_data=data.arrays[default_parameter_array_key][:,:])
+    
+    MatPlot(virtdata.measured)
+    scan2Dtime_v=round(time.clock() - start_time,2)
+    print("virtual 2D scan time %s" % scan2Dtime_v)
+    qtt.tools.addPPTslide(fig=plt.gcf().number)
+    return(virtdata)
+
 
 
 def plotData(alldata, diff_dir=None, fig=1):

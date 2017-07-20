@@ -457,7 +457,14 @@ class virtual_awg(Instrument):
             data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
 
         return data_processed
-
+    
+    def reset_AWG(self, clock=1e8):
+        """ Reset AWG to videomode and scanfast """
+        self.AWG_clock = clock
+        for a in self._awgs:
+            a.clock_freq.set(clock)
+            a.trigger_mode.set('CONT')    
+            a.trigger_source.set('INT')
 
 #%%
 def plot_wave_raw(wave_raw, samplerate=None, station=None):

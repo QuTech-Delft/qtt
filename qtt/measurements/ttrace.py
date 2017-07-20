@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
 """ Code for creating and parsting t-traces
 
-@author: eendebakpt
+@author: eendebakpt (houckm)
 """
 
 #%% Load packages
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+import pyqtgraph as pg
 
-import qcodes
 import qtt
-#import qtt.measurement.scans
 
-from pycqed.measurement.waveform_control.pulse import Pulse
+import sys
+sys.path.append("D:\\Users\\houckm\\PycQED_py3") #TODO: needed to install PycQED on computer, ugly
+
+import pycqed
 from pycqed.measurement.waveform_control import pulse
+from pycqed.measurement.waveform_control import pulsar as ps
 
 from pycqed.measurement.waveform_control.sequence import Sequence
-from pycqed.measurement.waveform_control import pulse, element
+from pycqed.measurement.waveform_control import element
 
 #%% Virtual
 
@@ -47,16 +49,37 @@ sq_pulse_marker = pulse.SquarePulse(
     channel='ch1_marker1', name='A square pulse on MW pmod')
 lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
 
-
 def create_virtual_matrix_dict(cc_basis, physical_gates, c, verbose=1):
-    """ Convert matrix to mapping notation """
-
-    virtual_matrix = OrderedDict()
-    for ii, k in enumerate(cc_basis):
+    """ Converts the virtual gate matrix into a virtual gate mapping
+    Inputs:
+        physical_gates (list): containing all the physical gates in the setup
+        cc_basis (list): containing all the virtual gates in the setup
+        c (array): virtual gate matrix
+    Outputs: 
+        virtual_matrix (dict): dictionary, mapping of the virtual gates"""
+    virtual_matrix = OrderedDict()                                                                                            
+    for ii,k in enumerate(cc_basis):
         if verbose:
             print('create_virtual_matrix_dict: adding %s ' % (k,))
-        tmp = OrderedDict(zip(physical_gates, c[ii, :]))
-        tmp[physical_gates[ii]] = 1
+        tmp=OrderedDict( zip(physical_gates, c[ii,:] ) )   
+        tmp[ physical_gates[ii]] = 1
+        virtual_matrix[k] = tmp
+    return virtual_matrix
+
+def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
+    """ Converts the virtual gate matrix into a virtual gate mapping needed for the ttraces
+    Inputs:
+        physical_gates (list): containing all the physical gates in the setup
+        cc_basis (list): containing all the virtual gates in the setup
+        c (array): virtual gate matrix
+    Outputs: 
+        virtual_matrix (dict): dictionary, mapping of the virtual gates needed for the ttraces """
+    invc=np.linalg.inv(c)                                                                                    
+    virtual_matrix = OrderedDict()                                                                                            
+    for ii,k in enumerate(cc_basis):
+        if verbose:
+            print('create_virtual_matrix_dict: adding %s ' % (k,))
+        tmp=OrderedDict( zip(physical_gates, invc[:,ii] ) )    #changed to test!!
         virtual_matrix[k] = tmp
     return virtual_matrix
 
@@ -175,9 +198,9 @@ def create_ttrace(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, marke
 def set_awg_trace(vawg, awgs, clock=10e6):
     """  Set the awg in correct operation mode for the ttraces """
     vawg.AWG_clock = clock
+    vawg.awg.AWG_clock=clock
     for a in awgs:
         a.clock_freq(clock)
-
 
 def define_awg5014_channels(pulsar, marker1highs=.25):
     """ Helper function """
@@ -373,3 +396,200 @@ class MultiTracePlot:
             print('MultiTracePlot: stop readout')
         self.timer.stop()
         self.win.setWindowTitle(self.title + ': stopped')
+        
+#%%
+
+class ttrace_t(dict):#TODO: check definitions of markerperiod and alpha
+    """ Structure that contains information about ttraces
+    
+        
+    Fields:
+        period (float): the time of the trace for each dot
+        markerperiod (float):  ?
+        fillperiod (float): the time it takes to come to the start voltage of the relevant signal end to go back to the initial value afterwards
+        period0:time before the trace sequence starts
+        alpha (float):?
+        fpga_delay (float): delay time between the actual signal and the readout of the FPGA 
+        fpgafreq: readout frequency of the FPGA
+        awgclock: clock frequency of the AWG
+        traces: contains the extrema the traces have to have
+        ....           
+    ...
+    
+    """
+           
+#%% TODO: try to merge ttrace and ttraces 
+def activate_ttraces(station, location, amplitudes, virt_map_for_traces, vgates,pgates,awgclock=10e6):   
+    """Activates orthogonal 1D sweeps in each dimension shortly after each other according to the virtual gate map
+    Inputs:
+        station: containing at least the clock frequency and mapping of the AWG and the readout frequency of the FPGA
+        location: location of the setup; 3dot,4dot,8dot or vdot
+        amplitudes: amplitudes of the ttraces
+        virt_map_for_traces: mapping of the virtual gate instrument according to the function create_virtual_matrix_dict_inv
+        vgates: virtual gates corresponding to the chemical potentials
+        pgates: plunger gates
+        awgclock (default=10e6): clock frequency the awg needs to have for ttrace operation (typically different than that needed for scan1Dfast etc.
+    Outputs:
+        ttraces,ttrace: containing information about the ttraces put on the AWG"""
+    #"""Define the pulsar object, the pulsar is the final object containing the traces which is put on the AWG"""
+    pulsar_objects =[]    
+    for ii,a in enumerate(station.awg._awgs):
+        print('creating Pulsar %d' % ii)
+        a.clock_freq.set(awgclock)
+        p = ps.Pulsar()
+        p.clock = awgclock
+        setattr(station, 'pulsar%d' % ii, p)
+        p.AWG=a        
+        define_awg5014_channels(p, marker1highs=2.6)    
+        pulsar_objects+=[p]
+      
+    #"""Define amplitudes and frequencies of Toivo traces according to the given virtual gate map"""  
+    ttrace = ttrace_t({'markerperiod': 80e-6, 'fillperiod': 100e-6, 'period': 500e-6, 'alpha': .1})
+    ttrace['period0']=250e-6
+    ttrace['fpga_delay']=2e-6
+    ttrace['traces'] = []; ttrace['traces_volt'] = []
+    ttrace['fpgafreq']=station.fpga.sampling_frequency()
+    ttrace['awgclock']=awgclock
+    
+    
+    if location=='3dot':
+        hw=station.hardware3dot#for now changed!!
+        awg_to_plunger_plungers=dict( [('P1', hw.awg_to_P1()), ('P2', hw.awg_to_P2()), ('P3',hw.awg_to_P3() )])
+    else:
+        awg_to_plunger_plungers=dict( [('P1', 103), ('P2', 100), ('P3',102 ), ('P4', 104)])
+    
+    #"""Map them onto the traces itself"""
+    for ii, v in enumerate(vgates):
+        R= amplitudes[ii]
+        print('gate %s: amplitude %.2f [mV]' % (v, R, ))   
+        q=virt_map_for_traces[v] #replaced vg
+        print(q)        
+        w = [(k, R*q[k]/awg_to_plunger_plungers[k]) for k in pgates]
+        wvolt = [(k, R*q[k]) for k in pgates]
+        ttrace['traces'] += [w]
+        ttrace['traces_volt'] += [wvolt]
+    if location=='vdot':
+        ttrace['traces'] = []
+        w=[('P1', 60/awg_to_plunger_plungers['P1'])]
+        ttrace['traces'] += [w]
+        w=[('P3', 50/awg_to_plunger_plungers['P3'])]
+        ttrace['traces'] += [w]
+        w=[('P4', 50/awg_to_plunger_plungers['P4'])]
+        ttrace['traces'] += [w]
+                   
+    #"""Create the ttrace waveforms"""     
+    ttrace['awg_delay'] = 0e-4+2e-5 
+    awg_map=station.awg.awg_map
+    markeridx=awg_map['fpga_mk'][0]
+    ttraces, ttrace = create_ttrace(ttrace, name='ttrace', pulsars=pulsar_objects, awg_map=awg_map, markeridx=markeridx)
+    ttrace_element = ttraces[0]
+    print('waveform: %d elements' % ttrace_element.waveforms()[0].size)
+           
+    #"""Put ttraces on the pulsars of the awg"""   
+    for ii, t in enumerate(ttraces):
+        seq = Sequence('8dot_sequence_awg%d' % ii)
+        seq.append(name='toivotrace', wfname=t.name, trigger_wait=False,)    
+        elts = [t]
+        # program the Sequence
+        pulsar = pulsar_objects[ii]
+        pulsar.program_awg(seq, *elts)
+    
+      
+    #"""Really run the awg"""
+    awgs=station.awg._awgs
+    set_awg_trace(station,awgs, awgclock)
+    for awg in awgs:
+        self = awg
+        if 1:
+            #TODO: needed?
+            v = self.write('SOUR1:ROSC:SOUR INT')
+            v = self.ask('SOUR1:ROSC:SOUR?')
+            print('%s: %s' % (awg, v))    
+        awg.run()
+    print('ttraces running')
+    return(ttraces,ttrace)
+    
+
+def plot_ttraces(ttraces): 
+    """Plots the ttraces which are put on the AWG
+    Inputs:
+        ttraces: information of the ttraces put on the AWG"""
+    for ii, ttrace_element in enumerate(ttraces):
+        v = ttrace_element.waveforms()
+        kk = v[1].keys()
+        kkx = [k for k in kk if np.any(v[1][k])]  
+        show_element(ttrace_element, fig=100 + ii, keys=kkx, label_map=None)
+        plt.legend(numpoints=1)
+       
+      
+def dummy_read(station, idx=[1,],Naverage=26):#TODO: what does idx exactly mean?
+    """Reads the raw data
+    Inputs: 
+        station: station at leas containing the FPGA
+        idx: indexes of channels used
+        Naverage: averaging filter over the readout function
+    Outputs: 
+        data_raw: the raw readout data ="""
+    ReadDevice = ['FPGA_ch%d' % c for c in idx ]
+    qq=station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
+    data_raw = np.array([qq[i] for i in idx])
+    return data_raw    
+
+def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax and tx, try tho put it in the ttrace class
+    """Read the data, split them in the different dimension sweeps
+    Inputs:
+        data_raw: the raw readout data
+        ttraces,ttrace: information of the ttraces put on the AWG in order to now how to split the data
+    Outputs:
+        tt: containing information of the timing of the function
+        datax:
+        tx: the actual signal which is can be used for further purposes """
+    fpgafreq=ttrace['fpgafreq']
+    
+    ttrace_element= ttraces[0]
+    tracedata=ttrace['tracedata']
+    ttotal = ttrace_element.waveforms()[0].size / ttrace['awgclock']         
+    qq=ttotal*fpgafreq
+
+    datax = data_raw.copy()
+    datax[:,0] = np.mean(datax[:,1:2], axis=1)
+    
+    ff=data_raw.shape[1]/qq                
+    fpgafreqx=fpgafreq*ff
+    tt=np.arange(0, datax.shape[1])/fpgafreqx
+    tx=[]
+    if tracedata is not None:
+        for x in tracedata:
+            sidx=int(x['start_time']*fpgafreqx)
+            eidx=int(x['end_time']*fpgafreqx)
+            if verbose>=2:
+                print('sidx %s, eidx %s'  % (sidx, eidx))
+            tx+=[ datax[:, sidx:eidx]]
+    return tt, datax, tx
+
+def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amount of input arguments
+    """Plot the raw data and the parsed data of the resulting signal
+    Inputs:
+        tt: parsed data including timing
+        tx: the actual signal 
+        data_raw: raw readout data
+        ttrace: data about the traces put on the AWG"""
+    plt.figure(fig)
+    plt.clf()
+    for i in range(data_raw.shape[0]):
+        plt.plot(tf*tt, data_raw[i], '.')
+    if tf==1e3:
+        plt.xlabel('Time [ms]')
+    else:
+        plt.xlabel('Time')
+    for ii, x in enumerate(ttrace['tracedata']):
+        s = x['start_time'] * tf # fpgafreq
+        e = x['end_time'] * tf # fpgafreq
+        qtt.pgeometry.plot2Dline([-1, 0, s], '--')
+        qtt.pgeometry.plot2Dline([-1, 0, e], ':')
+    plt.figure(400); plt.clf()
+    nx=int(np.ceil(np.sqrt(len(tx))))
+    ny=int(np.ceil(len(tx)/nx))
+    for ii, q in enumerate(tx):
+        plt.subplot(nx,ny,ii+1)
+        plt.plot(q.T)
