@@ -129,6 +129,13 @@ jupyter notebook
 call deactivate %USERNAME%
 ```
 
+## Hickle
+
+To install dev versin of hicke:
+```
+pip install git+https://github.com/telegraphic/hickle.git@dev
+```
+
 ## Install redis
 
 For Windows install redis from https://github.com/MSOpenTech/redis.
