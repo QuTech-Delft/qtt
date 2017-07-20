@@ -42,6 +42,14 @@ def trace_read_virtual(ttraces, gates):
 
 #%%
 
+def awg_info(awgs):
+      """ Print information about awgs """
+      for a in awgs:            
+        print('clock %s MHz' % ( a.clock_freq()/1e6, ))
+        print('awg run_mode %s '  % (a.run_mode(),) )
+        print('awg trigger_mode %s '  % (a.trigger_mode(),     ) )
+        print('awg trigger sources %s'  % (a.trigger_source(),     ) )
+
 
 sq_pulse = pulse.SquarePulse(channel='ch1', name='A square pulse')
 sq_pulse_marker = pulse.SquarePulse(
@@ -75,6 +83,26 @@ def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
 
     invc=np.linalg.inv(c)                                                                                    
     return create_virtual_matrix_dict(cc_basis, physical_gates, invc, verbose=1)
+
+
+def show_ttrace_elements(ttrace_elements, fig=100):
+    """ Show ttrace elements """
+    for ii, ttrace_element in enumerate(ttrace_elements):
+        print('waveform %d: %d elements' % (ii, ttrace_element.waveforms()[0].size) )
+        v = ttrace_element.waveforms()
+        kk = v[1].keys()
+    
+        kkx = [k for k in kk if np.any(v[1][k])]  # non-zero keys
+    
+        pi = ii
+        label_map = [(t[1], k) for k, t in awg_map.items() if t[0] == pi]
+    
+        # print(kkx)
+        #['ch%d' % (i+1) for i in range(4)]+['ch1_marker1']
+        show_element(ttrace_element, fig=fig + ii, keys=kkx, label_map=None)
+        plt.legend(numpoints=1)
+        # break
+    qtt.pgeometry.tilefigs(range(100,100+len(ttrace_elements)))
 
 
 def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, markeridx=1):
@@ -128,7 +156,7 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
                        name='marker%d' % ch, start=fpga_delay, refpulse=None, refpoint='end')  # refpulse=refpulse
 
     if verbose:
-        print('create_ttrace: %d traces, %d pulsars' % (ntraces, len(ttraces)))
+        print('ttrace2waveform: %d traces, %d pulsars' % (ntraces, len(ttraces)))
 
     print('time after first till: %e' % endtime)
     ttrace['tracedata'] = []
@@ -218,7 +246,7 @@ def define_awg5014_channels(pulsar, marker1highs=.25):
                               delay=0, active=True)
 
 
-def set_awg_trace(virtualawg, clock=10e6):
+def set_awg_trace(virtualawg, clock=10e6, verbose=0):
     """ Set the virtual awg in ttrace mode
     
     Args:
@@ -229,6 +257,11 @@ def set_awg_trace(virtualawg, clock=10e6):
     virtualawg.AWG_clock=clock
     for a in virtualawg._awgs:
         a.clock_freq(clock)
+        # needed?
+        v = a.write('SOUR1:ROSC:SOUR INT')
+        v = a.ask('SOUR1:ROSC:SOUR?')
+        if verbose:
+            print('%s: SOUR1:ROSC:SOUR? %s' % (a, v))
 
 def init_ttrace(station, awgclock=10e6):    
     pulsar_objects =[]
@@ -249,6 +282,29 @@ def init_ttrace(station, awgclock=10e6):
         pulsar_objects+=[p]
 
     return pulsar_objects
+
+def run_ttrace(virtualawg, pulsar_objects, ttrace, ttrace_elements, sequence_name='ttrace'):
+    """ Send the waveforms to the awg and run the awgs """
+    for ii, t in enumerate(ttrace_elements):
+        seq = Sequence(sequence_name + '_awg%d' % ii)
+        seq.append(name='toivotrace', wfname=t.name, trigger_wait=False,)
+    
+        elts = [t]
+    
+        # program the Sequence
+        pulsar = pulsar_objects[ii]
+        ss = pulsar.program_awg(seq, *elts)
+    
+    
+    #% Really run the awg
+    awgs=virtualawg._awgs
+    
+    awgclock = ttrace['awgclock']
+    set_awg_trace(virtualawg, awgclock)
+        
+    
+    for awg in awgs:     
+        awg.run()
         
 def lastpulse(filler_element):
     """ Return last pulse from a sequence """
@@ -364,7 +420,7 @@ class MultiTracePlot:
         self.plots = []
         self.curves = []
         pens = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 0)] * 2
-
+        
         for ii in range(self.ny):
             for ix in range(self.nx):
                 p = plotwin.addPlot()
@@ -389,6 +445,13 @@ class MultiTracePlot:
 
         win.start_button.clicked.connect(connect_slot(self.startreadout))
         win.stop_button.clicked.connect(connect_slot(self.stopreadout))
+
+    def add_verticals(self):
+        vpen=pg.QtGui.QPen(pg.QtGui.QColor(100, 100, 155,60), 0, pg.QtCore.Qt.SolidLine)
+        for p in self.plots:
+            g=pg.InfiniteLine([0,0], angle=90, pen=vpen)    
+            g.setZValue(-100)
+            p.addItem(g)
 
     def _updatefunction(self):
         self.updatefunction()
@@ -501,7 +564,7 @@ def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amoun
     plt.figure(fig)
     plt.clf()
     for i in range(data_raw.shape[0]):
-        plt.plot(tf*tt, data_raw[i], '.')
+        plt.plot(tf*tt, data_raw[i], '.', label='raw data')
     if tf==1e3:
         plt.xlabel('Time [ms]')
     else:
@@ -509,9 +572,13 @@ def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amoun
     for ii, x in enumerate(ttrace['tracedata']):
         s = x['start_time'] * tf # fpgafreq
         e = x['end_time'] * tf # fpgafreq
-        qtt.pgeometry.plot2Dline([-1, 0, s], '--')
-        qtt.pgeometry.plot2Dline([-1, 0, e], ':')
-    plt.figure(400); plt.clf()
+        if ii==0:
+            qtt.pgeometry.plot2Dline([-1, 0, s], '--', label='start segment')
+            qtt.pgeometry.plot2Dline([-1, 0, e], ':', label='end segment')
+        else:
+            qtt.pgeometry.plot2Dline([-1, 0, s], '--')
+            qtt.pgeometry.plot2Dline([-1, 0, e], ':')
+    plt.figure(fig+1); plt.clf()
     nx=int(np.ceil(np.sqrt(len(tx))))
     ny=int(np.ceil(len(tx)/nx))
     for ii, q in enumerate(tx):
