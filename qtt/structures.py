@@ -16,9 +16,32 @@ from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
 
 from qtt.tools import freezeclass
 
-
 #%%
+
+@freezeclass
+class twodot_t(dict):
         
+    def __init(self, gates, name=None):
+        """ Class to represent a double quantum dot """
+        self['gates']=gates       
+
+    def name(self):
+        return self['name']
+    
+    def __repr__(self):
+        s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name(), id(self))
+        return s
+    
+    def __getstate__(self):
+        """ Helper function to allow pickling of object """
+        d={}
+        import copy
+        for k, v in self.__dict__.items():
+            #print('deepcopy %s' % k)
+            if k not in ['station']:
+                d[k]=copy.deepcopy(v)
+        return d
+    
 @freezeclass
 class onedot_t(dict):
     """ Class representing a single quantum dot """ 
@@ -105,6 +128,9 @@ class sensingdot_t:
         self.index = index
         self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
+        
+        self.data = {}
+        
         if fpga_ch is None:
             self.fpga_ch = None # int(self.gg[1][2])
         else:
@@ -129,6 +155,9 @@ class sensingdot_t:
                 d[name] = str(d[name])
         return d
 
+    def gates(self):
+        return self.sdval
+    
     def show(self):
         gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
@@ -179,9 +208,9 @@ class sensingdot_t:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
 
-        scanjob1 = dict()
+        scanjob1 = qtt.measurements.scans.scanjob_t()
         scanjob1['sweepdata'] = dict(
-            {'param': [gg[1]], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
+            {'param': gg[1], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
         scanjob1['minstrument'] = keithleyidx
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
@@ -189,10 +218,7 @@ class sensingdot_t:
         print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
               (sd.gg[1], wait_time))
 
-        alldata = qtt.scans.scan1D(sd.station, scanjob=scanjob1)
-
-        # if not outputdir == None:
-        #    saveCoulombData(outputdir, alldata)
+        alldata = qtt.measurements.scans.scan1D(sd.station, scanjob=scanjob1)
 
         return alldata
 
@@ -234,11 +260,10 @@ class sensingdot_t:
             x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.title('autoTune: sd %d' % sd.index, fontsize=14)
-            # plt.xlabel(sdplg.name)
 
         sd.goodpeaks = goodpeaks
-        sd.tunex = x
-        sd.tuney = y
+        sd.data['tunex'] = x
+        sd.data['tuney'] = y
 
         if len(goodpeaks) > 0:
             sd.sdval[1] = goodpeaks[0]['xhalfl']

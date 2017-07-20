@@ -3,6 +3,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
+
 from qtt.algorithms.functions import FermiLinear, linear_function, Fermi
 
 

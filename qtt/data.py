@@ -192,6 +192,9 @@ def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
 
 
 def sweepgate(scanjob):
+    g = scanjob['sweepdata'].get('param', None)
+    if isinstance(g, str):
+        return g
     g = scanjob['sweepdata'].get('gate', None)
     if g is None:
         g = scanjob['sweepdata'].get('gates', [None])[0]
@@ -199,6 +202,9 @@ def sweepgate(scanjob):
 
 
 def stepgate(scanjob):
+    g = scanjob['stepdata'].get('param', None)
+    if isinstance(g, str):
+        return g
     g = scanjob['stepdata'].get('gate', None)
     if g is None:
         g = scanjob['stepdata'].get('gates', [None])[0]

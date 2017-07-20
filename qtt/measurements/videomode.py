@@ -24,7 +24,7 @@ class VideoMode:
         station (qcodes station): contains all the information about the set-up
         sweepparams (string, 1 x 2 list or dict): the parameter(s) to be swept
         sweepranges (int or 1 x 2 list): the range(s) to be swept over
-        minstrument (int): the channel of the FPGA
+        minstrument (int or tuple): the channel of the FPGA, or tuple (instrument, channel)
         Naverage (int): the number of times the FPGA averages
         resolution (1 x 2 list): for 2D the resolution
     """

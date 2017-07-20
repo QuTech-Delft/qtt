@@ -105,12 +105,12 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
     step (int, optional): Step value (default is -1)
 
     """
-    stepdata = scanjob_t(
-        {'param': [g1], 'start': r1[0], 'end': r1[1], 'step': step})
+    sweepdata = scanjob_t(
+        {'param': g1, 'start': r1[0], 'end': r1[1], 'step': step})
     scanjob = dict({'sweepdata': sweepdata, 'minstrument': keithleyidx})
     if not g2 is None:
-        stepdata = dict(
-            {'param': [g2], 'start': r2[0], 'end': r2[1], 'step': step})
+        stepdata = scanjob_t(
+            {'param': g2, 'start': r2[0], 'end': r2[1], 'step': step})
         scanjob['stepdata'] = stepdata
 
     return scanjob
@@ -167,53 +167,6 @@ from qtt.algorithms.generic import findCoulombDirection
 from qtt.data import dataset2Dmetadata, dataset2image
 
 
-def onedotHiresScan(station, od, dv=70, verbose=1, fig=4000, ptv=None):
-    """ Make high-resolution scan of a one-dot """
-    if verbose:
-        print('onedotHiresScan: one-dot: %s' % od['name'])
-
-    # od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=None)
-    if ptv is None:
-        ptv = od['balancepoint']
-    keithleyidx = [od['instrument']]
-    scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
-                              'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
-    scanjobhi['minstrument'] = keithleyidx
-    scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], -780)
-    scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], -780)
-
-    wait_time = waitTime(od['gates'][2], station=station)
-    scanjobhi['sweepdata']['wait_time'] = wait_time
-    scanjobhi['stepdata']['wait_time'] = 2*waitTime(None, station) + 3 * wait_time
-
-    alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-        alldatahi, verbose=0, arrayname=None)
-    impixel, tr = dataset2image(alldatahi, mode='pixel')
-
-    ptv, fimg, tmp = qtt.algorithms.onedot.onedotGetBalanceFine(
-        impixel, alldatahi, verbose=1, fig=fig)
-
-    if tmp['accuracy'] < .2:
-        logging.info('use old data point!')
-        # use normal balance point (fixme)
-        ptv = od['balancepoint']
-        ptx = od['balancepointpixel'].reshape(1, 2)
-    else:
-        ptx = tmp['ptpixel'].copy()
-    step = scanjobhi['stepdata']['step']
-    val = findCoulombDirection(
-        impixel, ptx, step, widthmv=8, fig=None, verbose=1)
-    od['coulombdirection'] = val
-
-    od['balancepointfine'] = ptv
-    od['setpoint'] = ptv + 10
-
-    alldatahi.metadata['od'] = od
-
-    scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
-    return scandata, od
-
 
 #%%
 
@@ -257,7 +210,7 @@ def get_instrument(instr, station=None):
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
-    if isinstance(mparams, (int, str, Parameter)):
+    if isinstance(mparams, (int, str, Parameter, tuple)):
         # for convenience
         mparams = [mparams]
     elif isinstance(mparams, (list, tuple)):
@@ -267,6 +220,12 @@ def get_measurement_params(station, mparams):
     for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
+        elif isinstance(x, tuple):
+            # pair of instrument and channel
+            instrument =get_instrument(x[0])
+            
+            params += [getattr(instrument, 'channel_%d' % x[1])]
+            
         elif isinstance(x, str):
             if x.startswith('digitizer'):
                 params += [getattr(station.digitizer, 'channel_%c' % x[-1])]
@@ -362,6 +321,10 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         delta, tprev, update_plot = delta_time(tprev, thr=.5)
         if (liveplotwindow) and update_plot:
             myupdate()
+
+        if qtt.abort_measurements():
+            print('  aborting measurement loop')
+            break
 
     myupdate()
     dt = time.time() - t0
@@ -479,25 +442,6 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 #%%
 
 
-def wait_bg_finish(verbose=0):
-    """ Wait for background job to finish """
-    if not hasattr(qcodes, 'get_bg'):
-        return True
-    for ii in range(10):
-        m = qcodes.get_bg()
-        if verbose:
-            print('wait_bg_finish: loop %d: bg %s ' % (ii, m))
-        if m is None:
-            break
-        time.sleep(0.05)
-    m = qcodes.get_bg()
-    if verbose:
-        print('wait_bg_finish: final: bg %s ' % (m, ))
-    if m is not None:
-        logging.info('background job not finished')
-    return m is None
-
-
 def makeScanjob(sweepgates, values, sweepranges, resolution):
     """ Create a scanjob from sweep ranges and a centre """
     sj = {}
@@ -514,6 +458,16 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
     return sj
 
 #%%
+
+class sample_data_t (dict):
+    """ Hold all kind of sample specific data """
+    pass
+
+    def gate_boundaries(self, gate):
+        bnds = self.get('gate_boundaries', {})
+        b = bnds.get(gate, (-700, 100))
+        return b
+    
 
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
@@ -824,7 +778,6 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     return alldata
 
-
 #%%
 
 def process_digitizer_trace(data, width, period, samplerate, padding=0,
@@ -912,6 +865,8 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     """ Measure block data with M4i
     
     Args:
+        digitizer (handle to instrument)
+        read_ch (int): channel to read
         width (None or float): if a float, then process data
     Returns:
         data (numpy array)
@@ -941,6 +896,12 @@ def measuresegment_m4i(digitizer,read_ch,  mV_range, period, Naverage=100, width
     return data
 
 def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=5000, period=None, sawtooth_width=None):
+    if isinstance(minstrhandle, str):
+        try:
+            instrument=getattr(station, minstrhandle)
+            minstrhandle=instrument            
+        except:
+            pass
     try:
        isfpga = isinstance(minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
     except:
@@ -950,6 +911,7 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
        ism4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)                  
     except:
        ism4i = False
+        
     if isfpga:
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
         devicedata = minstrhandle.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
@@ -961,6 +923,9 @@ def measuresegment(waveform, Naverage, station, minstrhandle, read_ch, mV_range=
                                  width=sawtooth_width, post_trigger=post_trigger)
     else:
         raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+    if data.size==0:
+        raise Exception('Data acquisition on %s failed' % minstrhandle)
+        
     return data
 
 #%%
@@ -1093,6 +1058,22 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     return alldata
 
+def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None,start=0):
+    """Converts the sweepdata or stepdata of a scanjob in those needed for virtual vector scans
+    Inputs:
+        virtual_parameter: parameter of the virtual gate which is varied
+        g_range (float): scan range
+        start (float): start if the scanjob data 
+    Outputs:
+        sweeporstepdata (dict): sweepdata or stepdata needed in the scanjob for virtual vector scans"""  
+    if sweeporstepdata is None:
+        sweeporstepdata = {}
+    if hasattr(virtual_parameter, 'comb_map'):
+        pp=dict( [ (p.name, r) for p, r in virtual_parameter.comb_map if round(r,5) != 0])
+    else:
+        pp={virtual_parameter.name: 1}
+    sweeporstepdata={'start': start, 'range':g_range, 'end': start+g_range, 'param': pp}
+    return sweeporstepdata
 
 def plotData(alldata, diff_dir=None, fig=1):
     """ Plot a dataset and optionally differentiate """
@@ -1307,7 +1288,7 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
-def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
+def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
@@ -1328,12 +1309,15 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
         b = 0
     else:
         b = basevalues[gate]
+        
+    minimum_gate_value = sample_data['gate_boundaries'].get(gate, [-700, 100] )[0]
+    
     sweepdata = dict(
-        {'param': gate, 'start': max(b, 0), 'end': -750, 'step': -2})
+        {'param': gate, 'start': max(b, 0), 'end': minimum_gate_value, 'step': -2})
     if full == 0:
         sweepdata['step'] = -6
 
-    scanjob = dict(
+    scanjob = scanjob_t(
         {'sweepdata': sweepdata, 'minstrument': minstrument, 'wait_time': stepdelay})
 
     station.gates.set(gate, sweepdata['start'])  # set gate to starting value
@@ -1514,4 +1498,55 @@ def test_scan2D(verbose=0):
     gates.close()
 
 
+
+def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), fig=4000, ptv=None):
+    """ Make high-resolution scan of a one-dot """
+    if verbose:
+        print('onedotHiresScan: one-dot: %s' % od['name'])
+
+    # od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=None)
+    if ptv is None:
+        ptv = od['balancepoint']
+    keithleyidx = [od['instrument']]
+    scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
+                              'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
+    
+    bstep = sample_data.gate_boundaries(od['gates'][0])
+    bsweep = sample_data.gate_boundaries(od['gates'][2])
+    
+    scanjobhi['minstrument'] = keithleyidx
+    scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], bstep[0])
+    scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], bsweep[0])
+
+    wait_time = waitTime(od['gates'][2], station=station)
+    scanjobhi['sweepdata']['wait_time'] = wait_time
+    scanjobhi['stepdata']['wait_time'] = 2*waitTime(None, station) + 3 * wait_time
+
+    alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
+    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
+        alldatahi, verbose=0, arrayname=None)
+    impixel, tr = dataset2image(alldatahi, mode='pixel')
+
+    ptv, fimg, tmp = qtt.algorithms.onedot.onedotGetBalanceFine(
+        impixel, alldatahi, verbose=1, fig=fig)
+
+    if tmp['accuracy'] < .2:
+        logging.info('use old data point!')
+        # use normal balance point (fixme)
+        ptv = od['balancepoint']
+        ptx = od['balancepointpixel'].reshape(1, 2)
+    else:
+        ptx = tmp['ptpixel'].copy()
+    step = scanjobhi['stepdata']['step']
+    val = findCoulombDirection(
+        impixel, ptx, step, widthmv=8, fig=None, verbose=1)
+    od['coulombdirection'] = val
+
+    od['balancepointfine'] = ptv
+    od['setpoint'] = ptv + 10
+
+    alldatahi.metadata['od'] = od
+
+    scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
+    return scandata, od
 

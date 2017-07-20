@@ -2322,13 +2322,21 @@ try:
     from PIL import Image
     from PIL import ImageDraw
 
-    def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype='/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'):
+    def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
         """ Write text on image using PIL """
-        font = ImageFont.truetype(fonttype, fontsize)
+        if fonttype is None:
+            try:
+                fonttype=r'c:\Windows\Fonts\Verdana.ttf'
+                font = ImageFont.truetype(fonttype, fontsize)
+            except:
+                fonttype='/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
+                font = ImageFont.truetype(fonttype, fontsize)
+        else:
+                font = ImageFont.truetype(fonttype, fontsize)
         im1 = Image.fromarray(im)
         # Drawing the text on the picture
         draw = ImageDraw.Draw(im1)
-        draw.text(pos, txt, color, font=font)
+        draw.text(pos, txt, fill=color, font=font)
         return np.array(im1)
 except:
     def writeTxt(*args, **kwargs):

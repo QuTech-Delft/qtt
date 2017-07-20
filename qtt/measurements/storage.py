@@ -23,7 +23,7 @@ def list_states(verbose=1):
     """
     statefile = qcodes.config.get('statefile', None)
     if statefile is None:
-        statefile = os.path.join(os.path.expanduser('~'), 'statefile.hdf5')
+        statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
     tags = []
     with h5py.File(statefile, 'r') as h5group:
         tags = list(h5group.keys())
@@ -49,7 +49,7 @@ def load_state(tag=None, station=None, verbose=1):
     """
     statefile = qcodes.config.get('statefile', None)
     if statefile is None:
-        statefile = os.path.join(os.path.expanduser('~'), 'statefile.hdf5')
+        statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
     if verbose:
         print('load_state: reading from file %s, tag %s' % (statefile, tag))
     obj = {}
@@ -85,7 +85,7 @@ def save_state(station, tag=None, overwrite=False, verbose=1):
     """
     statefile = qcodes.config.get('statefile', None)
     if statefile is None:
-        statefile = os.path.join(os.path.expanduser('~'), 'statefile.hdf5')
+        statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
 
     snapshot = station.snapshot()
     gv = station.gates.allvalues()
