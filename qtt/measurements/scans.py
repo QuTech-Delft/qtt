@@ -1715,7 +1715,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), 
 
     wait_time = waitTime(od['gates'][2], station=station)
     scanjobhi['sweepdata']['wait_time'] = wait_time
-    scanjobhi['stepdata']['wait_time'] = 2*waitTime(None, station) + 3 * wait_time
+    scanjobhi['stepdata']['wait_time'] = max(2*waitTime(None, station) + 3 * wait_time, .15)
 
     alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -1728,7 +1728,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), 
     if tmp['accuracy'] < .2:
         logging.info('use old data point!')
         # use normal balance point (fixme)
-        ptv = od['balancepoint']
+        ptv = od['balancepoint'] # gate0, gate2
         ptx = od['balancepointpixel'].reshape(1, 2)
     else:
         ptx = tmp['ptpixel'].copy()

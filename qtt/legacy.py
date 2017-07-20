@@ -108,7 +108,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample
         sweepdata['step'] = -12
 
     scanjob = qtt.scans.scanjob_t({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
-    scanjob['stepdata']['wait_time'] = wait_time_step_eff + 2 * wait_time_sweep
+    scanjob['stepdata']['wait_time'] = max(wait_time_step_eff + 2 * wait_time_sweep,.15)
     scanjob['sweepdata']['wait_time'] = wait_time_sweep_eff
     scanjob['wait_time_startscan']=.25 + wait_time_sweep + wait_time_step_eff
     alldata = qtt.scans.scan2D(station, scanjob )
