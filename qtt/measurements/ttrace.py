@@ -95,7 +95,7 @@ def show_ttrace_elements(ttrace_elements, fig=100):
         kkx = [k for k in kk if np.any(v[1][k])]  # non-zero keys
     
         pi = ii
-        label_map = [(t[1], k) for k, t in awg_map.items() if t[0] == pi]
+        #label_map = [(t[1], k) for k, t in awg_map.items() if t[0] == pi]
     
         # print(kkx)
         #['ch%d' % (i+1) for i in range(4)]+['ch1_marker1']
