@@ -31,6 +31,11 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/spin-projects.git
 ```
 
+Optional:
+```
+> git clone https://github.com/DiCarloLab-Delft/PycQED_py3.git
+```
+
 ## Create a working Python environment
 
 You need 3.4, but we recommand Python 3.6+. For Unix python is installed by default, for windows 
@@ -44,6 +49,7 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 ```
 > conda env create -n [yourname] -f condalist.yml
 > activate [yourname]
+> pip install slacker
 > # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
 > pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
 ```
