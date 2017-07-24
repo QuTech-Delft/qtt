@@ -167,7 +167,7 @@ class virtual_IVVI(Instrument):
                     val = 0
             if verbose >= 2:
                 print('  setting gate %s to %.1f [mV]' % (g, val))
-            gates.set(g, float(val) )
+            gates.set(g, val )
 
     def visualize(self, fig=1):
         """ Create a graphical representation of the system (needs graphviz). """
