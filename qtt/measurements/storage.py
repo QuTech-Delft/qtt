@@ -69,13 +69,14 @@ def load_state(tag=None, station=None, verbose=1):
     return obj
 
 
-def save_state(station, tag=None, overwrite=False, verbose=1):
+def save_state(station, tag=None, overwrite=False, data = None, verbose=1):
     """ Save current state of the system to disk
 
     Args:
         station (qcodes station)
         tag (str or None)
         overwrite (bool)
+        data (None or object): optional extra data
         verbose (int)
 
     Example:
@@ -97,7 +98,7 @@ def save_state(station, tag=None, overwrite=False, verbose=1):
     if tag is None:
         tag = datestring
 
-    obj = {'gatevalues': gv, 'snapshot': snapshot, 'datestring': datestring}
+    obj = {'gatevalues': gv, 'snapshot': snapshot, 'datestring': datestring, 'data': data}
 
     if verbose:
         print('save_state: writing to file %s, tag %s' % (statefile, tag))

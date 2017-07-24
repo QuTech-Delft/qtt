@@ -198,7 +198,6 @@ def start_measurement_control(doexec=False):
     if doexec:
         app.exec()
 
-    #return mc    
 
 
 #%%

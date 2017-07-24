@@ -169,6 +169,7 @@ def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
         meas_arr_name (str): name of the measured array to be differentiated
         fig (int): the number for the figure to plot
     """
+    meas_arr_name=alldata.default_array_name(meas_arr_name)
     meas_array = alldata.arrays[meas_arr_name]
     imx = qtt.diffImageSmooth(meas_array.ndarray, dy=diff_dir)
     name = 'diff_dir_%s' % diff_dir
