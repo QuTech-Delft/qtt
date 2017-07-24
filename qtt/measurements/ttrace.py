@@ -104,6 +104,57 @@ def show_ttrace_elements(ttrace_elements, fig=100):
         # break
     qtt.pgeometry.tilefigs(range(100,100+len(ttrace_elements)))
 
+#%%
+
+
+class ttrace_t(dict):
+    """ Structure that contains information about ttraces
+    
+        
+    Fields:
+        period (float): the time of the trace for each dot
+        markerperiod (float):  ?
+        fillperiod (float): the time it takes to come to the start voltage of the relevant signal end to go back to the initial value afterwards
+        period0:time before the trace sequence starts
+        alpha (float): 
+        fpga_delay (float): delay time between the actual signal and the readout of the FPGA 
+        fpgafreq: readout frequency of the FPGA
+        awgclock: clock frequency of the AWG
+        traces: contains the extrema the traces have to have
+        ....           
+    
+    """
+    
+def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
+    """Define amplitudes and frequencies of Toivo traces according to the given virtual gate map"""  
+    ttrace = ttrace_t({'markerperiod': 80e-6, 'fillperiod': 100e-6, 'period': 500e-6, 'alpha': .1})
+    ttrace['period0']=250e-6
+    ttrace['fpga_delay']=2e-6
+    ttrace['traces'] = []; ttrace['traces_volt'] = []
+    ttrace['fpgafreq']=station.fpga.sampling_frequency()
+    ttrace['awgclock']=station.awg.AWG_clock
+    ttrace['awg_delay'] = 0e-4+2e-5 # ???
+
+    
+    map_inv=virtualgates.get_crosscap_map_inv()
+
+    hw=station.hardware3dot#for now hardcoded!!
+    awg_to_plunger_plungers=dict( [ (g, getattr(hw, 'awg_to_%s' % g)() ) for g in sweepgates] )
+    
+    pgates=sweepgates
+    #"""Map them onto the traces itself"""
+    for ii, v in enumerate(vgates):
+        R= scanrange[ii]
+        print('gate %s: amplitude %.2f [mV]' % (v, R, ))   
+        #q=virt_map_for_traces[v] #replaced vg
+        #print(q)        
+        w = [(k, R*map_inv[k][v]/awg_to_plunger_plungers[k]) for k in pgates]
+        wvolt = [(k, R*map_inv[k][v]) for k in pgates]
+        ttrace['traces'] += [w]
+        ttrace['traces_volt'] += [wvolt]
+    return ttrace
+
+#%%
 
 def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, markeridx=1):
     """ Create a Toivo trace
@@ -179,7 +230,7 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
                 pi, ci = awg_map[g]
                 ch = ci
             R = a
-            print('  pi %d: channel %s: amplitude %.2f (%s)' % (pi, ch, R, g))
+            print('  awg %d: channel %s: amplitude %.2f (%s)' % (pi, ch, R, g))
             #lp = lastpulse(filler_element)
             start_time = endtime
             ttrace_element = ttraces[pi]
@@ -214,6 +265,9 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
         ttrace_element.add(pulse.cp(sq_pulse, amplitude=.1, length=awg_delay, channel='ch%d_marker%d' % (ci, mi), channels=[]),
                            name='awgmarker%dpre' % ci, start=lasttime(ttrace_element) - awg_delay, refpulse=None, refpoint='end')  # refpulse=refpulse
 
+    if verbose:
+        lt=lasttime(ttraces[0])
+        print('ttrace2waveform: last time on waveform 0: %.1f [ms]' % (1e3*lt))
     return ttraces, ttrace
 
 #%%
@@ -285,6 +339,12 @@ def init_ttrace(station, awgclock=10e6):
 
 def run_ttrace(virtualawg, pulsar_objects, ttrace, ttrace_elements, sequence_name='ttrace'):
     """ Send the waveforms to the awg and run the awgs """
+    
+    #% Really run the awg
+    awgs=virtualawg._awgs    
+    awgclock = ttrace['awgclock']
+    set_awg_trace(virtualawg, awgclock)
+ 
     for ii, t in enumerate(ttrace_elements):
         seq = Sequence(sequence_name + '_awg%d' % ii)
         seq.append(name='toivotrace', wfname=t.name, trigger_wait=False,)
@@ -295,12 +355,6 @@ def run_ttrace(virtualawg, pulsar_objects, ttrace, ttrace_elements, sequence_nam
         pulsar = pulsar_objects[ii]
         ss = pulsar.program_awg(seq, *elts)
     
-    
-    #% Really run the awg
-    awgs=virtualawg._awgs
-    
-    awgclock = ttrace['awgclock']
-    set_awg_trace(virtualawg, awgclock)
         
     
     for awg in awgs:     
@@ -378,7 +432,36 @@ def show_element(elmnt, fig=100, keys=None, label_map=None):
         plt.ylabel('Signal')
 
 #%%
+import time
 
+class ttrace_update:
+    
+    def __init__(self, station, read_function, channel, ttrace, ttrace_elements, multi_trace):
+        self.station=station
+        self.fps=qtt.pgeometry.fps_t()
+        self.app=pg.mkQApp()
+        self.read_function = read_function
+        self.channel = channel
+        self.ttrace =ttrace
+        self.ttrace_elements =ttrace_elements
+        self.multi_trace = multi_trace
+        self.verbose=1
+        
+    def updatefunction(self):
+        data_raw=self.read_function(self.station, self.channel )
+        tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2)
+        for ii, q in enumerate(tx):
+            self.fps.showloop(dt=15)
+            self.fps.addtime(time.time())
+            ncurves = self.multi_trace.ncurves
+            p=self.multi_trace.curves[ii]
+            for jj in range(ncurves):
+                nn=len(q[jj,:])
+                n0=int(nn/2)
+                xrange=np.arange(-n0, -n0+nn)
+                p[jj].setData(xrange, q[jj,:])
+            self.app.processEvents() 
+            
 
 class MultiTracePlot:
 
@@ -418,6 +501,7 @@ class MultiTracePlot:
         # pg.setConfigOptions(antialias=True)
 
         self.plots = []
+        self.ncurves=ncurves
         self.curves = []
         pens = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 0)] * 2
         
@@ -478,23 +562,6 @@ class MultiTracePlot:
         
 #%%
 
-class ttrace_t(dict):
-    """ Structure that contains information about ttraces
-    
-        
-    Fields:
-        period (float): the time of the trace for each dot
-        markerperiod (float):  ?
-        fillperiod (float): the time it takes to come to the start voltage of the relevant signal end to go back to the initial value afterwards
-        period0:time before the trace sequence starts
-        alpha (float): 
-        fpga_delay (float): delay time between the actual signal and the readout of the FPGA 
-        fpgafreq: readout frequency of the FPGA
-        awgclock: clock frequency of the AWG
-        traces: contains the extrema the traces have to have
-        ....           
-    
-    """
            
 
 def plot_ttraces(ttraces): 
@@ -552,6 +619,18 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
             if verbose>=2:
                 print('sidx %s, eidx %s'  % (sidx, eidx))
             tx+=[ datax[:, sidx:eidx]]
+            
+    if verbose:
+       # awg=station.awg._awgs[0]
+        awgclock=ttrace['awgclock']
+        tracedata=ttrace['tracedata']
+        ttotal = ttraces[0].waveforms()[0].size / awgclock
+        fpgafreq=ttrace['fpgafreq']
+        qq=ttotal*fpgafreq
+        print('fpga: freq %f [MHz]' % (fpgafreq / 1e6))
+        print('trace length %.3f [ms], %d points' % (1e3*ttotal, ttraces[0].waveforms()[0].size,))
+        print('fpga: expect %d, got %d'  % (qq, data_raw.shape[1]))
+
     return tt, datax, tx
 
 def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amount of input arguments
