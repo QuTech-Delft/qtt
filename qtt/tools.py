@@ -1,7 +1,6 @@
 import sys
 import os
 import numpy as np
-import scipy
 import matplotlib
 import logging
 import qcodes
@@ -10,7 +9,7 @@ import functools
 import pickle
 import tempfile
 from itertools import chain
-
+import scipy.ndimage as ndimage
 
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -133,9 +132,7 @@ def freezeclass(cls):
 
 #%%
 
-import scipy.ndimage as ndimage
-
-
+        
 def diffImage(im, dy, size=None):
     """ Simple differentiation of an image
 
@@ -162,7 +159,7 @@ def diffImage(im, dy, size=None):
     return im
 
 
-def diffImageSmooth(im, dy='x', sigma=2., size=None):
+def diffImageSmooth(im, dy='x', sigma=2):
     """ Simple differentiation of an image
 
     Input
@@ -205,6 +202,7 @@ def diffImageSmooth(im, dy='x', sigma=2., size=None):
             imx = np.sqrt(imx0**2 + imx1**2)
 
     return imx
+
 
 #%%
 
