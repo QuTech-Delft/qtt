@@ -137,7 +137,7 @@ def resampleImage(im):
     """ Resample the image so it has the similar sample rates (samples/mV) in both axis
     
     Args:
-        im (numpy array): input image
+        im (DataArray): input image
     Returns:
         im (numpy array): resampled image
         setpoints (list of 2 numpy arrays): setpoint arrays from resampled image
@@ -168,7 +168,13 @@ def resampleImage(im):
             facrem = facrem + 1
             im = im.reshape(im.shape[0],im.shape[1]//factor,factor).mean(-1)
             spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-facrem],im.shape[1]),0),[im.shape[0],1])           
-            setpointx = DataArray(name='Resampled_'+setpoints[1].array_id, array_id='Resampled_'+setpoints[1].array_id, label=setpoints[1].label,
+            idx = setpoints[1].array_id
+            if idx is None:
+                idx='x'
+            idy = setpoints[1].array_id
+            if idy is None:
+                idy= 'y'
+            setpointx = DataArray(name='Resampled_'+ idx , array_id='Resampled_'+idy, label=setpoints[1].label,
                   unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpoints[0], setpointx]
                 
@@ -244,14 +250,29 @@ def diffImageSmooth(im, dy='x', sigma=2):
 
     return imx
 
+
+def test_array(location=None, name=None):
+    # DataSet with one 2D array with 4 x 6 points
+    yy, xx = np.meshgrid(np.arange(0,10,.5), range(3))
+    zz = xx**2+yy**2
+    # outer setpoint should be 1D
+    xx = xx[:, 0]
+    x = DataArray(name='x', label='X', preset_data=xx, is_setpoint=True)
+    y = DataArray(name='y', label='Y', preset_data=yy, set_arrays=(x,),
+                  is_setpoint=True)
+    z = DataArray(name='z', label='Z', preset_data=zz, set_arrays=(x, y))
+    return z
+
 def test_image_operations(verbose=0):    
     import qcodes.tests.data_mocks    
-    ds=qcodes.tests.data_mocks.DataSet2D()
     
     if verbose:
         print('testing resampleImage')
-    v=qtt.tools.resampleImage(ds.z)
+    ds=qcodes.tests.data_mocks.DataSet2D()
+    imx, setpoints = resampleImage(ds.z)
 
+    z=test_array()
+    imx, setpoints = resampleImage(z)
     if verbose:
         print('testing diffImage')
     d=diffImage(ds.z, dy='x')
@@ -953,27 +974,6 @@ def slopeClick(drawmode='r--', **kwargs):
 
     return coords, signedslope
 
-def clickLeverarm(drawmode='r--', bias=1, **kwargs):
-    ''' Click three sets of two points to define triangle region:
-        1st line: addition line of dot more coupled to axis 0
-        2nd line: addition line of dor more coupled to axis 1
-        3rd line: interdot transition
-    Will return 
-    Works with matplotlib but not with pyqtgraph. Uses the currently active 
-    figure.
-
-    Arguments:
-        drawmode (string): plotting style
-        bias (float): applied bias in uV
-
-    Returns:
-        leverarms (list of 2 floats): lever-arms (in V/eV) for gate in each
-        axis to their respective more coupled dots.
-    '''
-    ax = plt.gca()
-    ax.set_autoscale_on(False)
-    coords = pmatlab.ginput(2, drawmode, **kwargs)
-    plt.pause(1e-6)
 
 def clickGatevals(plot, drawmode='ro'):
     ''' Get gate values for all gates at clicked point in a heatmap.
