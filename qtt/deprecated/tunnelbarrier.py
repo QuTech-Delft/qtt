@@ -133,6 +133,7 @@ def barrierScore(xd, yd, pp, weights=None, thr=3e9):
     sc = np.linalg.norm(sc, ord=4) / sc.size
     return sc
 
+import qtt
 
 def preprocessPAT(imextent, im0, im, fig=None):
     """ Preprocess a pair of calibration and PAT image """
