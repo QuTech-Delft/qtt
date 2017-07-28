@@ -304,7 +304,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         if verbose:
             tprint('scan1D: %d/%d: time %.1f' % (ix, len(sweepvalues), time.time() - t0), dt=1.5)
 
-        if scanjob['scantype'] == 'scan1Dfastvec':
+        if scanjob['scantype'] == 'scan1Dvec':
             for param in scanjob['phys_gates_vals']:
                 gates.set(param, scanjob['phys_gates_vals'][param][ix])
         else:
