@@ -967,7 +967,7 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
     
     return processed_data, (r1, r2)
 
-def select_digitizer_memsize(digitizer, period, verbose=1, pre_trigger=None):
+def select_digitizer_memsize(digitizer, period, trigger_delay=None, verbose=1):
     """ Select suitable memory size for a given period
     
     Args:
@@ -992,6 +992,7 @@ def select_digitizer_memsize(digitizer, period, verbose=1, pre_trigger=None):
         print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period*1e3))
         print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
         print('%s: pre and post trigger: %d %d'  % (digitizer.name,digitizer.pretrigger_memory_size(), digitizer.posttrigger_memory_size() ))
+    return memsize
        
 
 def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
