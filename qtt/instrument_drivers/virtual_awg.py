@@ -350,10 +350,8 @@ class virtual_awg(Instrument):
 
         old_sr = self.AWG_clock
         new_sr = 10 / (period_horz*(1-width))
-        self.AWG_clock = new_sr
-        for awg in self._awgs:
-            awg.set('clock_freq', self.AWG_clock)
-            
+        self.reset_AWG(clock=new_sr)
+           
         waveform = dict()
         # horizontal waveform
         wave_horz_raw = self.make_sawtooth(
@@ -398,9 +396,7 @@ class virtual_awg(Instrument):
             if 'delay' in sweep_info[channels]:
                 waveform['markerdelay'] = sweep_info[channels]['delay']
 
-        self.AWG_clock = old_sr
-        for awg in self._awgs:
-            awg.set('clock_freq', self.AWG_clock)
+        self.reset_AWG(clock=old_sr)
 
         return waveform, sweep_info
 
