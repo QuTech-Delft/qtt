@@ -33,13 +33,16 @@ from qcodes import DataArray, new_data
 
 
 def getDefaultParameterName(data, defname='amplitude'):
-    print('do not use this function, use the function from the object...')
+    warnings.warn('do not use this function, use the function from the object...')
     if defname in data.arrays.keys():
         return defname
     if (defname + '_0') in data.arrays.keys():
         return getattr(data, defname + '_0')
 
     vv = [v for v in data.arrays.keys() if v.endswith(defname)]
+    if (len(vv) > 0):
+        return vv[0]
+    vv = [v for v in data.arrays.keys() if v.startswith(defname)]
     if (len(vv) > 0):
         return vv[0]
     try:
