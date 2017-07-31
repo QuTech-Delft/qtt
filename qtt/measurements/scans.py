@@ -1196,7 +1196,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     dt = qtt.time.time() - t0
 
-    if update:
+    if liveplotwindow is not None:
         # final update
         liveplotwindow.update_plot()
         pg.mkQApp().processEvents()

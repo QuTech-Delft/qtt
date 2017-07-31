@@ -226,8 +226,8 @@ class virtual_awg(Instrument):
         """ Check whether a sawtooth waveform with specified period can be generated """
         old_sr = self.AWG_clock
         new_sr = 5 / (period*(1-width))        
-        if (new_sr)<old_sr:
-            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested' % (old_sr/1e6), UserWarning)
+        if (new_sr)>old_sr:
+            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (old_sr/1e6, new_sr/1e6, 1e3*period), UserWarning)
         return new_sr
     
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
