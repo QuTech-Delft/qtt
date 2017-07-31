@@ -90,7 +90,7 @@ def test_spin_structures():
     import pickle
     import json
     #station=qcodes.Station()
-    o = onedot_t('dot1', ['L', 'P1', 'D1'], station=station)
+    o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)
     #print(o)
     _=pickle.dumps(o)
     #x=json.dumps(o)

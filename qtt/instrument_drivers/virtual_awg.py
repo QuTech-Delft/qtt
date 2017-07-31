@@ -9,6 +9,8 @@ Created on Wed Aug 31 13:04:09 2016
 import numpy as np
 import scipy.signal
 import logging
+import warnings
+
 import qcodes
 from qcodes import Instrument
 from qcodes.plots.pyqtgraph import QtPlot
@@ -29,7 +31,7 @@ class virtual_awg(Instrument):
         self.verbose = verbose
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
         self.corr = .02e-6
-        self.maxdatapts = 8189
+        self.maxdatapts = 16e6 # This used to be set to the fpga maximum, but that maximum should not be handled here
         qtt.loggingGUI.installZMQlogger()
         logging.info('virtual_awg: setup')
 
@@ -98,9 +100,11 @@ class virtual_awg(Instrument):
         if 'fpga_mk' in self.awg_map:
             marker_info = self.awg_map['fpga_mk']
             marker_delay = self.delay_FPGA
+            marker_name = 'fpga_mk'
         elif 'm4i_mk' in self.awg_map:
             marker_info = self.awg_map['m4i_mk']
             marker_delay = period/2
+            marker_name = 'm4i_mk'
     
         awgs.append(self._awgs[marker_info[0]])
 
@@ -115,6 +119,8 @@ class virtual_awg(Instrument):
                 sweep_info[self.awg_map[g]]['name'] = waveforms[g]['name']
             else:
                 sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
+            if marker_info[:2]==self.awg_map[g]:
+                sweep_info[marker_info[:2]]['delay'] = marker_delay
 
         # marker points
         marker_points = np.zeros(wave_len)
@@ -125,10 +131,10 @@ class virtual_awg(Instrument):
             sweep_info[marker_info[:2]]['waveform'] = np.zeros(wave_len)
             sweep_info[marker_info[:2]]['marker1'] = np.zeros(wave_len)
             sweep_info[marker_info[:2]]['marker2'] = np.zeros(wave_len)
-            fpga_mk_name = 'fpga_mk'
             for g in sweepgates:
-                fpga_mk_name += '_%s' % g
-            sweep_info[marker_info[:2]]['name'] = fpga_mk_name
+                marker_name += '_%s' % g
+            sweep_info[marker_info[:2]]['name'] = marker_name
+            sweep_info[marker_info[:2]]['delay'] = marker_delay
 
         sweep_info[marker_info[:2]]['marker%d' % marker_info[2]] = marker_points
         self._awgs[marker_info[0]].set(
@@ -159,9 +165,15 @@ class virtual_awg(Instrument):
                 'ch%i_m%i_high' % (awg_info[1], awg_info[2]), 2.6)
 
         # send waveforms
-        for sweep in sweep_info:
-            self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
-                                                       sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
+        if delete:
+            for sweep in sweep_info:
+                try:
+                    self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
+                            sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
+                except:
+                    print(sweep_info[sweep]['waveform'].shape)
+                    print(sweep_info[sweep]['marker1'].shape)
+                    print(sweep_info[sweep]['marker2'].shape)
 
         return sweep_info
 
@@ -210,9 +222,17 @@ class virtual_awg(Instrument):
 
         return wave_raw
 
+    def check_frequency_waveform(self, period, width):
+        """ Check whether a sawtooth waveform with specified period can be generated """
+        old_sr = self.AWG_clock
+        new_sr = 5 / (period*(1-width))        
+        if (new_sr)>old_sr:
+            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (old_sr/1e6, new_sr/1e6, 1e3*period), UserWarning)
+        return new_sr
+    
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
-        send a marker to the FPGA.
+        send a marker to the measurement instrument.
 
         Arguments:
             gate (string): the name of the gate to sweep
@@ -227,6 +247,9 @@ class virtual_awg(Instrument):
         -------
         >>> waveform, sweep_info = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
+        
+        self.check_frequency_waveform(period, width)
+        
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
@@ -242,12 +265,16 @@ class virtual_awg(Instrument):
         waveform['width'] = width
         waveform['sweeprange'] = sweeprange
         waveform['samplerate'] = 1 / self.AWG_clock
+        waveform['period'] = period
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
 
         return waveform, sweep_info
 
     def sweep_gate_virt(self, gate_comb, sweeprange, period, width=.95, delete=True):
         ''' Send a sawtooth signal with the AWG to a linear combination of 
-        gates to sweep. Also send a marker to the FPGA.
+        gates to sweep. Also send a marker to the measurement instrument.
 
         Arguments:
             gate_comb (dict): the gates to sweep and the coefficients as values
@@ -258,6 +285,9 @@ class virtual_awg(Instrument):
             waveform (dict): The waveform being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
+ 
+        self.check_frequency_waveform(period, width) 
+ 
         waveform = dict()
         for g in gate_comb:
             wave_raw = self.make_sawtooth(sweeprange, period, width)
@@ -267,11 +297,15 @@ class virtual_awg(Instrument):
             waveform[g]['wave'] = wave
             waveform[g]['name'] = 'sweep_%s' % g
 
-        sweep_info = self.sweep_init(waveform, delete)
+        sweep_info = self.sweep_init(waveform, period, delete)
         self.sweep_run(sweep_info)
         waveform['width'] = width
         waveform['sweeprange'] = sweeprange
         waveform['samplerate'] = 1 / self.AWG_clock
+        waveform['period'] = period
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
 
         return waveform, sweep_info
 
@@ -309,12 +343,12 @@ class virtual_awg(Instrument):
 
         return data_processed
 
-    def sweep_2D(self, fpga_samp_freq, sweepgates, sweepranges, resolution, comp=None, delete=True):
+    def sweep_2D(self, samp_freq, sweepgates, sweepranges, resolution, width=.95, comp=None, delete=True):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
 
         Arguments:
-            fpga_samp_freq (float): sampling frequency of the fpga in Hertz.
+            samp_freq (float): sampling frequency of the measurement instrument in Hertz.
             sweepgates (list): two strings with names of gates to sweep
             sweepranges (list): two floats for sweepranges in milliVolts
 
@@ -322,19 +356,20 @@ class virtual_awg(Instrument):
             waveform (dict): The waveforms being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
-        if resolution[0] * resolution[1] > self.maxdatapts:
-            raise Exception('resolution is set higher than FPGA memory allows')
-
-        samp_freq = fpga_samp_freq
+## JP: I think FPGA exceptions should not be handled by awg
+#        if resolution[0] * resolution[1] > self.maxdatapts:
+#            raise Exception('resolution is set higher than FPGA memory allows')
 
         error_corr = resolution[0] * self.corr
         period_horz = resolution[0] / samp_freq + error_corr
         period_vert = resolution[1] * period_horz
 
+        self.check_frequency_waveform(period_horz, width)
+           
         waveform = dict()
         # horizontal waveform
         wave_horz_raw = self.make_sawtooth(
-            sweepranges[0], period_horz, repetitionnr=resolution[0])
+            sweepranges[0], period_horz, repetitionnr=resolution[1])
         awg_to_plunger_horz = self.hardware.parameters[
             'awg_to_%s' % sweepgates[0]].get()
         wave_horz = wave_horz_raw / awg_to_plunger_horz
@@ -361,25 +396,29 @@ class virtual_awg(Instrument):
                 else:
                     raise Exception('Can not compensate a sweepgate')
 
-        sweep_info = self.sweep_init(waveform, delete)
+        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete)
         self.sweep_run(sweep_info)
 
-        waveform['width_horz'] = .95
+        waveform['width_horz'] = width
         waveform['sweeprange_horz'] = sweepranges[0]
-        waveform['width_vert'] = .95
+        waveform['width_vert'] = width
         waveform['sweeprange_vert'] = sweepranges[1]
         waveform['resolution'] = resolution
         waveform['samplerate'] = 1 / self.AWG_clock
+        waveform['period'] = period_vert
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
 
         return waveform, sweep_info
 
-    def sweep_2D_virt(self, fpga_samp_freq, gates_horz, gates_vert, sweepranges, resolution, delete=True):
+    def sweep_2D_virt(self, samp_freq, gates_horz, gates_vert, sweepranges, resolution, width=.95, delete=True):
         ''' Send sawtooth signals to the linear combinations of gates set by
         gates_horz and gates_vert which effectively do a 2D scan of two virtual
         gates.
 
         Arguments:
-            fpga_samp_freq (float): sampling frequency of the fpga in Hertz.
+            samp_freq (float): sampling frequency of the measurement instrument in Hertz.
             gates_horz (dict): the gates for the horizontal direction and their coefficients
             gates_vert (dict): the gates for the vertical direction and their coefficients
             sweepranges (list): two floats for sweepranges in milliVolts
@@ -389,14 +428,16 @@ class virtual_awg(Instrument):
             waveform (dict): The waveforms being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
-        if resolution[0] * resolution[1] > self.maxdatapts:
-            raise Exception('resolution is set higher than FPGA memory allows')
-
-        samp_freq = fpga_samp_freq
+## JP: I think FPGA exceptions should not be handled by awg
+#        if resolution[0] * resolution[1] > self.maxdatapts:
+#            raise Exception('resolution is set higher than memory allows')
 
         error_corr = resolution[0] * self.corr
         period_horz = resolution[0] / samp_freq + error_corr
         period_vert = resolution[1] * period_horz
+        
+        new_sr = self.check_frequency_waveform(period_horz, width)
+        #self.reset_AWG(new_sr)
 
         waveform = dict()
         # horizontal virtual gate
@@ -422,15 +463,19 @@ class virtual_awg(Instrument):
 
         # TODO: Implement compensation of sensing dot plunger
 
-        sweep_info = self.sweep_init(waveform, delete)
+        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete)
         self.sweep_run(sweep_info)
 
-        waveform['width_horz'] = .95
+        waveform['width_horz'] = width
         waveform['sweeprange_horz'] = sweepranges[0]
-        waveform['width_vert'] = .95
+        waveform['width_vert'] = width
         waveform['sweeprange_vert'] = sweepranges[1]
         waveform['resolution'] = resolution
         waveform['samplerate'] = 1 / self.AWG_clock
+        waveform['period'] = period_vert
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
 
         return waveform, sweep_info
 

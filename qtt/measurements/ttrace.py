@@ -455,7 +455,7 @@ class ttrace_update:
             self.fps.addtime(time.time())
             ncurves = self.multi_trace.ncurves
             p=self.multi_trace.curves[ii]
-            for jj in range(ncurves):
+            for jj in range(min(ncurves, len(q)) ):
                 nn=len(q[jj,:])
                 n0=int(nn/2)
                 xrange=np.arange(-n0, -n0+nn)
