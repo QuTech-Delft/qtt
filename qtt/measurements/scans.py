@@ -1192,10 +1192,14 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
-
     station.awg.stop()
 
     dt = qtt.time.time() - t0
+
+    if update:
+        # final update
+        liveplotwindow.update_plot()
+        pg.mkQApp().processEvents()
 
     if diff_dir is not None:
         for mname in measure_names:

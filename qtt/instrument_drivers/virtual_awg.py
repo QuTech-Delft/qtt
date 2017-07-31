@@ -9,6 +9,8 @@ Created on Wed Aug 31 13:04:09 2016
 import numpy as np
 import scipy.signal
 import logging
+import warnings
+
 import qcodes
 from qcodes import Instrument
 from qcodes.plots.pyqtgraph import QtPlot
@@ -220,6 +222,14 @@ class virtual_awg(Instrument):
 
         return wave_raw
 
+    def check_frequency_waveform(self, period, width):
+        """ Check whether a sawtooth waveform with specified period can be generated """
+        old_sr = self.AWG_clock
+        new_sr = 5 / (period*(1-width))        
+        if (new_sr)<old_sr:
+            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested' % (old_sr/1e6), UserWarning)
+        return new_sr
+    
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the measurement instrument.
@@ -237,6 +247,9 @@ class virtual_awg(Instrument):
         -------
         >>> waveform, sweep_info = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
+        
+        self.check_frequency_waveform(period, width)
+        
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
@@ -272,6 +285,9 @@ class virtual_awg(Instrument):
             waveform (dict): The waveform being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
+ 
+        self.check_frequency_waveform(period, width) 
+ 
         waveform = dict()
         for g in gate_comb:
             wave_raw = self.make_sawtooth(sweeprange, period, width)
@@ -348,9 +364,7 @@ class virtual_awg(Instrument):
         period_horz = resolution[0] / samp_freq + error_corr
         period_vert = resolution[1] * period_horz
 
-        old_sr = self.AWG_clock
-        new_sr = 10 / (period_horz*(1-width))
-        self.reset_AWG(clock=new_sr)
+        self.check_frequency_waveform(period_horz, width)
            
         waveform = dict()
         # horizontal waveform
@@ -396,8 +410,6 @@ class virtual_awg(Instrument):
             if 'delay' in sweep_info[channels]:
                 waveform['markerdelay'] = sweep_info[channels]['delay']
 
-        self.reset_AWG(clock=old_sr)
-
         return waveform, sweep_info
 
     def sweep_2D_virt(self, samp_freq, gates_horz, gates_vert, sweepranges, resolution, width=.95, delete=True):
@@ -424,11 +436,8 @@ class virtual_awg(Instrument):
         period_horz = resolution[0] / samp_freq + error_corr
         period_vert = resolution[1] * period_horz
         
-        old_sr = self.AWG_clock
-        new_sr = 10 / (period_horz*(1-width))
-        self.AWG_clock = new_sr
-        for awg in self._awgs:
-            awg.set('clock_freq', self.AWG_clock)
+        new_sr = self.check_frequency_waveform(period_horz, width)
+        #self.reset_AWG(new_sr)
 
         waveform = dict()
         # horizontal virtual gate
@@ -467,10 +476,6 @@ class virtual_awg(Instrument):
         for channels in sweep_info:
             if 'delay' in sweep_info[channels]:
                 waveform['markerdelay'] = sweep_info[channels]['delay']
-
-        self.AWG_clock = old_sr
-        for awg in self._awgs:
-            awg.set('clock_freq', self.AWG_clock)
 
         return waveform, sweep_info
 
