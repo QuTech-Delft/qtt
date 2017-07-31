@@ -1681,7 +1681,7 @@ def test_scan2D(verbose=0):
     scanjob = scanjob_t({'sweepdata': dict({'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
 
-    scanjob = scanjob_t({'sweepdata': dict({'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
+    scanjob = scanjob_t({'sweepdata': dict({'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [q,R]})
     data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
  
     scanjob = scanjob_t({'sweepdata': dict({'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
