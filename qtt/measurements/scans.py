@@ -549,6 +549,8 @@ class scanjob_t(dict):
                     raise Exception('unrecognized gate parameter')
             elif not hasattr(station.gates, param):
                 raise Exception('unrecognized gate parameter')
+        elif isinstance(param, qcodes.instrument.parameter.Parameter):
+            self[field]['paramname'] = param.name            
         else:
             self[field]['paramname'] = '_'.join(['%s(%s)' % (key, value) for (key, value) in param.items()])
     
