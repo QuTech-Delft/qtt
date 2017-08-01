@@ -41,7 +41,7 @@ import traceback
 from qtt.legacy import analyse2dot
 
 from qtt.tools import diffImageSmooth, scanTime
-from qtt.scans import experimentFile, pinchoffFilename
+from qtt.measurements.scans import experimentFile, pinchoffFilename
 from qtt.data import *
 from qtt import pgeometry
 from qtt.algorithms.generic import *
@@ -236,7 +236,7 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
             if allgatevalues is None:   # legacy data files
                 allgatevalues = ddplunger['gatevalues']
 
-            qtt.scans.plot1D(ddplunger, fig=400, mstyle='.-b')
+            qtt.measurements.scans.plot1D(ddplunger, fig=400, mstyle='.-b')
             plt.figure(400)
             # xx, vstep, vsweep= show2D(dd, fig=101)
             imfile0 = 'sweep-%s-%s.png' % (od['name'], '-plunger')

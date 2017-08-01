@@ -282,7 +282,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     sweepvalues = scanjob._convert_scanjob_vec(station)
 
     wait_time = sweepdata.get('wait_time', 0)
-    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan',2*wait_time )
     t0 = time.time()
 
     # LEGACY
@@ -772,7 +772,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     wait_time_sweep = sweepdata.get('wait_time', 0)
     wait_time_step = stepdata.get('wait_time', 0)
-    wait_time_startscan = scanjob.get('wait_time_startscan', 0)
+    wait_time_startscan = scanjob.get('wait_time_startscan', wait_time_step)
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
     logging.info('scan2D: wait_time_sweep %f' % wait_time_sweep)
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
@@ -977,6 +977,8 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, verbose=1):
         memsize (int)
     """
     drate=digitizer.sample_rate()
+    if drate==0:
+        raise Exception('digitizer samplerate is zero, please reset digitizer' )
     npoints = int(period*drate)
     memsize = int(np.ceil(npoints/16)*16)
 		  						
@@ -992,8 +994,7 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, verbose=1):
         print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period*1e3))
         print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
         print('%s: pre and post trigger: %d %d'  % (digitizer.name,digitizer.pretrigger_memory_size(), digitizer.posttrigger_memory_size() ))
-    return memsize
-       
+    return memsize       
 
 def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
     """ Measure and process data with fpga for different scan types
@@ -1715,7 +1716,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), 
 
     wait_time = waitTime(od['gates'][2], station=station)
     scanjobhi['sweepdata']['wait_time'] = wait_time
-    scanjobhi['stepdata']['wait_time'] = 2*waitTime(None, station) + 3 * wait_time
+    scanjobhi['stepdata']['wait_time'] = max(2*waitTime(None, station) + 3 * wait_time, .15)
 
     alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -1728,7 +1729,7 @@ def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), 
     if tmp['accuracy'] < .2:
         logging.info('use old data point!')
         # use normal balance point (fixme)
-        ptv = od['balancepoint']
+        ptv = od['balancepoint'] # gate0, gate2
         ptx = od['balancepointpixel'].reshape(1, 2)
     else:
         ptx = tmp['ptpixel'].copy()
