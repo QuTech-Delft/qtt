@@ -105,11 +105,11 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
     step (int, optional): Step value (default is -1)
 
     """
-    sweepdata = scanjob_t(
+    sweepdata = dict(
         {'param': g1, 'start': r1[0], 'end': r1[1], 'step': step})
-    scanjob = dict({'sweepdata': sweepdata, 'minstrument': keithleyidx})
+    scanjob = scanjob_t({'sweepdata': sweepdata, 'minstrument': keithleyidx})
     if not g2 is None:
-        stepdata = scanjob_t(
+        stepdata = dict(
             {'param': g2, 'start': r2[0], 'end': r2[1], 'step': step})
         scanjob['stepdata'] = stepdata
 
@@ -1701,6 +1701,17 @@ def test_scan2D(verbose=0):
 
 
 
+def enforce_boundaries(scanjob, sample_data, eps=0):
+    """ Make sure a scanjob does not go outside sample boundaries """
+    for field in ['stepdata', 'sweepdata']:
+
+        if field in scanjob:
+            bstep = sample_data.gate_boundaries( scanjob[field]['param'])
+            scanjob[field]['end'] = max(scanjob[field]['end'], bstep[0]+eps)
+            scanjob[field]['start'] = max(scanjob[field]['start'], bstep[0]+eps)
+            scanjob[field]['end'] = min(scanjob[field]['end'], bstep[1]-eps)
+            scanjob[field]['start'] = min(scanjob[field]['start'], bstep[1]-eps)
+    
 def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), fig=4000, ptv=None):
     """ Make high-resolution scan of a one-dot """
     if verbose:
@@ -1712,13 +1723,10 @@ def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), 
     keithleyidx = [od['instrument']]
     scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
                               'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
-    
-    bstep = sample_data.gate_boundaries(od['gates'][0])
-    bsweep = sample_data.gate_boundaries(od['gates'][2])
-    
+      
     scanjobhi['minstrument'] = keithleyidx
-    scanjobhi['stepdata']['end'] = max(scanjobhi['stepdata']['end'], bstep[0])
-    scanjobhi['sweepdata']['end'] = max(scanjobhi['sweepdata']['end'], bsweep[0])
+    
+    enforce_boundaries(scanjobhi, sample_data, 1e-3)
 
     wait_time = waitTime(od['gates'][2], station=station)
     scanjobhi['sweepdata']['wait_time'] = wait_time
