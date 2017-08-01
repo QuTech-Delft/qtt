@@ -96,19 +96,19 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample
     stepdata = dict({'param': gg[0], 'start': stepstart, 'end': stepend, 'step': step})
     sweepdata = dict({'param': gg[2], 'start': sweepstart, 'end': sweepend, 'step': step})
 
-    wait_time_sweep = qtt.scans.waitTime(gg[2], station=station)
-    wait_time_step = qtt.scans.waitTime(gg[0], station=station) 
+    wait_time_sweep = qtt.measurements.scans.waitTime(gg[2], station=station)
+    wait_time_step = qtt.measurements.scans.waitTime(gg[0], station=station) 
 
     wait_time_step_eff = 3*wait_time_step + 3 * wait_time_sweep + .5
     wait_time_sweep_eff = np.minimum(wait_time_sweep / 3., .15)
 
-    scanjob = qtt.scans.scanjob_t({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
-    enforce_boundaries(scanjob, sample_data)
     
-    scanjob['stepdata']['wait_time'] = wait_time_step_eff + 2 * wait_time_sweep
+    scanjob = qtt.measurements.scans.scanjob_t({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
+    enforce_boundaries(scanjob, sample_data)
+    scanjob['stepdata']['wait_time'] = max(wait_time_step_eff + 2 * wait_time_sweep,.15)
     scanjob['sweepdata']['wait_time'] = wait_time_sweep_eff
     scanjob['wait_time_startscan']=.25 + wait_time_sweep + wait_time_step_eff
-    alldata = qtt.scans.scan2D(station, scanjob )
+    alldata = qtt.measurements.scans.scan2D(station, scanjob )
 
     od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
 
@@ -128,13 +128,14 @@ def onedotPlungerScan(station, od, verbose=1, sample_data = {}):
 
     scanjob = scanjob_t({'minstrument': [od['instrument']]})
     scanjob['sweepdata'] = dict({'param': gg[1], 'start': 50, 'end': pv, 'step': -1})
-
+    scanjob['wait_time_startscan']=.2
+    
     gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
     gates.set(gg[0], ptv[1, 0] + 20)
     gates.set(gg[1], scanjob['sweepdata']['start'])
 
-    wait_time = qtt.scans.waitTime(gg[1], station=station)
-    scanjob['sweepdata']['wait_time']=wait_time / 4.
+    wait_time = qtt.measurements.scans.waitTime(gg[1], station=station)
+    scanjob['sweepdata']['wait_time']=wait_time / 1.5
     time.sleep(wait_time)
 
     enforce_boundaries(scanjob, sample_data)
@@ -1030,7 +1031,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             # Create scan job
 
-            scanjob = qtt.scans.scanjob_t({'mode': '2d'})
+            scanjob = qtt.measurements.scans.scanjob_t({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
 
