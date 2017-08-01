@@ -1713,15 +1713,13 @@ def test_scan2D(verbose=0):
     gates.close()
 
 
-
 def enforce_boundaries(scanjob, sample_data, eps=1e-2):
     """ Make sure a scanjob does not go outside sample boundaries
     
     Args:
-        scanjob (scanjob_t or dict)
+        scanjob (scanjob_t)
         sample_data (sample_data_t)
-    """
-    
+    """   
     if isinstance(scanjob, scanjob_t) or ('minstrument' in scanjob):
         for field in ['stepdata', 'sweepdata']:
     
