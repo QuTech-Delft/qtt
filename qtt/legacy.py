@@ -14,6 +14,8 @@ import qcodes
 # explicit import
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
+from qtt.algorithms.images import straightenImage
+import itertools
 
 import qtt.data
 from qtt.data import loadExperimentData
@@ -61,9 +63,9 @@ def positionScanjob(scanjob, pt):
 
     return scanjob
 
-from qtt.measurements.scans import sample_data_t
+from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
-def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample_data_t(), scanrange=500, step=-8, full=1):
+def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample_data_t(), scanrange=500, step=-12):
     """ Scan a one-dot
 
     Arguments
@@ -84,15 +86,12 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample
 
     pv1 = float(od['pinchvalues'][0]) 
     pv2 = float(od['pinchvalues'][2]) 
+        
+    stepstart = float(pv1 + scanrange)
+    sweepstart = float(pv2 + scanrange)
     
-    r1=sample_data.gate_boundaries(gg[0])
-    r2=sample_data.gate_boundaries(gg[2])
-    
-    stepstart = float(np.minimum(od['pinchvalues'][0] + scanrange, r1[1]))
-    sweepstart = float(np.minimum(od['pinchvalues'][2] + scanrange, r2[1]))
-    
-    stepend = np.maximum(pv1-10, r1[0])
-    sweepend = np.maximum(pv2-10, r2[0])
+    stepend = pv1-10
+    sweepend = pv2-10
     
     stepdata = dict({'param': gg[0], 'start': stepstart, 'end': stepend, 'step': step})
     sweepdata = dict({'param': gg[2], 'start': sweepstart, 'end': sweepend, 'step': step})
@@ -103,11 +102,9 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample
     wait_time_step_eff = 3*wait_time_step + 3 * wait_time_sweep + .5
     wait_time_sweep_eff = np.minimum(wait_time_sweep / 3., .15)
 
-    if full == 0:
-        stepdata['step'] = -12
-        sweepdata['step'] = -12
-
+    
     scanjob = qtt.measurements.scans.scanjob_t({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
+    enforce_boundaries(scanjob, sample_data)
     scanjob['stepdata']['wait_time'] = max(wait_time_step_eff + 2 * wait_time_sweep,.15)
     scanjob['sweepdata']['wait_time'] = wait_time_sweep_eff
     scanjob['wait_time_startscan']=.25 + wait_time_sweep + wait_time_step_eff
@@ -120,7 +117,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample
     return alldata, od
 
 
-def onedotPlungerScan(station, od, verbose=1):
+def onedotPlungerScan(station, od, verbose=1, sample_data = {}):
     """ Make a scan with the plunger of a one-dot """
     # do sweep with plunger
     gates = station.gates
@@ -131,7 +128,8 @@ def onedotPlungerScan(station, od, verbose=1):
 
     scanjob = scanjob_t({'minstrument': [od['instrument']]})
     scanjob['sweepdata'] = dict({'param': gg[1], 'start': 50, 'end': pv, 'step': -1})
-
+    scanjob['wait_time_startscan']=.2
+    
     gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
     gates.set(gg[0], ptv[1, 0] + 20)
     gates.set(gg[1], scanjob['sweepdata']['start'])
@@ -140,6 +138,7 @@ def onedotPlungerScan(station, od, verbose=1):
     scanjob['sweepdata']['wait_time']=wait_time / 1.5
     time.sleep(wait_time)
 
+    enforce_boundaries(scanjob, sample_data)
     alldata = scan1D(station, scanjob=scanjob)
     alldata.metadata['od'] = od
     stripDataset(alldata)
@@ -513,11 +512,9 @@ def cmap_discretize(cmap, N, m=1024):
     return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d" % m, cdict, m)
 
 #%%
-from qtt.algorithms.images import straightenImage
 
 #%%
 
-import itertools
 
 
 def polyfit2d(x, y, z, order=3):

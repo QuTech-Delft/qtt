@@ -10,6 +10,7 @@ import pickle
 import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
+from qcodes import DataArray
 
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -132,6 +133,52 @@ def freezeclass(cls):
 
 #%%
 
+def resampleImage(im):
+    """ Resample the image so it has the similar sample rates (samples/mV) in both axis
+    
+    Args:
+        im (DataArray): input image
+    Returns:
+        im (numpy array): resampled image
+        setpoints (list of 2 numpy arrays): setpoint arrays from resampled image
+    """
+    setpoints = im.set_arrays
+    mVrange = [abs(setpoints[0][-1]-setpoints[0][0]), abs(setpoints[1][0,-1]-setpoints[1][0,0])]
+    samprates = [im.shape[0]//mVrange[0], im.shape[1]//mVrange[1]]
+    factor = int(max(samprates)//min(samprates))
+    if factor >= 2:
+        axis = int(samprates[0] - samprates[1] < 0)
+        if axis == 0:
+            facrem = im.shape[0] % factor
+            if facrem > 0:
+                im = im[:-facrem,:]
+            facrem = facrem + 1
+            im = im.reshape(im.shape[0]//factor,factor,im.shape[1]).mean(1)
+            spy = np.linspace(setpoints[0][0],setpoints[0][-facrem],im.shape[0])
+            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-1],im.shape[1]),0),im.shape[0])
+            setpointy = DataArray(name='Resampled_'+setpoints[0].array_id, array_id='Resampled_'+setpoints[0].array_id, label=setpoints[0].label,
+                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
+            setpointx = DataArray(name='Resampled_'+setpoints[1].array_id, array_id='Resampled_'+setpoints[1].array_id, label=setpoints[1].label,
+                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            setpoints = [setpointy, setpointx]
+        else:
+            facrem = im.shape[1] % factor
+            if facrem > 0:
+                im = im[:,:-facrem]
+            facrem = facrem + 1
+            im = im.reshape(im.shape[0],im.shape[1]//factor,factor).mean(-1)
+            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-facrem],im.shape[1]),0),[im.shape[0],1])           
+            idx = setpoints[1].array_id
+            if idx is None:
+                idx='x'
+            idy = setpoints[1].array_id
+            if idy is None:
+                idy= 'y'
+            setpointx = DataArray(name='Resampled_'+ idx , array_id='Resampled_'+idy, label=setpoints[1].label,
+                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            setpoints = [setpoints[0], setpointx]
+                
+    return im, setpoints
         
 def diffImage(im, dy, size=None):
     """ Simple differentiation of an image
@@ -204,6 +251,32 @@ def diffImageSmooth(im, dy='x', sigma=2):
     return imx
 
 
+def test_array(location=None, name=None):
+    # DataSet with one 2D array with 4 x 6 points
+    yy, xx = np.meshgrid(np.arange(0,10,.5), range(3))
+    zz = xx**2+yy**2
+    # outer setpoint should be 1D
+    xx = xx[:, 0]
+    x = DataArray(name='x', label='X', preset_data=xx, is_setpoint=True)
+    y = DataArray(name='y', label='Y', preset_data=yy, set_arrays=(x,),
+                  is_setpoint=True)
+    z = DataArray(name='z', label='Z', preset_data=zz, set_arrays=(x, y))
+    return z
+
+def test_image_operations(verbose=0):    
+    import qcodes.tests.data_mocks    
+    
+    if verbose:
+        print('testing resampleImage')
+    ds=qcodes.tests.data_mocks.DataSet2D()
+    imx, setpoints = resampleImage(ds.z)
+
+    z=test_array()
+    imx, setpoints = resampleImage(z)
+    if verbose:
+        print('testing diffImage')
+    d=diffImage(ds.z, dy='x')
+    
 #%%
 
 import dateutil
