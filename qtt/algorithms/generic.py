@@ -2,12 +2,17 @@
 
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
-
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
 import scipy
 
+try:
+    import cv2
+except:
+    warnings.warn('could not find opencv, not all functionality available', UserWarning)
+    
+from qtt import pgeometry
 from qtt import pgeometry as pmatlab
 
 from qtt.data import *
@@ -59,12 +64,9 @@ def localMaxima(arr, radius=1, thr=None):
 
 #%%
 
-import cv2
-from qtt import pgeometry
-import numpy as np
 
 
-def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.INTER_AREA, fig=None):
+def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None, fig=None):
     """ Scale image to make pixels at specified resolution
 
     Args:
@@ -81,6 +83,9 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=cv2.
        (mvx, mvy, fx, dy) : internal data
 
     """
+    if interpolation is None:
+        interpolation = cv2.INTER_AREA
+        
     dxmv = imextent[1] - imextent[0]
     dymv = imextent[3] - imextent[2]
 

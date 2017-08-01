@@ -1,10 +1,15 @@
 #%%
-import hickle
 from datetime import datetime
 import qcodes
 import os
 import h5py
 import logging
+import warnings
+
+try:
+    import hickle
+except:
+    warnings.warn('could not import hickle, not all functionality available', UserWarning)
 
 #%%
 

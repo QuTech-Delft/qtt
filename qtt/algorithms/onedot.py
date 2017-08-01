@@ -17,12 +17,15 @@ import qtt.data
 from qtt import pgeometry as pmatlab
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import plot2Dline
-#import qtt.measurements.scans
 
 from qtt.algorithms.generic import getValuePixel
 from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
 
-import cv2
+try:
+    import cv2
+except:
+    warnings.warn('could not find opencv, not all functionality available', UserWarning)
+
 
 #%%
 
