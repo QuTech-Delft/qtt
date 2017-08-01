@@ -245,7 +245,7 @@ class sensingdot_t:
             qtt.scans.plotData(alldata, fig=fig)
         return alldata
 
-    def autoTune(sd, scanjob=None, fig=200, outputdir=None, correctdelay=True, step=-3., max_wait_time=.8, scanrange=300):
+    def autoTune(sd, scanjob=None, fig=200, outputdir=None, correctdelay=True, step=-2., max_wait_time=1., scanrange=300):
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
         alldata = sd.scan1D(outputdir=outputdir, step=step,

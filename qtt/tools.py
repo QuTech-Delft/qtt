@@ -572,11 +572,11 @@ try:
             if verbose>=2:
                 print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
-                                    SaveWithDocument=True, Left=left, Top=100, Width=width, Height=height)
+                                    SaveWithDocument=True, Left=left, Top=120, Width=width, Height=height)
 
         txtbox = slide.Shapes.AddTextbox(
-            1, Left=100, Top=100, Width=500, Height=300)
-        txtbox.Name = 'text'
+            1, Left=100, Top=80, Width=500, Height=300)
+        txtbox.Name = 'scan_location'
 
         if txt is not None:
             txtbox.TextFrame.TextRange.Text = txt
@@ -626,8 +626,8 @@ try:
         text = 'Dataset location: %s' % dataset.location
 
         if notes is None:
-            notes = 'Dataset metadata: %s' % reshape_metadata(
-                dataset, printformat=printformat)
+            notes = 'Dataset %s metadata:\n%s' % (dataset.location, reshape_metadata(
+                dataset, printformat=printformat) )
 
         ppt, slide = addPPTslide(title=title, fig=temp_fig, txt=text,
                                  notes=notes, show=show, verbose=verbose, **kwargs)
