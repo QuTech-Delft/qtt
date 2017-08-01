@@ -1738,6 +1738,7 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             scanjob[param] = min(scanjob[param], bstep[1]-eps)
 
 
+
 def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), fig=4000, ptv=None):
     """ Make high-resolution scan of a one-dot """
     if verbose:
