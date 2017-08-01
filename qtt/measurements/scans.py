@@ -1738,7 +1738,12 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
 
 
 def enforce_boundaries(scanjob, sample_data, eps=0):
-    """ Make sure a scanjob does not go outside sample boundaries """
+    """ Make sure a scanjob does not go outside sample boundaries
+    
+    Args:
+        scanjob (scanjob_t)
+        sample_data (sample_data_t)
+    """
     for field in ['stepdata', 'sweepdata']:
 
         if field in scanjob:
