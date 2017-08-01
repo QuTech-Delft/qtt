@@ -470,7 +470,13 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 #%%
 
 class sample_data_t (dict):
-    """ Hold all kind of sample specific data """
+    """ Hold all kind of sample specific data
+    
+    The structure is that of a dictionary. Typical fields:
+        
+        gate_boundaries (dict): dictionary with gate boundaries
+    
+    """
     pass
 
     def gate_boundaries(self, gate):
@@ -1702,7 +1708,12 @@ def test_scan2D(verbose=0):
 
 
 def enforce_boundaries(scanjob, sample_data, eps=0):
-    """ Make sure a scanjob does not go outside sample boundaries """
+    """ Make sure a scanjob does not go outside sample boundaries
+    
+    Args:
+        scanjob (scanjob_t)
+        sample_data (sample_data_t)
+    """
     for field in ['stepdata', 'sweepdata']:
 
         if field in scanjob:
