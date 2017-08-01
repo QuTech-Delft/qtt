@@ -1737,6 +1737,17 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
 
 
 
+def enforce_boundaries(scanjob, sample_data, eps=0):
+    """ Make sure a scanjob does not go outside sample boundaries """
+    for field in ['stepdata', 'sweepdata']:
+
+        if field in scanjob:
+            bstep = sample_data.gate_boundaries( scanjob[field]['param'])
+            scanjob[field]['end'] = max(scanjob[field]['end'], bstep[0]+eps)
+            scanjob[field]['start'] = max(scanjob[field]['start'], bstep[0]+eps)
+            scanjob[field]['end'] = min(scanjob[field]['end'], bstep[1]-eps)
+            scanjob[field]['start'] = min(scanjob[field]['start'], bstep[1]-eps)
+    
 def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), fig=4000, ptv=None):
     """ Make high-resolution scan of a one-dot """
     if verbose:
