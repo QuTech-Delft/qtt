@@ -1737,14 +1737,15 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
 
 
 
-def enforce_boundaries(scanjob, sample_data, eps=1e-3):
+def enforce_boundaries(scanjob, sample_data, eps=1e-2):
     """ Make sure a scanjob does not go outside sample boundaries
     
     Args:
         scanjob (scanjob_t or dict)
         sample_data (sample_data_t)
     """
-    if isinstance(scanjob, scanjob_t):
+    
+    if isinstance(scanjob, scanjob_t) or ('minstrument' in scanjob):
         for field in ['stepdata', 'sweepdata']:
     
             if field in scanjob:
