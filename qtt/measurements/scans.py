@@ -899,7 +899,7 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
                             fig=None, pre_trigger=None):
     """ Process data from the M4i and a sawtooth trace 
     
-    This is done to remove the extra padded data of the digitized and to 
+    This is done to remove the extra padded data of the digitizer and to 
     extract the forward trace of the sawtooth.
     
     Args:
@@ -972,7 +972,8 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, verbose=1):
     
     Args:
         digitizer (object)
-        period (float)
+        period (float): period of signal to measure
+        trigger_delay (float): delay in seconds between ingoing signal and returning signal
     Returns:
         memsize (int)
     """
@@ -988,8 +989,9 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, verbose=1):
         pre_trigger = min(spare/2, 512)
     else:
         pre_trigger = trigger_delay*drate
-    post_trigger = int(np.ceil((memsize-pre_trigger)/16)*16)
+    post_trigger = int(np.ceil((memsize-pre_trigger)//16)*16)
     digitizer.posttrigger_memory_size(post_trigger)
+    digitizer.pretrigger_memory_size(memsize-post_trigger)
     if verbose:
         print('%s: sample rate %.3f Mhz, period %f [ms]'  % (digitizer.name, drate/1e6, period*1e3))
         print('%s: trace %d points, selected memsize %d'  % (digitizer.name, npoints, memsize))
@@ -1046,9 +1048,10 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     if period is None:
         raise Exception('please set period for block measurements')
     memsize = select_digitizer_memsize(digitizer, period, trigger_delay, verbose=verbose>=1)
+    post_trigger=digitizer.posttrigger_memory_size()									  
     
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
-    dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage)
+    dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
     if isinstance(dataraw, tuple):
         dataraw=dataraw[0]
     data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
@@ -1057,8 +1060,9 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (width, data.shape, digitizer.data_memory_size() ) )
     if process:
         samplerate=digitizer.sample_rate()
-													  
-        data, (r1, r2) = process_digitizer_trace(data.T, width, period, samplerate, resolution=resolution)
+        pre_trigger=digitizer.pretrigger_memory_size()									  
+
+        data, (r1, r2) = process_digitizer_trace(data.T, width, period, samplerate, pre_trigger=pre_trigger, resolution=resolution)
 											   
         if verbose:
             print('measuresegment_m4i: processing data: r1 %s, r2 %s' % (r1, r2) )
@@ -1079,6 +1083,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
         data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=True)
     else:
         raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+    if data.size == 0:
+        warnings.warn('measuresegment: received empty data array')
     return data
 
 #%%
