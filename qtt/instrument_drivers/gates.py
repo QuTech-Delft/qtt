@@ -119,8 +119,8 @@ class virtual_IVVI(Instrument):
             instrument = self._instrument_list[gx[0]]
             param = self.get_instrument_parameter(g)
             param._vals = Numbers(bnds[0], max_value=bnds[1])
-            if hasattr(instrument, 'adjust_validator_resolution'):
-                instrument.adjust_validator_resolution(param)
+            if hasattr(instrument, 'adjust_parameter_validator'):
+                instrument.adjust_parameter_validator(param)
 
     def __repr__(self):
         gm = getattr(self, '_gate_map', [])
