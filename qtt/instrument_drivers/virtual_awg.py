@@ -183,7 +183,7 @@ class virtual_awg(Instrument):
         Arguments:
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
-        for sweep in sweep_info:
+        for sweep in sweep_info:            
             if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
                     sweep_info[sweep]['name'], sweep[1], 1)
@@ -510,6 +510,12 @@ class virtual_awg(Instrument):
             a.clock_freq.set(clock)
             a.trigger_mode.set('CONT')    
             a.trigger_source.set('INT')
+            
+            for ii in range(1, 5):
+                f=getattr(a, 'ch%d_amp' % ii)
+                val=f()
+                if val!=4.0:
+                    warnings.warn('AWG channel %d output not at 4.0 V' % ii)
 
 #%%
 def plot_wave_raw(wave_raw, samplerate=None, station=None):
