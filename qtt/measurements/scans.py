@@ -637,7 +637,7 @@ class scanjob_t(dict):
         self['stepdata'] = stepdata
         self['sweepdata'] = sweepdata
 
-    def _convert_scanjob_vec(self, station, sweeplength=None, steplength=None):
+    def _convert_scanjob_vec(self, station, sweeplength=None, steplength=None, stepvalues=None):
         """ Adjust the scanjob for vector scans. 
 
         Note: For vector scans the range field in stepdata and sweepdata is 
@@ -742,8 +742,9 @@ class scanjob_t(dict):
 
             sweepvalues = sweepparam[sweepdata['start']
                 :sweepdata['end']:sweepdata['step']]
-            stepvalues = stepparam[stepdata['start']
-                :stepdata['end']:stepdata['step']]
+            sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+            if stepvalues is None:
+                stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
             scanvalues = [stepvalues, sweepvalues]
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                 param_init = {param: gates.get(param) for param in sweepdata['param']}
@@ -1275,7 +1276,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if plotparam == 'measured':
             plotparam = measure_names[0]
 
-    scanvalues = scanjob._convert_scanjob_vec(station, data[0].shape[0])
+    scanvalues = scanjob._convert_scanjob_vec(station, data[0].shape[0], stepvalues=scanjob.get('stepvalues', None))
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
     if stepvalues.name == sweepvalues.name:
@@ -1308,7 +1309,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                 gates.set(g, (scanjob['phys_gates_vals'][g][ix, 0] +
                               scanjob['phys_gates_vals'][g][ix, -1]) / 2)
         else:
-            stepvalues.set(x)
+#            stepvalues.set(x)
+            stepdata['param'].set(x)
         if ix == 0:
             qtt.time.sleep(wait_time_startscan)
         else:

@@ -106,6 +106,7 @@ def plotBarrierFit(imq, imextent, pp, fig=400, title='Fitted model'):
     x0 = np.linspace(imextent[0], imextent[1], 1000)
     yfit = barrierModel(x0, pp)
     plt.plot(x0, yfit, '-g', label='Model')
+    plt.plot(x0, yfit/2, ':b', alpha=1/2, label='Model_2photon')
 
     ppx = copy.deepcopy(pp)
     ppx[2] = 0
