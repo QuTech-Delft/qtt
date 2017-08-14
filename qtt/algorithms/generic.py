@@ -10,7 +10,8 @@ import scipy
 try:
     import cv2
 except:
-    warnings.warn('could not find opencv, not all functionality available', UserWarning)
+    import qtt
+    warnings.warn('could not find opencv, not all functionality available', qtt.MissingOptionalPackageWarning)
     
 from qtt import pgeometry
 from qtt import pgeometry as pmatlab

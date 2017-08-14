@@ -29,6 +29,12 @@ from qtt.gui.dataviewer import DataViewer
 
 #%%
 
+class MissingOptionalPackageWarning(UserWarning, ValueError):
+    """ An optional package is missing """
+    pass
+
+#%%
+
 if qcodes.config['user'].get('deprecation_warnings', True):
     # enable deprecation warnings
     warnings.simplefilter("default", DeprecationWarning)

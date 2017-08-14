@@ -24,7 +24,8 @@ from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
 try:
     import cv2
 except:
-    warnings.warn('could not find opencv, not all functionality available', UserWarning)
+    import qtt
+    warnings.warn('could not find opencv, not all functionality available', qtt.MissingOptionalPackageWarning)
 
 
 #%%

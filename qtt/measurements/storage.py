@@ -9,7 +9,8 @@ import warnings
 try:
     import hickle
 except:
-    warnings.warn('could not import hickle, not all functionality available', UserWarning)
+    import qtt
+    warnings.warn('could not import hickle, not all functionality available', qtt.MissingOptionalPackageWarning)
 
 #%%
 
