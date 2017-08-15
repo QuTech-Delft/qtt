@@ -291,12 +291,22 @@ def static_var(varname, value):
     return decorate
 
 
-@static_var("time", 0)
-def tprint(string, dt=1, output=False):
-    """ Print progress of a loop every dt seconds """
-    if (time.time() - tprint.time) > dt:
+@static_var("time", {'default': 0})
+def tprint(string, dt=1, output=False, tag='default'):
+    """ Print progress of a loop every dt seconds 
+    
+    Args:
+        string (str): text to print
+        dt (float): delta time in seconds
+        output (bool): if True return whether output was printed or not
+        tag (str): optional tag for time
+    Returns:
+        output (bool)
+        
+    """
+    if (time.time() - tprint.time.get(tag, 0)) > dt:
         print(string)
-        tprint.time = time.time()
+        tprint.time[tag] = time.time()
         if output:
             return True
         else:
