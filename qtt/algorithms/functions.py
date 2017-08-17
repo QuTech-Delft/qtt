@@ -2,6 +2,21 @@
 
 import numpy as np
 
+def gaussian(x, mean, s, amplitude = 1, offset = 0):
+    """ Model for Gaussuan function
+    
+       $$y = offset + amplitude * np.exp(-(1/2)*(x-mean)^2/s^2)$$
+    
+    Args:
+        x (array): data points
+        mean, std, amplitude, offset: parameters
+    Returns:
+        y (array)
+        
+    """
+    y = offset + amplitude * np.exp(- (x-mean)*(x-mean)/(2*s*s))
+    return y
+    
 def exp_function(x, a, b, c):
     """ Model for exponential function
     
