@@ -670,7 +670,8 @@ try:
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
-    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1, printformat='fancy', **kwargs):
+    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1,
+                       paramname='measured', printformat='fancy', **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
 
         Arguments:
@@ -678,6 +679,7 @@ try:
             notes (string): notes added to slide
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
+            paramname (None or str): passed to dataset.default_parameter_array
             printformat (string): 'fancy' for nice formatting or 'dict' for easy copy to python
         Returns:
             ppt: PowerPoint presentation
@@ -694,7 +696,7 @@ try:
         if len(dataset.arrays) > 3:
             raise Exception('The dataset contains more than three data arrays')
 
-        temp_fig = QtPlot(dataset.default_parameter_array(), show_window=False)
+        temp_fig = QtPlot(dataset.default_parameter_array(paramname=paramname), show_window=False)
 
         text = 'Dataset location: %s' % dataset.location
 
