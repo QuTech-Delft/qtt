@@ -1093,7 +1093,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
         data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=True)
     else:
         raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
-    if data.size == 0:
+    
+    if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
     return data
 
