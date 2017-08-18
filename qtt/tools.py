@@ -739,22 +739,26 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
         all_md={}
     else:
         all_md =  tmp['instruments']
-    metadata = dict()
+    metadata = OrderedDict()
 
-    for x in sorted(all_md.keys()):
+    # make sure the gates instrument is in front
+    all_md_keys = sorted(sorted(all_md), key=lambda x: x == 'gates',  reverse=True) 
+    for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
             metadata[x]['IDN'] = dict({'name': 'IDN', 'value': all_md[
                                       x]['parameters']['IDN']['value']})
             metadata[x]['IDN']['unit'] = ''
-        for y in all_md[x]['parameters'].keys():
+        for y in sorted(all_md[x]['parameters'].keys()):
             if y != 'IDN':
                 metadata[x][y] = OrderedDict()
                 param_md = all_md[x]['parameters'][y]
                 metadata[x][y]['name'] = y
-                if isinstance(param_md['value'], float):
+                if isinstance(param_md['value'], (float, np.float64) ):
                     metadata[x][y]['value'] = float(
                         format(param_md['value'], '.3f'))
+                else:
+                    metadata[x][y]['value'] = str(param_md['value'])    
                 metadata[x][y]['unit'] = param_md['unit']
                 metadata[x][y]['label'] = param_md['label']
 
@@ -771,7 +775,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
             for p in s:
                 pp = s[p]
                 if verbose:
-                    print('  --- %s' % p)
+                    print('  --- %s: %s' % (p, pp.get('value', '??')))
                 ss += '%s: %s %s' % (pp['name'],
                                      pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'
