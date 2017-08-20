@@ -118,7 +118,7 @@ class ttrace_t(dict):
         period0:time before the trace sequence starts
         alpha (float): 
         fpga_delay (float): delay time between the actual signal and the readout of the FPGA 
-        fpgafreq: readout frequency of the FPGA
+        samplingfreq: readout frequency of the acquisition device
         awgclock: clock frequency of the AWG
         traces: contains the extrema the traces have to have
         ....           
@@ -132,10 +132,13 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
     ttrace['fpga_delay']=2e-6
     ttrace['traces'] = []; ttrace['traces_volt'] = []
     try:
-        ttrace['fpgafreq']=station.fpga.sampling_frequency()
+        ttrace['samplingfreq']=station.fpga.sampling_frequency()
     except:
-        import warnings
-        warnings.warn('no fpga object available')    
+        try:
+            ttrace['samplingfreq']=station.digitizer.sample_rate()
+        except:
+            import warnings
+            warnings.warn('no fpga object available')    
     ttrace['awgclock']=station.awg.AWG_clock
     ttrace['awg_delay'] = 0e-4+2e-5 # ???
 
@@ -143,10 +146,10 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
     map_inv=virtualgates.get_crosscap_map_inv()
 
     try:
-        hw=station.hardware3dot#for now hardcoded!!
+        hw=station.hardware #for now hardcoded!!
         awg_to_plunger_plungers=dict( [ (g, getattr(hw, 'awg_to_%s' % g)() ) for g in sweepgates] )
     except:
-        warnings.warn('no hardware3dot object available')    
+        warnings.warn('no hardware object available')    
         awg_to_plunger_plungers=dict( [ (g, 80)  for g in sweepgates] )
         
     pgates=sweepgates
@@ -333,15 +336,16 @@ def init_ttrace(station, awgclock=10e6):
         print('init_ttrace: creating Pulsar %d' % ii)
         a.clock_freq.set(awgclock)
 
-        p = ps.Pulsar(name=qtt.measurements.scans.instrumentName('Pulsar%d' % ii) )
-        p.clock = awgclock
+        p = ps.Pulsar(name=qtt.measurements.scans.instrumentName('Pulsar%d' % ii),
+                      default_AWG=a.name)
         setattr(station, 'pulsar%d' % ii, p)
-        p.AWG=a        
+        #p.AWG=a        
 
 
         define_awg5014_channels(p, marker1highs=2.6)
         
         pulsar_objects+=[p]
+        #p.clock = awgclock
 
     return pulsar_objects
 
@@ -606,18 +610,18 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
         tt: containing information of the timing of the function
         datax:
         tx: the actual signal which is can be used for further purposes """
-    fpgafreq=ttrace['fpgafreq']
+    samplingfreq=ttrace['samplingfreq']
     
     ttrace_element= ttraces[0]
     tracedata=ttrace['tracedata']
     ttotal = ttrace_element.waveforms()[0].size / ttrace['awgclock']         
-    qq=ttotal*fpgafreq
+    qq=ttotal*samplingfreq
 
     datax = data_raw.copy()
     datax[:,0] = np.mean(datax[:,1:2], axis=1)
     
     ff=data_raw.shape[1]/qq                
-    fpgafreqx=fpgafreq*ff
+    fpgafreqx=samplingfreq*ff
     tt=np.arange(0, datax.shape[1])/fpgafreqx
     tx=[]
     if tracedata is not None:
@@ -633,11 +637,11 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
         awgclock=ttrace['awgclock']
         tracedata=ttrace['tracedata']
         ttotal = ttraces[0].waveforms()[0].size / awgclock
-        fpgafreq=ttrace['fpgafreq']
-        qq=ttotal*fpgafreq
-        print('fpga: freq %f [MHz]' % (fpgafreq / 1e6))
+        samplingfreq=ttrace['samplingfreq']
+        qq=ttotal*samplingfreq
+        print('acquisition: freq %f [MHz]' % (samplingfreq / 1e6))
         print('trace length %.3f [ms], %d points' % (1e3*ttotal, ttraces[0].waveforms()[0].size,))
-        print('fpga: expect %d, got %d'  % (qq, data_raw.shape[1]))
+        print('acquisition: expect %d, got %d'  % (qq, data_raw.shape[1]))
 
     return tt, datax, tx
 
@@ -657,8 +661,8 @@ def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amoun
     else:
         plt.xlabel('Time')
     for ii, x in enumerate(ttrace['tracedata']):
-        s = x['start_time'] * tf # fpgafreq
-        e = x['end_time'] * tf # fpgafreq
+        s = x['start_time'] * tf # 
+        e = x['end_time'] * tf # 
         if ii==0:
             qtt.pgeometry.plot2Dline([-1, 0, s], '--', label='start segment')
             qtt.pgeometry.plot2Dline([-1, 0, e], ':', label='end segment')
