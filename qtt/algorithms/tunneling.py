@@ -66,8 +66,8 @@ def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess
         kT (float): temperature in ueV
 
     Returns:
-        par_fit (1 x 6 array): fitted parameters, see polmod_all_2slopes
-        par_guess (1 x 6 array): initial guess of parameters for fitting, see  polmod_all_2slopes
+        par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
+        par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
     """
     if par_guess is None:
         t_guess = (delta[-1] - delta[0]) / 30  # hard-coded guess in ueV
@@ -80,7 +80,8 @@ def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess
         delta_offset_guess = delta[trans_idx]
         sensor_offset_guess = data[trans_idx] - sensitivity_guess / 2
         par_guess = np.array([t_guess, delta_offset_guess, sensor_offset_guess, slope_guess, slope_guess, sensitivity_guess])
-
+        if verbose>=2:
+            print('fit_pol_all: trans_idx %s' % (trans_idx, ))
     func = lambda par: polweight_all_2slopes(delta, data, par, kT)
     par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
