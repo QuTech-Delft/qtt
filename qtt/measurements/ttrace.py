@@ -131,16 +131,24 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
     ttrace['period0']=250e-6
     ttrace['fpga_delay']=2e-6
     ttrace['traces'] = []; ttrace['traces_volt'] = []
-    ttrace['fpgafreq']=station.fpga.sampling_frequency()
+    try:
+        ttrace['fpgafreq']=station.fpga.sampling_frequency()
+    except:
+        import warnings
+        warnings.warn('no fpga object available')    
     ttrace['awgclock']=station.awg.AWG_clock
     ttrace['awg_delay'] = 0e-4+2e-5 # ???
 
     
     map_inv=virtualgates.get_crosscap_map_inv()
 
-    hw=station.hardware3dot#for now hardcoded!!
-    awg_to_plunger_plungers=dict( [ (g, getattr(hw, 'awg_to_%s' % g)() ) for g in sweepgates] )
-    
+    try:
+        hw=station.hardware3dot#for now hardcoded!!
+        awg_to_plunger_plungers=dict( [ (g, getattr(hw, 'awg_to_%s' % g)() ) for g in sweepgates] )
+    except:
+        warnings.warn('no hardware3dot object available')    
+        awg_to_plunger_plungers=dict( [ (g, 80)  for g in sweepgates] )
+        
     pgates=sweepgates
     #"""Map them onto the traces itself"""
     for ii, v in enumerate(vgates):
@@ -325,7 +333,7 @@ def init_ttrace(station, awgclock=10e6):
         print('init_ttrace: creating Pulsar %d' % ii)
         a.clock_freq.set(awgclock)
 
-        p = ps.Pulsar()
+        p = ps.Pulsar(name=qtt.measurements.scans.instrumentName('Pulsar%d' % ii) )
         p.clock = awgclock
         setattr(station, 'pulsar%d' % ii, p)
         p.AWG=a        
@@ -353,7 +361,7 @@ def run_ttrace(virtualawg, pulsar_objects, ttrace, ttrace_elements, sequence_nam
     
         # program the Sequence
         pulsar = pulsar_objects[ii]
-        ss = pulsar.program_awg(seq, *elts)
+        ss = pulsar.program_awgs(seq, *elts)
     
         
     

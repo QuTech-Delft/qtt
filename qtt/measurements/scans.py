@@ -417,7 +417,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
 
-    sweepvalues = scanjob._convert_scanjob_vec(station, data.size)
+    sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength = data.size)
 
     alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, ['measured%d' % i for i in read_ch], data, location=location, loc_record={'label': scanjob['scantype']})
     
