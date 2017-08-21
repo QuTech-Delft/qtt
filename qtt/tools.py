@@ -670,7 +670,8 @@ try:
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
-    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1, printformat='fancy', **kwargs):
+    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1,
+                       paramname='measured', printformat='fancy', **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
 
         Arguments:
@@ -678,6 +679,7 @@ try:
             notes (string): notes added to slide
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
+            paramname (None or str): passed to dataset.default_parameter_array
             printformat (string): 'fancy' for nice formatting or 'dict' for easy copy to python
         Returns:
             ppt: PowerPoint presentation
@@ -691,10 +693,7 @@ try:
         if len(dataset.arrays) < 2:
             raise Exception('The dataset contains less than two data arrays')
 
-        if len(dataset.arrays) > 3:
-            raise Exception('The dataset contains more than three data arrays')
-
-        temp_fig = QtPlot(dataset.default_parameter_array(), show_window=False)
+        temp_fig = QtPlot(dataset.default_parameter_array(paramname=paramname), show_window=False)
 
         text = 'Dataset location: %s' % dataset.location
 
@@ -737,22 +736,26 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
         all_md={}
     else:
         all_md =  tmp['instruments']
-    metadata = dict()
+    metadata = OrderedDict()
 
-    for x in sorted(all_md.keys()):
+    # make sure the gates instrument is in front
+    all_md_keys = sorted(sorted(all_md), key=lambda x: x == 'gates',  reverse=True) 
+    for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
             metadata[x]['IDN'] = dict({'name': 'IDN', 'value': all_md[
                                       x]['parameters']['IDN']['value']})
             metadata[x]['IDN']['unit'] = ''
-        for y in all_md[x]['parameters'].keys():
+        for y in sorted(all_md[x]['parameters'].keys()):
             if y != 'IDN':
                 metadata[x][y] = OrderedDict()
                 param_md = all_md[x]['parameters'][y]
                 metadata[x][y]['name'] = y
-                if isinstance(param_md['value'], float):
+                if isinstance(param_md['value'], (float, np.float64) ):
                     metadata[x][y]['value'] = float(
                         format(param_md['value'], '.3f'))
+                else:
+                    metadata[x][y]['value'] = str(param_md['value'])    
                 metadata[x][y]['unit'] = param_md['unit']
                 metadata[x][y]['label'] = param_md['label']
 
@@ -769,7 +772,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
             for p in s:
                 pp = s[p]
                 if verbose:
-                    print('  --- %s' % p)
+                    print('  --- %s: %s' % (p, pp.get('value', '??')))
                 ss += '%s: %s %s' % (pp['name'],
                                      pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'

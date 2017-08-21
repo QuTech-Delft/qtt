@@ -1,6 +1,11 @@
 """ Functions to fit and analyse Coulomb peaks """
 
 import numpy as np
+import scipy.ndimage.filters as filters
+import scipy.ndimage.morphology as morphology
+import skimage
+import warnings
+
 import qcodes
 
 import qtt.measurements.scans
@@ -11,17 +16,8 @@ import matplotlib.pyplot as plt
 from qtt.algorithms.generic import *
 from qtt.algorithms.generic import issorted
 from qtt.algorithms.functions import logistic
-
-#%%
-
-import scipy.ndimage.filters as filters
-import scipy.ndimage.morphology as morphology
-import skimage
-import numpy as np
-
 from qtt.algorithms.generic import localMaxima
 
-#%%
 
 #%% Functions related to detection of Coulumb peaks
 
@@ -547,7 +543,15 @@ def peakdataOrientation(x, y):
 
 
 def coulombPeaks(x, y, verbose=1, fig=None, plothalf=False, istep=None):
-    """ Detect Coulumb peaks in a 1D scan """
+    """ Detect Coulumb peaks in a 1D scan
+    
+    Args:
+        x, y (arrays): 
+        verbose (int)
+        fig (int or None)
+        istep (float): scale in mV / pixel ?
+        
+    """
 
     if istep is None:
         warnings.warn('istep is None, please add istep as a parameter')
