@@ -693,9 +693,6 @@ try:
         if len(dataset.arrays) < 2:
             raise Exception('The dataset contains less than two data arrays')
 
-        if len(dataset.arrays) > 3:
-            raise Exception('The dataset contains more than three data arrays')
-
         temp_fig = QtPlot(dataset.default_parameter_array(paramname=paramname), show_window=False)
 
         text = 'Dataset location: %s' % dataset.location
