@@ -16,7 +16,7 @@ class ParameterScaler(Parameter):
 
     Initialize the parameter by passing the parameter to be measured/set
     and the value of the division OR the gain.
-    
+
     The scaling value can be either a scalar value or a Qcodes Parameter.
 
     The parameter scaler acts a your original parameter, but will set the right
@@ -25,10 +25,10 @@ class ParameterScaler(Parameter):
     Examples:
         Resistive voltage divider
         >>> vd = ParameterScaler(dac.chan0, division = 10)
-        
+
         Voltage multiplier
         >>> vb = ParameterScaler(dac.chan0, gain = 30, name = 'Vb')
-        
+
         Transimpedance amplifier
         >>> Id = ParameterScaler(multimeter.amplitude, division = 1e6, name = 'Id', unit = 'A')
 
@@ -117,7 +117,8 @@ class ParameterScaler(Parameter):
         if isinstance(multiplier, Parameter):
             self._multiplier_parameter = multiplier
         else:
-            self._multiplier_parameter = ManualParameter('multiplier', initial_value=multiplier)
+            self._multiplier_parameter = ManualParameter(
+                'multiplier', initial_value=multiplier)
 
     # Division of the scaler
     @property
@@ -125,7 +126,7 @@ class ParameterScaler(Parameter):
         if self.role == Role.DIVISION:
             return self._multiplier()
         elif self.role == Role.GAIN:
-            return 1/self._multiplier()
+            return 1 / self._multiplier()
 
     @division.setter
     def division(self, division: Union[int, float, Parameter]):
@@ -138,7 +139,7 @@ class ParameterScaler(Parameter):
         if self.role == Role.GAIN:
             return self._multiplier()
         elif self.role == Role.DIVISION:
-            return 1/self._multiplier()
+            return 1 / self._multiplier()
 
     @gain.setter
     def gain(self, gain: Union[int, float, Parameter]):
@@ -178,4 +179,3 @@ class ParameterScaler(Parameter):
 
         self._save_val(value)
         self._wrapper_param.set(instrument_value)
-
