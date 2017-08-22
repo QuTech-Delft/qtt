@@ -115,7 +115,6 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.rda_variable = rda_variable
         self.rda = rda_t()
 
-
         self.text = QtWidgets.QLabel()
         self.updateStatus()
         vbox.addWidget(self.text)
@@ -138,15 +137,16 @@ class MeasurementControl(QtWidgets.QMainWindow):
 
         w.resize(300, 300)
         self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.updateStatus) # this also works
+        self.timer.timeout.connect(self.updateStatus)  # this also works
         self.timer.start(1000)
         self.show()
 
     def updateStatus(self):
-        if self.verbose>=2:
-            print('updateStatus...' )
-        value= int(self.rda.get(self.rda_variable, 0)) 
-        self.text.setText('%s: %d' % (self.rda_variable, value)  )
+        if self.verbose >= 2:
+            print('updateStatus...')
+        value = int(self.rda.get(self.rda_variable, 0))
+        self.text.setText('%s: %d' % (self.rda_variable, value))
+
     def _install_qcodes_hook(self):
         """ xxx """
         # patch the qcodes abort function
@@ -172,32 +172,31 @@ class MeasurementControl(QtWidgets.QMainWindow):
 
 
 if __name__ == '__main__':
-    app=pg.mkQApp()
-    
+    app = pg.mkQApp()
+
     mc = MeasurementControl()
     mc.verbose = 1
     mc.setGeometry(1700, 50, 300, 400)
-    
+
 
 def start_measurement_control(doexec=False):
     """ Start measurement control GUI
-    
+
     Args:
         doexec(bool): if True run the event loop
-    """    
+    """
     #import warnings
     #from pyqtgraph.multiprocess.remoteproxy import RemoteExceptionWarning
-    #warnings.simplefilter('ignore', RemoteExceptionWarning)    
+    #warnings.simplefilter('ignore', RemoteExceptionWarning)
     proc = mp.QtProcess()
     lp = proc._import('qtt.live_plotting')
     mc = lp.MeasurementControl()
-    
+
     qtt._dummy_mc = mc
-    
+
     app = pyqtgraph.mkQApp()
     if doexec:
         app.exec()
-
 
 
 #%%
@@ -223,7 +222,8 @@ class RdaControl(QtWidgets.QMainWindow):
             tbox = QtWidgets.QLabel(b)
             self.widgets[b]['tbox'] = tbox
             dbox = QtWidgets.QDoubleSpinBox()
-            dbox.setKeyboardTracking(False)  # do not emit signals when still editing
+            # do not emit signals when still editing
+            dbox.setKeyboardTracking(False)
 
             self.widgets[b]['dbox'] = dbox
             val = self.rda.get_float(b, 100)
@@ -260,7 +260,8 @@ class RdaControl(QtWidgets.QMainWindow):
         if self.verbose:
             print('valueChanged: %s %s' % (name, value))
         self.rda.set(name, value)
-        # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
+        # self.label.setStyleSheet("QLabel { background-color : #baccba;
+        # margin: 2px; padding: 2px; }");
 
 #%%
 
@@ -286,7 +287,8 @@ class LivePlotControl(QtWidgets.QMainWindow):
             tbox = QtWidgets.QLabel(b)
             self.widgets[b]['tbox'] = tbox
             dbox = QtWidgets.QDoubleSpinBox()
-            dbox.setKeyboardTracking(False)  # do not emit signals when still editing
+            # do not emit signals when still editing
+            dbox.setKeyboardTracking(False)
 
             self.widgets[b]['dbox'] = dbox
             val = self.rda.get_float(b, 100)
@@ -387,7 +389,8 @@ class livePlot:
             p1.setLabel('left', 'param1')
             p1.setLabel('left', 'param2')
             if self.datafunction is None:
-                raise Exception('Either specify a datafunction or sweepparams.')
+                raise Exception(
+                    'Either specify a datafunction or sweepparams.')
             else:
                 data = np.array(self.datafunction())
                 if data.ndim == 1:
@@ -439,7 +442,7 @@ class livePlot:
             print('LivePlot.close()')
         self.stopreadout()
         self.win.close()
-        
+
     def resetdata(self):
         self.idx = 0
         self.data = None
@@ -454,27 +457,32 @@ class livePlot:
                 if None in (self.sweepInstrument, self.sweepparams, self.sweepranges):
                     self.plot.setData(self.data)
                 else:
-                    sweep_param = getattr(self.sweepInstrument, self.sweepparams)
+                    sweep_param = getattr(
+                        self.sweepInstrument, self.sweepparams)
                     paramval = sweep_param.get_latest()
-                    sweepvalues = np.linspace(paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
+                    sweepvalues = np.linspace(
+                        paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
                     self.plot.setData(sweepvalues, self.data)
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data.T)
                 if None not in (self.sweepInstrument, self.sweepparams, self.sweepranges):
-                    param_horz = getattr(self.sweepInstrument, self.sweepparams[0])
+                    param_horz = getattr(
+                        self.sweepInstrument, self.sweepparams[0])
                     value_x = param_horz.get_latest()
                     value_y = self.sweepInstrument.get(self.sweepparams[1])
-                    param_vert = getattr(self.sweepInstrument, self.sweepparams[1])
+                    param_vert = getattr(
+                        self.sweepInstrument, self.sweepparams[1])
                     value_y = param_vert.get_latest()
                     self.horz_low = value_x - self.sweepranges[0] / 2
                     self.horz_range = self.sweepranges[0]
                     self.vert_low = value_y - self.sweepranges[1] / 2
                     self.vert_range = self.sweepranges[1]
-                    self.rect = QtCore.QRect(self.horz_low, self.vert_low, self.horz_range, self.vert_range)
+                    self.rect = QtCore.QRect(
+                        self.horz_low, self.vert_low, self.horz_range, self.vert_range)
                     self.plot.setRect(self.rect)
             else:
                 raise Exception('ndim %d not supported' % ndim)
-                    
+
         else:
             pass
 
@@ -535,7 +543,7 @@ class MockCallback_2d:
         return data_reshaped
 
 
-#class fpgaCallback_1d:
+# class fpgaCallback_1d:
 #
 #    def __init__(self, station, waveform, Naverage=4, fpga_ch=1, waittime=0):
 #        raise Exception('do not used')
@@ -565,7 +573,7 @@ class MockCallback_2d:
 #        return data_processed
 
 
-#class fpgaCallback_2d:
+# class fpgaCallback_2d:
 #
 #    def __init__(self, station, waveform, Naverage, fpga_ch, resolution, diff_dir=None, waittime=0):
 #        raise Exception('do not used')
@@ -606,5 +614,6 @@ class MockCallback_2d:
 
 #%% Example
 if __name__ == '__main__':
-    lp = livePlot(datafunction=MockCallback_2d(), sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50])
+    lp = livePlot(datafunction=MockCallback_2d(), sweepInstrument=None,
+                  sweepparams=['L', 'R'], sweepranges=[50, 50])
     lp.win.setGeometry(1500, 10, 400, 400)
