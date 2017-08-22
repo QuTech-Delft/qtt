@@ -21,6 +21,16 @@ import qtt
 
 
 class virtual_awg(Instrument):
+    """ 
+    
+    Attributes:
+        _awgs (list): handles to instruments
+        awg_map (dict)
+        hardware (Instrument): contains AWG to plunger values
+        corr (float): unknown
+        delay_FPGA (float): time delay of signals going through fridge
+        
+    """
     shared_kwargs = ['instruments', 'hardware']
 
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
@@ -76,7 +86,7 @@ class virtual_awg(Instrument):
         if verbose:
             print('Stopped AWGs')
 
-    def sweep_init(self, waveforms, period=1e-3, delete=True):
+    def sweep_init(self, waveforms, period=1e-3, delete=True, samp_freq = None):
         ''' Send waveform(s) to gate(s)
 
         Arguments:
@@ -103,7 +113,11 @@ class virtual_awg(Instrument):
             marker_name = 'fpga_mk'
         elif 'm4i_mk' in self.awg_map:
             marker_info = self.awg_map['m4i_mk']
-            marker_delay = period/2
+            if samp_freq is not None:
+                pretrigger_period = 16 / samp_freq
+            else:
+                pretrigger_period = 0
+            marker_delay = self.delay_FPGA + pretrigger_period
             marker_name = 'm4i_mk'
     
         awgs.append(self._awgs[marker_info[0]])
@@ -396,7 +410,7 @@ class virtual_awg(Instrument):
                 else:
                     raise Exception('Can not compensate a sweepgate')
 
-        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete)
+        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete, samp_freq = samp_freq)
         self.sweep_run(sweep_info)
 
         waveform['width_horz'] = width
@@ -406,6 +420,7 @@ class virtual_awg(Instrument):
         waveform['resolution'] = resolution
         waveform['samplerate'] = 1 / self.AWG_clock
         waveform['period'] = period_vert
+        waveform['period_horz'] = period_horz
         for channels in sweep_info:
             if 'delay' in sweep_info[channels]:
                 waveform['markerdelay'] = sweep_info[channels]['delay']

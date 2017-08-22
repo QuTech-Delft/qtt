@@ -1041,23 +1041,27 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         data (numpy array)
     
     """
+    drate = digitizer.sample_rate()
     period  = waveform['period']
     if 'resolution' in waveform:
         resolution = waveform['resolution']
     else:
         resolution = None
-    trigger_delay = waveform['markerdelay']
+    pretrigger_period = 16 / drate #  waveform['markerdelay'],  16 / samp_freq
     if 'width' in waveform:
         width = [waveform['width']]
     else:
         width = [waveform['width_horz'], waveform['width_vert']]
     if period is None:
         raise Exception('please set period for block measurements')
-    memsize = select_digitizer_memsize(digitizer, period, trigger_delay, verbose=verbose>=1)
+    memsize = select_digitizer_memsize(digitizer, period, pretrigger_period, verbose=verbose>=1)
     post_trigger=digitizer.posttrigger_memory_size()									  
     
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
+    
+    measuresegment_m4i._dataraw = dataraw # for debugging
+     
     if isinstance(dataraw, tuple):
         dataraw=dataraw[0]
     data = np.transpose(np.reshape(dataraw,[-1,len(read_ch)]))
@@ -1089,7 +1093,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
         data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=True)
     else:
         raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
-    if data.size == 0:
+    
+    if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
     return data
 
@@ -1373,6 +1378,8 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     qtt.time.sleep(wait_time_startscan)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
+    
+    scan2Dturbo._data = data
     
     station.awg.stop()
     
