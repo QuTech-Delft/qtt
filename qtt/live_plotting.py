@@ -381,6 +381,7 @@ class livePlot:
         self.fps = pmatlab.fps_t(nn=6)
         self.datafunction = datafunction
 
+        # TODO: allow arguments like ['P1']
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
             p1.setLabel('left', 'param1')
@@ -471,6 +472,9 @@ class livePlot:
                     self.vert_range = self.sweepranges[1]
                     self.rect = QtCore.QRect(self.horz_low, self.vert_low, self.horz_range, self.vert_range)
                     self.plot.setRect(self.rect)
+            else:
+                raise Exception('ndim %d not supported' % ndim)
+                    
         else:
             pass
 
@@ -531,71 +535,74 @@ class MockCallback_2d:
         return data_reshaped
 
 
-class fpgaCallback_1d:
+#class fpgaCallback_1d:
+#
+#    def __init__(self, station, waveform, Naverage=4, fpga_ch=1, waittime=0):
+#        raise Exception('do not used')
+#
+#        self.station = station
+#        self.waveform = waveform
+#        self.Naverage = Naverage
+#        self.fpga_ch = fpga_ch
+#        self.waittime = waittime
+#
+#    def __call__(self, verbose=0):
+#        ''' Callback function to read a single line of data from the FPGA '''
+#        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
+#        totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
+#            Naverage=self.Naverage, ReadDevice=ReadDevice, waittime=self.waittime)
+#
+#        if 'FPGA_ch1' in ReadDevice:
+#            data = DataRead_ch1
+#        elif 'FPGA_ch2' in ReadDevice:
+#            data = DataRead_ch2
+#        else:
+#            raise Exception('FPGA channel not well specified')
+#
+#        data_processed = self.station.awg.sweep_process(
+#            data, self.waveform, self.Naverage)
+#
+#        return data_processed
 
-    def __init__(self, station, waveform, Naverage=4, fpga_ch=1, waittime=0):
-        self.station = station
-        self.waveform = waveform
-        self.Naverage = Naverage
-        self.fpga_ch = fpga_ch
-        self.waittime = waittime
 
-    def __call__(self, verbose=0):
-        ''' Callback function to read a single line of data from the FPGA '''
-        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
-            Naverage=self.Naverage, ReadDevice=ReadDevice, waittime=self.waittime)
-
-        if 'FPGA_ch1' in ReadDevice:
-            data = DataRead_ch1
-        elif 'FPGA_ch2' in ReadDevice:
-            data = DataRead_ch2
-        else:
-            raise Exception('FPGA channel not well specified')
-
-        data_processed = self.station.awg.sweep_process(
-            data, self.waveform, self.Naverage)
-
-        return data_processed
-
-
-class fpgaCallback_2d:
-
-    def __init__(self, station, waveform, Naverage, fpga_ch, resolution, diff_dir=None, waittime=0):
-        self.station = station
-        self.waveform = waveform
-        self.Naverage = Naverage
-        self.fpga_ch = fpga_ch
-        self.resolution = resolution
-        self.waittime = waittime
-        self.diffsigma = 1
-        self.diff = True
-        self.diff_dir = diff_dir
-        self.smoothing = False
-        self.laplace = False
-
-    def __call__(self):
-        ''' Callback function to read a 2d scan of data from the FPGA '''
-        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-        totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
-            ReadDevice=ReadDevice, Naverage=self.Naverage, waittime=self.waittime)
-
-        if 'FPGA_ch1' in ReadDevice:
-            data = DataRead_ch1
-        elif 'FPGA_ch2' in ReadDevice:
-            data = DataRead_ch2
-        else:
-            raise Exception('FPGA channel not well specified')
-
-        im_diff = qtt.instrument_drivers.virtual_awg.sweep_2D_process(data, self.waveform, self.diff_dir)
-
-        if self.smoothing:
-            im_diff = qtt.algorithms.generic.smoothImage(im_diff)
-
-        if self.laplace:
-            im_diff = ndimage.filters.laplace(im_diff, mode='nearest')
-
-        return np.array(im_diff)
+#class fpgaCallback_2d:
+#
+#    def __init__(self, station, waveform, Naverage, fpga_ch, resolution, diff_dir=None, waittime=0):
+#        raise Exception('do not used')
+#        self.station = station
+#        self.waveform = waveform
+#        self.Naverage = Naverage
+#        self.fpga_ch = fpga_ch
+#        self.resolution = resolution
+#        self.waittime = waittime
+#        self.diffsigma = 1
+#        self.diff = True
+#        self.diff_dir = diff_dir
+#        self.smoothing = False
+#        self.laplace = False
+#
+#    def __call__(self):
+#        ''' Callback function to read a 2d scan of data from the FPGA '''
+#        ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
+#        totalpoints, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
+#            ReadDevice=ReadDevice, Naverage=self.Naverage, waittime=self.waittime)
+#
+#        if 'FPGA_ch1' in ReadDevice:
+#            data = DataRead_ch1
+#        elif 'FPGA_ch2' in ReadDevice:
+#            data = DataRead_ch2
+#        else:
+#            raise Exception('FPGA channel not well specified')
+#
+#        im_diff = qtt.instrument_drivers.virtual_awg.sweep_2D_process(data, self.waveform, self.diff_dir)
+#
+#        if self.smoothing:
+#            im_diff = qtt.algorithms.generic.smoothImage(im_diff)
+#
+#        if self.laplace:
+#            im_diff = ndimage.filters.laplace(im_diff, mode='nearest')
+#
+#        return np.array(im_diff)
 
 #%% Example
 if __name__ == '__main__':
