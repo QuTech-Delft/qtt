@@ -88,20 +88,19 @@ def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
 def show_ttrace_elements(ttrace_elements, fig=100):
     """ Show ttrace elements """
     for ii, ttrace_element in enumerate(ttrace_elements):
-        print('waveform %d: %d elements' % (ii, ttrace_element.waveforms()[0].size) )
         v = ttrace_element.waveforms()
+        
+        c = list(v[0].keys())[0]
+        print('waveform %d: channel %s: %d elements' % (ii, c, v[0][c].size) )
         kk = v[1].keys()
     
         kkx = [k for k in kk if np.any(v[1][k])]  # non-zero keys
     
-        pi = ii
+        #pi = ii
         #label_map = [(t[1], k) for k, t in awg_map.items() if t[0] == pi]
     
-        # print(kkx)
-        #['ch%d' % (i+1) for i in range(4)]+['ch1_marker1']
         show_element(ttrace_element, fig=fig + ii, keys=kkx, label_map=None)
         plt.legend(numpoints=1)
-        # break
     qtt.pgeometry.tilefigs(range(100,100+len(ttrace_elements)))
 
 #%%
@@ -338,6 +337,9 @@ def init_ttrace(station, awgclock=10e6):
 
         p = ps.Pulsar(name=qtt.measurements.scans.instrumentName('Pulsar%d' % ii),
                       default_AWG=a.name)
+        
+        p._clock_prequeried(True) # if not set the interface is _very_ slow
+        
         setattr(station, 'pulsar%d' % ii, p)
         #p.AWG=a        
 
@@ -423,9 +425,12 @@ def show_element(elmnt, fig=100, keys=None, label_map=None):
     """ Show pycqed waveform element 
     
     Args:
-        elmnt ()
+        elmnt (waveform_control.element.Element)
+        fig (int or None): figure to plot to
+        keys (None or list): channels to plot 
+        label_map (None or dict)
     """
-    tt, xx = elmnt.waveforms()
+    ttc, xx = elmnt.waveforms()
     if fig is not None:
         qtt.pgeometry.cfigure(fig)
         plt.clf()
@@ -433,6 +438,7 @@ def show_element(elmnt, fig=100, keys=None, label_map=None):
         if keys is None:
             keys = sorted(xx.keys())
         for k in keys:
+            tt=ttc[k]
             v = xx[k]
 
             if label_map is None:
