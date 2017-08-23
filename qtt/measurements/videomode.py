@@ -96,7 +96,7 @@ class VideoMode:
         self.Naverage = StandardParameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
         self._Naverage_val = Naverage
         self.resolution = resolution
-        self.diff_dir = None
+        self.diff_dir = diff_dir
         self.datalock = threading.Lock()
         
         
