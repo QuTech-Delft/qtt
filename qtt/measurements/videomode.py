@@ -69,7 +69,7 @@ class videomode_callback:
             data_processed = ndimage.filters.laplace(data_processed, mode='nearest')
 
         return data_processed
-
+elf.sampling_frequency= station.digitizer.sample_r
 
 #%%
 
@@ -87,7 +87,7 @@ class VideoMode:
     # TODO: implement optional sweep directions, i.e. forward and backward
     # TODO: implement virtual gates functionality
     def __init__(self, station, sweepparams, sweepranges, minstrument, Naverage=25,
-                 resolution=[90, 90], diff_dir=None, verbose=1, dorun=True):
+                 resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1, dorun=True):
         self.station = station
         self.verbose=verbose
         self.sweepparams = sweepparams
@@ -96,6 +96,7 @@ class VideoMode:
         self.Naverage = StandardParameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
         self._Naverage_val = Naverage
         self.resolution = resolution
+        self.sample_rate = sample_rate
         self.diff_dir = diff_dir
         self.datalock = threading.Lock()
         
@@ -104,7 +105,11 @@ class VideoMode:
         if 'fpga' in station.components:
             self.sampling_frequency= station.fpga.sampling_frequency
         elif 'digitizer' in station.components:
-            self.sampling_frequency= station.digitizer.sample_rate
+            if sample_rate == 'default':
+                self.sampling_frequency= station.digitizer.sample_rate
+            else:                
+                station.digitizer.sample_rate(sample_rate)
+                self.sampling_frequency= station.digitizer.sample_rate
         else:
             raise Exception('no fpga or digitizer found')
                     
