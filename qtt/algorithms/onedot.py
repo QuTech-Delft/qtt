@@ -191,6 +191,9 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     Args:
         a,b (float): position along axis (a is the x-axis)
         pt (numpy array): point in image
+        ww (array)
+        verbose (int)
+        output (bool)
 
     Returns:
         cost (float)
@@ -211,6 +214,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     cost += (.025 * ww.size) * np.maximum(-a, 0) / ww.shape[1]
 
     cost += (.025 * ww.size) * 2 * (pts[2, 0, 1] < 0)
+    cost += (.025 * ww.size) * 2 * (pt[0] < 0) # x too far left
+    cost += (.025 * ww.size) * 2 * (pt[1] > ww.shape[0]) # y too far down
     cost += 1e-3*area
 
     if verbose:
