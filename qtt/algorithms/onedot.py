@@ -291,13 +291,15 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     if distutils.version.LooseVersion(scipy.version.version) < '0.18':
         opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
+        powell_opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
     else:
         opts = dict({'disp': verbose >= 2, 'fatol': 1e-6, 'xatol': 1e-5})
+        powell_opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
 
     xx = scipy.optimize.minimize(ff, x0, method='Nelder-Mead', options=opts)
     # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     opts['disp'] = verbose >= 2
-    xx = scipy.optimize.minimize(ff, xx.x, method='Powell', options=opts)
+    xx = scipy.optimize.minimize(ff, xx.x, method='Powell', options=powell_opts)
     x = xx.x
     # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     cost, pts, imx = costscoreOD(x0[0], x0[1], x0[2:4], wwarea, output=True)

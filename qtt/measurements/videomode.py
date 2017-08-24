@@ -106,7 +106,7 @@ class VideoMode:
         elif 'digitizer' in station.components:
             if sample_rate == 'default':
                 self.sampling_frequency= station.digitizer.sample_rate
-            else:                
+            else:
                 station.digitizer.sample_rate(sample_rate)
                 self.sampling_frequency= station.digitizer.sample_rate
         else:
