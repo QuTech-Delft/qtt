@@ -1119,12 +1119,23 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         data (numpy array)
 
     """
+    
     drate = digitizer.sample_rate()
+
+    # code for offsetting the data in software
+    signal_delay = getattr(digitizer, 'signal_delay', None)
+    if signal_delay is None:
+        signal_delay = 0
+    padding_offset=int(drate*signal_delay)
+        
     period = waveform['period']
     if 'resolution' in waveform:
         resolution = waveform['resolution']
     else:
         resolution = None
+        
+    paddingpix = 16
+    padding = paddingpix / drate
     pretrigger_period = 16 / drate  # waveform['markerdelay'],  16 / samp_freq
     if 'width' in waveform:
         width = [waveform['width']]
@@ -1133,13 +1144,15 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     if period is None:
         raise Exception('please set period for block measurements')
     memsize = select_digitizer_memsize(
-        digitizer, period, pretrigger_period, verbose=verbose >= 1)
+        digitizer, period+2*padding, pretrigger_period+padding, verbose=verbose >= 1)
     post_trigger = digitizer.posttrigger_memory_size()
 
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 
+    # remove padding
+    dataraw = dataraw[padding_offset+paddingpix:(padding_offset+paddingpix+int(period*drate))]
     measuresegment_m4i._dataraw = dataraw  # for debugging
 
     if isinstance(dataraw, tuple):

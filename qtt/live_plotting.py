@@ -495,9 +495,18 @@ class livePlot:
         else:
             self.stopreadout()
             dd = None
+            
+        if self.fps.framerate() < 10:
+            #print('slow rate...?')
+            time.sleep(0.1)
         time.sleep(0.00001)
 
-    def startreadout(self, callback=None, rate=1000, maxidx=None):
+    def startreadout(self, callback=None, rate=30, maxidx=None):
+        """
+        Args:
+            rate (float): sample rate in ms
+        
+        """
         if maxidx is not None:
             self.maxidx = maxidx
         if callback is not None:

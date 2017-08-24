@@ -377,6 +377,8 @@ def run_ttrace(virtualawg, pulsar_objects, ttrace, ttrace_elements, sequence_nam
 def lastpulse(filler_element):
     """ Return last pulse from a sequence """
     keys = list(filler_element.pulses.keys())
+    if len(keys)==0:
+        return None
     tt = [filler_element.pulses[k].effective_stop() for k in keys]
     idx = np.argmax(tt)
     return keys[idx]
@@ -385,6 +387,8 @@ def lastpulse(filler_element):
 def lasttime(filler_element):
     """ Return stop time of last pulse from a sequence """
     keys = list(filler_element.pulses.keys())
+    if len(keys)==0:
+        return None
     tt = [filler_element.pulses[k].effective_stop() for k in keys]
     idx = np.argmax(tt)
     return tt[idx]
@@ -415,8 +419,8 @@ def add_fill(awg_element, tag, channels=None, refpulse=None, fillperiod=1e-7, st
         awg_element.add(px,
                         name=name, start=start, refpulse=refpulse, refpoint=refpoint)
         if verbose:
-            print('add_fill: ch %s: name %s: amplitude %s' %
-                  (ch, name, px.amplitude))
+            print('add_fill: channel %s: name %s: amplitude %s, length %.6f [ms]' %
+                  (ch, name, px.amplitude, 1e3*fillperiod))
         if refpulse is None:
             refpulse = name
 
@@ -448,7 +452,7 @@ def show_element(elmnt, fig=100, keys=None, label_map=None):
             plt.plot(1e3 * tt, v, '.', label=label)
         plt.xlabel('Time [ms]')
         plt.ylabel('Signal')
-
+    
 #%%
 import time
 
