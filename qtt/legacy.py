@@ -117,7 +117,7 @@ def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample
     return alldata, od
 
 
-def onedotPlungerScan(station, od, verbose=1, sample_data = {}):
+def onedotPlungerScan(station, od, verbose=1, sample_data = sample_data_t):
     """ Make a scan with the plunger of a one-dot """
     # do sweep with plunger
     gates = station.gates
