@@ -69,7 +69,6 @@ class videomode_callback:
             data_processed = ndimage.filters.laplace(data_processed, mode='nearest')
 
         return data_processed
-elf.sampling_frequency= station.digitizer.sample_r
 
 #%%
 
