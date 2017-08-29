@@ -1100,7 +1100,7 @@ def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
     else:
         width = [waveform['width_horz'], waveform['width_vert']]
         resolution = waveform['resolution']
-        waittime = waveform['period']
+        waittime = waveform['period']*Naverage
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
         devicedata = fpga.readFPGA(
             Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
