@@ -1186,7 +1186,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
     except:
         ism4i = False
     if isfpga:
-        data = measuresegment_fpga(minstrhandle, waveform, read_ch)
+        data = measuresegment_fpga(minstrhandle, waveform, read_ch, Naverage)
     elif ism4i:
         data = measuresegment_m4i(
             minstrhandle, waveform, read_ch, mV_range, Naverage, process=True)
