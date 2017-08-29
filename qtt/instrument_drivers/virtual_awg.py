@@ -527,8 +527,9 @@ class virtual_awg(Instrument):
             amplitude = 4.5
     
         self.ch_amp = round(amplitude,3)
-        for i in range(1, 5):
-            self.set('ch%s_amp' % i, self.ch_amp)
+        for channels in self._awgs:
+            for i in range(1, 5):
+                channels.set('ch%s_amp' % i, self.ch_amp)
 
 #%%
 def plot_wave_raw(wave_raw, samplerate=None, station=None):
