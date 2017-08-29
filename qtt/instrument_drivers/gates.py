@@ -11,6 +11,7 @@ import logging
 from functools import partial
 import numpy as np
 from qcodes.utils.validators import Numbers
+from qcodes.data.data_set import load_data
 try:
     import graphviz
 except:
@@ -169,6 +170,18 @@ class virtual_IVVI(Instrument):
                 print('  setting gate %s to %.1f [mV]' % (g, val))
             gates.set(g, val )
 
+    def resettodataset(self, location, io):
+        """ Reset gates to the values from a previous dataset
+        Args:
+            location (str): the location to load from.
+            io (io_manager): base physical location of the ``DataSet``.
+            The full path to or physical location of the data is a
+            combination of io + location.
+        """
+        dataset = load_data(location, io)
+        gatevals = dataset.metadata['allgatevalues']
+        self.resetgates(gatevals,gatevals)
+    
     def visualize(self, fig=1):
         """ Create a graphical representation of the system (needs graphviz). """
         gates = self
