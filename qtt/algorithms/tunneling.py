@@ -10,14 +10,17 @@ import numpy as np
 import scipy.ndimage
 
 
-def polmod_all_2slopes(delta, par, kT):
+def polmod_all_2slopes(x_data, par, kT):
     """ Polarization line model.
 
+    This model is based on [DiCarlo2004, Hensgens2017]. For an example see
+    https://github.com/VandersypenQutech/qtt/blob/master/examples/example_polFitting.ipynb
+
     Args:
-        delta (1 x N array): chemical potential difference in ueV
+        x_data (1 x N array): chemical potential difference in ueV
         par (1 x 6 array): parameters for the model
             - par[0]: tunnel coupling in ueV
-            - par[1]: offset in delta for center of transition
+            - par[1]: offset in x_data for center of transition
             - par[2]: offset in background signal
             - par[3]: slope of sensor signal on left side
             - par[4]: slope of sensor signal on right side
@@ -25,44 +28,44 @@ def polmod_all_2slopes(delta, par, kT):
         kT (float): temperature in ueV
 
     Returns:
-        E (array): sensor data, e.g. from a sensing dot or QPC
+        y_data (array): sensor data, e.g. from a sensing dot or QPC
     """
-    delta = delta - par[1]
-    Om = np.sqrt(delta**2 + 4 * par[0]**2)
-    E = 1 / 2 * (1 + delta / Om * np.tanh(Om / (2 * kT)))
-    slopes = par[3] + (par[4] - par[3]) * E
-    E = par[2] + delta * slopes + E * par[5]
+    x_data_center = x_data - par[1]
+    Om = np.sqrt(x_data_center**2 + 4 * par[0]**2)
+    Q = 1 / 2 * (1 + x_data_center / Om * np.tanh(Om / (2 * kT)))
+    slopes = par[3] + (par[4] - par[3]) * Q
+    y_data = par[2] + x_data_center * slopes + Q * par[5]
 
-    return E
+    return y_data
 
 
-def polweight_all_2slopes(delta, data, par, kT):
+def polweight_all_2slopes(x_data, y_data, par, kT):
     """ Cost function for polarization fitting.
 
     Args:
-        delta (1 x N array): chemical potential difference in ueV
-        data (1 x N array): sensor data, e.g. from a sensing dot or QPC
+        x_data (1 x N array): chemical potential difference in ueV
+        y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
         par (1 x 6 array): see polmod_all_2slopes
         kT (float): temperature in ueV
 
     Returns:
         total (float): sum of residues
     """
-    mod = polmod_all_2slopes(delta, par, kT)
-    total = np.linalg.norm(data - mod)
+    mod = polmod_all_2slopes(x_data, par, kT)
+    total = np.linalg.norm(y_data - mod)
 
     return total
 
 
-def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
+def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
     """ Polarization line fitting. 
 
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
     the number of variables, i.e. 1200 in our case.
 
     Args:
-        delta (1 x N array): chemical potential difference in ueV
-        data (1 x N array): sensor data, e.g. from a sensing dot or QPC
+        x_data (1 x N array): chemical potential difference in ueV
+        y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
         kT (float): temperature in ueV
 
     Returns:
@@ -70,32 +73,49 @@ def fit_pol_all(delta, data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess
         par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
     """
     if par_guess is None:
-        t_guess = (delta[-1] - delta[0]) / 30  # hard-coded guess in ueV
-        numpts = round(len(delta) / 10)
-        slope_guess = np.polyfit(delta[-numpts:], data[-numpts:], 1)[0]
-        dat_noslope = data - slope_guess * (delta - delta[0])
+        t_guess = (x_data[-1] - x_data[0]) / 30  # hard-coded guess in ueV
+        numpts = round(len(x_data) / 10)
+        slope_guess = np.polyfit(x_data[-numpts:], y_data[-numpts:], 1)[0]
+        dat_noslope = y_data - slope_guess * (x_data - x_data[0])
         dat_noslope_1der = scipy.ndimage.filters.gaussian_filter(dat_noslope, sigma=20, order=1)
         trans_idx = np.abs(dat_noslope_1der).argmax()
-        sensitivity_guess = np.sign(delta[-1] - delta[0]) * np.sign(dat_noslope_1der[trans_idx]) * (np.percentile(dat_noslope, 90) - np.percentile(dat_noslope, 10))
-        delta_offset_guess = delta[trans_idx]
-        sensor_offset_guess = data[trans_idx] - sensitivity_guess / 2
-        par_guess = np.array([t_guess, delta_offset_guess, sensor_offset_guess, slope_guess, slope_guess, sensitivity_guess])
-        if verbose>=2:
+        sensitivity_guess = np.sign(x_data[-1] - x_data[0]) * np.sign(dat_noslope_1der[trans_idx]) * (np.percentile(dat_noslope, 90) - np.percentile(dat_noslope, 10))
+        x_offset_guess = x_data[trans_idx]
+        y_offset_guess = y_data[trans_idx] - sensitivity_guess / 2
+        par_guess = np.array([t_guess, x_offset_guess, y_offset_guess, slope_guess, slope_guess, sensitivity_guess])
+        if verbose >= 2:
             print('fit_pol_all: trans_idx %s' % (trans_idx, ))
-    func = lambda par: polweight_all_2slopes(delta, data, par, kT)
+    func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT)
     par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     return par_fit, par_guess
 
 
+def data_to_exc_ch(x_data, y_data, pol_fit):
+    """ Convert y_data to units of excess charge.
+
+    Note: also re-centers to zero detuning in x-direction.
+
+    Args:
+        x_data (1 x N array): chemical potential difference in ueV
+        y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
+        pol_fit (1 x 6 array): fit parameters, see :func:`polmod_all_2slopes`
+    """
+    x_center = x_data - pol_fit[1]
+    y_data_exc_ch = (y_data - pol_fit[2] - x_center * pol_fit[3]) / \
+        (pol_fit[5] + (pol_fit[4] - pol_fit[3]) * x_center)
+
+    return x_center, y_data_exc_ch
+
+
 def test_polFitting():
     """ Test the polarization fitting. """
-    delta = np.linspace(-100, 100, 1000)
+    x_data = np.linspace(-100, 100, 1000)
     kT = 6.5
     par_init = np.array([20, 2, 100, -.5, -.45, 300])
-    data = polmod_all_2slopes(delta, par_init, kT)
+    y_data = polmod_all_2slopes(x_data, par_init, kT)
     noise = np.random.normal(0, 3, data.shape)
-    par_fit, _ = fit_pol_all(delta, data + noise, kT, par_guess=par_init)
+    par_fit, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
     assert np.all(np.isclose(par_fit[0], par_init[0], .1))
 
 #%% Example fitting
@@ -119,7 +139,7 @@ if __name__ == '__main__':
     # xx=xx0
     yy0 = polmod_all_2slopes(xx0, par, kT=0.001)
     yy = yy0 + .015 * (np.random.rand(yy0.size) - .5)
-    delta = xx
+    x_data = xx
     data = yy
 
     t0 = time.time()
