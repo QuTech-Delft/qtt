@@ -113,15 +113,11 @@ class virtual_awg(Instrument):
             marker_name = 'fpga_mk'
         elif 'm4i_mk' in self.awg_map:
             marker_info = self.awg_map['m4i_mk']
-<<<<<<< 1f44b6107d3ad2a81d43267eac62ce2aa3436142
             if samp_freq is not None:
                 pretrigger_period = 16 / samp_freq
             else:
                 pretrigger_period = 0
             marker_delay = self.delay_FPGA + pretrigger_period
-=======
-            marker_delay = period / 2
->>>>>>> autopep
             marker_name = 'm4i_mk'
 
         awgs.append(self._awgs[marker_info[0]])
