@@ -1121,6 +1121,8 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     """
     
     drate = digitizer.sample_rate()
+    if drate == 0:
+        raise Exception('sample rate of m4i is zero, please reset the digitizer')
 
     # code for offsetting the data in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
@@ -1152,12 +1154,12 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 
     # remove padding
-    dataraw = dataraw[padding_offset+paddingpix:(padding_offset+paddingpix+int(period*drate))]
     measuresegment_m4i._dataraw = dataraw  # for debugging
 
     if isinstance(dataraw, tuple):
         dataraw = dataraw[0]
     data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
+    data = data[:, padding_offset+paddingpix:(padding_offset+paddingpix+int(period*drate))]
 
     if verbose:
         print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
