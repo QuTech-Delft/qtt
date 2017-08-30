@@ -170,15 +170,13 @@ class virtual_IVVI(Instrument):
                 print('  setting gate %s to %.1f [mV]' % (g, val))
             gates.set(g, val )
 
-    def resettodataset(self, location):
+    def resettodataset(self, dataset):
         """ Reset gates to the values from a previous dataset
         Args:
-            location (str): the location to load from.
-            io (io_manager): base physical location of the ``DataSet``.
-            The full path to or physical location of the data is a
-            combination of io + location.
+            dataset (qcodes.DataSet or str): the dataset or location to load from.
         """
-        dataset = load_data(location)
+        if type(dataset) is str:
+            dataset = load_data(dataset)
         gatevals = dataset.metadata['allgatevalues']
         self.resetgates(gatevals,gatevals)
     
