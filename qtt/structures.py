@@ -239,10 +239,10 @@ class sensingdot_t:
         scanjob['compensateGates'] = []
         scanjob['gate_values_corners'] = [[]]
 
-        alldata = qtt.scans.scan2D(scanjob)
+        alldata = qtt.measurements.scans.scan2D(scanjob)
 
         if fig is not None:
-            qtt.scans.plotData(alldata, fig=fig)
+            qtt.measurements.scans.plotData(alldata, fig=fig)
         return alldata
 
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, correctdelay=True, step=-2., max_wait_time=1., scanrange=300):
@@ -383,13 +383,13 @@ class sensingdot_t:
             gate=self.gg[1]
             sdplg = getattr(self.station.gates, gate)
             cc=self.station.gates.get(gate)
-            scanjob=qtt.scans.scanjob_t({'Naverage': Naverage,})
+            scanjob=qtt.measurements.scans.scanjob_t({'Naverage': Naverage,})
             scanjob['sweepdata'] = {'param':  gate, 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4}
             scanjob['minstrument'] = [channel]
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan']=sleeptime
            
-            alldata = qtt.scans.scan1Dfast(self.station, scanjob)
+            alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
         else:                           
             waveform, sweep_info = self.station.awg.sweep_gate(
                 self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)

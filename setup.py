@@ -10,7 +10,7 @@ def readme():
 extras = {
     'Numpy': ('numpy', '1.9', None),
     'MatPlot': ('matplotlib', '1.5', None),
-    'SciPi': ('scipy', '0.15', None),
+    'SciPi': ('scipy', '0.19', None),
     'qcodes': ('qcodes', '0.1', None),
     'scikit-image': ('skimage', '0.11', 'scikit-image'),
     'pandas': ('pandas', '0.15', None),
@@ -45,11 +45,10 @@ setup(name='qtt',
       # if we want to install without tests:
       # packages=find_packages(exclude=["*.tests", "tests"]),
       packages=find_packages(),
-      requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'], install_requires=[
+      requires=['numpy', 'matplotlib', 'scipy>=0.18', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'], install_requires=[
           'numpy>=1.10',
-          'scipy',
           'IPython>=0.1',
-          'qcodes>=0.1.3'
+          'qcodes>=0.1.5'
           # nose is only for tests, but we'd like to encourage people to run tests!
           #'nose>=1.3',
       ],
