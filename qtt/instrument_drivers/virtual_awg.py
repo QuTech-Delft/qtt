@@ -533,7 +533,12 @@ class virtual_awg(Instrument):
                     warnings.warn('AWG channel %d output not at 4.0 V' % ii)
                     
     def set_amplitude(self, amplitude):
-        """ Set the AWG peak-to-peak amplitude for all channels """
+        """ Set the AWG peak-to-peak amplitude for all channels
+        
+        Args:
+            amplitude (float): peak-to-peak amplitude (V)
+            
+        """
         if amplitude < 0.02:
             warnings.warn('Trying to set AWG amplitude too low, setting it to minimum (20mV)')
             amplitude = 0.02
@@ -541,6 +546,7 @@ class virtual_awg(Instrument):
             warnings.warn('Trying to set AWG amplitude too high, setting it to maximum (4.5V)')
             amplitude = 4.5
     
+        # tektronics 5014 has precision of 1mV
         self.ch_amp = round(amplitude,3)
         for awg in self._awgs:
             for i in range(1, 5):
