@@ -175,7 +175,7 @@ class virtual_IVVI(Instrument):
         Args:
             dataset (qcodes.DataSet or str): the dataset or location to load from.
         """
-        if type(dataset) is str:
+        if isinstance(dataset, str):
             dataset = load_data(dataset)
         gatevals = dataset.metadata['allgatevalues']
         self.resetgates(gatevals,gatevals)
