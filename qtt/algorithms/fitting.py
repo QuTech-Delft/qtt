@@ -3,6 +3,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
+import qtt.pgeometry
 
 from qtt.algorithms.functions import FermiLinear, linear_function, Fermi
 
@@ -69,6 +70,7 @@ def initFermiLinear(xdata, ydata, fig=None):
         plt.clf()
         plt.plot(xdata, ydata, '.b', label='raw data')
         plt.plot(xx, yy, 'ok')
+        qtt.pgeometry.plot2Dline([-1,0,cc],':c', label='center')
         plt.plot(xdata, ylin, '-m', label='fitted linear function')
         plt.plot(xdata, yf, '-m', label='fitted FermiLinear function')
 
