@@ -41,7 +41,7 @@ class virtual_awg(Instrument):
         self.verbose = verbose
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
         self.corr = .02e-6
-        self.maxdatapts = 16e6 # This used to be set to the fpga maximum, but that maximum should not be handled here
+        self.maxdatapts = 16e6  # This used to be set to the fpga maximum, but that maximum should not be handled here
         qtt.loggingGUI.installZMQlogger()
         logging.info('virtual_awg: setup')
 
@@ -119,7 +119,7 @@ class virtual_awg(Instrument):
                 pretrigger_period = 0
             marker_delay = self.delay_FPGA + pretrigger_period
             marker_name = 'm4i_mk'
-    
+
         awgs.append(self._awgs[marker_info[0]])
 
         sweep_info = dict()
@@ -133,7 +133,7 @@ class virtual_awg(Instrument):
                 sweep_info[self.awg_map[g]]['name'] = waveforms[g]['name']
             else:
                 sweep_info[self.awg_map[g]]['name'] = 'waveform_%s' % g
-            if marker_info[:2]==self.awg_map[g]:
+            if marker_info[:2] == self.awg_map[g]:
                 sweep_info[marker_info[:2]]['delay'] = marker_delay
 
         # marker points
@@ -183,7 +183,7 @@ class virtual_awg(Instrument):
             for sweep in sweep_info:
                 try:
                     self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
-                            sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
+                        sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
                 except:
                     print(sweep_info[sweep]['waveform'].shape)
                     print(sweep_info[sweep]['marker1'].shape)
@@ -197,7 +197,7 @@ class virtual_awg(Instrument):
         Arguments:
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
-        for sweep in sweep_info:            
+        for sweep in sweep_info:
             if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
                 self._awgs[sweep[0]].set_sqel_waveform(
                     sweep_info[sweep]['name'], sweep[1], 1)
@@ -239,11 +239,11 @@ class virtual_awg(Instrument):
     def check_frequency_waveform(self, period, width):
         """ Check whether a sawtooth waveform with specified period can be generated """
         old_sr = self.AWG_clock
-        new_sr = 5 / (period*(1-width))        
-        if (new_sr)>old_sr:
-            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (old_sr/1e6, new_sr/1e6, 1e3*period), UserWarning)
+        new_sr = 5 / (period * (1 - width))
+        if (new_sr) > old_sr:
+            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (old_sr / 1e6, new_sr / 1e6, 1e3 * period), UserWarning)
         return new_sr
-    
+
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the measurement instrument.
@@ -261,9 +261,9 @@ class virtual_awg(Instrument):
         -------
         >>> waveform, sweep_info = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
-        
+
         self.check_frequency_waveform(period, width)
-        
+
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
@@ -299,9 +299,9 @@ class virtual_awg(Instrument):
             waveform (dict): The waveform being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
- 
-        self.check_frequency_waveform(period, width) 
- 
+
+        self.check_frequency_waveform(period, width)
+
         waveform = dict()
         for g in gate_comb:
             wave_raw = self.make_sawtooth(sweeprange, period, width)
@@ -343,7 +343,7 @@ class virtual_awg(Instrument):
         width = waveform['width']
 
         if isinstance(data, list):
-            data=np.array(data)
+            data = np.array(data)
 
         if direction == 'forwards':
             end = int(np.floor(width * data.shape[0] - 1))
@@ -370,7 +370,7 @@ class virtual_awg(Instrument):
             waveform (dict): The waveforms being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
-## JP: I think FPGA exceptions should not be handled by awg
+# JP: I think FPGA exceptions should not be handled by awg
 #        if resolution[0] * resolution[1] > self.maxdatapts:
 #            raise Exception('resolution is set higher than FPGA memory allows')
 
@@ -379,7 +379,7 @@ class virtual_awg(Instrument):
         period_vert = resolution[1] * period_horz
 
         self.check_frequency_waveform(period_horz, width)
-           
+
         waveform = dict()
         # horizontal waveform
         wave_horz_raw = self.make_sawtooth(
@@ -443,16 +443,16 @@ class virtual_awg(Instrument):
             waveform (dict): The waveforms being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
-## JP: I think FPGA exceptions should not be handled by awg
+# JP: I think FPGA exceptions should not be handled by awg
 #        if resolution[0] * resolution[1] > self.maxdatapts:
 #            raise Exception('resolution is set higher than memory allows')
 
         error_corr = resolution[0] * self.corr
         period_horz = resolution[0] / samp_freq + error_corr
         period_vert = resolution[1] * period_horz
-        
+
         new_sr = self.check_frequency_waveform(period_horz, width)
-        #self.reset_AWG(new_sr)
+        # self.reset_AWG(new_sr)
 
         waveform = dict()
         # horizontal virtual gate
@@ -517,22 +517,44 @@ class virtual_awg(Instrument):
             data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
 
         return data_processed
-    
+
     def reset_AWG(self, clock=1e8):
         """ Reset AWG to videomode and scanfast """
         self.AWG_clock = clock
         for a in self._awgs:
             a.clock_freq.set(clock)
-            a.trigger_mode.set('CONT')    
+            a.trigger_mode.set('CONT')
             a.trigger_source.set('INT')
-            
+
             for ii in range(1, 5):
-                f=getattr(a, 'ch%d_amp' % ii)
-                val=f()
-                if val!=4.0:
+                f = getattr(a, 'ch%d_amp' % ii)
+                val = f()
+                if val != 4.0:
                     warnings.warn('AWG channel %d output not at 4.0 V' % ii)
+                    
+    def set_amplitude(self, amplitude):
+        """ Set the AWG peak-to-peak amplitude for all channels
+
+        Args:
+            amplitude (float): peak-to-peak amplitude (V)
+
+        """
+        if amplitude < 0.02:
+            warnings.warn('Trying to set AWG amplitude too low, setting it to minimum (20mV)')
+            amplitude = 0.02
+        elif amplitude > 4.5:
+            warnings.warn('Trying to set AWG amplitude too high, setting it to maximum (4.5V)')
+            amplitude = 4.5
+
+        # tektronics 5014 has precision of 1mV
+        self.ch_amp = round(amplitude, 3)
+        for awg in self._awgs:
+            for i in range(1, 5):
+                awg.set('ch%s_amp' % i, self.ch_amp)
 
 #%%
+
+
 def plot_wave_raw(wave_raw, samplerate=None, station=None):
     ''' Plot the raw wave 
 
