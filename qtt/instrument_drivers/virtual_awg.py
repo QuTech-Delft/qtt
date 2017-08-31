@@ -532,20 +532,6 @@ class virtual_awg(Instrument):
                 if val != 4.0:
                     warnings.warn('AWG channel %d output not at 4.0 V' % ii)
                     
-    def setamplitude(self, amplitude):
-        """ Set the AWG peak-to-peak amplitude for all channels """
-        if amplitude < 0.02:
-            warnings.warn('Trying to set AWG amplitude too low, setting it to minimum (20mV)')
-            amplitude = 0.02
-        elif amplitude > 4.5:
-            warnings.warn('Trying to set AWG amplitude too high, setting it to maximum (4.5V)')
-            amplitude = 4.5
-    
-        self.ch_amp = round(amplitude,3)
-        for channels in self._awgs:
-            for i in range(1, 5):
-                channels.set('ch%s_amp' % i, self.ch_amp)
-
     def set_amplitude(self, amplitude):
         """ Set the AWG peak-to-peak amplitude for all channels
 
