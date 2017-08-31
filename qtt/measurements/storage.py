@@ -184,3 +184,5 @@ def store_logdata(datadict, filename, tag='metadata'):
     df = pd.DataFrame([data], columns=names)
 
     store.append(tag, df)
+
+    return data
