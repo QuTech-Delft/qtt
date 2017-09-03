@@ -5,12 +5,15 @@ import os
 import h5py
 import logging
 import warnings
+import pandas as pd
+import numpy as np
 
 try:
     import hickle
 except:
     import qtt.exceptions
-    warnings.warn('could not import hickle, not all functionality available', qtt.exceptions.MissingOptionalPackageWarning)
+    warnings.warn('could not import hickle, not all functionality available',
+                  qtt.exceptions.MissingOptionalPackageWarning)
 
 #%%
 
@@ -75,7 +78,7 @@ def load_state(tag=None, station=None, verbose=1):
     return obj
 
 
-def save_state(station, tag=None, overwrite=False, data = None, verbose=1):
+def save_state(station, tag=None, overwrite=False, data=None, verbose=1):
     """ Save current state of the system to disk
 
     Args:
@@ -104,7 +107,8 @@ def save_state(station, tag=None, overwrite=False, data = None, verbose=1):
     if tag is None:
         tag = datestring
 
-    obj = {'gatevalues': gv, 'snapshot': snapshot, 'datestring': datestring, 'data': data}
+    obj = {'gatevalues': gv, 'snapshot': snapshot,
+           'datestring': datestring, 'data': data}
 
     if verbose:
         print('save_state: writing to file %s, tag %s' % (statefile, tag))
@@ -124,3 +128,61 @@ def save_state(station, tag=None, overwrite=False, data = None, verbose=1):
                     raise Exception(
                         'tag %s already exists in state file %s' % (tag, statefile))
             hickle.dump(obj, h5group, path=tag)
+
+#%% Logging and monitoring functions
+
+
+def retrieve_logdata(filename, tag='metadata'):
+    """ Retrieve logged data from a HDFStore
+
+    Args:
+        filename (str or HDFStore)
+        tag (str): key of table append to
+
+    Returns:
+        df (pandas dataframe)
+
+    """
+    if isinstance(filename, str):
+        store = pd.HDFStore(filename)
+    else:
+        store = filename
+    d = store.select(tag)
+    d.reset_index(inplace=True, drop=True)
+    return d
+
+
+def store_logdata(datadict, filename, tag='metadata'):
+    """ Log data to a HDFStore
+
+    Args:
+        datadict (dict): dictionary with names and values or functions
+        filename (str or HDFStore)
+        tag (str): key of table append to
+
+    """
+
+    if isinstance(filename, str):
+        store = pd.HDFStore(filename)
+    else:
+        store = filename
+    names = sorted(datadict.keys())
+
+    if tag in store:
+        for n in names:
+            if not n in store[tag]:
+                warnings.warn('column %s does not exist in store' % n)
+                names.remove(n)
+
+    def ev(p):
+        if callable(p):
+            return p()
+        else:
+            return p
+
+    data = [ev(datadict[n]) for n in names]
+    df = pd.DataFrame([data], columns=names)
+
+    store.append(tag, df)
+
+    return data
