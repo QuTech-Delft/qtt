@@ -579,7 +579,8 @@ class scanjob_t(dict):
                 if hasattr(virt, param):
                     param_map = virt.convert_matrix_to_map(
                         virt.get_crosscap_matrix_inv().T, virt._gates_list, virt._virts_list)
-                    self[field]['paramname'] = param
+                    if 'paramname' not in self[field]:
+                        self[field]['paramname'] = param
                     self[field]['param'] = param_map[param]
                 elif not hasattr(station.gates, param):
                     raise Exception('unrecognized gate parameter')
@@ -588,8 +589,9 @@ class scanjob_t(dict):
         elif isinstance(param, qcodes.instrument.parameter.Parameter):
             self[field]['paramname'] = param.name
         else:
-            self[field]['paramname'] = '_'.join(
-                ['%s(%s)' % (key, value) for (key, value) in param.items()])
+            if 'paramname' not in self[field]:
+                self[field]['paramname'] = '_'.join(
+                        ['%s(%s)' % (key, value) for (key, value) in param.items()])
 
     def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata']):
         """ Add range to stepdata and/or sweepdata in scanjob.
@@ -716,10 +718,6 @@ class scanjob_t(dict):
                     sweepname = self['sweepdata']['paramname']
                 else:
                     sweepname = 'sweepparam'
-# JP: Not sure how this works
-#                if not (np.dot(list(stepdata['param'].values()), [sweepdata['param'][x] for x in stepdata['param']]) == 0):
-#                    stepname = stepname + '_v'
-#                    sweepname= sweepname + '_v'
                 stepparam = VectorParameter(name=stepname, comb_map=[(
                     gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
                 sweepparam = VectorParameter(name=sweepname, comb_map=[(
