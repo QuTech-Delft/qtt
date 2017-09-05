@@ -3,6 +3,7 @@ scipy >= 0.18
 matplotlib >= 2.0
 coverage
 pandas
+jupyter
 scikit-image
 pyqt
 qtpy
