@@ -140,7 +140,7 @@ def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
         meas_arr_name (str): name of the measured array to be differentiated
         fig (int): the number for the figure to plot
     """
-    meas_arr_name=alldata.default_parameter_name(meas_arr_name)
+    meas_arr_name = alldata.default_parameter_name(meas_arr_name)
     meas_array = alldata.arrays[meas_arr_name]
     imx = qtt.diffImageSmooth(meas_array.ndarray, dy=diff_dir)
     name = 'diff_dir_%s' % diff_dir
@@ -785,7 +785,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
         return_names (bool): if True return array names in output
     '''
     xx = np.array(x)
-    yy = np.NaN*np.ones(xx.size)
+    yy = np.NaN * np.ones(xx.size)
     x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label,
                   unit=x.parameter.unit, preset_data=xx, is_setpoint=True)
     if isinstance(yname, str):
@@ -807,7 +807,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
 
     for idm, mname in enumerate(measure_names):
         ytmp = DataArray(name=mname, array_id=mname, label=mname,
-                      preset_data=np.copy(yy), set_arrays=(x,))
+                         preset_data=np.copy(yy), set_arrays=(x,))
         dd.add_array(ytmp)
         if y is not None:
             getattr(dd, mname).ndarray = np.array(preset_data[idm])
@@ -883,8 +883,9 @@ def test_makeDataSet2D():
     p2 = ManualParameter('dummy2')
     ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
 
-    _=diffDataset(ds)
-    
+    _ = diffDataset(ds)
+
+
 def test_makeDataSet1Dplain():
     x = np.arange(0, 10)
     y = np.vstack((x - 1, x + 10))
@@ -904,7 +905,7 @@ def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues'):
         dataset2 (DataSet): second dataset to compare
         metakey (str): key in the DataSet metadata to compare
     """
-    if (metakey not in dataset1.metadata) or  (metakey not in dataset2.metadata):
+    if (metakey not in dataset1.metadata) or (metakey not in dataset2.metadata):
         print('key %s not in dataset metadata' % metakey)
         return
     if metakey == 'allgatevalues':
@@ -917,13 +918,13 @@ def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues'):
                 print('Gate %s not in second dataset' % (ikey))
     else:
         raise Exception('metadata key not yet supported')
-        
+
 
 def test_compare():
     import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet2D()
     compare_dataset_metadata(ds, ds)
-        
+
 #%%
 
 
