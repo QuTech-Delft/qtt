@@ -294,34 +294,7 @@ class FourdotModel(Instrument):
         self.lock.release()
         return val
 
-
-class VirtualIVVI(Instrument):
-
-    shared_kwargs = ['model']
-
-    def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
-        """ Virtual instrument representing an IVVI 
-
-        """
-        raise Exception('please import VirtualIVVI from qtt.instrument_drivers.virtual_instruments' )
-
-#%%
-
-
-class VirtualMeter(Instrument):
-
-    shared_kwargs = ['model']
-
-    def __init__(self, name, model=None, **kwargs):
-        """ Virtual instrument with a parameter
-        
-        Args:
-            name (str)
-            model (object): class that provides a `.get` function
-            
-        """
-        raise Exception('please import from qtt.instrument_drivers.virtual_instruments instead')
-    
+   
 #%%
 
 try:
