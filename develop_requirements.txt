@@ -1,8 +1,12 @@
-numpy >= 1.11
-scipy
+numpy >= 1.12
+scipy >= 0.18
+matplotlib >= 2.0
 coverage
 pandas
-qcodes
+jupyter
 scikit-image
-matplotlib
-
+pyqt
+qtpy
+h5py
+slacker
+spyder

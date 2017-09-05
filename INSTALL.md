@@ -20,8 +20,7 @@ There are four repositories:
 
 1. QCodes
 2. QTT
-3. Users
-4. Stations
+3. Spin-projects
 
 The git commands are:
 ```
@@ -49,9 +48,6 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 ```
 > conda env create -n [yourname] -f condalist.yml
 > activate [yourname]
-> pip install slacker
-> # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
-> pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
 ```
 
 For Mac OS with anaconda type from the command line:
@@ -135,9 +131,9 @@ jupyter notebook
 call deactivate %USERNAME%
 ```
 
-## Hickle
+## Hickle (optional)
 
-To install dev versin of hicke:
+To install dev version of hicke:
 ```
 pip install git+https://github.com/telegraphic/hickle.git@dev
 ```
@@ -172,6 +168,14 @@ git config credential.helper store	# stores passwords in plain text!
 ```
 
 ### Old commands
+
+Manual installation:
+```
+> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py
+> pip install slacker attrs pyserial redis pyvisa
+> conda install -c conda-forge opencv
+```
+
 There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
 ```
 > pip install git+https://github.com/jupyter/qtconsole.git
@@ -199,4 +203,10 @@ Redis from [chocolately](https://chocolatey.org/)
 ```
 > choco install redis-64
 > pip install redis
+```
+
+Opencv pre-build packages:
+```
+> # opencv from http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
+> pip install K:\ns\qt\spin-qubits\software\qtt\opencv_python-3.2.0+contrib-cp36-cp36m-win_amd64.whl
 ```
