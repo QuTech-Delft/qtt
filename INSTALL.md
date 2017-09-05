@@ -48,8 +48,6 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 ```
 > conda env create -n [yourname] -f condalist.yml
 > activate [yourname]
-> pip install slacker
-> conda install -c conda-forge opencv
 ```
 
 For Mac OS with anaconda type from the command line:
@@ -170,6 +168,14 @@ git config credential.helper store	# stores passwords in plain text!
 ```
 
 ### Old commands
+
+Manual installation:
+```
+> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py
+> pip install slacker attrs pyserial redis pyvisa
+> conda install -c conda-forge opencv
+```
+
 There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
 ```
 > pip install git+https://github.com/jupyter/qtconsole.git

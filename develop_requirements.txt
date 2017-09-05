@@ -8,4 +8,5 @@ scikit-image
 pyqt
 qtpy
 h5py
+slacker
 spyder
