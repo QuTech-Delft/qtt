@@ -114,7 +114,7 @@ def test_polFitting():
     kT = 6.5
     par_init = np.array([20, 2, 100, -.5, -.45, 300])
     y_data = polmod_all_2slopes(x_data, par_init, kT)
-    noise = np.random.normal(0, 3, data.shape)
+    noise = np.random.normal(0, 3, y_data.shape)
     par_fit, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
     assert np.all(np.isclose(par_fit[0], par_init[0], .1))
 
