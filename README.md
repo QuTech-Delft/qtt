@@ -24,20 +24,6 @@ QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` 
 
 For more detailed instructions read the file [INSTALL.md](INSTALL.md).
 
-Make sure you have a working Python distribution. We recommend [Anaconda](https://www.continuum.io/downloads) as an easy way to get most of the dependencies out-of-the-box.
-
-As the project is still private, install it directly from this repository:
-
-- Clone this repositories somewhere on your hard drive. If you're using command line git, open a terminal window in the directory where you'd like to put qcodes and type:
-```
-> cd [MYLOCALDIR]
-> git clone https://github.com/VandersypenQutech/Qcodes.git
-> git clone https://github.com/VandersypenQutech/qtt.git
-> git clone https://github.com/VandersypenQutech/spin-projects.git
-```
-
-- Install necessary python dependencies and install the python packages.
-
 ### Updating QTT
 
 If you registered Qcodes with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`
@@ -51,7 +37,7 @@ For a general introduction also see
 * [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
 
 * If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following settings:
-- Use a `IPython` console and set the IPhyton backend graphics option to `QT`. This ensures correctly displaying the `Paramater viewer` and `DataBrowser`
+- Use a `IPython` console and set the IPyhton backend graphics option to `QT`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
 - In Tools->Preferences->Console->Advanced settings uncheck the box `Enable UMR`
 
 ## Contributing
