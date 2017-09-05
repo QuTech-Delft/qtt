@@ -27,36 +27,6 @@ import matplotlib.pyplot as plt
 from qtt.tools import diffImageSmooth
 from qcodes import DataArray, new_data
 
-#%%
-
-
-def getDefaultParameterName(data, defname='amplitude'):
-    warnings.warn('do not use this function, use the function from the object...')
-    if defname in data.arrays.keys():
-        return defname
-    if (defname + '_0') in data.arrays.keys():
-        return getattr(data, defname + '_0')
-
-    vv = [v for v in data.arrays.keys() if v.endswith(defname)]
-    if (len(vv) > 0):
-        return vv[0]
-    vv = [v for v in data.arrays.keys() if v.startswith(defname)]
-    if (len(vv) > 0):
-        return vv[0]
-    try:
-        name = next(iter(data.arrays.keys()))
-        return name
-    except:
-        pass
-    return None
-
-
-def getDefaultParameter(data, defname='amplitude'):
-    name = getDefaultParameterName(data)
-    if name is not None:
-        return getattr(data, name)
-    else:
-        return None
 
 #%%
 
