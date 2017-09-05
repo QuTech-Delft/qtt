@@ -1,4 +1,4 @@
-name: test1
+name: qtt
 channels:
 - conda-forge
 - defaults
@@ -113,5 +113,5 @@ dependencies:
   - redis==2.10.6
   - rope-py3k==0.9.4.post1
   - slacker==0.9.60
-prefix: C:\Users\eendebakpt\AppData\Local\Continuum\Anaconda3\envs\test1
+#prefix: C:\Users\eendebakpt\AppData\Local\Continuum\Anaconda3\envs\qtt
 
