@@ -3,8 +3,6 @@ import numpy as np
 import scipy
 import os
 import sys
-import copy
-import logging
 import time
 import qcodes
 import qcodes as qc
