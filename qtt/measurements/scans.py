@@ -823,12 +823,15 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dvec'
-        scanjob._start_end_to_range()
+        if 'stepvalues' in scanjob:
+            scanjob._start_end_to_range(scanfields=['sweepdata'])
+        else:
+            scanjob._start_end_to_range()
         scanjob._parse_2Dvec()
     else:
         scanjob['scantype'] = 'scan2D'
 
-    scanvalues = scanjob._convert_scanjob_vec(station)
+    scanvalues = scanjob._convert_scanjob_vec(station, stepvalues=scanjob.get('stepvalues', None))
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
 
@@ -842,7 +845,11 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.info('scan2D: wait_time_sweep %f' % wait_time_sweep)
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
-    alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
+    if type(stepvalues) is np.ndarray:
+        stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
+        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=mparams, location=location, loc_record={'label': scanjob['scantype']}, return_names=True)
+    else:
+        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
                                                         measure_names=mparams, location=location, loc_record={
                                                             'label': scanjob['scantype']},
                                                         return_names=True)
@@ -864,7 +871,11 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     tprev = time.time()
     for ix, x in enumerate(stepvalues):
         if verbose:
-            tprint('scan2D: %d/%d: time %.1f: setting %s to %.3f' %
+            if type(stepvalues) is np.ndarray:
+                tprint('scan2D: %d/%d: setting %s to %s' % 
+                   (ix, len(stepvalues), stepdata['param'].name, str(x)), dt=.5)
+            else:
+                tprint('scan2D: %d/%d: time %.1f: setting %s to %.3f' %
                    (ix, len(stepvalues), time.time() - t0, stepvalues.name, x), dt=1.5)
         if scanjob['scantype'] == 'scan2Dvec':
             pass
@@ -908,6 +919,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if scanjob['scantype'] == 'scan2Dvec':
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
+            if type(stepvalues) is np.ndarray:
+                stepvalues = stepvalues_tmp
             arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(
                 alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
             alldata.add_array(arr)
@@ -1816,12 +1829,11 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
 
 
 #%% Testing
-
 from qcodes import ManualParameter
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qtt.instrument_drivers.gates import virtual_IVVI
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-
+from qtt.structures import MultiParameter
 
 def test_scan2D(verbose=0):
     import qcodes
@@ -1847,6 +1859,12 @@ def test_scan2D(verbose=0):
                         'dac1': 1, 'dac2': .1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = dict(
         {'param': {'dac2': 1}, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
+    data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+
+    scanjob = scanjob_t({'sweepdata': dict(
+        {'param': {'dac1': 1}, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
+    scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
+    scanjob['stepvalues'] = np.array([[2*i, 3*i] for i in range(10)])
     data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
     # not supported:
