@@ -480,3 +480,32 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         val_diff = value - self.get()
         for (param, coeff) in self.comb_map:
             param.set(param.get() + coeff * val_diff / self.coeffs_sum)
+
+#%%
+class MultiParameter(qcodes.instrument.parameter.Parameter):
+    """ Create a parameter which is a combination of multiple other parameters.
+    
+    All parameters both have a set and a get.
+    
+    Attributes:
+        name (str): name for the parameter
+        params (list): the parameters to combine
+    """
+    def __init__(self, name, params, label=None):
+        self.name = name
+        self.params = params
+        self._vals = qcodes.utils.validators.Anything()
+        self._instrument = 'dummy'
+        if label is None:
+            self.label = self.name
+        self.unit = 'a.u.'
+        
+    def get(self):
+        values = []
+        for p in self.params:
+            values.append(p.get())
+        return values
+    
+    def set(self, values):
+        for idp, p in enumerate(self.params):
+            p.set(values[idp])

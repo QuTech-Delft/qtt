@@ -387,7 +387,7 @@ class livePlot:
                 else:
                     self.plot = pg.ImageItem()
                     p1.addItem(self.plot)
-        elif type(self.sweepparams) is str:
+        elif isinstance(self.sweepparams, str):
             p1 = plotwin.addPlot(title="1d scan")
             p1.setLabel('left', 'Value')
             p1.setLabel('bottom', self.sweepparams, units='mV')
