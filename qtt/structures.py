@@ -485,7 +485,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
 class MultiParameter(qcodes.instrument.parameter.Parameter):
     """ Create a parameter which is a combination of multiple other parameters.
     
-    All parameters both have a set and a get.
+    All parameters should both have a set and a get.
     
     Attributes:
         name (str): name for the parameter
