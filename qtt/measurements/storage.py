@@ -164,8 +164,10 @@ def store_logdata(datadict, filename, tag='metadata'):
 
     if isinstance(filename, str):
         store = pd.HDFStore(filename)
+        closestore = True
     else:
         store = filename
+        closestore = False
     names = sorted(datadict.keys())
 
     if tag in store:
@@ -184,5 +186,11 @@ def store_logdata(datadict, filename, tag='metadata'):
     df = pd.DataFrame([data], columns=names)
 
     store.append(tag, df)
+    
+    if closestore:
+        # to prevent memory leaks in loops
+        store.close()
+        import gc
+        gc.collect()
 
     return data
