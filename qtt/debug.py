@@ -5,11 +5,16 @@ import scipy
 import matplotlib
 import sys
 import os
+import inspect
+import functools
+import tempfile
+import time
+import datetime
 import logging
-import qcodes
 import pickle
 
 # explicit import
+import qcodes
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
 
@@ -27,14 +32,6 @@ def dumpstring(txt, tag='dump', showfile=False):
         fid.write(txt + '\n')
 
 #%% Decorator for generic function
-
-
-import inspect
-import functools
-import tempfile
-import time
-import datetime
-
 
 def functioncalldecorator(f, name=None):
     """ Decorate a function to log input and output arguments """
@@ -70,12 +67,3 @@ def logInstrument(instrument):
         if p.has_get and p.has_set:
             p.set = functioncalldecorator(p.set, '%s.set' % p.name)
 
-#%%
-import time
-if __name__ == '__main__':
-    for ii in range(10000):
-        # print(datetime.dtetime.now())
-        #print( time.time())
-        # print(time.process_time())
-        # print(time.clock())
-        print(time.perf_counter())
