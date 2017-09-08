@@ -1494,7 +1494,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
-    if scanjob['scantype'] == 'scan2Dturbo':
+    if scanjob['scantype'] == 'scan2Dturbo' and 'start' in 'sweepdata':
         stepdata['param'].set((stepdata['end'] + stepdata['start']) / 2)
         sweepdata['param'].set((sweepdata['end'] + sweepdata['start']) / 2)
         sweepranges = [sweepdata['end'] - sweepdata['start'], stepdata['end'] - stepdata['start']]
@@ -1521,7 +1521,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
             'Unrecognized fast readout instrument %s' % minstrhandle)
 
     if scanjob['scantype'] == 'scan2Dturbo':
-        sweepgates = [sweepdata['param'], stepdata['param']]
+        sweepgates = [sweepdata['param'].name, stepdata['param'].name]
         waveform, sweep_info = station.awg.sweep_2D(
             samp_freq, sweepgates, sweepranges, resolution, delete=delete)
         if verbose:
