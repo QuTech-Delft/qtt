@@ -669,7 +669,7 @@ class scanjob_t(dict):
                     sweepname = self['sweepdata']['paramname']
                 else:
                     sweepname = 'sweepparam'
-                sweepparam = VectorParameter(name=sweepname, comb_map=[(
+                sweepparam = VectorParameter(name=sweepname, label=sweepname, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan1D', 'scan1Dfast']:
                 sweepparam = get_param(gates, sweepdata['param'])
