@@ -455,9 +455,9 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
                  second a coefficient
         coeffs_sum (float): the sum of all the coefficients
     """
-    def __init__(self, name, comb_map):
+    def __init__(self, name, comb_map, **kwargs):
         """Initialize a linear combination parameter."""
-        super().__init__(name)
+        super().__init__(name, **kwargs)
         self.name = name
         self.comb_map = comb_map
         self.unit = self.comb_map[0][0].unit
