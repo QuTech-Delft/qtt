@@ -754,7 +754,7 @@ class scanjob_t(dict):
                 step_array2d = np.tile(np.array(stepvalues).reshape(-1, 1), (1, len(sweepvalues)))
                 sweep_array2d = np.tile(sweepvalues, (len(stepvalues), 1))   
                 for param in sweepdata['param']:
-                    if stepvalues is not None:
+                    if isinstance(stepvalues) is np.ndarray:
                         self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * \
                             sweepdata['param'][param]
                     else:
