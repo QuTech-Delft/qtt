@@ -815,8 +815,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata')
-    scanjob.parse_stepdata('sweepdata')
+    scanjob.parse_stepdata('stepdata', gates)
+    scanjob.parse_stepdata('sweepdata', gates)
 
     scanjob.parse_param('sweepdata', station, paramtype='slow')
     scanjob.parse_param('stepdata', station, paramtype='slow')
