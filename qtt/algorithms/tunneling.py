@@ -57,7 +57,7 @@ def polweight_all_2slopes(x_data, y_data, par, kT):
     return total
 
 
-def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
+def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None, sigma=False):
     """ Polarization line fitting. 
 
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
@@ -70,6 +70,7 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
 
     Returns:
         par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
+        sigma (float): standard deviation of the fit (assuming the fitting errors are normally distributed)
         par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
     """
     if par_guess is None:
@@ -86,9 +87,13 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
         if verbose >= 2:
             print('fit_pol_all: trans_idx %s' % (trans_idx, ))
     func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT)
-    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
-
-    return par_fit, par_guess
+    if sigma:
+        par_fit,fopt,_,_,_ = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, full_output=True, disp=verbose >= 2)
+        sigma = np.sqrt(fopt/len(y_data))
+        return par_fit, sigma, par_guess
+    else:
+        par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+        return par_fit, par_guess
 
 
 def data_to_exc_ch(x_data, y_data, pol_fit):
