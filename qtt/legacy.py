@@ -24,11 +24,11 @@ from qtt.measurements.scans import scanjob_t
 import matplotlib.pyplot as plt
 import datetime
 
+from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
 #%%
 
 from qtt.deprecated import linetools
-# from qtt.legacy import scaleCmap, plotCircle
 from qtt.data import dataset2Dmetadata, dataset2image
 
 from qtt.algorithms.onedot import onedotGetBalanceFine
@@ -63,58 +63,7 @@ def positionScanjob(scanjob, pt):
 
     return scanjob
 
-from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
-def onedotScan(station, od, basevalues, outputdir, verbose=1, sample_data=sample_data_t(), scanrange=500, step=-12):
-    """ Scan a one-dot
-
-    Arguments
-        station (qcodes station):
-        od (dict)
-        basevalues (list)
-        outputdir (str)
-        verbose (int): verbosity level
-
-    """
-    if verbose:
-        print('onedotScan: one-dot: %s' % od['name'])
-    gg = od['gates']
-    keithleyidx = [od['instrument']]
-
-    gates = station.gates
-    gates.set(gg[1], float(basevalues[gg[1]] - 0))    # plunger
-
-    pv1 = float(od['pinchvalues'][0]) 
-    pv2 = float(od['pinchvalues'][2]) 
-        
-    stepstart = float(pv1 + scanrange)
-    sweepstart = float(pv2 + scanrange)
-    
-    stepend = pv1-10
-    sweepend = pv2-10
-    
-    stepdata = dict({'param': gg[0], 'start': stepstart, 'end': stepend, 'step': step})
-    sweepdata = dict({'param': gg[2], 'start': sweepstart, 'end': sweepend, 'step': step})
-
-    wait_time_sweep = qtt.measurements.scans.waitTime(gg[2], station=station)
-    wait_time_step = qtt.measurements.scans.waitTime(gg[0], station=station) 
-
-    wait_time_step_eff = 3*wait_time_step + 3 * wait_time_sweep + .5
-    wait_time_sweep_eff = np.minimum(wait_time_sweep / 3., .15)
-
-
-    scanjob = qtt.measurements.scans.scanjob_t({'stepdata': stepdata, 'sweepdata': sweepdata, 'minstrument': keithleyidx})
-    enforce_boundaries(scanjob, sample_data)
-    scanjob['stepdata']['wait_time'] = max(wait_time_step_eff + 2 * wait_time_sweep,.15)
-    scanjob['sweepdata']['wait_time'] = wait_time_sweep_eff
-    scanjob['wait_time_startscan']=.25 + wait_time_sweep + wait_time_step_eff
-    alldata = qtt.measurements.scans.scan2D(station, scanjob )
-
-    od, ptv, pt, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, alldata, verbose=1, fig=None)
-
-    alldata.metadata['od'] = od
-
-    return alldata, od
 
 
 def onedotPlungerScan(station, od, verbose=1, sample_data = sample_data_t() ):
