@@ -10,6 +10,8 @@ import datetime
 import warnings
 import pickle
 import scipy
+import logging
+
 try:
     import hickle
 except:
