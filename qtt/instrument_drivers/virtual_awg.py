@@ -76,6 +76,20 @@ class virtual_awg(Instrument):
                'serial': None, 'firmware': None}
         return IDN
 
+    def awgGate(self, gate):
+        """ Return true of the gate can be controlled by the awg
+        
+        Args:
+            gate ()
+        """
+        if self.awg_map is None:
+            return False
+        
+        if gate in self.awg_map:
+            return True
+        else:
+            return False
+        
     def stop(self, verbose=0):
         ''' Stops all AWGs and turns of all channels '''
         for awg in self._awgs:
