@@ -99,6 +99,16 @@ from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, St
 for c in [ Parameter, Instrument, StandardParameter, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str
 
+
+# make a qcodes instrument pickable 
+qcodes.Instrument.__getstate__ = lambda self: str(self)
+qcodes.Parameter.__getstate__ = lambda self: str(self)
+
+def _setstate(self, d):
+    self.name = d
+qcodes.Instrument.__setstate__ = _setstate
+qcodes.Parameter.__setstate__ = _setstate
+    
 #%% Enhance the qcodes functionality
 
 try:
