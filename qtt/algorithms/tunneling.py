@@ -10,7 +10,7 @@ import numpy as np
 import scipy.ndimage
 
 
-def polmod_all_2slopes(x_data, tc, x0, y0, ml, mr, h, kT):
+def polmod_all_2slopes(x_data, par, kT):
     """ Polarization line model.
 
     This model is based on [DiCarlo2004, Hensgens2017]. For an example see
@@ -18,22 +18,23 @@ def polmod_all_2slopes(x_data, tc, x0, y0, ml, mr, h, kT):
 
     Args:
         x_data (1 x N array): chemical potential difference in ueV
-        tc (float): tunnel coupling in ueV
-        x0 (float): offset in x_data for center of transition
-        y0 (float): offset in background signal
-        ml (float): slope of sensor signal on left side
-        mr (float): slope of sensor signal on right side
-        h (float): height of transition, i.e. sensitivity for electron transition
+        par (1 x 6 array): parameters for the model
+            - par[0]: tunnel coupling in ueV
+            - par[1]: offset in x_data for center of transition
+            - par[2]: offset in background signal
+            - par[3]: slope of sensor signal on left side
+            - par[4]: slope of sensor signal on right side
+            - par[5]: height of transition, i.e. sensitivity for electron transition
         kT (float): temperature in ueV
 
     Returns:
         y_data (array): sensor data, e.g. from a sensing dot or QPC
     """
-    x_data_center = x_data - x0
-    Om = np.sqrt(x_data_center**2 + 4 * tc**2)
+    x_data_center = x_data - par[1]
+    Om = np.sqrt(x_data_center**2 + 4 * par[0]**2)
     Q = 1 / 2 * (1 + x_data_center / Om * np.tanh(Om / (2 * kT)))
-    slopes = ml + (mr - ml) * Q
-    y_data = y0 + x_data_center * slopes + Q * h
+    slopes = par[3] + (par[4] - par[3]) * Q
+    y_data = par[2] + x_data_center * slopes + Q * par[5]
 
     return y_data
 
@@ -50,7 +51,7 @@ def polweight_all_2slopes(x_data, y_data, par, kT):
     Returns:
         total (float): sum of residues
     """
-    mod = polmod_all_2slopes(x_data, *par, kT)
+    mod = polmod_all_2slopes(x_data, par, kT)
     total = np.linalg.norm(y_data - mod)
 
     return total
@@ -89,7 +90,7 @@ def fit_pol_all(x_data, y_data, kT, method='fmin', maxiter=None, maxfun=5000, ve
         par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
         return par_fit, par_guess
     elif method is 'curve_fit':
-        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, tc, x0, y0, ml, mr, h, kT)
+        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT)
         par_fit, par_cov = scipy.optimize.curve_fit(func, x_data, y_data, par_guess)
         return par_fit, par_cov, par_guess
     else:
@@ -118,7 +119,7 @@ def test_polFitting():
     x_data = np.linspace(-100, 100, 1000)
     kT = 6.5
     par_init = np.array([20, 2, 100, -.5, -.45, 300])
-    y_data = polmod_all_2slopes(x_data, *par_init, kT)
+    y_data = polmod_all_2slopes(x_data, par_init, kT)
     noise = np.random.normal(0, 3, y_data.shape)
     par_fit, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
     assert np.all(np.isclose(par_fit[0], par_init[0], .1))
@@ -142,7 +143,7 @@ if __name__ == '__main__':
     xx = xx0
     xx = 2 * xx0
     # xx=xx0
-    yy0 = polmod_all_2slopes(xx0, *par, kT=0.001)
+    yy0 = polmod_all_2slopes(xx0, par, kT=0.001)
     yy = yy0 + .015 * (np.random.rand(yy0.size) - .5)
     x_data = xx
     data = yy
@@ -151,7 +152,7 @@ if __name__ == '__main__':
     for ii in range(5):
         parfit, _ = fit_pol_all(xx, yy, kT=0.001)
     dt = time.time() - t0
-    yyfit = polmod_all_2slopes(xx, *parfit, kT=0.001)
+    yyfit = polmod_all_2slopes(xx, parfit, kT=0.001)
     print('dt: %.3f [s]' % dt)
 
     # show data
@@ -191,9 +192,9 @@ if __name__ == '__main__':
     parfit2, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None, verbose=2)
     parfit2i, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=parfit2)
 
-    yy1 = polmod_all_2slopes(xx, *parfit1, kT=0.001)
-    yy2 = polmod_all_2slopes(xx, *parfit2, kT=0.001)
-    yy2i = polmod_all_2slopes(xx, *parfit2i, kT=0.001)
+    yy1 = polmod_all_2slopes(xx, parfit1, kT=0.001)
+    yy2 = polmod_all_2slopes(xx, parfit2, kT=0.001)
+    yy2i = polmod_all_2slopes(xx, parfit2i, kT=0.001)
 
     c0 = polweight_all_2slopes(xx, yy, par, kT=0.001)
     c1 = polweight_all_2slopes(xx, yy1, par, kT=0.001)
@@ -256,7 +257,7 @@ if __name__ == '__main__':
     for ii, n in enumerate(npoints):
         print('full fit %d/%d' % (ii, len(npoints)))
         xx = np.linspace(-10, 10, n)
-        yy = polmod_all_2slopes(xx, *par, kT=0.001)
+        yy = polmod_all_2slopes(xx, par, kT=0.001)
 
         for j in range(niter):
             yyx = yy + Noise * (np.random.rand(yy.size) - .5)
