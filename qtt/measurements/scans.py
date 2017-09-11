@@ -813,11 +813,11 @@ def fastScan(scanjob, station = None):
     
     awg=getattr(station, 'awg')
     
-    if not awg.awgGate(scanjob['sweepdata']['param'] ):
+    if not awg.awg_gate(scanjob['sweepdata']['param'] ):
         # sweep gate is not fast, so no fast scan possible
         return 0
     if 'stepdata' in scanjob:
-        if awg.awgGate(scanjob['stepdata']['param'] ):
+        if awg.awg_gate(scanjob['stepdata']['param'] ):
             return 2
     return 1
 

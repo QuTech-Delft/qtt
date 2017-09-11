@@ -76,7 +76,7 @@ class virtual_awg(Instrument):
                'serial': None, 'firmware': None}
         return IDN
 
-    def awgGate(self, gate):
+    def awg_gate(self, gate):
         """ Return true of the gate can be controlled by the awg
         
         Args:
