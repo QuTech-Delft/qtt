@@ -57,7 +57,7 @@ def polweight_all_2slopes(x_data, y_data, par, kT):
     return total
 
 
-def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin'):
+def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
     """ Polarization line fitting. 
 
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
@@ -97,7 +97,10 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
     else:
         raise Exception('Unrecognized fitting method')
         
-    return par_fit, par_guess, fitdata
+    if returnextra:
+        return par_fit, par_guess, fitdata
+    else:
+        return par_fit, par_guess
 
 
 def data_to_exc_ch(x_data, y_data, pol_fit):
