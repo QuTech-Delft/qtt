@@ -88,9 +88,6 @@ def initFermiLinear(xdata, ydata, fig=None):
         plt.legend()
     return ab, ff
 
-if __name__ == '__main__':
-    ab, ff = initFermiLinear(xdata, ydata, fig=100)
-
 
 #%%
 
