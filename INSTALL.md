@@ -88,6 +88,7 @@ For Unix systems the proper command is `python setup.py develop --user`.
 
 * Use a IPython console and set the IPhyton backend graphics option to QT5. This ensures
  correctly displaying the Paramater viewer and DataBrowser
+* In Tools->Preferences->Python interpreter, uncheck the box Enable UMR 
 
 ## Create startup shortcuts
 
