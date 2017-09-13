@@ -1279,9 +1279,9 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
             print('  add cost for angle diff')
         cost += 1000
 
-    if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(15):
+    if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(10):
         cost += 10000
-    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(15):
+    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(10):
         cost += 10000
     if param[2] < 0:
         if verbose:
@@ -1309,7 +1309,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
         pmatlab.addfigurecopy(fig=fig)
         plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m', linewidth=linewidth, markersize=10, label='transition line')
-        plt.plot(cc[0], cc[0], '.m', markersize=12)
+        plt.plot(cc[0], cc[1], '.m', markersize=12)
         for ii in range(4):
             if ii == 0:
                 lbl = 'electron line'
@@ -1384,7 +1384,7 @@ def Vtrace(cdata, param, fig=None):
     pp = np.array(np.hstack((p1, cc, p2)))
     pp = np.array(np.hstack((p1, p2)))
     if fig is not None:
-        plt.figure(25)
+        plt.figure(fig)
 
         pmatlab.plotPoints(pp, '--k', markersize=20, linewidth=3, label='scan line')
         pmatlab.plotPoints(pp, '.y', markersize=20)
