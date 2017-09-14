@@ -988,6 +988,11 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         width_vert = width[1]
         res_horz = int(resolution[0])
         res_vert = int(resolution[1])
+        
+        if resolution[0]%16 !=0 or resolution[1]%16 !=0 :
+            # send out warning, due to rounding of the digitizer memory buffers
+            #this is not supported
+            warnings.warn('resolution for digitizer is not a multiple of 16')
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert
