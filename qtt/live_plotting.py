@@ -387,17 +387,21 @@ class livePlot:
                 else:
                     self.plot = pg.ImageItem()
                     p1.addItem(self.plot)
-        elif type(self.sweepparams) == str:
+        elif isinstance(self.sweepparams, str):
             p1 = plotwin.addPlot(title="1d scan")
             p1.setLabel('left', 'Value')
             p1.setLabel('bottom', self.sweepparams, units='mV')
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
-        elif type(self.sweepparams) == list:
+        elif type(self.sweepparams) is list:
             p1 = plotwin.addPlot(title='2d scan')
-            p1.setLabel('bottom', self.sweepparams[0], units='mV')
-            p1.setLabel('left', self.sweepparams[1], units='mV')
+            if self.sweepparams[0] is dict:
+                [xlabel, ylabel] = ['sweepparam_v', 'stepparam_v']
+            else:
+                [xlabel, ylabel] = self.sweepparams
+            p1.setLabel('bottom', xlabel, units='mV')
+            p1.setLabel('left', ylabel, units='mV')
             self.plot = pg.ImageItem()
             p1.addItem(self.plot)
         else:

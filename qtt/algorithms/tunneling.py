@@ -57,7 +57,7 @@ def polweight_all_2slopes(x_data, y_data, par, kT):
     return total
 
 
-def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
+def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
     """ Polarization line fitting. 
 
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
@@ -71,6 +71,7 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
     Returns:
         par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
         par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
+        fitdata (dictionary): extra data returned by fit functions
     """
     if par_guess is None:
         t_guess = (x_data[-1] - x_data[0]) / 30  # hard-coded guess in ueV
@@ -85,10 +86,21 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
         par_guess = np.array([t_guess, x_offset_guess, y_offset_guess, slope_guess, slope_guess, sensitivity_guess])
         if verbose >= 2:
             print('fit_pol_all: trans_idx %s' % (trans_idx, ))
-    func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT)
-    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
-
-    return par_fit, par_guess
+    fitdata = {}
+    if method is 'fmin':
+        func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT)
+        par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    elif method is 'curve_fit':
+        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT)
+        par_fit, par_cov = scipy.optimize.curve_fit(func, x_data, y_data, par_guess)
+        fitdata['par_cov'] = par_cov
+    else:
+        raise Exception('Unrecognized fitting method')
+        
+    if returnextra:
+        return par_fit, par_guess, fitdata
+    else:
+        return par_fit, par_guess
 
 
 def data_to_exc_ch(x_data, y_data, pol_fit):
