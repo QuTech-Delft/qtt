@@ -5,6 +5,7 @@ import scipy.ndimage.filters as filters
 import scipy.ndimage.morphology as morphology
 import skimage
 import warnings
+import copy
 
 import qcodes
 
@@ -13,10 +14,10 @@ import qtt.data
 
 import qtt.pgeometry as pmatlab
 import matplotlib.pyplot as plt
-from qtt.algorithms.generic import *
+#from qtt.algorithms.generic import *
 from qtt.algorithms.generic import issorted
 from qtt.algorithms.functions import logistic
-from qtt.algorithms.generic import localMaxima
+from qtt.algorithms.generic import localMaxima, nonmaxsuppts
 
 
 #%% Functions related to detection of Coulumb peaks

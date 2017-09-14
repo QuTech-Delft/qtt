@@ -527,6 +527,16 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
+    def setWaitTimes(self, station):
+        """ Set default waiting times based on gate filtering """
+
+        t=.1
+        for f in ['sweepdata', 'stepdata']:        
+            if f in self:
+                t=station.gate_settle(self[f]['param'])
+                self[f]['wait_time'] = t
+        self['wait_time_startscan']=.5+2*t
+        
     def parse_stepdata(self, field, gates=None):
         """ Helper function for legacy code """
         stepdata = self[field]
@@ -787,6 +797,29 @@ def parse_minstrument(scanjob):
 
     return minstrument
 
+def fastScan(scanjob, station = None):
+    """ Returns whether we can do a fast scan using an awg 
+    
+    Args:
+        scanjob
+        
+    Returns
+        f (int): 0: no fast scan possible, 1: scan2Dfast, 2: all axis
+        
+    """
+    
+    if not 'awg' in station.components:
+        return 0
+    
+    awg=getattr(station, 'awg')
+    
+    if not awg.awg_gate(scanjob['sweepdata']['param'] ):
+        # sweep gate is not fast, so no fast scan possible
+        return 0
+    if 'stepdata' in scanjob:
+        if awg.awg_gate(scanjob['stepdata']['param'] ):
+            return 2
+    return 1
 
 lin_comb_type = dict
 """ Class to represent linear combinations of parameters  """
@@ -1220,6 +1253,9 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
     elif ism4i:
         data = measuresegment_m4i(
             minstrhandle, waveform, read_ch, mV_range, Naverage, process=True)
+    elif minstrhandle=='dummy':
+        # for testing purposes
+        data = np.random.rand( 100, )
     else:
         raise Exception(
             'Unrecognized fast readout instrument %s' % minstrhandle)
@@ -1959,51 +1995,4 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             scanjob[param] = min(scanjob[param], bstep[1] - eps)
 
 
-def onedotHiresScan(station, od, dv=70, verbose=1, sample_data=sample_data_t(), fig=4000, ptv=None):
-    """ Make high-resolution scan of a one-dot """
-    if verbose:
-        print('onedotHiresScan: one-dot: %s' % od['name'])
 
-    # od, ptv, pt,ims,lv, wwarea=onedotGetBalance(od, alldata, verbose=1, fig=None)
-    if ptv is None:
-        ptv = od['balancepoint']
-    keithleyidx = [od['instrument']]
-    scanjobhi = createScanJob(od['gates'][0], [float(ptv[1]) + 1.2 * dv, float(ptv[1]) - 1.2 * dv], g2=od[
-                              'gates'][2], r2=[float(ptv[0]) + 1.2 * dv, float(ptv[0]) - 1.2 * dv], step=-4)
-
-    scanjobhi['minstrument'] = keithleyidx
-
-    enforce_boundaries(scanjobhi, sample_data, 1e-3)
-
-    wait_time = waitTime(od['gates'][2], station=station)
-    scanjobhi['sweepdata']['wait_time'] = wait_time
-    scanjobhi['stepdata']['wait_time'] = max(
-        2 * waitTime(None, station) + 3 * wait_time, .15)
-
-    alldatahi = qtt.measurements.scans.scan2D(station, scanjobhi)
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-        alldatahi, verbose=0, arrayname=None)
-    impixel, tr = dataset2image(alldatahi, mode='pixel')
-
-    ptv, fimg, tmp = qtt.algorithms.onedot.onedotGetBalanceFine(
-        impixel, alldatahi, verbose=1, fig=fig)
-
-    if tmp['accuracy'] < .2:
-        logging.info('use old data point!')
-        # use normal balance point (fixme)
-        ptv = od['balancepoint']  # gate0, gate2
-        ptx = od['balancepointpixel'].reshape(1, 2)
-    else:
-        ptx = tmp['ptpixel'].copy()
-    step = scanjobhi['stepdata']['step']
-    val = findCoulombDirection(
-        impixel, ptx, step, widthmv=8, fig=None, verbose=1)
-    od['coulombdirection'] = val
-
-    od['balancepointfine'] = ptv
-    od['setpoint'] = ptv + 10
-
-    alldatahi.metadata['od'] = od
-
-    scandata = dict({'od': od, 'dataset': alldatahi, 'scanjob': scanjobhi})
-    return scandata, od
