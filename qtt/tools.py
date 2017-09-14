@@ -191,18 +191,20 @@ def diffImage(im, dy, size=None):
         im = np.diff(im, n=1, axis=1)
         if size == 'same':
             im = np.hstack((im, im[:, -1:]))
-    if dy == 1 or dy == 'y':
+    elif dy == 1 or dy == 'y':
         im = np.diff(im, n=1, axis=0)
         if size == 'same':
             im = np.vstack((im, im[-1:, :]))
-    if dy == -1:
+    elif dy == -1:
         im = -np.diff(im, n=1, axis=0)
         if size == 'same':
             im = np.vstack((im, im[-1:, :]))
-    if dy == 2:
+    elif dy == 2 or dy=='xy':
         imx = np.diff(im, n=1, axis=1)
         imy = np.diff(im, n=1, axis=0)
         im = imx[0:-1, :] + imy[:, 0:-1]
+    else:
+        raise Exception('differentiation method not supported')
     return im
 
 
@@ -225,16 +227,16 @@ def diffImageSmooth(im, dy='x', sigma=2):
 
     if dy is None:
         imx = im.copy()
-    if dy == 0 or dy == 'x':
+    elif dy == 0 or dy == 'x':
         imx = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
-    if dy == 1 or dy == 'y':
+    elif dy == 1 or dy == 'y':
         imx = ndimage.gaussian_filter1d(
             im, axis=0, sigma=sigma, order=1, mode='nearest')
-    if dy == -1:
+    elif dy == -1:
         imx = -ndimage.gaussian_filter1d(im, axis=0,
                                          sigma=sigma, order=1, mode='nearest')
-    if dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2':
+    elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2':
         imx0 = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
         imx1 = ndimage.gaussian_filter1d(
@@ -247,7 +249,8 @@ def diffImageSmooth(im, dy='x', sigma=2):
             imx = np.sqrt(imx0**2 + imx1**2)
         if dy == 'xmy2':
             imx = np.sqrt(imx0**2 + imx1**2)
-
+    else:
+        raise Exception('differentiation method %s not supported' % dy)
     return imx
 
 
