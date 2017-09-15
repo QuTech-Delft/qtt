@@ -203,8 +203,10 @@ def diffImage(im, dy, size=None):
         imx = np.diff(im, n=1, axis=1)
         imy = np.diff(im, n=1, axis=0)
         im = imx[0:-1, :] + imy[:, 0:-1]
+    elif dy is None:
+        pass
     else:
-        raise Exception('differentiation method not supported')
+        raise Exception('differentiation method %s not supported' % dy)
     return im
 
 
