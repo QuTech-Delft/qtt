@@ -5,7 +5,7 @@ Created on Thu Sep 10 15:55:21 2015
 @author: tud205521
 """
 
-#%%
+#%% Load packages
 import time
 import logging
 import numpy as np
@@ -360,8 +360,7 @@ class livePlot:
         win.setLayout(vertLayout)
 
         self.win = win
-        self.setGeometry=self.win.setGeometry
-        
+        self.plotwin = plotwin
         self.verbose = verbose
         self.idx = 0
         self.maxidx = 1e9
@@ -557,7 +556,7 @@ class MockCallback_2d(qcodes.Instrument):
 
 
 def test_mock2d():
-    m = MockCallback_2d()
+    m = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d') )
     d = m()
 
 
