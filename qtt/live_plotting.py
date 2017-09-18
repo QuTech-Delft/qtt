@@ -501,7 +501,7 @@ class livePlot:
         else:
             self.stopreadout()
             dd = None
-            
+
         if self.fps.framerate() < 10:
             #print('slow rate...?')
             time.sleep(0.1)
@@ -511,7 +511,7 @@ class livePlot:
         """
         Args:
             rate (float): sample rate in ms
-        
+
         """
         if maxidx is not None:
             self.maxidx = maxidx
@@ -530,21 +530,41 @@ class livePlot:
 #%% Some default callbacks
 
 
-class MockCallback_2d:
+class MockCallback_2d(qcodes.Instrument):
 
-    def __init__(self, npoints=6400):
-        self.npoints = npoints
+    def __init__(self, name, nx=80, **kwargs):
+        super().__init__(name, **kwargs)
+
+        self.nx = nx
+
+        self.add_parameter(
+            'p', parameter_class=qcodes.ManualParameter, initial_value=-20)
+        self.add_parameter(
+            'q', parameter_class=qcodes.ManualParameter, initial_value=30)
 
     def __call__(self):
-        data = np.random.rand(self.npoints)
-        data_reshaped = data.reshape(80, 80)
+        import qtt.deprecated.linetools as lt
+
+        data = np.random.rand(self.nx * self.nx)
+        data_reshaped = data.reshape(self.nx, self.nx)
+
+        lt.semiLine(data_reshaped, [self.nx / 2, self.nx / 2],
+                    np.deg2rad(self.p()), w=2, l=self.nx / 3, H=2)
+        lt.semiLine(data_reshaped, [self.nx / 2, self.nx / 2],
+                    np.deg2rad(self.q()), w=2, l=self.nx / 4, H=3)
+
         return data_reshaped
 
+
+def test_mock2d():
+    m = MockCallback_2d()
+    d = m()
 
 
 #%% Example
 if __name__ == '__main__':
-    lp = livePlot(datafunction=MockCallback_2d(), sweepInstrument=None,
+    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')), sweepInstrument=None,
                   sweepparams=['L', 'R'], sweepranges=[50, 50])
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
+    pv = qtt.createParameterWidget([lp.datafunction])
