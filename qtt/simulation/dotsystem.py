@@ -179,16 +179,31 @@ class BaseDotSystem():
                     delocalizations[i, j] = min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1)) + min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1)) + min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1))
         return transitions, delocalizations
 
-#%%
+    def orderstatesbyN(self):
+        """ Order the calculated states by occupation """
+        sortinds = np.argsort(self.nstates)
+        self.energies = self.energies[sortinds]
+        self.states = self.states[sortinds]
+        self.stateprobs = self.stateprobs[sortinds]
+        self.stateoccs = self.stateoccs[sortinds]
+        self.nstates = self.nstates[sortinds]
 
+    def orderstatesbyE(self):
+        """ Order the calculated states by energy """
+        sortinds = np.argsort(self.energies)
+        self.energies = self.energies[sortinds]
+        self.states = self.states[sortinds]
+        self.stateprobs = self.stateprobs[sortinds]
+        self.stateoccs = self.stateoccs[sortinds]
+        self.nstates = self.nstates[sortinds]
 
-class DotSystem(BaseDotSystem):
-    ''' Class to simulate a system of interacting quantum dots '''
-
-    def __init__(self, name='dotsystem', ndots=3, **kwargs):
-        self.name = name
-        self.ndots = ndots
-        self.temperature = 0
+    def showstates(self, n):
+        """ List states of the system with energies """
+        print('\nEnergies/states list for %s:' % self.name)
+        print('-----------------------------------')
+        for i in range(n):
+            print(str(i) + '       - energy: ' + str(np.around(self.energies[i], decimals=2)) + ' ,      state: ' + str(np.around(self.stateoccs[i], decimals=2)) + ' ,      Ne = ' + str(self.nstates[i]))
+        print(' ')
 
     def makebasis(self, ndots=3, maxelectrons=2):
         ''' Define a basis of occupancy states with a specified number of dots and max occupancy '''
@@ -201,8 +216,21 @@ class DotSystem(BaseDotSystem):
         self.nbasis = np.sum(self.basis, axis=1)
         self.Nt = len(self.nbasis)
         self.H = np.zeros((self.Nt, self.Nt), dtype=float)
+        self.eigenstates = np.zeros((self.Nt, self.Nt), dtype=float)        
+        
+        
+#%%
 
-        self.eigenstates = np.zeros((self.Nt, self.Nt), dtype=float)
+
+class DotSystem(BaseDotSystem):
+    ''' Class to simulate a system of interacting quantum dots '''
+
+    def __init__(self, name='dotsystem', ndots=3, **kwargs):
+        self.name = name
+        self.ndots = ndots
+        self.temperature = 0
+
+
 
     def makevars(self):
         for name in self.varnames:
@@ -378,22 +406,6 @@ class DotSystem(BaseDotSystem):
         if verbose:
             print('simulatehoneycomb: %.1f [s]' % (time.time() - t0))
 
-    def orderstatesbyN(self):
-        sortinds = np.argsort(self.nstates)
-        self.energies = self.energies[sortinds]
-        self.states = self.states[sortinds]
-        self.stateprobs = self.stateprobs[sortinds]
-        self.stateoccs = self.stateoccs[sortinds]
-        self.nstates = self.nstates[sortinds]
-
-    def orderstatesbyE(self):
-        sortinds = np.argsort(self.energies)
-        self.energies = self.energies[sortinds]
-        self.states = self.states[sortinds]
-        self.stateprobs = self.stateprobs[sortinds]
-        self.stateoccs = self.stateoccs[sortinds]
-        self.nstates = self.nstates[sortinds]
-
     def calculate_energies(self, gatevalues):
         for i, val in enumerate(gatevalues):
             setattr(self, 'det%d' % (i + 1), val)
@@ -410,10 +422,11 @@ class DotSystem(BaseDotSystem):
         if self.solved == True:
             self.orderstatesbyE()
             if exact:
-                    # almost exact...
+                # almost exact...
                 idx = self.energies == self.energies[0]
                 self.OCC = np.around(np.mean(self.stateoccs[idx], axis=0), decimals=2)
             else:
+                # first order approximation
                 self.OCC = np.around(self.stateoccs[0], decimals=2)
         else:
             self.solveH()
@@ -480,13 +493,6 @@ class DotSystem(BaseDotSystem):
     def getHn(self, numberofelectrons):
         inds = np.where(self.nbasis == numberofelectrons)[0]
         return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]
-
-    def showstates(self, n):
-        print('\nEnergies/states list for %s:' % self.name)
-        print('-----------------------------------')
-        for i in range(n):
-            print(str(i) + '       - energy: ' + str(np.around(self.energies[i], decimals=2)) + ' ,      state: ' + str(np.around(self.stateoccs[i], decimals=2)) + ' ,      Ne = ' + str(self.nstates[i]))
-        print(' ')
 
     def visualize(self, fig=1):
         ''' Create a graphical representation of the system (needs graphviz) '''
