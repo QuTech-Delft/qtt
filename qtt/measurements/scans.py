@@ -797,7 +797,7 @@ def parse_minstrument(scanjob):
 
     return minstrument
 
-def fastScan(scanjob, station = None):
+def fastScan(scanjob, station):
     """ Returns whether we can do a fast scan using an awg 
     
     Args:

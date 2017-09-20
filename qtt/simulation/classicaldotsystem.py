@@ -159,7 +159,7 @@ class TripleDot(ClassicalDotSystem):
     def __init__(self, name='tripledot', **kwargs):
         super().__init__(name=name, ndots=3, ngates=3, **kwargs)
 
-        self.makebasis()
+        self.makebasis(ndots=3)
 
         vardict = {}
 
@@ -204,7 +204,7 @@ class DoubleDot(ClassicalDotSystem):
     def __init__(self, name='doubledot', **kwargs):
         super().__init__(name=name, ndots=2, ngates=2, **kwargs)
 
-        self.makebasis()
+        self.makebasis(ndots=2)
 
         vardict = {}
 
@@ -222,7 +222,7 @@ class SquareDot(ClassicalDotSystem):
     def __init__(self, name='squaredot', **kwargs):
         super().__init__(name=name, ndots=4, ngates=4, **kwargs)
 
-        self.makebasis()
+        self.makebasis(ndots=4)
 
         vardict = {}
 

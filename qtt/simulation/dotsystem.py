@@ -205,7 +205,7 @@ class BaseDotSystem():
             print(str(i) + '       - energy: ' + str(np.around(self.energies[i], decimals=2)) + ' ,      state: ' + str(np.around(self.stateoccs[i], decimals=2)) + ' ,      Ne = ' + str(self.nstates[i]))
         print(' ')
 
-    def makebasis(self, ndots=3, maxelectrons=2):
+    def makebasis(self, ndots, maxelectrons=2):
         ''' Define a basis of occupancy states with a specified number of dots and max occupancy '''
         self.maxelectrons = maxelectrons
         self.ndots = ndots
