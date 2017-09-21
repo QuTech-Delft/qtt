@@ -122,11 +122,11 @@ class GateTransform:
         if isinstance(vals2D, dict):
             xx = [vals2D.get(s, zz) for s in self.sourcenames]
             xx = [x.flatten() for x in xx]
+            v = np.vstack(xx).astype(np.float32)
         else:
             xx = vals2D
-            pass  # xx= np.array(xx)
+            v = np.array(xx).reshape( (-1,1)).astype(np.float32)
 
-        v = np.vstack(xx).astype(np.float32)
         vout = pmatlab.projectiveTransformation(self.Vmatrix, v)
         # vout = self.Vmatrix.dot(v)
 
