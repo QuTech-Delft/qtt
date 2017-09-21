@@ -43,7 +43,7 @@ class virtual_IVVI(Instrument):
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
-        self._fast_gate_map = {} # fast access to parameters
+        self._direct_gate_map = {} # fast access to parameters
         self._fast_readout = True
         # Create all functions for the gates as defined in self._gate_map
         for gate in self._gate_map.keys():
@@ -53,8 +53,7 @@ class virtual_IVVI(Instrument):
             gatemap = self._gate_map[gate]
             i = self._instrument_list[gatemap[0]]
             igate = 'dac%d' % gatemap[1]
-            print('make fast path for %s'% gate)
-            self._fast_gate_map[gate]= getattr(i, igate)
+            self._direct_gate_map[gate]= getattr(i, igate)
         self.get_all()
 
     def get_idn(self):
@@ -71,7 +70,7 @@ class virtual_IVVI(Instrument):
                 print('%s: %f' % (gate, self.get(gate)))
 
     def _get(self, gate, fast_readout = False):
-        if self._fast_gate_map is not None:
+        if self._direct_gate_map is not None:
             param = self._fast_gate_map[gate]
             if fast_readout:
                 return param.get_latest()
@@ -88,7 +87,7 @@ class virtual_IVVI(Instrument):
     def _set(self, value, gate):
         value = float(value)
         
-        if self._fast_gate_map is not None:
+        if self._direct_gate_map is not None:
             param = self._fast_gate_map[gate]
             param.set(value)
             return
