@@ -250,7 +250,7 @@ class virtual_awg(Instrument):
 
         return wave_raw
     
-    def make_pulses(self, voltages, waittimes):
+    def make_pulses(self, voltages, waittimes, mvrange=None):
         """Make a pulse sequence with custom voltage levels and wait times at each level.
         
         Arguments:
@@ -264,9 +264,10 @@ class virtual_awg(Instrument):
             raise Exception('Number of voltage levels must be equal to the number of wait times')
         samplerate = 1. / self.AWG_clock
         samples = [x * samplerate for x in waittimes]
-        v_range = max(voltages) - min(voltages)
-        v_wave = float(v_range / self.ch_amp)
-        v_prop = [2 * ((x - min(voltages)) / v_range) - 1 for x in voltages]
+        if mvrange is None:
+            mvrange = max(voltages) - min(voltages)
+        v_wave = float(mvrange / self.ch_amp)
+        v_prop = [2 * ((x - min(voltages)) / mvrange) - 1 for x in voltages]
         wave_raw = np.concatenate([x * v_wave * np.ones(y) for x, y in zip(v_prop, samples)])
         
         return wave_raw
@@ -553,33 +554,35 @@ class virtual_awg(Instrument):
 
         return data_processed
 
-    def pulse_gate(self, gate, voltages, waittimes, wave_name=None, delete=True):
-        ''' Send a pulse sequence with the AWG to a gate. Sends a marker to measurement
-        instrument at the start of the sequence.
+    def pulse_gates(self, gate_voltages, waittimes, delete=True):
+        ''' Send a pulse sequence with the AWG that can span over any gate space.
+        Sends a marker to measurement instrument at the start of the sequence.
+        Only works with physical gates.
 
         Arguments:
-            gate (string): the name of the gate to sweep
-            voltages (list of floats): voltage levels to be applied in the sequence
+            gate_voltages (dict): the gates to sweep and the voltage levels to be 
+            applied in the sequence
             waittimes (list of floats): duration of each pulse in the sequence
 
         Returns:
-            waveform (dict): The waveform being sent with the AWG.
+            waveform (dict): The waveform being send with the AWG.
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
-        
-# TO DO: Check sample rate of AWG, modify the sawtooth check function to a generic one? 
+
+# TO DO: Check sample rate of AWG, modify the sawtooth check function to a generic one?
 
         period = sum(waittimes)
+        allvoltages = np.concatenate([v for v in gate_voltages.values()])
+        mvrange = max(allvoltages) - min(allvoltages)
         waveform = dict()
-        wave_raw = self.make_pulses(voltages, waittimes)
-        awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
-        wave = wave_raw / awg_to_plunger
-        waveform[gate] = dict()
-        waveform[gate]['wave'] = wave
-        if wave_name is None:
-            waveform[gate]['name'] = 'pulses_%s' % gate
-        else:
-            waveform[gate]['name'] = wave_name
+        for g in gate_voltages:
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw / awg_to_plunger
+            waveform[g] = dict()
+            waveform[g]['wave'] = wave
+            waveform[g]['name'] = 'pulses_%s' % g
+
         sweep_info = self.sweep_init(waveform, period, delete)
         self.sweep_run(sweep_info)
         waveform['voltages'] = voltages
@@ -592,8 +595,8 @@ class virtual_awg(Instrument):
         return waveform, sweep_info
 
     def pulse_gate_virt(self, gate_comb, voltages, waittimes, delete=True):
-        ''' Send a pulse sequence with the AWG to a linear combination of gates
-        to sweep. Sends a marker to measurement instrument at the start of the sequence.
+        ''' Send a pulse sequence with the AWG to a linear combination of gates.
+        Sends a marker to measurement instrument at the start of the sequence.
 
         Arguments:
             gate_comb (dict): the gates to sweep and the coefficients as values
