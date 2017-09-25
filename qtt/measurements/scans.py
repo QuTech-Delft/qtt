@@ -710,18 +710,18 @@ class scanjob_t(dict):
                     stepdata['start'] = -stepdata['range'] / 2
                     stepdata['end'] = stepdata['range'] / 2
                 else:
-                    gate_val = gates.get(stepdata['param'])
-                    stepdata['start'] = gate_val - stepdata['range'] / 2
-                    stepdata['end'] = gate_val + stepdata['range'] / 2
+                    param_val = stepdata['param'].get()
+                    stepdata['start'] = param_val - stepdata['range'] / 2
+                    stepdata['end'] = param_val + stepdata['range'] / 2
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                     sweepdata['start'] = -sweepdata['range'] / 2
                     sweepdata['end'] = sweepdata['range'] / 2
                 else:
-                    gate_val = gates.get(sweepdata['param'])
-                    sweepdata['start'] = gate_val - sweepdata['range'] / 2
-                    sweepdata['end'] = gate_val + sweepdata['range'] / 2
+                    param_val = sweepdata['param'].get()
+                    sweepdata['start'] = param_val - sweepdata['range'] / 2
+                    sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                 if 'paramname' in self['stepdata']:
                     stepname = self['stepdata']['paramname']
