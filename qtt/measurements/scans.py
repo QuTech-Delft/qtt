@@ -672,8 +672,13 @@ class scanjob_t(dict):
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
-                sweepdata['start'] = -sweepdata['range'] / 2
-                sweepdata['end'] = sweepdata['range'] / 2
+                if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                    sweepdata['start'] = -sweepdata['range'] / 2
+                    sweepdata['end'] = sweepdata['range'] / 2
+                else:
+                    param_val = gates.get(sweepdata['param'])
+                    sweepdata['start'] = param_val - sweepdata['range'] / 2
+                    sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 if 'paramname' in self['sweepdata']:
                     sweepname = self['sweepdata']['paramname']
@@ -1327,9 +1332,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         else:
             sweeprange = (sweepdata['end'] - sweepdata['start'])
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
-            gates.set(sweepdata['param'], float(sweepgate_value))
+            sweepdata['param'].set(float(sweepgate_value))
         waveform, sweep_info = station.awg.sweep_gate(
-            sweepdata['param'], sweeprange, period)
+            sweepdata['paramname'], sweeprange, period)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
     if len(read_ch) == 1:
