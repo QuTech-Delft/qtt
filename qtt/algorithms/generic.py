@@ -447,7 +447,7 @@ def getValuePixel(imx, pt):
     return vv
 
 
-def smoothImage(im):
+def smoothImage(im, k=3):
     """ Super simple image smoothing
 
     Input
@@ -455,6 +455,7 @@ def smoothImage(im):
 
     im : array
         input image
+    k (int): kernel size
 
     Output
     ------
@@ -465,7 +466,7 @@ def smoothImage(im):
     >>> ims = smoothImage(np.random.rand( 30,40) )
     """
     ndim = len(im.shape)
-    k = np.ones((3,) * ndim) / 3**ndim
+    k = np.ones((k,) * ndim) / k**ndim
     ims = scipy.ndimage.filters.convolve(im, k, mode='nearest')
     return ims
 

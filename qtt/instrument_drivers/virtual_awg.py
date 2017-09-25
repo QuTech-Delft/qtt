@@ -82,6 +82,9 @@ class virtual_awg(Instrument):
         Args:
             gate ()
         """
+        if isinstance(gate, dict):
+            # vector scan, assume we can do it fast
+            return True
         if self.awg_map is None:
             return False
         
