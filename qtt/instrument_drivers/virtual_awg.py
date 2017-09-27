@@ -592,44 +592,7 @@ class virtual_awg(Instrument):
                 waveform['markerdelay'] = sweep_info[channels]['delay']
 
         return waveform, sweep_info
-
-    def pulse_gate_virt(self, gate_comb, voltages, waittimes, delete=True):
-        ''' Send a pulse sequence with the AWG to a linear combination of gates.
-        Sends a marker to measurement instrument at the start of the sequence.
-
-        Arguments:
-            gate_comb (dict): the gates to sweep and the coefficients as values
-            voltages (list of floats): voltage levels to be applied in the sequence
-            waittimes (list of floats): duration of each pulse in the sequence
-
-        Returns:
-            waveform (dict): The waveform being send with the AWG.
-            sweep_info (dict): the keys are tuples of the awgs and channels to activate
-        '''
-
-# TO DO: Check sample rate of AWG, modify the sawtooth check function to a generic one?
-
-        period = sum(waittimes)
-        waveform = dict()
-        for g in gate_comb:
-            wave_raw = self.make_pulses(voltages, waittimes)
-            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
-            wave = wave_raw * gate_comb[g] / awg_to_plunger
-            waveform[g] = dict()
-            waveform[g]['wave'] = wave
-            waveform[g]['name'] = 'pulses_%s' % g
-
-        sweep_info = self.sweep_init(waveform, period, delete)
-        self.sweep_run(sweep_info)
-        waveform['voltages'] = voltages
-        waveform['samplerate'] = 1 / self.AWG_clock
-        waveform['waittimes'] = waittimes
-        for channels in sweep_info:
-            if 'delay' in sweep_info[channels]:
-                waveform['markerdelay'] = sweep_info[channels]['delay']
-
-        return waveform, sweep_info
-    
+   
     def reset_AWG(self, clock=1e8):
         """ Reset AWG to videomode and scanfast """
         self.AWG_clock = clock
