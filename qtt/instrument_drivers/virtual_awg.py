@@ -262,12 +262,11 @@ class virtual_awg(Instrument):
         """
         if len(waittimes) is not len(voltages):
             raise Exception('Number of voltage levels must be equal to the number of wait times')
-        samplerate = 1. / self.AWG_clock
-        samples = [x * samplerate for x in waittimes]
+        samples = [int(x * self.AWG_clock) for x in waittimes]
         if mvrange is None:
-            mvrange = max(voltages) - min(voltages)
-        v_wave = float(mvrange / self.ch_amp)
-        v_prop = [2 * ((x - min(voltages)) / mvrange) - 1 for x in voltages]
+            mvrange = [max(voltages), min(voltages)]
+        v_wave = float((mvrange[0] - mvrange[1]) / self.ch_amp)
+        v_prop = [2 * ((x - mvrange[1]) / (mvrange[0] - mvrange[1])) - 1 for x in voltages]
         wave_raw = np.concatenate([x * v_wave * np.ones(y) for x, y in zip(v_prop, samples)])
         
         return wave_raw
@@ -573,7 +572,7 @@ class virtual_awg(Instrument):
 
         period = sum(waittimes)
         allvoltages = np.concatenate([v for v in gate_voltages.values()])
-        mvrange = max(allvoltages) - min(allvoltages)
+        mvrange = [max(allvoltages), min(allvoltages)]
         waveform = dict()
         for g in gate_voltages:
             wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
@@ -585,7 +584,7 @@ class virtual_awg(Instrument):
 
         sweep_info = self.sweep_init(waveform, period, delete)
         self.sweep_run(sweep_info)
-        waveform['voltages'] = voltages
+        waveform['voltages'] = gate_voltages
         waveform['samplerate'] = 1 / self.AWG_clock
         waveform['waittimes'] = waittimes
         for channels in sweep_info:
