@@ -1334,7 +1334,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
             sweepdata['param'].set(float(sweepgate_value))
         waveform, sweep_info = station.awg.sweep_gate(
-            sweepdata['paramname'], sweeprange, period)
+            sweepdata['param'].name, sweeprange, period)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
     if len(read_ch) == 1:
