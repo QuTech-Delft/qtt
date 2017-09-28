@@ -559,8 +559,8 @@ class virtual_awg(Instrument):
         Only works with physical gates.
 
         Arguments:
-            gate_voltages (dict): the gates to sweep and the voltage levels to be 
-            applied in the sequence
+            gate_voltages (dict): keys are gates to apply the sequence to, and values
+            are arrays with the voltage levels to be applied in the sequence
             waittimes (list of floats): duration of each pulse in the sequence
 
         Returns:
