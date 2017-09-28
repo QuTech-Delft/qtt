@@ -672,8 +672,13 @@ class scanjob_t(dict):
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
-                sweepdata['start'] = -sweepdata['range'] / 2
-                sweepdata['end'] = sweepdata['range'] / 2
+                if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                    sweepdata['start'] = -sweepdata['range'] / 2
+                    sweepdata['end'] = sweepdata['range'] / 2
+                else:
+                    param_val = gates.get(sweepdata['param'])
+                    sweepdata['start'] = param_val - sweepdata['range'] / 2
+                    sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 if 'paramname' in self['sweepdata']:
                     sweepname = self['sweepdata']['paramname']
@@ -710,18 +715,18 @@ class scanjob_t(dict):
                     stepdata['start'] = -stepdata['range'] / 2
                     stepdata['end'] = stepdata['range'] / 2
                 else:
-                    gate_val = gates.get(stepdata['param'])
-                    stepdata['start'] = gate_val - stepdata['range'] / 2
-                    stepdata['end'] = gate_val + stepdata['range'] / 2
+                    param_val = stepdata['param'].get()
+                    stepdata['start'] = param_val - stepdata['range'] / 2
+                    stepdata['end'] = param_val + stepdata['range'] / 2
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                     sweepdata['start'] = -sweepdata['range'] / 2
                     sweepdata['end'] = sweepdata['range'] / 2
                 else:
-                    gate_val = gates.get(sweepdata['param'])
-                    sweepdata['start'] = gate_val - sweepdata['range'] / 2
-                    sweepdata['end'] = gate_val + sweepdata['range'] / 2
+                    param_val = sweepdata['param'].get()
+                    sweepdata['start'] = param_val - sweepdata['range'] / 2
+                    sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                 if 'paramname' in self['stepdata']:
                     stepname = self['stepdata']['paramname']
@@ -1327,9 +1332,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         else:
             sweeprange = (sweepdata['end'] - sweepdata['start'])
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
-            gates.set(sweepdata['param'], float(sweepgate_value))
+            sweepdata['param'].set(float(sweepgate_value))
         waveform, sweep_info = station.awg.sweep_gate(
-            sweepdata['param'], sweeprange, period)
+            sweepdata['param'].name, sweeprange, period)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
     if len(read_ch) == 1:
