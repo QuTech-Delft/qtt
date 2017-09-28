@@ -358,6 +358,70 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
 
+    def sweepandpulse_gate(self, sweepdata, pulsedata, wave_name=None, delete=True):
+        ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
+        a gate, with a pulse sequence. A marker is sent to the measurement instrument 
+        at the start of the waveform.
+
+        Arguments:
+            sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width). 
+            See sweep_gate for more info.
+            pulsedata (dict): inputs for the pulse sequence (gate_voltages, waittimes).
+            See pulse_gates for more info.
+
+        Returns:
+            waveform (dict): The waveform being sent with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
+        '''
+
+        sweepgate = sweepdata['gate']
+        sweeprange = sweepdata['sweeprange']
+        period = sweepdata['period']
+        if 'width' in sweepdata:
+            width = sweepdata['width']
+        else:
+            width = 0.95
+        
+        gate_voltages = pulsedata['gate_voltages']
+        waittimes = pulsedata['waittimes']
+        
+        pulsereps = period // sum(waittimes)
+        waittimes = np.tile(waittimes,pulsereps)
+        allvoltages = np.concatenate([v for v in gate_voltages.values()])
+        mvrange = [max(allvoltages), min(allvoltages)]
+                
+        self.check_frequency_waveform(period, width)
+
+        waveform = dict()
+        wave_sweep = self.make_sawtooth(sweeprange, period, width)
+        for g in gate_voltages:
+            gate_voltages[g] = np.tile(gate_voltages[g],pulsereps)
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
+            wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
+            if sweepgate == gate_voltages[g]:
+                wave_raw += wave_sweep
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw / awg_to_plunger
+            waveform[g] = dict()
+            waveform[g]['wave'] = wave
+            if wave_name is None:
+                waveform[g]['name'] = 'sweepandpulse_%s' % g
+            else:
+                waveform[g]['name'] = wave_name
+        sweep_info = self.sweep_init(waveform, period, delete)
+        self.sweep_run(sweep_info)
+        waveform['width'] = width
+        waveform['sweeprange'] = sweeprange
+        waveform['samplerate'] = 1 / self.AWG_clock
+        waveform['period'] = period
+        waveform['pulse_voltages'] = gate_voltages
+        waveform['pulse_waittimes'] = waittimes
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
+
+        return waveform, sweep_info
+
     def sweep_process(self, data, waveform, Naverage=1, direction='forwards', start_offset=1):
         """ Process the data returned by reading out based on the shape of
         the sawtooth send with the AWG.
