@@ -162,7 +162,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.updateStatus()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
     app = pg.mkQApp()
 
     mc = MeasurementControl()
@@ -332,9 +332,19 @@ class livePlot:
         sweepInstrument: the instrument to which sweepparams belong
         sweepparams: the parameter(s) being swept
         sweepranges: the range over which sweepparams are being swept
+        verbose (int): output level of logging information
+        alpha (float): parameter that ...        
     """
 
-    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, verbose=1):
+    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, alpha=1, verbose=1):
+        """
+        
+        Args:
+            datafunction 
+            ...
+            alpha (float): ...
+        
+        """
         plotwin = pg.GraphicsWindow(title="Live view")
 
         win = QtWidgets.QWidget()
@@ -370,7 +380,10 @@ class livePlot:
         self.sweepranges = sweepranges
         self.fps = pmatlab.fps_t(nn=6)
         self.datafunction = datafunction
-
+        
+        self.datafunction_result = None
+        self.alpha=alpha
+        
         # TODO: allow arguments like ['P1']
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
@@ -439,7 +452,7 @@ class livePlot:
     def update(self, data=None, processevents=True):
         self.win.setWindowTitle('live view, fps: %.2f' % self.fps.framerate())
         if self.verbose >= 2:
-            print('livePlot: update')
+            print('livePlot: update: idx %d ' % self.idx )
         if data is not None:
             self.data = np.array(data)
             if self.data.ndim == 1:
@@ -491,8 +504,17 @@ class livePlot:
             try:
                 # print(self.datafunction)
                 dd = self.datafunction()
-                self.datafunction_result = dd
-                self.update(data=dd)
+
+                if self.datafunction_result is None:
+                    ddprev = dd
+                else:
+                    ddprev = self.datafunction_result
+                
+                newdd = self.alpha*dd + (1-self.alpha)*ddprev
+            
+                self.datafunction_result = newdd
+                
+                self.update(data=newdd)
             except Exception as e:
                 logging.exception(e)
                 print('livePlot: Exception in updatebg, stopping readout')
