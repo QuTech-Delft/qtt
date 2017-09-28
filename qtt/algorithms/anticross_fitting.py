@@ -10,20 +10,21 @@ import numpy as np
 from collections import OrderedDict
 
 #%%
-def acfit_to_ccmap(ac_fits, plungers, barrier):
-    """ Convert angles in anti-cross model to cross-capacitance matrix. 
+def acfit_to_ccmap(ac_fits):
+    """ Convert angles in anti-cross fit to cross-capacitance matrix. 
     
     Note: this function only supports 2 plungers and one or no barrier gates.
     
     Args:
-        ac_fits (array of tuples): scanned gates and array with the angles
-        plungers (list): names of the plunger gates 
-        barrier (list): name of the barrier gate
+        ac_fits (array of tuples): every tuple contains a tuple with the scanned
+            gates and an array with the angles
         
     Returns:
         cc_map (dict): describes the cross-capacitance matrix
     """
     gate_combs = [ac_fit[0] for ac_fit in ac_fits]
+    plungers = [gate for gate in np.unique(np.array((gate_combs))) if gate[0]=='P']
+    barrier = [gate for gate in np.unique(np.array((gate_combs))) if gate not in plungers]
     gate_combs_tmp = gate_combs[:2]
     cc_map = OrderedDict()
     # fill in the first row
