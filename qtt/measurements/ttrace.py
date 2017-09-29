@@ -45,10 +45,11 @@ def trace_read_virtual(ttraces, gates):
 def awg_info(awgs):
       """ Print information about awgs """
       for a in awgs:            
-        print('clock %s MHz' % ( a.clock_freq()/1e6, ))
-        print('awg run_mode %s '  % (a.run_mode(),) )
-        print('awg trigger_mode %s '  % (a.trigger_mode(),     ) )
-        print('awg trigger sources %s'  % (a.trigger_source(),     ) )
+        print('awg %s'  % a.name)
+        print('  clock %s MHz' % ( a.clock_freq()/1e6, ))
+        print('  awg run_mode %s '  % (a.run_mode(),) )
+        print('  awg trigger_mode %s '  % (a.trigger_mode(),     ) )
+        print('  awg trigger sources %s'  % (a.trigger_source(),     ) )
 
 
 sq_pulse = pulse.SquarePulse(channel='ch1', name='A square pulse')
@@ -210,7 +211,11 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
     # add marker
     markerperiod = ttrace['markerperiod']
 
-    pi, ci, mi = awg_map['fpga_mk']
+    try:
+        pi, ci, mi = awg_map['fpga_mk']
+    except:
+        pi, ci, mi = awg_map['m4i_mk']
+        
     pulsar = pulsars[pi]
     ttrace_element = ttraces[pi]
     ttrace_element.add(pulse.cp(sq_pulse, amplitude=.1, length=markerperiod, channel='ch%d_marker%d' % (ci, mi), channels=[]),
@@ -332,19 +337,22 @@ def init_ttrace(station, awgclock=10e6):
     
     set_awg_trace(station.awg, awgclock)
     for ii,a in enumerate(station.awg._awgs):
-        print('init_ttrace: creating Pulsar %d' % ii)
+        print('init_ttrace: creating Pulsar %d: awg name %s' % (ii, a.name))
         a.clock_freq.set(awgclock)
 
         p = ps.Pulsar(name=qtt.measurements.scans.instrumentName('Pulsar%d' % ii),
                       default_AWG=a.name)
         
+        define_awg5014_channels(p, marker1highs=2.6)
+
+        #p._clock_prequeried(False) # needed?
+        _=p.clock(list(p.channels.keys())[0])
         p._clock_prequeried(True) # if not set the interface is _very_ slow
         
         setattr(station, 'pulsar%d' % ii, p)
         #p.AWG=a        
 
 
-        define_awg5014_channels(p, marker1highs=2.6)
         
         pulsar_objects+=[p]
         #p.clock = awgclock
@@ -624,7 +632,10 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
     
     ttrace_element= ttraces[0]
     tracedata=ttrace['tracedata']
-    ttotal = ttrace_element.waveforms()[0].size / ttrace['awgclock']         
+    
+    ttotal  =ttrace_element.ideal_length() 
+    
+    #ttotal = ttrace_element.waveforms()[0].size / ttrace['awgclock']         
     qq=ttotal*samplingfreq
 
     datax = data_raw.copy()
@@ -646,11 +657,15 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
        # awg=station.awg._awgs[0]
         awgclock=ttrace['awgclock']
         tracedata=ttrace['tracedata']
-        ttotal = ttraces[0].waveforms()[0].size / awgclock
+        ttotal  =ttrace_element.ideal_length() 
+        tsize = int(ttotal * awgclock)
+        
+        #tsize=ttraces[0].waveforms()[0].size
+        #ttotal = ttraces[0].waveforms()[0].size / awgclock # is really slow!!
         samplingfreq=ttrace['samplingfreq']
         qq=ttotal*samplingfreq
         print('acquisition: freq %f [MHz]' % (samplingfreq / 1e6))
-        print('trace length %.3f [ms], %d points' % (1e3*ttotal, ttraces[0].waveforms()[0].size,))
+        print('trace length %.3f [ms], %d points' % (1e3*ttotal, tsize,))
         print('acquisition: expect %d, got %d'  % (qq, data_raw.shape[1]))
 
     return tt, datax, tx

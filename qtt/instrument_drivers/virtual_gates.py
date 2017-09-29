@@ -268,7 +268,12 @@ class virtual_gates(Instrument):
             self.print_map(updated_map)
         return updated_map
 
-    def print_map(self, base_map):
+    
+    def print_matrix(self):
+        self.print_map(self.get_crosscap_map() )
+        
+    @staticmethod
+    def print_map(base_map):
         """Show map as table.
         
         Args:
