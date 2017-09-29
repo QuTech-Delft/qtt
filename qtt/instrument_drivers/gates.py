@@ -71,7 +71,7 @@ class virtual_IVVI(Instrument):
 
     def _get(self, gate, fast_readout = False):
         if self._direct_gate_map is not None:
-            param = self._fast_gate_map[gate]
+            param = self._direct_gate_map[gate]
             if fast_readout:
                 return param.get_latest()
             else:
@@ -88,7 +88,7 @@ class virtual_IVVI(Instrument):
         value = float(value)
         
         if self._direct_gate_map is not None:
-            param = self._fast_gate_map[gate]
+            param = self._direct_gate_map[gate]
             param.set(value)
             return
         
