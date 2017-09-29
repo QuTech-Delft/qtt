@@ -84,13 +84,16 @@ def save_state(station, tag=None, overwrite=False, data=None, verbose=1):
     Args:
         station (qcodes station)
         tag (str or None)
-        overwrite (bool)
+        overwrite (bool): If True overwrite existing data, otherwise raise error
         data (None or object): optional extra data
         verbose (int)
 
     Example:
         >>> save_state(station, tag='tripledot1')    
 
+    The data is written to an HDF5 file. The default location is the user
+    home directory with name qtt_statefile.hdf5.
+    
     To install hickle: pip install git+https://github.com/telegraphic/hickle.git@dev
     """
     statefile = qcodes.config.get('statefile', None)

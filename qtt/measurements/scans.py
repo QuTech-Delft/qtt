@@ -197,6 +197,10 @@ def get_instrument(instr, station=None):
     if isinstance(instr, Instrument):
         return instr
 
+    if isinstance(instr, tuple):
+        # assume the tuple is (instrument, channel)
+        instr=instr[0]
+        
     if not isinstance(instr, str):
         raise Exception('could not find instrument %s' % str(instr))
     try:
@@ -672,8 +676,13 @@ class scanjob_t(dict):
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
-                sweepdata['start'] = -sweepdata['range'] / 2
-                sweepdata['end'] = sweepdata['range'] / 2
+                if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                    sweepdata['start'] = -sweepdata['range'] / 2
+                    sweepdata['end'] = sweepdata['range'] / 2
+                else:
+                    param_val = gates.get(sweepdata['param'])
+                    sweepdata['start'] = param_val - sweepdata['range'] / 2
+                    sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 if 'paramname' in self['sweepdata']:
                     sweepname = self['sweepdata']['paramname']
@@ -710,18 +719,18 @@ class scanjob_t(dict):
                     stepdata['start'] = -stepdata['range'] / 2
                     stepdata['end'] = stepdata['range'] / 2
                 else:
-                    gate_val = gates.get(stepdata['param'])
-                    stepdata['start'] = gate_val - stepdata['range'] / 2
-                    stepdata['end'] = gate_val + stepdata['range'] / 2
+                    param_val = stepdata['param'].get()
+                    stepdata['start'] = param_val - stepdata['range'] / 2
+                    stepdata['end'] = param_val + stepdata['range'] / 2
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                     sweepdata['start'] = -sweepdata['range'] / 2
                     sweepdata['end'] = sweepdata['range'] / 2
                 else:
-                    gate_val = gates.get(sweepdata['param'])
-                    sweepdata['start'] = gate_val - sweepdata['range'] / 2
-                    sweepdata['end'] = gate_val + sweepdata['range'] / 2
+                    param_val = sweepdata['param'].get()
+                    sweepdata['start'] = param_val - sweepdata['range'] / 2
+                    sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                 if 'paramname' in self['stepdata']:
                     stepname = self['stepdata']['paramname']
@@ -925,7 +934,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                     qtt.time.sleep(wait_time_startscan)
                 else:
                     qtt.time.sleep(wait_time_step)
-            else:
+            if wait_time_sweep > 0:
                 time.sleep(wait_time_sweep)
 
             for ii, p in enumerate(mparams):
@@ -1048,7 +1057,8 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         if resolution[0]%16 !=0 or resolution[1]%16 !=0 :
             # send out warning, due to rounding of the digitizer memory buffers
             #this is not supported
-            warnings.warn('resolution for digitizer is not a multiple of 16')
+            print('resolution argument: %s'  % (resolution,) )
+            warnings.warn('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert

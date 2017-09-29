@@ -43,12 +43,17 @@ class virtual_IVVI(Instrument):
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
+        self._direct_gate_map = {} # fast access to parameters
         self._fast_readout = True
         # Create all functions for the gates as defined in self._gate_map
         for gate in self._gate_map.keys():
             logging.debug('gates: make gate %s' % gate)
             self._make_gate(gate)
 
+            gatemap = self._gate_map[gate]
+            i = self._instrument_list[gatemap[0]]
+            igate = 'dac%d' % gatemap[1]
+            self._direct_gate_map[gate]= getattr(i, igate)
         self.get_all()
 
     def get_idn(self):
@@ -65,22 +70,31 @@ class virtual_IVVI(Instrument):
                 print('%s: %f' % (gate, self.get(gate)))
 
     def _get(self, gate, fast_readout = False):
+        if self._direct_gate_map is not None:
+            param = self._direct_gate_map[gate]
+            if fast_readout:
+                return param.get_latest()
+            else:
+                return param.get()
+        
         gatemap = self._gate_map[gate]
         gate = 'dac%d' % gatemap[1]
-        logging.debug('_get: %s %s' % (gatemap[0], gate))
         if fast_readout:
             return self._instrument_list[gatemap[0]].get_latest(gate)
         else:
             return self._instrument_list[gatemap[0]].get(gate)
 
     def _set(self, value, gate):
-        logging.debug('gate._set: gate %s, value %s' % (gate, value))
         value = float(value)
+        
+        if self._direct_gate_map is not None:
+            param = self._direct_gate_map[gate]
+            param.set(value)
+            return
+        
         gatemap = self._gate_map[gate]
         i = self._instrument_list[gatemap[0]]
         gate = 'dac%d' % gatemap[1]
-        logging.debug('gate._set: instrument %s, param %s: value %s' %
-                      (i.name, gate, value))
         i.set(gate, value)
 
     def _set_wrap(self, value, gate):

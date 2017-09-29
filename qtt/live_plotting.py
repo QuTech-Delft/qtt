@@ -360,6 +360,8 @@ class livePlot:
         win.setLayout(vertLayout)
 
         self.win = win
+        self.setGeometry=self.win.setGeometry
+        
         self.verbose = verbose
         self.idx = 0
         self.maxidx = 1e9

@@ -92,7 +92,7 @@ def initFermiLinear(xdata, ydata, fig=None):
 #%%
 
 
-def fitFermiLinear(xdata, ydata, verbose=1, fig=None):
+def fitFermiLinear(xdata, ydata, verbose=1, fig=None, l=1.16):
     """ Fit data to a Fermi-Linear function 
 
     Arguments:
@@ -116,7 +116,8 @@ def fitFermiLinear(xdata, ydata, verbose=1, fig=None):
         p0 = [0, np.mean(ydata), np.mean(xdata), amp, -.1]
 
     # fit
-    pp = scipy.optimize.curve_fit(FermiLinear, xdata, ydata, p0=p0)
+    func = lambda xdata, a, b, cc, A, T: FermiLinear(xdata, a, b, cc, A, T, l=l)
+    pp = scipy.optimize.curve_fit(func, xdata, ydata, p0=p0)
     p = pp[0]
 
     if fig is not None:
