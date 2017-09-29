@@ -260,7 +260,7 @@ class virtual_awg(Instrument):
         Returns:
             wave_raw (array): raw data which represents the waveform
         """
-        if len(waittimes) is not len(voltages):
+        if len(waittimes) != len(voltages):
             raise Exception('Number of voltage levels must be equal to the number of wait times')
         samples = [int(x * self.AWG_clock) for x in waittimes]
         if mvrange is None:
@@ -377,16 +377,15 @@ class virtual_awg(Instrument):
         sweepgate = sweepdata['gate']
         sweeprange = sweepdata['sweeprange']
         period = sweepdata['period']
-        if 'width' in sweepdata:
-            width = sweepdata['width']
-        else:
-            width = 0.95
+        width = sweepdata.get('width',0.95)
         
         gate_voltages = pulsedata['gate_voltages']
+        for g in gate_voltages:
+            gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
         waittimes = pulsedata['waittimes']
         
-        pulsereps = period // sum(waittimes)
-        waittimes = np.tile(waittimes,pulsereps)
+        pulsereps = int(period // sum(waittimes))
+        waittimes = np.tile(waittimes, pulsereps)
         allvoltages = np.concatenate([v for v in gate_voltages.values()])
         mvrange = [max(allvoltages), min(allvoltages)]
                 
@@ -395,10 +394,10 @@ class virtual_awg(Instrument):
         waveform = dict()
         wave_sweep = self.make_sawtooth(sweeprange, period, width)
         for g in gate_voltages:
-            gate_voltages[g] = np.tile(gate_voltages[g],pulsereps)
+            gate_voltages[g] = np.tile(gate_voltages[g], pulsereps)
             wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
             wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
-            if sweepgate == gate_voltages[g]:
+            if sweepgate == g:
                 wave_raw += wave_sweep
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw / awg_to_plunger
@@ -635,6 +634,8 @@ class virtual_awg(Instrument):
 # TO DO: Check sample rate of AWG, modify the sawtooth check function to a generic one?
 
         period = sum(waittimes)
+        for g in gate_voltages:
+            gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
         allvoltages = np.concatenate([v for v in gate_voltages.values()])
         mvrange = [max(allvoltages), min(allvoltages)]
         waveform = dict()
