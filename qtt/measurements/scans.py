@@ -197,6 +197,10 @@ def get_instrument(instr, station=None):
     if isinstance(instr, Instrument):
         return instr
 
+    if isinstance(instr, tuple):
+        # assume the tuple is (instrument, channel)
+        instr=instr[0]
+        
     if not isinstance(instr, str):
         raise Exception('could not find instrument %s' % str(instr))
     try:
@@ -1053,7 +1057,8 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         if resolution[0]%16 !=0 or resolution[1]%16 !=0 :
             # send out warning, due to rounding of the digitizer memory buffers
             #this is not supported
-            warnings.warn('resolution for digitizer is not a multiple of 16')
+            print('resolution argument: %s'  % (resolution,) )
+            warnings.warn('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert
