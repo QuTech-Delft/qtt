@@ -18,6 +18,8 @@ extras = {
     'attrs': ('attr', '16.2.0', 'attrs'),
     'h5py': ('h5py', '0.1', None),
     'slacker': ('slacker', '0.1', None),
+    'pyzmqrpc': ('zmqrpc', '1.5', None),
+    'pytables': ('pytables', '3.2', None),
 }
 extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
@@ -47,7 +49,7 @@ setup(name='qtt',
       packages=find_packages(),
       #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
       install_requires=[
-          'matplotlib', 'pandas', 'attrs', 'qtpy', 'nose', 'slacker','hickle',
+          'matplotlib', 'pandas', 'attrs', 'qtpy', 'nose', 'slacker','hickle', 'pyzmqrpc',
           'numpy>=1.10',
           'IPython>=0.1',
           'qcodes>=0.1.5',
