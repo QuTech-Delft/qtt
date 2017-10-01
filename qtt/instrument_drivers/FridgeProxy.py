@@ -2,7 +2,7 @@
 #%%
 from qcodes import Instrument
 from zmqrpc.ZmqRpcClient import ZmqRpcClient
-from functools impoprt partial
+from functools import partial
 
 class FridgeProxy(Instrument):
     '''
