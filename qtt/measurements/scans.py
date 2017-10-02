@@ -796,7 +796,6 @@ def delta_time(tprev, thr=2):
         update = 1
     return delta, tprev, update
 
-
 def parse_minstrument(scanjob):
     """ Extract the parameters to be measured from the scanjob """
     minstrument = scanjob.get('minstrument', None)
@@ -911,14 +910,22 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             alldata.default_parameter_array(paramname=plotparam))
 
     tprev = time.time()
+    
     for ix, x in enumerate(stepvalues):
         if verbose:
-            if type(stepvalues) is np.ndarray:
-                tprint('scan2D: %d/%d: setting %s to %s' % 
-                   (ix, len(stepvalues), stepdata['param'].name, str(x)), dt=.5)
+            t1=time.time() - t0
+            t1_str=qtt.time.strftime('%H:%M:%S',qtt.time.gmtime(t1))
+            if(ix==0):
+                time_est=len(sweepvalues)*len(stepvalues)*scanjob['sweepdata']['wait_time']*2
             else:
-                tprint('scan2D: %d/%d: time %.1f: setting %s to %.3f' %
-                   (ix, len(stepvalues), time.time() - t0, stepvalues.name, x), dt=1.5)
+                time_est=(t1)/ix*len(stepvalues)-t1
+            time_est_str=qtt.time.strftime('%H:%M:%S',qtt.time.gmtime(time_est))
+            if type(stepvalues) is np.ndarray:
+                tprint('scan2D: %d/%d, time %s (~%s remaining): setting %s to %s' % 
+                   (ix, len(stepvalues), t1_str, time_est_str, stepdata['param'].name, str(x)), dt=.5)
+            else:
+                tprint('scan2D: %d/%d: time %s (~%s remaining): setting %s to %.3f' %
+                   (ix, len(stepvalues), t1_str, time_est_str, stepvalues.name, x), dt=1.5)
         if scanjob['scantype'] == 'scan2Dvec':
             pass
         else:
