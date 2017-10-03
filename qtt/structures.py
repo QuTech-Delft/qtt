@@ -509,3 +509,36 @@ class MultiParameter(qcodes.instrument.parameter.Parameter):
     def set(self, values):
         for idp, p in enumerate(self.params):
             p.set(values[idp])
+            
+class CombiParameter(qcodes.instrument.parameter.Parameter):
+    """ Create a parameter which is a combination of multiple other parameters, which are always set to the same value.
+    
+    All parameters should both have a set and a get.
+    
+    Attributes:
+        name (str): name for the parameter
+        params (list): the parameters to combine
+    """
+    def __init__(self, name, params, label=None, unit=None):
+        self.name = name
+        self.params = params
+        self._vals = qcodes.utils.validators.Anything()
+        self._instrument = 'dummy'
+        if label is None:
+            self.label = self.name
+        if unit is None:
+            self.unit = 'a.u.'
+
+        self.has_get=True
+        self.has_set=True
+        
+    def get(self):
+        values = []
+        for p in self.params:
+            values.append(p.get())
+        return np.mean(values)
+    
+    def set(self, value):
+        for idp, p in enumerate(self.params):
+            p.set(value)
+
