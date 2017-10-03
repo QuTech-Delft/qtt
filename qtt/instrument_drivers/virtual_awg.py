@@ -252,6 +252,27 @@ class virtual_awg(Instrument):
 #        wave_raw = np.roll(wave_raw, wave_raw.size-idx_zero)
 
         return wave_raw
+    
+    def make_pulses(self, voltages, waittimes, mvrange=None):
+        """Make a pulse sequence with custom voltage levels and wait times at each level.
+        
+        Arguments:
+            voltages (list of floats): voltage levels to be applied in the sequence
+            waittimes (list of floats): duration of each pulse in the sequence
+            
+        Returns:
+            wave_raw (array): raw data which represents the waveform
+        """
+        if len(waittimes) != len(voltages):
+            raise Exception('Number of voltage levels must be equal to the number of wait times')
+        samples = [int(x * self.AWG_clock) for x in waittimes]
+        if mvrange is None:
+            mvrange = [max(voltages), min(voltages)]
+        v_wave = float((mvrange[0] - mvrange[1]) / self.ch_amp)
+        v_prop = [2 * ((x - mvrange[1]) / (mvrange[0] - mvrange[1])) - 1 for x in voltages]
+        wave_raw = np.concatenate([x * v_wave * np.ones(y) for x, y in zip(v_prop, samples)])
+        
+        return wave_raw
 
     def check_frequency_waveform(self, period, width):
         """ Check whether a sawtooth waveform with specified period can be generated """
@@ -334,6 +355,69 @@ class virtual_awg(Instrument):
         waveform['sweeprange'] = sweeprange
         waveform['samplerate'] = 1 / self.AWG_clock
         waveform['period'] = period
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
+
+        return waveform, sweep_info
+
+    def sweepandpulse_gate(self, sweepdata, pulsedata, wave_name=None, delete=True):
+        ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
+        a gate, with a pulse sequence. A marker is sent to the measurement instrument 
+        at the start of the waveform.
+
+        Arguments:
+            sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width). 
+            See sweep_gate for more info.
+            pulsedata (dict): inputs for the pulse sequence (gate_voltages, waittimes).
+            See pulse_gates for more info.
+
+        Returns:
+            waveform (dict): The waveform being sent with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
+        '''
+
+        sweepgate = sweepdata['gate']
+        sweeprange = sweepdata['sweeprange']
+        period = sweepdata['period']
+        width = sweepdata.get('width',0.95)
+        
+        gate_voltages = pulsedata['gate_voltages']
+        for g in gate_voltages:
+            gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
+        waittimes = pulsedata['waittimes']
+        
+        pulsereps = int(period // sum(waittimes))
+        waittimes = np.tile(waittimes, pulsereps)
+        allvoltages = np.concatenate([v for v in gate_voltages.values()])
+        mvrange = [max(allvoltages), min(allvoltages)]
+                
+        self.check_frequency_waveform(period, width)
+
+        waveform = dict()
+        wave_sweep = self.make_sawtooth(sweeprange, period, width)
+        for g in gate_voltages:
+            gate_voltages[g] = np.tile(gate_voltages[g], pulsereps)
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
+            wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
+            if sweepgate == g:
+                wave_raw += wave_sweep
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw / awg_to_plunger
+            waveform[g] = dict()
+            waveform[g]['wave'] = wave
+            if wave_name is None:
+                waveform[g]['name'] = 'sweepandpulse_%s' % g
+            else:
+                waveform[g]['name'] = wave_name
+        sweep_info = self.sweep_init(waveform, period, delete)
+        self.sweep_run(sweep_info)
+        waveform['width'] = width
+        waveform['sweeprange'] = sweeprange
+        waveform['samplerate'] = 1 / self.AWG_clock
+        waveform['period'] = period
+        waveform['pulse_voltages'] = gate_voltages
+        waveform['pulse_waittimes'] = waittimes
         for channels in sweep_info:
             if 'delay' in sweep_info[channels]:
                 waveform['markerdelay'] = sweep_info[channels]['delay']
@@ -535,6 +619,48 @@ class virtual_awg(Instrument):
 
         return data_processed
 
+    def pulse_gates(self, gate_voltages, waittimes, delete=True):
+        ''' Send a pulse sequence with the AWG that can span over any gate space.
+        Sends a marker to measurement instrument at the start of the sequence.
+        Only works with physical gates.
+
+        Arguments:
+            gate_voltages (dict): keys are gates to apply the sequence to, and values
+            are arrays with the voltage levels to be applied in the sequence
+            waittimes (list of floats): duration of each pulse in the sequence
+
+        Returns:
+            waveform (dict): The waveform being send with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
+        '''
+
+# TO DO: Check sample rate of AWG, modify the sawtooth check function to a generic one?
+
+        period = sum(waittimes)
+        for g in gate_voltages:
+            gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
+        allvoltages = np.concatenate([v for v in gate_voltages.values()])
+        mvrange = [max(allvoltages), min(allvoltages)]
+        waveform = dict()
+        for g in gate_voltages:
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw / awg_to_plunger
+            waveform[g] = dict()
+            waveform[g]['wave'] = wave
+            waveform[g]['name'] = 'pulses_%s' % g
+
+        sweep_info = self.sweep_init(waveform, period, delete)
+        self.sweep_run(sweep_info)
+        waveform['voltages'] = gate_voltages
+        waveform['samplerate'] = 1 / self.AWG_clock
+        waveform['waittimes'] = waittimes
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
+
+        return waveform, sweep_info
+   
     def reset_AWG(self, clock=1e8):
         """ Reset AWG to videomode and scanfast """
         self.AWG_clock = clock
