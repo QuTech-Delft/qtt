@@ -333,18 +333,13 @@ class livePlot:
         sweepparams: the parameter(s) being swept
         sweepranges: the range over which sweepparams are being swept
         verbose (int): output level of logging information
-        alpha (float): parameter that ...        
+        alpha (float): parameter (value between 0 and 1) which determines the weight given in averaging to the latest
+                        measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, alpha=1, verbose=1):
-        """
+    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, alpha=.3, verbose=1):
+        """Return a new livePlot object."""      
         
-        Args:
-            datafunction 
-            ...
-            alpha (float): ...
-        
-        """
         plotwin = pg.GraphicsWindow(title="Live view")
 
         win = QtWidgets.QWidget()
@@ -354,6 +349,7 @@ class livePlot:
         topLayout = QtWidgets.QHBoxLayout()
         win.start_button = QtWidgets.QPushButton('Start')
         win.stop_button = QtWidgets.QPushButton('Stop')
+        win.averaging_box = QtWidgets.QCheckBox('Averaging')
 
         for b in [win.start_button, win.stop_button]:
             b.setMaximumHeight(24)
@@ -361,6 +357,7 @@ class livePlot:
             #self.reloadbutton.setText('Reload data')
         topLayout.addWidget(win.start_button)
         topLayout.addWidget(win.stop_button)
+        topLayout.addWidget(win.averaging_box)
 
         vertLayout = QtWidgets.QVBoxLayout()
 
@@ -380,6 +377,7 @@ class livePlot:
         self.sweepranges = sweepranges
         self.fps = pmatlab.fps_t(nn=6)
         self.datafunction = datafunction
+        self._averaging_enabled = False
         
         self.datafunction_result = None
         self.alpha=alpha
@@ -436,6 +434,7 @@ class livePlot:
 
         win.start_button.clicked.connect(connect_slot(self.startreadout))
         win.stop_button.clicked.connect(connect_slot(self.stopreadout))
+        win.averaging_box.clicked.connect(connect_slot(self.enable_averaging))
 
         self.datafunction_result = None
 
@@ -510,7 +509,11 @@ class livePlot:
                 else:
                     ddprev = self.datafunction_result
                 
-                newdd = self.alpha*dd + (1-self.alpha)*ddprev
+                # depending on value of self.averaging_enabled either do or don't do the averaging
+                if self._averaging_enabled:
+                    newdd = self.alpha*dd + (1-self.alpha)*ddprev
+                else:
+                    newdd = dd
             
                 self.datafunction_result = newdd
                 
@@ -527,7 +530,16 @@ class livePlot:
             #print('slow rate...?')
             time.sleep(0.1)
         time.sleep(0.00001)
-
+        
+    def enable_averaging(self, *args, **kwargs):
+        
+        self._averaging_enabled = lp.win.averaging_box.checkState()
+        if self._averaging_enabled == 2:
+            print('enable_averaging called, alpha = '+str(self.alpha))
+        if self._averaging_enabled == 0:
+            print('enable_averaging called, averaging turned off')
+  
+    
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
