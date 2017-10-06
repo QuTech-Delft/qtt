@@ -5,8 +5,8 @@ from qcodes import Parameter, ManualParameter
 
 
 class Role(enum.Enum):
-    GAIN = enum.auto()
-    DIVISION = enum.auto()
+    GAIN = 1
+    DIVISION = 2
 
 
 class ParameterScaler(Parameter):
