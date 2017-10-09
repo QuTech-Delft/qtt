@@ -534,11 +534,13 @@ class livePlot:
     def enable_averaging(self, *args, **kwargs):
         
         self._averaging_enabled = lp.win.averaging_box.checkState()
-        if self._averaging_enabled == 2:
-            print('enable_averaging called, alpha = '+str(self.alpha))
-        if self._averaging_enabled == 0:
-            print('enable_averaging called, averaging turned off')
-  
+        if self.verbose>=1:
+            if self._averaging_enabled == 2:
+                print('enable_averaging called, alpha = '+str(self.alpha))
+            elif self._averaging_enabled == 0:
+                print('enable_averaging called, averaging turned off')
+            else:
+                print('enable_averaging called, undefined')
     
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
