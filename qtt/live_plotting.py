@@ -5,7 +5,7 @@ Created on Thu Sep 10 15:55:21 2015
 @author: tud205521
 """
 
-#%%
+#%% Load packages
 import time
 import logging
 import numpy as np
@@ -162,7 +162,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.updateStatus()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
     app = pg.mkQApp()
 
     mc = MeasurementControl()
@@ -332,9 +332,14 @@ class livePlot:
         sweepInstrument: the instrument to which sweepparams belong
         sweepparams: the parameter(s) being swept
         sweepranges: the range over which sweepparams are being swept
+        verbose (int): output level of logging information
+        alpha (float): parameter (value between 0 and 1) which determines the weight given in averaging to the latest
+                        measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, verbose=1):
+    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, alpha=.3, verbose=1):
+        """Return a new livePlot object."""      
+        
         plotwin = pg.GraphicsWindow(title="Live view")
 
         win = QtWidgets.QWidget()
@@ -344,6 +349,7 @@ class livePlot:
         topLayout = QtWidgets.QHBoxLayout()
         win.start_button = QtWidgets.QPushButton('Start')
         win.stop_button = QtWidgets.QPushButton('Stop')
+        win.averaging_box = QtWidgets.QCheckBox('Averaging')
 
         for b in [win.start_button, win.stop_button]:
             b.setMaximumHeight(24)
@@ -351,6 +357,7 @@ class livePlot:
             #self.reloadbutton.setText('Reload data')
         topLayout.addWidget(win.start_button)
         topLayout.addWidget(win.stop_button)
+        topLayout.addWidget(win.averaging_box)
 
         vertLayout = QtWidgets.QVBoxLayout()
 
@@ -360,8 +367,7 @@ class livePlot:
         win.setLayout(vertLayout)
 
         self.win = win
-        self.setGeometry=self.win.setGeometry
-        
+        self.plotwin = plotwin
         self.verbose = verbose
         self.idx = 0
         self.maxidx = 1e9
@@ -371,7 +377,11 @@ class livePlot:
         self.sweepranges = sweepranges
         self.fps = pmatlab.fps_t(nn=6)
         self.datafunction = datafunction
-
+        self._averaging_enabled = False
+        
+        self.datafunction_result = None
+        self.alpha=alpha
+        
         # TODO: allow arguments like ['P1']
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
@@ -424,6 +434,7 @@ class livePlot:
 
         win.start_button.clicked.connect(connect_slot(self.startreadout))
         win.stop_button.clicked.connect(connect_slot(self.stopreadout))
+        win.averaging_box.clicked.connect(connect_slot(self.enable_averaging))
 
         self.datafunction_result = None
 
@@ -440,7 +451,7 @@ class livePlot:
     def update(self, data=None, processevents=True):
         self.win.setWindowTitle('live view, fps: %.2f' % self.fps.framerate())
         if self.verbose >= 2:
-            print('livePlot: update')
+            print('livePlot: update: idx %d ' % self.idx )
         if data is not None:
             self.data = np.array(data)
             if self.data.ndim == 1:
@@ -492,8 +503,21 @@ class livePlot:
             try:
                 # print(self.datafunction)
                 dd = self.datafunction()
-                self.datafunction_result = dd
-                self.update(data=dd)
+
+                if self.datafunction_result is None:
+                    ddprev = dd
+                else:
+                    ddprev = self.datafunction_result
+                
+                # depending on value of self.averaging_enabled either do or don't do the averaging
+                if self._averaging_enabled:
+                    newdd = self.alpha*dd + (1-self.alpha)*ddprev
+                else:
+                    newdd = dd
+            
+                self.datafunction_result = newdd
+                
+                self.update(data=newdd)
             except Exception as e:
                 logging.exception(e)
                 print('livePlot: Exception in updatebg, stopping readout')
@@ -501,17 +525,28 @@ class livePlot:
         else:
             self.stopreadout()
             dd = None
-            
+
         if self.fps.framerate() < 10:
             #print('slow rate...?')
             time.sleep(0.1)
         time.sleep(0.00001)
-
+        
+    def enable_averaging(self, *args, **kwargs):
+        
+        self._averaging_enabled = lp.win.averaging_box.checkState()
+        if self.verbose>=1:
+            if self._averaging_enabled == 2:
+                print('enable_averaging called, alpha = '+str(self.alpha))
+            elif self._averaging_enabled == 0:
+                print('enable_averaging called, averaging turned off')
+            else:
+                print('enable_averaging called, undefined')
+    
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
             rate (float): sample rate in ms
-        
+
         """
         if maxidx is not None:
             self.maxidx = maxidx
@@ -530,21 +565,41 @@ class livePlot:
 #%% Some default callbacks
 
 
-class MockCallback_2d:
+class MockCallback_2d(qcodes.Instrument):
 
-    def __init__(self, npoints=6400):
-        self.npoints = npoints
+    def __init__(self, name, nx=80, **kwargs):
+        super().__init__(name, **kwargs)
+
+        self.nx = nx
+
+        self.add_parameter(
+            'p', parameter_class=qcodes.ManualParameter, initial_value=-20)
+        self.add_parameter(
+            'q', parameter_class=qcodes.ManualParameter, initial_value=30)
 
     def __call__(self):
-        data = np.random.rand(self.npoints)
-        data_reshaped = data.reshape(80, 80)
+        import qtt.deprecated.linetools as lt
+
+        data = np.random.rand(self.nx * self.nx)
+        data_reshaped = data.reshape(self.nx, self.nx)
+
+        lt.semiLine(data_reshaped, [self.nx / 2, self.nx / 2],
+                    np.deg2rad(self.p()), w=2, l=self.nx / 3, H=2)
+        lt.semiLine(data_reshaped, [self.nx / 2, self.nx / 2],
+                    np.deg2rad(self.q()), w=2, l=self.nx / 4, H=3)
+
         return data_reshaped
 
+
+def test_mock2d():
+    m = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d') )
+    d = m()
 
 
 #%% Example
 if __name__ == '__main__':
-    lp = livePlot(datafunction=MockCallback_2d(), sweepInstrument=None,
+    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')), sweepInstrument=None,
                   sweepparams=['L', 'R'], sweepranges=[50, 50])
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
+    pv = qtt.createParameterWidget([lp.datafunction])
