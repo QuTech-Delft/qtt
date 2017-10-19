@@ -46,11 +46,19 @@ for ii=1:length(dd)
     dataset.array(ii).label = dd(ii).Attributes(1).Value.Data;
     dataset.array(ii).name=nm;
     
-    dataset.array(ii).shape=dd(ii).Dims;
+    
     
     data = hdf5read(filename,dd(ii).Name);
-    dataset.array(ii).data=reshape(data, dataset.array(ii).shape );
-    %dataset.array(ii).data=data
+    shape = h5readatt(filename, dd(ii).Name, 'shape');
+    
+    shape = fliplr(shape');
+    dataset.array(ii).shape=shape;
+    if length(shape) ==1
+        dataset.array(ii).data=data;
+    else
+        dataset.array(ii).data=reshape(data,  shape);
+    end
+    
 end
 
 %% Read metadata
