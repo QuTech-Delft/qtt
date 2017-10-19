@@ -106,6 +106,8 @@ qcodes.Parameter.__getstate__ = lambda self: str(self)
 
 def _setstate(self, d):
     self.name = d
+    self._instrument=None
+
 qcodes.Instrument.__setstate__ = _setstate
 qcodes.Parameter.__setstate__ = _setstate
     
