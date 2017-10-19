@@ -220,7 +220,7 @@ def diffImageSmooth(im, dy='x', sigma=2):
     dy : string or integer
         direction of differentiation. can be 'x' (0) or 'y' (1) or 'xy' (2)
     sigma : float
-        parameter for differentiation kernel
+        parameter for gaussian filter kernel
 
     """
     if sigma is None:

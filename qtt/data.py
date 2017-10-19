@@ -133,7 +133,7 @@ def uniqueArrayName(dataset, name0):
 from qcodes.plots.qcmatplotlib import MatPlot
 
 
-def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
+def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measured'):
     """ Differentiate a dataset and plot the result.
 
     Args:
@@ -141,10 +141,11 @@ def diffDataset(alldata, diff_dir='y', fig=None, meas_arr_name='measured'):
         diff_dir (str): direction to differentiate in
         meas_arr_name (str): name of the measured array to be differentiated
         fig (int): the number for the figure to plot
+        sigma (float):  parameter for gaussian filter kernel
     """
     meas_arr_name = alldata.default_parameter_name(meas_arr_name)
     meas_array = alldata.arrays[meas_arr_name]
-    imx = qtt.diffImageSmooth(meas_array.ndarray, dy=diff_dir)
+    imx = qtt.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
     data_arr = qcodes.DataArray(
