@@ -7,7 +7,7 @@ import numbers
 def save_instrument_json(instr, ifile, verbose=1):
     jdict = dict()
     for pname, p in instr.parameters.items():
-        if not p.has_set:
+        if not hasattr(p, 'set'):
             continue
         if verbose:
             print('%s: store %s' % (instr.name, pname))
@@ -22,7 +22,7 @@ def load_instrument_json(instr, ifile, verbose=1):
     with open(ifile, 'r') as fid:
         jdict = json.load(fid)
     for pname, p in instr.parameters.items():
-        if not p.has_set:
+        if not hasattr(p, 'set'):
             continue
         if verbose:
             print('%s: load %s' % (instr.name, pname))
@@ -40,7 +40,7 @@ def save_instrument_configparser(instr, ifile, verbose=1):
     if not instr.name in jdict:
         jdict.add_section(instr.name)
     for pname, p in instr.parameters.items():
-        if not p.has_set:
+        if not hasattr(p, 'set'):
             continue
         if verbose:
             print('%s: store %s' % (instr.name, pname))
@@ -56,7 +56,7 @@ def load_instrument_configparser(instr, ifile, verbose=1):
     jdict = configparser.ConfigParser()
     jdict.read(ifile)
     for pname, p in instr.parameters.items():
-        if not p.has_set:
+        if not hasattr(p, 'set'):
             continue
         if verbose:
             print('%s: load %s' % (instr.name, pname))

@@ -799,6 +799,7 @@ def delta_time(tprev, thr=2):
 def parse_minstrument(scanjob):
     """ Extract the parameters to be measured from the scanjob """
     minstrument = scanjob.get('minstrument', None)
+    
     if minstrument is None:
         warnings.warn('use minstrument instead of keithleyidx')
         minstrument = scanjob.get('keithleyidx', None)
@@ -895,6 +896,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                                                             'label': scanjob['scantype']},
                                                         return_names=True)
 
+
     if verbose >= 2:
         print('scan2D: created dataset')
         print('  set_names: %s ' % (set_names,))
@@ -916,7 +918,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             t1=time.time() - t0
             t1_str=qtt.time.strftime('%H:%M:%S',qtt.time.gmtime(t1))
             if(ix==0):
-                time_est=len(sweepvalues)*len(stepvalues)*scanjob['sweepdata']['wait_time']*2
+                time_est=len(sweepvalues)*len(stepvalues)*scanjob['sweepdata'].get('wait_time', 0)*2
             else:
                 time_est=(t1)/ix*len(stepvalues)-t1
             time_est_str=qtt.time.strftime('%H:%M:%S',qtt.time.gmtime(time_est))
@@ -976,6 +978,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
+
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())

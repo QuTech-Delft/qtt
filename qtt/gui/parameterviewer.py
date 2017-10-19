@@ -84,7 +84,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             pp = instr.parameters
             ppnames = sorted(instr.parameters.keys())
 
-            ppnames = [p for p in ppnames if instr.parameters[p].has_get]
+            ppnames = [p for p in ppnames if hasattr(instr.parameters[p], 'get')]
             gatesroot = QtWidgets.QTreeWidgetItem(self, [iname])
             for g in ppnames:
                 # ww=['gates', g]
@@ -101,7 +101,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
                 self._itemsdict[iname][g] = A
 
-                if pp[g].has_set:
+                if hasattr( pp[g], 'set'):
                     qq = A
                     self.setItemWidget(qq, 1, box)
                     self._itemsdict[iname][g] = box

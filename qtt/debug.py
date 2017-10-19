@@ -56,14 +56,13 @@ def functioncalldecorator(f, name=None):
 
 #%%
 
-
 def logInstrument(instrument):
     """ Decorate all parameters of an instrument with logging methods """
     for k in instrument.parameters:
         p = instrument.parameters[k]
-        if p.has_get:
+        if hasattr(p, 'get'):
             print('decorate %s' % p)
             p.get = functioncalldecorator(p.get, '%s.get' % p.name)
-        if p.has_get and p.has_set:
+        if hasattr(p, 'get') and hasattr(p, 'set'):
             p.set = functioncalldecorator(p.set, '%s.set' % p.name)
 
