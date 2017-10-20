@@ -7,8 +7,9 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 extras = {
-     # name: (module_name, minversion, pip_name)
+    # name: (module_name, minversion, pip_name)
     'Numpy': ('numpy', '1.9', None),
     'MatPlot': ('matplotlib', '1.5', None),
     'SciPi': ('scipy', '0.19', None),
@@ -49,7 +50,7 @@ setup(name='qtt',
       packages=find_packages(),
       #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
       install_requires=[
-          'matplotlib', 'pandas', 'attrs', 'qtpy', 'nose', 'slacker','hickle', 'pyzmqrpc',
+          'matplotlib', 'pandas', 'attrs', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
           'numpy>=1.10',
           'IPython>=0.1',
           'qcodes>=0.1.5',
