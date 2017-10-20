@@ -19,7 +19,7 @@ extras = {
     'h5py': ('h5py', '0.1', None),
     'slacker': ('slacker', '0.1', None),
     'pyzmqrpc': ('zmqrpc', '1.5', None),
-    'pytables': ('pytables', '3.2', None),
+    'pytables': ('tables', '3.2', None),
 }
 extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
@@ -81,5 +81,8 @@ for extra, (module_name, min_version, pip_name) in extras.items():
         module = import_module(module_name)
         if StrictVersion(module.__version__) < StrictVersion(min_version):
             print(version_template.format(module_name, min_version, extra))
+    except AttributeError:
+        # probably a package not providing the __version__ attribute
+        pass
     except ImportError:
         print(missing_template.format(module_name, extra))

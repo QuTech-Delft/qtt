@@ -67,6 +67,7 @@ dependencies:
 - pyparsing=2.2.0=py36_0
 - pyqt=5.6.0=py36_2
 - pyqtgraph=0.10.0=py36_0
+- pytables
 - python=3.6.2=0
 - python-dateutil=2.6.1=py36_0
 - pytz=2017.2=py36_0
@@ -109,6 +110,7 @@ dependencies:
   - jupyter-core==4.3.0
   - prompt-toolkit==1.0.15
   - pyserial==3.4
+  - pyzmqrc
   - pyvisa==1.8
   - redis==2.10.6
   - rope-py3k==0.9.4.post1
