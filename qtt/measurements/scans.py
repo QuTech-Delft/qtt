@@ -1204,6 +1204,8 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     drate = digitizer.sample_rate()
     if drate == 0:
         raise Exception('sample rate of m4i is zero, please reset the digitizer')
+    if drate >= 50e6:
+        raise Exception('sample rate of m4i is >= 50 MHz, this is not supported')
 
     # code for offsetting the data in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
