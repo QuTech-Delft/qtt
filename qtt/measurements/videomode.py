@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 
 import qtt
-from qcodes.instrument.parameter import StandardParameter
+from qcodes.instrument.parameter import Parameter
 from qcodes.utils.validators import Numbers
 from qtt.live_plotting import livePlot
 from qtt.tools import connect_slot
@@ -92,7 +92,7 @@ class VideoMode:
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
         self.fpga_ch = minstrument
-        self.Naverage = StandardParameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
+        self.Naverage = Parameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
         self._Naverage_val = Naverage
         self.resolution = resolution
         self.sample_rate = sample_rate
