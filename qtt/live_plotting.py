@@ -533,7 +533,7 @@ class livePlot:
         
     def enable_averaging(self, *args, **kwargs):
         
-        self._averaging_enabled = lp.win.averaging_box.checkState()
+        self._averaging_enabled = self.win.averaging_box.checkState()
         if self.verbose>=1:
             if self._averaging_enabled == 2:
                 print('enable_averaging called, alpha = '+str(self.alpha))
