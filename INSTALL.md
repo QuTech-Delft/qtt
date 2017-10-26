@@ -71,7 +71,7 @@ For Mac OS with anaconda type from the command line:
 ## Install packages
 
 - Register the qcodes, qtt and spin-projects repositories with Python. Open a command prompt, change to your environment and run the following command
-in the directories `Qcodes`, `qtt` and `spin-projects/stations`.
+in the directories `Qcodes`, `qtt`, `spin-projects` and `spin-projects/stations`.
 ```
 > python setup.py develop    (Anaconda, while in your environment)
 ```
