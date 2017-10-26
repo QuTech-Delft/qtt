@@ -22,11 +22,12 @@ extras = {
     'slacker': ('slacker', '0.1', None),
     'pyzmqrpc': ('zmqrpc', '1.5', None),
     'pytables': ('tables', '3.2', None),    
+    'colorama': ('colorama', '0.1', None),    
     'Polygon3': ('Polygon', '0.1', None),    
 }
 
 if platform.system()=='Windows':
-    extras['pywin32'] =  ('win32', '0.1', None),
+    extras['pywin32'] =  ('win32', '0.1', None)
 
 extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
