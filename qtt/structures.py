@@ -499,6 +499,7 @@ class MultiParameter(qcodes.instrument.parameter.Parameter):
         if label is None:
             self.label = self.name
         self.unit = 'a.u.'
+        self.vals = None
         
     def get(self):
         values = []
