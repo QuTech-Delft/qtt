@@ -339,9 +339,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             value = p.get()
             alldata.arrays[measure_names[ii]].ndarray[ix] = value
 
-        delta, tprev, update_plot = delta_time(tprev, thr=.5)
-        if (liveplotwindow) and update_plot:
-            myupdate()
+        delta, tprev, update_plot = delta_time(tprev, thr=.25)
+        if update_plot:
+            if liveplotwindow:
+                myupdate()
+            pg.mkQApp().processEvents() # needed for the parameterviewer
 
         if qtt.abort_measurements():
             print('  aborting measurement loop')
@@ -448,14 +450,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
+        pg.mkQApp().processEvents() # needed for the parameterviewer
 
     dt = time.time() - t0
-
-#    if scanjob['scantype'] is 'scan1Dfastvec':
-#        for param in scanjob['phys_gates_vals']:
-#            parameter = gates.parameters[param]
-#            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[sweepvalues.parameter.name],))
-#            alldata.add_array(arr)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
@@ -1416,11 +1413,11 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         for idm, mname in enumerate(measure_names):
             alldata.arrays[mname].ndarray[ix] = data[idm]
 
-        if liveplotwindow is not None:
-            delta, tprev, update = delta_time(tprev, thr=2)
-            if update:
+        delta, tprev, update = delta_time(tprev, thr=1.)
+        if update:
+            if liveplotwindow is not None:
                 liveplotwindow.update_plot()
-                pg.mkQApp().processEvents()
+            pg.mkQApp().processEvents()
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
