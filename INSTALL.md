@@ -171,8 +171,8 @@ git config credential.helper store	# stores passwords in plain text!
 
 Manual installation:
 ```
-> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py
-> pip install slacker attrs pyserial redis pyvisa
+> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32
+> pip install slacker attrs pyserial redis pyvisa Polygon3
 > conda install -c conda-forge opencv
 ```
 
