@@ -712,6 +712,8 @@ class virtual_awg(Instrument):
             mvrange (float): voltage range, in mV, that the gate needs to reach
         """
         min_amp = mvrange / self.hardware.parameters['awg_to_%s' % gate].get()
+        if min_amp > 4:
+            raise(Exception('Sweep range of gate %s is larger than maximum allowed by the AWG' % gate))
         if self.ch_amp < min_amp:
             min_amp = np.ceil(min_amp * 10) / 10
             self.set_amplitude(min_amp)
