@@ -30,6 +30,60 @@ try:
 except:
     pass
 
+import subprocess
+import glob
+import time
+from colorama import Fore
+
+#%% Jupyter kernel tools
+
+def get_jupyter_kernel(verbose=2):
+    """ Return the most recently created jupyter kernel
+    
+    Args:
+        verbose (int): verbosity level
+    
+    """
+    cmd=r'jupyter --paths'
+    
+    print(Fore.BLUE + 'get_jupyuter_kernel: running %s' % cmd + Fore.RESET)
+    
+    rr = subprocess.check_output(cmd, shell=True)  
+    rr=rr.decode('ASCII')
+    r=0
+    rundir=None
+    for ii, l in enumerate(rr.split('\n')):
+        if r:
+            rundir = l.strip()
+            break
+        if verbose>=3:
+            print(l)
+        if l.startswith('runtime:'):
+            r=1
+            
+    if rundir is not None:
+        print(Fore.BLUE + '  rundir: %s' % rundir + Fore.RESET)
+        
+
+        # remove anything from the list that is not a file (directories, symlinks)
+        files = list(filter(os.path.isfile, glob.glob(rundir + os.sep + "kernel*json")))
+        files.sort(key=lambda x: os.path.getctime(x))
+        files=files[::-1]
+        
+        if verbose>=2:
+            print('all kernels (< 2 days old): ')
+            for k in files:
+                dt=time.time()-os.path.getctime(k)
+                if dt < 3600*24*2:
+                    print(' %.1f [s]:  ' % (float(dt), ) + k)
+        if len(files)>0:
+            kernel = files[0]
+            print(Fore.BLUE + '  found kernel: %s' % kernel + Fore.RESET)
+            kernelbase=os.path.split(kernel)[1]
+            print(Fore.BLUE + 'connect with: ' + Fore.GREEN+ ' jupyter console --existing %s' % kernelbase + Fore.RESET)
+            return kernelbase
+    return None
+
 #%% Debugging
 
 
