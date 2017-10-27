@@ -50,6 +50,11 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 > activate [yourname]
 ```
 
+To install dev version of hicke:
+```
+pip install git+https://github.com/telegraphic/hickle.git@dev
+```
+
 For Mac OS with anaconda type from the command line:
 ```
 > cd [MYLOCALDIR]/qtt
@@ -58,6 +63,7 @@ For Mac OS with anaconda type from the command line:
 > conda install -c nmearl pyqtgraph
 > pip install pyvisa
 ```
+
 (For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
 
 
@@ -65,7 +71,7 @@ For Mac OS with anaconda type from the command line:
 ## Install packages
 
 - Register the qcodes, qtt and spin-projects repositories with Python. Open a command prompt, change to your environment and run the following command
-in the directories `Qcodes`, `qtt` and `spin-projects/stations`.
+in the directories `Qcodes`, `qtt`, `spin-projects` and `spin-projects/stations`.
 ```
 > python setup.py develop    (Anaconda, while in your environment)
 ```
@@ -131,13 +137,6 @@ jupyter notebook
 call deactivate %USERNAME%
 ```
 
-## Hickle (optional)
-
-To install dev version of hicke:
-```
-pip install git+https://github.com/telegraphic/hickle.git@dev
-```
-
 ## Install redis
 
 For Windows install redis from https://github.com/MSOpenTech/redis.
@@ -171,8 +170,8 @@ git config credential.helper store	# stores passwords in plain text!
 
 Manual installation:
 ```
-> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py
-> pip install slacker attrs pyserial redis pyvisa
+> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 shapely
+> pip install slacker attrs pyserial redis pyvisa Polygon3 colorama
 > conda install -c conda-forge opencv
 ```
 

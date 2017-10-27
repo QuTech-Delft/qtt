@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 from distutils.version import StrictVersion
 from importlib import import_module
+import platform
 
 
 def readme():
@@ -20,8 +21,14 @@ extras = {
     'h5py': ('h5py', '0.1', None),
     'slacker': ('slacker', '0.1', None),
     'pyzmqrpc': ('zmqrpc', '1.5', None),
-    'pytables': ('tables', '3.2', None),
+    'pytables': ('tables', '3.2', None),    
+    'colorama': ('colorama', '0.1', None),    
+    'Polygon3': ('Polygon', '0.1', None),    
 }
+
+if platform.system()=='Windows':
+    extras['pywin32'] =  ('win32', '0.1', None)
+
 extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
 print('packages: %s' % find_packages())
@@ -54,6 +61,7 @@ setup(name='qtt',
           'numpy>=1.10',
           'IPython>=0.1',
           'qcodes>=0.1.5',
+          'Polygon3',
           'scipy'
           # nose is only for tests, but we'd like to encourage people to run tests!
           #'nose>=1.3',
