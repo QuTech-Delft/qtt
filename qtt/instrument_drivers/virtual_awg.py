@@ -301,6 +301,7 @@ class virtual_awg(Instrument):
         '''
 
         self.check_frequency_waveform(period, width)
+        self.check_amplitude(gate, sweeprange)
 
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
@@ -342,6 +343,7 @@ class virtual_awg(Instrument):
 
         waveform = dict()
         for g in gate_comb:
+            self.check_amplitude(g, gate_comb[g] * sweeprange)
             wave_raw = self.make_sawtooth(sweeprange, period, width)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gate_comb[g] / awg_to_plunger
@@ -397,6 +399,7 @@ class virtual_awg(Instrument):
         waveform = dict()
         wave_sweep = self.make_sawtooth(sweeprange, period, width)
         for g in gate_voltages:
+            self.check_amplitude(g, sweeprange + mvrange)
             gate_voltages[g] = np.tile(gate_voltages[g], pulsereps)
             wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
             wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
@@ -480,6 +483,8 @@ class virtual_awg(Instrument):
         period_vert = resolution[1] * period_horz
 
         self.check_frequency_waveform(period_horz, width)
+        for g, r in zip(sweepgates, sweepranges):
+            self.check_amplitude(g, r)
 
         waveform = dict()
         # horizontal waveform
@@ -558,6 +563,7 @@ class virtual_awg(Instrument):
         waveform = dict()
         # horizontal virtual gate
         for g in gates_horz:
+            self.check_amplitude(g, sweepranges[0] * gates_horz[g])
             wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[0])
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_horz[g] / awg_to_plunger
@@ -567,6 +573,7 @@ class virtual_awg(Instrument):
 
         # vertical virtual gate
         for g in gates_vert:
+            self.check_amplitude(g, sweepranges[1] * gates_vert[g])
             wave_raw = self.make_sawtooth(sweepranges[1], period_vert)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_vert[g] / awg_to_plunger
@@ -694,6 +701,23 @@ class virtual_awg(Instrument):
         for awg in self._awgs:
             for i in range(1, 5):
                 awg.set('ch%s_amp' % i, self.ch_amp)
+                
+    def check_amplitude(self, gate, mvrange):
+        """ Calculates the lowest allowable AWG peak-to-peak amplitude based on the
+        ranges to be applied to the gates. If the AWG amplitude is too low, it gives
+        a warning and increases the amplitude.
+        
+        Args:
+            gate (str): name of the gate to check
+            mvrange (float): voltage range, in mV, that the gate needs to reach
+        """
+        min_amp = mvrange / self.hardware.parameters['awg_to_%s' % gate].get()
+        if min_amp > 4:
+            raise(Exception('Sweep range of gate %s is larger than maximum allowed by the AWG' % gate))
+        if self.ch_amp < min_amp:
+            min_amp = np.ceil(min_amp * 10) / 10
+            self.set_amplitude(min_amp)
+            warnings.warn('AWG amplitude too low for this range, setting to %.1f' % min_amp)
 
 #%%
 
