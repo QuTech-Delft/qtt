@@ -790,6 +790,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
 
     Arguments:
         dataset (DataSet or qcodes.Station): a dataset of which the metadata will be reshaped
+        printformat (str): can be 'dict' or 'txt','fancy' (text format)
     Returns:
         metadata (string): the reshaped metadata
     '''
@@ -837,7 +838,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
     if printformat == 'dict':
         ss = str(metadata).replace('(', '').replace(
             ')', '').replace('OrderedDict', '')
-    else:
+    else: # 'txt' or 'fancy'
         ss = ''
         for k in metadata:
             if verbose:
