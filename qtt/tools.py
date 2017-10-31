@@ -37,50 +37,53 @@ from colorama import Fore
 
 #%% Jupyter kernel tools
 
+
 def get_jupyter_kernel(verbose=2):
     """ Return the most recently created jupyter kernel
-    
+
     Args:
         verbose (int): verbosity level
-    
+
     """
-    cmd=r'jupyter --paths'
-    
+    cmd = r'jupyter --paths'
+
     print(Fore.BLUE + 'get_jupyuter_kernel: running %s' % cmd + Fore.RESET)
-    
-    rr = subprocess.check_output(cmd, shell=True)  
-    rr=rr.decode('ASCII')
-    r=0
-    rundir=None
+
+    rr = subprocess.check_output(cmd, shell=True)
+    rr = rr.decode('ASCII')
+    r = 0
+    rundir = None
     for ii, l in enumerate(rr.split('\n')):
         if r:
             rundir = l.strip()
             break
-        if verbose>=3:
+        if verbose >= 3:
             print(l)
         if l.startswith('runtime:'):
-            r=1
-            
+            r = 1
+
     if rundir is not None:
         print(Fore.BLUE + '  rundir: %s' % rundir + Fore.RESET)
-        
 
-        # remove anything from the list that is not a file (directories, symlinks)
-        files = list(filter(os.path.isfile, glob.glob(rundir + os.sep + "kernel*json")))
+        # remove anything from the list that is not a file (directories,
+        # symlinks)
+        files = list(filter(os.path.isfile, glob.glob(
+            rundir + os.sep + "kernel*json")))
         files.sort(key=lambda x: os.path.getctime(x))
-        files=files[::-1]
-        
-        if verbose>=2:
+        files = files[::-1]
+
+        if verbose >= 2:
             print('all kernels (< 2 days old): ')
             for k in files:
-                dt=time.time()-os.path.getctime(k)
-                if dt < 3600*24*2:
+                dt = time.time() - os.path.getctime(k)
+                if dt < 3600 * 24 * 2:
                     print(' %.1f [s]:  ' % (float(dt), ) + k)
-        if len(files)>0:
+        if len(files) > 0:
             kernel = files[0]
             print(Fore.BLUE + '  found kernel: %s' % kernel + Fore.RESET)
-            kernelbase=os.path.split(kernel)[1]
-            print(Fore.BLUE + 'connect with: ' + Fore.GREEN+ ' jupyter console --existing %s' % kernelbase + Fore.RESET)
+            kernelbase = os.path.split(kernel)[1]
+            print(Fore.BLUE + 'connect with: ' + Fore.GREEN +
+                  ' jupyter console --existing %s' % kernelbase + Fore.RESET)
             return kernelbase
     return None
 
@@ -91,7 +94,6 @@ def dumpstring(txt):
     """ Dump a string to temporary file on disk """
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
-
 
 
 def deprecated(func):
@@ -137,9 +139,10 @@ def stripDataset(dataset):
         pass
 
     if 'scanjob' in dataset.metadata:
-        if 'minstrumenthandle' in  dataset.metadata['scanjob']:
-            dataset.metadata['scanjob']['minstrumenthandle']=str(dataset.metadata['scanjob']['minstrumenthandle'])
-            
+        if 'minstrumenthandle' in dataset.metadata['scanjob']:
+            dataset.metadata['scanjob']['minstrumenthandle'] = str(
+                dataset.metadata['scanjob']['minstrumenthandle'])
+
     return dataset
 
 #%%
@@ -187,9 +190,10 @@ def freezeclass(cls):
 
 #%%
 
+
 def resampleImage(im):
     """ Resample the image so it has the similar sample rates (samples/mV) in both axis
-    
+
     Args:
         im (DataArray): input image
     Returns:
@@ -197,43 +201,49 @@ def resampleImage(im):
         setpoints (list of 2 numpy arrays): setpoint arrays from resampled image
     """
     setpoints = im.set_arrays
-    mVrange = [abs(setpoints[0][-1]-setpoints[0][0]), abs(setpoints[1][0,-1]-setpoints[1][0,0])]
-    samprates = [im.shape[0]//mVrange[0], im.shape[1]//mVrange[1]]
-    factor = int(max(samprates)//min(samprates))
+    mVrange = [abs(setpoints[0][-1] - setpoints[0][0]),
+               abs(setpoints[1][0, -1] - setpoints[1][0, 0])]
+    samprates = [im.shape[0] // mVrange[0], im.shape[1] // mVrange[1]]
+    factor = int(max(samprates) // min(samprates))
     if factor >= 2:
         axis = int(samprates[0] - samprates[1] < 0)
         if axis == 0:
             facrem = im.shape[0] % factor
             if facrem > 0:
-                im = im[:-facrem,:]
+                im = im[:-facrem, :]
             facrem = facrem + 1
-            im = im.reshape(im.shape[0]//factor,factor,im.shape[1]).mean(1)
-            spy = np.linspace(setpoints[0][0],setpoints[0][-facrem],im.shape[0])
-            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-1],im.shape[1]),0),im.shape[0])
-            setpointy = DataArray(name='Resampled_'+setpoints[0].array_id, array_id='Resampled_'+setpoints[0].array_id, label=setpoints[0].label,
-                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
-            setpointx = DataArray(name='Resampled_'+setpoints[1].array_id, array_id='Resampled_'+setpoints[1].array_id, label=setpoints[1].label,
-                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            im = im.reshape(im.shape[0] // factor, factor, im.shape[1]).mean(1)
+            spy = np.linspace(setpoints[0][0], setpoints[
+                              0][-facrem], im.shape[0])
+            spx = np.tile(np.expand_dims(np.linspace(
+                setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
+            setpointy = DataArray(name='Resampled_' + setpoints[0].array_id, array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
+                                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
+            setpointx = DataArray(name='Resampled_' + setpoints[1].array_id, array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
+                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpointy, setpointx]
         else:
             facrem = im.shape[1] % factor
             if facrem > 0:
-                im = im[:,:-facrem]
+                im = im[:, :-facrem]
             facrem = facrem + 1
-            im = im.reshape(im.shape[0],im.shape[1]//factor,factor).mean(-1)
-            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-facrem],im.shape[1]),0),[im.shape[0],1])           
+            im = im.reshape(im.shape[0], im.shape[1] //
+                            factor, factor).mean(-1)
+            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0, 0], setpoints[
+                          1][0, -facrem], im.shape[1]), 0), [im.shape[0], 1])
             idx = setpoints[1].array_id
             if idx is None:
-                idx='x'
+                idx = 'x'
             idy = setpoints[1].array_id
             if idy is None:
-                idy= 'y'
-            setpointx = DataArray(name='Resampled_'+ idx , array_id='Resampled_'+idy, label=setpoints[1].label,
-                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+                idy = 'y'
+            setpointx = DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
+                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpoints[0], setpointx]
-                
+
     return im, setpoints
-        
+
+
 def diffImage(im, dy, size=None):
     """ Simple differentiation of an image
 
@@ -253,7 +263,7 @@ def diffImage(im, dy, size=None):
         im = -np.diff(im, n=1, axis=0)
         if size == 'same':
             im = np.vstack((im, im[-1:, :]))
-    elif dy == 2 or dy=='xy':
+    elif dy == 2 or dy == 'xy':
         imx = np.diff(im, n=1, axis=1)
         imy = np.diff(im, n=1, axis=0)
         im = imx[0:-1, :] + imy[:, 0:-1]
@@ -312,8 +322,8 @@ def diffImageSmooth(im, dy='x', sigma=2):
 
 def test_array(location=None, name=None):
     # DataSet with one 2D array with 4 x 6 points
-    yy, xx = np.meshgrid(np.arange(0,10,.5), range(3))
-    zz = xx**2+yy**2
+    yy, xx = np.meshgrid(np.arange(0, 10, .5), range(3))
+    zz = xx**2 + yy**2
     # outer setpoint should be 1D
     xx = xx[:, 0]
     x = DataArray(name='x', label='X', preset_data=xx, is_setpoint=True)
@@ -322,20 +332,21 @@ def test_array(location=None, name=None):
     z = DataArray(name='z', label='Z', preset_data=zz, set_arrays=(x, y))
     return z
 
-def test_image_operations(verbose=0):    
-    import qcodes.tests.data_mocks    
-    
+
+def test_image_operations(verbose=0):
+    import qcodes.tests.data_mocks
+
     if verbose:
         print('testing resampleImage')
-    ds=qcodes.tests.data_mocks.DataSet2D()
+    ds = qcodes.tests.data_mocks.DataSet2D()
     imx, setpoints = resampleImage(ds.z)
 
-    z=test_array()
+    z = test_array()
     imx, setpoints = resampleImage(z)
     if verbose:
         print('testing diffImage')
-    d=diffImage(ds.z, dy='x')
-    
+    d = diffImage(ds.z, dy='x')
+
 #%%
 
 import dateutil
@@ -651,7 +662,7 @@ try:
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
-        if verbose>=2:
+        if verbose >= 2:
             print('num of open PPTs: %d' % Application.presentations.Count)
 
         # ppt = Application.Presentations.Add()
@@ -692,7 +703,8 @@ try:
                 fig.save(fname)
             else:
                 if verbose:
-                    raise Exception('figure is of an unknown type %s' % (type(fig), ) )
+                    raise Exception(
+                        'figure is of an unknown type %s' % (type(fig), ))
             if figsize is not None:
                 left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
                 width = figsize[0]
@@ -701,7 +713,7 @@ try:
                 left = 100
                 width = 560
                 height = 350
-            if verbose>=2:
+            if verbose >= 2:
                 print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
                                     SaveWithDocument=True, Left=left, Top=120, Width=width, Height=height)
@@ -716,10 +728,10 @@ try:
         if isinstance(notes, qcodes.Station):
             station = notes
             gates = getattr(station, 'gates', None)
-            notes=reshape_metadata(station, printformat='s')
+            notes = reshape_metadata(station, printformat='s')
             if gates is not None:
-                notes = 'gates: ' + str(gates.allvalues()) +'\n\n' + notes
-            
+                notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
+
         if notes is not None:
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
@@ -731,7 +743,7 @@ try:
 
         if activate_slide:
             idx = int(slide.SlideIndex)
-            if verbose>=1:
+            if verbose >= 1:
                 print('addPPTslide: goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
@@ -759,13 +771,14 @@ try:
         if len(dataset.arrays) < 2:
             raise Exception('The dataset contains less than two data arrays')
 
-        temp_fig = QtPlot(dataset.default_parameter_array(paramname=paramname), show_window=False)
+        temp_fig = QtPlot(dataset.default_parameter_array(
+            paramname=paramname), show_window=False)
 
         text = 'Dataset location: %s' % dataset.location
 
         if notes is None:
             notes = 'Dataset %s metadata:\n%s' % (dataset.location, reshape_metadata(
-                dataset, printformat=printformat) )
+                dataset, printformat=printformat))
 
         ppt, slide = addPPTslide(title=title, fig=temp_fig, txt=text,
                                  notes=notes, show=show, verbose=verbose, **kwargs)
@@ -797,8 +810,8 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
 
     if isinstance(dataset, qcodes.Station):
         station = dataset
-        all_md=station.snapshot(update=False)['instruments']
-        
+        all_md = station.snapshot(update=False)['instruments']
+
         header = None
     else:
         if not 'station' in dataset.metadata:
@@ -806,16 +819,17 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
 
         tmp = dataset.metadata.get('station', None)
         if tmp is None:
-            all_md={}
+            all_md = {}
         else:
-            all_md =  tmp['instruments']
+            all_md = tmp['instruments']
 
-        header = 'dataset: %s'  % dataset.location
+        header = 'dataset: %s' % dataset.location
 
     metadata = OrderedDict()
 
     # make sure the gates instrument is in front
-    all_md_keys = sorted(sorted(all_md), key=lambda x: x == 'gates',  reverse=True) 
+    all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
+                         'gates',  reverse=True)
     for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
@@ -827,18 +841,18 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                 metadata[x][y] = OrderedDict()
                 param_md = all_md[x]['parameters'][y]
                 metadata[x][y]['name'] = y
-                if isinstance(param_md['value'], (float, np.float64) ):
+                if isinstance(param_md['value'], (float, np.float64)):
                     metadata[x][y]['value'] = float(
                         format(param_md['value'], '.3f'))
                 else:
-                    metadata[x][y]['value'] = str(param_md['value'])    
+                    metadata[x][y]['value'] = str(param_md['value'])
                 metadata[x][y]['unit'] = param_md['unit']
                 metadata[x][y]['label'] = param_md['label']
 
     if printformat == 'dict':
         ss = str(metadata).replace('(', '').replace(
             ')', '').replace('OrderedDict', '')
-    else: # 'txt' or 'fancy'
+    else:  # 'txt' or 'fancy'
         ss = ''
         for k in metadata:
             if verbose:
@@ -850,7 +864,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                 if verbose:
                     print('  --- %s: %s' % (p, pp.get('value', '??')))
                 ss += '%s: %s (%s)' % (pp['name'],
-                                     pp.get('value', '?'), pp.get('unit', ''))
+                                       pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'
             # ss+=str(s)
 
@@ -864,15 +878,16 @@ if __name__ == '__main__' and 0:
     x = reshape_metadata(data, printformat='dict')
     print(x)
 
+
 def test_reshape_metadata():
-    param=qcodes.ManualParameter('dummy')
+    param = qcodes.ManualParameter('dummy')
     try:
-        dataset=qcodes.Loop(param[0:1:10]).each(param).run()
+        dataset = qcodes.Loop(param[0:1:10]).each(param).run()
     except:
         dataset = None
         pass
     if dataset is not None:
-        _=reshape_metadata(dataset, printformat='dict')
+        _ = reshape_metadata(dataset, printformat='dict')
 
 #%%
 try:
@@ -890,14 +905,14 @@ try:
             w = qtt.createParameterWidget(ilist)
             #w = qtt.parameterviewer.ParameterViewer(ilist)
             w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
-            #w.updatecallback()
+            # w.updatecallback()
 
         plotQ = QtPlot(window_title='Live plot', interval=.5)
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
 
-        qtt.live.liveplotwindow=plotQ
-        
+        qtt.live.liveplotwindow = plotQ
+
         app = QtWidgets.QApplication.instance()
         app.processEvents()
 
@@ -931,7 +946,6 @@ def timeProgress(data):
     return fraction, remaining
 
 #%%
-
 
 
 def flatten(lst):
