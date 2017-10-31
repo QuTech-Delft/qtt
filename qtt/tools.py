@@ -629,8 +629,8 @@ try:
             title (string): title added to slide
             fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
                 figure added to slide
-            txt (string): text in textbox added to slide
-            notes (string): notes added to slide
+            txt (str): text in textbox added to slide
+            notes (str): notes added to slide
             figsize (list): size (width,height) of figurebox to add to powerpoint
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
@@ -713,6 +713,13 @@ try:
         if txt is not None:
             txtbox.TextFrame.TextRange.Text = txt
 
+        if isinstance(notes, qcodes.Station):
+            station = notes
+            gates = getattr(station, 'gates', None)
+            notes=reshape_metadata(station, printformat='s')
+            if gates is not None:
+                notes = 'gates: ' + str(gates.allvalues()) +'\n\n' + notes
+            
         if notes is not None:
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
@@ -782,19 +789,28 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
-        dataset (DataSet): a dataset of which the metadata will be reshaped
+        dataset (DataSet or qcodes.Station): a dataset of which the metadata will be reshaped
     Returns:
         metadata (string): the reshaped metadata
     '''
 
-    if not 'station' in dataset.metadata:
-        return 'dataset %s: no metadata available' % (str(dataset.location), )
-
-    tmp = dataset.metadata.get('station', None)
-    if tmp is None:
-        all_md={}
+    if isinstance(dataset, qcodes.Station):
+        station = dataset
+        all_md=station.snapshot(update=False)['instruments']
+        
+        header = None
     else:
-        all_md =  tmp['instruments']
+        if not 'station' in dataset.metadata:
+            return 'dataset %s: no metadata available' % (str(dataset.location), )
+
+        tmp = dataset.metadata.get('station', None)
+        if tmp is None:
+            all_md={}
+        else:
+            all_md =  tmp['instruments']
+
+        header = 'dataset: %s'  % dataset.location
+
     metadata = OrderedDict()
 
     # make sure the gates instrument is in front
@@ -832,11 +848,13 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                 pp = s[p]
                 if verbose:
                     print('  --- %s: %s' % (p, pp.get('value', '??')))
-                ss += '%s: %s %s' % (pp['name'],
+                ss += '%s: %s (%s)' % (pp['name'],
                                      pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'
             # ss+=str(s)
 
+    if header is not None:
+        ss = header + '\n\n' + ss
     return ss
 
 if __name__ == '__main__' and 0:
