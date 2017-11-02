@@ -166,12 +166,27 @@ git config credential.helper store	# stores passwords in plain text!
             warnings.simplefilter("ignore")
 ```
 
+### Ubuntu installation
+
+Either use the default Ubuntu packages, or install using pip (optionally within a virtualenv environment). Tested on 17.10
+
+
+```
+sudo apt-get install python3-spyder python3-nose python3-pyqtgraph python3-scipy python3-matplotlib python3-pandas python3-pip python3-coverage python3-h5py redis-server
+sudo apt-get install python3-rope python3-redis python3-skimage python3-sklearn python3-websockets
+cd [QTTDIR]
+pip3 install --user -r develop_requirements.txt
+pip install git+https://github.com/telegraphic/hickle.git@dev
+```
+
 ### Old commands
 
 Manual installation:
 ```
 > conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 shapely
-> pip install slacker attrs pyserial redis pyvisa Polygon3 colorama
+> cd [QTTDIR]
+> pip3 install --user -r develop_requirements.txt
+> pip install slacker attrs pyserial redis pyvisa Polygon3 colorama pyvisa
 > conda install -c conda-forge opencv
 ```
 
