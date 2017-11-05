@@ -48,7 +48,7 @@ def check_version(version, module=qcodes):
     if distutils.version.StrictVersion(module.__version__) < distutils.version.StrictVersion(version):
         raise Exception(' from %s need version %s' % (module, version) )
 
-_qversion = '0.1.3' # version of qcodes required
+_qversion = '0.1.7' # version of qcodes required
 check_version(_qversion)
 
 #%% Add hook to abort measurement
