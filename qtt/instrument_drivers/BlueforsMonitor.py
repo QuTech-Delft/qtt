@@ -170,16 +170,17 @@ if __name__ == '__main__':
 
 
 '''
-#Base examples
+#Basic example
 
-## Server
-directory = 'D:\\workspace\\QuTech\\data\\Fridge\\17-11-10'
+## Server (console 1)
+from BlueforsMonitor import FridgeDataSender
+directory = '<your_directory_here>'
 FridgeDataSender(folder_path=directory)
 
-## Client
+## Client (console 2)
+from BlueforsMonitor import FridgeDataReceiver
 client = FridgeDataReceiver(name='fridge')
 print(client.temperature())
 print(client.pressure())
 print(client.datetime())
-
 '''
