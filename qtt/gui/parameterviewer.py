@@ -59,6 +59,11 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         w.setHeaderItem(header)
         w.setWindowTitle(name)
 
+        # check to prevent nasty error (e.g. random values on a sample)
+        for i in instruments:
+            if getattr(i, 'lock', 'nolock') is None:
+                raise Exception('do not use multi-threading with an Instrument that is not thread safe')
+        
         if instrumentnames is None:
             instrumentnames = [i.name for i in instruments]
         self._instruments = instruments
@@ -189,7 +194,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
             for g in ppnames:
                 sys.setswitchinterval(100)  # hack to make this semi thread-safe
-                value = pp[g].get()
+                value = pp[g].get_latest()
                 sys.setswitchinterval(si)
 
                 self.update_field.emit(iname, g, value, force_update)
