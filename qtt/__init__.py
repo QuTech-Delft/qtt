@@ -126,7 +126,7 @@ try:
         ''' Patch to add a callback to the QtPlot figure window '''
         if e.key() == Qt.Key_P:
             print('key P pressed: copy figure window to powerpoint')
-            qtt.tools.addPPTslide(txt='', fig=self)
+            qtt.tools.addPPTslide(fig=self)
         super(QtPlot, self).keyPressEvent(e)
 
     # update the keypress callback function

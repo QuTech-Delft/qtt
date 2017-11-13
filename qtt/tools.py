@@ -633,15 +633,17 @@ try:
     import win32com
     import win32com.client
 
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None, show=False, verbose=1, activate_slide=True):
+    def addPPTslide(title=None, fig=None, txt = None, notes=None, figsize=None,
+                    subtitle = None, maintext=None, show=False, verbose=1, activate_slide=True):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
             title (string): title added to slide
             fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
                 figure added to slide
-            txt (str): text in textbox added to slide
-            notes (str): notes added to slide
+            subtitle (string): text added to slide as subtitle
+            maintext (string): text in textbox added to slide
+            notes (string): notes added to slide
             figsize (list): size (width,height) of figurebox to add to powerpoint
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
@@ -658,7 +660,7 @@ try:
         >>> fig = plt.figure(10)
         >>> txt = 'Some comments on the figure'
         >>> notes = 'some additional information' 
-        >>> addPPTslide(title,fig,txt,notes)
+        >>> addPPTslide(title,fig, subtitle = txt,notes = notes)
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
@@ -678,11 +680,36 @@ try:
         if verbose:
             print('addPPTslide: name: %s' % ppt.Name)
 
-        ppLayoutTitleOnly = 11
-        layout = ppLayoutTitleOnly
+        ppLayoutTitleOnly = 11; ppLayoutTitle = 1; ppLayoutText=2
+
+        if txt is not None:
+            if subtitle is None:
+                warnings.warn('please do not use the txt field any more')
+                subtitle = txt
+            else:
+                raise Exception('please do not use the txt field any more')
+                
+            txt = None
+            
+        if fig is None:
+            # no figure, text box over entire page
+            layout =    ppLayoutTitle
+        else:
+            # we have a figure, assume textbox is for dataset name only
+            
+            layout = ppLayoutTitleOnly
 
         slide = ppt.Slides.Add(ppt.Slides.Count + 1, layout)
-
+        if fig is None:
+            titlebox = slide.shapes.Item(1)
+            mainbox = slide.shapes.Item(2)
+            mainbox.TextFrame.TextRange.Text = maintext
+        else:
+            titlebox = slide.shapes.Item(1)
+            mainbox = None
+            if maintext is not None:
+                warnings.warn('maintext not implemented when figure is set')
+                
         if title is not None:
             slide.shapes.title.textframe.textrange.text = title
         else:
@@ -718,12 +745,14 @@ try:
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
                                     SaveWithDocument=True, Left=left, Top=120, Width=width, Height=height)
 
-        txtbox = slide.Shapes.AddTextbox(
-            1, Left=100, Top=80, Width=500, Height=300)
-        txtbox.Name = 'scan_location'
+        
 
-        if txt is not None:
-            txtbox.TextFrame.TextRange.Text = txt
+        if subtitle is not None:
+            # add subtitle
+            subtitlebox = slide.Shapes.AddTextbox(
+                1, Left=100, Top=80, Width=500, Height=300)
+            subtitlebox.Name = 'subtitle box'
+            subtitlebox.TextFrame.TextRange.Text = subtitle
 
         if isinstance(notes, qcodes.Station):
             station = notes
