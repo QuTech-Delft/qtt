@@ -678,8 +678,8 @@ try:
         if show:
             Application.Visible = True  # shows what's happening, not required, but helpful for now
 
-        if verbose:
-            print('addPPTslide: name: %s' % ppt.Name)
+        if verbose>=2:
+            print('addPPTslide: presentation name: %s' % ppt.Name)
 
         ppLayoutTitleOnly = 11; ppLayoutTitle = 1; ppLayoutText=2
 
@@ -699,6 +699,9 @@ try:
         else:
             # we have a figure, assume textbox is for dataset name only            
             ppLayout = ppLayoutTitleOnly
+
+        if verbose:
+            print('addPPTslide: presentation name: %s, adding slide %d' % (ppt.Name, ppt.Slides.count+1))
 
         slide = ppt.Slides.Add(ppt.Slides.Count + 1, ppLayout)
         if fig is None:
@@ -778,7 +781,7 @@ try:
 
         if activate_slide:
             idx = int(slide.SlideIndex)
-            if verbose >= 1:
+            if verbose >= 2:
                 print('addPPTslide: goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
@@ -812,10 +815,10 @@ try:
         text = 'Dataset location: %s' % dataset.location
 
         if notes is None:
-            notes = 'Dataset %s metadata:\n%s' % (dataset.location, reshape_metadata(
+            notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, reshape_metadata(
                 dataset, printformat=printformat))
 
-        ppt, slide = addPPTslide(title=title, fig=temp_fig, txt=text,
+        ppt, slide = addPPTslide(title=title, fig=temp_fig, subtitle=text,
                                  notes=notes, show=show, verbose=verbose, **kwargs)
 
         return ppt, slide
