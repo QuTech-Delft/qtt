@@ -577,8 +577,6 @@ except:
 #    warnings.warn('could not load deepdish...')
 
 
-def data_extension():
-    return 'pickle'
 
 
 def pickleload(pkl_file):
@@ -592,16 +590,18 @@ def pickleload(pkl_file):
             # different encoding
             with open(pkl_file, 'rb') as output:
                 data2 = pickle.load(output, encoding='latin')
-            # pickle.load(pkl_file, fix_imports=True, encoding="ASCII", errors="strict")
         else:
             data2 = None
     return data2
+
+def _data_extension():
+    return 'pickle'
 
 
 def load_data(mfile: str):
     ''' Load data from specified file '''
     # return hickle.load(mfile)
-    ext = data_extension()
+    ext = _data_extension()
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
@@ -612,7 +612,7 @@ def load_data(mfile: str):
 
 def write_data(mfile: str, data):
     ''' Write data to specified file '''
-    ext = data_extension()
+    ext = _data_extension()
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
@@ -623,36 +623,6 @@ def write_data(mfile: str, data):
         pickle.dump(data, fid)
     # hickle.dump(metadata, mfile)
     #_=deepdish.io.save(mfile, data)
-
-
-def loadQttData(path: str):
-    ''' Wrapper function
-
-    :param path: filename without extension
-    :returns dataset: The dataset
-    '''
-    warnings.warn('please use load_data instead')
-    mfile = path
-    ext = data_extension()
-    if not mfile.endswith(ext):
-        mfile = mfile + '.' + ext
-    # dataset=deepdish.io.load(mfile)
-    dataset = load_data(mfile)
-    return dataset
-
-
-def writeQttData(dataset, path, metadata=None):
-    ''' Wrapper function
-
-    :param path: filename without extension
-    '''
-    warnings.warn('please use write_data instead')
-    mfile = path
-    ext = data_extension()
-    if not mfile.endswith(ext):
-        mfile = mfile + ext
-    # deepdish.io.save(mfile, dataset)
-    write_data(mfile, dataset)
 
 
 def loadDataset(path):
