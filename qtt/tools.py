@@ -634,16 +634,17 @@ try:
     import win32com.client
 
     def addPPTslide(title=None, fig=None, txt = None, notes=None, figsize=None,
-                    subtitle = None, maintext=None, show=False, verbose=1, activate_slide=True):
+                    subtitle = None, maintext=None, show=False, verbose=1,
+                    activate_slide=True, ppLayout = None):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
-            title (string): title added to slide
+            title (str): title added to slide
             fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
                 figure added to slide
-            subtitle (string): text added to slide as subtitle
-            maintext (string): text in textbox added to slide
-            notes (string): notes added to slide
+            subtitle (str): text added to slide as subtitle
+            maintext (str): text in textbox added to slide
+            notes (str or QCoDeS station): notes added to slide
             figsize (list): size (width,height) of figurebox to add to powerpoint
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
@@ -693,13 +694,13 @@ try:
             
         if fig is None:
             # no figure, text box over entire page
-            layout =    ppLayoutTitle
+            if ppLayout is None:
+                ppLayout =    ppLayoutText
         else:
-            # we have a figure, assume textbox is for dataset name only
-            
-            layout = ppLayoutTitleOnly
+            # we have a figure, assume textbox is for dataset name only            
+            ppLayout = ppLayoutTitleOnly
 
-        slide = ppt.Slides.Add(ppt.Slides.Count + 1, layout)
+        slide = ppt.Slides.Add(ppt.Slides.Count + 1, ppLayout)
         if fig is None:
             titlebox = slide.shapes.Item(1)
             mainbox = slide.shapes.Item(2)
@@ -754,6 +755,9 @@ try:
             subtitlebox.Name = 'subtitle box'
             subtitlebox.TextFrame.TextRange.Text = subtitle
 
+        if notes is None:
+            warnings.warn('please set notes for the powerpoint slide. e.g. use the station or reshape_metadata')
+            
         if isinstance(notes, qcodes.Station):
             station = notes
             gates = getattr(station, 'gates', None)
