@@ -766,6 +766,8 @@ try:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
 
         if notes is not None:
+            if notes == '':
+                notes=' ' 
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
 
