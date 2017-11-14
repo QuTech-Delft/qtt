@@ -21,13 +21,13 @@ from qtt import pgeometry as pmatlab
 def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=True, drawmidpoints=True):
     """ Analyse sweep of a gate for pinch value, low value and high value
 
-    Arguments
-    ---------
-        dd : DataSet
-            structure containing the scan data
+    Args:
+        dd (1D qcodes DataSet): structure containing the scan data
         minthr, maxthr : float
             parameters for the algorithm (default: None)
 
+    Returns:
+        result (dict): dictionary with analysis results
     """
 
     goodgate = True
@@ -168,8 +168,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             [x[leftidx[-1]], x[leftidx[0]]], [lowvalue, value[leftidx[0]]], 1)
     leftval = value[leftidx]
 
-    # fitleft=np.polyfit([x[leftidx[-1]],x[leftidx[0]]], [lowvalue, midvalue], 1)
-
     leftpred = np.polyval(fitleft, x[leftidx])
 
     if np.abs(scandirection * (xleft[1] - xleft[0])) > 150 and xleft.size > 15:
@@ -215,19 +213,15 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             plot2Dline([-1, 0, midpoint2], '--m', linewidth=2)
 
         if verbose >= 2:
-            # plt.plot(x[leftidx], leftval, '.r', markersize=15)
             plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1)
 
-        if verbose >= 2:
-            1
-           # plt.plot(XX[ww,0].astype(int), XX[ww,2], '.g')
 
-    adata = dict({'pinchvalue': midpoint2 - 50,
-                  'pinchvalueX': midpoint1 - 50, 'goodgate': goodgate})
+    adata = dict({'description': 'pichoff analysis', 'pinchvalue': midpoint2 - 50,
+                  '_pinchvalueX': midpoint1 - 50, 'goodgate': goodgate})
     adata['lowvalue'] = lowvalue
     adata['highvalue'] = highvalue
     adata['xlabel'] = 'Sweep %s [mV]' % g
-    adata['mp'] = mp
+    adata['_mp'] = mp
     adata['midpoint'] = midpoint2
     adata['midvalue'] = midvalue
 
