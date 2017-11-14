@@ -15,9 +15,6 @@ from qtt import pgeometry as pmatlab
 
 #%%
 
-# import qtt.scans # FIXME: circular
-
-
 def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=True, drawmidpoints=True):
     """ Analyse sweep of a gate for pinch value, low value and high value
 
@@ -32,43 +29,27 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     goodgate = True
 
-    if isinstance(dd, qcodes.DataSet):
-        data = dd
-        XX = None
+    data = dd
+    XX = None
 
-        # should be made generic
-        g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
-        value = data.default_parameter_name()  # e.g. 'amplitude'
+    # should be made generic
+    g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
+    value = data.default_parameter_name()  # e.g. 'amplitude'
 
-        x = data.arrays[g]
-        value = np.array(data.arrays[value])
+    x = data.arrays[g]
+    value = np.array(data.arrays[value])
 
-        # detect direction of scan
-        scandirection = np.sign(x[-1] - x[0])
-        if scandirection < 0 and 1:
-            pass
-            scandirection = 1
-            x = x[::-1]
-            value = value[::-1]
-    else:
-        # legacy code
-        XX = dd['data_array']
-        datashape = XX.shape
-        goodgate = True
-        sweepdata = dd['sweepdata']
-        g = sweepdata['gates'][0]
+    # detect direction of scan
+    scandirection = np.sign(x[-1] - x[0])
+    if scandirection < 0 and 1:
+        pass
+        scandirection = 1
+        x = x[::-1]
+        value = value[::-1]
 
-        sr = np.arange(sweepdata['start'], sweepdata['end'], sweepdata['step'])
-        if datashape[0] == 2 * sr.size:
-                    # double sweep, reduce
-            if verbose:
-                print('analyseGateSweep: scan with sweepback: reducing data')
-            XX = XX[0:sr.size, :]
 
-        x = XX[:, 0]
-        value = XX[:, 2]
-        XX = None
-
+    # crude estimate of noise
+    noise = np.percentile(np.abs(np.diff(value)), 50)
     lowvalue = np.percentile(value, 1)
     highvalue = np.percentile(value, 90)
     # sometimes a channel is almost completely closed, then the percentile
@@ -184,7 +165,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                 print('analyseGateSweep: gate not good: gate is not closed (or fully closed) (slope check)')
             pass
 
-    if np.sum(leftval - leftpred) > 0:
+    if np.mean(leftval - leftpred) > noise:
         midpoint1 = np.percentile(x, .5)
         midpoint2 = np.percentile(x, .5)
         goodgate = False
@@ -213,7 +194,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             plot2Dline([-1, 0, midpoint2], '--m', linewidth=2)
 
         if verbose >= 2:
-            plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1)
+            plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1, label='leftpred')
+            plt.plot(x[leftidx], leftval, '--m', markersize=15, linewidth=1, label='leftval')
 
 
     adata = dict({'description': 'pichoff analysis', 'pinchvalue': midpoint2 - 50,
