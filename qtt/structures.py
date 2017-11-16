@@ -494,6 +494,8 @@ class MultiParameter(qcodes.instrument.parameter.Parameter):
     def __init__(self, name, params, label=None):
         self.name = name
         self.params = params
+        self.vals = qcodes.utils.validators.Anything()
+        #Legacy
         self._vals = qcodes.utils.validators.Anything()
         self._instrument = 'dummy'
         if label is None:
@@ -523,7 +525,7 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
     def __init__(self, name, params, label=None, unit=None):
         self.name = name
         self.params = params
-        self._vals = qcodes.utils.validators.Anything()
+        self.vals = qcodes.utils.validators.Anything()
         self._instrument = 'dummy'
         if label is None:
             self.label = self.name
