@@ -822,6 +822,8 @@ def fillPoly(im, poly_verts, color=None):
         im (array)
         poly_verts (kx2 array): polygon vertices
         color (array or float)
+    Returns:
+        grid (array)
     """
     ny, nx = im.shape[0], im.shape[1]
 
@@ -845,7 +847,6 @@ def fillPoly(im, poly_verts, color=None):
         r = points_in_poly(points, poly_verts)
         pass
     im.flatten()[r] = 1
-    # grid = points_inside_poly(points, poly_verts)
     grid = r
     grid = grid.reshape((ny, nx))
 
@@ -935,7 +936,6 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             # Define base values
 
             tmp = copy.copy(basevalues)
-            # print(tmp)
             # print('createDoubleDotJobs: call getTwoDotValues: ')
             basevaluesTD, tddata = getTwoDotValues(td, ods, basevaluestd=tmp, verbose=1)
             # print('### createDoubleDotJobs: debug here: ')
@@ -946,10 +946,6 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             scanjob = qtt.measurements.scans.scanjob_t({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
-
-            sweeprange = 240
-            if p2 == 'P3':
-                sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
 
             sweeprange = 240
             if p2 == 'P3':

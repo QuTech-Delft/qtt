@@ -27,7 +27,9 @@ from qtt.algorithms.onedot import onedotGetBalance
 from qtt.algorithms.onedot import onedotGetBalanceFine
 import qtt.live
 
-from qtt.data import experimentFile
+from qtt.algorithms.generic import showCoulombDirection
+
+from qtt.data import experimentFile, dataset2image
 from qtt.algorithms.coulomb import coulombPeaks
 from qtt.legacy import saveImage, analyse2dot
 from qtt.legacy import singleElectronCheck, singleRegion
@@ -141,7 +143,7 @@ def generateOneDotReport(one_dots, xdir, resultsdir, verbose=1):
 
         od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, dd2d, verbose=0, fig=None)
 
-        xx, vstep, vsweep = show2D(dd2d, fig=101, verbose=1)
+        xx, vstep, vsweep = qtt.legacy.show2D(dd2d, fig=101, verbose=1)
         plt.figure(101)
         pgeometry.plotPoints(od['balancepoint'], '.m', markersize=14)
         pgeometry.plotPoints(od['balancepoint0'], '.b', markersize=11)
