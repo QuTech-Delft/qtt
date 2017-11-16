@@ -872,7 +872,6 @@ def getPinchvalues(od, xdir, verbose=1):
 
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
-    # one_dots=get_one_dots(full=1)
     xdir = os.path.join(resultsdir, 'one_dot')
 
     jobs = []
@@ -926,13 +925,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     print('createDoubleDotJobs: at fillPoly')
                 imx = 0 * wwarea.copy().astype(np.uint8)
                 tmp = fillPoly(imx, od['balancefit'])
-                # cv2.fillConvexPoly(imx, od['balancefit'],color=[1] )
 
                 showODresults(od, dd2d, fig=figm, imx=imx, ww=wwarea)
-                if 0:
-                    plt.close(fig + 10 * ii + 0)
-                    plt.close(fig + 10 * ii + 2)
-                    plt.close(fig + 10 * ii + 3)
                 ods.append(od)
 
             if fig:
@@ -949,7 +943,6 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             td['tddata'] = tddata
 
             # Create scan job
-
             scanjob = qtt.measurements.scans.scanjob_t({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
@@ -979,9 +972,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
         except Exception as e:
-            logging.exception("error with double-dot job!")
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])
-            continue
+            raise e
 
     return jobs
 
