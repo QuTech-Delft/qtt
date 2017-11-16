@@ -18,7 +18,7 @@ except:
     pass
 
 import numpy.linalg
-from qtt import pgeometry as pmatlab
+from qtt import pgeometry 
 
 import qtt.tools
 import qtt.algorithms.generic
@@ -231,7 +231,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
         unitstr = ' (%s)' % units
     if fig is not None:
         scanjob = dd.metadata.get('scanjob', dict())
-        pmatlab.cfigure(fig)
+        pgeometry.cfigure(fig)
         plt.clf()
 
         if impixel is None:
@@ -493,7 +493,7 @@ class image_transform:
           ptx (array): point in scan coordinates (sweep, step)
 
         """
-        ptx = pmatlab.projectiveTransformation(
+        ptx = pgeometry.projectiveTransformation(
             self.Hi, np.array(pt).astype(float))
 
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -547,7 +547,7 @@ class image_transform:
         # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
         # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
 
-        ptpixel = pmatlab.projectiveTransformation(
+        ptpixel = pgeometry.projectiveTransformation(
             self.H, np.array(ptpixel).astype(float))
 
         return ptpixel
@@ -695,7 +695,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
     if dstr is None:
         dstr = getDateString()
 
-    ext = data_extension()
+    ext = _data_extension()
     basename = '%s' % (dstr,)
     if bname is not None:
         basename = '%s-' % bname + basename
@@ -708,7 +708,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('loadExperimentdata %s' % path)
-    dataset = pmatlab.load(path)
+    dataset = pgeometry.load(path)
 
     dataset = load_data(path)
     return dataset

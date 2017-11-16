@@ -199,6 +199,11 @@ class virtual_gates(Instrument):
                 print('  setting gate %s to %.1f [mV]' % (g, val))
             self.set(g, val)
 
+    def set_crosscap_matrix(self, cc):
+        """Sets the cross-capacitance matrix. Update the dependent variables """
+        m=self.convert_matrix_to_map(cc)
+        self.set_crosscap_map(m)
+        
     def get_crosscap_map(self):
         """Gets the current cross-capacitance map."""
         return self._crosscap_map
@@ -268,7 +273,22 @@ class virtual_gates(Instrument):
             self.print_map(updated_map)
         return updated_map
 
-    
+    def ratio(self, target, g1, g2, laplace = 0):
+        """ Return ratio of influence of two gates
+        
+        Args:
+            target (str): target gate
+            g1, g2 (str): gates
+            laplace (float): parameter for Laplacian smoothing
+        
+        Returns
+            ratio (float)
+        
+        """
+        m=self.get_crosscap_map()
+        ratio = (m[target][g2]+laplace)/(m[target][g1]+laplace)
+        return ratio
+        
     def print_matrix(self):
         self.print_map(self.get_crosscap_map() )
         

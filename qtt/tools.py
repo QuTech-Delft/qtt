@@ -824,7 +824,8 @@ try:
         return ppt, slide
 
 except:
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
+    def addPPTslide(title=None, fig=None, subtitle = None, maintext=None,
+                    notes=None, show=False, verbose=1, ppLayout=1):
         ''' Dummy implementation '''
         pass
 

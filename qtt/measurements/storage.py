@@ -116,13 +116,6 @@ def save_state(station, tag=None, overwrite=False, data=None, verbose=1):
     if verbose:
         print('save_state: writing to file %s, tag %s' % (statefile, tag))
     with h5py.File(statefile, 'a') as h5group:
-        if 0:
-            # implementation with qcodes formatter
-            f = qcodes.data.hdf5_format.HDF5Format()
-            metadata_group = h5group.create_group('metadata')
-            f.write_dict_to_hdf5(obj, metadata_group)
-
-        else:
             # implementation using dev branch of hickle
             if (tag in h5group):
                 if overwrite:

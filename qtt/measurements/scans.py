@@ -503,7 +503,7 @@ class sample_data_t (dict):
 
     def gate_boundaries(self, gate):
         bnds = self.get('gate_boundaries', {})
-        b = bnds.get(gate, (-700, 100))
+        b = bnds.get(gate, (None, None))
         return b
 
 
@@ -531,10 +531,14 @@ class scanjob_t(dict):
     def setWaitTimes(self, station):
         """ Set default waiting times based on gate filtering """
 
+        gate_settle=getattr(station,'gate_settle', None)
         t=.1
+        if gate_settle is None:
+            t=0
         for f in ['sweepdata', 'stepdata']:        
             if f in self:
-                t=station.gate_settle(self[f]['param'])
+                if gate_settle:
+                    t=gate_settle(self[f]['param'])
                 self[f]['wait_time'] = t
         self['wait_time_startscan']=.5+2*t
         
