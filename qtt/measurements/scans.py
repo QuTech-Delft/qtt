@@ -905,10 +905,15 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow:
         liveplotwindow.clear()
-        liveplotwindow.add(
-            alldata.default_parameter_array(paramname=plotparam))
+        if plotparam is 'all':
+            for i in range(np.min(len(mparams))):
+                liveplotwindow.add(
+                        alldata.default_parameter_array(paramname=measure_names[i]), subplot=i+1)
+        else:
+            liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     tprev = time.time()
+    wtprev = time.time()
     
     for ix, x in enumerate(stepvalues):
         if verbose:
@@ -947,11 +952,14 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 value = p.get()
                 alldata.arrays[measure_names[ii]].ndarray[ix, iy] = value
 
-        if ix == len(stepvalues) - 1 or ix % 5 == 0:
-            delta, tprev, update = delta_time(tprev, thr=.2)
-            if update and liveplotwindow:
-                liveplotwindow.update_plot()
-                pg.mkQApp().processEvents()
+        delta, tprev, update = delta_time(tprev, thr=.2)
+        if (update or (ix == len(stepvalues) - 1)) and liveplotwindow:
+            liveplotwindow.update_plot()
+            pg.mkQApp().processEvents()
+        
+        wdelta, wtprev, wupdate = delta_time(wtprev, thr=300)
+        if ix % 5 == 0 and wupdate and (ix != len(stepvalues) - 1):
+            alldata.write(write_metadata=False)
 
         if qtt.abort_measurements():
             print('  aborting measurement loop')
