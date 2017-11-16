@@ -29,10 +29,11 @@ import qtt.live
 
 from qtt.algorithms.generic import showCoulombDirection
 
-from qtt.data import experimentFile, dataset2image
+from qtt.data import experimentFile, dataset2image, dataset2Dmetadata
 from qtt.algorithms.coulomb import coulombPeaks
 from qtt.legacy import saveImage, analyse2dot
 from qtt.legacy import singleElectronCheck, singleRegion
+from qtt.legacy import show2D
 
 import webbrowser
 import dateutil
