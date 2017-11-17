@@ -9,6 +9,8 @@ import os
 import logging
 import cv2
 import time
+import math
+import pickle
 
 import qcodes
 # explicit import
@@ -37,6 +39,8 @@ from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
 from qtt.measurements.scans import scan2D, scan1D
 from qtt.tools import stripDataset
+from qtt.algorithms.generic import smoothImage
+from qtt.measurements.scans import scanPinchValue
 
 
 from qtt import pgeometry as pmatlab
@@ -66,7 +70,6 @@ def positionScanjob(scanjob, pt):
 
 #%%
 
-from qtt.measurements.scans import scanPinchValue
 
 
 def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, cache=False, full=0, verbose=1):
@@ -218,7 +221,6 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 
 #%%
 
-import math
 
 
 def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(10)):
@@ -457,7 +459,6 @@ def polyval2d(x, y, m):
     return z
 
 
-from qtt.algorithms.generic import smoothImage
 
 
 def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=False, returndict=None):
@@ -909,23 +910,12 @@ if __name__ == '__main__':
 
 def stopbias(gates):
     """ Stop the bias currents in the sample """
+    raise Exception('do not use this function')
     gates.set_bias_1(0)
     gates.set_bias_2(0)
     for ii in [3]:
         if hasattr(gates, 'set_bias_%d' % ii):
             gates.set('bias_%d' % ii, 0)
-
-
-def stop_AWG(awg1):
-    """ Stop the AWG """
-    print('FIXME: add this function to the awg driver')
-    if not awg1 is None:
-        awg1.stop()
-        awg1.set_ch1_status('off')
-        awg1.set_ch2_status('off')
-        awg1.set_ch3_status('off')
-        awg1.set_ch4_status('off')
-    print('stopped AWG...')
 
 
 def printGateValues(gv, verbose=1):
@@ -939,7 +929,6 @@ def getODbalancepoint(od):
         bp = od['balancepointfine']
     return bp
 
-import pickle
 
 
 def loadpickle(pkl_file):
@@ -960,9 +949,3 @@ def loadpickle(pkl_file):
     return data2
 
 
-def load_qt(fname):
-    """ Load qtlab style file """
-    alldata = loadpickle(fname)
-    if isinstance(alldata, tuple):
-        alldata = alldata[0]
-    return alldata
