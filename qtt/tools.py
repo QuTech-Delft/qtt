@@ -818,6 +818,11 @@ try:
             notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, reshape_metadata(
                 dataset, printformat=printformat))
 
+            gatevalues = dataset.metadata.get('allgatevalues', None)
+            if gatevalues is not None:
+                notes = 'gates: ' + str(gatevalues) + '\n\n' + notes
+
+
         ppt, slide = addPPTslide(title=title, fig=temp_fig, subtitle=text,
                                  notes=notes, show=show, verbose=verbose, **kwargs)
 
