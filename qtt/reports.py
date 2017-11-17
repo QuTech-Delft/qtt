@@ -45,11 +45,7 @@ from qtt.legacy import analyse2dot
 
 from qtt.tools import diffImageSmooth, scanTime
 from qtt.measurements.scans import experimentFile, pinchoffFilename
-#from qtt.data import *
 from qtt import pgeometry
-#from qtt.algorithms.generic import *
-import traceback
-import logging
 
 from qtt.data import loadExperimentData
 import qtt.legacy  # should be removed in the future
