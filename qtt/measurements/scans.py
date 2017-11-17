@@ -807,6 +807,12 @@ def parse_minstrument(scanjob):
 
     return minstrument
 
+def awgGate(gate, station):
+    awg=getattr(station, 'awg', None)
+    if awg is None:
+        return False
+    return awg.awg_gate(gate)
+    
 def fastScan(scanjob, station):
     """ Returns whether we can do a fast scan using an awg 
     
