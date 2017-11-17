@@ -31,7 +31,7 @@ from qtt.algorithms.generic import showCoulombDirection
 
 from qtt.data import experimentFile, dataset2image, dataset2Dmetadata
 from qtt.algorithms.coulomb import coulombPeaks
-from qtt.legacy import saveImage, analyse2dot
+from qtt.legacy import saveImage 
 from qtt.legacy import singleElectronCheck, singleRegion
 from qtt.legacy import show2D
 
@@ -41,7 +41,6 @@ import qtt.utilities.markup as markup
 import copy
 import traceback
 
-from qtt.legacy import analyse2dot
 
 from qtt.tools import diffImageSmooth, scanTime
 from qtt.measurements.scans import experimentFile, pinchoffFilename
