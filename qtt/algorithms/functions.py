@@ -4,35 +4,37 @@ import numpy as np
 import scipy.constants
 
 
-def gaussian(x, mean, s, amplitude = 1, offset = 0):
+def gaussian(x, mean, s, amplitude=1, offset=0):
     """ Model for Gaussuan function
-    
+
        $$y = offset + amplitude * np.exp(-(1/2)*(x-mean)^2/s^2)$$
-    
+
     Args:
         x (array): data points
         mean, std, amplitude, offset: parameters
     Returns:
         y (array)
-        
+
     """
-    y = offset + amplitude * np.exp(- (x-mean)*(x-mean)/(2*s*s))
+    y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * s * s))
     return y
-    
+
+
 def exp_function(x, a, b, c):
     """ Model for exponential function
-    
+
        $$y = a + b * np.exp(-c * x)$$
-    
+
     Args:
         x (array): data points
         a, b, c: parameters
     Returns:
         y (array)
-        
+
     """
     y = a + b * np.exp(-c * x)
     return y
+
 
 def linear_function(x, a, b):
     """ Linear function with offset"""
@@ -60,7 +62,7 @@ def Fermi(x, cc, A, T, kb=1):
     return y
 
 
-def FermiLinear(x, a, b, cc, A, T, l = 1.16):
+def FermiLinear(x, a, b, cc, A, T, l=1.16):
     """ Fermi distribution with linear function added 
 
     Arguments:
@@ -73,10 +75,10 @@ def FermiLinear(x, a, b, cc, A, T, l = 1.16):
 
     The default value of the leverarm is
         (100 ueV/mV)/kb = (100*1e-6*scipy.constants.eV )/kb = 1.16.
-        
+
     For this value the input variable x should be in mV, the 
     temperature T in K. We input the leverarm divided by kb for numerical stability.
-    
+
     Returns:
         y (numpy array): value of the function
 
@@ -85,7 +87,7 @@ def FermiLinear(x, a, b, cc, A, T, l = 1.16):
         y = a*x + b + A*(1/ (1+\exp( l* (x-cc)/(T) ) ) )
 
     """
-    y = a * x + b + A * 1. / (1 + np.exp(l*(x - cc) / (T)))
+    y = a * x + b + A * 1. / (1 + np.exp(l * (x - cc) / (T)))
     return y
 
 
