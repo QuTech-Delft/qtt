@@ -64,6 +64,9 @@ class DataViewer(QtWidgets.QWidget):
 
         self.reloadbutton = QtWidgets.QPushButton()
         self.reloadbutton.setText('Reload data')
+        
+        self.outCombo = QtWidgets.QComboBox()
+        
         topLayout.addWidget(self.text)
         topLayout.addWidget(self.select_dir)
         topLayout.addWidget(self.reloadbutton)
@@ -78,9 +81,12 @@ class DataViewer(QtWidgets.QWidget):
         self.pptbutton.setText('Send data to powerpoint')
         self.clipboardbutton = QtWidgets.QPushButton()
         self.clipboardbutton.setText('Copy image to clipboard')
+        
         bLayout = QtWidgets.QHBoxLayout()
+        bLayout.addWidget(self.outCombo)
         bLayout.addWidget(self.pptbutton)
         bLayout.addWidget(self.clipboardbutton)
+        
         vertLayout.addItem(bLayout)
 
         self.setLayout(vertLayout)
@@ -95,7 +101,7 @@ class DataViewer(QtWidgets.QWidget):
         self.setDatadir(datadir)
 
         self.logtree.doubleClicked.connect(self.logCallback)
-
+        self.outCombo.currentIndexChanged.connect(self.comboCallback)
         self.select_dir.clicked.connect(self.selectDirectory)
         self.reloadbutton.clicked.connect(self.updateLogs)
         self.pptbutton.clicked.connect(self.pptCallback)
@@ -193,19 +199,22 @@ class DataViewer(QtWidgets.QWidget):
 
     def selectedDatafile(self):
         return self.datatag
+    
+    def comboCallback(self, index):
+        self.logCallback(self.logtree.currentIndex(), update_combo=False)
 
-    def logCallback(self, index):
-        """ Function called when a log entry is selected """
+    def logCallback(self, index, update_combo=True):
+        """ Function called when. a log entry is selected """
         logging.info('logCallback: index %s' % str(index))
         self.__debug['last'] = index
         pp = index.parent()
         row = index.row()
-
+        
         tag = pp.child(row, 2).data()
         filename = pp.child(row, 3).data()
         self.datatag = tag
         self.filename = filename
-
+        
         # load data
         if tag is not None:
             if self.verbose>=2:
@@ -247,9 +256,18 @@ class DataViewer(QtWidgets.QWidget):
                 infotxt = 'arrays: ' + ', '.join(list(data.arrays.keys()))
                 q = pp.child(row, 1).model()
                 q.setData(pp.child(row, 1), infotxt)
-
-                param_name = self.plot_parameter(data)
-
+                
+                print(self.outCombo.currentIndex())
+                if self.outCombo.currentIndex()>-1:
+                    param_name = self.outCombo.currentText()
+                else:
+                    param_name = self.plot_parameter(data)
+                if update_combo:
+                    self.outCombo.clear()
+                    for k in data.arrays.keys():
+                        if not getattr(data, k).is_setpoint:
+                            self.outCombo.addItem(k)
+                            
                 if param_name is not None:
                     logging.info(
                         'using parameter %s for plotting' % param_name)
@@ -257,7 +275,7 @@ class DataViewer(QtWidgets.QWidget):
                 else:
                     logging.info('could not find parameter for DataSet')
             except Exception as e:
-                print('logCallback! error ...')
+                print('logCallback! error: %s' % str(e))
                 logging.exception(e)
         pass
 
@@ -282,6 +300,7 @@ if __name__ == '__main__':
     app = pg.mkQApp()
 
     dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
+    dataviewer.verbose=5
     dataviewer.setGeometry(1280, 60, 700, 900)
     dataviewer.plotwindow.setMaximumHeight(400)
     dataviewer.show()
