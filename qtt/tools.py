@@ -672,8 +672,12 @@ try:
         try:
             ppt = Application.ActivePresentation
         except Exception:
-            print('could not open active Powerpoint presentation')
-            return None, None
+            print('could not open active Powerpoint presentation, opening blank presentation')
+            try:
+                ppt=Application.Presentations.Add()
+            except Exception as ex:
+                warnings.warn('could not make connection to Powerpoint presentation')
+                return None, None
 
         if show:
             Application.Visible = True  # shows what's happening, not required, but helpful for now
