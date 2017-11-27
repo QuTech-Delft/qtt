@@ -56,7 +56,7 @@ def tprint(string, dt=1, output=False):
 
 def removeZMQlogger(name=None, verbose=0):
     """ Remove ZMQ logger from handlers
-    
+
     Args:
         name (str or logger)
         verbose (int)
@@ -76,7 +76,7 @@ def removeZMQlogger(name=None, verbose=0):
 def installZMQlogger(port=5800, name=None, clear=True, level=None, logger=None):
     """ Add ZMQ logging handler to a Python logger 
     """
-    
+
     if clear:
         removeZMQlogger(name)
     ctx = zmq.Context()
@@ -184,32 +184,31 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         ''' Clear the messages in the logging window '''
         self.nkill = 10
 
-
-    def setup_monitor(self, port = 5800):
+    def setup_monitor(self, port=5800):
         ctx = zmq.Context()
         sub = ctx.socket(zmq.SUB)
         sub.bind('tcp://127.0.0.1:%i' % port)
         sub.setsockopt(zmq.SUBSCRIBE, b"")
         sub.setsockopt(zmq.RCVHWM, 10)
-    
-        #logging.basicConfig(level=level)
+
+        # logging.basicConfig(level=level)
         app = QtWidgets.QApplication.instance()
         app.processEvents()
-    
+
         logging.info('connected to port %s' % port)
         self.sub = sub
-            
+
         from apscheduler.schedulers.background import BackgroundScheduler
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.start()
         self.scheduler.add_job(self._callback, 'interval', seconds=1)
-        
+
     def _callback(self, verbose=1):
         logging.debug('ZMQ logger: logging...')
         app = QtWidgets.QApplication.instance()
         dlg = self
-        
+
         try:
             sub = self.sub
             level, message = sub.recv_multipart(zmq.NOBLOCK)
@@ -258,17 +257,20 @@ class zmqLoggingGUI(QtWidgets.QDialog):
             time.sleep(.1)
             dlg.nkill = max(dlg.nkill - 1, 0)
 
+
 def qt_logger(port, dlg, level=logging.INFO, verbose=1):
     raise Exception("do not use this function, use setup_monitor instead")
+
 
 def start_logging_gui():
     """ Start logging GUI in the background """
     proc = mp.QtProcess()
     lp = proc._import('qtt.loggingGUI')
-    mc = lp.zmqLoggingGUI(); mc.show()
+    mc = lp.zmqLoggingGUI()
+    mc.show()
     mc.setup_monitor(port=5800)
     qtt._dummy_logging_gui = mc
-    #return mc    
+    # return mc
 
 #%%
 if __name__ == '__main__':
@@ -276,7 +278,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
     parser.add_argument(
         '-l', '--level', default=logging.DEBUG, help="logging level")
-    parser.add_argument('-p', '--port', type=int, default=5800, help="zmq port")
+    parser.add_argument('-p', '--port', type=int,
+                        default=5800, help="zmq port")
     parser.add_argument('-g', '--gui', type=int, default=1, help="show gui")
     args = parser.parse_args()
 
