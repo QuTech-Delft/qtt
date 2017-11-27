@@ -267,6 +267,7 @@ class DataViewer(QtWidgets.QWidget):
                     for k in data.arrays.keys():
                         if not getattr(data, k).is_setpoint:
                             self.outCombo.addItem(k)
+                    logviewer.outCombo.setCurrentIndex(self.outCombo.findText(param_name))
                             
                 if param_name is not None:
                     logging.info(
