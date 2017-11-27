@@ -22,7 +22,8 @@ import zmq
 import zmq.log.handlers
 from zmq.log.handlers import PUBHandler
 
-
+import pyqtgraph.multiprocess as mp
+import qtt
 #%% Util functions
 
 
@@ -54,7 +55,16 @@ def tprint(string, dt=1, output=False):
 
 
 def removeZMQlogger(name=None, verbose=0):
-    logger = logging.getLogger(name)
+    """ Remove ZMQ logger from handlers
+    
+    Args:
+        name (str or logger)
+        verbose (int)
+    """
+    if isinstance(name, str) or name is None:
+        logger = logging.getLogger(name)
+    else:
+        logger = name
 
     for h in logger.handlers:
         if isinstance(h, zmq.log.handlers.PUBHandler):
@@ -63,7 +73,10 @@ def removeZMQlogger(name=None, verbose=0):
             logger.removeHandler(h)
 
 
-def installZMQlogger(port=5800, name=None, clear=True, level=None):
+def installZMQlogger(port=5800, name=None, clear=True, level=None, logger=None):
+    """ Add ZMQ logging handler to a Python logger 
+    """
+    
     if clear:
         removeZMQlogger(name)
     ctx = zmq.Context()
@@ -72,12 +85,10 @@ def installZMQlogger(port=5800, name=None, clear=True, level=None):
 
     pub.connect('tcp://127.0.0.1:%i' % port)
 
-    if name is None:
-        rootlogger = logging.getLogger()
-    else:
-        rootlogger = logging.getLogger(name)
+    if logger is None:
+        logger = logging.getLogger()
     if level is not None:
-        rootlogger.setLevel(level)
+        logger.setLevel(level)
     handler = PUBHandler(pub)
     pid = os.getpid()
     pstr = 'pid %d: ' % pid
@@ -92,10 +103,10 @@ def installZMQlogger(port=5800, name=None, clear=True, level=None):
         logging.CRITICAL: logging.Formatter(pstr +
                                             "%(levelname)s %(filename)s:%(lineno)d - %(message)s\n")}
 
-    rootlogger.addHandler(handler)
-    logging.debug('installZMQlogger: handler installed')
+    logger.addHandler(handler)
+    logger.debug('installZMQlogger: handler installed')
     # first message always is discarded
-    return rootlogger
+    return logger
 
 #%%
 
@@ -105,7 +116,8 @@ class zmqLoggingGUI(QtWidgets.QDialog):
     LOG_LEVELS = dict({logging.DEBUG: 'debug', logging.INFO: 'info',
                        logging.WARN: 'warning', logging.ERROR: 'error', logging.CRITICAL: 'critical'})
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, extra_controls=False):
+        """ Simple GUI to view log messages """
         super(zmqLoggingGUI, self).__init__(parent)
 
         self.setWindowTitle('ZMQ logger')
@@ -117,21 +129,22 @@ class zmqLoggingGUI(QtWidgets.QDialog):
 
         self._button = QtWidgets.QPushButton(self)
         self._button.setText('Clear')
-        self._killbutton = QtWidgets.QPushButton(self)
-        self._killbutton.setText('Kill processes')
 
         self._levelBox = QtWidgets.QComboBox(self)
         for k in sorted(self.LOG_LEVELS.keys()):
-            print('item %s' % k)
+            logging.debug('item %s' % k)
             val = self.LOG_LEVELS[k]
             self._levelBox.insertItem(k, val)
 
         blayout = QtWidgets.QHBoxLayout()
         blayout.addWidget(self._button)
-        blayout.addWidget(self._killbutton)
+        if extra_controls:
+            self._killbutton = QtWidgets.QPushButton(self)
+            self._killbutton.setText('Kill processes')
+            blayout.addWidget(self._killbutton)
+            self._killbutton.clicked.connect(self.killPID)
         blayout.addWidget(self._levelBox)
         self._button.clicked.connect(self.clearMessages)
-        self._killbutton.clicked.connect(self.killPID)
         self._levelBox.currentIndexChanged.connect(self.setLevel)
 
         layout = QtWidgets.QVBoxLayout()
@@ -148,11 +161,12 @@ class zmqLoggingGUI(QtWidgets.QDialog):
     def setLevel(self, boxidx):
         name = self._levelBox.itemText(boxidx)
         lvl = self.imap.get(name, None)
-        print('set level to %s: %d' % (name, lvl))
+        logging.debug('set level to %s: %d' % (name, lvl))
         if lvl is not None:
             self.loglevel = lvl
 
     def addMessage(self, msg, level=None):
+        """ Add a message to the GUI list """
         if level is not None:
             if level < self.loglevel:
                 return
@@ -171,6 +185,79 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         self.nkill = 10
 
 
+    def setup_monitor(self, port = 5800):
+        ctx = zmq.Context()
+        sub = ctx.socket(zmq.SUB)
+        sub.bind('tcp://127.0.0.1:%i' % port)
+        sub.setsockopt(zmq.SUBSCRIBE, b"")
+        sub.setsockopt(zmq.RCVHWM, 10)
+    
+        #logging.basicConfig(level=level)
+        app = QtWidgets.QApplication.instance()
+        app.processEvents()
+    
+        logging.info('connected to port %s' % port)
+        self.sub = sub
+            
+        from apscheduler.schedulers.background import BackgroundScheduler
+
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.start()
+        self.scheduler.add_job(self._callback, 'interval', seconds=1)
+        
+    def _callback(self, verbose=1):
+        logging.debug('ZMQ logger: logging...')
+        app = QtWidgets.QApplication.instance()
+        dlg = self
+        
+        try:
+            sub = self.sub
+            level, message = sub.recv_multipart(zmq.NOBLOCK)
+            # level, message = sub.recv_multipart()
+            message = message.decode('ascii')
+            if message.endswith('\n'):
+                # trim trailing newline, which will get appended again
+                message = message[:-1]
+            level = level.lower().decode('ascii')
+            log = getattr(logging, level)
+            lvlvalue = dlg.imap.get(level, None)
+
+            if verbose >= 2:
+                log(message)
+            dlg.addMessage(message + '\n', lvlvalue)
+
+            if dlg.nkill > 0:
+                print('check pid')
+                m = re.match(r'pid (\d*): heartbeat', message)
+                dlg.nkill = dlg.nkill - 1
+                if m is not None:
+                    pid = int(m.group(1))
+                    print('killing pid %d' % pid)
+                    mysignal = getattr(signal, 'SIGKILL', signal.SIGTERM)
+                    try:
+                        os.kill(pid, mysignal)  # or signal.SIGKILL
+                        dlg.addMessage(
+                            'send kill signal to pid %d\n' % pid, logging.CRITICAL)
+                    except Exception:
+                        dlg.addMessage(
+                            'kill signal to pid %d failed\n' % pid, logging.CRITICAL)
+                        pass
+            app.processEvents()
+
+            if verbose >= 2:
+                print('message: %s (level %s)' % (message, level))
+        except zmq.error.Again:
+            # no messages in system....
+            app = QtWidgets.QApplication.instance()
+
+            app.processEvents()
+            time.sleep(.06)
+            message = ''
+            level = None
+        if dlg.nkill > 0:
+            time.sleep(.1)
+            dlg.nkill = max(dlg.nkill - 1, 0)
+
 def qt_logger(port, dlg, level=logging.INFO, verbose=1):
     ctx = zmq.Context()
     sub = ctx.socket(zmq.SUB)
@@ -182,7 +269,7 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
     app = QtWidgets.QApplication.instance()
     app.processEvents()
 
-    print('connected to port %s' % port)
+    logging.info('connected to port %s' % port)
     while True:
         tprint('ZMQ logger: logging...', dt=5)
         try:
@@ -230,15 +317,14 @@ def qt_logger(port, dlg, level=logging.INFO, verbose=1):
             time.sleep(.1)
             dlg.nkill = max(dlg.nkill - 1, 0)
 
-import pyqtgraph.multiprocess as mp
-import qtt
+
 
 def start_logging_gui():
     """ Start logging GUI in the background """
     proc = mp.QtProcess()
     lp = proc._import('qtt.loggingGUI')
     mc = lp.zmqLoggingGUI(); mc.show()
-    
+    mc.setup_monitor(port=5800)
     qtt._dummy_logging_gui = mc
     #return mc    
 
@@ -264,12 +350,11 @@ if __name__ == '__main__':
 
     # start the log watcher
     try:
-        qt_logger(port, level=args.level, verbose=verbose, dlg=dlg)
+        dlg.setup_monitor(port)
+        #qt_logger(port, level=args.level, verbose=verbose, dlg=dlg)
     except KeyboardInterrupt:
         pass
 
-    # if (app):
-    #    app.exec_()
 
 #%% Send message to logger
 if 0:
