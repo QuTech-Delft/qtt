@@ -259,65 +259,7 @@ class zmqLoggingGUI(QtWidgets.QDialog):
             dlg.nkill = max(dlg.nkill - 1, 0)
 
 def qt_logger(port, dlg, level=logging.INFO, verbose=1):
-    ctx = zmq.Context()
-    sub = ctx.socket(zmq.SUB)
-    sub.bind('tcp://127.0.0.1:%i' % port)
-    sub.setsockopt(zmq.SUBSCRIBE, b"")
-    sub.setsockopt(zmq.RCVHWM, 10)
-
-    logging.basicConfig(level=level)
-    app = QtWidgets.QApplication.instance()
-    app.processEvents()
-
-    logging.info('connected to port %s' % port)
-    while True:
-        tprint('ZMQ logger: logging...', dt=5)
-        try:
-            level, message = sub.recv_multipart(zmq.NOBLOCK)
-            # level, message = sub.recv_multipart()
-            message = message.decode('ascii')
-            if message.endswith('\n'):
-                # trim trailing newline, which will get appended again
-                message = message[:-1]
-            level = level.lower().decode('ascii')
-            log = getattr(logging, level)
-            lvlvalue = dlg.imap.get(level, None)
-
-            if verbose >= 2:
-                log(message)
-            dlg.addMessage(message + '\n', lvlvalue)
-
-            if dlg.nkill > 0:
-                print('check pid')
-                m = re.match(r'pid (\d*): heartbeat', message)
-                dlg.nkill = dlg.nkill - 1
-                if m is not None:
-                    pid = int(m.group(1))
-                    print('killing pid %d' % pid)
-                    mysignal = getattr(signal, 'SIGKILL', signal.SIGTERM)
-                    try:
-                        os.kill(pid, mysignal)  # or signal.SIGKILL
-                        dlg.addMessage(
-                            'send kill signal to pid %d\n' % pid, logging.CRITICAL)
-                    except Exception:
-                        dlg.addMessage(
-                            'kill signal to pid %d failed\n' % pid, logging.CRITICAL)
-                        pass
-            app.processEvents()
-
-            if verbose >= 2:
-                print('message: %s (level %s)' % (message, level))
-        except zmq.error.Again:
-            # no messages in system....
-            app.processEvents()
-            time.sleep(.06)
-            message = ''
-            level = None
-        if dlg.nkill > 0:
-            time.sleep(.1)
-            dlg.nkill = max(dlg.nkill - 1, 0)
-
-
+    raise Exception("do not use this function, use setup_monitor instead")
 
 def start_logging_gui():
     """ Start logging GUI in the background """
@@ -351,7 +293,6 @@ if __name__ == '__main__':
     # start the log watcher
     try:
         dlg.setup_monitor(port)
-        #qt_logger(port, level=args.level, verbose=verbose, dlg=dlg)
     except KeyboardInterrupt:
         pass
 
