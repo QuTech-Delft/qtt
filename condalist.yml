@@ -111,6 +111,7 @@ dependencies:
   - jupyter-console==5.2.0
   - jupyter-core==4.3.0
   - prompt-toolkit==1.0.15
+  - apscheduler
   - pyserial==3.4
   - pyzmqrc
   - Polygon3
