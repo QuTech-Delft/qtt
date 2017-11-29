@@ -17,6 +17,7 @@ import re
 
 from qtpy import QtGui
 from qtpy import QtWidgets
+from qtpy.QtCore import Signal, Slot
 
 import zmq
 import zmq.log.handlers
@@ -157,7 +158,11 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         self._levelBox.setCurrentIndex(1)
         self.loglevel = logging.INFO
         self.nkill = 0
-
+        
+    def closeEvent(self, evnt):
+        print('loggingGUI: close event')
+        super().closeEvent(evnt)
+            
     def setLevel(self, boxidx):
         name = self._levelBox.itemText(boxidx)
         lvl = self.imap.get(name, None)
@@ -165,15 +170,21 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         if lvl is not None:
             self.loglevel = lvl
 
+    addMessageSignal = Signal(str)
+    @Slot(str)
+    def _addMessage(self, msg):
+        """ Helper function to solve threading issues """
+        self._console.moveCursor(QtGui.QTextCursor.End)
+        self._console.insertPlainText(msg)
+        self._console.moveCursor(QtGui.QTextCursor.End)
+        
     def addMessage(self, msg, level=None):
         """ Add a message to the GUI list """
         if level is not None:
             if level < self.loglevel:
                 return
-        self._console.moveCursor(QtGui.QTextCursor.End)
-        self._console.insertPlainText(msg)
-        self._console.moveCursor(QtGui.QTextCursor.End)
-
+        self.addMessageSignal.emit(msg)
+        
     def clearMessages(self):
         ''' Clear the messages in the logging window '''
         self._console.clear()
