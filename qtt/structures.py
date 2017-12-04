@@ -197,7 +197,7 @@ class sensingdot_t:
             gates.set(gg[ii], sdval[ii])
 
         startval = sdval[1] + scanrange
-        startval = np.minimum(startval, 100)
+        startval = np.minimum(startval, 200)
         endval = sdval[1] - scanrange
         endval = np.maximum(endval, -700)
 

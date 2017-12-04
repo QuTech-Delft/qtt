@@ -542,7 +542,7 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
-    def setWaitTimes(self, station, min_time):
+    def setWaitTimes(self, station, min_time = 0):
         """ Set default waiting times based on gate filtering """
 
         gate_settle=getattr(station,'gate_settle', None)
@@ -1088,8 +1088,9 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         if resolution[0]%16 !=0 or resolution[1]%16 !=0 :
             # send out warning, due to rounding of the digitizer memory buffers
             #this is not supported
-            print('resolution argument: %s'  % (resolution,) )
+            #print('resolution argument: %s'  % (resolution,) )
             warnings.warn('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
+            raise 'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) 
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert
