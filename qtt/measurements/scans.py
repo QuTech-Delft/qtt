@@ -506,7 +506,21 @@ class sample_data_t (dict):
         b = bnds.get(gate, (None, None))
         return b
 
-
+    def restrict_boundaries(self, gate, value):
+        bnds = self.get('gate_boundaries', {})
+        b = bnds.get(gate, (None, None))
+        if b[1] is not None:
+            value=min(value, b[1])
+        if b[0] is not None:
+            value=max(value, b[0])
+        return value
+    
+def test_sample_data():
+    s=sample_data_t()
+    s['gate_boundaries']={'D0': [-500,100]}
+    v=s.restrict_boundaries('D0', 1000)
+    assert(v==100)
+    
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
 
@@ -2029,4 +2043,7 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             scanjob[param] = min(scanjob[param], bstep[1] - eps)
 
 
-
+#%% Unit testing
+            
+if __name__=='__main__':
+    test_sample_data()

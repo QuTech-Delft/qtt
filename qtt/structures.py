@@ -532,8 +532,8 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
         if unit is None:
             self.unit = 'a.u.'
 
-        #self.has_get=True
-        #self.has_set=True
+        self.has_get=True
+        self.has_set=True
         
     def get(self):
         values = []
