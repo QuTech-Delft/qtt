@@ -229,7 +229,13 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 
 
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
-    """ Determine tuning point from a 2D scan of a 1-dot """
+    """ Determine tuning point from a 2D scan of a 1-dot
+    
+    Args:
+        od (one-dot structure)
+        dd (2D dataset)
+    
+    """
     # XX = dd['data_array']
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
@@ -244,8 +250,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
             #impixel = r * impixel
 
     extentImage = copy.deepcopy(tr.scan_image_extent() ) # [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
-    mextentImage = tr.matplotlib_image_extent()
-
+    
     ims = im.copy()
     kk = np.ones((3, 3)) / 9.
     for ii in range(2):
@@ -264,14 +269,10 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     # balance point: method 1 (first point above threshold of 45 degree line)
     try:
         ww = np.nonzero(ims > lv)
-        # ww[0]+ww[1]
         zz = -ww[0] + ww[1]
         idx = zz.argmin()
         pt = np.array([[ww[1][idx]], [ww[0][idx]]])
         ptv = tr.pixel2scan(pt)
-        # print(pt); print(ptv)
-        # print(vsweep)
-
     except:
         print('qutechtnotools: error in onedotGetBalance: please debug')
         idx = 0

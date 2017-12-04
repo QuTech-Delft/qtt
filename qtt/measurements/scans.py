@@ -528,7 +528,7 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
-    def setWaitTimes(self, station):
+    def setWaitTimes(self, station, min_time):
         """ Set default waiting times based on gate filtering """
 
         gate_settle=getattr(station,'gate_settle', None)
@@ -539,7 +539,7 @@ class scanjob_t(dict):
             if f in self:
                 if gate_settle:
                     t=gate_settle(self[f]['param'])
-                self[f]['wait_time'] = t
+                self[f]['wait_time'] = max(t, min_time)
         self['wait_time_startscan']=.5+2*t
         
     def parse_stepdata(self, field, gates=None):
