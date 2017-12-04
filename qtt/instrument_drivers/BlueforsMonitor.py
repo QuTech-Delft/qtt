@@ -2,9 +2,12 @@ import sys
 import glob
 import getopt
 
+import qtt.instrument_drivers.DistributedInstrument
+
 from datetime import datetime
-from DistributedInstrument import InstrumentDataClient
-from DistributedInstrument import InstrumentDataServer
+import qtt.instrument_drivers.DistributedInstrument
+from qtt.instrument_drivers.DistributedInstrument import InstrumentDataClient
+from qtt.instrument_drivers.DistributedInstrument import InstrumentDataServer
 
 
 # -----------------------------------------------------------------------------
@@ -163,7 +166,7 @@ class BlueforsApp():
                          user=self._username_, password=self._password_)
 
 
-# -----------------------------------------------------------------------------
+#%% -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
     BlueforsApp().main(sys.argv)
@@ -178,8 +181,8 @@ directory = '<your_directory_here>'
 FridgeDataSender(folder_path=directory)
 
 ## Client (console 2)
-from BlueforsMonitor import FridgeDataReceiver
-client = FridgeDataReceiver(name='fridge')
+from qtt.instrument_drivers.BlueforsMonitor import FridgeDataReceiver
+client = FridgeDataReceiver(name='fridge', address='131.180.83.220', port=8001)
 print(client.temperature())
 print(client.pressure())
 print(client.datetime())
