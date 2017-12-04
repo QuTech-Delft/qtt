@@ -841,7 +841,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         station (object): contains all the instruments
         scanjob (scanjob_t): data for scan
         write_period (float): save-to-disk interval in seconds, None for no writing before finished
-        update_period (float): liveplot update interval in seconds
+        update_period (float): liveplot update interval in seconds, None for no updates
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -962,11 +962,12 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             
             alldata.store((ix,iy), datapoint)
             
-            delta, tprev, update = delta_time(tprev, thr=update_period)
-            
-            if update and liveplotwindow:
-                liveplotwindow.update_plot()
-                pg.mkQApp().processEvents()
+            if not (update_period is None):
+                delta, tprev, update = delta_time(tprev, thr=update_period)
+                
+                if update and liveplotwindow:
+                    liveplotwindow.update_plot()
+                    pg.mkQApp().processEvents()
         
         if qtt.abort_measurements():
             print('  aborting measurement loop')
