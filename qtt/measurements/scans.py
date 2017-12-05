@@ -1090,7 +1090,7 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
             #this is not supported
             #print('resolution argument: %s'  % (resolution,) )
             warnings.warn('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
-            raise 'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) 
+            raise Exception('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert
@@ -1578,7 +1578,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     sweepdata = scanjob['sweepdata']
 
     Naverage = scanjob.get('Naverage', 20)
-    resolution = scanjob.get('resolution', [90, 90])
+    resolution = scanjob.get('resolution', [80, 80])
 
     t0 = qtt.time.time()
 
