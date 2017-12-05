@@ -190,10 +190,10 @@ class DataViewer(QtWidgets.QWidget):
         if self.verbose>=2:
             print('DataViewer: updateLogs done' )
 
-    def plot_parameter(self, data):
+    def getPlotParameter(self):
         ''' Return parameter to be plotted '''
-        arraynames = data.arrays.keys()
-        if self.default_parameter in arraynames:
+        parameters = self.dataset.arrays.keys()
+        if self.default_parameter in parameters:
             return self.default_parameter
         return data.default_parameter_name()
 
@@ -201,85 +201,70 @@ class DataViewer(QtWidgets.QWidget):
         return self.datatag
     
     def comboCallback(self, index):
-        self.logCallback(self.logtree.currentIndex(), update_combo=False)
+        param_name = self.outCombo.currentText()
+        if self.dataset == None: return
+        self.updatePlot(param_name)
 
-    def logCallback(self, index, update_combo=True):
+    def logCallback(self, index):
         """ Function called when. a log entry is selected """
         logging.info('logCallback: index %s' % str(index))
         self.__debug['last'] = index
         pp = index.parent()
-        row = index.row()
-        
+        row = index.row()       
         tag = pp.child(row, 2).data()
         filename = pp.child(row, 3).data()
-        self.datatag = tag
         self.filename = filename
-        
-        # load data
-        if tag is not None:
-            if self.verbose>=2:
-                print('DataViewer: logCallback: tag %s, filename %s' % (tag,filename))
-            try:
-                logging.debug('DataViewer: load tag %s' % tag)
+        self.datatag = tag
+        if tag is None: return
+        if self.verbose>=2:
+            print('DataViewer logCallback: tag %s, filename %s' % (tag,filename))
+        try:
+            logging.debug('DataViewer: load tag %s' % tag)
+            data = self.loadData(filename, tag)
+            self.dataset = data
 
-                try:
-                    location=os.path.split(filename)[0]
-                    if self.verbose>=3:
-                                print('trying HDF5')
-                                print('tag: %s' % tag)
-                    from qcodes.data.hdf5_format import HDF5Format
-                    hformatter = HDF5Format()
-                    data = qcodes.load_data(location, formatter=hformatter, io=self.io)
-                    logging.debug('loaded HDF5 dataset %s' % tag)
-                    print(data)
-                except Exception as ex:
-                    # load with default formatter
-                    from qcodes.data.gnuplot_format import GNUPlotFormat
-                    hformatter = GNUPlotFormat()
-                    location=os.path.split(filename)[0]
-                    if self.verbose:
-                        if self.verbose>=2:
-                            print('failed with format:' )
-                            print(ex)
-                            
-                        if self.verbose>=3:
-                            logging.info('trying GNUPlotFormat: tag %s' % tag)
-                    data = qcodes.load_data(location, formatter=hformatter, io=self.io)
-                    logging.debug('loaded GNUPlotFormat datasett %s' % tag)
+            data_keys = data.arrays.keys()
+            infotxt = 'arrays: ' + ', '.join(list(data_keys))
+            q = pp.child(row, 1).model()
+            q.setData(pp.child(row, 1), infotxt)
 
-                if self.verbose:
-                        logging.debug('load tag %s: data loaded' % tag)
-                self.dataset = data
+            param_name = self.resetComboItems(data, data_keys)            
+            if not param_name: param_name = self.getPlotParameter()
+            self.updatePlot(param_name)
+        except Exception as e:
+            print('logCallback! error: %s' % str(e))
+            logging.exception(e)
+        return
 
-                self.qplot.clear()
+    def resetComboItems(self, data, keys):
+        self.outCombo.clear()
+        for key in keys:
+            if not getattr(data, key).is_setpoint:
+                self.outCombo.addItem(key)
+        return self.outCombo.currentText() if self.outCombo.count() > 0 else None
+    
+    def loadData(self, filename, tag):
+        location=os.path.split(filename)[0]
+        try:
+            from qcodes.data.hdf5_format import HDF5Format
+            hformatter = HDF5Format()
+            data = qcodes.load_data(location, formatter=hformatter, io=self.io)
+            logging.debug('loaded HDF5 dataset %s' % tag)
+        except Exception as ex:
+            from qcodes.data.gnuplot_format import GNUPlotFormat
+            hformatter = GNUPlotFormat()
+            data = qcodes.load_data(location, formatter=hformatter, io=self.io)
+            logging.debug('loaded GNUPlotFormat dataset %s' % tag)
+        return data
 
-                infotxt = 'arrays: ' + ', '.join(list(data.arrays.keys()))
-                q = pp.child(row, 1).model()
-                q.setData(pp.child(row, 1), infotxt)
-                
-                print(self.outCombo.currentIndex())
-                if self.outCombo.currentIndex()>-1:
-                    param_name = self.outCombo.currentText()
-                else:
-                    param_name = self.plot_parameter(data)
-                if update_combo:
-                    self.outCombo.clear()
-                    for k in data.arrays.keys():
-                        if not getattr(data, k).is_setpoint:
-                            self.outCombo.addItem(k)
-                    self.outCombo.setCurrentIndex(self.outCombo.findText(param_name))
-                            
-                if param_name is not None:
-                    logging.info(
-                        'using parameter %s for plotting' % param_name)
-                    self.qplot.add(getattr(data, param_name))
-                else:
-                    logging.info('could not find parameter for DataSet')
-            except Exception as e:
-                print('logCallback! error: %s' % str(e))
-                logging.exception(e)
-        pass
-
+    def updatePlot(self, parameter):
+        self.qplot.clear()                            
+        if parameter is None: 
+            logging.info('could not find parameter for DataSet')
+            return
+        else:
+            logging.info('using plotting parameter %s' % parameter)
+            self.qplot.add(getattr(self.dataset, parameter))
 
 #%% Run the GUI as a standalone program
 
