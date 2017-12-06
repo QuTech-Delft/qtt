@@ -15,7 +15,6 @@ import qtt.pgeometry
 import qtt.algorithms.coulomb
 from qtt import pgeometry
 
-
 # %% Find range of sensing dot used
 
 
