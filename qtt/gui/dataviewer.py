@@ -197,7 +197,7 @@ class DataViewer(QtWidgets.QWidget):
         parameters = self.dataset.arrays.keys()
         if self.default_parameter in parameters:
             return self.default_parameter
-        return data.default_parameter_name()
+        return self.dataset.default_parameter_name()
 
     def selectedDatafile(self):
         return self.datatag
