@@ -1,4 +1,4 @@
-#%% Load packages
+# %% Load packages
 
 import os
 import re
@@ -16,23 +16,24 @@ from qcodes.plots.pyqtgraph import QtPlot
 
 import qtt
 
-#%% Main class
+# %% Main class
 
 
 class DataViewer(QtWidgets.QWidget):
 
-
-    def __init__(self, datadir=None, window_title='Data browser', default_parameter='amplitude', extensions=['dat', 'hdf5'], verbose=1):
+    def __init__(self, datadir=None, window_title='Data browser',
+                 default_parameter='amplitude', extensions=['dat', 'hdf5'],
+                 verbose=1):
         ''' Simple viewer for Qcodes data
-    
+
         Arugments
         ---------
-    
+
             datadir (string or None): directory to scan for experiments
             default_parameter (string): name of default parameter to plot
         '''
         super(DataViewer, self).__init__()
-        self.verbose=verbose # for debugging
+        self.verbose = verbose  # for debugging
         self.default_parameter = default_parameter
         if datadir is None:
             datadir = qcodes.DataSet.default_io.base_location
@@ -64,9 +65,9 @@ class DataViewer(QtWidgets.QWidget):
 
         self.reloadbutton = QtWidgets.QPushButton()
         self.reloadbutton.setText('Reload data')
-        
+
         self.outCombo = QtWidgets.QComboBox()
-        
+
         topLayout.addWidget(self.text)
         topLayout.addWidget(self.select_dir)
         topLayout.addWidget(self.reloadbutton)
@@ -81,12 +82,12 @@ class DataViewer(QtWidgets.QWidget):
         self.pptbutton.setText('Send data to powerpoint')
         self.clipboardbutton = QtWidgets.QPushButton()
         self.clipboardbutton.setText('Copy image to clipboard')
-        
+
         bLayout = QtWidgets.QHBoxLayout()
         bLayout.addWidget(self.outCombo)
         bLayout.addWidget(self.pptbutton)
         bLayout.addWidget(self.clipboardbutton)
-        
+
         vertLayout.addItem(bLayout)
 
         self.setLayout(vertLayout)
@@ -106,14 +107,14 @@ class DataViewer(QtWidgets.QWidget):
         self.reloadbutton.clicked.connect(self.updateLogs)
         self.pptbutton.clicked.connect(self.pptCallback)
         self.clipboardbutton.clicked.connect(self.clipboardCallback)
-        if self.verbose>=2:
+        if self.verbose >= 2:
             print('created gui...')
         # get logs from disk
         self.updateLogs()
         self.datatag = None
-        
+
         self.show()
-        
+
     def setDatadir(self, datadir):
         self.datadir = datadir
         self.io = qcodes.DiskIO(datadir)
@@ -126,6 +127,7 @@ class DataViewer(QtWidgets.QWidget):
             print('no data selected')
             return
         qtt.tools.addPPT_dataset(self.dataset)
+
     def clipboardCallback(self):
         self.qplot.copyToClipboard()
 
@@ -144,12 +146,14 @@ class DataViewer(QtWidgets.QWidget):
         model = self._treemodel
         dd = []
         for e in self.extensions:
-            dd += qtt.pgeometry.findfilesR(self.datadir, '.*%s' % e, show_progress=True)
+            dd += qtt.pgeometry.findfilesR(self.datadir, '.*%s' %
+                                           e, show_progress=True)
         if self.verbose:
             print('DataViewer: found %d files' % (len(dd)))
 
         self.datafiles = sorted(dd)
-        self.datafiles = [os.path.join(self.datadir, d) for d in self.datafiles]
+        self.datafiles = [os.path.join(self.datadir, d)
+                          for d in self.datafiles]
 
         model.clear()
         model.setHorizontalHeaderLabels(['Log', 'Comments'])
@@ -158,37 +162,35 @@ class DataViewer(QtWidgets.QWidget):
         for i, d in enumerate(dd):
             try:
                 datetag, logtag = d.split(os.sep)[-3:-1]
-                if not datetag in logs:
+                if datetag not in logs:
                     logs[datetag] = dict()
                 logs[datetag][logtag] = d
             except Exception:
                 pass
         self.logs = logs
 
-        if self.verbose>=2:
-            print('DataViewer: create gui elements' )
+        if self.verbose >= 2:
+            print('DataViewer: create gui elements')
         for i, datetag in enumerate(sorted(logs.keys())[::-1]):
-            if self.verbose>=2:
-                print('DataViewer: datetag %s ' % datetag )
-            
+            if self.verbose >= 2:
+                print('DataViewer: datetag %s ' % datetag)
+
             parent1 = QtGui.QStandardItem(datetag)
             for j, logtag in enumerate(sorted(logs[datetag])):
                 filename = logs[datetag][logtag]
                 child1 = QtGui.QStandardItem(logtag)
                 child2 = QtGui.QStandardItem('info about plot')
-                if self.verbose>=2:
+                if self.verbose >= 2:
                     print('datetag %s, logtag %s' % (datetag, logtag))
-                    #print('   %s'  % filename)
                 child3 = QtGui.QStandardItem(os.path.join(datetag, logtag))
                 child4 = QtGui.QStandardItem(filename)
-                #child3 = QtGui.QStandardItem(os.path.join(datetag, logtag))
                 parent1.appendRow([child1, child2, child3, child4])
             model.appendRow(parent1)
             # span container columns
             self.logtree.setFirstColumnSpanned(
                 i, self.logtree.rootIndex(), True)
-        if self.verbose>=2:
-            print('DataViewer: updateLogs done' )
+        if self.verbose >= 2:
+            print('DataViewer: updateLogs done')
 
     def getPlotParameter(self):
         ''' Return parameter to be plotted '''
@@ -199,10 +201,11 @@ class DataViewer(QtWidgets.QWidget):
 
     def selectedDatafile(self):
         return self.datatag
-    
+
     def comboCallback(self, index):
         param_name = self.outCombo.currentText()
-        if self.dataset == None: return
+        if self.dataset is None:
+            return
         self.updatePlot(param_name)
 
     def logCallback(self, index):
@@ -210,14 +213,16 @@ class DataViewer(QtWidgets.QWidget):
         logging.info('logCallback: index %s' % str(index))
         self.__debug['last'] = index
         pp = index.parent()
-        row = index.row()       
+        row = index.row()
         tag = pp.child(row, 2).data()
         filename = pp.child(row, 3).data()
         self.filename = filename
         self.datatag = tag
-        if tag is None: return
-        if self.verbose>=2:
-            print('DataViewer logCallback: tag %s, filename %s' % (tag,filename))
+        if tag is None:
+            return
+        if self.verbose >= 2:
+            print('DataViewer logCallback: tag %s, filename %s' %
+                  (tag, filename))
         try:
             logging.debug('DataViewer: load tag %s' % tag)
             data = self.loadData(filename, tag)
@@ -228,8 +233,9 @@ class DataViewer(QtWidgets.QWidget):
             q = pp.child(row, 1).model()
             q.setData(pp.child(row, 1), infotxt)
 
-            param_name = self.resetComboItems(data, data_keys)            
-            if not param_name: param_name = self.getPlotParameter()
+            param_name = self.resetComboItems(data, data_keys)
+            if not param_name:
+                param_name = self.getPlotParameter()
             self.updatePlot(param_name)
         except Exception as e:
             print('logCallback! error: %s' % str(e))
@@ -238,13 +244,14 @@ class DataViewer(QtWidgets.QWidget):
 
     def resetComboItems(self, data, keys):
         self.outCombo.clear()
+        text = self.outCombo.currentText()
         for key in keys:
             if not getattr(data, key).is_setpoint:
                 self.outCombo.addItem(key)
-        return self.outCombo.currentText() if self.outCombo.count() > 0 else None
-    
+        return text if self.outCombo.count() > 0 else None
+
     def loadData(self, filename, tag):
-        location=os.path.split(filename)[0]
+        location = os.path.split(filename)[0]
         try:
             from qcodes.data.hdf5_format import HDF5Format
             hformatter = HDF5Format()
@@ -258,22 +265,21 @@ class DataViewer(QtWidgets.QWidget):
         return data
 
     def updatePlot(self, parameter):
-        self.qplot.clear()                            
-        if parameter is None: 
+        self.qplot.clear()
+        if parameter is None:
             logging.info('could not find parameter for DataSet')
             return
         else:
             logging.info('using plotting parameter %s' % parameter)
             self.qplot.add(getattr(self.dataset, parameter))
 
-#%% Run the GUI as a standalone program
-
+# %% Run the GUI as a standalone program
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
-        #sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'data', 'qutech', 'data')]
-        sys.argv += ['-d', os.path.join(os.path.expanduser('~'), 'tmp', 'qdata')]
+        sys.argv += ['-d', os.path.join(os.path.expanduser('~'),
+                     'tmp', 'qdata')]
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
@@ -286,16 +292,16 @@ if __name__ == '__main__':
     app = pg.mkQApp()
 
     dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
-    dataviewer.verbose=5
+    dataviewer.verbose = 5
     dataviewer.setGeometry(1280, 60, 700, 900)
     dataviewer.plotwindow.setMaximumHeight(400)
     dataviewer.show()
     self = dataviewer
 
-    #app.exec()
+    # app.exec()
 
 
-#%%
+# %%
 
 if 0:
     tag = list(list(dataviewer.logs.items())[0][1].items())[0][1]
