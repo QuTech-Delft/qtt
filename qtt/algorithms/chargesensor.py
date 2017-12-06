@@ -6,17 +6,39 @@
 """
 
 #%% Load packages
+<<<<<<< 8efb1c3df811f2f8286664615a6fa04098e7c21e
 import matplotlib.pyplot as plt
 import scipy.interpolate
 import numpy as np
 
 import qtt
 import qtt.pgeometry
+=======
+import os
+import sys
+import qcodes
+import matplotlib.pyplot as plt
+import time
+import pdb
+import scipy.interpolate
+import numpy as np
+
+from qcodes.data.hdf5_format import HDF5Format
+
+import qtt
+import qtt.pgeometry
+from qtt.algorithms.functions import gaussian
+from qtt.algorithms.tunneling import polmod_all_2slopes, fit_pol_all
+>>>>>>> autopep; bump version
 import qtt.algorithms.coulomb
 from qtt import pgeometry
 
 
+<<<<<<< 8efb1c3df811f2f8286664615a6fa04098e7c21e
 # %% Find range of sensing dot used
+=======
+#%% Find range of sensing dot used
+>>>>>>> autopep; bump version
 
 
 class DataLinearizer:
@@ -31,7 +53,11 @@ class DataLinearizer:
             xsr, ysr (array): data containing the signal
 
 
+<<<<<<< 8efb1c3df811f2f8286664615a6fa04098e7c21e
         Internal variables:
+=======
+        Internal variables:            
+>>>>>>> autopep; bump version
             tck: fit the charge sensor slope
             tck_inv: inverse fit the charge sensor slope
             linfit: linear fit to charge sensor slope
