@@ -1,30 +1,28 @@
+import os
 import sys
 import glob
 import getopt
 
-import qtt.instrument_drivers.DistributedInstrument
-
 from datetime import datetime
-import qtt.instrument_drivers.DistributedInstrument
 from qtt.instrument_drivers.DistributedInstrument import InstrumentDataClient
 from qtt.instrument_drivers.DistributedInstrument import InstrumentDataServer
 
-
 # -----------------------------------------------------------------------------
+
 
 class FridgeDataReceiver(InstrumentDataClient):
 
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
-        self.add_measurable_quantity('temperature', 'K', -1,
-                                     'Cold plate temperature')
-        self.add_measurable_quantity('pressure', 'bar', -1,
-                                     'Maxigauge pressure')
+        self.add_measurable_quantity('temperatures', 'K', -1,
+                                     'The CH temperature values')
+        self.add_measurable_quantity('pressures', 'bar', -1,
+                                     'The maxigauge pressures values')
         self.add_measurable_quantity('datetime', '', -1,
-                                     'Read time from server')
-
+                                     'Server date and time (for testing)')
 
 # -----------------------------------------------------------------------------
+
 
 class FridgeDataSender():
 
@@ -32,16 +30,12 @@ class FridgeDataSender():
     _P_file_ext_ = "maxigauge*.log"
 
     def __init__(self, folder_path, **kwargs):
-        self._check_folder_path_(folder_path)
+        self._folder_path_ = folder_path
         quantities = {'datetime': self.get_datetime,
-                      'temperature': self.get_temperatures,
-                      'pressure': self.get_pressures}
+                      'temperatures': self.get_temperatures,
+                      'pressures': self.get_pressures}
         _data_server_ = InstrumentDataServer(quantities, **kwargs)
-        _data_server_.start()
-
-    def _check_folder_path_(self, path):
-        self._folder_path_ = path
-        # check if folder and .../17-10-11/ exists..
+        _data_server_.run()
 
     def _read_file_(self, file_path):
         with open(file_path, 'r') as fstream:
@@ -49,25 +43,27 @@ class FridgeDataSender():
         return last_line.strip().split(",")
 
     def _read_temperature_(self, file_path):
-        temperature_data = self._read_file_(file_path)
-        return float(temperature_data[-1])
+        data = self._read_file_(file_path)
+        temperature = float(data[2])
+        time = '{0} {1}'.format(data[0], data[1])
+        return (temperature, time)
 
     def get_temperatures(self):
         today = datetime.now().strftime('%y-%m-%d')
         T_directory = '{0}\\{1}\\{2}'.format(self._folder_path_, today,
                                              FridgeDataSender._T_file_ext_)
-        print(T_directory)
         temperature_files = glob.glob(T_directory)
-        print(temperature_files)
         assert(len(temperature_files) == 5)
         T = [self._read_temperature_(file) for file in temperature_files]
-        return {'1 - PT1': T[0], '2 - PT2': T[1], '3 - Magnet': T[2],
-                '5 - Still': T[3], '6 - MC': T[4]}
+        return {'PT1': T[0], 'PT2': T[1], 'Magnet': T[2],
+                'Still': T[3], 'MC': T[4]}
 
     def _read_pressure_(self, file_path):
         P = self._read_file_(file_path)
+        time = '{0} {1}'.format(P[0], P[1])
         return {'P1': float(P[5]), 'P2': float(P[11]), 'P3': float(P[17]),
-                'P4': float(P[23]), 'P5': float(P[29]), 'P6': float(P[35])}
+                'P4': float(P[23]), 'P5': float(P[29]), 'P6': float(P[35]), 
+                'time': time}
 
     def get_pressures(self):
         today = datetime.now().strftime('%y-%m-%d')
@@ -80,14 +76,8 @@ class FridgeDataSender():
     def get_datetime(self):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    def start_data_logger(self):
-        self._data_server_.run()
-
-    def stop_data_logger(self):
-        self._data_server_.stop()
-
-
 # -----------------------------------------------------------------------------
+
 
 class BlueforsApp():
 
@@ -95,7 +85,7 @@ class BlueforsApp():
     _long_options_ = ['--help', '--dir', '--un', '--pw', '--port']
 
     def __init__(self):
-        self._directory_ = ''  # todo: set default folder...
+        self._directory_ = ''
         self._username_ = None
         self._password_ = None
         self._port_ = 8080
@@ -132,30 +122,36 @@ class BlueforsApp():
         try:
             self._port_ = int(port)
         except ValueError:
-            self.print_usage(-3)
+            self.print_usage(2)
 
     def set_directory(self, directory: str):
+        print(directory)
         self._directory_ = directory
 
     def check_directory(self):
-        pass  # todo check if exists
+        today = datetime.now().strftime('%y-%m-%d')
+        directory = '{0}\\{1}'.format(self._directory_, today)
+        if not os.path.exists(directory):
+            print('Directory ({0}) does not exist!\n'.format(directory))
+            self.print_usage(3)
 
     def main(self, argv):
         if len(argv) < 2:
-            self.print_usage(-1)
+            self.print_usage(1)
         try:
             options, arguments = getopt.getopt(argv[1:],
                                                BlueforsApp._short_options_,
                                                BlueforsApp._long_options_)
         except getopt.GetoptError:
-            self.print_usage(-2)
+            self.print_usage(-1)
+        print(options)
         for option, argument in options:
             if option in ('-?', '-h', '--help'):
                 self.print_usage()
             elif option in ("-u", "--un"):
                 self.set_username(argument)
             elif option in ("-p", "--pw"):
-                    self.set_password(argument)
+                self.set_password(argument)
             elif option in ("-d", "--dir"):
                 self.set_directory(argument)
             elif option in ("-n", "--port"):
@@ -165,25 +161,28 @@ class BlueforsApp():
         FridgeDataSender(self._directory_, port=self._port_,
                          user=self._username_, password=self._password_)
 
-
-#%% -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Main block for creating py-installer
 
 if __name__ == '__main__':
     BlueforsApp().main(sys.argv)
 
+# -----------------------------------------------------------------------------
+# Sample for testing
+    
+# Python console 1: server
+if None:
+    from qtt.instrument_drivers.BlueforsMonitor import BlueforsApp
+    argv = ['', '-d', 'D:\\Workspace\\QuTech\\TestData\\Fridge']
+    BlueforsApp().main(argv)
 
-'''
-#Basic example
+# Python console 2: client
+if None:
+    from qtt.instrument_drivers.BlueforsMonitor import FridgeDataReceiver
+    client = FridgeDataReceiver(name='fridge')
+    print(client.temperatures())
+    print(client.pressures())
+    print(client.datetime())
+    client.close()
 
-## Server (console 1)
-from BlueforsMonitor import FridgeDataSender
-directory = '<your_directory_here>'
-FridgeDataSender(folder_path=directory)
-
-## Client (console 2)
-from qtt.instrument_drivers.BlueforsMonitor import FridgeDataReceiver
-client = FridgeDataReceiver(name='fridge', address='131.180.83.220', port=8001)
-print(client.temperature())
-print(client.pressure())
-print(client.datetime())
-'''
+# -----------------------------------------------------------------------------

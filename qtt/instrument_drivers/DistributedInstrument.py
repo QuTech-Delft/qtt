@@ -3,12 +3,12 @@ from functools import partial
 from zmqrpc.ZmqRpcClient import ZmqRpcClient
 from zmqrpc.ZmqRpcServer import ZmqRpcServerThread
 
-
 # -----------------------------------------------------------------------------
-# Represents a client for collecting instrument measurable quantities from
-# a server.
+
 
 class InstrumentDataClient(Instrument):
+    '''Represents a client for collecting instrument measurable quantities
+    from a server.'''
 
     def __init__(self, name, address='localhost', port=8080, user=None,
                  password=None, **kwargs):
@@ -18,7 +18,7 @@ class InstrumentDataClient(Instrument):
 
     def __proxy_wrapper__(self, command_name, default_value, sec_time_out=3):
         try:
-            return self._client_.invoke(command_name, None, 3)
+            return self._client_.invoke(command_name, None, sec_time_out)
         except:
             return default_value
 
@@ -30,11 +30,12 @@ class InstrumentDataClient(Instrument):
                            docstring=doc_string)
 
 
-# ------------------------------------------------------------------------------
-# Represents a server proxy for sending instrument measurable quantities to
-# a client.
+# -----------------------------------------------------------------------------
+
 
 class InstrumentDataServer():
+    '''Represents a server proxy for sending instrument measurable quantities
+    to a client.'''
 
     def __init__(self, functions, address='*', port=8080, user=None,
                  password=None):
@@ -44,7 +45,7 @@ class InstrumentDataServer():
                                            username=user,
                                            password=password)
 
-    def start(self):
+    def run(self):
         '''Start the server proxy on the set adrress and port-number.'''
         print(' Enabled instrument server...')
         print(' Press CTRL+C to quit!')
@@ -52,15 +53,10 @@ class InstrumentDataServer():
             self._server_.start()
             while(True):
                 continue
-        except KeyboardInterrupt as ex:
+        except KeyboardInterrupt:
             print(' Done')
         finally:
             self._server_.stop()
             self._server_.join()
 
-
 # -----------------------------------------------------------------------------
-# Example for testing...
-
-if __name__ == '__main__':
-    fridge = FridgeProxy(name='fridge_test', ip_address='localhost')
