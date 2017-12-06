@@ -6,26 +6,17 @@
 """
 
 #%% Load packages
-import os
-import sys
-import qcodes
 import matplotlib.pyplot as plt
-import time
-import pdb
 import scipy.interpolate
 import numpy as np
 
-from qcodes.data.hdf5_format import HDF5Format
-
 import qtt
 import qtt.pgeometry
-from qtt.algorithms.functions import gaussian
-from qtt.algorithms.tunneling import polmod_all_2slopes, fit_pol_all
 import qtt.algorithms.coulomb
 from qtt import pgeometry
 
 
-#%% Find range of sensing dot used
+# %% Find range of sensing dot used
 
 
 class DataLinearizer:
@@ -40,7 +31,7 @@ class DataLinearizer:
             xsr, ysr (array): data containing the signal
 
 
-        Internal variables:            
+        Internal variables:
             tck: fit the charge sensor slope
             tck_inv: inverse fit the charge sensor slope
             linfit: linear fit to charge sensor slope
@@ -62,10 +53,6 @@ class DataLinearizer:
         plt.clf()
         ysnew = self.forward_curve(self.xsr)
         plt.plot(self.xsr, ysnew, '-r', linewidth=4, label='spline')
-        #plt.plot(xsnew, ysr, '-m', linewidth=2, label='spline inverse')
-
-       # pgeometry.plot2Dline([0, -1, minv], '--c', label='range of scan')
-       # pgeometry.plot2Dline([0, -1, maxv], '--c', label='range of scan')
         plt.plot(self.xsr, self.forward(self.xsr), ':k', label='linear fit')
         plt.legend(numpoints=1)
 
@@ -135,8 +122,8 @@ def test_datalinearizer():
     x = np.arange(0, 10, .1)
     y = x + .05 * x**2
     dl = DataLinearizer(x, y)
-    a = dl.forward([1])
-    b = dl.forward_curve([1])
+    _ = dl.forward([1])
+    _ = dl.forward_curve([1])
 
 if __name__ == '__main__':
     test_datalinearizer()
