@@ -11,6 +11,10 @@ from qtt.instrument_drivers.DistributedInstrument import InstrumentDataServer
 
 
 class FridgeDataReceiver(InstrumentDataClient):
+    '''
+    Receives temperature and pressure data from the Bluefors fridge with
+    server connection.
+    '''
 
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
@@ -25,6 +29,10 @@ class FridgeDataReceiver(InstrumentDataClient):
 
 
 class FridgeDataSender():
+    '''
+    Sends temperature and pressure data of the Bluefors fridge to the proxy
+    client connections.
+    '''
 
     _T_file_ext_ = "CH*T*.log"
     _P_file_ext_ = "maxigauge*.log"
@@ -62,7 +70,7 @@ class FridgeDataSender():
         P = self._read_file_(file_path)
         time = '{0} {1}'.format(P[0], P[1])
         return {'P1': float(P[5]), 'P2': float(P[11]), 'P3': float(P[17]),
-                'P4': float(P[23]), 'P5': float(P[29]), 'P6': float(P[35]), 
+                'P4': float(P[23]), 'P5': float(P[29]), 'P6': float(P[35]),
                 'time': time}
 
     def get_pressures(self):
@@ -168,18 +176,18 @@ if __name__ == '__main__':
     BlueforsApp().main(sys.argv)
 
 # -----------------------------------------------------------------------------
-# Sample for testing
-    
+# Sample for local testing
+
 # Python console 1: server
 if None:
     from qtt.instrument_drivers.BlueforsMonitor import BlueforsApp
-    argv = ['', '-d', 'D:\\Workspace\\QuTech\\TestData\\Fridge']
+    argv = ['', '-d', '<fridge_data_dir>']
     BlueforsApp().main(argv)
 
 # Python console 2: client
 if None:
     from qtt.instrument_drivers.BlueforsMonitor import FridgeDataReceiver
-    client = FridgeDataReceiver(name='fridge')
+    client = FridgeDataReceiver(name='dummy_fridge')
     print(client.temperatures())
     print(client.pressures())
     print(client.datetime())

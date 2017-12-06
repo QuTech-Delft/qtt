@@ -7,8 +7,17 @@ from zmqrpc.ZmqRpcServer import ZmqRpcServerThread
 
 
 class InstrumentDataClient(Instrument):
-    '''Represents a client for collecting instrument measurable quantities
-    from a server.'''
+    '''
+    A proxy client for collecting instrument measurable quantities
+    from a server.
+
+    Args:
+        name (str): the name of the instrument.
+        address (str): the ip-address of the server.
+        port (int): the port number of the proxy server.
+        user (str): a username for protection.
+        password (str): a password for protection.
+    '''
 
     def __init__(self, name, address='localhost', port=8080, user=None,
                  password=None, **kwargs):
@@ -24,6 +33,7 @@ class InstrumentDataClient(Instrument):
 
     def add_measurable_quantity(self, name='quantity', unit='arb.',
                                 default_value=None, doc_string='Unknown'):
+        '''Adds a instument function to the dataclient.'''
         command = partial(self.__proxy_wrapper__, command_name=name,
                           default_value=default_value)
         self.add_parameter(name, unit=unit, get_cmd=command,
@@ -34,8 +44,17 @@ class InstrumentDataClient(Instrument):
 
 
 class InstrumentDataServer():
-    '''Represents a server proxy for sending instrument measurable quantities
-    to a client.'''
+    '''
+    Represents a server proxy for sending instrument measurable quantities
+    to a client.
+
+    Args:
+        functions (dict): the instrument functions.
+        address (str): the ip-address of the server.
+        port (int): the port number of the proxy server.
+        user (str): a username for protection.
+        password (str): a password for protection.
+    '''
 
     def __init__(self, functions, address='*', port=8080, user=None,
                  password=None):
