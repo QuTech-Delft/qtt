@@ -174,6 +174,20 @@ class virtual_gates(Instrument):
             vals = [(gate, self.get(gate)) for gate in self._virts_list]
         return dict(vals)
 
+    def setgates(self, values, verbose=0):
+        """ Seset a set of gates to new values.
+
+        Args:
+            values (dict): keys are gate names, values are values to be set
+            verbose (int): Output level
+        """
+        if verbose:
+            print('resetgates: setting gates to default values')
+        for g, val in values.items():
+            if verbose >= 2:
+                print('  setting gate %s to %.1f [mV]' % (g, val))
+            self.set(g, val)
+        
     def resetgates(self, activegates, basevalues=None, verbose=0):
         """Reset a set of gates to new values.
 
