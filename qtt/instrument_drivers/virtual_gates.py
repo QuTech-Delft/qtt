@@ -175,7 +175,7 @@ class virtual_gates(Instrument):
         return dict(vals)
 
     def setgates(self, values, verbose=0):
-        """ Seset a set of gates to new values.
+        """ Set gates to new values.
 
         Args:
             values (dict): keys are gate names, values are values to be set
