@@ -152,6 +152,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     update_field = Signal(str, str, object, bool)
 
+    def stop(self):
+        self._timer.stop()
+        
     @Slot(str, str, object, bool)
     def _set_field(self, iname, g, value, force_update):
         """ Helper function
@@ -187,7 +190,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         for iname in self._instrumentnames:
             instr = self._instruments[self._instrumentnames.index(iname)]
 
-            pp = instr.parameters
+            try:
+                pp = instr.parameters
+            except AttributeError as ex:
+                # instrument was removed
+                print('instrument was removed, stopping ParameterViewer')
+                self._timer.stop()
+
             ppnames = sorted(instr.parameters.keys())
 
             si = sys.getswitchinterval()
