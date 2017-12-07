@@ -126,7 +126,8 @@ class DataViewer(QtWidgets.QWidget):
         if self.dataset is None:
             print('no data selected')
             return
-        qtt.tools.addPPT_dataset(self.dataset)
+        qtt.tools.addPPT_dataset(self.dataset,
+                                 paramname=self.getPlotParameter())
 
     def clipboardCallback(self):
         self.qplot.copyToClipboard()
@@ -194,6 +195,9 @@ class DataViewer(QtWidgets.QWidget):
 
     def getPlotParameter(self):
         ''' Return parameter to be plotted '''
+        param_name = self.outCombo.currentText()
+        if param_name is not '':
+            return param_name
         parameters = self.dataset.arrays.keys()
         if self.default_parameter in parameters:
             return self.default_parameter
@@ -203,10 +207,11 @@ class DataViewer(QtWidgets.QWidget):
         return self.datatag
 
     def comboCallback(self, index):
-        param_name = self.outCombo.currentText()
-        if self.dataset is None:
+        if not self._update_plot_:
             return
-        self.updatePlot(param_name)
+        param_name = self.getPlotParameter()
+        if self.dataset is not None:
+            self.updatePlot(param_name)
 
     def logCallback(self, index):
         """ Function called when. a log entry is selected """
@@ -227,15 +232,12 @@ class DataViewer(QtWidgets.QWidget):
             logging.debug('DataViewer: load tag %s' % tag)
             data = self.loadData(filename, tag)
             self.dataset = data
-
             data_keys = data.arrays.keys()
             infotxt = 'arrays: ' + ', '.join(list(data_keys))
             q = pp.child(row, 1).model()
             q.setData(pp.child(row, 1), infotxt)
-
-            param_name = self.resetComboItems(data, data_keys)
-            if not param_name:
-                param_name = self.getPlotParameter()
+            self.resetComboItems(data, data_keys)
+            param_name = self.getPlotParameter()
             self.updatePlot(param_name)
         except Exception as e:
             print('logCallback! error: %s' % str(e))
@@ -243,12 +245,13 @@ class DataViewer(QtWidgets.QWidget):
         return
 
     def resetComboItems(self, data, keys):
+        self._update_plot_ = False
         self.outCombo.clear()
-        text = self.outCombo.currentText()
         for key in keys:
             if not getattr(data, key).is_setpoint:
                 self.outCombo.addItem(key)
-        return text if self.outCombo.count() > 0 else None
+        self._update_plot_ = True
+        return
 
     def loadData(self, filename, tag):
         location = os.path.split(filename)[0]
