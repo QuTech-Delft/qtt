@@ -731,7 +731,11 @@ try:
                 fig = plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, QtWidgets.QWidget):
-                figtemp = QtGui.QPixmap.grabWidget(fig)
+                try:
+                    figtemp = QtGui.QPixmap.grabWidget(fig)
+                except:
+                    # new Qt style
+                    figtemp = fig.grab()
                 figtemp.save(fname)
             elif isinstance(fig, qcodes.plots.pyqtgraph.QtPlot):
                 #figtemp = QtGui.QPixmap.grabWidget(fig.win)
