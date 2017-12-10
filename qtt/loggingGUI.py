@@ -153,6 +153,7 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         layout.addLayout(blayout)
         self.setLayout(layout)
 
+        self.addMessageSignal.connect(self._addMessage)
         self.addMessage('logging started...' + '\n')
 
         self._levelBox.setCurrentIndex(1)

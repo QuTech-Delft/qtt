@@ -552,7 +552,10 @@ class scanjob_t(dict):
         for f in ['sweepdata', 'stepdata']:        
             if f in self:
                 if gate_settle:
-                    t=gate_settle(self[f]['param'])
+                    if f=='stepdata':
+                        t=2.5*gate_settle(self[f]['param'])
+                    else:
+                        t=gate_settle(self[f]['param'])
                 self[f]['wait_time'] = max(t, min_time)
         self['wait_time_startscan']=.5+2*t
         
