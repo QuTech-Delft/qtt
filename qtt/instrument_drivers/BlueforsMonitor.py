@@ -45,13 +45,31 @@ class FridgeDataSender():
         _data_server_ = InstrumentDataServer(quantities, **kwargs)
         _data_server_.run()
 
-    def _read_file_(self, file_path):
-        with open(file_path, 'r') as fstream:
-            last_line = fstream.readlines()[-1]
-        return last_line.strip().split(",")
+    @staticmethod
+    def _get_tail_line_(file_path, block_size=1024):
+        with open(file_path, 'rb') as fstream:
+            fstream.seek(0, 2)
+            end_byte = fstream.tell()
+            lines_to_go = 1
+            block_number = -1
+            blocks = []
+            while lines_to_go > 0 and end_byte > 0:
+                if (end_byte - block_size > 0):
+                    fstream.seek(block_number*block_size, 2)
+                    data = fstream.read(block_size)
+                else:
+                    fstream.seek(0, 0)
+                    data = fstream.read(end_byte)
+                blocks.append(data.decode('utf-8'))
+                lines_found = blocks[-1].count('\n')
+                lines_to_go -= lines_found
+                end_byte -= block_size
+                block_number -= 1
+        all_read_text = ''.join(reversed(blocks)).splitlines()[-1]
+        return all_read_text.strip().split(",")
 
     def _read_temperature_(self, file_path):
-        data = self._read_file_(file_path)
+        data = FridgeDataSender._get_tail_line_(file_path)
         temperature = float(data[2])
         time = '{0} {1}'.format(data[0], data[1])
         return (temperature, time)
@@ -67,7 +85,7 @@ class FridgeDataSender():
                 'Still': T[3], 'MC': T[4]}
 
     def _read_pressure_(self, file_path):
-        P = self._read_file_(file_path)
+        P = FridgeDataSender._get_tail_line_(file_path)
         time = '{0} {1}'.format(P[0], P[1])
         return {'P1': float(P[5]), 'P2': float(P[11]), 'P3': float(P[17]),
                 'P4': float(P[23]), 'P5': float(P[29]), 'P6': float(P[35]),
