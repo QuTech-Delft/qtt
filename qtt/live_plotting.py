@@ -416,6 +416,13 @@ class livePlot:
             p1.setLabel('left', ylabel, units='mV')
             self.plot = pg.ImageItem()
             p1.addItem(self.plot)
+        elif type(self.sweepparams) is dict:
+            p1 = plotwin.addPlot(title='2d scan')
+            [xlabel, ylabel] = ['sweepparam_v', 'stepparam_v']
+            p1.setLabel('bottom', xlabel, units='mV')
+            p1.setLabel('left', ylabel, units='mV')
+            self.plot = pg.ImageItem()
+            p1.addItem(self.plot)
         else:
             raise Exception(
                 'The number of sweep parameters should be either None, 1 or 2.')
@@ -467,13 +474,12 @@ class livePlot:
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data.T)
                 if None not in (self.sweepInstrument, self.sweepparams, self.sweepranges):
-                    param_horz = getattr(
-                        self.sweepInstrument, self.sweepparams[0])
-                    value_x = param_horz.get_latest()
-                    value_y = self.sweepInstrument.get(self.sweepparams[1])
-                    param_vert = getattr(
-                        self.sweepInstrument, self.sweepparams[1])
-                    value_y = param_vert.get_latest()
+                    if type(self.sweepparams) is dict:
+                        value_x = 0
+                        value_y = 0
+                    else:
+                        value_x = self.sweepInstrument.get(self.sweepparams[0])
+                        value_y = self.sweepInstrument.get(self.sweepparams[1])
                     self.horz_low = value_x - self.sweepranges[0] / 2
                     self.horz_range = self.sweepranges[0]
                     self.vert_low = value_y - self.sweepranges[1] / 2
