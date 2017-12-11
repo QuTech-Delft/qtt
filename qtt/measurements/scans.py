@@ -962,7 +962,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             
             alldata.store((ix,iy), datapoint)
             
-            if not (update_period is None):
+            if update_period is not None:
                 delta, tprev, update = delta_time(tprev, thr=update_period)
                 
                 if update and liveplotwindow:
