@@ -215,6 +215,10 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         self.scheduler.start()
         self.scheduler.add_job(self._callback, 'interval', seconds=1)
 
+    def close(self):
+        self.scheduler.pause()
+        self.pub.close()
+                
     def _callback(self, verbose=1):
         logging.debug('ZMQ logger: logging...')
         app = QtWidgets.QApplication.instance()
