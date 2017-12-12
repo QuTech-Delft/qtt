@@ -545,13 +545,13 @@ def peakdataOrientation(x, y):
 
 def coulombPeaks(x, y, verbose=1, fig=None, plothalf=False, istep=None):
     """ Detect Coulumb peaks in a 1D scan
-    
+
     Args:
         x, y (arrays): 
         verbose (int)
         fig (int or None)
         istep (float): scale in mV / pixel ?
-        
+
     """
 
     if istep is None:

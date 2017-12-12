@@ -152,6 +152,7 @@ class VideoMode:
     def run(self, startreadout = True):
         """ Programs the AWG, starts the read-out and the plotting. """
         if type(self.sweepranges) is int:
+            # 1D scan
             if type(self.sweepparams) is str:
                 waveform, _ = self.station.awg.sweep_gate(self.sweepparams, self.sweepranges, period=1e-3)
             elif type(self.sweepparams) is dict:
@@ -160,6 +161,7 @@ class VideoMode:
                 raise Exception('arguments not supported')
             self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), self.fpga_ch)
         elif type(self.sweepranges) is list:
+            # 2D scan
             if type(self.sweepparams) is list:
                 waveform, _ = self.station.awg.sweep_2D(self.sampling_frequency.get(), self.sweepparams, self.sweepranges, self.resolution)
             elif type(self.sweepparams) is dict:

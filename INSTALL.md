@@ -12,6 +12,9 @@ If you want a GUI you can use either
 * https://tortoisegit.org/
 * https://desktop.github.com/
 
+To prevent typing your password all the time, you can use SSH keys. See https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
+
+
 ## Clone the necessary GIT repositories
 
 All code is hosted on GitHub. If you are unfamiliar with git, read an [introduction](https://guides.github.com/activities/hello-world/) first.

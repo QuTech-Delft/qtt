@@ -66,7 +66,7 @@ except:
 
 #%% Try numba support
 try:
-    from numba import autojit  # ,jit
+    from numba import jit as autojit  # ,jit
 except:
     def autojit(original_function):
         def dummy_function(*args, **kwargs):
@@ -78,8 +78,6 @@ except:
 #%% Functions
 
 
-# plocal: xl, theta_l, w, h
-# pglobal: x,y,theta
 
 def showIm(ims, fig=1, title=''):
     """ Show image with nearest neighbor interpolation and axis scaling """
@@ -87,13 +85,16 @@ def showIm(ims, fig=1, title=''):
     matplotlib.pyplot.clf()
     matplotlib.pyplot.imshow(ims, interpolation='nearest')
     matplotlib.pyplot.axis('image')
-    # scaleCmap(ims)
-
 
 def l2g(plocal, pglobal, dy=0):
-    """ Convert pair of local-global coordinates to global """
+    """ Convert pair of local-global coordinates to global
+    
+    Note:
+     plocal: xl, theta_l, w, h
+     pglobal: x,y,theta
+
+    """
     pp = pglobal.copy()
-    # pp[0]+=plocal[0]
     pp[2] += plocal[1]
     pp[0] += math.cos(-pp[2]) * plocal[0] - math.sin(-pp[2]) * dy
     pp[1] += math.sin(-pp[2]) * plocal[0] + math.cos(-pp[2]) * dy

@@ -503,10 +503,24 @@ class sample_data_t (dict):
 
     def gate_boundaries(self, gate):
         bnds = self.get('gate_boundaries', {})
-        b = bnds.get(gate, (-700, 100))
+        b = bnds.get(gate, (None, None))
         return b
 
-
+    def restrict_boundaries(self, gate, value):
+        bnds = self.get('gate_boundaries', {})
+        b = bnds.get(gate, (None, None))
+        if b[1] is not None:
+            value=min(value, b[1])
+        if b[0] is not None:
+            value=max(value, b[0])
+        return value
+    
+def test_sample_data():
+    s=sample_data_t()
+    s['gate_boundaries']={'D0': [-500,100]}
+    v=s.restrict_boundaries('D0', 1000)
+    assert(v==100)
+    
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
 
@@ -528,14 +542,21 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
-    def setWaitTimes(self, station):
+    def setWaitTimes(self, station, min_time = 0):
         """ Set default waiting times based on gate filtering """
 
+        gate_settle=getattr(station,'gate_settle', None)
         t=.1
+        if gate_settle is None:
+            t=0
         for f in ['sweepdata', 'stepdata']:        
             if f in self:
-                t=station.gate_settle(self[f]['param'])
-                self[f]['wait_time'] = t
+                if gate_settle:
+                    if f=='stepdata':
+                        t=2.5*gate_settle(self[f]['param'])
+                    else:
+                        t=gate_settle(self[f]['param'])
+                self[f]['wait_time'] = max(t, min_time)
         self['wait_time_startscan']=.5+2*t
         
     def parse_stepdata(self, field, gates=None):
@@ -803,6 +824,12 @@ def parse_minstrument(scanjob):
 
     return minstrument
 
+def awgGate(gate, station):
+    awg=getattr(station, 'awg', None)
+    if awg is None:
+        return False
+    return awg.awg_gate(gate)
+    
 def fastScan(scanjob, station):
     """ Returns whether we can do a fast scan using an awg 
     
@@ -1080,8 +1107,9 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         if resolution[0]%16 !=0 or resolution[1]%16 !=0 :
             # send out warning, due to rounding of the digitizer memory buffers
             #this is not supported
-            print('resolution argument: %s'  % (resolution,) )
+            #print('resolution argument: %s'  % (resolution,) )
             warnings.warn('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
+            raise Exception('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert
@@ -1215,10 +1243,11 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     """
     
     drate = digitizer.sample_rate()
+    maxrate = digitizer.max_sample_rate()
     if drate == 0:
         raise Exception('sample rate of m4i is zero, please reset the digitizer')
-    if drate >= 50e6:
-        raise Exception('sample rate of m4i is >= 50 MHz, this is not supported')
+    if drate > maxrate:
+        raise Exception('sample rate of m4i is > %d MHz, this is not supported' % (maxrate//1e6))
 
     # code for offsetting the data in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
@@ -1569,7 +1598,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     sweepdata = scanjob['sweepdata']
 
     Naverage = scanjob.get('Naverage', 20)
-    resolution = scanjob.get('resolution', [90, 90])
+    resolution = scanjob.get('resolution', [80, 80])
 
     t0 = qtt.time.time()
 
@@ -2035,4 +2064,7 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             scanjob[param] = min(scanjob[param], bstep[1] - eps)
 
 
-
+#%% Unit testing
+            
+if __name__=='__main__':
+    test_sample_data()

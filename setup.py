@@ -2,12 +2,27 @@ from setuptools import setup, find_packages
 from distutils.version import StrictVersion
 from importlib import import_module
 import platform
-
+import re
 
 def readme():
     with open('README.md') as f:
         return f.read()
 
+def get_version(verbose=1):
+    """ Extract version information from source code """
+
+    try:
+        with open('qtt/version.py', 'r') as f:
+            ln = f.readline()
+            # print(ln)
+            m = re.search('.* ''(.*)''', ln)
+            version = (m.group(1)).strip('\'')
+    except Exception as E:
+        print(E)
+        version = 'none'
+    if verbose:
+        print('get_version: %s' % version)
+    return version
 
 extras = {
     # name: (module_name, minversion, pip_name)
@@ -23,6 +38,7 @@ extras = {
     'pyzmqrpc': ('zmqrpc', '1.5', None),
     'pytables': ('tables', '3.2', None),    
     'colorama': ('colorama', '0.1', None),    
+    'apscheduler': ('apscheduler', '3.4', None),    
     'Polygon3': ('Polygon', '0.1', None),    
 }
 
@@ -33,8 +49,13 @@ extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
 print('packages: %s' % find_packages())
 
+try:
+	import qcodes
+except ImportError as ex:
+	raise Exception('please install qcodes before running setup.py')
+	
 setup(name='qtt',
-      version='0.1.3',
+      version=get_version(),
       use_2to3=False,
       author='Pieter Eendebak',
       author_email='pieter.eendebak@tno.nl',
