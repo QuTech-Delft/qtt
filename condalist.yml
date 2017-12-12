@@ -113,7 +113,7 @@ dependencies:
   - prompt-toolkit==1.0.15
   - apscheduler
   - pyserial==3.4
-  - pyzmqrc
+  - pyzmqrpc
   - Polygon3
   - pyvisa==1.8
   - redis==2.10.6

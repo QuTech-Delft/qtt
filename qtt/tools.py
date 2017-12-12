@@ -632,7 +632,8 @@ def showDotGraph(dot, fig=10):
 try:
     import win32com
     import win32com.client
-
+    import pprint
+    
     def addPPTslide(title=None, fig=None, txt = None, notes=None, figsize=None,
                     subtitle = None, maintext=None, show=False, verbose=1,
                     activate_slide=True, ppLayout = None):
@@ -731,7 +732,11 @@ try:
                 fig = plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, QtWidgets.QWidget):
-                figtemp = QtGui.QPixmap.grabWidget(fig)
+                try:
+                    figtemp = QtGui.QPixmap.grabWidget(fig)
+                except:
+                    # new Qt style
+                    figtemp = fig.grab()
                 figtemp.save(fname)
             elif isinstance(fig, qcodes.plots.pyqtgraph.QtPlot):
                 #figtemp = QtGui.QPixmap.grabWidget(fig.win)
@@ -822,10 +827,14 @@ try:
             notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, reshape_metadata(
                 dataset, printformat=printformat))
 
+            scanjob = dataset.metadata.get('scanjob', None)
+            if scanjob is not None:
+                s=pprint.pformat(scanjob)
+                notes = 'scanjob: ' + str(s) + '\n\n' + notes
+
             gatevalues = dataset.metadata.get('allgatevalues', None)
             if gatevalues is not None:
                 notes = 'gates: ' + str(gatevalues) + '\n\n' + notes
-
 
         ppt, slide = addPPTslide(title=title, fig=temp_fig, subtitle=text,
                                  notes=notes, show=show, verbose=verbose, **kwargs)
@@ -919,12 +928,6 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
     if header is not None:
         ss = header + '\n\n' + ss
     return ss
-
-if __name__ == '__main__' and 0:
-    x = reshape_metadata(data, printformat='fancy')
-    print(x)
-    x = reshape_metadata(data, printformat='dict')
-    print(x)
 
 
 def test_reshape_metadata():

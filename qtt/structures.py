@@ -197,7 +197,7 @@ class sensingdot_t:
             gates.set(gg[ii], sdval[ii])
 
         startval = sdval[1] + scanrange
-        startval = np.minimum(startval, 100)
+        startval = np.minimum(startval, 300)
         endval = sdval[1] - scanrange
         endval = np.maximum(endval, -700)
 
@@ -416,7 +416,7 @@ class sensingdot_t:
 
         #alldata= qtt.scans.scan1Dfast(self.station, scanjob, location=location)
 
-        alldata.add_metadata({'scanjob': None, 'scantype': 'fastTune'})
+        alldata.add_metadata({'scanjob': scanjob, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
 
         alldata.write(write_metadata=True)
