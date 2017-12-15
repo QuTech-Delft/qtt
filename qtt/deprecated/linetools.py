@@ -962,8 +962,10 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
     samplesize (int): size of image patch in pixels
     l, w, lsegment : float
         parameters of the model in mV?. lsegment is the length of the 4 addition lines
+            w is width of lines in the model
             l is not used by default
     
+    istep (float): scan resolution in pixel/mV
     scale (None): parameter not used any more
     H (float): intensity of cross
     
