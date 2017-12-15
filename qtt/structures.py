@@ -18,88 +18,92 @@ from qtt.tools import freezeclass
 
 #%%
 
+
 @freezeclass
 class twodot_t(dict):
-        
+
     def __init(self, gates, name=None):
         """ Class to represent a double quantum dot """
-        self['gates']=gates       
+        self['gates'] = gates
 
     def name(self):
         return self['name']
-    
+
     def __repr__(self):
         s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name(), id(self))
         return s
-    
+
     def __getstate__(self):
         """ Helper function to allow pickling of object """
-        d={}
+        d = {}
         import copy
         for k, v in self.__dict__.items():
             #print('deepcopy %s' % k)
             if k not in ['station']:
-                d[k]=copy.deepcopy(v)
+                d[k] = copy.deepcopy(v)
         return d
-    
+
+
 @freezeclass
 class onedot_t(dict):
-    """ Class representing a single quantum dot """ 
+    """ Class representing a single quantum dot """
 
     def __init__(self, gates, name=None, data=None, station=None, transport_instrument=None):
         """ Class to represent a single quantum dot
-        
+
         Args:
             gates (list): names of gates to use for left barrier, plunger and right barrier
             name (str): for for the object
             transport_instrument (str or Instrument): instrument to use for transport measurements
             data (dict or None): data for internal storage
             station (obj): object with references to instruments
-        
+
         """
-        self['gates']= gates
-        self.station=station
+        self['gates'] = gates
+        self.station = station
         self['transport_instrument'] = transport_instrument
-        self['instrument'] = transport_instrument # legacy code
+        self['instrument'] = transport_instrument  # legacy code
         if name is None:
             name = 'dot-%s' % ('-'.join(gates))
         self['name'] = name
-    
+
         if data is None:
-            data={}
-        self.data=data
+            data = {}
+        self.data = data
 
     def name(self):
         return self['name']
-    
+
     def __repr__(self):
         s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name(), id(self))
         return s
-    
+
     def __getstate__(self):
         """ Helper function to allow pickling of object """
-        d={}
+        d = {}
         import copy
         for k, v in self.__dict__.items():
             #print('deepcopy %s' % k)
             if k not in ['station']:
-                d[k]=copy.deepcopy(v)
+                d[k] = copy.deepcopy(v)
         return d
-    
+
+
 def test_spin_structures():
     import pickle
     import json
-    #station=qcodes.Station()
+    # station=qcodes.Station()
     o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)
-    #print(o)
-    _=pickle.dumps(o)
-    #x=json.dumps(o)
+    # print(o)
+    _ = pickle.dumps(o)
+    # x=json.dumps(o)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     test_spin_structures()
-    
-#%%    
+
+#%%
+
 
 @freezeclass
 class sensingdot_t:
@@ -128,11 +132,11 @@ class sensingdot_t:
         self.index = index
         self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
-        
+
         self.data = {}
-        
+
         if fpga_ch is None:
-            self.fpga_ch = None # int(self.gg[1][2])
+            self.fpga_ch = None  # int(self.gg[1][2])
         else:
             self.fpga_ch = fpga_ch
 
@@ -157,7 +161,7 @@ class sensingdot_t:
 
     def gates(self):
         return self.sdval
-    
+
     def show(self):
         gates = self.station.gates
         s = 'sensingdot_t: %s: %s: g %.1f, value %.1f/%.1f' % (
@@ -183,7 +187,8 @@ class sensingdot_t:
         """Return current through sensing dot."""
         if self.valuefunc is not None:
             return self.valuefunc()
-        raise Exception('value function is not defined for this sensing dot object')
+        raise Exception(
+            'value function is not defined for this sensing dot object')
 
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
         """Make 1D-scan of the sensing dot."""
@@ -285,10 +290,10 @@ class sensingdot_t:
     def autoTuneInit(sd, scanjob, mode='center'):
         stepdata = scanjob.get('stepdata', None)
         sweepdata = scanjob['sweepdata']
-        
-        stepparam= sweepdata['param']
-        sweepparam= sweepdata['param']
-        
+
+        stepparam = sweepdata['param']
+        sweepparam = sweepdata['param']
+
         # set sweep to center
         gates = sd.station.gates
         gates.set(
@@ -376,43 +381,48 @@ class sensingdot_t:
             value (float): value of plunger
             alldata (dataset): measured data
         """
-        
+
         if self.minstrument is not None:
             instrument = self.minstrument[0]
-            channel =  self.minstrument[1]
-            gate=self.gg[1]
+            channel = self.minstrument[1]
+            gate = self.gg[1]
             sdplg = getattr(self.station.gates, gate)
-            cc=self.station.gates.get(gate)
-            scanjob=qtt.measurements.scans.scanjob_t({'Naverage': Naverage,})
-            scanjob['sweepdata'] = {'param':  gate, 'start': cc-sweeprange/2, 'end': cc+sweeprange/2, 'step': 4}
+            cc = self.station.gates.get(gate)
+            scanjob = qtt.measurements.scans.scanjob_t(
+                {'Naverage': Naverage, })
+            scanjob['sweepdata'] = {'param':  gate, 'start': cc -
+                                    sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
             scanjob['minstrument'] = [channel]
             scanjob['minstrumenthandle'] = instrument
-            scanjob['wait_time_startscan']=sleeptime
-           
+            scanjob['wait_time_startscan'] = sleeptime
+
             alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
-        else:                           
+        else:
             waveform, sweep_info = self.station.awg.sweep_gate(
                 self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
-    
+
             # time for AWG signal to reach the sample
             qtt.time.sleep(sleeptime)
-    
+
             ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-            _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(Naverage=Naverage, ReadDevice=ReadDevice)
-    
+            _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
+                Naverage=Naverage, ReadDevice=ReadDevice)
+
             self.station.awg.stop()
-    
+
             if self.fpga_ch == 1:
                 datr = DataRead_ch1
             else:
                 datr = DataRead_ch2
             data = self.station.awg.sweep_process(datr, waveform, Naverage)
-    
+
             sdplg = getattr(self.station.gates, self.gg[1])
             initval = sdplg.get()
-            sweepvalues = sdplg[initval - sweeprange / 2:sweeprange / 2 + initval:sweeprange / len(data)]
-    
-            alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={'label': 'sensingdot_t.fastTune'})
+            sweepvalues = sdplg[initval - sweeprange /
+                                2:sweeprange / 2 + initval:sweeprange / len(data)]
+
+            alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={
+                                             'label': 'sensingdot_t.fastTune'})
 
         #alldata= qtt.scans.scan1Dfast(self.station, scanjob, location=location)
 
@@ -420,8 +430,9 @@ class sensingdot_t:
         alldata.add_metadata({'snapshot': self.station.snapshot()})
 
         alldata.write(write_metadata=True)
-        
-        y = np.array(alldata.arrays[alldata.default_parameter_name('measured')])
+
+        y = np.array(
+            alldata.arrays[alldata.default_parameter_name('measured')])
         x = alldata.arrays[self.gg[1]]
         x, y = peakdataOrientation(x, y)
 
@@ -455,20 +466,22 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
                  second a coefficient
         coeffs_sum (float): the sum of all the coefficients
     """
+
     def __init__(self, name, comb_map, **kwargs):
         """Initialize a linear combination parameter."""
         super().__init__(name, **kwargs)
         self.name = name
         self.comb_map = comb_map
         self.unit = self.comb_map[0][0].unit
-        self.coeffs_sum = sum([np.abs(coeff) for (param, coeff) in self.comb_map])
+        self.coeffs_sum = sum([np.abs(coeff)
+                               for (param, coeff) in self.comb_map])
 
-    def get(self):
+    def get_raw(self):
         """Return the value of this parameter."""
         value = sum([coeff * param.get() for (param, coeff) in self.comb_map])
         return value
 
-    def set(self, value):
+    def set_raw(self, value):
         """Set the parameter to value. 
 
         Note: the set is not unique, i.e. the result of this method depends on
@@ -482,46 +495,51 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
             param.set(param.get() + coeff * val_diff / self.coeffs_sum)
 
 #%%
+
+
 class MultiParameter(qcodes.instrument.parameter.Parameter):
     """ Create a parameter which is a combination of multiple other parameters.
-    
+
     All parameters should both have a set and a get.
-    
+
     Attributes:
         name (str): name for the parameter
         params (list): the parameters to combine
     """
+
     def __init__(self, name, params, label=None):
         self.name = name
         self.params = params
         self.vals = qcodes.utils.validators.Anything()
-        #Legacy
+        # Legacy
         self._vals = qcodes.utils.validators.Anything()
         self._instrument = 'dummy'
         if label is None:
             self.label = self.name
         self.unit = 'a.u.'
         self.vals = None
-        
-    def get(self):
+
+    def get_raw(self):
         values = []
         for p in self.params:
             values.append(p.get())
         return values
-    
-    def set(self, values):
+
+    def set_raw(self, values):
         for idp, p in enumerate(self.params):
             p.set(values[idp])
-            
+
+
 class CombiParameter(qcodes.instrument.parameter.Parameter):
     """ Create a parameter which is a combination of multiple other parameters, which are always set to the same value.
-    
+
     All parameters should both have a set and a get.
-    
+
     Attributes:
         name (str): name for the parameter
         params (list): the parameters to combine
     """
+
     def __init__(self, name, params, label=None, unit=None):
         self.name = name
         self.params = params
@@ -532,16 +550,15 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
         if unit is None:
             self.unit = 'a.u.'
 
-        self.has_get=True
-        self.has_set=True
-        
+        self.has_get = True
+        self.has_set = True
+
     def get(self):
         values = []
         for p in self.params:
             values.append(p.get())
         return np.mean(values)
-    
+
     def set(self, value):
         for idp, p in enumerate(self.params):
             p.set(value)
-

@@ -1975,8 +1975,11 @@ def test_scan2D(verbose=0):
         {'param': {'dac1': 1}, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
     scanjob['stepvalues'] = np.array([[2*i, 3*i] for i in range(10)])
-    data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
+    try:
+        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+    except:
+        from colorama import Fore
+        print(Fore.RED + 'MultiParameter test failed!' + Fore.RESET)
     # not supported:
     try:
         scanjob = scanjob_t({'sweepdata': dict({'param': {
