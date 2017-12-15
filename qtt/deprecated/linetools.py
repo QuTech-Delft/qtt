@@ -967,6 +967,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
     
     istep (float): scan resolution in pixel/mV
     scale (None): parameter not used any more
+    addX (bool): if True add polarization line to model
     H (float): intensity of cross
     
     linesegment (bool): if True create line segments instead of full lines
