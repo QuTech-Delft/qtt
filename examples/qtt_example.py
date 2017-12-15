@@ -79,6 +79,19 @@ save_state(station)
 
 print(data1d.default_parameter_name())
 
+import logging
+import logging_tree
+
+def update_formatter(logger=None):
+    
+    formatter = logging.Formatter("%(levelname)s %(filename)s:%(lineno)d - %(message)s\n")
+    if logger is None:        
+        logger=logging.getLogger()
+    h=logger.handlers[0]
+    h.setFormatter(formatter)
+
+#update_formatter(qcodes.data.format.log)
+update_formatter(logging.getLogger())
 
 #%% Make a 2D scan
 start = -500
