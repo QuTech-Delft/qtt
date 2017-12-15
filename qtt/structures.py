@@ -481,7 +481,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         value = sum([coeff * param.get() for (param, coeff) in self.comb_map])
         return value
 
-    def set(self, value):
+    def set_raw(self, value):
         """Set the parameter to value. 
 
         Note: the set is not unique, i.e. the result of this method depends on
@@ -519,13 +519,13 @@ class MultiParameter(qcodes.instrument.parameter.Parameter):
         self.unit = 'a.u.'
         self.vals = None
 
-    def get(self):
+    def get_raw(self):
         values = []
         for p in self.params:
             values.append(p.get())
         return values
 
-    def set(self, values):
+    def set_raw(self, values):
         for idp, p in enumerate(self.params):
             p.set(values[idp])
 
