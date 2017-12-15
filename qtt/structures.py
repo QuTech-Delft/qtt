@@ -476,7 +476,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         self.coeffs_sum = sum([np.abs(coeff)
                                for (param, coeff) in self.comb_map])
 
-    def get(self):
+    def get_raw(self):
         """Return the value of this parameter."""
         value = sum([coeff * param.get() for (param, coeff) in self.comb_map])
         return value
