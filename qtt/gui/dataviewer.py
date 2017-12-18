@@ -245,11 +245,15 @@ class DataViewer(QtWidgets.QWidget):
         return
 
     def resetComboItems(self, data, keys):
+        old_key = self.outCombo.currentText()
         self._update_plot_ = False
         self.outCombo.clear()
         for key in keys:
             if not getattr(data, key).is_setpoint:
                 self.outCombo.addItem(key)
+        if old_key in keys:
+            self.outCombo.setCurrentIndex(self.outCombo.findText(old_key))
+            
         self._update_plot_ = True
         return
 
