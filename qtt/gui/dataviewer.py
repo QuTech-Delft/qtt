@@ -253,8 +253,7 @@ class DataViewer(QtWidgets.QWidget):
                 self.outCombo.addItem(key)
         if old_key in keys:
             self.outCombo.setCurrentIndex(self.outCombo.findText(old_key))
-        else:
-            print('previous key not found in this dataset: %s' %old_key)
+            
         self._update_plot_ = True
         return
 
