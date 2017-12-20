@@ -824,8 +824,12 @@ try:
         text = 'Dataset location: %s' % dataset.location
 
         if notes is None:
-            notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, reshape_metadata(
-                dataset, printformat=printformat))
+            try:
+                metastring = reshape_metadata(
+                    dataset, printformat=printformat)
+            except:
+                metastring = 'Could not read metadata'
+                notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, metastring)
 
             scanjob = dataset.metadata.get('scanjob', None)
             if scanjob is not None:
@@ -883,7 +887,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
         header = 'dataset: %s' % dataset.location
 
     metadata = OrderedDict()
-
+    
     # make sure the gates instrument is in front
     all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
                          'gates',  reverse=True)
