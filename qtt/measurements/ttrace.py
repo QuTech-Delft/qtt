@@ -57,7 +57,7 @@ sq_pulse_marker = pulse.SquarePulse(
     channel='ch1_marker1', name='A square pulse on MW pmod')
 lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
 
-def create_virtual_matrix_dict(virt_basis, physical_gates, c, verbose=1):
+def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     """ Converts the virtual gate matrix into a virtual gate mapping
     Inputs:
         physical_gates (list): containing all the physical gates in the setup
@@ -69,7 +69,12 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c, verbose=1):
     for ii, vname in enumerate(virt_basis):
         if verbose:
             print('create_virtual_matrix_dict: adding %s ' % (vname,))
-        tmp=OrderedDict( zip(physical_gates, c[ii,:] ) )           
+        if c is None:
+            v=np.zeros( len(physical_gates))
+            v[ii]=1
+        else:
+            v=c[ii,:]
+        tmp=OrderedDict( zip(physical_gates, v ) )           
         virtual_matrix[vname] = tmp
     return virtual_matrix
 
@@ -78,11 +83,14 @@ def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
     Inputs:
         physical_gates (list): containing all the physical gates in the setup
         cc_basis (list): containing all the virtual gates in the setup
-        c (array): inverse virtual gate matrix
+        c (array or None): inverse virtual gate matrix
     Outputs: 
         virtual_matrix (dict): dictionary, mapping of the virtual gates needed for the ttraces """
 
-    invc=np.linalg.inv(c)                                                                                    
+    if c is None:
+        invc=None
+    else:
+        invc=np.linalg.inv(c)                                                                                    
     return create_virtual_matrix_dict(cc_basis, physical_gates, invc, verbose=1)
 
 

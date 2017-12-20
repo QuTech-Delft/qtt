@@ -11,7 +11,7 @@ import qcodes
 
 import qtt
 import qtt.measurements.scans
-from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks
+from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks, findSensingDotPosition
 
 
 from qtt.tools import freezeclass
@@ -256,16 +256,19 @@ class sensingdot_t:
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
-        x, y = qtt.data.dataset1Ddata(alldata)
-
         istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
+        x, y = qtt.data.dataset1Ddata(alldata)
         x, y = peakdataOrientation(x, y)
 
-        goodpeaks = coulombPeaks(
-            x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
+        if 1:
+            goodpeaks = findSensingDotPosition(x, y, useslopes=True, fig=fig, verbose=1, istep=istep)
+        else:
+    
+            goodpeaks = coulombPeaks(
+                x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.title('autoTune: sd %d' % sd.index, fontsize=14)
-
+    
         sd.goodpeaks = goodpeaks
         sd.data['tunex'] = x
         sd.data['tuney'] = y
