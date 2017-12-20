@@ -43,13 +43,20 @@ class DataViewer(QtWidgets.QWidget):
         # setup GUI
 
         self.dataset = None
-
         self.text = QtWidgets.QLabel()
+        
+        #logtree
         self.logtree = QtWidgets.QTreeView()  # QTreeWidget
         self.logtree.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
         self._treemodel = QtGui.QStandardItemModel()
         self.logtree.setModel(self._treemodel)
+        
+        #metatree
+        self.metatree = QtWidgets.QTreeView()
+        self._metamodel = QtGui.QStandardItemModel()
+        self.metatree.setModel(self._metamodel)
+        
         self.__debug = dict()
         if isinstance(QtPlot, QWidget):
             self.qplot = QtPlot()  # remote=False, interval=0)
@@ -72,10 +79,14 @@ class DataViewer(QtWidgets.QWidget):
         topLayout.addWidget(self.select_dir)
         topLayout.addWidget(self.reloadbutton)
 
+        treesLayout = QtWidgets.QHBoxLayout()
+        treesLayout.addWidget(self.logtree)
+        treesLayout.addWidget(self.metatree)
+
         vertLayout = QtWidgets.QVBoxLayout()
 
         vertLayout.addItem(topLayout)
-        vertLayout.addWidget(self.logtree)
+        vertLayout.addItem(treesLayout)
         vertLayout.addWidget(self.plotwindow)
 
         self.pptbutton = QtWidgets.QPushButton()
@@ -193,6 +204,35 @@ class DataViewer(QtWidgets.QWidget):
         if self.verbose >= 2:
             print('DataViewer: updateLogs done')
 
+             
+    def updateMetatree(self):
+        ''' Update metadata tree '''
+        self._metamodel.clear()
+        self._metamodel.setHorizontalHeaderLabels(['meatadata', 'value'])
+        try:
+            self.fill_item(self._metamodel, self.dataset.metadata)
+        except Exception as ex:
+            print(ex)
+    
+    def fill_item(self, item, value):
+        ''' recursive population of tree structure with a dict '''
+        def new_item(parent, text, val=None):
+            child = QtGui.QStandardItem(text)
+            self.fill_item(child, val)
+            parent.appendRow(child)
+
+        if value is None: return
+        elif isinstance(value, dict):                    
+            for key, val in sorted(value.items()):
+                if type(val) in [str, float, int]:
+                    child = [QtGui.QStandardItem(str(key)),QtGui.QStandardItem(str(val))]
+                    item.appendRow(child)
+                else:
+                    new_item(item, str(key), val)
+        else:
+            new_item(item, str(value))
+                
+
     def getPlotParameter(self):
         ''' Return parameter to be plotted '''
         param_name = self.outCombo.currentText()
@@ -232,6 +272,8 @@ class DataViewer(QtWidgets.QWidget):
             logging.debug('DataViewer: load tag %s' % tag)
             data = self.loadData(filename, tag)
             self.dataset = data
+            self.updateMetatree()
+            
             data_keys = data.arrays.keys()
             infotxt = 'arrays: ' + ', '.join(list(data_keys))
             q = pp.child(row, 1).model()
