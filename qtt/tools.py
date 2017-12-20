@@ -827,9 +827,10 @@ try:
             try:
                 metastring = reshape_metadata(
                     dataset, printformat=printformat)
-            except:
-                metastring = 'Could not read metadata'
-                notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, metastring)
+            except Exception as ex:
+                metastring = 'Could not read metadata: %s' % str(ex)
+            
+            notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, metastring)
 
             scanjob = dataset.metadata.get('scanjob', None)
             if scanjob is not None:
@@ -898,17 +899,20 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                                       x]['parameters']['IDN']['value']})
             metadata[x]['IDN']['unit'] = ''
         for y in sorted(all_md[x]['parameters'].keys()):
-            if y != 'IDN':
-                metadata[x][y] = OrderedDict()
-                param_md = all_md[x]['parameters'][y]
-                metadata[x][y]['name'] = y
-                if isinstance(param_md['value'], (float, np.float64)):
-                    metadata[x][y]['value'] = float(
-                        format(param_md['value'], '.3f'))
-                else:
-                    metadata[x][y]['value'] = str(param_md['value'])
-                metadata[x][y]['unit'] = param_md['unit']
-                metadata[x][y]['label'] = param_md['label']
+            try:
+                if y != 'IDN':
+                    metadata[x][y] = OrderedDict()
+                    param_md = all_md[x]['parameters'][y]
+                    metadata[x][y]['name'] = y
+                    if isinstance(param_md['value'], (float, np.float64)):
+                        metadata[x][y]['value'] = float(
+                            format(param_md['value'], '.3f'))
+                    else:
+                        metadata[x][y]['value'] = str(param_md['value'])
+                    metadata[x][y]['unit'] = param_md['unit']
+                    metadata[x][y]['label'] = param_md['label']
+            except:
+                print('failed on parameter %s' %y)
 
     if printformat == 'dict':
         ss = str(metadata).replace('(', '').replace(
