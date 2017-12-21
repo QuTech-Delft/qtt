@@ -146,11 +146,11 @@ class DataViewer(QtWidgets.QWidget):
         from qtpy.QtWidgets import QFileDialog
         d = QtWidgets.QFileDialog(caption='Select data directory')
         d.setFileMode(QFileDialog.Directory)
-        d.exec()
-        datadir = d.selectedFiles()[0]
-        self.setDatadir(datadir)
-        print('update logs')
-        self.updateLogs()
+        if d.exec():
+            datadir = d.selectedFiles()[0]
+            self.setDatadir(datadir)
+            print('update logs')
+            self.updateLogs()
 
     def updateLogs(self):
         ''' Update the list of measurements '''
