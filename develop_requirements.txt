@@ -1,5 +1,5 @@
 # List of packages that can be pip installed
-numpy >= 1.12
+numpy >= 1.10
 scipy >= 0.18
 matplotlib >= 2.0
 coverage
@@ -9,6 +9,7 @@ scikit-image
 scikit-learn
 qtpy
 h5py
+pyvisa
 slacker
 apscheduler
 spyder
