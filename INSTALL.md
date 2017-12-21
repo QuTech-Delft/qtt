@@ -93,6 +93,11 @@ For Unix systems the proper command is `python setup.py develop --user`.
 * [Spectrum M4i](http://spectrum-instrumentation.com/en/m4i-platform-overview)
 * [SPI-rack](https://github.com/Rubenknex/SPI-rack)
 
+- To install the low-level SPI driver run:
+```
+pip install git+https://github.com/Rubenknex/SPI-rack.git
+
+```
 ## Spyder
 
 * Use a IPython console and set the IPhyton backend graphics option to QT5. This ensures
