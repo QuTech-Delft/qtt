@@ -865,7 +865,7 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict', verbose=0):
+def reshape_metadata(dataset, printformat='dict', verbose=1):
     '''Reshape the metadata of a DataSet
 
     Arguments:
@@ -914,10 +914,11 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                             format(param_md['value'], '.3f'))
                     else:
                         metadata[x][y]['value'] = str(param_md['value'])
-                    metadata[x][y]['unit'] = param_md['unit']
-                    metadata[x][y]['label'] = param_md['label']
-            except:
-                print('failed on parameter %s' %y)
+                    metadata[x][y]['unit'] = param_md.get('unit', None)
+                    metadata[x][y]['label'] = param_md.get('label', None)
+            except KeyError as ex:
+                if verbose:
+                    print('failed on parameter %s / %s: %s' %(x, y, str(ex)))
 
     if printformat == 'dict':
         ss = str(metadata).replace('(', '').replace(
