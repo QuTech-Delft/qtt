@@ -145,14 +145,13 @@ try:
 except:
     pass
 
-#%%
+# %%
 import pyqtgraph as pg
-
 
 def _copyToClipboard(self):
     ''' Copy the current image to a the system clipboard '''
     app = pg.mkQApp()
     clipboard = app.clipboard()
-    clipboard.setPixmap(pg.QtGui.QPixmap.grabWidget(self))
+    clipboard.setPixmap(self.win.grab())
 
 QtPlot.copyToClipboard = _copyToClipboard
