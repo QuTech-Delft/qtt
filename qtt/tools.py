@@ -795,50 +795,51 @@ try:
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
-    def addPPT_dataset(dataset, customfig=None, title=None, notes=None, show=False, verbose=1,
-                       paramname='measured', printformat='fancy', **kwargs):
+    def addPPT_dataset(dataset, customfig=None, title=None, notes=None,
+                       show=False, verbose=1, paramname='measured',
+                       printformat='fancy', **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
 
         Arguments:
             dataset (DataSet): data and metadata from DataSet added to slide
-            customfig (QtPlot): custom QtPlot object to be added to slide (for dataviewer)
+            customfig (QtPlot): custom QtPlot object to be added to
+                                slide (for dataviewer)
             notes (string): notes added to slide
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
             paramname (None or str): passed to dataset.default_parameter_array
-            printformat (string): 'fancy' for nice formatting or 'dict' for easy copy to python
+            printformat (string): 'fancy' for nice formatting or 'dict'
+                                  for easy copy to python
         Returns:
             ppt: PowerPoint presentation
             slide: PowerPoint slide
 
         Example
         -------
-        >>> notes = 'some additional information' 
+        >>> notes = 'some additional information'
         >>> addPPT_dataset(dataset,notes)
         '''
         if len(dataset.arrays) < 2:
-            raise Exception('The dataset contains less than two data arrays')
+            raise IndexError('The dataset contains less than two data arrays')
 
         if customfig is None:
             temp_fig = QtPlot(dataset.default_parameter_array(
-            paramname=paramname), show_window=False)
+                              paramname=paramname), show_window=False)
         else:
             temp_fig = customfig
 
         text = 'Dataset location: %s' % dataset.location
-
         if notes is None:
             try:
-                metastring = reshape_metadata(
-                    dataset, printformat=printformat)
+                metastring = reshape_metadata(dataset,
+                                          printformat=printformat)
             except Exception as ex:
                 metastring = 'Could not read metadata: %s' % str(ex)
-            
-            notes = 'Dataset %s metadata:\n\n%s' % (dataset.location, metastring)
-
+            notes = 'Dataset %s metadata:\n\n%s' % (dataset.location,
+                                                    metastring)
             scanjob = dataset.metadata.get('scanjob', None)
             if scanjob is not None:
-                s=pprint.pformat(scanjob)
+                s = pprint.pformat(scanjob)
                 notes = 'scanjob: ' + str(s) + '\n\n' + notes
 
             gatevalues = dataset.metadata.get('allgatevalues', None)
@@ -846,12 +847,12 @@ try:
                 notes = 'gates: ' + str(gatevalues) + '\n\n' + notes
 
         ppt, slide = addPPTslide(title=title, fig=temp_fig, subtitle=text,
-                                 notes=notes, show=show, verbose=verbose, **kwargs)
-
+                                 notes=notes, show=show, verbose=verbose,
+                                 **kwargs)
         return ppt, slide
 
 except:
-    def addPPTslide(title=None, fig=None, subtitle = None, maintext=None,
+    def addPPTslide(title=None, fig=None, subtitle=None, maintext=None,
                     notes=None, show=False, verbose=1, ppLayout=1):
         ''' Dummy implementation '''
         pass
@@ -868,7 +869,8 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
-        dataset (DataSet or qcodes.Station): a dataset of which the metadata will be reshaped
+        dataset (DataSet or qcodes.Station): a dataset of which the metadata 
+                                             will be reshaped.
         printformat (str): can be 'dict' or 'txt','fancy' (text format)
     Returns:
         metadata (string): the reshaped metadata
@@ -877,7 +879,6 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
     if isinstance(dataset, qcodes.Station):
         station = dataset
         all_md = station.snapshot(update=False)['instruments']
-
         header = None
     else:
         if not 'station' in dataset.metadata:

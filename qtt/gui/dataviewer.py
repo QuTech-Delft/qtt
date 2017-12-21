@@ -1,7 +1,6 @@
 # %% Load packages
 
 import os
-import re
 import logging
 
 import qtpy.QtGui as QtGui
@@ -212,7 +211,7 @@ class DataViewer(QtWidgets.QWidget):
             self.fill_item(self._metamodel, self.dataset.metadata)
         except Exception as ex:
             print(ex)
-    
+
     def fill_item(self, item, value):
         ''' recursive population of tree structure with a dict '''
         def new_item(parent, text, val=None):
@@ -221,7 +220,7 @@ class DataViewer(QtWidgets.QWidget):
             parent.appendRow(child)
 
         if value is None: return
-        elif isinstance(value, dict):                    
+        elif isinstance(value, dict):
             for key, val in sorted(value.items()):
                 if type(val) in [str, float, int]:
                     child = [QtGui.QStandardItem(str(key)),QtGui.QStandardItem(str(val))]
@@ -230,7 +229,6 @@ class DataViewer(QtWidgets.QWidget):
                     new_item(item, str(key), val)
         else:
             new_item(item, str(value))
-                
 
     def getPlotParameter(self):
         ''' Return parameter to be plotted '''
@@ -272,7 +270,7 @@ class DataViewer(QtWidgets.QWidget):
             data = self.loadData(filename, tag)
             self.dataset = data
             self.updateMetatree()
-            
+
             data_keys = data.arrays.keys()
             infotxt = 'arrays: ' + ', '.join(list(data_keys))
             q = pp.child(row, 1).model()
@@ -294,7 +292,7 @@ class DataViewer(QtWidgets.QWidget):
                 self.outCombo.addItem(key)
         if old_key in keys:
             self.outCombo.setCurrentIndex(self.outCombo.findText(old_key))
-            
+
         self._update_plot_ = True
         return
 
