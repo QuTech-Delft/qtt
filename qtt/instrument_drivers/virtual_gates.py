@@ -2,16 +2,31 @@
 """
 Created on Thu Dec  8 10:37:36 2016
 
-@author: diepencjv
+@author: diepencjv, eendebakpt
 """
 
-#%%
+#%% Load packages
 from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
 import numpy as np
 from collections import OrderedDict
 import warnings
+
+def set_distance_matrix(virt_gates, dists):
+    """ Update the cross capacitance matrix for a virtual_gate matrix
+    
+    Args:
+        virt_gates (virtual_gates): virtual gates object
+        dists (list): list of distances between dots
+    """
+    cc=virt_gates.get_crosscap_matrix()
+    dists = list(dists) + [0]*cc.shape[0]
+    for ii in range(cc.shape[0]):
+        for jj in range(cc.shape[0]):
+            cc[ii,jj]=dists[ np.abs(ii-jj)]
+    virt_gates.set_crosscap_matrix(cc)
+
 
 class virtual_gates(Instrument):
     """A virtual gate instrument to control linear combinations of gates.
@@ -174,6 +189,10 @@ class virtual_gates(Instrument):
             vals = [(gate, self.get(gate)) for gate in self._virts_list]
         return dict(vals)
 
+    def set_distances(self, dists):
+        """ Update the cross-capacitance matrix based on a list of distances """
+        set_distance_matrix(self, dists)
+        
     def setgates(self, values, verbose=0):
         """ Set gates to new values.
 
@@ -444,7 +463,13 @@ def test_virtual_gates(verbose=0):
 
     virts.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
     av = virts.allvalues()
-
+    
     c=virts.get_crosscap_matrix()
     assert(c[0][0]==1)    
     assert(c[0][1]==.6)
+    
+    virts.set_distances(np.arange(5))
+    
+if __name__=='__main__':
+    test_virtual_gates()
+    
