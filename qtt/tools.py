@@ -865,7 +865,7 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict', verbose=1):
+def reshape_metadata(dataset, printformat='dict', verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
