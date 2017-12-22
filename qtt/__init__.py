@@ -2,9 +2,10 @@
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
 import copy
-import qcodes
-
 import warnings
+import importlib
+
+import qcodes
 import qtt.live
 import qtt.tools
 import qtt.data
@@ -12,6 +13,7 @@ import qtt.algorithms
 import qtt.measurements
 import qtt.utilities.markup as markup
 
+import distutils
 import distutils.version
 
 from qtt.version import __version__
@@ -26,6 +28,38 @@ import qtt.gui.parameterviewer
 from qtt.gui.parameterviewer import createParameterWidget
 
 from qtt.gui.dataviewer import DataViewer
+import qtt.exceptions
+
+#%% Check packages
+
+
+def check_version(version, module=qcodes):
+    if isinstance(module, str):
+        try:
+            m = importlib.import_module(module)
+            module = m
+        except ModuleNotFoundError:
+            raise Exception('could not load module %s' % module)
+            
+    mversion = getattr(module, '__version__', None)
+    if mversion is None:
+        raise Exception(' module %s has no __version__ attribute' % (module,))
+
+    if distutils.version.StrictVersion(mversion) < distutils.version.StrictVersion(version):
+        raise Exception(' from %s need version %s' % (module, version))
+
+check_version('1.0', 'qtpy')
+check_version('0.18', 'scipy')
+check_version('0.1', 'colorama')
+try:
+    check_version('0.1', 'redis')
+except:
+    warnings.warn('missing redis package', qtt.exceptions.MissingOptionalPackageWarning)
+
+_qversion = '0.1.7'  # version of qcodes required
+check_version(_qversion, qcodes)
+
+
 
 #%%
 
@@ -46,17 +80,6 @@ def start_dataviewer():
 from qtt.loggingGUI import installZMQlogger
 
 
-def check_version(version, module=qcodes):
-    mversion = getattr(module, '__version__', None)
-    if mversion is None:
-        raise Exception(' module %s has no __version__ attribute' % (module,))
-
-    if distutils.version.StrictVersion(mversion) < distutils.version.StrictVersion(version):
-        raise Exception(' from %s need version %s' % (module, version))
-
-_qversion = '0.1.7'  # version of qcodes required
-check_version(_qversion)
-
 #%% Add hook to abort measurement
 
 # connect to redis server
@@ -68,9 +91,6 @@ try:
 except:
     _redis_connection = None
 
-    from colorama import Fore
-    warnings.warn(Fore.RED + 'install the redis package!!!!' + Fore.RESET)
-    pass
 
 
 def _abort_measurement():
@@ -126,10 +146,6 @@ qcodes.Parameter.__setstate__ = _setstate
 
 #%% Enhance the qcodes functionality
 
-try:
-    import qtpy
-except:
-    pass
 try:
     from qtpy.QtCore import Qt
     from qtpy import QtWidgets
