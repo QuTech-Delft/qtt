@@ -864,7 +864,7 @@ lin_comb_type = dict
 """ Class to represent linear combinations of parameters  """
 
 
-def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None,  write_period = 60, update_period = 5, verbose=1):
+def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None,  write_period = None, update_period = 5, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
 
     For 2D vector scans see also the documentation of the _convert_scanjob_vec
@@ -873,8 +873,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     Args:
         station (object): contains all the instruments
         scanjob (scanjob_t): data for scan
-        write_period (float): save-to-disk interval in seconds, None for no writing before finished
-        update_period (float): liveplot update interval in seconds, None for no updates
+        write_period (float): save-to-disk interval in lines, None for no writing before finished
+        update_period (float): liveplot update interval in lines, None for no updates
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -949,7 +949,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     tprev = time.time()
     
-    alldata.write_period = write_period
+    # disable time-based write period
+    alldata.write_period = None
     
     for ix, x in enumerate(stepvalues):
         alldata.store((ix,), {stepvalues.parameter.name:x})
@@ -994,14 +995,19 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 datapoint[measure_names[ii]] = p.get()
             
             alldata.store((ix,iy), datapoint)
-            
-            if update_period is not None:
-                delta, tprev, update = delta_time(tprev, thr=update_period)
+        
+        if write_period is not None:
+            if ix % write_period == write_period -1:
+                alldata.write()
+                alldata.last_write = time.time()
+        if update_period is not None:
+            if ix % update_period == update_period -1:
+                delta, tprev, update = delta_time(tprev, thr=0.5)
                 
                 if update and liveplotwindow:
                     liveplotwindow.update_plot()
                     pg.mkQApp().processEvents()
-        
+            
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
