@@ -337,14 +337,16 @@ class livePlot:
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, alpha=.3, verbose=1):
+    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
+                 sweepranges=None, alpha=.3, verbose=1, window_title='live view'):
         """Return a new livePlot object."""      
         
         plotwin = pg.GraphicsWindow(title="Live view")
+        self.window_title = window_title
 
         win = QtWidgets.QWidget()
         win.resize(800, 600)
-        win.setWindowTitle('livePlot')
+        win.setWindowTitle(self.window_title)
 
         topLayout = QtWidgets.QHBoxLayout()
         win.start_button = QtWidgets.QPushButton('Start')
@@ -406,9 +408,9 @@ class livePlot:
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
-        elif type(self.sweepparams) is list:
+        elif type(self.sweepparams) is list or dict:
             p1 = plotwin.addPlot(title='2d scan')
-            if self.sweepparams[0] is dict:
+            if type(self.sweepparams) is dict:
                 [xlabel, ylabel] = ['sweepparam_v', 'stepparam_v']
             else:
                 [xlabel, ylabel] = self.sweepparams
@@ -449,7 +451,7 @@ class livePlot:
         self.data = None
 
     def update(self, data=None, processevents=True):
-        self.win.setWindowTitle('live view, fps: %.2f' % self.fps.framerate())
+        self.win.setWindowTitle('%s, fps: %.2f' % (self.window_title, self.fps.framerate()) )
         if self.verbose >= 2:
             print('livePlot: update: idx %d ' % self.idx )
         if data is not None:
@@ -467,13 +469,12 @@ class livePlot:
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data.T)
                 if None not in (self.sweepInstrument, self.sweepparams, self.sweepranges):
-                    param_horz = getattr(
-                        self.sweepInstrument, self.sweepparams[0])
-                    value_x = param_horz.get_latest()
-                    value_y = self.sweepInstrument.get(self.sweepparams[1])
-                    param_vert = getattr(
-                        self.sweepInstrument, self.sweepparams[1])
-                    value_y = param_vert.get_latest()
+                    if type(self.sweepparams) is dict:
+                        value_x = 0
+                        value_y = 0
+                    else:
+                        value_x = self.sweepInstrument.get(self.sweepparams[0])
+                        value_y = self.sweepInstrument.get(self.sweepparams[1])
                     self.horz_low = value_x - self.sweepranges[0] / 2
                     self.horz_range = self.sweepranges[0]
                     self.vert_low = value_y - self.sweepranges[1] / 2

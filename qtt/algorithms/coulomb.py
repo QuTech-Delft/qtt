@@ -586,7 +586,14 @@ def getOverlap(a, b):
 
 
 def findBestSlope(x, y, minder=None, fig=None, verbose=1):
-    """ Find good slopes to use in sensing dot """
+    """ Find good slopes to use in sensing dot
+    
+    Args:
+        ...
+    Returns:
+        slopes (...)
+        results (object): additional data
+    """
     lowvalue = np.percentile(y, 1)
     highvalue = np.percentile(y, 99)
     H = highvalue - lowvalue
@@ -619,7 +626,7 @@ def findBestSlope(x, y, minder=None, fig=None, verbose=1):
         slope['halfvalue'] = (slope['y'] + slope['ybottoml']) / 2
         # slope['halfvalue']=(slope['y']-slope['ybottom'])/2
         halfvalue = slope['halfvalue']
-        phalfl = np.round((p + pbottom) / 2)  # FIXME
+        phalfl = int( np.round((p + pbottom) / 2) ) # FIXME
         # print(phalfl)
         slope['phalfl'] = phalfl
         slope['phalf0'] = phalfl
@@ -663,7 +670,7 @@ def findBestSlope(x, y, minder=None, fig=None, verbose=1):
         plt.subplot(2, 1, 2)
         plt.plot(x[:], dy, '.-b')
         plt.ylabel('Derivative')
-        plot2Dline([0, -1, minder], '--r', label='Minimum derivative')
+        qtt.pgeometry.plot2Dline([0, -1, minder], '--r', label='Minimum derivative')
         plt.title('findBestSlopes: derivative')
 
     peakScores(slopes, x, y)

@@ -424,11 +424,13 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
     if scanjob['scantype'] == 'scan1Dfast':
-        sweeprange = (sweepdata['end'] - sweepdata['start'])
-        waveform, sweep_info = station.awg.sweep_gate(
-            sweepdata['param'], sweeprange, period)
-        sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
-        gates.set(sweepdata['param'], float(sweepgate_value))
+        if 'range' in sweepdata:
+            sweeprange = sweepdata['range']
+        else:
+            sweeprange = (sweepdata['end'] - sweepdata['start'])
+            sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
+            gates.set(sweepdata['param'], float(sweepgate_value))
+        waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period)
     else:
         sweeprange = sweepdata['range']
         waveform, sweep_info = station.awg.sweep_gate_virt(
@@ -438,10 +440,14 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
 
-    sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data.size)
+    sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data[0].shape[0])
 
-    alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, [
-                                 'measured%d' % i for i in read_ch], data, location=location, loc_record={'label': scanjob['scantype']})
+    if len(read_ch) == 1:
+        measure_names = ['measured']
+    else:
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
+
+    alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data, location=location, loc_record={'label': scanjob['scantype']})
 
     station.awg.stop()
 
@@ -1981,8 +1987,11 @@ def test_scan2D(verbose=0):
         {'param': {'dac1': 1}, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
     scanjob['stepvalues'] = np.array([[2*i, 3*i] for i in range(10)])
-    data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
+    try:
+        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+    except:
+        from colorama import Fore
+        print(Fore.RED + 'MultiParameter test failed!' + Fore.RESET)
     # not supported:
     try:
         scanjob = scanjob_t({'sweepdata': dict({'param': {
