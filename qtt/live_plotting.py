@@ -337,14 +337,16 @@ class livePlot:
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None, sweepranges=None, alpha=.3, verbose=1):
+    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
+                 sweepranges=None, alpha=.3, verbose=1, window_title='live view'):
         """Return a new livePlot object."""      
         
         plotwin = pg.GraphicsWindow(title="Live view")
+        self.window_title = window_title
 
         win = QtWidgets.QWidget()
         win.resize(800, 600)
-        win.setWindowTitle('livePlot')
+        win.setWindowTitle(self.window_title)
 
         topLayout = QtWidgets.QHBoxLayout()
         win.start_button = QtWidgets.QPushButton('Start')
@@ -449,7 +451,7 @@ class livePlot:
         self.data = None
 
     def update(self, data=None, processevents=True):
-        self.win.setWindowTitle('live view, fps: %.2f' % self.fps.framerate())
+        self.win.setWindowTitle('%s, fps: %.2f' % (self.window_title, self.fps.framerate()) )
         if self.verbose >= 2:
             print('livePlot: update: idx %d ' % self.idx )
         if data is not None:
