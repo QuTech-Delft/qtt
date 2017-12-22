@@ -68,6 +68,8 @@ try:
 except:
     _redis_connection = None
 
+    from colorama import Fore
+    warnings.warn(Fore.RED + 'install the redis package!!!!' + Fore.RESET)
     pass
 
 
