@@ -731,6 +731,11 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
+            elif isinstance(fig, qtt.measurements.videomode.VideoMode):
+                # new Qt style
+                figtemp = fig.lp.plotwin.grab()
+                figtemp.save(fname)
+                
             elif isinstance(fig, QtWidgets.QWidget):
                 try:
                     figtemp = QtGui.QPixmap.grabWidget(fig)

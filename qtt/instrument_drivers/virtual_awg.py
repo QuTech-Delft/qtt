@@ -586,7 +586,7 @@ class virtual_awg(Instrument):
 
         # TODO: Implement compensation of sensing dot plunger
 
-        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete)
+        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete, samp_freq=samp_freq)
         self.sweep_run(sweep_info)
 
         waveform['width_horz'] = width
@@ -596,6 +596,7 @@ class virtual_awg(Instrument):
         waveform['resolution'] = resolution
         waveform['samplerate'] = 1 / self.AWG_clock
         waveform['period'] = period_vert
+        waveform['period_horz'] = period_horz
         for channels in sweep_info:
             if 'delay' in sweep_info[channels]:
                 waveform['markerdelay'] = sweep_info[channels]['delay']
