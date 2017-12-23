@@ -250,38 +250,18 @@ class sensingdot_t:
             qtt.measurements.scans.plotData(alldata, fig=fig)
         return alldata
 
-    def autoTune(sd, scanjob=None, fig=200, outputdir=None, correctdelay=True, step=-2., max_wait_time=1., scanrange=300):
+    def autoTune(sd, scanjob=None, fig=200, outputdir=None, step=-2.,
+                 max_wait_time=1., scanrange=300, add_slopes=False):
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
-        istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
-        x, y = qtt.data.dataset1Ddata(alldata)
-        x, y = peakdataOrientation(x, y)
-
-        if 1:
-            goodpeaks = findSensingDotPosition(x, y, useslopes=True, fig=fig, verbose=1, istep=istep)
-        else:
-    
-            goodpeaks = coulombPeaks(
-                x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
-        if fig is not None:
-            plt.title('autoTune: sd %d' % sd.index, fontsize=14)
-    
-        sd.goodpeaks = goodpeaks
-        sd.data['tunex'] = x
-        sd.data['tuney'] = y
+        goodpeaks = sd._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
         if len(goodpeaks) > 0:
             sd.sdval[1] = goodpeaks[0]['xhalfl']
-            sd.targetvalue = goodpeaks[0]['yhalfl']
-            # correction of gate delay
-            if correctdelay:
-                if sd.gg[1] == 'SD1b' or sd.gg[1] == 'SD2b':
-                    # *(getwaittime(sd.gg[1])/max_wait_time )
-                    corr = -step * .75
-                    sd.sdval[1] += corr
+            sd.targetvalue = goodpeaks[0]['yhalfl']           
         else:
             print('autoTune: could not find good peak')
 
@@ -290,6 +270,25 @@ class sensingdot_t:
                 'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
         return sd.sdval[1], alldata
 
+    def _process_scan(self, alldata, useslopes=True, fig=None):
+        istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
+        x, y = qtt.data.dataset1Ddata(alldata)
+        x, y = peakdataOrientation(x, y)
+
+        if useslopes:
+            goodpeaks = findSensingDotPosition(x, y, useslopes=useslopes, fig=fig, verbose=1, istep=istep)
+        else:
+    
+            goodpeaks = coulombPeaks(
+                x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
+        if fig is not None:
+            plt.title('autoTune: sd %d' % self.index, fontsize=14)
+    
+        self.goodpeaks = goodpeaks
+        self.data['tunex'] = x
+        self.data['tuney'] = y
+        return goodpeaks
+    
     def autoTuneInit(sd, scanjob, mode='center'):
         stepdata = scanjob.get('stepdata', None)
         sweepdata = scanjob['sweepdata']
@@ -374,7 +373,8 @@ class sensingdot_t:
 
         return (sdstart, sdend, sdmiddle)
 
-    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None, fig=201, sleeptime=2, delete=True):
+    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None,
+                 fig=201, sleeptime=2, delete=True, add_slopes=False):
         """Fast tuning of the sensing dot plunger.
 
         Args:
@@ -434,17 +434,7 @@ class sensingdot_t:
 
         alldata.write(write_metadata=True)
 
-        y = np.array(
-            alldata.arrays[alldata.default_parameter_name('measured')])
-        x = alldata.arrays[self.gg[1]]
-        x, y = peakdataOrientation(x, y)
-
-        goodpeaks = coulombPeaks(
-            x, y, verbose=1, fig=fig, plothalf=True, istep=1)
-
-        if fig is not None:
-            plt.title('autoTune: sd %d' % self.index, fontsize=14)
-            plt.xlabel(sdplg.name)
+        goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
         if len(goodpeaks) > 0:
             self.sdval[1] = goodpeaks[0]['xhalfl']
