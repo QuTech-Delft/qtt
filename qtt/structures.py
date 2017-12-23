@@ -257,7 +257,7 @@ class sensingdot_t:
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
-        goodpeaks = sd.process_scan(alldata, useslopes=add_slopes, fig=fig)
+        goodpeaks = sd._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
         if len(goodpeaks) > 0:
             sd.sdval[1] = goodpeaks[0]['xhalfl']
@@ -282,7 +282,7 @@ class sensingdot_t:
             goodpeaks = coulombPeaks(
                 x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
-            plt.title('autoTune: sd %d' % sd.index, fontsize=14)
+            plt.title('autoTune: sd %d' % self.index, fontsize=14)
     
         self.goodpeaks = goodpeaks
         self.data['tunex'] = x
@@ -434,7 +434,7 @@ class sensingdot_t:
 
         alldata.write(write_metadata=True)
 
-        goodpeaks = self.process_scan(alldata, useslopes=add_slopes, fig=fig)
+        goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
         if len(goodpeaks) > 0:
             self.sdval[1] = goodpeaks[0]['xhalfl']

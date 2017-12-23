@@ -125,7 +125,7 @@ class GateTransform:
             v = np.vstack(xx).astype(np.float32)
         else:
             xx = vals2D
-            v = np.array(xx).reshape( (-1,1)).astype(np.float32)
+            v = np.array(xx).astype(np.float32)
 
         vout = pmatlab.projectiveTransformation(self.Vmatrix, v)
         # vout = self.Vmatrix.dot(v)

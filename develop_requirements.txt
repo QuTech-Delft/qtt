@@ -17,3 +17,4 @@ colorama
 attrs
 Polygon3
 pyzmqrpc
+redis

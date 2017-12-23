@@ -579,6 +579,7 @@ class MockCallback_2d(qcodes.Instrument):
             'q', parameter_class=qcodes.ManualParameter, initial_value=30)
 
     def __call__(self):
+        import qtt.deprecated
         import qtt.deprecated.linetools as lt
 
         data = np.random.rand(self.nx * self.nx)
