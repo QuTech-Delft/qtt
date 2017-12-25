@@ -17,6 +17,7 @@ from qcodes.plots.pyqtgraph import QtPlot
 from qcodes import DataArray
 import qtt
 
+logger = logging.getLogger(__name__)
 #%%
 
 
@@ -31,10 +32,9 @@ class virtual_awg(Instrument):
         delay_FPGA (float): time delay of signals going through fridge
         
     """
-    shared_kwargs = ['instruments', 'hardware']
-
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
         super().__init__(name, **kwargs)
+        logger.info('initialize virtual_awg %s' % name)
         self._awgs = instruments
         self.awg_map = awg_map
         self.hardware = hardware
@@ -42,8 +42,6 @@ class virtual_awg(Instrument):
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
         self.corr = .02e-6
         self.maxdatapts = 16e6  # This used to be set to the fpga maximum, but that maximum should not be handled here
-        qtt.loggingGUI.installZMQlogger()
-        logging.info('virtual_awg: setup')
 
         if len(self._awgs) == 0 and self.verbose:
             print('no physical AWGs connected')
