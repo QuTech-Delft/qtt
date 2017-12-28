@@ -118,7 +118,7 @@ class ClassicalDotSystem(BaseDotSystem):
 
         nparams = np.shape(paramvalues2D)[0]
         npointsx = np.shape(paramvalues2D)[1]
-        if len(paramvalues2D.shape)==2:
+        if len(paramvalues2D.shape)==3:
             npointsy = np.shape(paramvalues2D)[2]
         else:
             npointsy = 1

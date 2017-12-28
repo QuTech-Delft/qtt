@@ -357,8 +357,13 @@ class SimulationDigitizer(qcodes.Instrument):
 
         # FIXME: use csd instead of honeycomb
         # FIXME: make 1d plot work
-        sd1 = (test_dot.honeycomb.reshape((*test_dot.honeycomb.shape, -1))
-               * (model.sddist1.reshape((1, 1, -1)))).sum(axis=-1)
+        
+        if 1:        
+            sd1 = ((test_dot.hcgs) * (model.sddist1.reshape((1, 1, -1)))).sum(axis=-1)
+        else:
+            sd1 = (test_dot.honeycomb.reshape((*test_dot.honeycomb.shape, -1))
+                   * (model.sddist1.reshape((1, 1, -1)))).sum(axis=-1)
+            plt.figure(200); plt.clf(); plt.imshow(test_dot.honeycomb); plt.draw();
         sd1 *= (1 / np.sum(model.sddist1))
 
         if model.sdnoise > 0:
@@ -408,6 +413,7 @@ if __name__ == '__main__':
     verbose = 1
     multiprocess = False
 
+
     digitizer = SimulationDigitizer(
         qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
     station.components[digitizer.name] = digitizer
@@ -415,11 +421,12 @@ if __name__ == '__main__':
     station.awg = simulation_awg(qtt.measurements.scans.instrumentName('vawg'))
     station.components[station.awg.name] = station.awg
 
-    sweepparams = ['B0', 'B3']
-    sweepranges = [160, 80]
-    resolution = [24, 16]
-    #sweepparams='B0'; sweepranges=160; resolution = [60]
+    if 0:
+        sweepparams = ['B0', 'B3']; sweepranges = [160, 80]; resolution = [80, 48]
+    else:
+        sweepparams='B0'; sweepranges=160; resolution = [60]
     minstrument = (digitizer.name, [0, 1])
+    station.model.sdnoise=.1
     vm = VideoMode(station, sweepparams, sweepranges, minstrument, Naverage=25,
                    resolution=resolution, sample_rate='default', diff_dir=None, verbose=1, dorun=True)
 
