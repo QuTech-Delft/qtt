@@ -21,7 +21,8 @@ from qtt.measurements.scans import plotData, makeDataset_sweep, makeDataset_swee
 
 class videomode_callback:
     
-    def __init__(self, station, waveform, Naverage, minstrument, waittime=0, diff_dir=None, resolution=None):
+    def __init__(self, station, waveform, Naverage, minstrument, waittime=0,
+                 diff_dir=None, resolution=None):
         """ Create callback object for videmode data
         
         Args:
@@ -231,3 +232,5 @@ class VideoMode:
         self.box.setValue(value)
         
         
+#%% Testing
+
