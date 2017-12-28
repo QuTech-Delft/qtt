@@ -268,6 +268,7 @@ class livePlot:
         sweepparams: the parameter(s) being swept
         sweepranges: the range over which sweepparams are being swept
         verbose (int): output level of logging information
+        show_controls (bool): show gui elements for control of the live plotting
         alpha (float): parameter (value between 0 and 1) which determines the weight given in averaging to the latest
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
@@ -309,6 +310,7 @@ class livePlot:
         self.idx = 0
         self.maxidx = 1e9
         self.data = None
+        self.data_avg = None
         self.sweepInstrument = sweepInstrument
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
@@ -372,7 +374,7 @@ class livePlot:
         if show_controls:
             win.start_button.clicked.connect(connect_slot(self.startreadout))
             win.stop_button.clicked.connect(connect_slot(self.stopreadout))
-            win.averaging_box.clicked.connect(connect_slot(self.enable_averaging))
+            win.averaging_box.clicked.connect(connect_slot(self.enable_averaging_slot))
 
         self.datafunction_result = None
 
@@ -393,19 +395,31 @@ class livePlot:
             print('livePlot: update: idx %d ' % self.idx)
         if data is not None:
             self.data = np.array(data)
+            
+            if self.data_avg is None:
+                    self.data_avg = self.data
+
+            # depending on value of self.averaging_enabled either do or
+            # don't do the averaging
+            if self._averaging_enabled:
+                self.data_avg = self.alpha * self.data + (1 - self.alpha) * self.data_avg
+            else:
+                self.data_avg = self.data
+
+
             if self.data.ndim == 1:
                 if None in (self.sweepInstrument, self.sweepparams,
                             self.sweepranges):
-                    self.plot.setData(self.data)
+                    self.plot.setData(self.data_avg)
                 else:
                     sweep_param = getattr(
                         self.sweepInstrument, self.sweepparams)
                     paramval = sweep_param.get_latest()
                     sweepvalues = np.linspace(
                         paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
-                    self.plot.setData(sweepvalues, self.data)
+                    self.plot.setData(sweepvalues, self.data_avg)
             elif self.data.ndim == 2:
-                self.plot.setImage(self.data.T)
+                self.plot.setImage(self.data_avg.T)
                 if None not in (self.sweepInstrument,
                                 self.sweepparams, self.sweepranges):
                     if type(self.sweepparams) is dict:
@@ -441,24 +455,9 @@ class livePlot:
         self.fps.addtime(time.time())
         if self.datafunction is not None:
             try:
-                # print(self.datafunction)
                 dd = self.datafunction()
-
-                if self.datafunction_result is None:
-                    ddprev = dd
-                else:
-                    ddprev = self.datafunction_result
-
-                # depending on value of self.averaging_enabled either do or
-                # don't do the averaging
-                if self._averaging_enabled:
-                    newdd = self.alpha * dd + (1 - self.alpha) * ddprev
-                else:
-                    newdd = dd
-
-                self.datafunction_result = newdd
-
-                self.update(data=newdd)
+                self.datafunction_result = dd
+                self.update(data=dd)
             except Exception as e:
                 logging.exception(e)
                 print('livePlot: Exception in updatebg, stopping readout')
@@ -471,7 +470,7 @@ class livePlot:
             time.sleep(0.1)
         time.sleep(0.00001)
 
-    def enable_averaging(self, *args, **kwargs):
+    def enable_averaging_slot(self, *args, **kwargs):
         """ Update the averaging mode of the widget """
         self._averaging_enabled = self.win.averaging_box.checkState()
         if self.verbose >= 1:
