@@ -105,12 +105,23 @@ class ClassicalDotSystem(BaseDotSystem):
 
     def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
         """ Simulating a honeycomb by looping over a 2D array of parameter values (paramvalues2D),
-         resulting honeycomb is stored in self.honeycomb """
+         resulting honeycomb is stored in self.honeycomb 
+         
+         Args:
+             paramvalues2D (array): shape nparams x nx x ny
+             verbose (int)
+             usediag (bool)
+             multiprocess(bool)
+         
+         """
         t0 = time.time()
 
         nparams = np.shape(paramvalues2D)[0]
         npointsx = np.shape(paramvalues2D)[1]
-        npointsy = np.shape(paramvalues2D)[2]
+        if len(paramvalues2D.shape)==2:
+            npointsy = np.shape(paramvalues2D)[2]
+        else:
+            npointsy = 1
 
         if nparams != self.ngates:
             print('simulate_honeycomb: number of parameters (%d) does not equal number of gates (%d)...' % (nparams, self.ngates))

@@ -321,7 +321,8 @@ class livePlot:
         self.datafunction_result = None
         self.alpha = alpha
 
-        # TODO: allow arguments like ['P1']
+        is1dscan=( isinstance(self.sweepparams, str) or (isinstance(self.sweepparams, (list, dict)) and len(self.sweepparams)==1 ) )
+        
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
             p1.setLabel('left', 'param1')
@@ -338,14 +339,14 @@ class livePlot:
                 else:
                     self.plot = pg.ImageItem()
                     p1.addItem(self.plot)
-        elif isinstance(self.sweepparams, str):
+        elif is1dscan:
             p1 = plotwin.addPlot(title="1d scan")
             p1.setLabel('left', 'Value')
             p1.setLabel('bottom', self.sweepparams, units='mV')
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
-        elif type(self.sweepparams) is list or dict:
+        elif isinstance(self.sweepparams, (list, dict)):
             p1 = plotwin.addPlot(title='2d scan')
             if type(self.sweepparams) is dict:
                 [xlabel, ylabel] = ['sweepparam_v', 'stepparam_v']

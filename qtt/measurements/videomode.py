@@ -96,6 +96,8 @@ class VideoMode:
         self.fpga_ch = minstrument # legacy
         self.minstrumenthandle = minstrument[0]
         self.channels=minstrument[1]
+        if isinstance(self.channels, int):
+            self.channels=[self.channels]
         
         self.Naverage = Parameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
         self._Naverage_val = Naverage
@@ -169,7 +171,7 @@ class VideoMode:
             else:
                 raise Exception('arguments not supported')
             self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), self.fpga_ch)
-        elif type(self.sweepranges) is list:
+        elif isinstance(self.sweepranges, list):
             # 2D scan
             if isinstance(self.sweepparams, list):
                 waveform, _ = self.station.awg.sweep_2D(self.sampling_frequency.get(), self.sweepparams, self.sweepranges, self.resolution)
@@ -275,14 +277,21 @@ class SimulationDigitizer(qcodes.Instrument):
         test_dot = self.model.ds
         waveform = self._waveform
         model = self.model
+        sweepgates=waveform['sweepgates']
+        ndim = len(sweepgates)
         
         nn = waveform['resolution']
+        if isinstance(nn, float):
+            nn=[nn]*ndim
         nnr=nn[::-1] # funny reverse ordering
         
         if verbose >= 2:
             print('myhoneycomb: start resolution %s' % (nn,))
     
-        sweepgates=waveform['sweepgates']
+
+        if ndim!=len(nn):
+            raise Exception('number of sweep gates %d does not match resolution' % ndim)
+            
         ng = len(model.gate_transform.sourcenames)
         test2Dparams = np.zeros((test_dot.ngates, *nnr))
         gate2Dparams = np.zeros((ng, *nnr))
@@ -298,19 +307,18 @@ class SimulationDigitizer(qcodes.Instrument):
             idx[i], idx[j] = idx[j], idx[i]
         Vmatrix = Vmatrix[:, idx].copy()
         
-        sweepx = np.linspace(-rr[0], rr[0], nn[0])
-        sweepy = np.linspace(-rr[1], rr[1], nn[1])
-        xv, yv = np.meshgrid(sweepx, sweepy)
-    
-        w = np.vstack((xv.flatten(), yv.flatten(), np.zeros((ng - 2, xv.size))))
+        sweeps=[]
+        for ii in range(ndim):
+            sweeps.append( np.linspace(-rr[ii], rr[ii], nn[ii]) )
+        meshgrid = np.meshgrid(*sweeps)
+        mm=tuple( [xv.flatten() for xv in meshgrid])
+        w = np.vstack((*mm, np.zeros((ng - ndim, mm[0].size))))
         ww = np.linalg.inv(Vmatrix).dot(w)
     
         for ii, p in enumerate(model.gate_transform.sourcenames):
             val = model.get_gate(p)
             gate2Dparams[ii] = val
-    
-        #plungers = ['P%d' % n for n in range(station.model.ds.ndots)]
-    
+       
         for ii, p in enumerate(model.gate_transform.sourcenames):
             gate2Dparams[ii] += ww[ii].reshape(nnr)
     
@@ -322,14 +330,21 @@ class SimulationDigitizer(qcodes.Instrument):
         for ii in range(test_dot.ndots):
             test2Dparams[ii] = qq['det%d' % (ii + 1)].reshape(nnr)
     
+        if ndim==1:
+            test2Dparams=test2Dparams.reshape( (test2Dparams.shape[0],test2Dparams.shape[1],1))
         # run the honeycomb simulation
         test_dot.simulate_honeycomb(test2Dparams, multiprocess=multiprocess, verbose=0)
-    
-        #test_dot.honeycomb = test_dot.honeycomb.astype(np.float64)
-    
+     
+        # FIXME: use csd instead of honeycomb
+        # FIXME: make 1d plot work
+        sd1=(test_dot.honeycomb.reshape( (*test_dot.honeycomb.shape, -1) ) * (model.sddist1.reshape( (1,1,-1) ) )).sum(axis=-1)
+        sd1*=(1 / np.sum(model.sddist1))
+            
         if model.sdnoise > 0:
-            test_dot.honeycomb += model.sdnoise * (np.random.rand(*test_dot.honeycomb.shape) - .5)
-        return test_dot.honeycomb
+            sd1 += model.sdnoise * (np.random.rand(*test_dot.honeycomb.shape) - .5)
+        if ndim==1:
+            sd1=sd1.reshape( (-1,))
+        return sd1
     
 
 class simulation_awg(qcodes.Instrument):
@@ -342,12 +357,25 @@ class simulation_awg(qcodes.Instrument):
                       'type': 'sweep_2D', 'samp_freq': samp_freq, 'resolution': resolution}
         waveform = self.current_sweep
         return waveform, None
+    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
+        self.current_sweep = {'waveform':'simulation_awg', 'gate': gate, 'sweeprange': sweeprange,
+                      'type': 'sweep_gate', 'period': period, 'width': width, 'wave_name': wave_name}
+        
+        waveform = self.current_sweep
+        waveform['resolution']=[int(period*self.sampling_frequency()) ]
+        waveform['sweepgates']=[waveform['gate']]    
+        waveform['sweepranges']=[waveform['sweeprange']]
+        
+        sweep_info = None
+        return waveform, sweep_info
     
 #%% Testing
 
 if __name__=='__main__':
+    import pdb
     from imp import reload
     import matplotlib.pyplot as plt
+    reload(qtt.live_plotting)
     
     pv=qtt.createParameterWidget([gates])
     
@@ -355,21 +383,22 @@ if __name__=='__main__':
     verbose=1
     multiprocess=False
     
-    sweepparams=['B0', 'B3']
     digitizer=SimulationDigitizer(qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
     station.components[digitizer.name]=digitizer
     
     station.awg = simulation_awg(qtt.measurements.scans.instrumentName('vawg'))
     station.components[station.awg.name]=station.awg
                       
-    sweepranges=[160,80]
+    sweepparams=['B0', 'B3']; sweepranges=[160,80]; resolution = [24, 16]
+    #sweepparams='B0'; sweepranges=160; resolution = [60]
     minstrument=(digitizer.name, [0,1])
     vm = VideoMode(station, sweepparams, sweepranges, minstrument, Naverage=25,
-                 resolution=[64, 48], sample_rate='default', diff_dir=None, verbose=1, dorun=True)
+                 resolution=resolution, sample_rate='default', diff_dir=None, verbose=1, dorun=True)
     
     self=vm
     
     # NEXT: use sddist1 in calculations, output simular to sd1 model
+    # NEXT: 1d scans
     # NEXT: two output windows
     # NEXT: faster simulation
     
