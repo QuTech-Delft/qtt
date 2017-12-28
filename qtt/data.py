@@ -18,7 +18,7 @@ except:
     pass
 
 import numpy.linalg
-from qtt import pgeometry 
+from qtt import pgeometry
 
 import qtt.tools
 import qtt.algorithms.generic
@@ -50,7 +50,8 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
     """
     if arrayname is None:
         arrayname = dataset.default_parameter_name()
-    tr = image_transform(dataset, arrayname=arrayname, mode=mode, unitsperpixel=unitsperpixel)
+    tr = image_transform(dataset, arrayname=arrayname,
+                         mode=mode, unitsperpixel=unitsperpixel)
     im = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname].ndarray
@@ -577,8 +578,6 @@ except:
 #    warnings.warn('could not load deepdish...')
 
 
-
-
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
     try:
@@ -593,6 +592,7 @@ def pickleload(pkl_file):
         else:
             data2 = None
     return data2
+
 
 def _data_extension():
     return 'pickle'
