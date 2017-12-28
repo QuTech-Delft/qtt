@@ -35,7 +35,7 @@ class rda_t:
     def __init__(self):
         """ Class for simple real-time data access
 
-        Every object has a `get` and `set` method to access simple parameters 
+        Every object has a `get` and `set` method to access simple parameters
         globally (e.g. across different python sessions).
 
         """
@@ -100,7 +100,8 @@ class rda_t:
 
 class MeasurementControl(QtWidgets.QMainWindow):
 
-    def __init__(self, name='Measurement Control', rda_variable='qtt_abort_running_measurement', **kwargs):
+    def __init__(self, name='Measurement Control',
+                 rda_variable='qtt_abort_running_measurement', **kwargs):
         """ Simple control for stopping running measurements """
         super().__init__(**kwargs)
         w = self
@@ -191,7 +192,8 @@ def start_measurement_control(doexec=False):
 
 class RdaControl(QtWidgets.QMainWindow):
 
-    def __init__(self, name='LivePlot Control', boxes=['xrange', 'yrange', 'nx', 'ny'], **kwargs):
+    def __init__(self, name='LivePlot Control', boxes=[
+                 'xrange', 'yrange', 'nx', 'ny'], **kwargs):
         """ Simple control for real-time data parameters """
         super().__init__(**kwargs)
         w = self
@@ -272,8 +274,8 @@ class livePlot:
 
     def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
                  sweepranges=None, alpha=.3, verbose=1, window_title='live view'):
-        """Return a new livePlot object."""      
-        
+        """Return a new livePlot object."""
+
         plotwin = pg.GraphicsWindow(title="Live view")
         self.window_title = window_title
 
@@ -313,10 +315,10 @@ class livePlot:
         self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
         self._averaging_enabled = False
-        
+
         self.datafunction_result = None
-        self.alpha=alpha
-        
+        self.alpha = alpha
+
         # TODO: allow arguments like ['P1']
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
@@ -384,13 +386,15 @@ class livePlot:
         self.data = None
 
     def update(self, data=None, processevents=True):
-        self.win.setWindowTitle('%s, fps: %.2f' % (self.window_title, self.fps.framerate()) )
+        self.win.setWindowTitle('%s, fps: %.2f' %
+                                (self.window_title, self.fps.framerate()))
         if self.verbose >= 2:
-            print('livePlot: update: idx %d ' % self.idx )
+            print('livePlot: update: idx %d ' % self.idx)
         if data is not None:
             self.data = np.array(data)
             if self.data.ndim == 1:
-                if None in (self.sweepInstrument, self.sweepparams, self.sweepranges):
+                if None in (self.sweepInstrument, self.sweepparams,
+                            self.sweepranges):
                     self.plot.setData(self.data)
                 else:
                     sweep_param = getattr(
@@ -401,7 +405,8 @@ class livePlot:
                     self.plot.setData(sweepvalues, self.data)
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data.T)
-                if None not in (self.sweepInstrument, self.sweepparams, self.sweepranges):
+                if None not in (self.sweepInstrument,
+                                self.sweepparams, self.sweepranges):
                     if type(self.sweepparams) is dict:
                         value_x = 0
                         value_y = 0
@@ -442,15 +447,16 @@ class livePlot:
                     ddprev = dd
                 else:
                     ddprev = self.datafunction_result
-                
-                # depending on value of self.averaging_enabled either do or don't do the averaging
+
+                # depending on value of self.averaging_enabled either do or
+                # don't do the averaging
                 if self._averaging_enabled:
-                    newdd = self.alpha*dd + (1-self.alpha)*ddprev
+                    newdd = self.alpha * dd + (1 - self.alpha) * ddprev
                 else:
                     newdd = dd
-            
+
                 self.datafunction_result = newdd
-                
+
                 self.update(data=newdd)
             except Exception as e:
                 logging.exception(e)
@@ -464,18 +470,18 @@ class livePlot:
             #print('slow rate...?')
             time.sleep(0.1)
         time.sleep(0.00001)
-        
+
     def enable_averaging(self, *args, **kwargs):
-        
+
         self._averaging_enabled = self.win.averaging_box.checkState()
-        if self.verbose>=1:
+        if self.verbose >= 1:
             if self._averaging_enabled == 2:
-                print('enable_averaging called, alpha = '+str(self.alpha))
+                print('enable_averaging called, alpha = ' + str(self.alpha))
             elif self._averaging_enabled == 0:
                 print('enable_averaging called, averaging turned off')
             else:
                 print('enable_averaging called, undefined')
-    
+
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
@@ -527,7 +533,7 @@ class MockCallback_2d(qcodes.Instrument):
 
 
 def test_mock2d():
-    m = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d') )
+    m = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d'))
     d = m()
 
 
