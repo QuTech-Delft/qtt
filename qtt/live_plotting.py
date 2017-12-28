@@ -273,7 +273,7 @@ class livePlot:
     """
 
     def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
-                 sweepranges=None, alpha=.3, verbose=1, window_title='live view'):
+                 sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view'):
         """Return a new livePlot object."""
 
         plotwin = pg.GraphicsWindow(title="Live view")
@@ -283,22 +283,22 @@ class livePlot:
         win.resize(800, 600)
         win.setWindowTitle(self.window_title)
 
-        topLayout = QtWidgets.QHBoxLayout()
-        win.start_button = QtWidgets.QPushButton('Start')
-        win.stop_button = QtWidgets.QPushButton('Stop')
-        win.averaging_box = QtWidgets.QCheckBox('Averaging')
-
-        for b in [win.start_button, win.stop_button]:
-            b.setMaximumHeight(24)
-
-            #self.reloadbutton.setText('Reload data')
-        topLayout.addWidget(win.start_button)
-        topLayout.addWidget(win.stop_button)
-        topLayout.addWidget(win.averaging_box)
-
         vertLayout = QtWidgets.QVBoxLayout()
 
-        vertLayout.addLayout(topLayout)
+        if show_controls:
+            topLayout = QtWidgets.QHBoxLayout()
+            win.start_button = QtWidgets.QPushButton('Start')
+            win.stop_button = QtWidgets.QPushButton('Stop')
+            win.averaging_box = QtWidgets.QCheckBox('Averaging')
+
+            for b in [win.start_button, win.stop_button]:
+                b.setMaximumHeight(24)
+
+            topLayout.addWidget(win.start_button)
+            topLayout.addWidget(win.stop_button)
+            topLayout.addWidget(win.averaging_box)
+            vertLayout.addLayout(topLayout)
+
         vertLayout.addWidget(plotwin)
 
         win.setLayout(vertLayout)
@@ -369,9 +369,10 @@ class livePlot:
                 target()
             return signal_drop_arguments
 
-        win.start_button.clicked.connect(connect_slot(self.startreadout))
-        win.stop_button.clicked.connect(connect_slot(self.stopreadout))
-        win.averaging_box.clicked.connect(connect_slot(self.enable_averaging))
+        if show_controls:
+            win.start_button.clicked.connect(connect_slot(self.startreadout))
+            win.stop_button.clicked.connect(connect_slot(self.stopreadout))
+            win.averaging_box.clicked.connect(connect_slot(self.enable_averaging))
 
         self.datafunction_result = None
 
@@ -467,12 +468,11 @@ class livePlot:
             dd = None
 
         if self.fps.framerate() < 10:
-            #print('slow rate...?')
             time.sleep(0.1)
         time.sleep(0.00001)
 
     def enable_averaging(self, *args, **kwargs):
-
+        """ Update the averaging mode of the widget """
         self._averaging_enabled = self.win.averaging_box.checkState()
         if self.verbose >= 1:
             if self._averaging_enabled == 2:
@@ -540,7 +540,7 @@ def test_mock2d():
 #%% Example
 if __name__ == '__main__':
     lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')), sweepInstrument=None,
-                  sweepparams=['L', 'R'], sweepranges=[50, 50])
+                  sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
     pv = qtt.createParameterWidget([lp.datafunction])
