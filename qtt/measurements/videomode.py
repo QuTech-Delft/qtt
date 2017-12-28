@@ -92,7 +92,11 @@ class VideoMode:
         self.verbose=verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.fpga_ch = minstrument
+        
+        self.fpga_ch = minstrument # legacy
+        self.minstrumenthandle = minstrument[0]
+        self.channels=minstrument[1]
+        
         self.Naverage = Parameter('Naverage', get_cmd=self._get_Naverage, set_cmd=self._set_Naverage, vals=Numbers(1, 1023))
         self._Naverage_val = Naverage
         self.resolution = resolution
@@ -111,7 +115,11 @@ class VideoMode:
                 station.digitizer.sample_rate(sample_rate)
                 self.sampling_frequency= station.digitizer.sample_rate
         else:
-            raise Exception('no fpga or digitizer found')
+            try:
+                minstrumenthandle = qtt.measurements.scans.get_instrument(minstrument, station)
+                self.sampling_frequency= minstrumenthandle.sample_rate
+            except:
+                raise Exception('no fpga or digitizer found')
                     
         self.lp = livePlot(None, self.station.gates, self.sweepparams, self.sweepranges)
 
@@ -163,13 +171,13 @@ class VideoMode:
             self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), self.fpga_ch)
         elif type(self.sweepranges) is list:
             # 2D scan
-            if type(self.sweepparams) is list:
+            if isinstance(self.sweepparams, list):
                 waveform, _ = self.station.awg.sweep_2D(self.sampling_frequency.get(), self.sweepparams, self.sweepranges, self.resolution)
-            elif type(self.sweepparams) is dict:
+            elif isinstance(self.sweepparams,dict):
                 waveform, _ = self.station.awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams['gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
             else:
                 raise Exception('arguments not supported')
-            self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), self.fpga_ch, self.resolution, self.diff_dir)
+            self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), minstrument=(self.minstrumenthandle, self.channels), resolution=self.resolution, diff_dir=self.diff_dir)
 
         self._waveform = waveform
         self.lp.datafunction = self.datafunction
@@ -231,6 +239,137 @@ class VideoMode:
         self.lp.datafunction.Naverage = value
         self.box.setValue(value)
         
+#%%
+import qcodes
+import logging
+
+class SimulationDigitizer(qcodes.Instrument):
+
+    def __init__(self, name, model=None, **kwargs):
+        super().__init__(name, **kwargs)
+        self.current_sweep = None
+        self.model=model
+        self.add_parameter('sample_rate', set_cmd=None, initial_value=1e6)
+        self.debug={}
+        self.verbose=0
         
+    def measuresegment(self, waveform, channels=[0]):
+        import time
+        if self.verbose:
+            print('%s: measuresegment' % self.name)
+            print(waveform)
+        self._waveform = waveform
+        
+        d = self.myhoneycomb()
+        time.sleep(.05)
+        return [d]*len(channels)
+    
+    def myhoneycomb(self, multiprocess=False, verbose=0):
+        """
+        Args:
+            model (object):
+            Vmatrix (array): transformation from ordered scan gates to the sourcenames 
+            erange, drange (float):
+            nx, ny (integer):
+        """
+        test_dot = self.model.ds
+        waveform = self._waveform
+        model = self.model
+        
+        nn = waveform['resolution']
+        nnr=nn[::-1] # funny reverse ordering
+        
+        if verbose >= 2:
+            print('myhoneycomb: start resolution %s' % (nn,))
+    
+        sweepgates=waveform['sweepgates']
+        ng = len(model.gate_transform.sourcenames)
+        test2Dparams = np.zeros((test_dot.ngates, *nnr))
+        gate2Dparams = np.zeros((ng, *nnr))
+        logging.info('honeycomb: %s' % (nn,))
+    
+        rr=waveform['sweepranges']
+    
+        v = model.gate_transform.sourcenames
+        ii = [v.index(s) for s in sweepgates]
+        Vmatrix = np.eye(len(v))  # , 3) )
+        idx = np.array((range(len(v))))
+        for i, j in enumerate(ii):
+            idx[i], idx[j] = idx[j], idx[i]
+        Vmatrix = Vmatrix[:, idx].copy()
+        
+        sweepx = np.linspace(-rr[0], rr[0], nn[0])
+        sweepy = np.linspace(-rr[1], rr[1], nn[1])
+        xv, yv = np.meshgrid(sweepx, sweepy)
+    
+        w = np.vstack((xv.flatten(), yv.flatten(), np.zeros((ng - 2, xv.size))))
+        ww = np.linalg.inv(Vmatrix).dot(w)
+    
+        for ii, p in enumerate(model.gate_transform.sourcenames):
+            val = model.get_gate(p)
+            gate2Dparams[ii] = val
+    
+        #plungers = ['P%d' % n for n in range(station.model.ds.ndots)]
+    
+        for ii, p in enumerate(model.gate_transform.sourcenames):
+            gate2Dparams[ii] += ww[ii].reshape(nnr)
+    
+        qq = model.gate_transform.transformGateScan(gate2Dparams.reshape((gate2Dparams.shape[0], -1)))
+        # for debugging
+        self.debug['gate2Dparams']= gate2Dparams
+        self.debug['qq'] = qq
+    
+        for ii in range(test_dot.ndots):
+            test2Dparams[ii] = qq['det%d' % (ii + 1)].reshape(nnr)
+    
+        # run the honeycomb simulation
+        test_dot.simulate_honeycomb(test2Dparams, multiprocess=multiprocess, verbose=0)
+    
+        #test_dot.honeycomb = test_dot.honeycomb.astype(np.float64)
+    
+        if model.sdnoise > 0:
+            test_dot.honeycomb += model.sdnoise * (np.random.rand(*test_dot.honeycomb.shape) - .5)
+        return test_dot.honeycomb
+    
+
+class simulation_awg(qcodes.Instrument):
+    def __init__(self, name, **kwargs):
+        super().__init__(name, **kwargs)
+        self.add_parameter('sampling_frequency', set_cmd=None, initial_value=1e6)
+
+    def sweep_2D(self, samp_freq, sweepgates, sweepranges, resolution):
+        self.current_sweep = {'waveform':'simulation_awg', 'sweepgates': sweepgates, 'sweepranges': sweepranges,
+                      'type': 'sweep_2D', 'samp_freq': samp_freq, 'resolution': resolution}
+        waveform = self.current_sweep
+        return waveform, None
+    
 #%% Testing
 
+if __name__=='__main__':
+    from imp import reload
+    import matplotlib.pyplot as plt
+    
+    pv=qtt.createParameterWidget([gates])
+    
+    reload(qtt.measurements.scans)
+    verbose=1
+    multiprocess=False
+    
+    sweepparams=['B0', 'B3']
+    digitizer=SimulationDigitizer(qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
+    station.components[digitizer.name]=digitizer
+    
+    station.awg = simulation_awg(qtt.measurements.scans.instrumentName('vawg'))
+    station.components[station.awg.name]=station.awg
+                      
+    sweepranges=[160,80]
+    minstrument=(digitizer.name, [0,1])
+    vm = VideoMode(station, sweepparams, sweepranges, minstrument, Naverage=25,
+                 resolution=[64, 48], sample_rate='default', diff_dir=None, verbose=1, dorun=True)
+    
+    self=vm
+    
+    # NEXT: use sddist1 in calculations, output simular to sd1 model
+    # NEXT: two output windows
+    # NEXT: faster simulation
+    

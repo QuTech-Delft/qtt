@@ -1324,6 +1324,9 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
     except:
         ism4i = False
+    minstrument=get_instrument(minstrhandle)
+    is_simulation = minstrument.name.startswith('sdigitizer')
+    
     if isfpga:
         data = measuresegment_fpga(minstrhandle, waveform, read_ch, Naverage)
     elif ism4i:
@@ -1332,6 +1335,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
     elif minstrhandle=='dummy':
         # for testing purposes
         data = np.random.rand( 100, )
+    elif is_simulation:
+        data = minstrument.measuresegment(waveform, channels=read_ch)
     else:
         raise Exception(
             'Unrecognized fast readout instrument %s' % minstrhandle)
