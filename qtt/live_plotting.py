@@ -18,12 +18,9 @@ import pyqtgraph
 import pyqtgraph.multiprocess as mp
 
 import qcodes
-
 import qtt
-from qtt import pgeometry as pmatlab
-
+from qtt import pgeometry
 import qtt.algorithms.generic
-import qtt
 
 #%% Communication
 
@@ -93,7 +90,7 @@ class rda_t:
         """ Set a value
 
         Args:
-            key (str): key 
+            key (str): key
             value (str): the value to be set
         """
 
@@ -104,7 +101,7 @@ class rda_t:
 class MeasurementControl(QtWidgets.QMainWindow):
 
     def __init__(self, name='Measurement Control', rda_variable='qtt_abort_running_measurement', **kwargs):
-        """ Simple control for real-time data parameters """
+        """ Simple control for stopping running measurements """
         super().__init__(**kwargs)
         w = self
         w.setWindowTitle(name)
@@ -377,7 +374,7 @@ class livePlot:
         self.sweepInstrument = sweepInstrument
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.fps = pmatlab.fps_t(nn=6)
+        self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
         self._averaging_enabled = False
         
