@@ -251,72 +251,8 @@ class RdaControl(QtWidgets.QMainWindow):
         # self.label.setStyleSheet("QLabel { background-color : #baccba;
         # margin: 2px; padding: 2px; }");
 
-#%%
-
-
-class LivePlotControl(QtWidgets.QMainWindow):
-
-    def __init__(self, name='LivePlot Control', boxes=['xrange', 'yrange', 'nx', 'ny'], **kwargs):
-        """ Simple control widget """
-        super().__init__(**kwargs)
-        w = self
-        w.setGeometry(1700, 50, 300, 600)
-        w.setWindowTitle(name)
-        vbox = QtWidgets.QVBoxLayout()
-        self.verbose = 0
-
-        self.rda = rda_t()
-        self.boxes = boxes
-        self.widgets = {}
-        for ii, b in enumerate(self.boxes):
-            self.widgets[b] = {}
-            hbox = QtWidgets.QHBoxLayout()
-            self.widgets[b]['hbox'] = hbox
-            tbox = QtWidgets.QLabel(b)
-            self.widgets[b]['tbox'] = tbox
-            dbox = QtWidgets.QDoubleSpinBox()
-            # do not emit signals when still editing
-            dbox.setKeyboardTracking(False)
-
-            self.widgets[b]['dbox'] = dbox
-            val = self.rda.get_float(b, 100)
-
-            dbox.setMinimum(-10000)
-            dbox.setMaximum(10000)
-            dbox.setSingleStep(10)
-            dbox.setValue(val)
-            dbox.setValue(100)
-            dbox.valueChanged.connect(partial(self.valueChanged, b))
-            hbox.addWidget(tbox)
-            hbox.addWidget(dbox)
-            vbox.addLayout(hbox)
-
-        # w.setLayout(vbox)
-        widget = QtWidgets.QWidget()
-        widget.setLayout(vbox)
-        self.setCentralWidget(widget)
-
-        for b in self.boxes:
-            if self.rda.get(b) is None:
-                # make defaults...
-                self.rda.set(b, 100)
-        self.update_values()
-
-    def update_values(self):
-        for ii, b in enumerate(self.boxes):
-            val = self.rda.get_float(b)
-            if val is None:
-                # default...
-                val = 100
-            dbox = self.widgets[b]['dbox']
-            #oldstate = dbox.blockSignals(True)
-            dbox.setValue(val)
-            # dbox.blockSignals(oldstate)
-
-    def valueChanged(self, name, value):
-        if self.verbose:
-            print('valueChanged: %s %s' % (name, value))
-        self.rda.set(name, value)
+# legacy name
+LivePlotControl = RdaControl
 
 #%% Liveplot object
 
