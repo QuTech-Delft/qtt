@@ -815,9 +815,9 @@ try:
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
-    def addPPT_dataset(dataset, customfig=None, title=None, notes=None,
+    def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
-                       printformat='fancy', **kwargs):
+                       printformat='fancy', customfig=None, **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
 
         Arguments:
