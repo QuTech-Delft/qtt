@@ -162,6 +162,7 @@ def checkPickle(obj, verbose=0):
         return False
     return True
 
+
 from functools import wraps
 
 
@@ -348,6 +349,7 @@ def test_image_operations(verbose=0):
     d = diffImage(ds.z, dy='x')
 
 #%%
+
 
 import dateutil
 
@@ -609,6 +611,7 @@ def pythonVersion():
 
 #%%
 
+
 try:
     import graphviz
 except:
@@ -628,15 +631,16 @@ def showDotGraph(dot, fig=10):
     plt.tight_layout()
     plt.axis('off')
 
+
 #%%
 try:
     import win32com
     import win32com.client
     import pprint
-    
-    def addPPTslide(title=None, fig=None, txt = None, notes=None, figsize=None,
-                    subtitle = None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout = None):
+
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
+                    subtitle=None, maintext=None, show=False, verbose=1,
+                    activate_slide=True, ppLayout=None):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
@@ -673,20 +677,24 @@ try:
         try:
             ppt = Application.ActivePresentation
         except Exception:
-            print('could not open active Powerpoint presentation, opening blank presentation')
+            print(
+                'could not open active Powerpoint presentation, opening blank presentation')
             try:
-                ppt=Application.Presentations.Add()
+                ppt = Application.Presentations.Add()
             except Exception as ex:
-                warnings.warn('could not make connection to Powerpoint presentation')
+                warnings.warn(
+                    'could not make connection to Powerpoint presentation')
                 return None, None
 
         if show:
             Application.Visible = True  # shows what's happening, not required, but helpful for now
 
-        if verbose>=2:
+        if verbose >= 2:
             print('addPPTslide: presentation name: %s' % ppt.Name)
 
-        ppLayoutTitleOnly = 11; ppLayoutTitle = 1; ppLayoutText=2
+        ppLayoutTitleOnly = 11
+        ppLayoutTitle = 1
+        ppLayoutText = 2
 
         if txt is not None:
             if subtitle is None:
@@ -694,19 +702,20 @@ try:
                 subtitle = txt
             else:
                 raise Exception('please do not use the txt field any more')
-                
+
             txt = None
-            
+
         if fig is None:
             # no figure, text box over entire page
             if ppLayout is None:
-                ppLayout =    ppLayoutText
+                ppLayout = ppLayoutText
         else:
-            # we have a figure, assume textbox is for dataset name only            
+            # we have a figure, assume textbox is for dataset name only
             ppLayout = ppLayoutTitleOnly
 
         if verbose:
-            print('addPPTslide: presentation name: %s, adding slide %d' % (ppt.Name, ppt.Slides.count+1))
+            print('addPPTslide: presentation name: %s, adding slide %d' %
+                  (ppt.Name, ppt.Slides.count + 1))
 
         slide = ppt.Slides.Add(ppt.Slides.Count + 1, ppLayout)
         if fig is None:
@@ -718,7 +727,7 @@ try:
             mainbox = None
             if maintext is not None:
                 warnings.warn('maintext not implemented when figure is set')
-                
+
         if title is not None:
             slide.shapes.title.textframe.textrange.text = title
         else:
@@ -735,7 +744,7 @@ try:
                 # new Qt style
                 figtemp = fig.lp.plotwin.grab()
                 figtemp.save(fname)
-                
+
             elif isinstance(fig, QtWidgets.QWidget):
                 try:
                     figtemp = QtGui.QPixmap.grabWidget(fig)
@@ -763,8 +772,6 @@ try:
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
                                     SaveWithDocument=True, Left=left, Top=120, Width=width, Height=height)
 
-        
-
         if subtitle is not None:
             # add subtitle
             subtitlebox = slide.Shapes.AddTextbox(
@@ -773,8 +780,9 @@ try:
             subtitlebox.TextFrame.TextRange.Text = subtitle
 
         if notes is None:
-            warnings.warn('please set notes for the powerpoint slide. e.g. use the station or reshape_metadata')
-            
+            warnings.warn(
+                'please set notes for the powerpoint slide. e.g. use the station or reshape_metadata')
+
         if isinstance(notes, qcodes.Station):
             station = notes
             gates = getattr(station, 'gates', None)
@@ -784,7 +792,7 @@ try:
 
         if notes is not None:
             if notes == '':
-                notes=' ' 
+                notes = ' '
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
 
@@ -837,7 +845,7 @@ try:
         if notes is None:
             try:
                 metastring = reshape_metadata(dataset,
-                                          printformat=printformat)
+                                              printformat=printformat)
             except Exception as ex:
                 metastring = 'Could not read metadata: %s' % str(ex)
             notes = 'Dataset %s metadata:\n\n%s' % (dataset.location,
@@ -898,7 +906,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
         header = 'dataset: %s' % dataset.location
 
     metadata = OrderedDict()
-    
+
     # make sure the gates instrument is in front
     all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
                          'gates',  reverse=True)
@@ -923,7 +931,7 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                     metadata[x][y]['label'] = param_md.get('label', None)
             except KeyError as ex:
                 if verbose:
-                    print('failed on parameter %s / %s: %s' %(x, y, str(ex)))
+                    print('failed on parameter %s / %s: %s' % (x, y, str(ex)))
 
     if printformat == 'dict':
         ss = str(metadata).replace('(', '').replace(
@@ -958,6 +966,7 @@ def test_reshape_metadata():
         pass
     if dataset is not None:
         _ = reshape_metadata(dataset, printformat='dict')
+
 
 #%%
 try:
@@ -1071,6 +1080,8 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
         plt.imshow(F, interpolation='nearest')
 
     return F  # , rr
+
+
 F = smoothFourierFilter([36, 36])
 
 
@@ -1114,6 +1125,7 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     imf = imf[0:imx.shape[0], 0:imx.shape[1]]
 
     return imf
+
 
 #%%
 import copy

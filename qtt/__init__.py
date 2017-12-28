@@ -22,6 +22,7 @@ from qtt.tools import cfigure, plot2Dline
 from qtt.data import *
 from qtt.algorithms.functions import logistic
 from qtt.measurements.storage import save_state, load_state
+from qtt.loggingGUI import installZMQlogger
 
 import qtt.live_plotting
 import qtt.gui.parameterviewer
@@ -77,7 +78,6 @@ def start_dataviewer():
     dv = DataViewer()
     dv.show()
     return dv
-from qtt.loggingGUI import installZMQlogger
 
 
 #%% Add hook to abort measurement
@@ -101,6 +101,7 @@ def _abort_measurement():
     if v is None:
         v = 0
     return int(v)
+
 
 abort_measurements = _abort_measurement
 # patch the qcodes abort function
@@ -126,6 +127,7 @@ def set_location_name(name, verbose=1):
 def _copy_to_str(x, memo):
     return str(x)
 
+
 # black magic to make qcodes objects work with deepcopy
 from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, Station
 for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
@@ -140,6 +142,7 @@ qcodes.Parameter.__getstate__ = lambda self: str(self)
 def _setstate(self, d):
     self.name = d
     self._instrument = None
+
 
 qcodes.Instrument.__setstate__ = _setstate
 qcodes.Parameter.__setstate__ = _setstate
@@ -166,10 +169,12 @@ except:
 # %%
 import pyqtgraph as pg
 
+
 def _copyToClipboard(self):
     ''' Copy the current image to a the system clipboard '''
     app = pg.mkQApp()
     clipboard = app.clipboard()
     clipboard.setPixmap(self.win.grab())
+
 
 QtPlot.copyToClipboard = _copyToClipboard
