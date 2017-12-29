@@ -241,8 +241,6 @@ class sensingdot_t:
         scanjob['sweepdata'] = dict(
             {'param': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
         scanjob['minstrument'] = keithleyidx
-        scanjob['compensateGates'] = []
-        scanjob['gate_values_corners'] = [[]]
 
         alldata = qtt.measurements.scans.scan2D(scanjob)
 
