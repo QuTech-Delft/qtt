@@ -4,10 +4,13 @@ Contains code to do live plotting
 
 """
 #%%
+import time
 import datetime
 import threading
 import numpy as np
 from scipy import ndimage
+from colorama import Fore
+import pyqtgraph as pg
 
 import qtt
 from qcodes.instrument.parameter import Parameter
@@ -15,6 +18,7 @@ from qcodes.utils.validators import Numbers
 from qtt.live_plotting import livePlot
 from qtt.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
+from qtpy import QtCore
 from qtt.measurements.scans import plotData, makeDataset_sweep, makeDataset_sweep_2D
 
 #%%
@@ -145,7 +149,7 @@ class VideoMode:
         if nplots is None:
             nplots = len(self.channels)
         self.nplots = nplots
-        self.window_title = "Videomode: %d" % self.nplots
+        self.window_title = "%s: nplots %d" % (self.__class__.__name__, self.nplots )
 
         win = QtWidgets.QWidget()
         win.setWindowTitle(self.window_title)
@@ -179,13 +183,12 @@ class VideoMode:
         self.plotLayout = QtWidgets.QHBoxLayout()
         vertLayout.addLayout(self.plotLayout)
 
-        self.plotLayout.addWidget(QtWidgets.QLabel('hi'))
-
         self.lp = []
         for ii in range(nplots):
 
             lp = livePlot(None, self.station.gates,
-                          self.sweepparams, self.sweepranges, show_controls=False)
+                          self.sweepparams, self.sweepranges, show_controls=False,
+                          plot_title=str(minstrument[0])+' '  + str(ii) )
             self.lp.append(lp)
             self.plotLayout.addWidget(self.lp[ii].win)
 
@@ -195,7 +198,7 @@ class VideoMode:
 
         self.mainwin.start_button.clicked.connect(connect_slot(self.run))
         self.mainwin.stop_button.clicked.connect(connect_slot(self.stop))
-        self.box = self._create_naverage_box()
+        self.box = self._create_naverage_box(Naverage=Naverage)
         self.topLayout.addWidget(self.box)
 
         self.setGeometry = self.mainwin.setGeometry
@@ -225,7 +228,7 @@ class VideoMode:
         """
         if self.idx % 10 == 0:
             logging.debug('%s: updatebg %d' %
-                          (vm.__class__.__name__, self.idx))
+                          (self.__class__.__name__, self.idx))
         self.idx = self.idx + 1
         self.fps.addtime(time.time())
         if self.datafunction is not None:
@@ -241,11 +244,13 @@ class VideoMode:
             except Exception as e:
                 logging.exception(e)
                 print('%s: Exception in updatebg, stopping readout' %
-                      vm.__class__.__name__)
+                      self.__class__.__name__)
                 self.stopreadout()
         else:
             self.stopreadout()
             dd = None
+
+        self.mainwin.setWindowTitle(self.window_title + ' %.1f [fps]' % self.fps.framerate())
 
         if self.fps.framerate() < 10:
             time.sleep(0.1)
@@ -263,15 +268,15 @@ class VideoMode:
             self.datafunction = callback
         self.timer.start(1000 * (1. / rate))
         if self.verbose:
-            print('%s: start readout' % (vm.__class__.__name__,))
+            print('%s: start readout' % (self.__class__.__name__,))
 
     def stopreadout(self):
         if self.verbose:
-            print('%s: stop readout' % (vm.__class__.__name__,))
+            print('%s: stop readout' % (self.__class__.__name__,))
         self.timer.stop()
         self.mainwin.setWindowTitle(self.window_title + ' stopped')
 
-    def _create_naverage_box(self):
+    def _create_naverage_box(self, Naverage=1):
         box = QtWidgets.QSpinBox()
         box.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
         # do not emit signals when still editing
@@ -279,6 +284,7 @@ class VideoMode:
         box.setMinimum(1)
         box.setMaximum(1023)
         box.setPrefix('Naverage: ')
+        box.setValue(Naverage)
         box.setMaximumWidth(120)
         box.valueChanged.connect(self.Naverage.set)
         return box
@@ -303,7 +309,7 @@ class VideoMode:
 
         if self.verbose:
             print(Fore.BLUE + '%s: run ' %
-                  (vm.__class__.__name__,) + Fore.RESET)
+                  (self.__class__.__name__,) + Fore.RESET)
 
         if type(self.sweepranges) is int:
             # 1D scan
@@ -316,7 +322,7 @@ class VideoMode:
             else:
                 raise Exception('arguments not supported')
             self.datafunction = videomode_callback(
-                self.station, waveform, self.Naverage.get(), minstrument=(vm.minstrumenthandle, self.channels))
+                self.station, waveform, self.Naverage.get(), minstrument=(self.minstrumenthandle, self.channels))
         elif isinstance(self.sweepranges, list):
             # 2D scan
             if isinstance(self.sweepparams, list):
@@ -334,7 +340,11 @@ class VideoMode:
         #self.lp.datafunction = self.datafunction
         # self.box.setValue(self.Naverage.get())
 
+
         if startreadout:
+            if self.verbose:
+                print(Fore.BLUE + '%s: run: startreadout' %
+                      (self.__class__.__name__,) + Fore.RESET)
             self.startreadout()
 
     def stop(self):

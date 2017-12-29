@@ -274,7 +274,8 @@ class livePlot:
     """
 
     def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
-                 sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view'):
+                 sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view',
+                 plot_title=None):
         """Return a new livePlot object."""
 
         self.window_title = window_title
@@ -341,14 +342,14 @@ class livePlot:
                     self.plot = pg.ImageItem()
                     p1.addItem(self.plot)
         elif is1dscan:
-            p1 = plotwin.addPlot(title="1d scan")
+            p1 = plotwin.addPlot(title=plot_title)
             p1.setLabel('left', 'Value')
             p1.setLabel('bottom', self.sweepparams, units='mV')
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
         elif isinstance(self.sweepparams, (list, dict)):
-            p1 = plotwin.addPlot(title='2d scan')
+            p1 = plotwin.addPlot(title=plot_title)
             if type(self.sweepparams) is dict:
                 [xlabel, ylabel] = ['sweepparam_v', 'stepparam_v']
             else:
@@ -361,6 +362,7 @@ class livePlot:
             raise Exception(
                 'The number of sweep parameters should be either None, 1 or 2.')
 
+        self.plothandle=p1
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
         self.win.show()
