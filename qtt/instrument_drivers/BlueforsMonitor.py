@@ -20,6 +20,8 @@ class FridgeDataReceiver(InstrumentDataClient):
         super().__init__(name, **kwargs)
         self.add_measurable_quantity('temperatures', 'K', -1,
                                      'The CH temperature values')
+        self.add_measurable_quantity('mc_temperature', 'K', -1,
+                                     'The mc temperature')
         self.add_measurable_quantity('pressures', 'bar', -1,
                                      'The maxigauge pressures values')
         self.add_measurable_quantity('datetime', '', -1,
@@ -83,6 +85,10 @@ class FridgeDataSender():
         T = [self._read_temperature_(file) for file in temperature_files]
         return {'PT1': T[0], 'PT2': T[1], 'Magnet': T[2],
                 'Still': T[3], 'MC': T[4]}
+
+    def get_mc_temperatures(self):
+        t=self.get_temperatures()
+        return t.get('MC', [None, None])[0]
 
     def _read_pressure_(self, file_path):
         P = FridgeDataSender._get_tail_line_(file_path)
