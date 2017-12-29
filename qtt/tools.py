@@ -10,8 +10,9 @@ import pickle
 import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
-from qcodes import DataArray
 
+
+from qcodes import DataArray
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
 try:
@@ -25,7 +26,7 @@ from qtt.pgeometry import mpl2clipboard
 # do NOT load any other qtt submodules here
 
 try:
-    import qtpy.QtGui as QtGui
+    import qtpy.QtGui as QtGui, QtCore
     import qtpy.QtWidgets as QtWidgets
 except:
     pass
@@ -748,22 +749,16 @@ try:
                 fig = plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__=='VideoMode':
-                from qtpy import QtGui, QtCore
                 if isinstance(fig.lp, list):
-                    ff=[]
-                    for l in fig.lp:
-                        figtemp = l.plotwin.grab()
-                        ff.append(figtemp)
-                    f=ff[0]
-                    sz=f.size()
+                    ff=[l.plotwin.grab() for l in fig.lp]
+                    sz=ff[0].size()
                     sz = QtCore.QSize(sz.width()*len(ff), sz.height())
                     figtemp=QtGui.QPixmap(sz)
                     p=QtGui.QPainter(figtemp)
                     offset=0
                     for ii in range(len(ff)):
                         p.drawPixmap(offset, 0, ff[ii])
-                        offset+=ff[ii].size().width()
-                    
+                        offset+=ff[ii].size().width()                    
                     figtemp.save(fname)
                     
                 else:
