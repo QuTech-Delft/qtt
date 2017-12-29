@@ -41,8 +41,8 @@ class videomode_callback:
         self.channel = minstrument[1]
         self.channels = self.channel
         if not isinstance(self.channels, list):
-            self.channels=[self.channels]
-            
+            self.channels = [self.channels]
+
         self.waittime = waittime
 
         # for 2D scans
@@ -55,7 +55,7 @@ class videomode_callback:
 
     def __call__(self, verbose=0):
         """ Callback function to read a single line of data from the device 
-        
+
         Returns:
             data (list or array): either a list with length the number of channels or a numpy array with all data
         """
@@ -64,17 +64,18 @@ class videomode_callback:
         data = qtt.measurements.scans.measuresegment(
             self.waveform, self.Naverage, minstrumenthandle, self.channels)
 
-        dd=[]
+        dd = []
         for ii in range(len(data)):
             data_processed = np.array(data[ii])
-    
+
             if self.diff_dir is not None:
                 data_processed = qtt.diffImageSmooth(
                     data_processed, dy=self.diff_dir, sigma=self.diffsigma)
-    
+
             if self.smoothing:
-                data_processed = qtt.algorithms.generic.smoothImage(data_processed)
-    
+                data_processed = qtt.algorithms.generic.smoothImage(
+                    data_processed)
+
             if self.laplace:
                 data_processed = ndimage.filters.laplace(
                     data_processed, mode='nearest')
@@ -82,6 +83,7 @@ class videomode_callback:
         return dd
 
 #%%
+
 
 class VideoMode:
     """ Controls the videomode tuning.
@@ -105,7 +107,6 @@ class VideoMode:
         self.verbose = verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-
 
         self.minstrumenthandle = minstrument[0]
         self.channels = minstrument[1]
@@ -137,21 +138,21 @@ class VideoMode:
             except:
                 raise Exception('no fpga or digitizer found')
 
-        self.idx=0
-        self.fps = pgeometry.fps_t(nn=6)
+        self.idx = 0
+        self.fps = qtt.pgeometry.fps_t(nn=6)
 
-        ## Setup the GUI
+        # Setup the GUI
         if nplots is None:
             nplots = len(self.channels)
         self.nplots = nplots
-        self.window_title="Videomode: %d" % self.nplots
+        self.window_title = "Videomode: %d" % self.nplots
 
         win = QtWidgets.QWidget()
         win.setWindowTitle(self.window_title)
-        self.mainwin=win
+        self.mainwin = win
 
         vertLayout = QtWidgets.QVBoxLayout()
-        self.topLayout=None
+        self.topLayout = None
         if show_controls:
             topLayout = QtWidgets.QHBoxLayout()
             win.start_button = QtWidgets.QPushButton('Start')
@@ -170,27 +171,27 @@ class VideoMode:
 
             topLayout.addWidget(win.averaging_box)
             vertLayout.addLayout(topLayout)
-            self.topLayout=topLayout
+            self.topLayout = topLayout
 
         win.setLayout(vertLayout)
-        #self.mainwin.add
+        # self.mainwin.add
 
-        
         self.plotLayout = QtWidgets.QHBoxLayout()
         vertLayout.addLayout(self.plotLayout)
 
         self.plotLayout.addWidget(QtWidgets.QLabel('hi'))
 
-        self.lp=[]
+        self.lp = []
         for ii in range(nplots):
-                    
+
             lp = livePlot(None, self.station.gates,
-                               self.sweepparams, self.sweepranges, show_controls=False)
+                          self.sweepparams, self.sweepranges, show_controls=False)
             self.lp.append(lp)
             self.plotLayout.addWidget(self.lp[ii].win)
-            
+
         if show_controls:
-            self.mainwin.averaging_box.clicked.connect(connect_slot(self.enable_averaging_slot))
+            self.mainwin.averaging_box.clicked.connect(
+                connect_slot(self.enable_averaging_slot))
 
         self.mainwin.start_button.clicked.connect(connect_slot(self.run))
         self.mainwin.stop_button.clicked.connect(connect_slot(self.stop))
@@ -200,8 +201,7 @@ class VideoMode:
         self.setGeometry = self.mainwin.setGeometry
         self.mainwin.resize(800, 600)
         self.mainwin.show()
-        
-        
+
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
 
@@ -212,27 +212,27 @@ class VideoMode:
         """ Update the averaging mode of the widget """
         self._averaging_enabled = self.mainwin.averaging_box.checkState()
         for l in self.lp:
-            l.enable_averaging( self._averaging_enabled)
-
+            l.enable_averaging(self._averaging_enabled)
 
     def addPPT(self):
         """ Copy image of videomode window to PPT """
         qtt.tools.addPPTslide(fig=self, notes=self.station)
-        
-    def updatebg(self):   
+
+    def updatebg(self):
         """ Update function for the widget 
-        
+
         Calls the datafunction() and update() function for all subplots
         """
         if self.idx % 10 == 0:
-            logging.debug('%s: updatebg %d' % (vm.__class__.__name__, self.idx) )
+            logging.debug('%s: updatebg %d' %
+                          (vm.__class__.__name__, self.idx))
         self.idx = self.idx + 1
         self.fps.addtime(time.time())
         if self.datafunction is not None:
             try:
                 dd = self.datafunction()
                 self.datafunction_result = dd
-                if self.nplots==1:
+                if self.nplots == 1:
                     self.lp[0].update(data=dd[0])
                 else:
                     for ii, d in enumerate(dd):
@@ -240,7 +240,8 @@ class VideoMode:
                     pg.mkQApp().processEvents()
             except Exception as e:
                 logging.exception(e)
-                print('%s: Exception in updatebg, stopping readout' % vm.__class__.__name__)
+                print('%s: Exception in updatebg, stopping readout' %
+                      vm.__class__.__name__)
                 self.stopreadout()
         else:
             self.stopreadout()
@@ -249,7 +250,6 @@ class VideoMode:
         if self.fps.framerate() < 10:
             time.sleep(0.1)
         time.sleep(0.00001)
-
 
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
@@ -263,15 +263,14 @@ class VideoMode:
             self.datafunction = callback
         self.timer.start(1000 * (1. / rate))
         if self.verbose:
-            print('%s: start readout' % (vm.__class__.__name__,) )
+            print('%s: start readout' % (vm.__class__.__name__,))
 
     def stopreadout(self):
         if self.verbose:
-            print('%s: stop readout' % (vm.__class__.__name__,) )
+            print('%s: stop readout' % (vm.__class__.__name__,))
         self.timer.stop()
-        self.mainwin.setWindowTitle(self.window_title+' stopped')
+        self.mainwin.setWindowTitle(self.window_title + ' stopped')
 
-        
     def _create_naverage_box(self):
         box = QtWidgets.QSpinBox()
         box.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
@@ -283,7 +282,7 @@ class VideoMode:
         box.setMaximumWidth(120)
         box.valueChanged.connect(self.Naverage.set)
         return box
-    
+
     def close(self):
         self.mainwin.close()
 
@@ -291,20 +290,21 @@ class VideoMode:
         """ Return latest recorded dataset """
         with self.datalock:
             if run:
-                data = [l.datafunction() for l in self.lp ]
-                data=np.array(data)
+                data = [l.datafunction() for l in self.lp]
+                data = np.array(data)
             else:
-                data =  [l.datafunction_result for l in self.lp ] 
-                data=np.array(data)
+                data = [l.datafunction_result for l in self.lp]
+                data = np.array(data)
             self.alldata = self.makeDataset(data, Naverage=None)
             return self.alldata
 
     def run(self, startreadout=True):
         """ Programs the AWG, starts the read-out and the plotting. """
-        
+
         if self.verbose:
-            print(Fore.BLUE + '%s: run ' % (vm.__class__.__name__,) + Fore.RESET)
-            
+            print(Fore.BLUE + '%s: run ' %
+                  (vm.__class__.__name__,) + Fore.RESET)
+
         if type(self.sweepranges) is int:
             # 1D scan
             if type(self.sweepparams) is str:
@@ -316,7 +316,7 @@ class VideoMode:
             else:
                 raise Exception('arguments not supported')
             self.datafunction = videomode_callback(
-                self.station, waveform, self.Naverage.get(), minstrument = ( vm.minstrumenthandle, self.channels) )
+                self.station, waveform, self.Naverage.get(), minstrument=(vm.minstrumenthandle, self.channels))
         elif isinstance(self.sweepranges, list):
             # 2D scan
             if isinstance(self.sweepparams, list):
@@ -332,11 +332,10 @@ class VideoMode:
 
         self._waveform = waveform
         #self.lp.datafunction = self.datafunction
-        #self.box.setValue(self.Naverage.get())
+        # self.box.setValue(self.Naverage.get())
 
         if startreadout:
             self.startreadout()
-
 
     def stop(self):
         """ Stops the plotting, AWG(s) and if available RF. """
@@ -476,7 +475,6 @@ class SimulationDigitizer(qcodes.Instrument):
         test_dot.simulate_honeycomb(
             test2Dparams, multiprocess=multiprocess, verbose=0)
 
-     
         sd1 = ((test_dot.hcgs) * (model.sddist1.reshape((1, 1, -1)))).sum(axis=-1)
         sd2 = ((test_dot.hcgs) * (model.sddist2.reshape((1, 1, -1)))).sum(axis=-1)
         sd1 *= (1 / np.sum(model.sddist1))
@@ -492,8 +490,6 @@ class SimulationDigitizer(qcodes.Instrument):
             sd2 = sd2.reshape((-1,))
         #plt.figure(1000); plt.clf(); plt.plot(sd1, '.b'); plt.plot(sd2,'.r')
         return sd1, sd2
-    
-    
 
 
 class simulation_awg(qcodes.Instrument):
@@ -523,8 +519,9 @@ class simulation_awg(qcodes.Instrument):
 
     def stop(self):
         pass
-    
+
 #%% Testing
+
 
 if __name__ == '__main__':
     import pdb
@@ -539,7 +536,6 @@ if __name__ == '__main__':
     verbose = 1
     multiprocess = False
 
-
     digitizer = SimulationDigitizer(
         qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
     station.components[digitizer.name] = digitizer
@@ -548,18 +544,22 @@ if __name__ == '__main__':
     station.components[station.awg.name] = station.awg
 
     if 1:
-        sweepparams = ['B0', 'B3']; sweepranges = [160, 80]; resolution = [80, 48]
-        minstrument = (digitizer.name, [0,1])
+        sweepparams = ['B0', 'B3']
+        sweepranges = [160, 80]
+        resolution = [80, 48]
+        minstrument = (digitizer.name, [0, 1])
     else:
-        sweepparams='B0'; sweepranges=160; resolution = [60]
+        sweepparams = 'B0'
+        sweepranges = 160
+        resolution = [60]
         minstrument = (digitizer.name, [0])
-    station.model.sdnoise=.1
+    station.model.sdnoise = .1
     vm = VideoMode(station, sweepparams, sweepranges, minstrument, Naverage=25,
                    resolution=resolution, sample_rate='default', diff_dir=None,
                    verbose=1, nplots=None, dorun=True)
 
     self = vm
-    vm.setGeometry(4310,100,800,800)
+    vm.setGeometry(4310, 100, 800, 800)
 
     # NEXT: use sddist1 in calculations, output simular to sd1 model
     # NEXT: 1d scans
