@@ -86,7 +86,7 @@ class FridgeDataSender():
         return {'PT1': T[0], 'PT2': T[1], 'Magnet': T[2],
                 'Still': T[3], 'MC': T[4]}
 
-    def get_mc_temperatures(self):
+    def get_mc_temperature(self):
         t=self.get_temperatures()
         return t.get('MC', [None, None])[0]
 

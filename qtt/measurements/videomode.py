@@ -188,7 +188,7 @@ class VideoMode:
 
             lp = livePlot(None, self.station.gates,
                           self.sweepparams, self.sweepranges, show_controls=False,
-                          plot_title=str(minstrument[0])+' '  + str(ii) )
+                          plot_title=str(minstrument[0])+' '  + str(minstrument[1][ii]) )
             self.lp.append(lp)
             self.plotLayout.addWidget(self.lp[ii].win)
 
@@ -219,7 +219,10 @@ class VideoMode:
 
     def addPPT(self):
         """ Copy image of videomode window to PPT """
+        self.stopreadout() # prevent multi-threading issues        
+        time.sleep(0.2)
         qtt.tools.addPPTslide(fig=self, notes=self.station)
+        self.startreadout()
 
     def updatebg(self):
         """ Update function for the widget 
