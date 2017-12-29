@@ -277,7 +277,6 @@ class livePlot:
                  sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view'):
         """Return a new livePlot object."""
 
-        plotwin = pg.GraphicsWindow(title="Live view")
         self.window_title = window_title
 
         win = QtWidgets.QWidget()
@@ -300,10 +299,12 @@ class livePlot:
             topLayout.addWidget(win.averaging_box)
             vertLayout.addLayout(topLayout)
 
+        plotwin = pg.GraphicsWindow(title="Live view")
         vertLayout.addWidget(plotwin)
 
         win.setLayout(vertLayout)
 
+        self.setGeometry = win.setGeometry
         self.win = win
         self.plotwin = plotwin
         self.verbose = verbose
@@ -460,7 +461,7 @@ class livePlot:
         self.fps.addtime(time.time())
         if self.datafunction is not None:
             try:
-                dd = self.datafunction()
+                dd = self.datafunction()[0]
                 self.datafunction_result = dd
                 self.update(data=dd)
             except Exception as e:
@@ -475,9 +476,8 @@ class livePlot:
             time.sleep(0.1)
         time.sleep(0.00001)
 
-    def enable_averaging_slot(self, *args, **kwargs):
-        """ Update the averaging mode of the widget """
-        self._averaging_enabled = self.win.averaging_box.checkState()
+    def enable_averaging(self, value):
+        self._averaging_enabled = value
         if self.verbose >= 1:
             if self._averaging_enabled == 2:
                 print('enable_averaging called, alpha = ' + str(self.alpha))
@@ -485,6 +485,11 @@ class livePlot:
                 print('enable_averaging called, averaging turned off')
             else:
                 print('enable_averaging called, undefined')
+
+    def enable_averaging_slot(self, *args, **kwargs):
+        """ Update the averaging mode of the widget """
+        self._averaging_enabled = self.win.averaging_box.checkState()
+        self.enable_averaging( self._averaging_enabled)
 
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """

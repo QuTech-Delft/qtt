@@ -747,10 +747,29 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
-            elif isinstance(fig, qtt.measurements.videomode.VideoMode):
-                # new Qt style
-                figtemp = fig.lp.plotwin.grab()
-                figtemp.save(fname)
+            elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__=='VideoMode':
+                from qtpy import QtGui, QtCore
+                if isinstance(fig.lp, list):
+                    ff=[]
+                    for l in fig.lp:
+                        figtemp = l.plotwin.grab()
+                        ff.append(figtemp)
+                    f=ff[0]
+                    sz=f.size()
+                    sz = QtCore.QSize(sz.width()*len(ff), sz.height())
+                    figtemp=QtGui.QPixmap(sz)
+                    p=QtGui.QPainter(figtemp)
+                    offset=0
+                    for ii in range(len(ff)):
+                        p.drawPixmap(offset, 0, ff[ii])
+                        offset+=ff[ii].size().width()
+                    
+                    figtemp.save(fname)
+                    
+                else:
+                    # new Qt style
+                    figtemp = fig.lp.plotwin.grab()
+                    figtemp.save(fname)
 
             elif isinstance(fig, QtWidgets.QWidget):
                 try:
