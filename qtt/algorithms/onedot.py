@@ -231,27 +231,26 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
     """ Determine tuning point from a 2D scan of a 1-dot
     
+    This function performs a simple fitting of the open (conducting region).
+    
     Args:
-        od (one-dot structure)
+        od (one-dot structure or None)
         dd (2D dataset)
+        
+    Returns:
+        ....
     
     """
-    # XX = dd['data_array']
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
-    #im, impixel, tr = qtt.data.dataset2image2(dd)
     im, tr = qtt.data.dataset2image(dd)
 
-    if 0:
-        r = qtt.scans.checkReversal(im, verbose=verbose >= 2)
-        if r == -1:
-            warnings.warn('image sign is not correct!?')
-            im = qtt.scans.fixReversal(im)
-            #impixel = r * impixel
-
     extentImage = copy.deepcopy(tr.scan_image_extent() ) # [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
+    extentImageMatlab = tr.matplotlib_image_extent()
     
     ims = im.copy()
+    
+    # simlpy smoothing of the image
     kk = np.ones((3, 3)) / 9.
     for ii in range(2):
         ims = scipy.ndimage.convolve(ims, kk, mode='nearest', cval=0.0)
@@ -279,28 +278,18 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         pt = np.array([[int(vstep.size / 2)], [int(vsweep.size / 2)]])
         ptv = np.array([[vstep[pt[0, 0]]], [vsweep[-pt[1, 0]]]])
         pass
-    od['balancepoint0'] = ptv
-    # od['balancepoint0'] = ptv
 
     # balance point: method 2 (fit quadrilateral)
     wwarea = ims > lv
 
-    # x0=np.array( [pt[0],im.shape[0]+.1,pt[0], pt[1] ] )
     x0 = np.array([pt[0] - .1 * im.shape[1], pt[1] + .1 *
                    im.shape[0], pt[0], pt[1]]).reshape(4,)  # initial square
     ff = lambda x: costscoreOD(x[0], x[1], x[2:4], wwarea)
-    # ff(x0)
 
     # scipy.optimize.show_options(method='Nelder-Mead')
 
-    import distutils.version
-
-    if distutils.version.LooseVersion(scipy.version.version) < '0.18':
-        opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
-        powell_opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
-    else:
-        opts = dict({'disp': verbose >= 2, 'fatol': 1e-6, 'xatol': 1e-5})
-        powell_opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
+    opts = dict({'disp': verbose >= 2, 'fatol': 1e-6, 'xatol': 1e-5})
+    powell_opts = dict({'disp': verbose >= 2, 'ftol': 1e-6, 'xtol': 1e-5})
 
     xx = scipy.optimize.minimize(ff, x0, method='Nelder-Mead', options=opts)
     # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
@@ -313,45 +302,52 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True)
     pt = pts[1, :, :].transpose()
 
-    od['balancepointpixel'] = pt
-    od['balancepointpolygon'] = tr.pixel2scan(pt)
-    od['balancepoint'] = tr.pixel2scan(pt)
-    od['balancefitpixel'] = pts.reshape((-1, 2)).T.copy()
-    od['balancefit'] = tr.pixel2scan(od['balancefitpixel'])
-    od['balancefit1'] = tr.pixel2scan(balancefitpixel0)
-    od['setpoint'] = od['balancepoint'] + 8
-    od['x0'] = x0
-    # od['xx']=dict(xx)
-    ptv = od['balancepoint']
+    fitresults={}
+    fitresults['balancepoint0'] = ptv
+    fitresults['balancepointpixel'] = pt
+    fitresults['balancepointpolygon'] = tr.pixel2scan(pt)
+    fitresults['balancepoint'] = tr.pixel2scan(pt)
+    fitresults['balancefitpixel'] = pts.reshape((-1, 2)).T.copy()
+    fitresults['balancefit'] = tr.pixel2scan(fitresults['balancefitpixel'])
+    fitresults['balancefit1'] = tr.pixel2scan(balancefitpixel0)
+    fitresults['setpoint'] = fitresults['balancepoint'] + 8
+    fitresults['x0'] = x0
+    ptv = fitresults['balancepoint']
 
-    # print(balancefitpixel0)
-    # print(od['balancefitpixel'])
+    if od is not None:
+        # copy results into od structure
+        for k in fitresults:
+            od[k]=fitresults[k]
+        od['onedotbalance']=fitresults
+        
+        odname=od['name']
+    else:
+        odname = 'one-dot'
 
     if verbose:
-        print('onedotGetBalance %s: balance point 0 at: %.1f %.1f [mV]' % (od['name'], ptv[0, 0], ptv[1, 0]))
+        print('onedotGetBalance %s: balance point 0 at: %.1f %.1f [mV]' % (odname, ptv[0, 0], ptv[1, 0]))
         print('onedotGetBalance: balance point at: %.1f %.1f [mV]' % (
-            od['balancepoint'][0, 0], od['balancepoint'][1, 0]))
+            fitresults['balancepoint'][0, 0], fitresults['balancepoint'][1, 0]))
 
     if verbose>=3:
         #%
-        plt.figure(9); plt.clf(); plt.imshow(extentims, interpolation='nearest');
-        pgeometry.plotPoints(balancefitpixel0, '.-r')
+        plt.figure(9); plt.clf(); plt.imshow(im, interpolation='nearest');
+        pgeometry.plotPoints(balancefitpixel0, '.-r', label='balancefitpixel0')
         pgeometry.plotLabels(balancefitpixel0)
-        pgeometry.plotPoints(od['balancefitpixel'], '.-m')
-        pgeometry.plotLabels(od['balancefitpixel'])
+        pgeometry.plotPoints(fitresults['balancefitpixel'], '.-m')
+        pgeometry.plotLabels(fitresults['balancefitpixel'])
         
         cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True, verbose=1)
         
         #%
     if fig is not None:
-        #print('######\n %s' % extentImage)
-        qtt.tools.showImage(im, extentImage, fig=fig)
+        qtt.tools.showImage(im, extentImageMatlab, fig=fig)
 
         if verbose >= 2 or drawpoly:
-            pmatlab.plotPoints(od['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
+            pmatlab.plotPoints(fitresults['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
         if verbose >= 2:
-            pmatlab.plotPoints(od['balancepoint0'], '.r', markersize=13, label='balancepoint0')
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=17, label='balancepoint')
+            pmatlab.plotPoints(fitresults['balancepoint0'], '.r', markersize=13, label='balancepoint0')
+        pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=17, label='balancepoint')
         plt.axis('image')
 
         plt.title('image')
@@ -359,18 +355,18 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         plt.ylabel('%s (mV)' % g0)  
         
 
-        qtt.tools.showImage((ims), extentImage, fig=fig + 1) # XX
+        qtt.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
         plt.axis('image')
         plt.title('Smoothed image')
-        pmatlab.plotPoints(od['balancepoint'], '.m', markersize=16, label='balancepoint')
+        pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=16, label='balancepoint')
         plt.xlabel('%s (mV)' % g2)
         plt.ylabel('%s (mV)' % g0)
 
         qtt.tools.showImage(ims > lv, None, fig=fig + 2)
         # plt.imshow(ims > lv, extent=None, interpolation='nearest')
         pmatlab.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
-        pmatlab.plotPoints(od['balancefitpixel'], '--c', markersize=16, label='balancefit')
-        pmatlab.plotLabels(od['balancefitpixel'])
+        pmatlab.plotPoints(fitresults['balancefitpixel'], '--c', markersize=16, label='balancefit')
+        pmatlab.plotLabels(fitresults['balancefitpixel'])
         plt.axis('image')
         plt.title('thresholded area')
         plt.xlabel('%s' % g2)
@@ -382,10 +378,12 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
             plt.figure(123)
             plt.clf()
             plt.hist(qq, 20)
-            plot2Dline([-1, 0, np.percentile(ims, 1)], '--m')
-            plot2Dline([-1, 0, np.percentile(ims, 2)], '--m')
-            plot2Dline([-1, 0, np.percentile(ims, 99)], '--m')
-            plot2Dline([-1, 0, lv], '--r', linewidth=2)
+            plot2Dline([-1, 0, np.percentile(ims, 1)], '--m', label='percentile 1')
+            plot2Dline([-1, 0, np.percentile(ims, 2)], '--m', label='percentile 2')
+            plot2Dline([-1, 0, np.percentile(ims, 99)], '--m', label='percentile 99')
+            plot2Dline([-1, 0, lv], '--r', linewidth=2, label='lv')
+            plt.legend(numpoints=1)
+            plt.title('Histogram of image intensities')
             plt.xlabel('Image (smoothed) values')
 
     return od, ptv, pt, ims, lv, wwarea

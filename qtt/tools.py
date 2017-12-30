@@ -392,6 +392,13 @@ def plot1D(dataset, fig=1):
 
 
 def showImage(im, extent=None, fig=None):
+    """ Show image in figure window
+    
+    Args:
+        im (array)
+        extend (list): matplotlib style image extent
+        fig (None or int): figure window to show image        
+    """
     if fig is not None:
         plt.figure(fig)
         plt.clf()
