@@ -246,6 +246,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     im, tr = qtt.data.dataset2image(dd)
 
     extentImage = copy.deepcopy(tr.scan_image_extent() ) # [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
+    extentImageMatlab = tr.matplotlib_image_extent()
     
     ims = im.copy()
     
@@ -330,8 +331,8 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     if verbose>=3:
         #%
-        plt.figure(9); plt.clf(); plt.imshow(extentims, interpolation='nearest');
-        pgeometry.plotPoints(balancefitpixel0, '.-r')
+        plt.figure(9); plt.clf(); plt.imshow(im, interpolation='nearest');
+        pgeometry.plotPoints(balancefitpixel0, '.-r', label='balancefitpixel0')
         pgeometry.plotLabels(balancefitpixel0)
         pgeometry.plotPoints(fitresults['balancefitpixel'], '.-m')
         pgeometry.plotLabels(fitresults['balancefitpixel'])
@@ -340,8 +341,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         
         #%
     if fig is not None:
-        #print('######\n %s' % extentImage)
-        qtt.tools.showImage(im, extentImage, fig=fig)
+        qtt.tools.showImage(im, extentImageMatlab, fig=fig)
 
         if verbose >= 2 or drawpoly:
             pmatlab.plotPoints(fitresults['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
@@ -355,7 +355,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         plt.ylabel('%s (mV)' % g0)  
         
 
-        qtt.tools.showImage((ims), extentImage, fig=fig + 1) # XX
+        qtt.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
         plt.axis('image')
         plt.title('Smoothed image')
         pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=16, label='balancepoint')
@@ -378,10 +378,12 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
             plt.figure(123)
             plt.clf()
             plt.hist(qq, 20)
-            plot2Dline([-1, 0, np.percentile(ims, 1)], '--m')
-            plot2Dline([-1, 0, np.percentile(ims, 2)], '--m')
-            plot2Dline([-1, 0, np.percentile(ims, 99)], '--m')
-            plot2Dline([-1, 0, lv], '--r', linewidth=2)
+            plot2Dline([-1, 0, np.percentile(ims, 1)], '--m', label='percentile 1')
+            plot2Dline([-1, 0, np.percentile(ims, 2)], '--m', label='percentile 2')
+            plot2Dline([-1, 0, np.percentile(ims, 99)], '--m', label='percentile 99')
+            plot2Dline([-1, 0, lv], '--r', linewidth=2, label='lv')
+            plt.legend(numpoints=1)
+            plt.title('Histogram of image intensities')
             plt.xlabel('Image (smoothed) values')
 
     return od, ptv, pt, ims, lv, wwarea
