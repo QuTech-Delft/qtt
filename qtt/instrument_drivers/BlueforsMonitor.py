@@ -22,6 +22,8 @@ class FridgeDataReceiver(InstrumentDataClient):
                                      'The CH temperature values')
         self.add_measurable_quantity('pressures', 'bar', -1,
                                      'The maxigauge pressures values')
+        self.add_measurable_quantity('status', '', None, 'status control',
+                                     params={'name':'ctrl_pres'})
         self.add_measurable_quantity('datetime', '', -1,
                                      'Server date and time (for testing)')
 
@@ -36,12 +38,14 @@ class FridgeDataSender():
 
     _T_file_ext_ = "CH*T*.log"
     _P_file_ext_ = "maxigauge*.log"
+    _E_file_ext_ = "Status_*.log"
 
     def __init__(self, folder_path, **kwargs):
         self._folder_path_ = folder_path
         quantities = {'datetime': self.get_datetime,
                       'temperatures': self.get_temperatures,
-                      'pressures': self.get_pressures}
+                      'pressures': self.get_pressures, 
+                      'status': self.get_status}
         _data_server_ = InstrumentDataServer(quantities, **kwargs)
         _data_server_.run()
 
@@ -108,6 +112,27 @@ class FridgeDataSender():
                           "({0}/1 files found on BlueFors desktop)!"
                           .format(file_count))
         return self._read_pressure_(pressure_files[0])
+
+    def get_status(self, name):
+        today = datetime.now().strftime('%y-%m-%d')
+        E_directory = '{0}\\{1}\\{2}'.format(self._folder_path_, today,
+                                             FridgeDataSender._E_file_ext_)
+        status_files = glob.glob(E_directory)
+        file_count = len(status_files)
+        if file_count != 1:
+            raise FileNotFoundError(E_directory,
+                          "Error log not present " + 
+                          "({0}/1 files found on BlueFors desktop)!"
+                          .format(file_count))
+        return self._read_status_(status_files[0], name)
+
+    def _read_status_(self, file_path, name):
+        E = FridgeDataSender._get_tail_line_(file_path)
+        try:
+            index = E.index(name)
+            return float(E[index+1])
+        except ValueError:
+            return None
 
     def get_datetime(self):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
