@@ -299,10 +299,11 @@ class VideoMode:
         """ Return latest recorded dataset """
         with self.datalock:
             if run:
-                data = [l.datafunction() for l in self.lp]
+                #data = [l.datafunction() for l in self.lp]
+                data = self.datafunction_result # [l.datafunction_result for l in self.lp]
                 data = np.array(data)
             else:
-                data = [l.datafunction_result for l in self.lp]
+                data = self.datafunction_result # [l.datafunction_result for l in self.lp]
                 data = np.array(data)
             self.alldata = self.makeDataset(data, Naverage=None)
             return self.alldata
@@ -368,17 +369,25 @@ class VideoMode:
         raise Exception('not implemented')
 
     def makeDataset(self, data, Naverage=None):
-        if data.ndim == 1:
+        if data.ndim == 2:
+            if (data.shape[0]>1):
+                raise Exception('not yet implemented')
+            data=data[0]
             alldata, _ = makeDataset_sweep(data, self.sweepparams, self.sweepranges,
                                            gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
-        if data.ndim == 2:
+        elif data.ndim == 3:
+            if (data.shape[0]>1):
+                raise Exception('not yet implemented')
+            data=data[0]
             alldata, _ = makeDataset_sweep_2D(data, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
                                               'label': 'videomode_2d_single'})
+        else:
+            raise Exception('makeDataset: data.ndim %d' % data.ndim)
         alldata.metadata = {'scantime': str(datetime.datetime.now(
         )), 'station': self.station.snapshot(), 'allgatevalues': self.station.gates.allvalues()}
         alldata.metadata['Naverage'] = Naverage
-        if hasattr(self.lp.datafunction, 'diff_dir'):
-            alldata.metadata['diff_dir'] = self.lp.datafunction.diff_dir
+        if hasattr(self.datafunction, 'diff_dir'):
+            alldata.metadata['diff_dir'] = self.datafunction.diff_dir
         return alldata
 
     def _get_Naverage(self):
