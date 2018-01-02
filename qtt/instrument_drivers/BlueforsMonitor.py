@@ -79,7 +79,12 @@ class FridgeDataSender():
         T_directory = '{0}\\{1}\\{2}'.format(self._folder_path_, today,
                                              FridgeDataSender._T_file_ext_)
         temperature_files = glob.glob(T_directory)
-        assert(len(temperature_files) == 5)
+        file_count = len(temperature_files)
+        if file_count != 5:
+            raise FileNotFoundError(T_directory,
+                          "Temperature log not present " + 
+                          "({0}/5 files found on BlueFors desktop)!"
+                          .format(file_count))
         T = [self._read_temperature_(file) for file in temperature_files]
         return {'PT1': T[0], 'PT2': T[1], 'Magnet': T[2],
                 'Still': T[3], 'MC': T[4]}
@@ -96,7 +101,12 @@ class FridgeDataSender():
         P_directory = '{0}\\{1}\\{2}'.format(self._folder_path_, today,
                                              FridgeDataSender._P_file_ext_)
         pressure_files = glob.glob(P_directory)
-        assert(len(pressure_files) == 1)
+        file_count = len(pressure_files)
+        if file_count != 1:
+            raise FileNotFoundError(P_directory,
+                          "Pressure log not present " + 
+                          "({0}/1 files found on BlueFors desktop)!"
+                          .format(file_count))
         return self._read_pressure_(pressure_files[0])
 
     def get_datetime(self):
