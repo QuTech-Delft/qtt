@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import qcodes
 import qcodes as qc
 from qcodes.utils.helpers import tprint
-from qcodes.instrument.parameter import Parameter, StandardParameter, ManualParameter
+from qcodes.instrument.parameter import Parameter, StandardParameter
 from qcodes import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes import Instrument
@@ -134,7 +134,7 @@ def parse_stepdata(stepdata):
         stepdata['param'] = stepdata['gate']
 
     v = stepdata.get('param', None)
-    if isinstance(v, (str, StandardParameter, ManualParameter, dict)):
+    if isinstance(v, (str, StandardParameter, Parameter, dict)):
         pass
     elif isinstance(v, list):
         warnings.warn('please use string or Instrument instead of list')
@@ -589,7 +589,7 @@ class scanjob_t(dict):
                 stepdata['param'] = getattr(gates, v)
             else:
                 pass
-        elif isinstance(v, (StandardParameter, ManualParameter, dict)):
+        elif isinstance(v, (StandardParameter, Parameter, dict)):
             pass
         self[field] = stepdata
 
@@ -953,7 +953,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     alldata.write_period = None
     
     for ix, x in enumerate(stepvalues):
-        alldata.store((ix,), {stepvalues.parameter.name:x})
+        #alldata.store((ix,), {stepvalues.parameter.name:x})
         
         if verbose:
             t1=time.time() - t0
@@ -1956,7 +1956,7 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
 
 
 #%% Testing
-from qcodes import ManualParameter
+from qcodes import Parameter
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qtt.instrument_drivers.gates import virtual_IVVI
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
@@ -1966,8 +1966,8 @@ def test_scan2D(verbose=0):
     import qcodes
     import qtt.measurements.scans
     from qtt.measurements.scans import scanjob_t
-    p = ManualParameter('p')
-    q = ManualParameter('q')
+    p = Parameter('p', set_cmd=None)
+    q = Parameter('q', set_cmd=None)
     R = VoltageDivider(p, 4)
     gates = VirtualIVVI(
         name=qtt.measurements.scans.instrumentName('gates'), model=None)
@@ -1989,7 +1989,7 @@ def test_scan2D(verbose=0):
     data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
     scanjob = scanjob_t({'sweepdata': dict(
-        {'param': {'dac1': 1}, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
+        {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
     scanjob['stepvalues'] = np.array([[2*i, 3*i] for i in range(10)])
     try:
