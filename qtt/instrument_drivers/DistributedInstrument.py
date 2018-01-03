@@ -34,9 +34,11 @@ class InstrumentDataClient(Instrument):
 
     def add_measurable_quantity(self, name='quantity', unit='arb.',
                                 default_value=None, doc_string='Unknown',
-                                params=None):
+                                command_name='', params=None):
         '''Adds a instument function to the dataclient.'''
-        command = partial(self.__proxy_wrapper__, command_name=name,
+        if not command_name:
+            command_name = name
+        command = partial(self.__proxy_wrapper__, command_name=command_name,
                           default_value=default_value, params=params)
         self.add_parameter(name, unit=unit, get_cmd=command,
                            docstring=doc_string)

@@ -22,10 +22,20 @@ class FridgeDataReceiver(InstrumentDataClient):
                                      'The CH temperature values')
         self.add_measurable_quantity('pressures', 'bar', -1,
                                      'The maxigauge pressures values')
-        self.add_measurable_quantity('status', '', None, 'status control',
-                                     params={'name':'ctrl_pres'})
+        self.add_measurable_quantity('cpatempwo', '°C', None,
+                                     'The compressor output water temperature',
+                                     command_name='status',
+                                     params={'item': 'cpatempwo'})
+        self.add_measurable_quantity('cpatempwi', '°C', None,
+                                     'The compressor input water temperature',
+                                     command_name='status',
+                                     params={'item': 'cpatempwi'})
+        self.add_measurable_quantity('cpawarn', 'arb.', None,
+                                     'The compressor status',
+                                     command_name='status',
+                                     params={'item': 'cpawarn'})
         self.add_measurable_quantity('datetime', '', -1,
-                                     'Server date and time (for testing)')
+                                     'The server date and time (for testing)')
 
 # -----------------------------------------------------------------------------
 
@@ -44,7 +54,7 @@ class FridgeDataSender():
         self._folder_path_ = folder_path
         quantities = {'datetime': self.get_datetime,
                       'temperatures': self.get_temperatures,
-                      'pressures': self.get_pressures, 
+                      'pressures': self.get_pressures,
                       'status': self.get_status}
         _data_server_ = InstrumentDataServer(quantities, **kwargs)
         _data_server_.run()
@@ -86,9 +96,9 @@ class FridgeDataSender():
         file_count = len(temperature_files)
         if file_count != 5:
             raise FileNotFoundError(T_directory,
-                          "Temperature log not present " + 
-                          "({0}/5 files found on BlueFors desktop)!"
-                          .format(file_count))
+                                    "Temperature log not present " +
+                                    "({0}/5 files found on BlueFors desktop)!"
+                                    .format(file_count))
         T = [self._read_temperature_(file) for file in temperature_files]
         return {'PT1': T[0], 'PT2': T[1], 'Magnet': T[2],
                 'Still': T[3], 'MC': T[4]}
@@ -108,12 +118,12 @@ class FridgeDataSender():
         file_count = len(pressure_files)
         if file_count != 1:
             raise FileNotFoundError(P_directory,
-                          "Pressure log not present " + 
-                          "({0}/1 files found on BlueFors desktop)!"
-                          .format(file_count))
+                                    "Pressure log not present " +
+                                    "({0}/1 files found on BlueFors desktop)!"
+                                    .format(file_count))
         return self._read_pressure_(pressure_files[0])
 
-    def get_status(self, name):
+    def get_status(self, item):
         today = datetime.now().strftime('%y-%m-%d')
         E_directory = '{0}\\{1}\\{2}'.format(self._folder_path_, today,
                                              FridgeDataSender._E_file_ext_)
@@ -121,10 +131,10 @@ class FridgeDataSender():
         file_count = len(status_files)
         if file_count != 1:
             raise FileNotFoundError(E_directory,
-                          "Error log not present " + 
-                          "({0}/1 files found on BlueFors desktop)!"
-                          .format(file_count))
-        return self._read_status_(status_files[0], name)
+                                    "Error log not present " +
+                                    "({0}/1 files found on BlueFors desktop)!"
+                                    .format(file_count))
+        return self._read_status_(status_files[0], item)
 
     def _read_status_(self, file_path, name):
         E = FridgeDataSender._get_tail_line_(file_path)
@@ -243,6 +253,9 @@ if None:
     client = FridgeDataReceiver(name='dummy_fridge')
     print(client.temperatures())
     print(client.pressures())
+    print(client.cpatempwo())
+    print(client.cpatempwi())
+    print(client.cpawarn())
     print(client.datetime())
     client.close()
 
