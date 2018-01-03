@@ -10,7 +10,7 @@ import numpy as np
 import scipy.ndimage
 
 
-def polmod_all_2slopes(x_data, par, kT):
+def polmod_all_2slopes(x_data, par, kT, model=None):
     """ Polarization line model.
 
     This model is based on [DiCarlo2004, Hensgens2017]. For an example see

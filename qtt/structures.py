@@ -538,8 +538,12 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
         self._instrument = 'dummy'
         if label is None:
             self.label = self.name
+        else:
+            self.label = label
         if unit is None:
             self.unit = 'a.u.'
+        else:
+            self.unit = unit
 
         self.has_get = True
         self.has_set = True

@@ -26,7 +26,8 @@ from qtt.pgeometry import mpl2clipboard
 # do NOT load any other qtt submodules here
 
 try:
-    import qtpy.QtGui as QtGui, QtCore
+    import qtpy.QtGui as QtGui
+    import qtpy.QtCore as QtCore
     import qtpy.QtWidgets as QtWidgets
 except:
     pass
