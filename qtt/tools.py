@@ -10,8 +10,9 @@ import pickle
 import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
-from qcodes import DataArray
 
+
+from qcodes import DataArray
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
 try:
@@ -26,9 +27,67 @@ from qtt.pgeometry import mpl2clipboard
 
 try:
     import qtpy.QtGui as QtGui
+    import qtpy.QtCore as QtCore
     import qtpy.QtWidgets as QtWidgets
 except:
     pass
+
+import subprocess
+import glob
+import time
+from colorama import Fore
+
+#%% Jupyter kernel tools
+
+
+def get_jupyter_kernel(verbose=2):
+    """ Return the most recently created jupyter kernel
+
+    Args:
+        verbose (int): verbosity level
+
+    """
+    cmd = r'jupyter --paths'
+
+    print(Fore.BLUE + 'get_jupyuter_kernel: running %s' % cmd + Fore.RESET)
+
+    rr = subprocess.check_output(cmd, shell=True)
+    rr = rr.decode('ASCII')
+    r = 0
+    rundir = None
+    for ii, l in enumerate(rr.split('\n')):
+        if r:
+            rundir = l.strip()
+            break
+        if verbose >= 3:
+            print(l)
+        if l.startswith('runtime:'):
+            r = 1
+
+    if rundir is not None:
+        print(Fore.BLUE + '  rundir: %s' % rundir + Fore.RESET)
+
+        # remove anything from the list that is not a file (directories,
+        # symlinks)
+        files = list(filter(os.path.isfile, glob.glob(
+            rundir + os.sep + "kernel*json")))
+        files.sort(key=lambda x: os.path.getctime(x))
+        files = files[::-1]
+
+        if verbose >= 2:
+            print('all kernels (< 2 days old): ')
+            for k in files:
+                dt = time.time() - os.path.getctime(k)
+                if dt < 3600 * 24 * 2:
+                    print(' %.1f [s]:  ' % (float(dt), ) + k)
+        if len(files) > 0:
+            kernel = files[0]
+            print(Fore.BLUE + '  found kernel: %s' % kernel + Fore.RESET)
+            kernelbase = os.path.split(kernel)[1]
+            print(Fore.BLUE + 'connect with: ' + Fore.GREEN +
+                  ' jupyter console --existing %s' % kernelbase + Fore.RESET)
+            return kernelbase
+    return None
 
 #%% Debugging
 
@@ -37,7 +96,6 @@ def dumpstring(txt):
     """ Dump a string to temporary file on disk """
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
-
 
 
 def deprecated(func):
@@ -83,9 +141,10 @@ def stripDataset(dataset):
         pass
 
     if 'scanjob' in dataset.metadata:
-        if 'minstrumenthandle' in  dataset.metadata['scanjob']:
-            dataset.metadata['scanjob']['minstrumenthandle']=str(dataset.metadata['scanjob']['minstrumenthandle'])
-            
+        if 'minstrumenthandle' in dataset.metadata['scanjob']:
+            dataset.metadata['scanjob']['minstrumenthandle'] = str(
+                dataset.metadata['scanjob']['minstrumenthandle'])
+
     return dataset
 
 #%%
@@ -104,6 +163,7 @@ def checkPickle(obj, verbose=0):
             print(ex)
         return False
     return True
+
 
 from functools import wraps
 
@@ -133,9 +193,10 @@ def freezeclass(cls):
 
 #%%
 
+
 def resampleImage(im):
     """ Resample the image so it has the similar sample rates (samples/mV) in both axis
-    
+
     Args:
         im (DataArray): input image
     Returns:
@@ -143,43 +204,49 @@ def resampleImage(im):
         setpoints (list of 2 numpy arrays): setpoint arrays from resampled image
     """
     setpoints = im.set_arrays
-    mVrange = [abs(setpoints[0][-1]-setpoints[0][0]), abs(setpoints[1][0,-1]-setpoints[1][0,0])]
-    samprates = [im.shape[0]//mVrange[0], im.shape[1]//mVrange[1]]
-    factor = int(max(samprates)//min(samprates))
+    mVrange = [abs(setpoints[0][-1] - setpoints[0][0]),
+               abs(setpoints[1][0, -1] - setpoints[1][0, 0])]
+    samprates = [im.shape[0] // mVrange[0], im.shape[1] // mVrange[1]]
+    factor = int(max(samprates) // min(samprates))
     if factor >= 2:
         axis = int(samprates[0] - samprates[1] < 0)
         if axis == 0:
             facrem = im.shape[0] % factor
             if facrem > 0:
-                im = im[:-facrem,:]
+                im = im[:-facrem, :]
             facrem = facrem + 1
-            im = im.reshape(im.shape[0]//factor,factor,im.shape[1]).mean(1)
-            spy = np.linspace(setpoints[0][0],setpoints[0][-facrem],im.shape[0])
-            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-1],im.shape[1]),0),im.shape[0])
-            setpointy = DataArray(name='Resampled_'+setpoints[0].array_id, array_id='Resampled_'+setpoints[0].array_id, label=setpoints[0].label,
-                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
-            setpointx = DataArray(name='Resampled_'+setpoints[1].array_id, array_id='Resampled_'+setpoints[1].array_id, label=setpoints[1].label,
-                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            im = im.reshape(im.shape[0] // factor, factor, im.shape[1]).mean(1)
+            spy = np.linspace(setpoints[0][0], setpoints[
+                              0][-facrem], im.shape[0])
+            spx = np.tile(np.expand_dims(np.linspace(
+                setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
+            setpointy = DataArray(name='Resampled_' + setpoints[0].array_id, array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
+                                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
+            setpointx = DataArray(name='Resampled_' + setpoints[1].array_id, array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
+                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpointy, setpointx]
         else:
             facrem = im.shape[1] % factor
             if facrem > 0:
-                im = im[:,:-facrem]
+                im = im[:, :-facrem]
             facrem = facrem + 1
-            im = im.reshape(im.shape[0],im.shape[1]//factor,factor).mean(-1)
-            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0,0],setpoints[1][0,-facrem],im.shape[1]),0),[im.shape[0],1])           
+            im = im.reshape(im.shape[0], im.shape[1] //
+                            factor, factor).mean(-1)
+            spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0, 0], setpoints[
+                          1][0, -facrem], im.shape[1]), 0), [im.shape[0], 1])
             idx = setpoints[1].array_id
             if idx is None:
-                idx='x'
+                idx = 'x'
             idy = setpoints[1].array_id
             if idy is None:
-                idy= 'y'
-            setpointx = DataArray(name='Resampled_'+ idx , array_id='Resampled_'+idy, label=setpoints[1].label,
-                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+                idy = 'y'
+            setpointx = DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
+                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpoints[0], setpointx]
-                
+
     return im, setpoints
-        
+
+
 def diffImage(im, dy, size=None):
     """ Simple differentiation of an image
 
@@ -199,7 +266,7 @@ def diffImage(im, dy, size=None):
         im = -np.diff(im, n=1, axis=0)
         if size == 'same':
             im = np.vstack((im, im[-1:, :]))
-    elif dy == 2 or dy=='xy':
+    elif dy == 2 or dy == 'xy':
         imx = np.diff(im, n=1, axis=1)
         imy = np.diff(im, n=1, axis=0)
         im = imx[0:-1, :] + imy[:, 0:-1]
@@ -258,8 +325,8 @@ def diffImageSmooth(im, dy='x', sigma=2):
 
 def test_array(location=None, name=None):
     # DataSet with one 2D array with 4 x 6 points
-    yy, xx = np.meshgrid(np.arange(0,10,.5), range(3))
-    zz = xx**2+yy**2
+    yy, xx = np.meshgrid(np.arange(0, 10, .5), range(3))
+    zz = xx**2 + yy**2
     # outer setpoint should be 1D
     xx = xx[:, 0]
     x = DataArray(name='x', label='X', preset_data=xx, is_setpoint=True)
@@ -268,21 +335,23 @@ def test_array(location=None, name=None):
     z = DataArray(name='z', label='Z', preset_data=zz, set_arrays=(x, y))
     return z
 
-def test_image_operations(verbose=0):    
-    import qcodes.tests.data_mocks    
-    
+
+def test_image_operations(verbose=0):
+    import qcodes.tests.data_mocks
+
     if verbose:
         print('testing resampleImage')
-    ds=qcodes.tests.data_mocks.DataSet2D()
+    ds = qcodes.tests.data_mocks.DataSet2D()
     imx, setpoints = resampleImage(ds.z)
 
-    z=test_array()
+    z = test_array()
     imx, setpoints = resampleImage(z)
     if verbose:
         print('testing diffImage')
-    d=diffImage(ds.z, dy='x')
-    
+    d = diffImage(ds.z, dy='x')
+
 #%%
+
 
 import dateutil
 
@@ -325,6 +394,13 @@ def plot1D(dataset, fig=1):
 
 
 def showImage(im, extent=None, fig=None):
+    """ Show image in figure window
+    
+    Args:
+        im (array)
+        extend (list): matplotlib style image extent
+        fig (None or int): figure window to show image        
+    """
     if fig is not None:
         plt.figure(fig)
         plt.clf()
@@ -544,6 +620,7 @@ def pythonVersion():
 
 #%%
 
+
 try:
     import graphviz
 except:
@@ -563,20 +640,25 @@ def showDotGraph(dot, fig=10):
     plt.tight_layout()
     plt.axis('off')
 
+
 #%%
 try:
     import win32com
     import win32com.client
+    import pprint
 
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None, show=False, verbose=1, activate_slide=True):
+    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
+                    subtitle=None, maintext=None, show=False, verbose=1,
+                    activate_slide=True, ppLayout=None):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
-            title (string): title added to slide
+            title (str): title added to slide
             fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
                 figure added to slide
-            txt (string): text in textbox added to slide
-            notes (string): notes added to slide
+            subtitle (str): text added to slide as subtitle
+            maintext (str): text in textbox added to slide
+            notes (str or QCoDeS station): notes added to slide
             figsize (list): size (width,height) of figurebox to add to powerpoint
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
@@ -593,30 +675,67 @@ try:
         >>> fig = plt.figure(10)
         >>> txt = 'Some comments on the figure'
         >>> notes = 'some additional information' 
-        >>> addPPTslide(title,fig,txt,notes)
+        >>> addPPTslide(title,fig, subtitle = txt,notes = notes)
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
-        if verbose>=2:
+        if verbose >= 2:
             print('num of open PPTs: %d' % Application.presentations.Count)
 
         # ppt = Application.Presentations.Add()
         try:
             ppt = Application.ActivePresentation
         except Exception:
-            print('could not open active Powerpoint presentation')
-            return None, None
+            print(
+                'could not open active Powerpoint presentation, opening blank presentation')
+            try:
+                ppt = Application.Presentations.Add()
+            except Exception as ex:
+                warnings.warn(
+                    'could not make connection to Powerpoint presentation')
+                return None, None
 
         if show:
             Application.Visible = True  # shows what's happening, not required, but helpful for now
 
-        if verbose:
-            print('addPPTslide: name: %s' % ppt.Name)
+        if verbose >= 2:
+            print('addPPTslide: presentation name: %s' % ppt.Name)
 
         ppLayoutTitleOnly = 11
-        layout = ppLayoutTitleOnly
+        ppLayoutTitle = 1
+        ppLayoutText = 2
 
-        slide = ppt.Slides.Add(ppt.Slides.Count + 1, layout)
+        if txt is not None:
+            if subtitle is None:
+                warnings.warn('please do not use the txt field any more')
+                subtitle = txt
+            else:
+                raise Exception('please do not use the txt field any more')
+
+            txt = None
+
+        if fig is None:
+            # no figure, text box over entire page
+            if ppLayout is None:
+                ppLayout = ppLayoutText
+        else:
+            # we have a figure, assume textbox is for dataset name only
+            ppLayout = ppLayoutTitleOnly
+
+        if verbose:
+            print('addPPTslide: presentation name: %s, adding slide %d' %
+                  (ppt.Name, ppt.Slides.count + 1))
+
+        slide = ppt.Slides.Add(ppt.Slides.Count + 1, ppLayout)
+        if fig is None:
+            titlebox = slide.shapes.Item(1)
+            mainbox = slide.shapes.Item(2)
+            mainbox.TextFrame.TextRange.Text = maintext
+        else:
+            titlebox = slide.shapes.Item(1)
+            mainbox = None
+            if maintext is not None:
+                warnings.warn('maintext not implemented when figure is set')
 
         if title is not None:
             slide.shapes.title.textframe.textrange.text = title
@@ -630,15 +749,38 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
+            elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__=='VideoMode':
+                if isinstance(fig.lp, list):
+                    ff=[l.plotwin.grab() for l in fig.lp]
+                    sz=ff[0].size()
+                    sz = QtCore.QSize(sz.width()*len(ff), sz.height())
+                    figtemp=QtGui.QPixmap(sz)
+                    p=QtGui.QPainter(figtemp)
+                    offset=0
+                    for ii in range(len(ff)):
+                        p.drawPixmap(offset, 0, ff[ii])
+                        offset+=ff[ii].size().width()                    
+                    figtemp.save(fname)
+                    
+                else:
+                    # new Qt style
+                    figtemp = fig.lp.plotwin.grab()
+                    figtemp.save(fname)
+
             elif isinstance(fig, QtWidgets.QWidget):
-                figtemp = QtGui.QPixmap.grabWidget(fig)
+                try:
+                    figtemp = QtGui.QPixmap.grabWidget(fig)
+                except:
+                    # new Qt style
+                    figtemp = fig.grab()
                 figtemp.save(fname)
             elif isinstance(fig, qcodes.plots.pyqtgraph.QtPlot):
                 #figtemp = QtGui.QPixmap.grabWidget(fig.win)
                 fig.save(fname)
             else:
                 if verbose:
-                    raise Exception('figure is of an unknown type %s' % (type(fig), ) )
+                    raise Exception(
+                        'figure is of an unknown type %s' % (type(fig), ))
             if figsize is not None:
                 left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
                 width = figsize[0]
@@ -647,19 +789,32 @@ try:
                 left = 100
                 width = 560
                 height = 350
-            if verbose>=2:
+            if verbose >= 2:
                 print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
                                     SaveWithDocument=True, Left=left, Top=120, Width=width, Height=height)
 
-        txtbox = slide.Shapes.AddTextbox(
-            1, Left=100, Top=80, Width=500, Height=300)
-        txtbox.Name = 'scan_location'
+        if subtitle is not None:
+            # add subtitle
+            subtitlebox = slide.Shapes.AddTextbox(
+                1, Left=100, Top=80, Width=500, Height=300)
+            subtitlebox.Name = 'subtitle box'
+            subtitlebox.TextFrame.TextRange.Text = subtitle
 
-        if txt is not None:
-            txtbox.TextFrame.TextRange.Text = txt
+        if notes is None:
+            warnings.warn(
+                'please set notes for the powerpoint slide. e.g. use the station or reshape_metadata')
+
+        if isinstance(notes, qcodes.Station):
+            station = notes
+            gates = getattr(station, 'gates', None)
+            notes = reshape_metadata(station, printformat='s')
+            if gates is not None:
+                notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
 
         if notes is not None:
+            if notes == '':
+                notes = ' '
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
 
@@ -670,49 +825,70 @@ try:
 
         if activate_slide:
             idx = int(slide.SlideIndex)
-            if verbose>=1:
+            if verbose >= 2:
                 print('addPPTslide: goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
 
-    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1,
-                       paramname='measured', printformat='fancy', **kwargs):
+    def addPPT_dataset(dataset, title=None, notes=None,
+                       show=False, verbose=1, paramname='measured',
+                       printformat='fancy', customfig=None, **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
 
         Arguments:
             dataset (DataSet): data and metadata from DataSet added to slide
+            customfig (QtPlot): custom QtPlot object to be added to
+                                slide (for dataviewer)
             notes (string): notes added to slide
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
             paramname (None or str): passed to dataset.default_parameter_array
-            printformat (string): 'fancy' for nice formatting or 'dict' for easy copy to python
+            printformat (string): 'fancy' for nice formatting or 'dict'
+                                  for easy copy to python
         Returns:
             ppt: PowerPoint presentation
             slide: PowerPoint slide
 
         Example
         -------
-        >>> notes = 'some additional information' 
+        >>> notes = 'some additional information'
         >>> addPPT_dataset(dataset,notes)
         '''
         if len(dataset.arrays) < 2:
-            raise Exception('The dataset contains less than two data arrays')
+            raise IndexError('The dataset contains less than two data arrays')
 
-        temp_fig = QtPlot(dataset.default_parameter_array(paramname=paramname), show_window=False)
+        if customfig is None:
+            temp_fig = QtPlot(dataset.default_parameter_array(
+                              paramname=paramname), show_window=False)
+        else:
+            temp_fig = customfig
 
         text = 'Dataset location: %s' % dataset.location
-
         if notes is None:
-            notes = 'Dataset %s metadata:\n%s' % (dataset.location, reshape_metadata(
-                dataset, printformat=printformat) )
+            try:
+                metastring = reshape_metadata(dataset,
+                                              printformat=printformat)
+            except Exception as ex:
+                metastring = 'Could not read metadata: %s' % str(ex)
+            notes = 'Dataset %s metadata:\n\n%s' % (dataset.location,
+                                                    metastring)
+            scanjob = dataset.metadata.get('scanjob', None)
+            if scanjob is not None:
+                s = pprint.pformat(scanjob)
+                notes = 'scanjob: ' + str(s) + '\n\n' + notes
 
-        ppt, slide = addPPTslide(title=title, fig=temp_fig, txt=text,
-                                 notes=notes, show=show, verbose=verbose, **kwargs)
+            gatevalues = dataset.metadata.get('allgatevalues', None)
+            if gatevalues is not None:
+                notes = 'gates: ' + str(gatevalues) + '\n\n' + notes
 
+        ppt, slide = addPPTslide(title=title, fig=temp_fig, subtitle=text,
+                                 notes=notes, show=show, verbose=verbose,
+                                 **kwargs)
         return ppt, slide
 
 except:
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, show=False, verbose=1):
+    def addPPTslide(title=None, fig=None, subtitle=None, maintext=None,
+                    notes=None, show=False, verbose=1, ppLayout=1):
         ''' Dummy implementation '''
         pass
 
@@ -728,23 +904,34 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
-        dataset (DataSet): a dataset of which the metadata will be reshaped
+        dataset (DataSet or qcodes.Station): a dataset of which the metadata 
+                                             will be reshaped.
+        printformat (str): can be 'dict' or 'txt','fancy' (text format)
     Returns:
         metadata (string): the reshaped metadata
     '''
 
-    if not 'station' in dataset.metadata:
-        return 'dataset %s: no metadata available' % (str(dataset.location), )
-
-    tmp = dataset.metadata.get('station', None)
-    if tmp is None:
-        all_md={}
+    if isinstance(dataset, qcodes.Station):
+        station = dataset
+        all_md = station.snapshot(update=False)['instruments']
+        header = None
     else:
-        all_md =  tmp['instruments']
+        if not 'station' in dataset.metadata:
+            return 'dataset %s: no metadata available' % (str(dataset.location), )
+
+        tmp = dataset.metadata.get('station', None)
+        if tmp is None:
+            all_md = {}
+        else:
+            all_md = tmp['instruments']
+
+        header = 'dataset: %s' % dataset.location
+
     metadata = OrderedDict()
 
     # make sure the gates instrument is in front
-    all_md_keys = sorted(sorted(all_md), key=lambda x: x == 'gates',  reverse=True) 
+    all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
+                         'gates',  reverse=True)
     for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
@@ -752,22 +939,26 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                                       x]['parameters']['IDN']['value']})
             metadata[x]['IDN']['unit'] = ''
         for y in sorted(all_md[x]['parameters'].keys()):
-            if y != 'IDN':
-                metadata[x][y] = OrderedDict()
-                param_md = all_md[x]['parameters'][y]
-                metadata[x][y]['name'] = y
-                if isinstance(param_md['value'], (float, np.float64) ):
-                    metadata[x][y]['value'] = float(
-                        format(param_md['value'], '.3f'))
-                else:
-                    metadata[x][y]['value'] = str(param_md['value'])    
-                metadata[x][y]['unit'] = param_md['unit']
-                metadata[x][y]['label'] = param_md['label']
+            try:
+                if y != 'IDN':
+                    metadata[x][y] = OrderedDict()
+                    param_md = all_md[x]['parameters'][y]
+                    metadata[x][y]['name'] = y
+                    if isinstance(param_md['value'], (float, np.float64)):
+                        metadata[x][y]['value'] = float(
+                            format(param_md['value'], '.3f'))
+                    else:
+                        metadata[x][y]['value'] = str(param_md['value'])
+                    metadata[x][y]['unit'] = param_md.get('unit', None)
+                    metadata[x][y]['label'] = param_md.get('label', None)
+            except KeyError as ex:
+                if verbose:
+                    print('failed on parameter %s / %s: %s' % (x, y, str(ex)))
 
     if printformat == 'dict':
         ss = str(metadata).replace('(', '').replace(
             ')', '').replace('OrderedDict', '')
-    else:
+    else:  # 'txt' or 'fancy'
         ss = ''
         for k in metadata:
             if verbose:
@@ -778,28 +969,26 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
                 pp = s[p]
                 if verbose:
                     print('  --- %s: %s' % (p, pp.get('value', '??')))
-                ss += '%s: %s %s' % (pp['name'],
-                                     pp.get('value', '?'), pp.get('unit', ''))
+                ss += '%s: %s (%s)' % (pp['name'],
+                                       pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'
             # ss+=str(s)
 
+    if header is not None:
+        ss = header + '\n\n' + ss
     return ss
 
-if __name__ == '__main__' and 0:
-    x = reshape_metadata(data, printformat='fancy')
-    print(x)
-    x = reshape_metadata(data, printformat='dict')
-    print(x)
 
 def test_reshape_metadata():
-    param=qcodes.ManualParameter('dummy')
+    param = qcodes.ManualParameter('dummy')
     try:
-        dataset=qcodes.Loop(param[0:1:10]).each(param).run()
+        dataset = qcodes.Loop(param[0:1:10]).each(param).run()
     except:
         dataset = None
         pass
     if dataset is not None:
-        _=reshape_metadata(dataset, printformat='dict')
+        _ = reshape_metadata(dataset, printformat='dict')
+
 
 #%%
 try:
@@ -817,14 +1006,14 @@ try:
             w = qtt.createParameterWidget(ilist)
             #w = qtt.parameterviewer.ParameterViewer(ilist)
             w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
-            #w.updatecallback()
+            # w.updatecallback()
 
         plotQ = QtPlot(window_title='Live plot', interval=.5)
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
 
-        qtt.live.liveplotwindow=plotQ
-        
+        qtt.live.liveplotwindow = plotQ
+
         app = QtWidgets.QApplication.instance()
         app.processEvents()
 
@@ -858,7 +1047,6 @@ def timeProgress(data):
     return fraction, remaining
 
 #%%
-
 
 
 def flatten(lst):
@@ -914,6 +1102,8 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
         plt.imshow(F, interpolation='nearest')
 
     return F  # , rr
+
+
 F = smoothFourierFilter([36, 36])
 
 
@@ -957,6 +1147,7 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     imf = imf[0:imx.shape[0], 0:imx.shape[1]]
 
     return imf
+
 
 #%%
 import copy

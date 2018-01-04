@@ -18,7 +18,7 @@ except:
     pass
 
 import numpy.linalg
-from qtt import pgeometry as pmatlab
+from qtt import pgeometry
 
 import qtt.tools
 import qtt.algorithms.generic
@@ -50,7 +50,8 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
     """
     if arrayname is None:
         arrayname = dataset.default_parameter_name()
-    tr = image_transform(dataset, arrayname=arrayname, mode=mode, unitsperpixel=unitsperpixel)
+    tr = image_transform(dataset, arrayname=arrayname,
+                         mode=mode, unitsperpixel=unitsperpixel)
     im = None
     if arrayname is not None:
         imraw = dataset.arrays[arrayname].ndarray
@@ -231,7 +232,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
         unitstr = ' (%s)' % units
     if fig is not None:
         scanjob = dd.metadata.get('scanjob', dict())
-        pmatlab.cfigure(fig)
+        pgeometry.cfigure(fig)
         plt.clf()
 
         if impixel is None:
@@ -493,7 +494,7 @@ class image_transform:
           ptx (array): point in scan coordinates (sweep, step)
 
         """
-        ptx = pmatlab.projectiveTransformation(
+        ptx = pgeometry.projectiveTransformation(
             self.Hi, np.array(pt).astype(float))
 
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
@@ -547,7 +548,7 @@ class image_transform:
         # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
         # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
 
-        ptpixel = pmatlab.projectiveTransformation(
+        ptpixel = pgeometry.projectiveTransformation(
             self.H, np.array(ptpixel).astype(float))
 
         return ptpixel
@@ -577,10 +578,6 @@ except:
 #    warnings.warn('could not load deepdish...')
 
 
-def data_extension():
-    return 'pickle'
-
-
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
     try:
@@ -592,16 +589,19 @@ def pickleload(pkl_file):
             # different encoding
             with open(pkl_file, 'rb') as output:
                 data2 = pickle.load(output, encoding='latin')
-            # pickle.load(pkl_file, fix_imports=True, encoding="ASCII", errors="strict")
         else:
             data2 = None
     return data2
 
 
+def _data_extension():
+    return 'pickle'
+
+
 def load_data(mfile: str):
     ''' Load data from specified file '''
     # return hickle.load(mfile)
-    ext = data_extension()
+    ext = _data_extension()
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
@@ -612,7 +612,7 @@ def load_data(mfile: str):
 
 def write_data(mfile: str, data):
     ''' Write data to specified file '''
-    ext = data_extension()
+    ext = _data_extension()
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
@@ -623,36 +623,6 @@ def write_data(mfile: str, data):
         pickle.dump(data, fid)
     # hickle.dump(metadata, mfile)
     #_=deepdish.io.save(mfile, data)
-
-
-def loadQttData(path: str):
-    ''' Wrapper function
-
-    :param path: filename without extension
-    :returns dataset: The dataset
-    '''
-    warnings.warn('please use load_data instead')
-    mfile = path
-    ext = data_extension()
-    if not mfile.endswith(ext):
-        mfile = mfile + '.' + ext
-    # dataset=deepdish.io.load(mfile)
-    dataset = load_data(mfile)
-    return dataset
-
-
-def writeQttData(dataset, path, metadata=None):
-    ''' Wrapper function
-
-    :param path: filename without extension
-    '''
-    warnings.warn('please use write_data instead')
-    mfile = path
-    ext = data_extension()
-    if not mfile.endswith(ext):
-        mfile = mfile + ext
-    # deepdish.io.save(mfile, dataset)
-    write_data(mfile, dataset)
 
 
 def loadDataset(path):
@@ -699,6 +669,11 @@ def getTimeString(t=None):
     dstr = t.strftime('%H-%M-%S')
     return dstr
 
+def dateString(t=None):
+    """ Return date string with timezone """
+    if t is None:
+        t = datetime.datetime.now()
+    return t.strftime('%Y-%m-%d %H:%M:%S.%f %z %Z' )
 
 def getDateString(t=None, full=False):
     """ Return date string
@@ -725,7 +700,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
     if dstr is None:
         dstr = getDateString()
 
-    ext = data_extension()
+    ext = _data_extension()
     basename = '%s' % (dstr,)
     if bname is not None:
         basename = '%s-' % bname + basename
@@ -738,7 +713,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('loadExperimentdata %s' % path)
-    dataset = pmatlab.load(path)
+    dataset = pgeometry.load(path)
 
     dataset = load_data(path)
     return dataset

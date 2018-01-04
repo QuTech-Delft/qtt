@@ -59,6 +59,11 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         w.setHeaderItem(header)
         w.setWindowTitle(name)
 
+        # check to prevent nasty error (e.g. random values on a sample)
+        for i in instruments:
+            if getattr(i, 'lock', 'nolock') is None:
+                raise Exception('do not use multi-threading with an Instrument that is not thread safe')
+        
         if instrumentnames is None:
             instrumentnames = [i.name for i in instruments]
         self._instruments = instruments
@@ -147,6 +152,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     update_field = Signal(str, str, object, bool)
 
+    def stop(self):
+        self._timer.stop()
+        
     @Slot(str, str, object, bool)
     def _set_field(self, iname, g, value, force_update):
         """ Helper function
@@ -161,7 +169,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             sb.setText(1, str(value))
         else:
             # update a float value
-            if np.abs(sb.value() - value) > 1e-9 or force_update:
+            
+            try:
+                update_value = np.abs(sb.value() - value) > 1e-9
+            except:
+                update_value = True
+            if update_value or force_update:
                 if not sb.hasFocus():  # do not update when editing
                     logging.debug('update %s to %s' % (g, value))
                     try:
@@ -177,14 +190,20 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         for iname in self._instrumentnames:
             instr = self._instruments[self._instrumentnames.index(iname)]
 
-            pp = instr.parameters
+            try:
+                pp = instr.parameters
+            except AttributeError as ex:
+                # instrument was removed
+                print('instrument was removed, stopping ParameterViewer')
+                self._timer.stop()
+
             ppnames = sorted(instr.parameters.keys())
 
             si = sys.getswitchinterval()
 
             for g in ppnames:
                 sys.setswitchinterval(100)  # hack to make this semi thread-safe
-                value = pp[g].get()
+                value = pp[g].get_latest()
                 sys.setswitchinterval(si)
 
                 self.update_field.emit(iname, g, value, force_update)

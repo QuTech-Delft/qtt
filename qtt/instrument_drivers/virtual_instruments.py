@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 
 class VirtualMeter(Instrument):
 
-    shared_kwargs = ['model']
-
     def __init__(self, name, model=None, **kwargs):
         """ Virtual instrument with a parameter
 
@@ -59,8 +57,6 @@ class VirtualMeter(Instrument):
 
 class VirtualIVVI(Instrument):
 
-    shared_kwargs = ['model']
-
     def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
         """ Virtual instrument representing an IVVI 
 
@@ -81,7 +77,7 @@ class VirtualIVVI(Instrument):
             logger.debug('VirtualIVVI: add gate %s' % g)
             if model is None:
                 self.add_parameter(g,
-                                   parameter_class=ManualParameter,
+                                   set_cmd=None,
                                    initial_value=0,
                                    label='Gate {} (arb. units)'.format(g),
                                    unit='arb. units',

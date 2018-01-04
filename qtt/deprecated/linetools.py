@@ -66,7 +66,7 @@ except:
 
 #%% Try numba support
 try:
-    from numba import autojit  # ,jit
+    from numba import jit as autojit  # ,jit
 except:
     def autojit(original_function):
         def dummy_function(*args, **kwargs):
@@ -78,8 +78,6 @@ except:
 #%% Functions
 
 
-# plocal: xl, theta_l, w, h
-# pglobal: x,y,theta
 
 def showIm(ims, fig=1, title=''):
     """ Show image with nearest neighbor interpolation and axis scaling """
@@ -87,13 +85,16 @@ def showIm(ims, fig=1, title=''):
     matplotlib.pyplot.clf()
     matplotlib.pyplot.imshow(ims, interpolation='nearest')
     matplotlib.pyplot.axis('image')
-    # scaleCmap(ims)
-
 
 def l2g(plocal, pglobal, dy=0):
-    """ Convert pair of local-global coordinates to global """
+    """ Convert pair of local-global coordinates to global
+    
+    Note:
+     plocal: xl, theta_l, w, h
+     pglobal: x,y,theta
+
+    """
     pp = pglobal.copy()
-    # pp[0]+=plocal[0]
     pp[2] += plocal[1]
     pp[0] += math.cos(-pp[2]) * plocal[0] - math.sin(-pp[2]) * dy
     pp[1] += math.sin(-pp[2]) * plocal[0] + math.cos(-pp[2]) * dy
@@ -948,7 +949,8 @@ def polygon_centroid(p):
 
 #%%
 
-def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, lines=range(4), istep=1, centermodel=True, linesegment=True, addX=True, verbose=0):
+def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
+                lines=range(4), istep=1, centermodel=True, linesegment=True, addX=True, verbose=0):
     """ Create a cross model
 
     The parameters are [x, y, width, alpha_1, ..., alpha_4, [rotation of polarization line] ]
@@ -957,10 +959,18 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
 
     param : array of floats
         parameters of the model
+    samplesize (int): size of image patch in pixels
     l, w, lsegment : float
-        parameters of the model
-    lsegment (float) :
+        parameters of the model in mV?. lsegment is the length of the 4 addition lines
+            w is width of lines in the model
+            l is not used by default
+    
+    istep (float): scan resolution in pixel/mV
+    scale (None): parameter not used any more
+    addX (bool): if True add polarization line to model
     H (float): intensity of cross
+    
+    linesegment (bool): if True create line segments instead of full lines
 
     """
     aa = param[3:7]
@@ -974,30 +984,31 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
 
     if samplesize is None:
         cc = param[0:2].reshape((2, 1))
-        if scale is None:
-            scale = 50
+        #if scale is None:
+        #    scale = 50
     else:
-        if scale is None:
-            scale = np.mean(samplesize)
+        #if scale is None:
+        #    scale = np.mean(samplesize)
         samplesize = np.array(samplesize).flatten()
         if centermodel:
             cc = np.array(samplesize).reshape((2, 1)) / 2 - .5
         else:
             cc = np.array(param[0:2] / istep).reshape((2, 1))
 
+    # lp and hp are the triple points
     lp = cc + pmatlab.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
     hp = cc - pmatlab.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
 
     op = np.zeros((5, 2))
     opr = np.zeros((4, 2))
     ip = np.zeros((5, 2))
+    # loop over all 4 line segments
     for ii, a in enumerate(aa):
         if ii == 0 or ii == 1:
             ip[ii].flat = lp
         else:
             ip[ii].flat = hp
-        #a += -np.pi/4
-        op[ii] = ip[ii] + ((scale) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
+        #op[ii] = ip[ii] + ((scale) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
         opr[ii] = ip[ii] + ((lsegment / istep) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
 
     if samplesize is not None:
@@ -1010,6 +1021,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
 
                 lineSegment(modelpatch, x0=x0, x1=x1x, w=w / istep, l=None, H=H)
             else:
+                raise Exception('code not used any more?')
                 semiLine(modelpatch, x0=ip[ii], theta=aa[ii], w=w / istep, l=l / istep, H=H)
         if addX:
             lx = np.linalg.norm(hp - lp, ord=2)
@@ -1062,6 +1074,15 @@ def lineSegment(im, x0, x1=None, theta=None, w=2, l=12, H=200, ml=0):
 def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
     """ Plot half-line into image 
 
+    Args:
+        im (array)
+        x0 (array): starting point of semi-line
+        theta (float): angle
+        w (float): width
+        l (float): length of line segment
+        H (float): intensity of line segment
+        dohalf (bool): add smoothing?
+        
     >>> im=semiLine(np.zeros( (160,240)), [60,40], theta=np.deg2rad(20), w=10, l=60)
     >>> plt.imshow(im)
 
@@ -1184,7 +1205,7 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
 @pmatlab.static_var("scaling0", np.diag([1., 1, 1]))
 def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2,
-                  usemask=False, use_abs=False):
+                  usemask=False, use_abs=False, w=2.5):
     """ Calculate cross matching score
 
     Args:
@@ -1211,7 +1232,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
     if verbose:
         print('evaluateCross: patch shape %s' % (patch.shape,))
-    modelpatch, cdata = createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose >= 2)
+    modelpatch, cdata = createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose >= 2, w=w)
     (cc, lp, hp, ip, op, _, _, _) = cdata
 
     if use_abs:
@@ -1336,7 +1357,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
 
 def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=None, 
-             istepmodel=.5, cb=None, use_abs=False):
+             istepmodel=.5, cb=None, use_abs=False, w=2.5):
     """ Fit model of an anti-crossing """
     samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
@@ -1514,7 +1535,7 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
     return cost
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
     res.x = res.x + [.0, .0, .15]
     pp = res.x
     verbose = 2
@@ -1555,7 +1576,7 @@ def fitLine(alldata, param0=None, fig=None):
     plt.ylabel(igate)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
     param0 = [0, 0, .5 * np.pi]  # x,y,theta,
     figl = 100
 

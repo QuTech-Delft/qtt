@@ -339,9 +339,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             value = p.get()
             alldata.arrays[measure_names[ii]].ndarray[ix] = value
 
-        delta, tprev, update_plot = delta_time(tprev, thr=.5)
-        if (liveplotwindow) and update_plot:
-            myupdate()
+        delta, tprev, update_plot = delta_time(tprev, thr=.25)
+        if update_plot:
+            if liveplotwindow:
+                myupdate()
+            pg.mkQApp().processEvents() # needed for the parameterviewer
 
         if qtt.abort_measurements():
             print('  aborting measurement loop')
@@ -422,11 +424,13 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
     if scanjob['scantype'] == 'scan1Dfast':
-        sweeprange = (sweepdata['end'] - sweepdata['start'])
-        waveform, sweep_info = station.awg.sweep_gate(
-            sweepdata['param'], sweeprange, period)
-        sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
-        gates.set(sweepdata['param'], float(sweepgate_value))
+        if 'range' in sweepdata:
+            sweeprange = sweepdata['range']
+        else:
+            sweeprange = (sweepdata['end'] - sweepdata['start'])
+            sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
+            gates.set(sweepdata['param'], float(sweepgate_value))
+        waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period)
     else:
         sweeprange = sweepdata['range']
         waveform, sweep_info = station.awg.sweep_gate_virt(
@@ -436,10 +440,14 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
 
-    sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data.size)
+    sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data[0].shape[0])
 
-    alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, [
-                                 'measured%d' % i for i in read_ch], data, location=location, loc_record={'label': scanjob['scantype']})
+    if len(read_ch) == 1:
+        measure_names = ['measured']
+    else:
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
+
+    alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data, location=location, loc_record={'label': scanjob['scantype']})
 
     station.awg.stop()
 
@@ -448,14 +456,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
+        pg.mkQApp().processEvents() # needed for the parameterviewer
 
     dt = time.time() - t0
-
-#    if scanjob['scantype'] is 'scan1Dfastvec':
-#        for param in scanjob['phys_gates_vals']:
-#            parameter = gates.parameters[param]
-#            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[sweepvalues.parameter.name],))
-#            alldata.add_array(arr)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
@@ -506,10 +509,24 @@ class sample_data_t (dict):
 
     def gate_boundaries(self, gate):
         bnds = self.get('gate_boundaries', {})
-        b = bnds.get(gate, (-700, 100))
+        b = bnds.get(gate, (None, None))
         return b
 
-
+    def restrict_boundaries(self, gate, value):
+        bnds = self.get('gate_boundaries', {})
+        b = bnds.get(gate, (None, None))
+        if b[1] is not None:
+            value=min(value, b[1])
+        if b[0] is not None:
+            value=max(value, b[0])
+        return value
+    
+def test_sample_data():
+    s=sample_data_t()
+    s['gate_boundaries']={'D0': [-500,100]}
+    v=s.restrict_boundaries('D0', 1000)
+    assert(v==100)
+    
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
 
@@ -531,14 +548,21 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
-    def setWaitTimes(self, station):
+    def setWaitTimes(self, station, min_time = 0):
         """ Set default waiting times based on gate filtering """
 
+        gate_settle=getattr(station,'gate_settle', None)
         t=.1
+        if gate_settle is None:
+            t=0
         for f in ['sweepdata', 'stepdata']:        
             if f in self:
-                t=station.gate_settle(self[f]['param'])
-                self[f]['wait_time'] = t
+                if gate_settle:
+                    if f=='stepdata':
+                        t=2.5*gate_settle(self[f]['param'])
+                    else:
+                        t=gate_settle(self[f]['param'])
+                self[f]['wait_time'] = max(t, min_time)
         self['wait_time_startscan']=.5+2*t
         
     def parse_stepdata(self, field, gates=None):
@@ -806,6 +830,12 @@ def parse_minstrument(scanjob):
 
     return minstrument
 
+def awgGate(gate, station):
+    awg=getattr(station, 'awg', None)
+    if awg is None:
+        return False
+    return awg.awg_gate(gate)
+    
 def fastScan(scanjob, station):
     """ Returns whether we can do a fast scan using an awg 
     
@@ -834,7 +864,7 @@ lin_comb_type = dict
 """ Class to represent linear combinations of parameters  """
 
 
-def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
+def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None,  write_period = None, update_period = 5, verbose=1):
     """Make a 2D scan and create dictionary to store on disk.
 
     For 2D vector scans see also the documentation of the _convert_scanjob_vec
@@ -843,6 +873,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     Args:
         station (object): contains all the instruments
         scanjob (scanjob_t): data for scan
+        write_period (float): save-to-disk interval in lines, None for no writing before finished
+        update_period (float): liveplot update interval in lines, None for no updates
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -908,12 +940,21 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         liveplotwindow = qtt.live.livePlot()
     if liveplotwindow:
         liveplotwindow.clear()
-        liveplotwindow.add(
-            alldata.default_parameter_array(paramname=plotparam))
+        if plotparam is 'all':
+            for i in range(np.min(len(mparams))):
+                liveplotwindow.add(
+                        alldata.default_parameter_array(paramname=measure_names[i]), subplot=i+1)
+        else:
+            liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     tprev = time.time()
     
+    # disable time-based write period
+    alldata.write_period = None
+    
     for ix, x in enumerate(stepvalues):
+        alldata.store((ix,), {stepvalues.parameter.name:x})
+        
         if verbose:
             t1=time.time() - t0
             t1_str=qtt.time.strftime('%H:%M:%S',qtt.time.gmtime(t1))
@@ -928,6 +969,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             else:
                 tprint('scan2D: %d/%d: time %s (~%s remaining): setting %s to %.3f' %
                    (ix, len(stepvalues), t1_str, time_est_str, stepvalues.name, x), dt=1.5)
+                
         if scanjob['scantype'] == 'scan2Dvec':
             pass
         else:
@@ -945,17 +987,27 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                     qtt.time.sleep(wait_time_step)
             if wait_time_sweep > 0:
                 time.sleep(wait_time_sweep)
-
+            
+            datapoint = {}
+            datapoint[sweepvalues.parameter.name] = y
+            
             for ii, p in enumerate(mparams):
-                value = p.get()
-                alldata.arrays[measure_names[ii]].ndarray[ix, iy] = value
-
-        if ix == len(stepvalues) - 1 or ix % 5 == 0:
-            delta, tprev, update = delta_time(tprev, thr=.2)
-            if update and liveplotwindow:
-                liveplotwindow.update_plot()
-                pg.mkQApp().processEvents()
-
+                datapoint[measure_names[ii]] = p.get()
+            
+            alldata.store((ix,iy), datapoint)
+        
+        if write_period is not None:
+            if ix % write_period == write_period -1:
+                alldata.write()
+                alldata.last_write = time.time()
+        if update_period is not None:
+            if ix % update_period == update_period -1:
+                delta, tprev, update = delta_time(tprev, thr=0.5)
+                
+                if update and liveplotwindow:
+                    liveplotwindow.update_plot()
+                    pg.mkQApp().processEvents()
+            
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
@@ -1067,8 +1119,9 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         if resolution[0]%16 !=0 or resolution[1]%16 !=0 :
             # send out warning, due to rounding of the digitizer memory buffers
             #this is not supported
-            print('resolution argument: %s'  % (resolution,) )
+            #print('resolution argument: %s'  % (resolution,) )
             warnings.warn('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
+            raise Exception('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert
@@ -1202,10 +1255,11 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     """
     
     drate = digitizer.sample_rate()
+    maxrate = digitizer.max_sample_rate()
     if drate == 0:
         raise Exception('sample rate of m4i is zero, please reset the digitizer')
-    if drate >= 50e6:
-        raise Exception('sample rate of m4i is >= 50 MHz, this is not supported')
+    if drate > maxrate:
+        raise Exception('sample rate of m4i is > %d MHz, this is not supported' % (maxrate//1e6))
 
     # code for offsetting the data in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
@@ -1270,6 +1324,9 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
     except:
         ism4i = False
+    minstrument=get_instrument(minstrhandle)
+    is_simulation = minstrument.name.startswith('sdigitizer')
+    
     if isfpga:
         data = measuresegment_fpga(minstrhandle, waveform, read_ch, Naverage)
     elif ism4i:
@@ -1278,6 +1335,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
     elif minstrhandle=='dummy':
         # for testing purposes
         data = np.random.rand( 100, )
+    elif is_simulation:
+        data = minstrument.measuresegment(waveform, channels=read_ch)
     else:
         raise Exception(
             'Unrecognized fast readout instrument %s' % minstrhandle)
@@ -1416,11 +1475,11 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         for idm, mname in enumerate(measure_names):
             alldata.arrays[mname].ndarray[ix] = data[idm]
 
-        if liveplotwindow is not None:
-            delta, tprev, update = delta_time(tprev, thr=2)
-            if update:
+        delta, tprev, update = delta_time(tprev, thr=1.)
+        if update:
+            if liveplotwindow is not None:
                 liveplotwindow.update_plot()
-                pg.mkQApp().processEvents()
+            pg.mkQApp().processEvents()
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
@@ -1556,7 +1615,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     sweepdata = scanjob['sweepdata']
 
     Naverage = scanjob.get('Naverage', 20)
-    resolution = scanjob.get('resolution', [90, 90])
+    resolution = scanjob.get('resolution', [80, 80])
 
     t0 = qtt.time.time()
 
@@ -1933,8 +1992,11 @@ def test_scan2D(verbose=0):
         {'param': {'dac1': 1}, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
     scanjob['stepvalues'] = np.array([[2*i, 3*i] for i in range(10)])
-    data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
+    try:
+        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+    except:
+        from colorama import Fore
+        print(Fore.RED + 'MultiParameter test failed!' + Fore.RESET)
     # not supported:
     try:
         scanjob = scanjob_t({'sweepdata': dict({'param': {
@@ -2022,4 +2084,7 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             scanjob[param] = min(scanjob[param], bstep[1] - eps)
 
 
-
+#%% Unit testing
+            
+if __name__=='__main__':
+    test_sample_data()

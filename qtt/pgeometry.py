@@ -217,7 +217,7 @@ except:
 
 #%% Try numba support
 try:
-    from numba import jit, autojit
+    from numba import jit as autojit
 except:
     def autojit(original_function):
         """ dummy autojit decorator """

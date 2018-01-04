@@ -79,7 +79,6 @@ save_state(station)
 
 print(data1d.default_parameter_name())
 
-
 #%% Make a 2D scan
 start = -500
 scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': start, 'end': start + 400, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley1']})
@@ -96,11 +95,13 @@ gv=gates.allvalues()
 adata = analyseGateSweep(data1d, fig=100)
 
 #%% Fit 2D cross
-from qtt.legacy import analyse2dot
-qtt.measurements.scans.plotData(data, fig=30)
-
-pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
-
+try:
+    from projects.autotune4dot.autotuning import analyse2dot
+    qtt.measurements.scans.plotData(data, fig=30)
+    
+    pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
+except:
+    pass
     
 #%% Make virtual gates
 np.set_printoptions(precision=2, suppress=True)

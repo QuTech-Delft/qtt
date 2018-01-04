@@ -17,6 +17,7 @@ from qcodes.plots.pyqtgraph import QtPlot
 from qcodes import DataArray
 import qtt
 
+logger = logging.getLogger(__name__)
 #%%
 
 
@@ -31,10 +32,9 @@ class virtual_awg(Instrument):
         delay_FPGA (float): time delay of signals going through fridge
         
     """
-    shared_kwargs = ['instruments', 'hardware']
-
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
         super().__init__(name, **kwargs)
+        logger.info('initialize virtual_awg %s' % name)
         self._awgs = instruments
         self.awg_map = awg_map
         self.hardware = hardware
@@ -42,21 +42,19 @@ class virtual_awg(Instrument):
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
         self.corr = .02e-6
         self.maxdatapts = 16e6  # This used to be set to the fpga maximum, but that maximum should not be handled here
-        qtt.loggingGUI.installZMQlogger()
-        logging.info('virtual_awg: setup')
 
         if len(self._awgs) == 0 and self.verbose:
             print('no physical AWGs connected')
         elif len(self._awgs) == 1:
             self.awg_cont = self._awgs[0]
             self.awg_cont.set('run_mode', 'CONT')
+            self.awg_seq = None
         elif len(self._awgs) == 2 and 'awg_mk' in self.awg_map:
             self.awg_cont = self._awgs[self.awg_map['awg_mk'][0]]
             self.awg_cont.set('run_mode', 'CONT')
             self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0] + 1) % 2]
-            self.awg_seq.set('run_mode', 'SEQ')
-            self.awg_seq.sequence_length.set(1)
-            self.awg_seq.set_sqel_trigger_wait(1, 0)
+            
+            self._set_seq_mode(self.awg_seq)
             self.delay_AWG = self.hardware.parameters['delay_AWG'].get()
         else:
             raise Exception(
@@ -70,6 +68,11 @@ class virtual_awg(Instrument):
             for i in range(1, 5):
                 awg.set('ch%s_amp' % i, self.ch_amp)
 
+    def _set_seq_mode(self, a):
+        a.set('run_mode', 'SEQ')
+        a.sequence_length.set(1)
+        a.set_sqel_trigger_wait(1, 0)
+        
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
         IDN = {'vendor': 'QuTech', 'model': 'virtual_awg',
@@ -301,6 +304,7 @@ class virtual_awg(Instrument):
         '''
 
         self.check_frequency_waveform(period, width)
+        self.check_amplitude(gate, sweeprange)
 
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width)
@@ -342,6 +346,7 @@ class virtual_awg(Instrument):
 
         waveform = dict()
         for g in gate_comb:
+            self.check_amplitude(g, gate_comb[g] * sweeprange)
             wave_raw = self.make_sawtooth(sweeprange, period, width)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gate_comb[g] / awg_to_plunger
@@ -397,6 +402,7 @@ class virtual_awg(Instrument):
         waveform = dict()
         wave_sweep = self.make_sawtooth(sweeprange, period, width)
         for g in gate_voltages:
+            self.check_amplitude(g, sweeprange + mvrange)
             gate_voltages[g] = np.tile(gate_voltages[g], pulsereps)
             wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
             wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
@@ -480,6 +486,8 @@ class virtual_awg(Instrument):
         period_vert = resolution[1] * period_horz
 
         self.check_frequency_waveform(period_horz, width)
+        for g, r in zip(sweepgates, sweepranges):
+            self.check_amplitude(g, r)
 
         waveform = dict()
         # horizontal waveform
@@ -558,6 +566,7 @@ class virtual_awg(Instrument):
         waveform = dict()
         # horizontal virtual gate
         for g in gates_horz:
+            self.check_amplitude(g, sweepranges[0] * gates_horz[g])
             wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[0])
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_horz[g] / awg_to_plunger
@@ -567,6 +576,7 @@ class virtual_awg(Instrument):
 
         # vertical virtual gate
         for g in gates_vert:
+            self.check_amplitude(g, sweepranges[1] * gates_vert[g])
             wave_raw = self.make_sawtooth(sweepranges[1], period_vert)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_vert[g] / awg_to_plunger
@@ -579,7 +589,7 @@ class virtual_awg(Instrument):
 
         # TODO: Implement compensation of sensing dot plunger
 
-        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete)
+        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete, samp_freq=samp_freq)
         self.sweep_run(sweep_info)
 
         waveform['width_horz'] = width
@@ -589,6 +599,7 @@ class virtual_awg(Instrument):
         waveform['resolution'] = resolution
         waveform['samplerate'] = 1 / self.AWG_clock
         waveform['period'] = period_vert
+        waveform['period_horz'] = period_horz
         for channels in sweep_info:
             if 'delay' in sweep_info[channels]:
                 waveform['markerdelay'] = sweep_info[channels]['delay']
@@ -674,7 +685,9 @@ class virtual_awg(Instrument):
                 val = f()
                 if val != 4.0:
                     warnings.warn('AWG channel %d output not at 4.0 V' % ii)
-                    
+        if self.awg_seq is not None:
+            self._set_seq_mode(self.awg_seq)
+            
     def set_amplitude(self, amplitude):
         """ Set the AWG peak-to-peak amplitude for all channels
 
@@ -694,6 +707,23 @@ class virtual_awg(Instrument):
         for awg in self._awgs:
             for i in range(1, 5):
                 awg.set('ch%s_amp' % i, self.ch_amp)
+                
+    def check_amplitude(self, gate, mvrange):
+        """ Calculates the lowest allowable AWG peak-to-peak amplitude based on the
+        ranges to be applied to the gates. If the AWG amplitude is too low, it gives
+        a warning and increases the amplitude.
+        
+        Args:
+            gate (str): name of the gate to check
+            mvrange (float): voltage range, in mV, that the gate needs to reach
+        """
+        min_amp = mvrange / self.hardware.parameters['awg_to_%s' % gate].get()
+        if min_amp > 4:
+            raise(Exception('Sweep range of gate %s is larger than maximum allowed by the AWG' % gate))
+        if self.ch_amp < min_amp:
+            min_amp = np.ceil(min_amp * 10) / 10
+            self.set_amplitude(min_amp)
+            warnings.warn('AWG amplitude too low for this range, setting to %.1f' % min_amp)
 
 #%%
 

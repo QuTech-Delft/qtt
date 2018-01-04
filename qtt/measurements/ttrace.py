@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 import pyqtgraph as pg
 import qtt
+import warnings
 
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
@@ -57,7 +58,7 @@ sq_pulse_marker = pulse.SquarePulse(
     channel='ch1_marker1', name='A square pulse on MW pmod')
 lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
 
-def create_virtual_matrix_dict(virt_basis, physical_gates, c, verbose=1):
+def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     """ Converts the virtual gate matrix into a virtual gate mapping
     Inputs:
         physical_gates (list): containing all the physical gates in the setup
@@ -69,7 +70,12 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c, verbose=1):
     for ii, vname in enumerate(virt_basis):
         if verbose:
             print('create_virtual_matrix_dict: adding %s ' % (vname,))
-        tmp=OrderedDict( zip(physical_gates, c[ii,:] ) )           
+        if c is None:
+            v=np.zeros( len(physical_gates))
+            v[ii]=1
+        else:
+            v=c[ii,:]
+        tmp=OrderedDict( zip(physical_gates, v ) )           
         virtual_matrix[vname] = tmp
     return virtual_matrix
 
@@ -78,11 +84,14 @@ def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
     Inputs:
         physical_gates (list): containing all the physical gates in the setup
         cc_basis (list): containing all the virtual gates in the setup
-        c (array): inverse virtual gate matrix
+        c (array or None): inverse virtual gate matrix
     Outputs: 
         virtual_matrix (dict): dictionary, mapping of the virtual gates needed for the ttraces """
 
-    invc=np.linalg.inv(c)                                                                                    
+    if c is None:
+        invc=None
+    else:
+        invc=np.linalg.inv(c)                                                                                    
     return create_virtual_matrix_dict(cc_basis, physical_gates, invc, verbose=1)
 
 
@@ -102,6 +111,7 @@ def show_ttrace_elements(ttrace_elements, fig=100):
     
         show_element(ttrace_element, fig=fig + ii, keys=kkx, label_map=None)
         plt.legend(numpoints=1)
+        plt.title('ttrace element %s' % (ttrace_element.name,) )
     qtt.pgeometry.tilefigs(range(100,100+len(ttrace_elements)))
 
 #%%
@@ -137,7 +147,6 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
         try:
             ttrace['samplingfreq']=station.digitizer.sample_rate()
         except:
-            import warnings
             warnings.warn('no fpga object available')    
     ttrace['awgclock']=station.awg.AWG_clock
     ttrace['awg_delay'] = 0e-4+2e-5 # ???
@@ -148,11 +157,15 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
     try:
         hw=station.hardware #for now hardcoded!!
         awg_to_plunger_plungers=dict( [ (g, getattr(hw, 'awg_to_%s' % g)() ) for g in sweepgates] )
-    except:
+    except Exception as ex:
+        print(ex)
         warnings.warn('no hardware object available')    
         awg_to_plunger_plungers=dict( [ (g, 80)  for g in sweepgates] )
         
     pgates=sweepgates
+    if isinstance(scanrange, (float, int)):
+        scanrange=[scanrange]*len(vgates)
+        
     #"""Map them onto the traces itself"""
     for ii, v in enumerate(vgates):
         R= scanrange[ii]
@@ -166,6 +179,64 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
     return ttrace
 
 #%%
+
+def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=60, verbose=0, fig=None):
+    """ Read data from m4i device 
+    
+    TODO: merge with measuresegment function...
+    """
+    
+    digitizer = station.digitizer
+    if digitizer.sample_rate() == 0:
+        raise Exception('error with digitizer')
+    digitizer.sample_rate(10e6)
+    read_ch = [1]
+    mV_range = 2000
+
+    drate = digitizer.sample_rate()
+    if drate == 0:
+        raise Exception('sample rate of m4i is zero, please reset the digitizer')
+
+    #ttotal = ttrace_elements[0].waveforms()[0].size / ttrace['awgclock']
+    e = ttrace_elements[0]
+    ttotal = e.ideal_length()
+
+    # code for offsetting the data in software
+    signal_delay = getattr(digitizer, 'signal_delay', None)
+    if signal_delay is None:
+        signal_delay = 0
+    padding_offset = int(drate * signal_delay)
+
+    period = ttotal
+
+    paddingpix = 16
+    padding = paddingpix / drate
+    pretrigger_period = 16 / drate  # waveform['markerdelay'],  16 / samp_freq
+
+    memsize = qtt.measurements.scans.select_digitizer_memsize(
+        digitizer, period + 2 * padding, pretrigger_period + padding, verbose=verbose >= 1)
+    post_trigger = digitizer.posttrigger_memory_size()
+
+    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
+    dataraw = digitizer.blockavg_hardware_trigger_acquisition(
+        mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
+
+    # remove padding
+
+    if isinstance(dataraw, tuple):
+        dataraw = dataraw[0]
+    data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
+    data = data[:, padding_offset + paddingpix:(padding_offset + paddingpix + int(period * drate))]
+
+    if verbose:
+        print('measuresegment_m4i: processing data: data shape %s, memsize %s' % (data.shape, digitizer.data_memory_size()))
+
+    if fig is not None:
+        plt.figure(fig); plt.clf(); plt.plot(data.flatten(), '.b')
+        plt.title('trace from m4i')
+        
+    return data
+
 
 def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, markeridx=1):
     """ Create a Toivo trace
@@ -194,7 +265,7 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
     ttraces = []
     # start with empty space
     for pi, pulsar in enumerate(pulsars):
-        ttrace_element = element.Element(name, pulsar=pulsar)
+        ttrace_element = element.Element(name+'%d' % pi, pulsar=pulsar)
         ttraces += [ttrace_element]
 
     for pi, ttrace_element in enumerate(ttraces):
@@ -478,7 +549,7 @@ class ttrace_update:
         self.verbose=1
         
     def updatefunction(self):
-        data_raw=self.read_function(self.station, self.channel )
+        data_raw=self.read_function(self.station,  self.ttrace_elements, self.channel )
         tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2)
         for ii, q in enumerate(tx):
             self.fps.showloop(dt=15)

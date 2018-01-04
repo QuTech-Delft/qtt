@@ -2,16 +2,31 @@
 """
 Created on Thu Dec  8 10:37:36 2016
 
-@author: diepencjv
+@author: diepencjv, eendebakpt
 """
 
-#%%
+#%% Load packages
 from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
 import numpy as np
 from collections import OrderedDict
 import warnings
+
+def set_distance_matrix(virt_gates, dists):
+    """ Update the cross capacitance matrix for a virtual_gate matrix
+    
+    Args:
+        virt_gates (virtual_gates): virtual gates object
+        dists (list): list of distances between dots
+    """
+    cc=virt_gates.get_crosscap_matrix()
+    dists = list(dists) + [0]*cc.shape[0]
+    for ii in range(cc.shape[0]):
+        for jj in range(cc.shape[0]):
+            cc[ii,jj]=dists[ np.abs(ii-jj)]
+    virt_gates.set_crosscap_matrix(cc)
+
 
 class virtual_gates(Instrument):
     """A virtual gate instrument to control linear combinations of gates.
@@ -174,6 +189,24 @@ class virtual_gates(Instrument):
             vals = [(gate, self.get(gate)) for gate in self._virts_list]
         return dict(vals)
 
+    def set_distances(self, dists):
+        """ Update the cross-capacitance matrix based on a list of distances """
+        set_distance_matrix(self, dists)
+        
+    def setgates(self, values, verbose=0):
+        """ Set gates to new values.
+
+        Args:
+            values (dict): keys are gate names, values are values to be set
+            verbose (int): Output level
+        """
+        if verbose:
+            print('resetgates: setting gates to default values')
+        for g, val in values.items():
+            if verbose >= 2:
+                print('  setting gate %s to %.1f [mV]' % (g, val))
+            self.set(g, val)
+        
     def resetgates(self, activegates, basevalues=None, verbose=0):
         """Reset a set of gates to new values.
 
@@ -199,6 +232,11 @@ class virtual_gates(Instrument):
                 print('  setting gate %s to %.1f [mV]' % (g, val))
             self.set(g, val)
 
+    def set_crosscap_matrix(self, cc):
+        """Sets the cross-capacitance matrix. Update the dependent variables """
+        m=self.convert_matrix_to_map(cc)
+        self.set_crosscap_map(m)
+        
     def get_crosscap_map(self):
         """Gets the current cross-capacitance map."""
         return self._crosscap_map
@@ -268,7 +306,22 @@ class virtual_gates(Instrument):
             self.print_map(updated_map)
         return updated_map
 
-    
+    def ratio(self, target, g1, g2, laplace = 0):
+        """ Return ratio of influence of two gates
+        
+        Args:
+            target (str): target gate
+            g1, g2 (str): gates
+            laplace (float): parameter for Laplacian smoothing
+        
+        Returns
+            ratio (float)
+        
+        """
+        m=self.get_crosscap_map()
+        ratio = (m[target][g2]+laplace)/(m[target][g1]+laplace)
+        return ratio
+        
     def print_matrix(self):
         self.print_map(self.get_crosscap_map() )
         
@@ -410,7 +463,13 @@ def test_virtual_gates(verbose=0):
 
     virts.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
     av = virts.allvalues()
-
+    
     c=virts.get_crosscap_matrix()
     assert(c[0][0]==1)    
     assert(c[0][1]==.6)
+    
+    virts.set_distances(np.arange(5))
+    
+if __name__=='__main__':
+    test_virtual_gates()
+    

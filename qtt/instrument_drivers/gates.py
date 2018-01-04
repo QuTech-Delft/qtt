@@ -133,7 +133,7 @@ class virtual_IVVI(Instrument):
                 continue
             instrument = self._instrument_list[gx[0]]
             param = self.get_instrument_parameter(g)
-            param._vals = Numbers(bnds[0], max_value=bnds[1])
+            param.vals= Numbers(bnds[0], max_value=bnds[1]) 
             if hasattr(instrument, 'adjust_parameter_validator'):
                 instrument.adjust_parameter_validator(param)
 

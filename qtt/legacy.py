@@ -9,6 +9,8 @@ import os
 import logging
 import cv2
 import time
+import math
+import pickle
 
 import qcodes
 # explicit import
@@ -37,6 +39,8 @@ from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
 from qtt.measurements.scans import scan2D, scan1D
 from qtt.tools import stripDataset
+from qtt.algorithms.generic import smoothImage
+from qtt.measurements.scans import scanPinchValue
 
 
 from qtt import pgeometry as pmatlab
@@ -64,38 +68,8 @@ def positionScanjob(scanjob, pt):
     return scanjob
 
 
-
-
-def onedotPlungerScan(station, od, verbose=1, sample_data = sample_data_t() ):
-    """ Make a scan with the plunger of a one-dot """
-    # do sweep with plunger
-    gates = station.gates
-    gg = od['gates']
-    ptv = od['setpoint']
-
-    pv = od['pinchvalues'][1]
-
-    scanjob = scanjob_t({'minstrument': [od['instrument']]})
-    scanjob['sweepdata'] = dict({'param': gg[1], 'start': 50, 'end': pv, 'step': -1})
-
-    gates.set(gg[2], ptv[0, 0] + 20)    # left gate = step gate in 2D plot =  y axis
-    gates.set(gg[0], ptv[1, 0] + 20)
-    gates.set(gg[1], scanjob['sweepdata']['start'])
-
-    wait_time = qtt.measurements.scans.waitTime(gg[1], station=station)
-    scanjob['sweepdata']['wait_time']=wait_time / 1.5
-    time.sleep(wait_time)
-
-    enforce_boundaries(scanjob, sample_data)
-    alldata = scan1D(station, scanjob=scanjob)
-    alldata.metadata['od'] = od
-    stripDataset(alldata)
-    scandata = dict(dataset=alldata, od=od)
-    return scandata
-
 #%%
 
-from qtt.measurements.scans import scanPinchValue
 
 
 def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, cache=False, full=0, verbose=1):
@@ -247,7 +221,6 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 
 #%%
 
-import math
 
 
 def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(10)):
@@ -486,7 +459,6 @@ def polyval2d(x, y, m):
     return z
 
 
-from qtt.algorithms.generic import smoothImage
 
 
 def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=False, returndict=None):
@@ -617,79 +589,6 @@ def showIm(ims, fig=1, title='', showz=False):
     plt.axis('image')
     plt.title(title)
 
-
-def analyse2dot(alldata, fig=300, istep=1, efig=None, verbose=1):
-    """ Analyse a 2-dot scan
-
-    Arguments
-    ---------
-        alldata : dict
-            data of 2D scan
-        fig : integer or None
-            if not None plot results in figure
-        istep: float
-            conversion parameter
-    Output
-    ------
-        pt : array
-            point of zero-zero crossing
-        results : dict
-            results of the analysis
-
-    """
-    # imextent, xdata, ydata, im = get2Ddata(alldata, fastscan=None, verbose=0, fig=None, midx=2)
-    extent, g0, g1, xdata, ydata, arrayname = dataset2Dmetadata(alldata)
-    im, tr = dataset2image(alldata)
-    imextent = tr.matplotlib_image_extent()
-
-    im = fixReversal(im, verbose=0)
-    imc = cleanSensingImage(im, sigma=.93, verbose=0)
-    imtmp, (fw, fh, mvx, mvy, H) = straightenImage(imc, imextent, mvx=istep, verbose=verbose >= 2,)  # cv2.INTER_NEAREST
-    imx = imtmp.astype(np.float64)
-
-    ksize0 = int(math.ceil(31. / istep))
-    ksize0 += (ksize0 - 1) % 2
-    pts, rr, _ = linetools.findCrossTemplate(imx, ksize=ksize0, istep=istep, fig=efig, widthmv=6, sepmv=3.8)
-
-    # Select best point
-    bestidx = np.argsort(pts[0] - pts[1])[0]
-    pt = pts[:, bestidx]
-
-    ptq = pmatlab.projectiveTransformation((H.I), pt)
-    ptmv = tr.pixel2scan(ptq)
-    ims = imc
-    # ims= scaleRatio(imc, imextent, verbose=1)
-
-    check, rr0, res, thr = singleElectronCheck(pt, imx, istep, fig=None, verbose=1)
-    se = dict({'rr0': rr0, 'res': res, 'check': check, 'thr': thr})
-
-    # pmatlab.tilefigs([200,50, 60, 61])
-
-    if fig is not None:
-        ims, (fw, fh, mvx, mvy, _) = straightenImage(imc, imextent, mvx=1, verbose=0)
-        show2D(alldata, ims, fig=fig, verbose=0)
-        try:
-            scaleCmap(ims)
-        except:
-            # ipython workaround
-            pass    
-        plt.axis('image')
-        plt.title('zero-zero point (zoom)')
-
-        # plotPoints(ptmv, '.m', markersize=22)
-        c2 = plotCircle(ptmv, radius=11.5, color='r', linewidth=3, alpha=.5, label='fitted point')
-
-        plt.axis('image')
-
-        region = int(70 / mvx) * np.array([[-1, 1], [-1, 1]]) + ptmv.reshape(2, 1)
-        region[0, 0] = max(region[0, 0], imextent[0])
-        region[1, 0] = max(region[1, 0], imextent[2])
-        region[0, 1] = min(region[0, 1], imextent[1])
-        region[1, 1] = min(region[1, 1], imextent[3])
-        plt.xlim(region[0])
-        plt.ylim(region[1][::])
-    results = dict({'ptmv': ptmv, 'pt': pt, 'imc': imc, 'imx': imx, 'singleelectron': se, 'istep': istep})
-    return pt, results
 
 
 def getTwoDotValues(td, ods, basevaluestd=dict({}), verbose=1):
@@ -851,6 +750,8 @@ def fillPoly(im, poly_verts, color=None):
         im (array)
         poly_verts (kx2 array): polygon vertices
         color (array or float)
+    Returns:
+        grid (array)
     """
     ny, nx = im.shape[0], im.shape[1]
 
@@ -874,7 +775,6 @@ def fillPoly(im, poly_verts, color=None):
         r = points_in_poly(points, poly_verts)
         pass
     im.flatten()[r] = 1
-    # grid = points_inside_poly(points, poly_verts)
     grid = r
     grid = grid.reshape((ny, nx))
 
@@ -901,7 +801,6 @@ def getPinchvalues(od, xdir, verbose=1):
 
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
-    # one_dots=get_one_dots(full=1)
     xdir = os.path.join(resultsdir, 'one_dot')
 
     jobs = []
@@ -955,13 +854,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                     print('createDoubleDotJobs: at fillPoly')
                 imx = 0 * wwarea.copy().astype(np.uint8)
                 tmp = fillPoly(imx, od['balancefit'])
-                # cv2.fillConvexPoly(imx, od['balancefit'],color=[1] )
 
                 showODresults(od, dd2d, fig=figm, imx=imx, ww=wwarea)
-                if 0:
-                    plt.close(fig + 10 * ii + 0)
-                    plt.close(fig + 10 * ii + 2)
-                    plt.close(fig + 10 * ii + 3)
                 ods.append(od)
 
             if fig:
@@ -970,7 +864,6 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             # Define base values
 
             tmp = copy.copy(basevalues)
-            # print(tmp)
             # print('createDoubleDotJobs: call getTwoDotValues: ')
             basevaluesTD, tddata = getTwoDotValues(td, ods, basevaluestd=tmp, verbose=1)
             # print('### createDoubleDotJobs: debug here: ')
@@ -978,14 +871,9 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
             td['tddata'] = tddata
 
             # Create scan job
-
             scanjob = qtt.measurements.scans.scanjob_t({'mode': '2d'})
             p1 = ods[0]['gates'][1]
             p2 = ods[1]['gates'][1]
-
-            sweeprange = 240
-            if p2 == 'P3':
-                sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
 
             sweeprange = 240
             if p2 == 'P3':
@@ -1008,9 +896,8 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
             print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
         except Exception as e:
-            logging.exception("error with double-dot job!")
             print('createDoubleDotJobs: failed to create job file %s' % td['name'])
-            continue
+            raise e
 
     return jobs
 
@@ -1023,23 +910,12 @@ if __name__ == '__main__':
 
 def stopbias(gates):
     """ Stop the bias currents in the sample """
+    raise Exception('do not use this function')
     gates.set_bias_1(0)
     gates.set_bias_2(0)
     for ii in [3]:
         if hasattr(gates, 'set_bias_%d' % ii):
             gates.set('bias_%d' % ii, 0)
-
-
-def stop_AWG(awg1):
-    """ Stop the AWG """
-    print('FIXME: add this function to the awg driver')
-    if not awg1 is None:
-        awg1.stop()
-        awg1.set_ch1_status('off')
-        awg1.set_ch2_status('off')
-        awg1.set_ch3_status('off')
-        awg1.set_ch4_status('off')
-    print('stopped AWG...')
 
 
 def printGateValues(gv, verbose=1):
@@ -1053,7 +929,6 @@ def getODbalancepoint(od):
         bp = od['balancepointfine']
     return bp
 
-import pickle
 
 
 def loadpickle(pkl_file):
@@ -1074,9 +949,3 @@ def loadpickle(pkl_file):
     return data2
 
 
-def load_qt(fname):
-    """ Load qtlab style file """
-    alldata = loadpickle(fname)
-    if isinstance(alldata, tuple):
-        alldata = alldata[0]
-    return alldata

@@ -37,6 +37,7 @@ def qtt_test_part(name):
     suite = unittest.defaultTestLoader.loadTestsFromName(fullname)
     return unittest.TextTestRunner().run(suite).wasSuccessful()
 
+
 if __name__ == '__main__':
     import argparse
     import os

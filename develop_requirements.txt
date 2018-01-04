@@ -1,12 +1,20 @@
-numpy >= 1.12
+# List of packages that can be pip installed
+numpy >= 1.10
 scipy >= 0.18
 matplotlib >= 2.0
 coverage
 pandas
 jupyter
 scikit-image
-pyqt
+scikit-learn
 qtpy
 h5py
+pyvisa
 slacker
+apscheduler
 spyder
+colorama
+attrs
+Polygon3
+pyzmqrpc
+redis

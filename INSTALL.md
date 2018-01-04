@@ -12,6 +12,9 @@ If you want a GUI you can use either
 * https://tortoisegit.org/
 * https://desktop.github.com/
 
+To prevent typing your password all the time, you can use SSH keys. See https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
+
+
 ## Clone the necessary GIT repositories
 
 All code is hosted on GitHub. If you are unfamiliar with git, read an [introduction](https://guides.github.com/activities/hello-world/) first.
@@ -50,6 +53,11 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 > activate [yourname]
 ```
 
+To install dev version of hicke:
+```
+pip install git+https://github.com/telegraphic/hickle.git@dev
+```
+
 For Mac OS with anaconda type from the command line:
 ```
 > cd [MYLOCALDIR]/qtt
@@ -58,6 +66,7 @@ For Mac OS with anaconda type from the command line:
 > conda install -c nmearl pyqtgraph
 > pip install pyvisa
 ```
+
 (For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
 
 
@@ -65,7 +74,7 @@ For Mac OS with anaconda type from the command line:
 ## Install packages
 
 - Register the qcodes, qtt and spin-projects repositories with Python. Open a command prompt, change to your environment and run the following command
-in the directories `Qcodes`, `qtt` and `spin-projects/stations`.
+in the directories `Qcodes`, `qtt`, `spin-projects` and `spin-projects/stations`.
 ```
 > python setup.py develop    (Anaconda, while in your environment)
 ```
@@ -84,10 +93,18 @@ For Unix systems the proper command is `python setup.py develop --user`.
 * [Spectrum M4i](http://spectrum-instrumentation.com/en/m4i-platform-overview)
 * [SPI-rack](https://github.com/Rubenknex/SPI-rack)
 
+- To install the low-level SPI driver run:
+```
+pip install git+https://github.com/Rubenknex/SPI-rack.git
+
+```
 ## Spyder
 
-* Use a IPython console and set the IPhyton backend graphics option to QT5. This ensures
- correctly displaying the Paramater viewer and DataBrowser
+* Use the IPython console and set the IPhyton backend graphics option to QT5. This ensures
+ correctly displaying the Paramater viewer and DataBrowser. The option is here:
+```
+Tools->Preferences->IPython console->Graphics->Backend
+```
 * In Tools->Preferences->Python interpreter, uncheck the box Enable UMR 
 
 ## Create startup shortcuts
@@ -131,13 +148,6 @@ jupyter notebook
 call deactivate %USERNAME%
 ```
 
-## Hickle (optional)
-
-To install dev version of hicke:
-```
-pip install git+https://github.com/telegraphic/hickle.git@dev
-```
-
 ## Install redis
 
 For Windows install redis from https://github.com/MSOpenTech/redis.
@@ -167,13 +177,32 @@ git config credential.helper store	# stores passwords in plain text!
             warnings.simplefilter("ignore")
 ```
 
+### Ubuntu installation
+
+Either use the default Ubuntu packages, or install using pip (optionally within a virtualenv environment). Tested on 17.10
+
+
+```
+sudo apt-get install python3-spyder python3-nose python3-pyqtgraph python3-scipy python3-matplotlib python3-pandas python3-pip python3-coverage python3-h5py redis-server
+sudo apt-get install python3-rope python3-redis python3-skimage python3-sklearn python3-websockets
+cd [QTTDIR]
+pip3 install --user -r develop_requirements.txt
+pip install git+https://github.com/telegraphic/hickle.git@dev
+```
+
 ### Old commands
 
 Manual installation:
 ```
-> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py
-> pip install slacker attrs pyserial redis pyvisa
+> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
+> cd [QTTDIR]
+> pip install --user -r develop_requirements.txt
 > conda install -c conda-forge opencv
+> pip install git+https://github.com/telegraphic/hickle.git@dev
+```
+
+```
+> pip install slacker attrs pyserial redis pyvisa Polygon3 colorama pyvisa
 ```
 
 There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do

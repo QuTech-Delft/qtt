@@ -1,9 +1,8 @@
-import qcodes
-
-#%% Static variables
+# %% Static variables
 
 mwindows = None
-liveplotwindow = None
+liveplotwindow = None  # global handle for live plotting
+
 
 def livePlot():
     """ Return handle to live plotting window """
