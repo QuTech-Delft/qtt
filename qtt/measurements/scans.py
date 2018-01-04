@@ -1969,6 +1969,8 @@ def test_scan2D(verbose=0):
     p = Parameter('p', set_cmd=None)
     q = Parameter('q', set_cmd=None)
     R = VoltageDivider(p, 4)
+    mp = MultiParameter(instrumentName('multi_param'), [p, q])
+     
     gates = VirtualIVVI(
         name=qtt.measurements.scans.instrumentName('gates'), model=None)
     station = qcodes.Station(gates)
@@ -1994,8 +1996,9 @@ def test_scan2D(verbose=0):
     scanjob['stepvalues'] = np.array([[2*i, 3*i] for i in range(10)])
     try:
         data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-    except:
+    except Exception as ex:
         from colorama import Fore
+        print(ex)
         print(Fore.RED + 'MultiParameter test failed!' + Fore.RESET)
     # not supported:
     try:
@@ -2028,7 +2031,9 @@ def test_scan2D(verbose=0):
 
     gates.close()
 
-
+if __name__=='__main__':    
+    test_scan2D()
+    
 def enforce_boundaries(scanjob, sample_data, eps=1e-2):
     """ Make sure a scanjob does not go outside sample boundaries
 
