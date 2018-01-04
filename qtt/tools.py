@@ -749,7 +749,7 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
-            elif isinstance(fig, qtt.measurements.ttrace.MultiPlot) or \
+            elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
                            fig.__class__.__name__=='MultiTracePlot':
                     figtemp = fig.plotwin.grab()
                     figtemp.save(fname)
