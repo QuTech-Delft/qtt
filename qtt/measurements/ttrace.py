@@ -190,7 +190,7 @@ def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=60, verbose=0
     if digitizer.sample_rate() == 0:
         raise Exception('error with digitizer')
     digitizer.sample_rate(10e6)
-    read_ch = [1]
+    #read_ch = [1]
     mV_range = 2000
 
     drate = digitizer.sample_rate()
