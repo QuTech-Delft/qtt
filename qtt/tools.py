@@ -749,6 +749,10 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
+            elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
+                           fig.__class__.__name__=='MultiTracePlot':
+                    figtemp = fig.plotwin.grab()
+                    figtemp.save(fname)
             elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__=='VideoMode':
                 if isinstance(fig.lp, list):
                     # do NOT change this into a list comprehension
@@ -765,13 +769,15 @@ try:
                         p.drawPixmap(offset, 0, ff[ii])
                         offset+=ff[ii].size().width()                    
                     figtemp.save(fname)
-                    p.end()
-                    
+                    p.end()                    
                 else:
                     # new Qt style
                     figtemp = fig.lp.plotwin.grab()
                     figtemp.save(fname)
-
+            elif isinstance(fig, QtGui.QWidget):
+                # generic method
+                figtemp = fig.plotwin.grab()
+                figtemp.save(fname)                    
             elif isinstance(fig, QtWidgets.QWidget):
                 try:
                     figtemp = QtGui.QPixmap.grabWidget(fig)

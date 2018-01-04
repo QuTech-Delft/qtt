@@ -33,6 +33,8 @@ def list_states(verbose=1):
     statefile = qcodes.config.get('statefile', None)
     if statefile is None:
         statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
+    if not os.path.exists(statefile):
+        return []
     tags = []
     with h5py.File(statefile, 'r') as h5group:
         tags = list(h5group.keys())

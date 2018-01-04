@@ -566,10 +566,11 @@ class ttrace_update:
 
 class MultiTracePlot:
 
-    def __init__(self, nplots, ncurves=1, title='Multi trace plot'):
+    def __init__(self, nplots, ncurves=1, title='Multi trace plot', station=None):
+        """ Plot window for multiple 1D traces """
         self.title = title
         self.verbose = 1
-
+        self.station = station
         plotwin = pg.GraphicsWindow(title=title)
         self.plotwin = plotwin
 
@@ -581,12 +582,13 @@ class MultiTracePlot:
         topLayout = QtWidgets.QHBoxLayout()
         win.start_button = QtWidgets.QPushButton('Start')
         win.stop_button = QtWidgets.QPushButton('Stop')
-
-        for b in [win.start_button, win.stop_button]:
+        win.ppt_button = QtWidgets.QPushButton('PPT')
+        for b in [win.start_button, win.stop_button, win.ppt_button]:
             b.setMaximumHeight(24)
 
         topLayout.addWidget(win.start_button)
         topLayout.addWidget(win.stop_button)
+        topLayout.addWidget(win.ppt_button)
 
         vertLayout = QtWidgets.QVBoxLayout()
 
@@ -604,7 +606,7 @@ class MultiTracePlot:
         self.plots = []
         self.ncurves=ncurves
         self.curves = []
-        pens = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 0)] * 2
+        pens = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 0)] * 3
         
         for ii in range(self.ny):
             for ix in range(self.nx):
@@ -630,7 +632,15 @@ class MultiTracePlot:
 
         win.start_button.clicked.connect(connect_slot(self.startreadout))
         win.stop_button.clicked.connect(connect_slot(self.stopreadout))
+        win.ppt_button.clicked.connect(connect_slot(self.add_ppt))
 
+    def add_ppt(self, notes=None):
+        """ Copy current image window to PPT """
+        
+        if notes is None:
+            notes = getattr(self, 'station', None)
+        qtt.tools.addPPTslide(fig=self, title='T-traces', notes=notes)
+        
     def add_verticals(self):
         vpen=pg.QtGui.QPen(pg.QtGui.QColor(100, 100, 155,60), 0, pg.QtCore.Qt.SolidLine)
         for p in self.plots:
