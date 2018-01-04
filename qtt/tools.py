@@ -751,7 +751,11 @@ try:
                 fig.savefig(fname)
             elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__=='VideoMode':
                 if isinstance(fig.lp, list):
-                    ff=[l.plotwin.grab() for l in fig.lp]
+                    # do NOT change this into a list comprehension
+                    ff=[]
+                    for jj in range(len(fig.lp)):    
+                        ff.append(fig.lp[jj].plotwin.grab() )
+
                     sz=ff[0].size()
                     sz = QtCore.QSize(sz.width()*len(ff), sz.height())
                     figtemp=QtGui.QPixmap(sz)
@@ -761,6 +765,7 @@ try:
                         p.drawPixmap(offset, 0, ff[ii])
                         offset+=ff[ii].size().width()                    
                     figtemp.save(fname)
+                    p.end()
                     
                 else:
                     # new Qt style
