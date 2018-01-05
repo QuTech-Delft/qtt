@@ -127,8 +127,10 @@ gates.resetgates(gv, gv, verbose=0)
 
 print('virtual and physical gates: ' + ','.join( '%.2f' % x for x in [virts.VP1(),virts.VP2(),virts.VP3(), gates.P1(), gates.P2(), gates.P3() ]) )
 
-
-
+vgates=['vSD1b'] + virts.vgates() + ['vSD1a']
+pgates=['SD1b'] + virts.pgates() + ['SD1a']
+virts2= qtt.instrument_drivers.virtual_gates.extend_virtual_gates(vgates, pgates, virts, name='vgates')
+    
 #%% Send data to powerpoint
 print('add copy data to Powerpoint use the following:')
 print('   qtt.tools.addPPT_dataset(data);')
@@ -139,5 +141,4 @@ if 0:
 
 qtt.instrument_drivers.virtual_gates.test_virtual_gates()
 qtt.measurements.scans.test_scan2D()
-
 
