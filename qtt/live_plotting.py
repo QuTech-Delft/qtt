@@ -286,11 +286,13 @@ class livePlot:
 
         vertLayout = QtWidgets.QVBoxLayout()
 
+        self._averaging_enabled = True
         if show_controls:
             topLayout = QtWidgets.QHBoxLayout()
             win.start_button = QtWidgets.QPushButton('Start')
             win.stop_button = QtWidgets.QPushButton('Stop')
             win.averaging_box = QtWidgets.QCheckBox('Averaging')
+            win.averaging_box.setChecked(self._averaging_enabled)
 
             for b in [win.start_button, win.stop_button]:
                 b.setMaximumHeight(24)
@@ -318,7 +320,6 @@ class livePlot:
         self.sweepranges = sweepranges
         self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
-        self._averaging_enabled = False
 
         self.datafunction_result = None
         self.alpha = alpha
