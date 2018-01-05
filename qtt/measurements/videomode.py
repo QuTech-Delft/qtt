@@ -581,9 +581,34 @@ if __name__ == '__main__':
                    verbose=1, nplots=None, dorun=True)
 
     self = vm
-    vm.setGeometry(4310, 100, 800, 800)
+    vm.setGeometry(1310, 100, 800, 800)
 
-    # NEXT: use sddist1 in calculations, output simular to sd1 model
-    # NEXT: 1d scans
-    # NEXT: two output windows
-    # NEXT: faster simulation
+#%% Test MultiTracePlot    
+    app=pg.mkQApp()
+    waveform, ix= station.awg.sweep_gate('P1', 50, 1e-3)
+    nplots=3
+    ncurves=2
+    
+    def read_trace_dummy():
+        data=qtt.measurements.scans.measuresegment(waveform, Naverage=1, minstrhandle=station.sdigitizer.name, read_ch=[1,2] )
+        dd=[data]*nplots
+        xd=np.linspace(-waveform['sweeprange']/2, waveform['sweeprange']/2, data[0].size)
+        xdata=[xd]*nplots
+        return xdata, dd
+    
+    xd, yd=read_trace_dummy()
+    
+    #%%
+    reload(qtt.measurements.ttrace)
+    from qtt.measurements.ttrace import MultiTracePlot
+    
+    mt = MultiTracePlot(nplots=nplots, ncurves=ncurves)
+    mt.win.setGeometry(1400, 40, 500, 500)
+    mt.add_verticals()
+       
+    def callback():
+        xdata, ydata=read_trace_dummy()
+        mt.plot_curves(xdata, ydata)
+        app.processEvents() 
+    
+    mt.startreadout(callback=callback)

@@ -9,8 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import pyqtgraph as pg
-import qtt
 import warnings
+import scipy
+
+import qtt
 
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
@@ -562,8 +564,7 @@ class ttrace_update:
                 xrange=np.arange(-n0, -n0+nn)
                 p[jj].setData(xrange, q[jj,:])
             self.app.processEvents() 
-            
-
+                   
 class MultiTracePlot:
 
     def __init__(self, nplots, ncurves=1, title='Multi trace plot', station=None):
@@ -586,9 +587,18 @@ class MultiTracePlot:
         for b in [win.start_button, win.stop_button, win.ppt_button]:
             b.setMaximumHeight(24)
 
+        self.diff=False
+        self._moving_average = True
+        self.alpha=0.3 # for moving average        
+        self.ydata=None
+
+        win.averaging_box = QtWidgets.QCheckBox('Averaging')
+        win.averaging_box.setChecked(self._moving_average)
+
         topLayout.addWidget(win.start_button)
         topLayout.addWidget(win.stop_button)
         topLayout.addWidget(win.ppt_button)
+        topLayout.addWidget(win.averaging_box)
 
         vertLayout = QtWidgets.QVBoxLayout()
 
@@ -619,21 +629,27 @@ class MultiTracePlot:
                 self.curves.append(cc)
             plotwin.nextRow()
 
+        self.fps=qtt.pgeometry.fps_t()
+
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self._updatefunction)
 
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
-            #@Slot()
             def signal_drop_arguments(*args, **kwargs):
-                #print('call %s' % target)
                 target()
             return signal_drop_arguments
 
         win.start_button.clicked.connect(connect_slot(self.startreadout))
         win.stop_button.clicked.connect(connect_slot(self.stopreadout))
         win.ppt_button.clicked.connect(connect_slot(self.add_ppt))
+        win.averaging_box.clicked.connect(connect_slot(self.enable_averaging_slot))
 
+    def enable_averaging_slot(self, *args, **kwargs):
+        """ Update the averaging mode of the widget """
+        self._moving_average = self.win.averaging_box.checkState()
+        print('enable_averaging_slot: set to %s' % (self._moving_average, ))
+        
     def add_ppt(self, notes=None):
         """ Copy current image window to PPT """
         
@@ -655,6 +671,25 @@ class MultiTracePlot:
         qtt.pgeometry.tprint('updatefunction: dummy...', dt=10)
         pass
 
+    def plot_curves(self, xdata, ydata):
+        if self._moving_average and self.ydata is not None:
+            for jj in range(len(ydata)):
+                for ii in range(self.ncurves):
+                    if self.diff:
+                        ydata[jj][ii]=scipy.ndimage.filters.convolve(ydata[jj][ii], [1,-1], mode='nearest')
+                    self.ydata[jj][ii] = self.alpha *  ydata[jj][ii] + (1 - self.alpha) * self.ydata[jj][ii]    
+        else:
+            self.ydata = ydata
+      
+        self.fps.showloop(dt=15)
+        self.fps.addtime(time.time())
+        ncurves = self.ncurves
+        for ii, xd in enumerate(xdata):
+            p=self.curves[ii]
+            yd=self.ydata[ii]
+            for jj in range(min(ncurves, len(yd)) ):
+                p[jj].setData(xd, yd[jj])
+            
     def startreadout(self, callback=None, rate=1000, maxidx=None):
         if maxidx is not None:
             self.maxidx = maxidx
