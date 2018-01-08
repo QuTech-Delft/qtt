@@ -531,25 +531,25 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
         params (list): the parameters to combine
     """
 
-    def __init__(self, name, params, label=None, unit=None):
-        self.name = name
-        self.params = params
-        self.vals = qcodes.utils.validators.Anything()
-        self._instrument = 'dummy'
+    def __init__(self, name, params, label=None, unit='a.u.', **kwargs):
+        super().__init__(name, vals = qcodes.utils.validators.Anything(), unit = unit, **kwargs)
+        
         if label is None:
-            self.label = self.name
-        if unit is None:
-            self.unit = 'a.u.'
+            self.label = name
+        else:
+            self.label = label
+            
+        self.params = params
+#        
+#        self.has_get = True
+#        self.has_set = True
 
-        self.has_get = True
-        self.has_set = True
-
-    def get(self):
+    def get_raw(self):
         values = []
         for p in self.params:
             values.append(p.get())
         return np.mean(values)
 
-    def set(self, value):
+    def set_raw(self, value):
         for idp, p in enumerate(self.params):
             p.set(value)
