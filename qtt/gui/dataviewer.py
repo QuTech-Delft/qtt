@@ -43,20 +43,21 @@ class DataViewer(QtWidgets.QWidget):
 
         self.dataset = None
         self.text = QtWidgets.QLabel()
-        
-        #logtree
+
+        # logtree
         self.logtree = QtWidgets.QTreeView()  # QTreeWidget
         self.logtree.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
         self._treemodel = QtGui.QStandardItemModel()
         self.logtree.setModel(self._treemodel)
-        
-        #metatree
+
+        # metatree
         self.metatree = QtWidgets.QTreeView()
         self._metamodel = QtGui.QStandardItemModel()
         self.metatree.setModel(self._metamodel)
-        self.metatree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        
+        self.metatree.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers)
+
         self.__debug = dict()
         if isinstance(QtPlot, QWidget):
             self.qplot = QtPlot()  # remote=False, interval=0)
@@ -137,7 +138,7 @@ class DataViewer(QtWidgets.QWidget):
         if self.dataset is None:
             print('no data selected')
             return
-        qtt.tools.addPPT_dataset(self.dataset,customfig=self.qplot)
+        qtt.tools.addPPT_dataset(self.dataset, customfig=self.qplot)
 
     def clipboardCallback(self):
         self.qplot.copyToClipboard()
@@ -203,7 +204,6 @@ class DataViewer(QtWidgets.QWidget):
         if self.verbose >= 2:
             print('DataViewer: updateLogs done')
 
-             
     def updateMetatree(self):
         ''' Update metadata tree '''
         self._metamodel.clear()
@@ -220,11 +220,13 @@ class DataViewer(QtWidgets.QWidget):
             self.fill_item(child, val)
             parent.appendRow(child)
 
-        if value is None: return
+        if value is None:
+            return
         elif isinstance(value, dict):
             for key, val in sorted(value.items()):
                 if type(val) in [str, float, int]:
-                    child = [QtGui.QStandardItem(str(key)),QtGui.QStandardItem(str(val))]
+                    child = [QtGui.QStandardItem(
+                        str(key)), QtGui.QStandardItem(str(val))]
                     item.appendRow(child)
                 else:
                     new_item(item, str(key), val)
@@ -326,7 +328,7 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
         sys.argv += ['-d', os.path.join(os.path.expanduser('~'),
-                     'tmp', 'qdata')]
+                                        'tmp', 'qdata')]
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
