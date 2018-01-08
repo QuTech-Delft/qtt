@@ -256,7 +256,6 @@ def getDefaultParameter(data):
 
 #%%
 
-
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1):
     """Simple 1D scan. 
 
@@ -1350,6 +1349,21 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
     if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
     return data
+
+def save_segments(minstrhandle, read_ch, period, nsegments, average=True, mV_range=None):
+    """Record triggered segments as time traces into dataset and save it.
+    
+    Args:
+        minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
+        read_ch (list of int): channel numbers to record.
+        period (float): time in seconds to record for each segment.
+        nsegments (int): number of segments to record.
+        average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; if False, dataset will contain nsegments single time trace acquisitions.
+        
+    Returns:
+        dataset containing the time trace(s) of the segments acquired.
+    """
+    
 
 #%%
 
