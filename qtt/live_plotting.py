@@ -286,13 +286,11 @@ class livePlot:
 
         vertLayout = QtWidgets.QVBoxLayout()
 
-        self._averaging_enabled = True
         if show_controls:
             topLayout = QtWidgets.QHBoxLayout()
             win.start_button = QtWidgets.QPushButton('Start')
             win.stop_button = QtWidgets.QPushButton('Stop')
             win.averaging_box = QtWidgets.QCheckBox('Averaging')
-            win.averaging_box.setChecked(self._averaging_enabled)
 
             for b in [win.start_button, win.stop_button]:
                 b.setMaximumHeight(24)
@@ -320,12 +318,13 @@ class livePlot:
         self.sweepranges = sweepranges
         self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
+        self._averaging_enabled = False
 
         self.datafunction_result = None
         self.alpha = alpha
 
         is1dscan=( isinstance(self.sweepparams, str) or (isinstance(self.sweepparams, (list, dict)) and len(self.sweepparams)==1 ) )
-            
+        
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
             p1.setLabel('left', 'param1')
@@ -415,8 +414,7 @@ class livePlot:
             if self.data.ndim == 1:
                 if None in (self.sweepInstrument, self.sweepparams,
                             self.sweepranges):
-                    sweepvalues=np.arange(0, self.data_avg.size)
-                    self.plot.setData(sweepvalues, self.data_avg)
+                    self.plot.setData(self.data_avg)
                 else:
                     sweep_param = getattr(
                         self.sweepInstrument, self.sweepparams)

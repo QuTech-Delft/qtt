@@ -85,9 +85,6 @@ class virtual_awg(Instrument):
         Args:
             gate ()
         """
-        if gate is None:
-            return False
-        
         if isinstance(gate, dict):
             # vector scan, assume we can do it fast
             return True

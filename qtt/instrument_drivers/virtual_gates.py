@@ -13,8 +13,6 @@ import numpy as np
 from collections import OrderedDict
 import warnings
 
-import qtt.measurements.scans
-
 def set_distance_matrix(virt_gates, dists):
     """ Update the cross capacitance matrix for a virtual_gate matrix
     
@@ -29,26 +27,6 @@ def set_distance_matrix(virt_gates, dists):
             cc[ii,jj]=dists[ np.abs(ii-jj)]
     virt_gates.set_crosscap_matrix(cc)
 
-def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
-    """ Converts the virtual gate matrix into a virtual gate mapping
-    Inputs:
-        physical_gates (list): containing all the physical gates in the setup
-        virt_basis (list): containing all the virtual gates in the setup
-        c (array): virtual gate matrix
-    Outputs: 
-        virtual_matrix (dict): dictionary, mapping of the virtual gates"""
-    virtual_matrix = OrderedDict()                                                                                            
-    for ii, vname in enumerate(virt_basis):
-        if verbose:
-            print('create_virtual_matrix_dict: adding %s ' % (vname,))
-        if c is None:
-            v=np.zeros( len(physical_gates))
-            v[ii]=1
-        else:
-            v=c[ii,:]
-        tmp=OrderedDict( zip(physical_gates, v ) )           
-        virtual_matrix[vname] = tmp
-    return virtual_matrix
 
 class virtual_gates(Instrument):
     """A virtual gate instrument to control linear combinations of gates.
@@ -68,6 +46,8 @@ class virtual_gates(Instrument):
     Functions:
         
     """
+    shared_kwargs = ['gates']
+
     def __init__(self, name, gates_instr, crosscap_map, **kwargs):
         """Initialize a virtual gates object.
 
@@ -129,14 +109,6 @@ class virtual_gates(Instrument):
         self.allvalues()
         self._fast_readout=True
 
-    def vgates(self):
-        """ Return the names of the virtual gates """
-        return self._virts_list
-
-    def pgates(self):
-        """ Return the names of the physical gates """
-        return self._gates_list
-    
     def _get(self, gate):
         """Get the value of virtual gate voltage in mV
         
@@ -375,6 +347,8 @@ class virtual_gates(Instrument):
 
         """
         if base_map == self._crosscap_map:
+#            self._crosscap_matrix = self._update_crosscap_matrix(self._crosscap_map, verbose)
+#            self._crosscap_matrix_inv = np.linalg.inv(self._crosscap_matrix)
             crosscap_map_inv = OrderedDict()
             cmatrix = self.get_crosscap_matrix()
             cmatrix_inv=np.linalg.inv(cmatrix)
@@ -460,32 +434,11 @@ class virtual_gates(Instrument):
         if verbose >= 2:
             print('  updating virt parameters')
 
-def extend_virtual_gates(vgates, pgates, virts, name='vgates', verbose=0):
-    """ Create a new virtual gates object based on another virtual gates object """
-    vgates0=virts.vgates()
-    pgates0=virts.pgates()
-    
-    map0=virts.get_crosscap_map()
-    cc=np.eye( len(vgates), len(pgates)) 
-    
-    for ii,v in enumerate(vgates0):
-        for jj,p in enumerate(pgates0):
-            pass
-            if( p in pgates) and v in vgates:
-                 i =vgates.index(v)
-                 j=pgates.index(p)
-                 cc[i,j]=map0[v][p]
-                 if verbose:
-                     print('extend_virtual_gates: %s %s = %s' % (v,p, cc[i,j]))
-    crosscap_map = create_virtual_matrix_dict(vgates, pgates, cc, verbose=0)
-    virts = virtual_gates(qtt.measurements.scans.instrumentName(name), virts.gates, crosscap_map)
-    return virts
-
 
 def test_virtual_gates(verbose=0):
     """ Test for virtual gates object """
     import qtt.instrument_drivers.virtual_instruments
-    gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(name=qtt.measurements.scans.instrumentName('testivvi'), model=None, gates=['P1', 'P2', 'P3', 'P4'])
+    gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(name=qtt.measurements.scans.instrumentName('testivvi'), model=None, gates=['P1', 'P2', 'P3'])
     
     crosscap_map = OrderedDict((
     ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
@@ -515,14 +468,8 @@ def test_virtual_gates(verbose=0):
     assert(c[0][0]==1)    
     assert(c[0][1]==.6)
     
-    virts.set_distances(1./np.arange(1,5))
-
-    vgates=virts.vgates() + ['vP4']
-    pgates=virts.pgates() + ['P4']
-    virts2= extend_virtual_gates(vgates, pgates, virts, name='vgates')
-    if verbose:        
-        virts2.print_matrix()    
-        
+    virts.set_distances(np.arange(5))
+    
 if __name__=='__main__':
     test_virtual_gates()
     

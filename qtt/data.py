@@ -673,7 +673,7 @@ def dateString(t=None):
     """ Return date string with timezone """
     if t is None:
         t = datetime.datetime.now()
-    return t.strftime('%Y-%m-%d %H:%M:%S.%f %z %Z' ).strip()
+    return t.strftime('%Y-%m-%d %H:%M:%S.%f %z %Z' )
 
 def getDateString(t=None, full=False):
     """ Return date string
