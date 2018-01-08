@@ -599,6 +599,7 @@ if __name__ == '__main__':
     xd, yd=read_trace_dummy()
     
     #%%
+    import qtt.measurements.ttrace
     reload(qtt.measurements.ttrace)
     from qtt.measurements.ttrace import MultiTracePlot
     
