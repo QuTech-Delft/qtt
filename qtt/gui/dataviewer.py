@@ -55,6 +55,7 @@ class DataViewer(QtWidgets.QWidget):
         self.metatree = QtWidgets.QTreeView()
         self._metamodel = QtGui.QStandardItemModel()
         self.metatree.setModel(self._metamodel)
+        self.metatree.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         
         self.__debug = dict()
         if isinstance(QtPlot, QWidget):
@@ -206,7 +207,7 @@ class DataViewer(QtWidgets.QWidget):
     def updateMetatree(self):
         ''' Update metadata tree '''
         self._metamodel.clear()
-        self._metamodel.setHorizontalHeaderLabels(['meatadata', 'value'])
+        self._metamodel.setHorizontalHeaderLabels(['metadata', 'value'])
         try:
             self.fill_item(self._metamodel, self.dataset.metadata)
         except Exception as ex:
