@@ -259,7 +259,7 @@ class sensingdot_t:
 
         if len(goodpeaks) > 0:
             sd.sdval[1] = goodpeaks[0]['xhalfl']
-            sd.targetvalue = goodpeaks[0]['yhalfl']           
+            sd.targetvalue = goodpeaks[0]['yhalfl']
         else:
             print('autoTune: could not find good peak')
 
@@ -274,19 +274,20 @@ class sensingdot_t:
         x, y = peakdataOrientation(x, y)
 
         if useslopes:
-            goodpeaks = findSensingDotPosition(x, y, useslopes=useslopes, fig=fig, verbose=1, istep=istep)
+            goodpeaks = findSensingDotPosition(
+                x, y, useslopes=useslopes, fig=fig, verbose=1, istep=istep)
         else:
-    
+
             goodpeaks = coulombPeaks(
                 x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.title('autoTune: sd %d' % self.index, fontsize=14)
-    
+
         self.goodpeaks = goodpeaks
         self.data['tunex'] = x
         self.data['tuney'] = y
         return goodpeaks
-    
+
     def autoTuneInit(sd, scanjob, mode='center'):
         stepdata = scanjob.get('stepdata', None)
         sweepdata = scanjob['sweepdata']
@@ -491,24 +492,28 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
 class MultiParameter(qcodes.instrument.parameter.Parameter):
     """ Create a parameter which is a combination of multiple other parameters.
 
-    All parameters should both have a set and a get.
-
     Attributes:
         name (str): name for the parameter
         params (list): the parameters to combine
     """
 
-    def __init__(self, name, params, label=None):
+    def __init__(self, name, params, label=None, unit=None, **kwargs):
+        super().__init__(name, **kwargs)
         self.name = name
         self.params = params
         self.vals = qcodes.utils.validators.Anything()
-        # Legacy
-        self._vals = qcodes.utils.validators.Anything()
         self._instrument = 'dummy'
         if label is None:
             self.label = self.name
-        self.unit = 'a.u.'
+        if unit is None:
+            self.unit = 'a.u.'
+        else:
+            self.unit = unit
         self.vals = None
+
+        # for backwards compatibility
+        self.has_get = True
+        self.has_set = True
 
     def get_raw(self):
         values = []
@@ -524,7 +529,7 @@ class MultiParameter(qcodes.instrument.parameter.Parameter):
 class CombiParameter(qcodes.instrument.parameter.Parameter):
     """ Create a parameter which is a combination of multiple other parameters, which are always set to the same value.
 
-    All parameters should both have a set and a get.
+    The `get` function returns the mean of the individual parameters.
 
     Attributes:
         name (str): name for the parameter
@@ -533,16 +538,15 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
 
     def __init__(self, name, params, label=None, unit='a.u.', **kwargs):
         super().__init__(name, vals = qcodes.utils.validators.Anything(), unit = unit, **kwargs)
-        
+        self.params = params
         if label is None:
-            self.label = name
+            self.label = self.name
         else:
             self.label = label
-            
-        self.params = params
-#        
-#        self.has_get = True
-#        self.has_set = True
+        
+        # for backwards compatibility
+        self.has_get = True
+        self.has_set = True
 
     def get_raw(self):
         values = []
@@ -553,3 +557,20 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
     def set_raw(self, value):
         for idp, p in enumerate(self.params):
             p.set(value)
+
+
+def test_multi_parameter():
+    p = qcodes.Parameter('p', set_cmd=None)
+    q = qcodes.Parameter('q', set_cmd=None)
+    mp = MultiParameter('multi_param', [p, q])
+    mp.set([1, 2])
+    _ = mp.get()
+    mp = CombiParameter('multi_param', [p, q])
+    mp.set([1, 3])
+    v = mp.get()
+    assert(v == 2)
+
+
+if __name__ == '__main__':
+    import qcodes
+    test_multi_parameter()

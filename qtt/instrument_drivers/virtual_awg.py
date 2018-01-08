@@ -48,13 +48,13 @@ class virtual_awg(Instrument):
         elif len(self._awgs) == 1:
             self.awg_cont = self._awgs[0]
             self.awg_cont.set('run_mode', 'CONT')
+            self.awg_seq = None
         elif len(self._awgs) == 2 and 'awg_mk' in self.awg_map:
             self.awg_cont = self._awgs[self.awg_map['awg_mk'][0]]
             self.awg_cont.set('run_mode', 'CONT')
             self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0] + 1) % 2]
-            self.awg_seq.set('run_mode', 'SEQ')
-            self.awg_seq.sequence_length.set(1)
-            self.awg_seq.set_sqel_trigger_wait(1, 0)
+            
+            self._set_seq_mode(self.awg_seq)
             self.delay_AWG = self.hardware.parameters['delay_AWG'].get()
         else:
             raise Exception(
@@ -68,6 +68,11 @@ class virtual_awg(Instrument):
             for i in range(1, 5):
                 awg.set('ch%s_amp' % i, self.ch_amp)
 
+    def _set_seq_mode(self, a):
+        a.set('run_mode', 'SEQ')
+        a.sequence_length.set(1)
+        a.set_sqel_trigger_wait(1, 0)
+        
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
         IDN = {'vendor': 'QuTech', 'model': 'virtual_awg',
@@ -80,6 +85,9 @@ class virtual_awg(Instrument):
         Args:
             gate ()
         """
+        if gate is None:
+            return False
+        
         if isinstance(gate, dict):
             # vector scan, assume we can do it fast
             return True
@@ -680,7 +688,9 @@ class virtual_awg(Instrument):
                 val = f()
                 if val != 4.0:
                     warnings.warn('AWG channel %d output not at 4.0 V' % ii)
-                    
+        if self.awg_seq is not None:
+            self._set_seq_mode(self.awg_seq)
+            
     def set_amplitude(self, amplitude):
         """ Set the AWG peak-to-peak amplitude for all channels
 

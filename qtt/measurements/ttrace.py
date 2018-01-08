@@ -9,8 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 import pyqtgraph as pg
-import qtt
 import warnings
+import scipy
+
+import qtt
 
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
@@ -190,7 +192,7 @@ def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=60, verbose=0
     if digitizer.sample_rate() == 0:
         raise Exception('error with digitizer')
     digitizer.sample_rate(10e6)
-    read_ch = [1]
+    #read_ch = [1]
     mV_range = 2000
 
     drate = digitizer.sample_rate()
@@ -562,14 +564,14 @@ class ttrace_update:
                 xrange=np.arange(-n0, -n0+nn)
                 p[jj].setData(xrange, q[jj,:])
             self.app.processEvents() 
-            
-
+                   
 class MultiTracePlot:
 
-    def __init__(self, nplots, ncurves=1, title='Multi trace plot'):
+    def __init__(self, nplots, ncurves=1, title='Multi trace plot', station=None):
+        """ Plot window for multiple 1D traces """
         self.title = title
         self.verbose = 1
-
+        self.station = station
         plotwin = pg.GraphicsWindow(title=title)
         self.plotwin = plotwin
 
@@ -581,12 +583,22 @@ class MultiTracePlot:
         topLayout = QtWidgets.QHBoxLayout()
         win.start_button = QtWidgets.QPushButton('Start')
         win.stop_button = QtWidgets.QPushButton('Stop')
-
-        for b in [win.start_button, win.stop_button]:
+        win.ppt_button = QtWidgets.QPushButton('PPT')
+        for b in [win.start_button, win.stop_button, win.ppt_button]:
             b.setMaximumHeight(24)
+
+        self.diff=False
+        self._moving_average = True
+        self.alpha=0.3 # for moving average        
+        self.ydata=None
+
+        win.averaging_box = QtWidgets.QCheckBox('Averaging')
+        win.averaging_box.setChecked(self._moving_average)
 
         topLayout.addWidget(win.start_button)
         topLayout.addWidget(win.stop_button)
+        topLayout.addWidget(win.ppt_button)
+        topLayout.addWidget(win.averaging_box)
 
         vertLayout = QtWidgets.QVBoxLayout()
 
@@ -604,7 +616,7 @@ class MultiTracePlot:
         self.plots = []
         self.ncurves=ncurves
         self.curves = []
-        pens = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 0)] * 2
+        pens = [(255, 0, 0), (0, 0, 255), (0, 255, 0), (255, 255, 0)] * 3
         
         for ii in range(self.ny):
             for ix in range(self.nx):
@@ -617,20 +629,34 @@ class MultiTracePlot:
                 self.curves.append(cc)
             plotwin.nextRow()
 
+        self.fps=qtt.pgeometry.fps_t()
+
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self._updatefunction)
 
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
-            #@Slot()
             def signal_drop_arguments(*args, **kwargs):
-                #print('call %s' % target)
                 target()
             return signal_drop_arguments
 
         win.start_button.clicked.connect(connect_slot(self.startreadout))
         win.stop_button.clicked.connect(connect_slot(self.stopreadout))
+        win.ppt_button.clicked.connect(connect_slot(self.add_ppt))
+        win.averaging_box.clicked.connect(connect_slot(self.enable_averaging_slot))
 
+    def enable_averaging_slot(self, *args, **kwargs):
+        """ Update the averaging mode of the widget """
+        self._moving_average = self.win.averaging_box.checkState()
+        print('enable_averaging_slot: set to %s' % (self._moving_average, ))
+        
+    def add_ppt(self, notes=None):
+        """ Copy current image window to PPT """
+        
+        if notes is None:
+            notes = getattr(self, 'station', None)
+        qtt.tools.addPPTslide(fig=self, title='T-traces', notes=notes)
+        
     def add_verticals(self):
         vpen=pg.QtGui.QPen(pg.QtGui.QColor(100, 100, 155,60), 0, pg.QtCore.Qt.SolidLine)
         for p in self.plots:
@@ -645,6 +671,25 @@ class MultiTracePlot:
         qtt.pgeometry.tprint('updatefunction: dummy...', dt=10)
         pass
 
+    def plot_curves(self, xdata, ydata):
+        if self._moving_average and self.ydata is not None:
+            for jj in range(len(ydata)):
+                for ii in range(self.ncurves):
+                    if self.diff:
+                        ydata[jj][ii]=scipy.ndimage.filters.convolve(ydata[jj][ii], [1,-1], mode='nearest')
+                    self.ydata[jj][ii] = self.alpha *  ydata[jj][ii] + (1 - self.alpha) * self.ydata[jj][ii]    
+        else:
+            self.ydata = ydata
+      
+        self.fps.showloop(dt=15)
+        self.fps.addtime(time.time())
+        ncurves = self.ncurves
+        for ii, xd in enumerate(xdata):
+            p=self.curves[ii]
+            yd=self.ydata[ii]
+            for jj in range(min(ncurves, len(yd)) ):
+                p[jj].setData(xd, yd[jj])
+            
     def startreadout(self, callback=None, rate=1000, maxidx=None):
         if maxidx is not None:
             self.maxidx = maxidx

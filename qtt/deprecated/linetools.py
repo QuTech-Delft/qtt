@@ -1205,7 +1205,7 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
 @pmatlab.static_var("scaling0", np.diag([1., 1, 1]))
 def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2,
-                  usemask=False, use_abs=False):
+                  usemask=False, use_abs=False, w=2.5):
     """ Calculate cross matching score
 
     Args:
@@ -1232,7 +1232,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
     if verbose:
         print('evaluateCross: patch shape %s' % (patch.shape,))
-    modelpatch, cdata = createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose >= 2)
+    modelpatch, cdata = createCross(param, samplesize, centermodel=False, istep=istepmodel, verbose=verbose >= 2, w=w)
     (cc, lp, hp, ip, op, _, _, _) = cdata
 
     if use_abs:
@@ -1357,7 +1357,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
 
 def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=None, 
-             istepmodel=.5, cb=None, use_abs=False):
+             istepmodel=.5, cb=None, use_abs=False, w=2.5):
     """ Fit model of an anti-crossing """
     samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
