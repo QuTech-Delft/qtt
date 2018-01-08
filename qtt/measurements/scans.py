@@ -953,7 +953,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     alldata.write_period = None
     
     for ix, x in enumerate(stepvalues):
-        #alldata.store((ix,), {stepvalues.parameter.name:x})
+        alldata.store((ix,), {stepvalues.parameter.name:x})
         
         if verbose:
             t1=time.time() - t0
