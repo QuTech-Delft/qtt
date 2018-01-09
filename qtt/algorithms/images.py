@@ -42,9 +42,6 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
 
     fw = np.abs((float(mvx0) / mvx))
     fh = np.abs((float(mvy0) / mvy))
-    if verbose:
-        print('straightenImage: fx %.4f fy %.4f' % (fw, fh))
-        print('straightenImage: result mvx %.4f mvy %.4f' % (mvx, mvy))
 
     if fw < .5:
         fwx = fw
@@ -59,6 +56,10 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
             ims, None, fx=fac * fw, fy=fh, interpolation=interpolation)
     else:
         ims = cv2.resize(im, None, fx=fw, fy=fh, interpolation=interpolation)
+
+    if verbose:
+        print('straightenImage: size %s fx %.4f fy %.4f' % (im.shape, fw, fh))
+        print('straightenImage: result size %s mvx %.4f mvy %.4f' % (ims.shape, mvx, mvy))
 
     H = pgeometry.pg_transl2H([-.5, -.5]) .dot(np.diag([fw, fh, 1]).dot(pgeometry.pg_transl2H([.5, .5])))
 
