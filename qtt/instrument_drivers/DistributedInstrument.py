@@ -43,7 +43,6 @@ class InstrumentDataClient(Instrument):
         self.add_parameter(name, unit=unit, get_cmd=command,
                            docstring=doc_string)
 
-
 # -----------------------------------------------------------------------------
 
 
@@ -69,7 +68,8 @@ class InstrumentDataServer():
                                            password=password)
 
     def run(self):
-        '''Start the server proxy on the set adrress and port-number.'''
+        '''Starts the server proxy and blocks the current thread. A keyboard
+        interuption will stop and clean-up the server proxy.'''
         print(' Enabled instrument server...')
         print(' Press CTRL+C to quit!')
         try:
@@ -81,5 +81,13 @@ class InstrumentDataServer():
         finally:
             self._server_.stop()
             self._server_.join()
+
+    def start(self):
+        '''Starts the server proxy.'''
+        self._server_.start()
+
+    def stop(self):
+        '''Stops the server proxy.'''
+        self._server_.stop()
 
 # -----------------------------------------------------------------------------
