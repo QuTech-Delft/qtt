@@ -628,8 +628,17 @@ class scanjob_t(dict):
             self[field]['paramname'] = param.name
         else:
             if 'paramname' not in self[field]:
+                
+                def fmt(val):
+                    if isinstance(val, float):
+                        s = '%.4g' % val
+                        if not '.' in s:
+                            s += '.'
+                        return s
+                    else:
+                        return str(val)
                 self[field]['paramname'] = '_'.join(
-                        ['%s(%s)' % (key, value) for (key, value) in param.items()])
+                        ['%s(%s)' % (key, fmt(value)) for (key, value) in param.items()])
 
     def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata']):
         """ Add range to stepdata and/or sweepdata in scanjob.
@@ -1517,12 +1526,13 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     return alldata
 
 
-def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=0):
+def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=0, step=None):
     """Converts the sweepdata or stepdata of a scanjob in those needed for virtual vector scans
     Inputs:
         virtual_parameter: parameter of the virtual gate which is varied
         g_range (float): scan range
         start (float): start if the scanjob data 
+        step (None or float): if not None, then add to the scanning field
     Outputs:
         sweeporstepdata (dict): sweepdata or stepdata needed in the scanjob for virtual vector scans"""
     if sweeporstepdata is None:
@@ -1534,6 +1544,8 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=
         pp = {virtual_parameter.name: 1}
     sweeporstepdata = {'start': start, 'range': g_range,
                        'end': start + g_range, 'param': pp}
+    if step is not None:
+        sweeporstepdata['step']=step
     return sweeporstepdata
 
 
