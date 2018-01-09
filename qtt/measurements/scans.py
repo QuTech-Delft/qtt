@@ -1779,7 +1779,7 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose
 #%% Measurement tools
 
 
-def waitTime(gate, station=None, gate_settle=None):
+def waitTime(gate, station=None, gate_settle=None, default = 1e-3):
     """ Return settle times for gates on a station """
     if gate is None:
         return 0.001
@@ -1788,7 +1788,7 @@ def waitTime(gate, station=None, gate_settle=None):
     if station is not None:
         if hasattr(station, 'gate_settle'):
             return station.gate_settle(gate)
-    return 0.001
+    return default
 
 
 def pinchoffFilename(g, od=None):

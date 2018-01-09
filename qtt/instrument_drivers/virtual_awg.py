@@ -89,8 +89,8 @@ class virtual_awg(Instrument):
             return False
         
         if isinstance(gate, dict):
-            # vector scan, assume we can do it fast
-            return True
+            # vector scan, assume we can do it fast if all components are fast
+            return np.all([self.awg_gate(g) for g in gate])
         if self.awg_map is None:
             return False
         

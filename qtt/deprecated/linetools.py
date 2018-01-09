@@ -1383,7 +1383,7 @@ def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=No
         paramy = res
     else:
         paramy = param0
-    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead', options={'maxiter': 1200, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose >= 2}, callback=cb)
+    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead', options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
     #res = scipy.optimize.minimize(costfun, res.x, method='Powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
 
     # for kk in range(1000):
