@@ -627,8 +627,7 @@ class scanjob_t(dict):
         elif isinstance(param, qcodes.instrument.parameter.Parameter):
             self[field]['paramname'] = param.name
         else:
-            if 'paramname' not in self[field]:
-                
+            if 'paramname' not in self[field]:                
                 def fmt(val):
                     if isinstance(val, float):
                         s = '%.4g' % val
