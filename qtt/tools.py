@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import pprint
 import matplotlib
 import logging
 import qcodes
@@ -645,7 +646,6 @@ def showDotGraph(dot, fig=10):
 try:
     import win32com
     import win32com.client
-    import pprint
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
@@ -819,9 +819,12 @@ try:
         if isinstance(notes, qcodes.Station):
             station = notes
             gates = getattr(station, 'gates', None)
-            notes = reshape_metadata(station, printformat='s')
+            notes = reshape_metadata(station, printformat='s', add_scanjob=True)
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
+
+        if isinstance(notes, qcodes.Dataset):
+            notes = reshape_metadata(notes, printformat='s')
 
         if notes is not None:
             if notes == '':
@@ -911,7 +914,7 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict', verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob = True, verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
@@ -938,8 +941,15 @@ def reshape_metadata(dataset, printformat='dict', verbose=0):
 
         header = 'dataset: %s' % dataset.location
 
-    metadata = OrderedDict()
+        if hasattr(dataset.io, 'base_location'):
+            header += ' (base %s)' % dataset.io.base_location
 
+    scanjob = dataset.metadata.get('scanjob', None)
+    if scanjob is not None and add_scanjob:
+        s = pprint.pformat(scanjob)
+        header += '\n\nscanjob: ' + str(s) + '\n'
+
+    metadata = OrderedDict()
     # make sure the gates instrument is in front
     all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
                          'gates',  reverse=True)
@@ -999,6 +1009,8 @@ def test_reshape_metadata():
         pass
     if dataset is not None:
         _ = reshape_metadata(dataset, printformat='dict')
+    st=qcodes.Station(qcodes.Instrument('_dummy123' ))
+    _ = reshape_metadata(st, printformat='dict')
 
 
 #%%
