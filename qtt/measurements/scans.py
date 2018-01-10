@@ -1350,8 +1350,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
         warnings.warn('measuresegment: received empty data array')
     return data
 
-def save_segments(minstrhandle, read_ch, period, nsegments, average=True, mV_range=None):
-    """Record triggered segments as time traces into dataset and save it.
+def save_segments(station, minstrhandle, read_ch, period, nsegments, average=True, mV_range=2000, location=None):
+    """Record triggered segments as time traces into dataset and save it. AWG must be already sending a trigger pulse per segment.
     
     Args:
         minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
@@ -1361,10 +1361,59 @@ def save_segments(minstrhandle, read_ch, period, nsegments, average=True, mV_ran
         average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; if False, dataset will contain nsegments single time trace acquisitions.
         
     Returns:
-        dataset containing the time trace(s) of the segments acquired.
+        alldata (dataset): time trace(s) of the segments acquired.
     """
+    t0 = time.time()
+    gates = station.gates
+    gatevals = gates.allvalues()
     
+    waveform = {'period': period, 'width':0}
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
+    if len(read_ch) == 1:
+        measure_names = ['measured']
+    else:
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
+    
+    if average:
+        data = measuresegment(waveform, nsegments, minstrhandle, read_ch, mV_range)
+        trace_time = DataArray(preset_data=np.linspace(0, period, len(data[0])),name='trace_time',label='Time',unit='s',is_setpoint=True)
+        alldata = makeDataSet1D(trace_time, measure_names, data, location=location, loc_record={'label': 'simple_acquisition'})
+    else:
+        try:
+            ism4i = isinstance(
+                minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+        except:
+            ism4i = False
+        if ism4i:
+            memsize = select_digitizer_memsize(minstrhandle, period)
+            post_trigger = minstrhandle.posttrigger_memory_size()
+        
+        for i in range(nsegments):
+            if ism4i:
+                dataraw = minstrhandle.single_trigger_acquisition(mV_range, memsize, post_trigger)
+                if isinstance(dataraw, tuple):
+                    dataraw = dataraw[0]
+                data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
+            else:
+                data = measuresegment(waveform, 1, minstrhandle, read_ch, mV_range)
+            if i == 0:
+                segnum = DataArray(preset_data=np.arange(nsegments),name='segment_number',label='Segment Number',unit='#',is_setpoint=True)
+                trace_time = DataArray(preset_data=np.linspace(0, period, len(data[0])),name='trace_time',label='Time',unit='s',is_setpoint=True)
+                alldata = makeDataSet2D(segnum, trace_time, measure_names=measure_names, location=location, loc_record={'label': 'simple_acquisition'})
+            for idm, mname in enumerate(measure_names):
+                alldata.arrays[mname].ndarray[i] = data[idm]
+        
+    dt = time.time() - t0
+    update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
 
+    alldata = qtt.tools.stripDataset(alldata)
+
+    alldata.write(write_metadata=True)
+
+    return alldata
+    
 #%%
 
 
