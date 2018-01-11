@@ -313,7 +313,8 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
         start_time = endtime
 
         ttrace['tracedata'] += [{'start_time': start_time + alpha *
-                                 period, 'end_time': start_time + (1 - alpha) * period}]
+                                 period, 'end_time': start_time + (1 - alpha) * period,
+                                'start_time0': start_time, 'end_time0': start_time+period}]
 
         for g, a in tt:
             if isinstance(g, int):
@@ -795,6 +796,7 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
 
 def _plot_tracedata(tracedata, tf=1e3):
       for ii, x in enumerate(tracedata):
+        s0 = x['start_time0'] * tf # 
         s = x['start_time'] * tf # 
         e = x['end_time'] * tf # 
         if ii==0:
@@ -803,6 +805,7 @@ def _plot_tracedata(tracedata, tf=1e3):
         else:
             qtt.pgeometry.plot2Dline([-1, 0, s], '--')
             qtt.pgeometry.plot2Dline([-1, 0, e], ':')
+        qtt.pgeometry.plot2Dline([-1, 0, s0], ':c', linewidth=1)
   
 def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amount of input arguments
     """Plot the raw data and the parsed data of the resulting signal
