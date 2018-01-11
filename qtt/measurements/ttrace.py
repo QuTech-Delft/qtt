@@ -97,7 +97,7 @@ def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
     return create_virtual_matrix_dict(cc_basis, physical_gates, invc, verbose=1)
 
 
-def show_ttrace_elements(ttrace_elements, fig=100):
+def show_ttrace_elements(ttrace_elements, fig=100, tracedata=None):
     """ Show ttrace elements """
     for ii, ttrace_element in enumerate(ttrace_elements):
         v = ttrace_element.waveforms()
@@ -114,6 +114,11 @@ def show_ttrace_elements(ttrace_elements, fig=100):
         show_element(ttrace_element, fig=fig + ii, keys=kkx, label_map=None)
         plt.legend(numpoints=1)
         plt.title('ttrace element %s' % (ttrace_element.name,) )
+
+
+        if tracedata is not None:        
+            _plot_tracedata(tracedata)
+        
     qtt.pgeometry.tilefigs(range(100,100+len(ttrace_elements)))
 
 #%%
@@ -137,9 +142,10 @@ class ttrace_t(dict):
     
     """
     
-def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates):
+def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}):
     """Define amplitudes and frequencies of Toivo traces according to the given virtual gate map"""  
-    ttrace = ttrace_t({'markerperiod': 80e-6, 'fillperiod': 100e-6, 'period': 500e-6, 'alpha': .1})
+    fillperiod = param.get('fillperiod', 100e-6)
+    ttrace = ttrace_t({'markerperiod': 80e-6, 'fillperiod': fillperiod, 'period': 500e-6, 'alpha': .1})
     ttrace['period0']=250e-6
     ttrace['fpga_delay']=2e-6
     ttrace['traces'] = []; ttrace['traces_volt'] = []
@@ -533,6 +539,7 @@ def show_element(elmnt, fig=100, keys=None, label_map=None):
             plt.plot(1e3 * tt, v, '.', label=label)
         plt.xlabel('Time [ms]')
         plt.ylabel('Signal')
+        
     
 #%%
 import time
@@ -786,6 +793,17 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
 
     return tt, datax, tx
 
+def _plot_tracedata(tracedata, tf=1e3):
+      for ii, x in enumerate(tracedata):
+        s = x['start_time'] * tf # 
+        e = x['end_time'] * tf # 
+        if ii==0:
+            qtt.pgeometry.plot2Dline([-1, 0, s], '--', label='start segment')
+            qtt.pgeometry.plot2Dline([-1, 0, e], ':', label='end segment')
+        else:
+            qtt.pgeometry.plot2Dline([-1, 0, s], '--')
+            qtt.pgeometry.plot2Dline([-1, 0, e], ':')
+  
 def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amount of input arguments
     """Plot the raw data and the parsed data of the resulting signal
     Inputs:
@@ -801,15 +819,7 @@ def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amoun
         plt.xlabel('Time [ms]')
     else:
         plt.xlabel('Time')
-    for ii, x in enumerate(ttrace['tracedata']):
-        s = x['start_time'] * tf # 
-        e = x['end_time'] * tf # 
-        if ii==0:
-            qtt.pgeometry.plot2Dline([-1, 0, s], '--', label='start segment')
-            qtt.pgeometry.plot2Dline([-1, 0, e], ':', label='end segment')
-        else:
-            qtt.pgeometry.plot2Dline([-1, 0, s], '--')
-            qtt.pgeometry.plot2Dline([-1, 0, e], ':')
+    _plot_tracedata(ttrace['tracedata'])
     plt.figure(fig+1); plt.clf()
     nx=int(np.ceil(np.sqrt(len(tx))))
     ny=int(np.ceil(len(tx)/nx))
