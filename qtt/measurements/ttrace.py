@@ -680,6 +680,8 @@ class MultiTracePlot:
         win.ppt_button.clicked.connect(connect_slot(self.add_ppt))
         win.averaging_box.clicked.connect(connect_slot(self.enable_averaging_slot))
 
+        self.setGeometry = self.win.setGeometry
+        
     def enable_averaging_slot(self, *args, **kwargs):
         """ Update the averaging mode of the widget """
         self._moving_average = self.win.averaging_box.checkState()
