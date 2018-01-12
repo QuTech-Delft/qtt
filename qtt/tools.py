@@ -286,7 +286,8 @@ def diffImageSmooth(im, dy='x', sigma=2):
     im : array
         input image
     dy : string or integer
-        direction of differentiation. can be 'x' (0) or 'y' (1) or 'xy' (2)
+        direction of differentiation. can be 'x' (0) or 'y' (1) or 'xy' (2) or 'g' (3)
+        or 
     sigma : float
         parameter for gaussian filter kernel
 
@@ -306,7 +307,7 @@ def diffImageSmooth(im, dy='x', sigma=2):
     elif dy == -1:
         imx = -ndimage.gaussian_filter1d(im, axis=0,
                                          sigma=sigma, order=1, mode='nearest')
-    elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2':
+    elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2' or dy=='g' or dy=='x2my2' or dy=='x2y2' :
         imx0 = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
         imx1 = ndimage.gaussian_filter1d(
@@ -318,11 +319,15 @@ def diffImageSmooth(im, dy='x', sigma=2):
         if dy == 3 or dy == 'g':
             imx = np.sqrt(imx0**2 + imx1**2)
         if dy == 'xmy2':
+            warnings.warn('please do not use this option')
             imx = np.sqrt(imx0**2 + imx1**2)
+        if dy == 'x2y2':
+            imx = imx0**2 + imx1**2
+        if dy == 'x2my2':
+            imx = imx0**2 - imx1**2
     else:
         raise Exception('differentiation method %s not supported' % dy)
     return imx
-
 
 def test_array(location=None, name=None):
     # DataSet with one 2D array with 4 x 6 points
