@@ -246,7 +246,7 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
         if ii>1000000:
             break
         if hasattr(obj, '__class__'):
-            if getattr(obj.__class__, '__name__', 'none').startswith(objectclassname) or isinstance(obj, qtt.measurements.videomode.VideoMode):
+            if getattr(obj.__class__, '__name__', 'none').startswith(objectclassname) or isinstance(obj, objectype):
                 if verbose:
                     print('list_objects: object %s'  % (obj, ))
                 ll.append(obj)
@@ -910,7 +910,7 @@ class camera_t():
         return xim
 
     def reprojectionError(ecam, X, xim):
-        """ Calculate reprojection error for a set of 3D and 2D points
+        r""" Calculate reprojection error for a set of 3D and 2D points
 
         The error calculated is:
 
@@ -1653,9 +1653,9 @@ def plotPoints(xx, *args, **kwargs):
 
 
     Arguments:
-        xx - array of points
-        \*args - arguments passed to the plot function of matplotlib
-
+        xx (array): array of points to plot
+        args: arguments passed to the plot function of matplotlib
+        kwargs:  arguments passed to the plot function of matplotlib
     Example:
     >>> plotPoints(np.random.rand(2,10), '.-b')
 
@@ -2142,7 +2142,7 @@ def save(pkl_file, *args):
     ---------
     pkl_file : string
          filename
-    \*args : anything
+    *args : anything
          Python objects to save
     """
 
