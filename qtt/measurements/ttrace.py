@@ -586,6 +586,7 @@ class ttrace_update:
         xdata=[xrange]*len(ydata)
         self.multi_trace.plot_curves(xdata, ydata)
         self.app.processEvents() 
+        time.sleep(0.05)
 
         if 0:        
             for ii, q in enumerate(tx):
