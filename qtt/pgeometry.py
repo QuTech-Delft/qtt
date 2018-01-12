@@ -229,6 +229,13 @@ except:
 
 #%% Utils
 
+def memory():
+    """ return the memory usage in MB """
+    import psutil, os
+    process = psutil.Process(os.getpid())
+    mem =process.memory_info().rss / (1024.*1024.)
+    return mem
+    
 def list_objects(objectype=None, objectclassname='__123', verbose=1):
     """ List all objects in memory of a specific type or with a specific class name
     

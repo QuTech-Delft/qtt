@@ -465,7 +465,7 @@ class livePlot:
         self.fps.addtime(time.time())
         if self.datafunction is not None:
             try:
-                dd = self.datafunction()[0]
+                dd = self.datafunction()
                 self.datafunction_result = dd
                 self.update(data=dd)
             except Exception as e:
@@ -558,3 +558,4 @@ if __name__ == '__main__':
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
     pv = qtt.createParameterWidget([lp.datafunction])
+
