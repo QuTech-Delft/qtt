@@ -229,6 +229,13 @@ except:
 
 #%% Utils
 
+def memory():
+    """ return the memory usage in MB """
+    import psutil, os
+    process = psutil.Process(os.getpid())
+    mem =process.memory_info().rss / (1024.*1024.)
+    return mem
+    
 from functools import wraps
 
 def package_versions(verbose=1):   
