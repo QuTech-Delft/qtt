@@ -125,6 +125,9 @@ class VideoMode:
         self.diff_dir = diff_dir
         self.datalock = threading.Lock()
 
+        # for addPPT
+        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument}
+        
         # parse instrument
         if 'fpga' in station.components:
             self.sampling_frequency = station.fpga.sampling_frequency
@@ -221,7 +224,7 @@ class VideoMode:
         """ Copy image of videomode window to PPT """
         self.stopreadout() # prevent multi-threading issues        
         time.sleep(0.2)
-        qtt.tools.addPPTslide(fig=self, title='VideoMode', notes=self.station)
+        qtt.tools.addPPTslide(fig=self, title='VideoMode', notes=self.station, extranotes=str(self.scanparams) )
         self.startreadout()
 
     def updatebg(self):
