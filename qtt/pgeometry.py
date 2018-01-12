@@ -245,11 +245,16 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
     for ii,obj in enumerate(gc.get_objects()):
         if ii>1000000:
             break
+        valid = False
         if hasattr(obj, '__class__'):
-            if getattr(obj.__class__, '__name__', 'none').startswith(objectclassname) or isinstance(obj, objectype):
-                if verbose:
+            valid = getattr(obj.__class__, '__name__', 'none').startswith(objectclassname)
+        if objectype is not None and not valid:
+            if isinstance(obj, objectype):
+                valid = True
+        if valid:
+            if verbose:
                     print('list_objects: object %s'  % (obj, ))
-                ll.append(obj)
+            ll.append(obj)
     return ll
 
 from functools import wraps
