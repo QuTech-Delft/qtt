@@ -22,6 +22,7 @@ except:
 
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import mpl2clipboard
+import qtt.measurements.ttrace
 
 # do NOT load any other qtt submodules here
 
