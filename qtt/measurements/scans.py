@@ -28,7 +28,6 @@ from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes import Instrument
 
 import qtt.tools
-from qtt.tools import tilefigs
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.live

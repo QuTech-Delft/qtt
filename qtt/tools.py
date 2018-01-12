@@ -23,7 +23,6 @@ except:
 
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import mpl2clipboard
-import qtt.measurements.ttrace
 
 # do NOT load any other qtt submodules here
 
@@ -747,6 +746,8 @@ try:
             slide.shapes.title.textframe.textrange.text = title
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
+
+        import qtt.measurements.ttrace
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
