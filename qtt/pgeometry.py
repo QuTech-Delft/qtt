@@ -229,6 +229,29 @@ except:
 
 #%% Utils
 
+def list_objects(objectype=None, objectclassname='__123', verbose=1):
+    """ List all objects in memory of a specific type or with a specific class name
+    
+    Args:
+        objectype (None or class)
+        objectclassname (str)
+    Returns:
+        ll (list): list of objects found
+        
+    
+    """
+    import gc
+    ll=[]
+    for ii,obj in enumerate(gc.get_objects()):
+        if ii>1000000:
+            break
+        if hasattr(obj, '__class__'):
+            if getattr(obj.__class__, '__name__', 'none').startswith(objectclassname) or isinstance(obj, qtt.measurements.videomode.VideoMode):
+                if verbose:
+                    print('list_objects: object %s'  % (obj, ))
+                ll.append(obj)
+    return ll
+
 from functools import wraps
 
 def package_versions(verbose=1):   
