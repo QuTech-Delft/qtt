@@ -99,12 +99,12 @@ class VideoMode:
         minstrument (int or tuple): the channel of the FPGA, or tuple (instrument, channel)
         Naverage (int): the number of times the FPGA averages
         resolution (1 x 2 list): for 2D the resolution
-        nplots (int): number of plots to show. must be equal to the number of channels in the minstrument argument
+        nplots (int or None): number of plots to show. must be equal to the number of channels in the minstrument argument
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
     # TODO: implement virtual gates functionality
 
-    def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=1, Naverage=10,
+    def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
                  dorun=True, show_controls=True, add_ppt=True):
         self.station = station
@@ -125,6 +125,9 @@ class VideoMode:
         self.diff_dir = diff_dir
         self.datalock = threading.Lock()
 
+        # for addPPT
+        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument}
+        
         # parse instrument
         if 'fpga' in station.components:
             self.sampling_frequency = station.fpga.sampling_frequency
@@ -221,7 +224,7 @@ class VideoMode:
         """ Copy image of videomode window to PPT """
         self.stopreadout() # prevent multi-threading issues        
         time.sleep(0.2)
-        qtt.tools.addPPTslide(fig=self, title='VideoMode', notes=self.station)
+        qtt.tools.addPPTslide(fig=self, title='VideoMode', notes=self.station, extranotes=str(self.scanparams) )
         self.startreadout()
 
     def updatebg(self):

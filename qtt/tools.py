@@ -654,7 +654,7 @@ try:
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None):
+                    activate_slide=True, ppLayout=None, extranotes=None):
         ''' Add slide to current active Powerpoint presentation
 
         Arguments:
@@ -827,10 +827,11 @@ try:
             station = notes
             gates = getattr(station, 'gates', None)
             notes = reshape_metadata(station, printformat='s', add_scanjob=True)
+            if extranotes is not None:
+                notes = '\n' + extranotes +'\n'+ notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
-
-        if isinstance(notes, qcodes.Dataset):
+        if isinstance(notes, qcodes.DataSet):
             notes = reshape_metadata(notes, printformat='s')
 
         if notes is not None:
@@ -853,7 +854,7 @@ try:
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
-                       printformat='fancy', customfig=None, **kwargs):
+                       printformat='fancy', customfig=None, extranotes=None, **kwargs):
         ''' Add slide based on dataset to current active Powerpoint presentation
 
         Arguments:
@@ -904,6 +905,7 @@ try:
 
         ppt, slide = addPPTslide(title=title, fig=temp_fig, subtitle=text,
                                  notes=notes, show=show, verbose=verbose,
+                                 extranotes=extranotes,
                                  **kwargs)
         return ppt, slide
 

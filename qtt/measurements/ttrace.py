@@ -51,6 +51,7 @@ def awg_info(awgs):
         print('awg %s'  % a.name)
         print('  clock %s MHz' % ( a.clock_freq()/1e6, ))
         print('  awg run_mode %s '  % (a.run_mode(),) )
+        print('  awg ref source %s '  % (a.ref_source(),     ) )
         print('  awg trigger_mode %s '  % (a.trigger_mode(),     ) )
         print('  awg trigger sources %s'  % (a.trigger_source(),     ) )
 
@@ -145,7 +146,7 @@ class ttrace_t(dict):
 def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}):
     """Define amplitudes and frequencies of Toivo traces according to the given virtual gate map"""  
     fillperiod = param.get('fillperiod', 100e-6)
-    ttrace = ttrace_t({'markerperiod': 80e-6, 'fillperiod': fillperiod, 'period': 500e-6, 'alpha': .1})
+    ttrace = ttrace_t({'markerperiod': 80e-6, 'fillperiod': fillperiod, 'period':  param.get('period', 500e-6), 'alpha': .1})
     ttrace['period0']=250e-6
     ttrace['fpga_delay']=2e-6
     ttrace['traces'] = []; ttrace['traces_volt'] = []
@@ -156,6 +157,9 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}
             ttrace['samplingfreq']=station.digitizer.sample_rate()
         except:
             warnings.warn('no fpga object available')    
+    if ttrace['samplingfreq']==0:
+        raise Exception('sampling freq of acquisition device is zero')
+        
     ttrace['awgclock']=station.awg.AWG_clock
     ttrace['awg_delay'] = 0e-4+2e-5 # ???
 
@@ -188,7 +192,8 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}
 
 #%%
 
-def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=60, verbose=0, fig=None):
+def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=20, verbose=0,
+                   fig=None, drate=2e6):
     """ Read data from m4i device 
     
     TODO: merge with measuresegment function...
@@ -197,7 +202,7 @@ def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=60, verbose=0
     digitizer = station.digitizer
     if digitizer.sample_rate() == 0:
         raise Exception('error with digitizer')
-    digitizer.sample_rate(10e6)
+    digitizer.sample_rate(drate)
     #read_ch = [1]
     mV_range = 2000
 
@@ -273,6 +278,8 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
     ttraces = []
     # start with empty space
     for pi, pulsar in enumerate(pulsars):
+        pulsar._clock_prequeried(True)
+
         ttrace_element = element.Element(name+'%d' % pi, pulsar=pulsar)
         ttraces += [ttrace_element]
 
@@ -351,14 +358,16 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
         add_fill(ttrace_element, fillperiod=period0,
                  start=startx, tag='lastfill')
 
-    if 'awg_mk' in awg_map:
-        pi, ci, mi = awg_map['awg_mk']
-        pulsar = pulsars[pi]
-        ttrace_element = ttraces[pi]
-        ttrace_element.add(pulse.cp(sq_pulse, amplitude=.1, length=markerperiod - awg_delay, channel='ch%d_marker%d' % (ci, mi), channels=[]),
-                           name='awgmarker%dpost' % ci, start=0, refpulse=None, refpoint='end')  # refpulse=refpulse
-        ttrace_element.add(pulse.cp(sq_pulse, amplitude=.1, length=awg_delay, channel='ch%d_marker%d' % (ci, mi), channels=[]),
-                           name='awgmarker%dpre' % ci, start=lasttime(ttrace_element) - awg_delay, refpulse=None, refpoint='end')  # refpulse=refpulse
+    for awgmk in ['awg_mk', 'awg_mk2']:
+        if awgmk in awg_map:
+            print('adding awg marker %s at %s'  % (awgmk, awg_map[awgmk],) )
+            pi, ci, mi = awg_map[awgmk]
+            pulsar = pulsars[pi]
+            ttrace_element = ttraces[pi]
+            ttrace_element.add(pulse.cp(sq_pulse, amplitude=.1, length=markerperiod - awg_delay, channel='ch%d_marker%d' % (ci, mi), channels=[]),
+                               name='%sci%dpost' % (awgmk,ci), start=0, refpulse=None, refpoint='end')  # refpulse=refpulse
+            ttrace_element.add(pulse.cp(sq_pulse, amplitude=.1, length=awg_delay, channel='ch%d_marker%d' % (ci, mi), channels=[]),
+                               name='%sci%dpre' % (awgmk,ci), start=lasttime(ttrace_element) - awg_delay, refpulse=None, refpoint='end')  # refpulse=refpulse
 
     if verbose:
         lt=lasttime(ttraces[0])
@@ -369,11 +378,14 @@ def ttrace2waveform(ttrace, pulsars, name='ttrace', verbose=1, awg_map=None, mar
 
 
 
-def define_awg5014_channels(pulsar, marker1highs=.25):
+def define_awg5014_channels(pulsar, marker1highs=.25, marker2highs=2.6):
     """ Helper function """
+    nchannels=4
     if isinstance(marker1highs, (int, float)):
-        marker1highs = [marker1highs] * 4
-    for i in range(4):
+        marker1highs = [marker1highs] * nchannels
+    if isinstance(marker2highs, (int, float)):
+        marker2highs = [marker2highs] * nchannels
+    for i in range(nchannels):
         # Note that these are default parameters and should be kept so.
         # the channel offset is set in the AWG itself. For now the amplitude is
         # hardcoded. You can set it by hand but this will make the value in the
@@ -391,7 +403,7 @@ def define_awg5014_channels(pulsar, marker1highs=.25):
         pulsar.define_channel(id='ch{}_marker2'.format(i + 1),
                               name='ch{}_marker2'.format(i + 1),
                               type='marker',
-                              high=2.6, low=0, offset=0.,
+                              high=marker2highs[i], low=0, offset=0.,
                               delay=0, active=True)
 
 
@@ -407,10 +419,10 @@ def set_awg_trace(virtualawg, clock=10e6, verbose=0):
     for a in virtualawg._awgs:
         a.clock_freq(clock)
         # needed?
-        v = a.write('SOUR1:ROSC:SOUR INT')
-        v = a.ask('SOUR1:ROSC:SOUR?')
+        a.ref_source('INT')
+        v = a.ref_source() # ask('SOUR1:ROSC:SOUR?')
         if verbose:
-            print('%s: SOUR1:ROSC:SOUR? %s' % (a, v))
+            print('%s: ref_source() SOUR1:ROSC:SOUR? %s' % (a, v))
 
 def init_ttrace(station, awgclock=10e6):    
     pulsar_objects =[]
@@ -447,6 +459,9 @@ def run_ttrace(virtualawg, pulsar_objects, ttrace, ttrace_elements, sequence_nam
     awgclock = ttrace['awgclock']
     set_awg_trace(virtualawg, awgclock)
  
+    for p in pulsar_objects:
+        p._clock_prequeried(True)
+
     for ii, t in enumerate(ttrace_elements):
         seq = Sequence(sequence_name + '_awg%d' % ii)
         seq.append(name='toivotrace', wfname=t.name, trigger_wait=False,)
@@ -547,7 +562,7 @@ import time
 
 class ttrace_update:
     
-    def __init__(self, station, read_function, channel, ttrace, ttrace_elements, multi_trace):
+    def __init__(self, station, read_function, channel, ttrace, ttrace_elements, multi_trace, Naverage):
         self.station=station
         self.fps=qtt.pgeometry.fps_t()
         self.app=pg.mkQApp()
@@ -557,21 +572,34 @@ class ttrace_update:
         self.ttrace_elements =ttrace_elements
         self.multi_trace = multi_trace
         self.verbose=1
+        self.Naverage = Naverage
+        self.read_args={}
         
     def updatefunction(self):
-        data_raw=self.read_function(self.station,  self.ttrace_elements, self.channel )
+        data_raw=self.read_function(self.station,  self.ttrace_elements, self.channel, Naverage=self.Naverage, **self.read_args )
         tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2)
-        for ii, q in enumerate(tx):
-            self.fps.showloop(dt=15)
-            self.fps.addtime(time.time())
-            ncurves = self.multi_trace.ncurves
-            p=self.multi_trace.curves[ii]
-            for jj in range(min(ncurves, len(q)) ):
-                nn=len(q[jj,:])
-                n0=int(nn/2)
-                xrange=np.arange(-n0, -n0+nn)
-                p[jj].setData(xrange, q[jj,:])
-            self.app.processEvents() 
+        
+        # FIXME: here
+        ydata=tx
+        nn=ydata[0][0].size;n0=int(nn/2)
+        xrange=np.arange(-n0, -n0+nn)
+        xdata=[xrange]*len(ydata)
+        self.multi_trace.plot_curves(xdata, ydata)
+        self.app.processEvents() 
+        time.sleep(0.05)
+
+        if 0:        
+            for ii, q in enumerate(tx):
+                self.fps.showloop(dt=15)
+                self.fps.addtime(time.time())
+                ncurves = self.multi_trace.ncurves
+                p=self.multi_trace.curves[ii]
+                for jj in range(min(ncurves, len(q)) ):
+                    nn=len(q[jj,:])
+                    n0=int(nn/2)
+                    xrange=np.arange(-n0, -n0+nn)
+                    p[jj].setData(xrange, q[jj,:])
+                self.app.processEvents() 
                    
 class MultiTracePlot:
 
@@ -653,6 +681,8 @@ class MultiTracePlot:
         win.ppt_button.clicked.connect(connect_slot(self.add_ppt))
         win.averaging_box.clicked.connect(connect_slot(self.enable_averaging_slot))
 
+        self.setGeometry = self.win.setGeometry
+        
     def enable_averaging_slot(self, *args, **kwargs):
         """ Update the averaging mode of the widget """
         self._moving_average = self.win.averaging_box.checkState()
@@ -705,7 +735,7 @@ class MultiTracePlot:
             self.updatefunction = callback
         self.timer.start(1000 * (1. / rate))
         if self.verbose:
-            print('MultiTracePlot: start readout: rate %.1f Hz' % rate)
+            print('MultiTracePlot: start readout')
         self.win.setWindowTitle(self.title + ': started')
 
     def stopreadout(self):
