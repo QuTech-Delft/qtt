@@ -99,12 +99,12 @@ class VideoMode:
         minstrument (int or tuple): the channel of the FPGA, or tuple (instrument, channel)
         Naverage (int): the number of times the FPGA averages
         resolution (1 x 2 list): for 2D the resolution
-        nplots (int): number of plots to show. must be equal to the number of channels in the minstrument argument
+        nplots (int or None): number of plots to show. must be equal to the number of channels in the minstrument argument
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
     # TODO: implement virtual gates functionality
 
-    def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=1, Naverage=10,
+    def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
                  dorun=True, show_controls=True, add_ppt=True):
         self.station = station
