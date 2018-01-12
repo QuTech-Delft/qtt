@@ -236,6 +236,34 @@ def memory():
     mem =process.memory_info().rss / (1024.*1024.)
     return mem
     
+def list_objects(objectype=None, objectclassname='__123', verbose=1):
+    """ List all objects in memory of a specific type or with a specific class name
+    
+    Args:
+        objectype (None or class)
+        objectclassname (str)
+    Returns:
+        ll (list): list of objects found
+        
+    
+    """
+    import gc
+    ll=[]
+    for ii,obj in enumerate(gc.get_objects()):
+        if ii>1000000:
+            break
+        valid = False
+        if hasattr(obj, '__class__'):
+            valid = getattr(obj.__class__, '__name__', 'none').startswith(objectclassname)
+        if objectype is not None and not valid:
+            if isinstance(obj, objectype):
+                valid = True
+        if valid:
+            if verbose:
+                    print('list_objects: object %s'  % (obj, ))
+            ll.append(obj)
+    return ll
+
 from functools import wraps
 
 def package_versions(verbose=1):   
@@ -894,7 +922,7 @@ class camera_t():
         return xim
 
     def reprojectionError(ecam, X, xim):
-        """ Calculate reprojection error for a set of 3D and 2D points
+        r""" Calculate reprojection error for a set of 3D and 2D points
 
         The error calculated is:
 
@@ -1637,9 +1665,9 @@ def plotPoints(xx, *args, **kwargs):
 
 
     Arguments:
-        xx - array of points
-        \*args - arguments passed to the plot function of matplotlib
-
+        xx (array): array of points to plot
+        args: arguments passed to the plot function of matplotlib
+        kwargs:  arguments passed to the plot function of matplotlib
     Example:
     >>> plotPoints(np.random.rand(2,10), '.-b')
 
@@ -2126,7 +2154,7 @@ def save(pkl_file, *args):
     ---------
     pkl_file : string
          filename
-    \*args : anything
+    *args : anything
          Python objects to save
     """
 
