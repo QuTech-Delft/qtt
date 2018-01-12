@@ -192,8 +192,8 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}
 
 #%%
 
-def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=60, verbose=0,
-                   fig=None, drate=10e6):
+def read_trace_m4i(station, ttrace_elements, read_ch=[1], Naverage=20, verbose=0,
+                   fig=None, drate=2e6):
     """ Read data from m4i device 
     
     TODO: merge with measuresegment function...
@@ -734,7 +734,7 @@ class MultiTracePlot:
             self.updatefunction = callback
         self.timer.start(1000 * (1. / rate))
         if self.verbose:
-            print('MultiTracePlot: start readout: rate %.1f Hz' % rate)
+            print('MultiTracePlot: start readout')
         self.win.setWindowTitle(self.title + ': started')
 
     def stopreadout(self):

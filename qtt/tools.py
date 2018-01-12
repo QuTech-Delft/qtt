@@ -831,7 +831,7 @@ try:
                 notes = '\n' + extranotes +'\n'+ notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
-        if isinstance(notes, qcodes.Dataset):
+        if isinstance(notes, qcodes.DataSet):
             notes = reshape_metadata(notes, printformat='s')
 
         if notes is not None:
