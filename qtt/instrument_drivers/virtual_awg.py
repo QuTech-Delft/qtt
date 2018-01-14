@@ -43,12 +43,12 @@ class virtual_awg(Instrument):
         self.corr = .02e-6
         self.maxdatapts = 16e6  # This used to be set to the fpga maximum, but that maximum should not be handled here
 
+        self.awg_seq = None
         if len(self._awgs) == 0 and self.verbose:
             print('no physical AWGs connected')
         elif len(self._awgs) == 1:
             self.awg_cont = self._awgs[0]
             self.awg_cont.set('run_mode', 'CONT')
-            self.awg_seq = None
         elif len(self._awgs) == 2 and 'awg_mk' in self.awg_map:
             self.awg_cont = self._awgs[self.awg_map['awg_mk'][0]]
             self.awg_cont.set('run_mode', 'CONT')
@@ -180,7 +180,7 @@ class virtual_awg(Instrument):
             'ch%i_m%i_high' % (marker_info[1], marker_info[2]), 2.6)
 
         # awg marker
-        if hasattr(self, 'awg_seq'):
+        if getattr(self, 'awg_seq', None) is not None:
             awg_info = self.awg_map['awg_mk']
             if awg_info[:2] not in sweep_info:
                 awgs.append(self._awgs[awg_info[0]])
