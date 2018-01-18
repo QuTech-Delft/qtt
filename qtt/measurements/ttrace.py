@@ -579,27 +579,18 @@ class ttrace_update:
         data_raw=self.read_function(self.station,  self.ttrace_elements, self.channel, Naverage=self.Naverage, **self.read_args )
         tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2)
         
-        # FIXME: here
         ydata=tx
-        nn=ydata[0][0].size;n0=int(nn/2)
-        xrange=np.arange(-n0, -n0+nn)
-        xdata=[xrange]*len(ydata)
+        
+        nplots=len(ydata)
+        xdata=[None]*nplots
+        for ii in range(nplots):
+            nn=ydata[ii][0].size;n0=int(nn/2)
+            xdata[ii]=np.linspace(-n0, n0, nn)
+        
         self.multi_trace.plot_curves(xdata, ydata)
         self.app.processEvents() 
         time.sleep(0.05)
 
-        if 0:        
-            for ii, q in enumerate(tx):
-                self.fps.showloop(dt=15)
-                self.fps.addtime(time.time())
-                ncurves = self.multi_trace.ncurves
-                p=self.multi_trace.curves[ii]
-                for jj in range(min(ncurves, len(q)) ):
-                    nn=len(q[jj,:])
-                    n0=int(nn/2)
-                    xrange=np.arange(-n0, -n0+nn)
-                    p[jj].setData(xrange, q[jj,:])
-                self.app.processEvents() 
                    
 class MultiTracePlot:
 
