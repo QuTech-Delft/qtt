@@ -124,6 +124,24 @@ def show_ttrace_elements(ttrace_elements, fig=100, tracedata=None):
 
 #%%
 
+def fix_ttrace_seq_mode(vawg):
+    """ Fix the sequence mode of the virtual awg
+    
+    Upstream pycqed assumes sychronization with a clock sync, but we use the event input.
+    """
+    self=vawg
+    sweep_info={}
+    for ii in range(1,5):
+        sweep_info[ (1,ii)]={'name': 'ttrace1ch%d' % ii }
+    for sweep in sweep_info:
+    
+        if hasattr(self, 'awg_seq') and self._awgs[sweep[0]] == self.awg_seq:
+            print(' update %s %s'  % (sweep,  sweep_info[sweep]['name'] ) )
+            self._awgs[sweep[0]].set_sqel_waveform(
+                sweep_info[sweep]['name'], sweep[1], 1)
+            self._awgs[sweep[0]].set_sqel_loopcnt_to_inf(1)
+            self._awgs[sweep[0]].set_sqel_event_jump_target_index(sweep[1], 1)
+            self._awgs[sweep[0]].set_sqel_event_jump_type(1, 'IND')
 
 class ttrace_t(dict):
     """ Structure that contains information about ttraces
