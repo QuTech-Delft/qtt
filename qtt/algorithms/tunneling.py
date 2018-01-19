@@ -57,17 +57,14 @@ def polweight_all_2slopes(x_data, y_data, par, kT):
     return total
 
 
-def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
+def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
     """ Polarization line fitting. 
-
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
     the number of variables, i.e. 1200 in our case.
-
     Args:
         x_data (1 x N array): chemical potential difference in ueV
         y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
         kT (float): temperature in ueV
-
     Returns:
         par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
         par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
@@ -88,10 +85,10 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
             print('fit_pol_all: trans_idx %s' % (trans_idx, ))
     fitdata = {}
     if method is 'fmin':
-        func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT)
+        func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT, model=model)
         par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     elif method is 'curve_fit':
-        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT)
+        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT, model=model)
         par_fit, par_cov = scipy.optimize.curve_fit(func, x_data, y_data, par_guess)
         fitdata['par_cov'] = par_cov
     else:
@@ -101,6 +98,9 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
         return par_fit, par_guess, fitdata
     else:
         return par_fit, par_guess
+
+def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
+    raise Exception('please use fit_pol_all instead')
 
 def pol_mod_two_ele_boltz(x_data, par, kT):
     """ Model of the inter-dot transition with two electron spin states, also
@@ -124,47 +124,6 @@ def pol_mod_two_ele_boltz(x_data, par, kT):
     
     return signal
 
-def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
-    """ Polarization line fitting. 
-    The default value for the maxiter argument of scipy.optimize.fmin is N*200
-    the number of variables, i.e. 1200 in our case.
-    Args:
-        x_data (1 x N array): chemical potential difference in ueV
-        y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
-        kT (float): temperature in ueV
-    Returns:
-        par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
-        par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
-        fitdata (dictionary): extra data returned by fit functions
-    """
-    if par_guess is None:
-        t_guess = (x_data[-1] - x_data[0]) / 30  # hard-coded guess in ueV
-        numpts = round(len(x_data) / 10)
-        slope_guess = np.polyfit(x_data[-numpts:], y_data[-numpts:], 1)[0]
-        dat_noslope = y_data - slope_guess * (x_data - x_data[0])
-        dat_noslope_1der = scipy.ndimage.filters.gaussian_filter(dat_noslope, sigma=20, order=1)
-        trans_idx = np.abs(dat_noslope_1der).argmax()
-        sensitivity_guess = np.sign(x_data[-1] - x_data[0]) * np.sign(dat_noslope_1der[trans_idx]) * (np.percentile(dat_noslope, 90) - np.percentile(dat_noslope, 10))
-        x_offset_guess = x_data[trans_idx]
-        y_offset_guess = y_data[trans_idx] - sensitivity_guess / 2
-        par_guess = np.array([t_guess, x_offset_guess, y_offset_guess, slope_guess, slope_guess, sensitivity_guess])
-        if verbose >= 2:
-            print('fit_pol_all: trans_idx %s' % (trans_idx, ))
-    fitdata = {}
-    if method is 'fmin':
-        func = lambda par: polweight_all_2slopes_2(x_data, y_data, par, kT, model=model)
-        par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
-    elif method is 'curve_fit':
-        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT, model=model)
-        par_fit, par_cov = scipy.optimize.curve_fit(func, x_data, y_data, par_guess)
-        fitdata['par_cov'] = par_cov
-    else:
-        raise Exception('Unrecognized fitting method')
-        
-    if returnextra:
-        return par_fit, par_guess, fitdata
-    else:
-        return par_fit, par_guess
 
 def data_to_exc_ch(x_data, y_data, pol_fit):
     """ Convert y_data to units of excess charge.

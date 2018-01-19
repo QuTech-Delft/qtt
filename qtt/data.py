@@ -371,6 +371,9 @@ class image_transform:
         self.vsweep = vsweep
 
         self._istep = dataset_get_istep(dataset)
+        if self.verbose:
+            print('image_transform: istep %.2f' % self._istep)
+
         nx = len(vsweep)
         ny = len(vstep)
         self.flipX = False
@@ -393,7 +396,7 @@ class image_transform:
                 self.flipY = True
                 self.H = Hy.dot(self.H)
 
-        self._imraw = dataset.arrays[arrayname].ndarray
+        self._imraw = np.array(dataset.arrays[arrayname] )
 
         if isinstance(unitsperpixel, (float, int)):
             unitsperpixel = [unitsperpixel, unitsperpixel]
