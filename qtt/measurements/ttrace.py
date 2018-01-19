@@ -596,7 +596,8 @@ class ttrace_update:
         
     def updatefunction(self):
         data_raw=self.read_function(self.station,  self.ttrace_elements, self.channel, Naverage=self.Naverage, **self.read_args )
-        tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2)
+        clockbias = getattr(getattr(self.station, 'digitizer', {}), 'clockbias', 1.)
+        tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2, clockbias=clockbias)
         
         ydata=tx
         
@@ -783,7 +784,7 @@ def read_FPGA_line(station, idx=[1,],Naverage=26):
     data_raw = np.array([qq[i] for i in idx])
     return data_raw    
 
-def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax and tx, try tho put it in the ttrace class
+def parse_data(data_raw, ttraces,ttrace, clockbias = 1, verbose=1): #TODO: definition of datax and tx, try tho put it in the ttrace class
     """Read the data, split them in the different dimension sweeps
     Inputs:
         data_raw: the raw readout data
@@ -800,21 +801,21 @@ def parse_data(data_raw, ttraces,ttrace, verbose=1): #TODO: definition of datax 
     ttotal  =ttrace_element.ideal_length() 
     
     #ttotal = ttrace_element.waveforms()[0].size / ttrace['awgclock']         
-    qq=ttotal*samplingfreq
+    qq=ttotal*samplingfreq # expected number of data points
 
     datax = data_raw.copy()
     datax[:,0] = np.mean(datax[:,1:2], axis=1)
     
-    ff=data_raw.shape[1]/qq                
-    fpgafreqx=samplingfreq*ff
+    fpgahack=data_raw.shape[1]/qq                
+    fpgafreqx=samplingfreq*fpgahack*clockbias
     tt=np.arange(0, datax.shape[1])/fpgafreqx
     tx=[]
     if tracedata is not None:
-        for x in tracedata:
+        for ti, x in enumerate(tracedata):
             sidx=int(x['start_time']*fpgafreqx)
             eidx=int(x['end_time']*fpgafreqx)
             if verbose>=2:
-                print('sidx %s, eidx %s'  % (sidx, eidx))
+                print('trace %d: sidx %s, eidx %s'  % (ti, sidx, eidx))
             tx+=[ datax[:, sidx:eidx]]
             
     if verbose:
