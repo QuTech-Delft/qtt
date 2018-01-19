@@ -596,7 +596,8 @@ class ttrace_update:
         
     def updatefunction(self):
         data_raw=self.read_function(self.station,  self.ttrace_elements, self.channel, Naverage=self.Naverage, **self.read_args )
-        tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2)
+        clockbias = getattr(getattr(self.station, 'digitizer', {}), 'clockbias', 1.)
+        tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace, verbose=self.verbose>=2, clockbias=clockbias)
         
         ydata=tx
         
