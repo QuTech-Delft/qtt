@@ -167,7 +167,7 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}
     ttrace = ttrace_t({'markerperiod': 80e-6, 'fillperiod': fillperiod, 'period':  param.get('period', 500e-6), 'alpha': .1})
     ttrace['period0']=250e-6
     ttrace['fpga_delay']=2e-6
-    ttrace['traces'] = []; ttrace['traces_volt'] = []
+    ttrace['traces'] = []; ttrace['traces_volt_gate'] = []
     try:
         ttrace['samplingfreq']=station.fpga.sampling_frequency()
     except:
@@ -195,7 +195,8 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}
     pgates=sweepgates
     if isinstance(scanrange, (float, int)):
         scanrange=[scanrange]*len(vgates)
-        
+    ttrace['scanrange']=scanrange
+    
     #"""Map them onto the traces itself"""
     for ii, v in enumerate(vgates):
         R= scanrange[ii]
@@ -205,7 +206,7 @@ def create_ttrace(station, virtualgates, vgates, scanrange, sweepgates, param={}
         w = [(k, R*map_inv[k][v]/awg_to_plunger_plungers[k]) for k in pgates]
         wvolt = [(k, R*map_inv[k][v]) for k in pgates]
         ttrace['traces'] += [w]
-        ttrace['traces_volt'] += [wvolt]
+        ttrace['traces_volt_gate'] += [wvolt]
     return ttrace
 
 #%%
@@ -846,7 +847,7 @@ def _plot_tracedata(tracedata, tf=1e3):
             qtt.pgeometry.plot2Dline([-1, 0, e], ':')
         qtt.pgeometry.plot2Dline([-1, 0, s0], ':c', linewidth=1)
   
-def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amount of input arguments
+def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10, labels=None):
     """Plot the raw data and the parsed data of the resulting signal
     Inputs:
         tt: parsed data including timing
@@ -867,4 +868,13 @@ def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10):#TODO: diminish the amoun
     ny=int(np.ceil(len(tx)/nx))
     for ii, q in enumerate(tx):
         plt.subplot(nx,ny,ii+1)
-        plt.plot(q.T)
+        R=ttrace['scanrange'][ii]
+        xdata=np.linspace(-R, R, q.shape[1])
+        plt.plot(xdata, q.T, label='sensor data')
+        qtt.pgeometry.plot2Dline([-1,0,0], '--', alpha=.15, zorder=-100)
+        if labels is not None:
+            plt.xlabel(labels[ii])
+    if labels is not None:
+        import pylab
+        pylab.subplots_adjust( hspace=.3 )
+        
