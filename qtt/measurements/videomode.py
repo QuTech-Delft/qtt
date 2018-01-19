@@ -222,10 +222,13 @@ class VideoMode:
 
     def addPPT(self):
         """ Copy image of videomode window to PPT """
-        self.stopreadout() # prevent multi-threading issues        
-        time.sleep(0.2)
+        isrunning = self.is_running()
+        if isrunning:
+            self.stopreadout() # prevent multi-threading issues        
+            time.sleep(0.2)
         qtt.tools.addPPTslide(fig=self, title='VideoMode', notes=self.station, extranotes=str(self.scanparams) )
-        self.startreadout()
+        if isrunning:
+            self.startreadout()
 
     def updatebg(self):
         """ Update function for the widget 
@@ -262,6 +265,9 @@ class VideoMode:
             time.sleep(0.1)
         time.sleep(0.00001)
 
+    def is_running(self):
+        return self.timer.isActive()
+    
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
