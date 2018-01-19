@@ -1902,7 +1902,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
     """Convert the data of a 2D sweep to a DataSet."""
 
     scantype = loc_record['label']
-    if 'vec' not in scantype:
+    if 'vec' not in scantype and not isinstance(sweepgates, dict):
         gate_horz = getattr(gates, sweepgates[0])
         gate_vert = getattr(gates, sweepgates[1])
 
@@ -1918,7 +1918,12 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
                                2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data_measured[0])]
         sweep_vert = gate_vert[initval_vert - sweepranges[1] /
                                2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data_measured)]
-
+    else:
+        gate_horz='gate_horz'
+        gate_vert='gate_vert'
+        sweep_vert=np.arange(0, data.shape[0])
+        sweep_horz=np.arange(0, data.shape[1])
+        
     dataset = makeDataSet2D(sweep_vert, sweep_horz, measure_names=measure_names,
                             location=location, loc_record=loc_record, preset_data=data)
 
