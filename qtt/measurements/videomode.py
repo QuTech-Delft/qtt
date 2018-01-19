@@ -68,6 +68,10 @@ class videomode_callback:
         data = qtt.measurements.scans.measuresegment(
             self.waveform, self.Naverage, minstrumenthandle, self.channels)
 
+        if np.all(data==0):
+            self.stopreadout()
+            raise Exception('data returned contained only zeros, aborting')
+            
         dd = []
         for ii in range(len(data)):
             data_processed = np.array(data[ii])

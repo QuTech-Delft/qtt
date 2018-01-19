@@ -1872,7 +1872,7 @@ def makeDataset_sweep(data, sweepgate, sweeprange, sweepgate_value=None,
     """
     if sweepgate_value is None:
         if gates is not None:
-            sweepgate_param = gates.getattr(sweepgate)
+            sweepgate_param = getattr(gates, sweepgate)
             sweepgate_value = sweepgate_param.get()
         else:
             raise Exception('No gates supplied')
