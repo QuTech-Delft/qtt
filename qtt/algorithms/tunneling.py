@@ -38,20 +38,32 @@ def polmod_all_2slopes(x_data, par, kT, model=None):
 
     return y_data
 
-
-def polweight_all_2slopes(x_data, y_data, par, kT):
+def polweight_all_2slopes(x_data, y_data, par, kT, model='one_ele'):
     """ Cost function for polarization fitting.
-
     Args:
         x_data (1 x N array): chemical potential difference in ueV
         y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
         par (1 x 6 array): see polmod_all_2slopes
         kT (float): temperature in ueV
-
     Returns:
         total (float): sum of residues
     """
-    mod = polmod_all_2slopes(x_data, par, kT)
+    mod = polmod_all_2slopes(x_data, par, kT, model=model)
+    total = np.linalg.norm(y_data - mod)
+
+    return total
+
+def polweight_all_2slopes_2(x_data, y_data, par, kT, model='one_ele'):
+    """ Cost function for polarization fitting.
+    Args:
+        x_data (1 x N array): chemical potential difference in ueV
+        y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
+        par (1 x 6 array): see polmod_all_2slopes
+        kT (float): temperature in ueV
+    Returns:
+        total (float): sum of residues
+    """
+    mod = pol_mod_two_ele_boltz(x_data, par, kT)
     total = np.linalg.norm(y_data - mod)
 
     return total

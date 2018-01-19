@@ -372,7 +372,7 @@ class image_transform:
 
         self._istep = dataset_get_istep(dataset)
         if self.verbose:
-            print('image_transform: istep %.2f' % self._istep)
+            print('image_transform: istep %.2f, unitsperpixel %s' % ( self._istep, unitsperpixel ))
 
         nx = len(vsweep)
         ny = len(vstep)
@@ -411,6 +411,9 @@ class image_transform:
             self._im = ims
             self.H = Hs @ self.H
 
+        if verbose:
+            print('image_transform: tr._imraw.shape %s' % (tr._imraw.shape, ))
+            print('image_transform: tr._im.shape %s' % (tr._im.shape, ))
         self._im = self._transform(self._imraw)
         self.Hi = numpy.linalg.inv(self.H)
 
