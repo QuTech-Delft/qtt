@@ -1319,7 +1319,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     return data
 
 
-def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
+def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
     try:
         isfpga = isinstance(
             minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
@@ -1337,7 +1337,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
         data = measuresegment_fpga(minstrhandle, waveform, read_ch, Naverage)
     elif ism4i:
         data = measuresegment_m4i(
-            minstrhandle, waveform, read_ch, mV_range, Naverage, process=True)
+            minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
     elif minstrhandle=='dummy':
         # for testing purposes
         data = np.random.rand( 100, )
@@ -1376,7 +1376,7 @@ def save_segments(station, minstrhandle, read_ch, period, nsegments, average=Tru
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
     
     if average:
-        data = measuresegment(waveform, nsegments, minstrhandle, read_ch, mV_range)
+        data = measuresegment(waveform, nsegments, minstrhandle, read_ch, mV_range, process=False)
         trace_time = DataArray(preset_data=np.linspace(0, period, len(data[0])),name='trace_time',label='Time',unit='s',is_setpoint=True)
         alldata = makeDataSet1D(trace_time, measure_names, data, location=location, loc_record={'label': 'simple_acquisition'})
     else:
