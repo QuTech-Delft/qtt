@@ -876,5 +876,5 @@ def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10, labels=None):
             plt.xlabel(labels[ii])
     if labels is not None:
         import pylab
-        pylab.subplots_adjust( hspace=.3 )
+        pylab.subplots_adjust( hspace=.4 )
         
