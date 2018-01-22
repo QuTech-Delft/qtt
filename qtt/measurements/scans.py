@@ -1921,8 +1921,10 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
     else:
         gate_horz='gate_horz'
         gate_vert='gate_vert'
-        sweep_vert=np.arange(0, data.shape[0])
-        sweep_horz=np.arange(0, data.shape[1])
+        p1=qcodes.Parameter('gate_horz', set_cmd=None)
+        p2=qcodes.Parameter('gate_vert', set_cmd=None)
+        sweep_horz=p1[0:data.shape[0]:1]
+        sweep_vert=p2[0:data.shape[0]:1]
         
     dataset = makeDataSet2D(sweep_vert, sweep_horz, measure_names=measure_names,
                             location=location, loc_record=loc_record, preset_data=data)
