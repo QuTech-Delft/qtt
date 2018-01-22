@@ -152,10 +152,10 @@ class virtual_IVVI(Instrument):
             vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
         return dict(vals)
 
-    def allvalues_string(self):
+    def allvalues_string(self, fmt='%.3f'):
         """ Return all gate values in string format. """
         vals = self.allvalues()
-        s = '{' + ','.join(['\'%s\': %.2f' % (x, vals[x]) for x in vals]) + '}'
+        s = '{' + ','.join(['\'%s\': '  % (x,) + fmt % (vals[x], ) for x in vals]) + '}'
         return s
 
     def resetgates(gates, activegates, basevalues=None, verbose=2):
