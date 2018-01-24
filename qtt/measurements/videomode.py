@@ -104,6 +104,7 @@ class VideoMode:
         Naverage (int): the number of times the FPGA averages
         resolution (1 x 2 list): for 2D the resolution
         nplots (int or None): number of plots to show. must be equal to the number of channels in the minstrument argument
+        sample_rate (float): sample rate for acquisition device
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
     # TODO: implement virtual gates functionality
