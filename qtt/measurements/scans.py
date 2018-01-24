@@ -1105,7 +1105,7 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         data (Nxk array)
         width (float): width of the sawtooth
         period (float)
-        samplerate (float)
+        samplerate (float): sample rate of digitizer
     Returns
         processed_data (Nxk array): processed data
         rr (tuple)
