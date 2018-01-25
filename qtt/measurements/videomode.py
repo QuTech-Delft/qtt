@@ -215,12 +215,19 @@ class VideoMode:
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
 
+
+        self.enable_averaging_slot(averaging=True)
         if dorun:
             self.run()
 
-    def enable_averaging_slot(self, *args, **kwargs):
+    def enable_averaging_slot(self, averaging=None, *args, **kwargs):
         """ Update the averaging mode of the widget """
-        self._averaging_enabled = self.mainwin.averaging_box.checkState()
+        if averaging is None:
+            self._averaging_enabled = self.mainwin.averaging_box.checkState()
+        else:
+            self._averaging_enabled = averaging
+            self.mainwin.averaging_box.setChecked(self._averaging_enabled)
+            
         for l in self.lp:
             l.enable_averaging(self._averaging_enabled)
 
