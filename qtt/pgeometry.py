@@ -2683,7 +2683,8 @@ def ca():
 
 
 @static_var('monitorindex', -1)
-def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, verbose=0):
+def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
+             verbose=0, monitorindex=None):
     """ Tile figure windows on a specified area
 
     Arguments
@@ -2692,12 +2693,17 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, v
                 list of figure handles or integers
         geometry : 2x1 array
                 layout of windows
+        monitorindex (None or int): index of monitor to use for output
+        ww (None or list): monitor sizes
 
     """
     mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
+    if monitorindex is None:
+        monitorindex = tilefigs.monitorindex
+        
     if ww is None:
-        ww = monitorSizes()[tilefigs.monitorindex]
+        ww = monitorSizes()[monitorindex]
 
     w = ww[2] / geometry[0]
     h = ww[3] / geometry[1]

@@ -38,36 +38,45 @@ def polmod_all_2slopes(x_data, par, kT, model=None):
 
     return y_data
 
-
-def polweight_all_2slopes(x_data, y_data, par, kT):
+def polweight_all_2slopes(x_data, y_data, par, kT, model='one_ele'):
     """ Cost function for polarization fitting.
-
     Args:
         x_data (1 x N array): chemical potential difference in ueV
         y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
         par (1 x 6 array): see polmod_all_2slopes
         kT (float): temperature in ueV
-
     Returns:
         total (float): sum of residues
     """
-    mod = polmod_all_2slopes(x_data, par, kT)
+    mod = polmod_all_2slopes(x_data, par, kT, model=model)
+    total = np.linalg.norm(y_data - mod)
+
+    return total
+
+def polweight_all_2slopes_2(x_data, y_data, par, kT, model='one_ele'):
+    """ Cost function for polarization fitting.
+    Args:
+        x_data (1 x N array): chemical potential difference in ueV
+        y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
+        par (1 x 6 array): see polmod_all_2slopes
+        kT (float): temperature in ueV
+    Returns:
+        total (float): sum of residues
+    """
+    mod = pol_mod_two_ele_boltz(x_data, par, kT)
     total = np.linalg.norm(y_data - mod)
 
     return total
 
 
-def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
+def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
     """ Polarization line fitting. 
-
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
     the number of variables, i.e. 1200 in our case.
-
     Args:
         x_data (1 x N array): chemical potential difference in ueV
         y_data (1 x N array): sensor data, e.g. from a sensing dot or QPC
         kT (float): temperature in ueV
-
     Returns:
         par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
         par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
@@ -88,10 +97,10 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
             print('fit_pol_all: trans_idx %s' % (trans_idx, ))
     fitdata = {}
     if method is 'fmin':
-        func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT)
+        func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT, model=model)
         par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     elif method is 'curve_fit':
-        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT)
+        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT, model=model)
         par_fit, par_cov = scipy.optimize.curve_fit(func, x_data, y_data, par_guess)
         fitdata['par_cov'] = par_cov
     else:
@@ -101,6 +110,31 @@ def fit_pol_all(x_data, y_data, kT, maxiter=None, maxfun=5000, verbose=1, par_gu
         return par_fit, par_guess, fitdata
     else:
         return par_fit, par_guess
+
+def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
+    raise Exception('please use fit_pol_all instead')
+
+def pol_mod_two_ele_boltz(x_data, par, kT):
+    """ Model of the inter-dot transition with two electron spin states, also
+    taking into account thermal occupation of the triplets. """
+    t = par[0]
+    x_offset = par[1]
+    y_offset = par[2]
+    dy_left = par[3]
+    dy_right = par[4]
+    dy = par[5]
+    omega = np.sqrt((x_data - x_offset)**2 + 8 * t**2)
+    E_Smin = - omega / 2
+    E_T = (x_data - x_offset) / 2
+    E_Splus = omega / 2
+    part_func = np.exp(- E_Smin / kT) + 3 * np.exp(- E_T / kT) + np.exp(- E_Splus / kT)
+    
+    excess_charge = (np.exp(- E_Smin / kT) * 1 / 2 * (1 + (x_data - x_offset) / omega ) + \
+                          np.exp(- E_Splus / kT) * 1 / 2 * (1 - (x_data - x_offset) / omega )) / part_func
+                   
+    signal = y_offset + dy*excess_charge + (dy_left+(dy_right-dy_left)*excess_charge)*(x_data-x_offset)
+    
+    return signal
 
 
 def data_to_exc_ch(x_data, y_data, pol_fit):
