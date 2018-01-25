@@ -707,7 +707,7 @@ class MultiTracePlot:
         qtt.tools.addPPTslide(fig=self, title='T-traces', notes=notes)
         
     def add_verticals(self):
-        vpen=pg.QtGui.QPen(pg.QtGui.QColor(100, 100, 155,60), 0, pg.QtCore.Qt.SolidLine)
+        vpen=pg.QtGui.QPen(pg.QtGui.QColor(130, 130, 175,60), 0, pg.QtCore.Qt.SolidLine)
         for p in self.plots:
             g=pg.InfiniteLine([0,0], angle=90, pen=vpen)    
             g.setZValue(-100)
