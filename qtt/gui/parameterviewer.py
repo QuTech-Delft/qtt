@@ -19,26 +19,29 @@ from functools import partial
 
 #%%
 
+
 class QCodesTimer(threading.Thread):
 
     def __init__(self, fn, dt=2, **kwargs):
         super().__init__(**kwargs)
         self.fn = fn
         self.dt = dt
+        self._run = True
 
     def run(self):
-        while 1:
+        while self._run:
             logging.debug('QCodesTimer: start sleep')
             time.sleep(self.dt)
             # do something
             logging.debug('QCodesTimer: run!')
             self.fn()
 
+    def stop(self):
+        self._run = False
+
 
 class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
-
-    shared_kwargs = ['station', 'instrumentnames']
 
     def __init__(self, instruments, instrumentnames=None,
                  name='QuTech Parameter Viewer', **kwargs):
@@ -51,6 +54,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         """
         super().__init__(**kwargs)
+        self.name = name
         w = self
         w.setGeometry(1700, 50, 300, 600)
         w.setColumnCount(3)
@@ -62,8 +66,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         # check to prevent nasty error (e.g. random values on a sample)
         for i in instruments:
             if getattr(i, 'lock', 'nolock') is None:
-                raise Exception('do not use multi-threading with an Instrument that is not thread safe')
-        
+                raise Exception(
+                    'do not use multi-threading with an Instrument that is not thread safe')
+
         if instrumentnames is None:
             instrumentnames = [i.name for i in instruments]
         self._instruments = instruments
@@ -89,15 +94,19 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             pp = instr.parameters
             ppnames = sorted(instr.parameters.keys())
 
-            ppnames = [p for p in ppnames if hasattr(instr.parameters[p], 'get')]
+            ppnames = [p for p in ppnames if hasattr(
+                instr.parameters[p], 'get')]
             gatesroot = QtWidgets.QTreeWidgetItem(self, [iname])
             for g in ppnames:
                 # ww=['gates', g]
-                si = min(sys.getswitchinterval(), 0.1)  # hack to make this semi thread-safe
-                sys.setswitchinterval(100)  # hack to make this semi thread-safe
+                # hack to make this semi thread-safe
+                si = min(sys.getswitchinterval(), 0.1)
+                # hack to make this semi thread-safe
+                sys.setswitchinterval(100)
                 sys.setswitchinterval(si)  # hack to make this semi thread-safe
                 box = QtWidgets.QDoubleSpinBox()
-                box.setKeyboardTracking(False)  # do not emit signals when still editing
+                # do not emit signals when still editing
+                box.setKeyboardTracking(False)
                 box.setMinimum(-10000)
                 box.setMaximum(10000)
                 box.setSingleStep(5)
@@ -106,7 +115,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
                 self._itemsdict[iname][g] = A
 
-                if hasattr( pp[g], 'set'):
+                if hasattr(pp[g], 'set'):
                     qq = A
                     self.setItemWidget(qq, 1, box)
                     self._itemsdict[iname][g] = box
@@ -115,7 +124,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         self.setSortingEnabled(True)
         self.expandAll()
-        # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
+        # self.label.setStyleSheet("QLabel { background-color : #baccba;
+        # margin: 2px; padding: 2px; }");
 
     def setSingleStep(self, value, instrument_name=None):
         """ Set the default step size for parameters in the viewer """
@@ -153,8 +163,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     update_field = Signal(str, str, object, bool)
 
     def stop(self):
+        self.setWindowTitle(self.name + ': stopped')
         self._timer.stop()
-        
+
     @Slot(str, str, object, bool)
     def _set_field(self, iname, g, value, force_update):
         """ Helper function
@@ -169,7 +180,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             sb.setText(1, str(value))
         else:
             # update a float value
-            
+
             try:
                 update_value = np.abs(sb.value() - value) > 1e-9
             except:
@@ -202,7 +213,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             si = sys.getswitchinterval()
 
             for g in ppnames:
-                sys.setswitchinterval(100)  # hack to make this semi thread-safe
+                # hack to make this semi thread-safe
+                sys.setswitchinterval(100)
                 value = pp[g].get_latest()
                 sys.setswitchinterval(si)
 
@@ -236,7 +248,8 @@ def createParameterWidget(instruments, doexec=False, remote=False):
                        Note: this can only be used if all the Instruments are remote instruments.
     """
     if remote:
-        p = mp.Process(target=createParameterWidget, args=(instruments, doexec))
+        p = mp.Process(target=createParameterWidget,
+                       args=(instruments, doexec))
         p.start()
         return p
 
