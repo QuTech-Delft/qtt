@@ -1400,7 +1400,7 @@ def save_segments(station, minstrhandle, read_ch, period, nsegments, average=Tru
             if i == 0:
                 segment_num = np.arange(nsegments)
                 segment_time = np.linspace(0, period, len(data[0]))
-                alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num, measure_names, data, location=location, loc_record={'label': 'save_segments'})
+                alldata = makeDataSet2Dplain('segment_number', segment_num, 'time', segment_time, zname=measure_names, xunit='s', location=location, loc_record={'label': 'save_segments'})
             for idm, mname in enumerate(measure_names):
                 alldata.arrays[mname].ndarray[i] = data[idm]
         

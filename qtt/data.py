@@ -752,7 +752,7 @@ def makeDataSet1Dplain(xname, x, yname, y, xunit=None, yunit=None, location=None
     else:
         for ii, name in enumerate(yname):
             y = DataArray(name=name, array_id=name,
-                          preset_data=yy[ii], unit=yunit[ii], set_arrays=(x,))
+                          preset_data=yy[ii], unit=yunit, set_arrays=(x,))
             dd.add_array(y)
 
     return dd
@@ -805,7 +805,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
         return dd
 
 
-def makeDataSet2Dplain(xname, x, yname, y, zname, z, xunit=None, yunit=None, zunit=None, location=None, loc_record=None):
+def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None, yunit=None, zunit=None, location=None, loc_record=None):
     ''' Make DataSet with one 2D array and two setpoint arrays
 
     Arguments:
@@ -817,21 +817,21 @@ def makeDataSet2Dplain(xname, x, yname, y, zname, z, xunit=None, yunit=None, zun
     xx = np.array(x)
     yy0 = np.array(y)
     yy = np.tile(yy0, [xx.size, 1])
-    zz = np.array(z)
-    x = DataArray(name=xname, array_id=xname, preset_data=xx, unit=xunit, is_setpoint=True)
-    y = DataArray(name=yname, array_id=yname, preset_data=yy, unit=yunit, set_arrays=(x,), is_setpoint=True)
+    zz = np.NaN * np.ones((xx.size, yy0.size))
+    xa = DataArray(name=xname, array_id=xname, preset_data=xx, unit=xunit, is_setpoint=True)
+    ya = DataArray(name=yname, array_id=yname, preset_data=yy, unit=yunit, set_arrays=(xa,), is_setpoint=True)
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
-    dd.add_array(x)
-    dd.add_array(y)
     if isinstance(zname, str):
-        z = DataArray(name=zname, array_id=zname,
-                      preset_data=zz, unit=zunit, set_arrays=(x,y))
-        dd.add_array(z)
-    else:
-        for ii, name in enumerate(zname):
-            z = DataArray(name=name, array_id=name,
-                          preset_data=zz[ii], unit=zunit[ii], set_arrays=(x,y))
-            dd.add_array(z)
+        zname = [zname]
+    for ii, name in enumerate(zname):
+        za = DataArray(name=name, array_id=name, label=name, preset_data=np.copy(zz), unit=zunit, set_arrays=(xa, ya))
+        dd.add_array(za)
+        if z is not None:
+            getattr(dd, name).ndarray = np.array(z[ii])
+    dd.add_array(xa)
+    dd.add_array(ya)
+    
+    dd.last_write = -1
 
     return dd
 
