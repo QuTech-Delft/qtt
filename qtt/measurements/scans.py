@@ -33,7 +33,7 @@ import qtt.algorithms.onedot
 import qtt.live
 from qtt.tools import deprecated
 
-from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
+from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 
@@ -1377,8 +1377,8 @@ def save_segments(station, minstrhandle, read_ch, period, nsegments, average=Tru
     
     if average:
         data = measuresegment(waveform, nsegments, minstrhandle, read_ch, mV_range, process=False)
-        trace_time = DataArray(preset_data=np.linspace(0, period, len(data[0])),name='trace_time',label='Time',unit='s',is_setpoint=True)
-        alldata = makeDataSet1D(trace_time, measure_names, data, location=location, loc_record={'label': 'simple_acquisition'})
+        segment_time = np.linspace(0, period, len(data[0]))
+        alldata = makeDataSet1Dplain('time', segment_time, measure_names, data, xunit='s', location=location, loc_record={'label': 'save_segments'})
     else:
         try:
             ism4i = isinstance(
@@ -1398,9 +1398,9 @@ def save_segments(station, minstrhandle, read_ch, period, nsegments, average=Tru
             else:
                 data = measuresegment(waveform, 1, minstrhandle, read_ch, mV_range)
             if i == 0:
-                segnum = DataArray(preset_data=np.arange(nsegments),name='segment_number',label='Segment Number',unit='#',is_setpoint=True)
-                trace_time = DataArray(preset_data=np.linspace(0, period, len(data[0])),name='trace_time',label='Time',unit='s',is_setpoint=True)
-                alldata = makeDataSet2D(segnum, trace_time, measure_names=measure_names, location=location, loc_record={'label': 'simple_acquisition'})
+                segment_num = np.arange(nsegments)
+                segment_time = np.linspace(0, period, len(data[0]))
+                alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num, measure_names, data, location=location, loc_record={'label': 'save_segments'})
             for idm, mname in enumerate(measure_names):
                 alldata.arrays[mname].ndarray[i] = data[idm]
         
