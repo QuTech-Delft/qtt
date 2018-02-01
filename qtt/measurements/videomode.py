@@ -389,6 +389,10 @@ class VideoMode:
         """
         raise Exception('not implemented')
 
+    def crosshair(self, *args, **kwargs):
+        for l in self.lp:
+            l.crosshair(*args, **kwargs)
+            
     def makeDataset(self, data, Naverage=None):
         if data.ndim == 2:
             if (data.shape[0]>1):
