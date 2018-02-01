@@ -1350,22 +1350,29 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
         warnings.warn('measuresegment: received empty data array')
     return data
 
-def save_segments(station, minstrhandle, read_ch, period, nsegments, average=True, mV_range=2000, location=None):
-    """Record triggered segments as time traces into dataset and save it. AWG must be already sending a trigger pulse per segment.
+def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None):
+    """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
     
     Args:
-        minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
-        read_ch (list of int): channel numbers to record.
-        period (float): time in seconds to record for each segment.
-        nsegments (int): number of segments to record.
-        average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; if False, dataset will contain nsegments single time trace acquisitions.
+        parameters (dict): dictionary containing the following compulsory parameters:
+        -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
+        -read_ch (list of int): channel numbers to record.
+        -period (float): time in seconds to record for each segment.
+        -nsegments (int): number of segments to record.
+        -average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; if False, dataset will contain nsegments single time trace acquisitions.
         
     Returns:
         alldata (dataset): time trace(s) of the segments acquired.
     """
-    t0 = time.time()
-    gates = station.gates
-    gatevals = gates.allvalues()
+    minstrhandle = parameters['minstrhandle']
+    read_ch = parameters['read_ch']
+    period = parameters['period']
+    nsegments = parameters['nsegments']
+    
+    if save_to_disk:
+        t0 = time.time()
+        gates = station.gates
+        gatevals = gates.allvalues()
     
     waveform = {'period': period, 'width':0}
     if isinstance(read_ch, int):
@@ -1381,8 +1388,7 @@ def save_segments(station, minstrhandle, read_ch, period, nsegments, average=Tru
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data, xunit='s', location=location, loc_record={'label': 'save_segments'})
     else:
         try:
-            ism4i = isinstance(
-                minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+            ism4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         except:
             ism4i = False
         if ism4i:
@@ -1404,13 +1410,12 @@ def save_segments(station, minstrhandle, read_ch, period, nsegments, average=Tru
             for idm, mname in enumerate(measure_names):
                 alldata.arrays[mname].ndarray[i] = data[idm]
         
-    dt = time.time() - t0
-    update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
-
-    alldata = qtt.tools.stripDataset(alldata)
-
-    alldata.write(write_metadata=True)
+    if save_to_disk:
+        dt = time.time() - t0
+        update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
+        update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
+        alldata = qtt.tools.stripDataset(alldata)    
+        alldata.write(write_metadata=True)
 
     return alldata
     
