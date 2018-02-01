@@ -328,8 +328,8 @@ class livePlot:
             
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
-            p1.setLabel('left', 'param1')
             p1.setLabel('left', 'param2')
+            p1.setLabel('bottom', 'param1')
             if self.datafunction is None:
                 raise Exception(
                     'Either specify a datafunction or sweepparams.')
@@ -349,7 +349,15 @@ class livePlot:
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
+
+            vpen=pg.QtGui.QPen(pg.QtGui.QColor(130, 130, 175,60), 0, pg.QtCore.Qt.SolidLine)
+            gv=pg.InfiniteLine([0,0], angle=0, pen=vpen)    
+            gv.setZValue(0)
+            p1.addItem(gv)
+            self._crosshair = [ gv]
+            self.crosshair(show=False)            
         elif isinstance(self.sweepparams, (list, dict)):
+            # 2D scan
             p1 = plotwin.addPlot(title=plot_title)
             if type(self.sweepparams) is dict:
                 [xlabel, ylabel] = ['sweepparam_v', 'stepparam_v']
@@ -359,6 +367,15 @@ class livePlot:
             p1.setLabel('left', ylabel, units='mV')
             self.plot = pg.ImageItem()
             p1.addItem(self.plot)
+            vpen=pg.QtGui.QPen(pg.QtGui.QColor(0, 130, 235,60), 0, pg.QtCore.Qt.SolidLine)
+            gh=pg.InfiniteLine([0,0], angle=90, pen=vpen)    
+            gv=pg.InfiniteLine([0,0], angle=0, pen=vpen)    
+            gh.setZValue(0)            
+            gv.setZValue(0)
+            p1.addItem(gh)
+            p1.addItem(gv)
+            self._crosshair = [gh, gv]
+            self.crosshair(show=False)            
         else:
             raise Exception(
                 'The number of sweep parameters should be either None, 1 or 2.')
@@ -393,6 +410,23 @@ class livePlot:
         self.idx = 0
         self.data = None
 
+    def crosshair(self, show=None, pos=None):
+        """ Enable or disable crosshair 
+        
+        Args:
+            show (None, True or False)
+            pos (None or position)
+        """
+        for x in self._crosshair:
+            if show is not None:
+                if show:
+                    x.show()
+                else:
+                    x.hide()
+            if pos is not None:
+                x.setPos(pos)
+
+        
     def update(self, data=None, processevents=True):
         self.win.setWindowTitle('%s, fps: %.2f' %
                                 (self.window_title, self.fps.framerate()))
@@ -424,6 +458,7 @@ class livePlot:
                     sweepvalues = np.linspace(
                         paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
+                    self.crosshair(show=None, pos=[paramval, 0])
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data_avg.T)
                 if None not in (self.sweepInstrument,
@@ -441,6 +476,7 @@ class livePlot:
                     self.rect = QtCore.QRect(
                         self.horz_low, self.vert_low, self.horz_range, self.vert_range)
                     self.plot.setRect(self.rect)
+                    self.crosshair(show=None, pos=[value_x, value_y])
             else:
                 raise Exception('ndim %d not supported' % self.data.ndim)
 
@@ -557,5 +593,6 @@ if __name__ == '__main__':
                   sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
+    self=lp
     pv = qtt.createParameterWidget([lp.datafunction])
 
