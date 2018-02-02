@@ -253,6 +253,7 @@ class RdaControl(QtWidgets.QMainWindow):
         # self.label.setStyleSheet("QLabel { background-color : #baccba;
         # margin: 2px; padding: 2px; }");
 
+
 # legacy name
 LivePlotControl = RdaControl
 
@@ -275,7 +276,7 @@ class livePlot:
 
     def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
                  sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view',
-                 plot_title=None, is1dscan = None):
+                 plot_title=None, is1dscan=None):
         """Return a new livePlot object."""
 
         self.window_title = window_title
@@ -325,14 +326,15 @@ class livePlot:
         self.alpha = alpha
 
         if is1dscan is None:
-            is1dscan=( isinstance(self.sweepparams, str) or (isinstance(self.sweepparams, (list, dict)) and len(self.sweepparams)==1 ) )
+            is1dscan = (isinstance(self.sweepparams, str) or (isinstance(
+                self.sweepparams, (list, dict)) and len(self.sweepparams) == 1))
             if isinstance(self.sweepparams, dict):
                 if not 'gates_horz' in self.sweepparams:
                     is1dscan = True
-                
+
         if verbose:
             print('live_plotting: is1dscan %s' % is1dscan)
-            
+
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
             p1.setLabel('left', 'param2')
@@ -357,12 +359,13 @@ class livePlot:
             plot = p1.plot(dd, pen='b')
             self.plot = plot
 
-            vpen=pg.QtGui.QPen(pg.QtGui.QColor(130, 130, 175,60), 0, pg.QtCore.Qt.SolidLine)
-            gv=pg.InfiniteLine([0,0], angle=0, pen=vpen)    
+            vpen = pg.QtGui.QPen(pg.QtGui.QColor(
+                130, 130, 175, 60), 0, pg.QtCore.Qt.SolidLine)
+            gv = pg.InfiniteLine([0, 0], angle=0, pen=vpen)
             gv.setZValue(0)
             p1.addItem(gv)
-            self._crosshair = [ gv]
-            self.crosshair(show=False)            
+            self._crosshair = [gv]
+            self.crosshair(show=False)
         elif isinstance(self.sweepparams, (list, dict)):
             # 2D scan
             p1 = plotwin.addPlot(title=plot_title)
@@ -374,20 +377,21 @@ class livePlot:
             p1.setLabel('left', ylabel, units='mV')
             self.plot = pg.ImageItem()
             p1.addItem(self.plot)
-            vpen=pg.QtGui.QPen(pg.QtGui.QColor(0, 130, 235,60), 0, pg.QtCore.Qt.SolidLine)
-            gh=pg.InfiniteLine([0,0], angle=90, pen=vpen)    
-            gv=pg.InfiniteLine([0,0], angle=0, pen=vpen)    
-            gh.setZValue(0)            
+            vpen = pg.QtGui.QPen(pg.QtGui.QColor(
+                0, 130, 235, 60), 0, pg.QtCore.Qt.SolidLine)
+            gh = pg.InfiniteLine([0, 0], angle=90, pen=vpen)
+            gv = pg.InfiniteLine([0, 0], angle=0, pen=vpen)
+            gh.setZValue(0)
             gv.setZValue(0)
             p1.addItem(gh)
             p1.addItem(gv)
             self._crosshair = [gh, gv]
-            self.crosshair(show=False)            
+            self.crosshair(show=False)
         else:
             raise Exception(
                 'The number of sweep parameters should be either None, 1 or 2.')
 
-        self.plothandle=p1
+        self.plothandle = p1
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
         self.win.show()
@@ -403,7 +407,8 @@ class livePlot:
         if show_controls:
             win.start_button.clicked.connect(connect_slot(self.startreadout))
             win.stop_button.clicked.connect(connect_slot(self.stopreadout))
-            win.averaging_box.clicked.connect(connect_slot(self.enable_averaging_slot))
+            win.averaging_box.clicked.connect(
+                connect_slot(self.enable_averaging_slot))
 
         self.datafunction_result = None
 
@@ -419,7 +424,7 @@ class livePlot:
 
     def crosshair(self, show=None, pos=None):
         """ Enable or disable crosshair 
-        
+
         Args:
             show (None, True or False)
             pos (None or position)
@@ -433,7 +438,6 @@ class livePlot:
             if pos is not None:
                 x.setPos(pos)
 
-        
     def update(self, data=None, processevents=True):
         self.win.setWindowTitle('%s, fps: %.2f' %
                                 (self.window_title, self.fps.framerate()))
@@ -441,22 +445,22 @@ class livePlot:
             print('livePlot: update: idx %d ' % self.idx)
         if data is not None:
             self.data = np.array(data)
-            
+
             if self.data_avg is None:
-                    self.data_avg = self.data
+                self.data_avg = self.data
 
             # depending on value of self.averaging_enabled either do or
             # don't do the averaging
             if self._averaging_enabled:
-                self.data_avg = self.alpha * self.data + (1 - self.alpha) * self.data_avg
+                self.data_avg = self.alpha * self.data + \
+                    (1 - self.alpha) * self.data_avg
             else:
                 self.data_avg = self.data
-
 
             if self.data.ndim == 1:
                 if None in (self.sweepInstrument, self.sweepparams,
                             self.sweepranges):
-                    sweepvalues=np.arange(0, self.data_avg.size)
+                    sweepvalues = np.arange(0, self.data_avg.size)
                     self.plot.setData(sweepvalues, self.data_avg)
                 else:
                     if type(self.sweepparams) is dict:
@@ -502,7 +506,7 @@ class livePlot:
 
     def updatebg(self):
         """ Update function for the widget 
-        
+
         Calls the datafunction() and update() function
         """
         if self.idx % 10 == 0:
@@ -539,7 +543,7 @@ class livePlot:
     def enable_averaging_slot(self, *args, **kwargs):
         """ Update the averaging mode of the widget """
         self._averaging_enabled = self.win.averaging_box.checkState()
-        self.enable_averaging( self._averaging_enabled)
+        self.enable_averaging(self._averaging_enabled)
 
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
@@ -603,6 +607,5 @@ if __name__ == '__main__':
                   sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
-    self=lp
+    self = lp
     pv = qtt.createParameterWidget([lp.datafunction])
-
