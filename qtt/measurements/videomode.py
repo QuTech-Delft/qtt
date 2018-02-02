@@ -112,7 +112,7 @@ class VideoMode:
 
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
-                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=False):
+                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True):
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
@@ -132,7 +132,7 @@ class VideoMode:
         self.datalock = threading.Lock()
 
         # for addPPT
-        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument}
+        self.scanparams = {'sweepparams': self.sweepparams, 'sweepranges': self.sweepranges, 'minstrument': minstrument}
         
         # parse instrument
         if 'fpga' in station.components:
@@ -187,7 +187,6 @@ class VideoMode:
             self.topLayout = topLayout
 
         win.setLayout(vertLayout)
-        # self.mainwin.add
 
         self.plotLayout = QtWidgets.QHBoxLayout()
         vertLayout.addLayout(self.plotLayout)
@@ -322,15 +321,22 @@ class VideoMode:
         """ Return latest recorded dataset """
         with self.datalock:
             if run:
-                #data = [l.datafunction() for l in self.lp]
                 data = self.datafunction_result # [l.datafunction_result for l in self.lp]
                 data = np.array(data)
             else:
-                data = self.datafunction_result # [l.datafunction_result for l in self.lp]
+                data = self.datafunction_result 
                 data = np.array(data)
             self.alldata = self.makeDataset(data, Naverage=None)
             return self.alldata
 
+    def scan_dimension(self):
+        if isinstance(self.sweepranges, (float,int)):
+            return 1
+        elif isinstance(self.sweepranges, list):
+            return 2
+        else:
+            return -1
+        
     def run(self, startreadout=True):
         """ Programs the AWG, starts the read-out and the plotting. """
 
@@ -338,7 +344,8 @@ class VideoMode:
             print(Fore.BLUE + '%s: run ' %
                   (self.__class__.__name__,) + Fore.RESET)
 
-        if type(self.sweepranges) is int:
+        dim = self.scan_dimension()
+        if dim == 1:
             # 1D scan
             if type(self.sweepparams) is str:
                 waveform, _ = self.station.awg.sweep_gate(
@@ -350,7 +357,7 @@ class VideoMode:
                 raise Exception('arguments not supported')
             self.datafunction = videomode_callback(
                 self.station, waveform, self.Naverage.get(), minstrument=(self.minstrumenthandle, self.channels))
-        elif isinstance(self.sweepranges, list):
+        elif dim == 2:
             # 2D scan
             if isinstance(self.sweepparams, list):
                 waveform, _ = self.station.awg.sweep_2D(self.sampling_frequency.get(
@@ -362,11 +369,10 @@ class VideoMode:
                 raise Exception('arguments not supported')
             self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), minstrument=(
                 self.minstrumenthandle, self.channels), resolution=self.resolution, diff_dir=self.diff_dir)
-
+        else:
+            raise Exception('type of scan not supported')
+                
         self._waveform = waveform
-        #self.lp.datafunction = self.datafunction
-        # self.box.setValue(self.Naverage.get())
-
 
         if startreadout:
             if self.verbose:
