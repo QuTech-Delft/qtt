@@ -275,7 +275,7 @@ class livePlot:
 
     def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
                  sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view',
-                 plot_title=None):
+                 plot_title=None, is1dscan = None):
         """Return a new livePlot object."""
 
         self.window_title = window_title
@@ -324,7 +324,14 @@ class livePlot:
         self.datafunction_result = None
         self.alpha = alpha
 
-        is1dscan=( isinstance(self.sweepparams, str) or (isinstance(self.sweepparams, (list, dict)) and len(self.sweepparams)==1 ) )
+        if is1dscan is None:
+            is1dscan=( isinstance(self.sweepparams, str) or (isinstance(self.sweepparams, (list, dict)) and len(self.sweepparams)==1 ) )
+            if isinstance(self.sweepparams, dict):
+                if not 'gates_horz' in self.sweepparams:
+                    is1dscan = True
+                
+        if verbose:
+            print('live_plotting: is1dscan %s' % is1dscan)
             
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
@@ -452,9 +459,12 @@ class livePlot:
                     sweepvalues=np.arange(0, self.data_avg.size)
                     self.plot.setData(sweepvalues, self.data_avg)
                 else:
-                    sweep_param = getattr(
-                        self.sweepInstrument, self.sweepparams)
-                    paramval = sweep_param.get_latest()
+                    if type(self.sweepparams) is dict:
+                        paramval = 0
+                    else:
+                        sweep_param = getattr(
+                            self.sweepInstrument, self.sweepparams)
+                        paramval = sweep_param.get_latest()
                     sweepvalues = np.linspace(
                         paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
