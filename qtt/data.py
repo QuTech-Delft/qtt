@@ -742,7 +742,8 @@ def makeDataSet1Dplain(xname, x, yname, y, xunit=None, yunit=None, location=None
     '''
     xx = np.array(x)
     yy = np.array(y)
-    x = DataArray(name=xname, array_id=xname, preset_data=xx, unit=xunit, is_setpoint=True)
+    x = DataArray(name=xname, array_id=xname, preset_data=xx,
+                  unit=xunit, is_setpoint=True)
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
     if isinstance(yname, str):
@@ -818,19 +819,22 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     yy0 = np.array(y)
     yy = np.tile(yy0, [xx.size, 1])
     zz = np.NaN * np.ones((xx.size, yy0.size))
-    xa = DataArray(name=xname, array_id=xname, preset_data=xx, unit=xunit, is_setpoint=True)
-    ya = DataArray(name=yname, array_id=yname, preset_data=yy, unit=yunit, set_arrays=(xa,), is_setpoint=True)
+    xa = DataArray(name=xname, array_id=xname, preset_data=xx,
+                   unit=xunit, is_setpoint=True)
+    ya = DataArray(name=yname, array_id=yname, preset_data=yy,
+                   unit=yunit, set_arrays=(xa,), is_setpoint=True)
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     if isinstance(zname, str):
         zname = [zname]
     for ii, name in enumerate(zname):
-        za = DataArray(name=name, array_id=name, label=name, preset_data=np.copy(zz), unit=zunit, set_arrays=(xa, ya))
+        za = DataArray(name=name, array_id=name, label=name,
+                       preset_data=np.copy(zz), unit=zunit, set_arrays=(xa, ya))
         dd.add_array(za)
         if z is not None:
             getattr(dd, name).ndarray = np.array(z[ii])
     dd.add_array(xa)
     dd.add_array(ya)
-    
+
     dd.last_write = -1
 
     return dd
