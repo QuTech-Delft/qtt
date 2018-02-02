@@ -68,10 +68,10 @@ class videomode_callback:
         data = qtt.measurements.scans.measuresegment(
             self.waveform, self.Naverage, minstrumenthandle, self.channels)
 
-        if np.all(data==0):
+        if np.all(data == 0):
             self.stopreadout()
             raise Exception('data returned contained only zeros, aborting')
-            
+
         dd = []
         for ii in range(len(data)):
             data_processed = np.array(data[ii])
@@ -132,8 +132,9 @@ class VideoMode:
         self.datalock = threading.Lock()
 
         # for addPPT
-        self.scanparams = {'sweepparams': self.sweepparams, 'sweepranges': self.sweepranges, 'minstrument': minstrument}
-        
+        self.scanparams = {'sweepparams': self.sweepparams,
+                           'sweepranges': self.sweepranges, 'minstrument': minstrument}
+
         # parse instrument
         if 'fpga' in station.components:
             self.sampling_frequency = station.fpga.sampling_frequency
@@ -158,7 +159,8 @@ class VideoMode:
         if nplots is None:
             nplots = len(self.channels)
         self.nplots = nplots
-        self.window_title = "%s: nplots %d" % (self.__class__.__name__, self.nplots )
+        self.window_title = "%s: nplots %d" % (
+            self.__class__.__name__, self.nplots)
 
         win = QtWidgets.QWidget()
         win.setWindowTitle(self.window_title)
@@ -196,7 +198,7 @@ class VideoMode:
 
             lp = livePlot(None, self.station.gates,
                           self.sweepparams, self.sweepranges, show_controls=False,
-                          plot_title=str(self.minstrumenthandle)+' '  + str(self.channels[ii]) )
+                          plot_title=str(self.minstrumenthandle) + ' ' + str(self.channels[ii]))
             self.lp.append(lp)
             self.plotLayout.addWidget(self.lp[ii].win)
 
@@ -229,7 +231,7 @@ class VideoMode:
         else:
             self._averaging_enabled = averaging
             self.mainwin.averaging_box.setChecked(self._averaging_enabled)
-            
+
         for l in self.lp:
             l.enable_averaging(self._averaging_enabled)
 
@@ -237,9 +239,10 @@ class VideoMode:
         """ Copy image of videomode window to PPT """
         isrunning = self.is_running()
         if isrunning:
-            self.stopreadout() # prevent multi-threading issues        
+            self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
-        qtt.tools.addPPTslide(fig=self, title='VideoMode', notes=self.station, extranotes=str(self.scanparams) )
+        qtt.tools.addPPTslide(fig=self, title='VideoMode',
+                              notes=self.station, extranotes=str(self.scanparams))
         if isrunning:
             self.startreadout()
 
@@ -272,7 +275,8 @@ class VideoMode:
             self.stopreadout()
             dd = None
 
-        self.mainwin.setWindowTitle(self.window_title + ' %.1f [fps]' % self.fps.framerate())
+        self.mainwin.setWindowTitle(
+            self.window_title + ' %.1f [fps]' % self.fps.framerate())
 
         if self.fps.framerate() < 10:
             time.sleep(0.1)
@@ -280,7 +284,7 @@ class VideoMode:
 
     def is_running(self):
         return self.timer.isActive()
-    
+
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
@@ -321,22 +325,23 @@ class VideoMode:
         """ Return latest recorded dataset """
         with self.datalock:
             if run:
-                data = self.datafunction_result # [l.datafunction_result for l in self.lp]
+                # [l.datafunction_result for l in self.lp]
+                data = self.datafunction_result
                 data = np.array(data)
             else:
-                data = self.datafunction_result 
+                data = self.datafunction_result
                 data = np.array(data)
             self.alldata = self.makeDataset(data, Naverage=None)
             return self.alldata
 
     def scan_dimension(self):
-        if isinstance(self.sweepranges, (float,int)):
+        if isinstance(self.sweepranges, (float, int)):
             return 1
         elif isinstance(self.sweepranges, list):
             return 2
         else:
             return -1
-        
+
     def run(self, startreadout=True):
         """ Programs the AWG, starts the read-out and the plotting. """
 
@@ -371,7 +376,7 @@ class VideoMode:
                 self.minstrumenthandle, self.channels), resolution=self.resolution, diff_dir=self.diff_dir)
         else:
             raise Exception('type of scan not supported')
-                
+
         self._waveform = waveform
 
         if startreadout:
@@ -400,18 +405,18 @@ class VideoMode:
     def crosshair(self, *args, **kwargs):
         for l in self.lp:
             l.crosshair(*args, **kwargs)
-            
+
     def makeDataset(self, data, Naverage=None):
         if data.ndim == 2:
-            if (data.shape[0]>1):
+            if (data.shape[0] > 1):
                 raise Exception('not yet implemented')
-            data=data[0]
+            data = data[0]
             alldata, _ = makeDataset_sweep(data, self.sweepparams, self.sweepranges,
                                            gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
         elif data.ndim == 3:
-            if (data.shape[0]>1):
+            if (data.shape[0] > 1):
                 raise Exception('not yet implemented')
-            data=data[0]
+            data = data[0]
             alldata, _ = makeDataset_sweep_2D(data, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
                                               'label': 'videomode_2d_single'})
         else:
@@ -616,33 +621,35 @@ if __name__ == '__main__':
     self = vm
     vm.setGeometry(1310, 100, 800, 800)
 
-#%% Test MultiTracePlot    
-    app=pg.mkQApp()
-    waveform, ix= station.awg.sweep_gate('P1', 50, 1e-3)
-    nplots=3
-    ncurves=2
-    
+#%% Test MultiTracePlot
+    app = pg.mkQApp()
+    waveform, ix = station.awg.sweep_gate('P1', 50, 1e-3)
+    nplots = 3
+    ncurves = 2
+
     def read_trace_dummy():
-        data=qtt.measurements.scans.measuresegment(waveform, Naverage=1, minstrhandle=station.sdigitizer.name, read_ch=[1,2] )
-        dd=[data]*nplots
-        xd=np.linspace(-waveform['sweeprange']/2, waveform['sweeprange']/2, data[0].size)
-        xdata=[xd]*nplots
+        data = qtt.measurements.scans.measuresegment(
+            waveform, Naverage=1, minstrhandle=station.sdigitizer.name, read_ch=[1, 2])
+        dd = [data] * nplots
+        xd = np.linspace(-waveform['sweeprange'] / 2,
+                         waveform['sweeprange'] / 2, data[0].size)
+        xdata = [xd] * nplots
         return xdata, dd
-    
-    xd, yd=read_trace_dummy()
-    
+
+    xd, yd = read_trace_dummy()
+
     #%%
     import qtt.measurements.ttrace
     reload(qtt.measurements.ttrace)
     from qtt.measurements.ttrace import MultiTracePlot
-    
+
     mt = MultiTracePlot(nplots=nplots, ncurves=ncurves)
     mt.win.setGeometry(1400, 40, 500, 500)
     mt.add_verticals()
-       
+
     def callback():
-        xdata, ydata=read_trace_dummy()
+        xdata, ydata = read_trace_dummy()
         mt.plot_curves(xdata, ydata)
-        app.processEvents() 
-    
+        app.processEvents()
+
     mt.startreadout(callback=callback)
