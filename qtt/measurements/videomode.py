@@ -112,11 +112,7 @@ class VideoMode:
 
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
-<<<<<<< HEAD
-                 dorun=True, show_controls=True, add_ppt=True, crosshair=False):
-=======
-                 dorun=True, show_controls=True, add_ppt=True, averaging=False):
->>>>>>> Fix videomode 1D with virtual gates and some misc features.
+                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=False):
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
