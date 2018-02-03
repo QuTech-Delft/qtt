@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # qtt documentation build configuration file, created by
-# sphinx-quickstart on Fri Feb  2 16:37:06 2018.
+# sphinx-quickstart on Sat Feb  3 15:16:09 2018.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -32,8 +32,7 @@
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.mathjax', 'sphinx.ext.napoleon']
+    'sphinx.ext.mathjax']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,8 +48,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'qtt'
-copyright = '2018, Pieter'
-author = 'Pieter'
+copyright = '2018, Pieter Eendebak'
+author = 'Pieter Eendebak'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -85,7 +84,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'agogo'
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -145,7 +144,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'qtt.tex', 'qtt Documentation',
-     'Pieter', 'manual'),
+     'Pieter Eendebak', 'manual'),
 ]
 
 
