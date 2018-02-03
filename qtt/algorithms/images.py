@@ -24,8 +24,9 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
 
     Returns
     -------
-     ims: transformed image
-     (fw, fh, mvx, mvy, H) : data
+    ims: numpy array
+         transformed image
+    (fw, fh, mvx, mvy, H) : data
          H is the homogeneous transform from original to straightened image
 
     """

@@ -13,7 +13,6 @@ from itertools import chain
 import scipy.ndimage as ndimage
 
 
-from qcodes import DataArray
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
 try:
@@ -281,8 +280,8 @@ def diffImage(im, dy, size=None):
 def diffImageSmooth(im, dy='x', sigma=2):
     """ Simple differentiation of an image
 
-    Input
-    -----
+    Parameters
+    ----------
     im : array
         input image
     dy : string or integer
@@ -370,7 +369,7 @@ def scanTime(dd):
 
 
 def plot_parameter(data, default_parameter='amplitude'):
-    ''' Return parameter to be plotted '''
+    """ Return parameter to be plotted """
     if 'main_parameter' in data.metadata.keys():
         return data.metadata['main_parameter']
     if default_parameter in data.arrays.keys():
@@ -420,14 +419,14 @@ def showImage(im, extent=None, fig=None):
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values
 
-    Arguments
-    ---------
-        activegates : list or dict
-            list of gates to reset
-        basevalues: dict
-            new values for the gates
-        verbose : integer
-            output level
+    Parameters
+    ----------
+    activegates : list or dict
+        list of gates to reset
+    basevalues: dict
+        new values for the gates
+    verbose : integer
+        output level
 
     """
     if verbose:
@@ -436,8 +435,6 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
         if basevalues == None:
             val = 0
         else:
-            # print(g)
-            # print(basevalues)
             if g in basevalues.keys():
                 val = basevalues[g]
             else:

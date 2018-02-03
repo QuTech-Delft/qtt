@@ -61,6 +61,8 @@ docs/_build/
 # PyBuilder
 target/
 
+# Qcodes new dataset nonsense
+experiment.db
 
 # Temporary files
 *~
