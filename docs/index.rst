@@ -11,10 +11,53 @@ Welcome to qtt's documentation!
    :caption: Contents:
 
 
+QTT (QuTech Tuning) is a Python package for performing measurements and calibration of spin-qubits.
+An example:
+
+.. code:: python
+
+   # imports
+   import qtt
+   # load data
+   dataset = load_data('example')
+   # analyse
+   results = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=100)
+   
+
+More examples can be found in the example notebooks.
+
+
+
+Documentation
+-------------
+
+.. toctree::
+   :maxdepth: 2
+
+   start/index
+   help
+   user/index
+   community/index
+   api/index
+   api/generated/qcodes.instrument_drivers
+   roadmap
+   changes/index
+   examples/index
+
 
 Indices and tables
 ==================
 
+
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+License
+=======
+
+.. include:: ../LICENSE
+
+
+Contributions
+=============
