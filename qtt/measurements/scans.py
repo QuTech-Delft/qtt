@@ -1489,6 +1489,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dfastvec'
+        for xx in set(scanjob['sweepdata']['param'].keys()) - set(station.awg.awg_map.keys()):
+            scanjob['sweepdata']['param'].pop(xx, None)
+            
         fast_sweep_gates = scanjob['sweepdata']['param'].copy()
         if 'stepvalues' in scanjob:
             scanjob._start_end_to_range(scanfields=['sweepdata'])
@@ -1721,6 +1724,12 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dturbovec'
+        for xx in set(scanjob['sweepdata']['param'].keys()) - set(station.awg.awg_map.keys()):
+            scanjob['sweepdata']['param'].pop(xx, None)
+            
+        for xx in set(scanjob['stepdata']['param'].keys()) - set(station.awg.awg_map.keys()):
+            scanjob['stepdata']['param'].pop(xx, None)
+        
         fast_sweep_gates = scanjob['sweepdata']['param'].copy()
         fast_step_gates = scanjob['stepdata']['param'].copy()
         scanjob._start_end_to_range()
