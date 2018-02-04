@@ -8,6 +8,7 @@ import qcodes
 import warnings
 import functools
 import pickle
+import inspect
 import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
@@ -99,23 +100,30 @@ def dumpstring(txt):
 
 
 def deprecated(func):
-    '''This is a decorator which can be used to mark functions
+    """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
-    when the function is used.'''
+    when the function is used. """
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
+        try:
+            filename = inspect.getfile(func)
+        except:
+            filename = '?'
+        try:
+            lineno = inspect.getlineno(func)
+        except:
+            lineno = -1
         warnings.warn_explicit(
             "Call to deprecated function {}.".format(func.__name__),
             category=DeprecationWarning,
-            filename='?',  # func.func_code.co_filename,
-            lineno=-1,  # func.func_code.co_firstlineno + 1
+            filename=filename,
+            lineno=lineno, 
         )
         return func(*args, **kwargs)
     return new_func
 
 #%%
-
 
 def update_dictionary(alldata, **kwargs):
     """ Update elements of a dictionary

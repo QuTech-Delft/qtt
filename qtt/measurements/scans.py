@@ -118,7 +118,7 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
 
 #%%
 
-
+@qtt.tools.deprecated
 def parse_stepdata(stepdata):
     """ Helper function for legacy code """
     if not isinstance(stepdata, dict):
