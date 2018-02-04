@@ -1345,6 +1345,9 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
 
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
+    """Wrapper to identify measurement instrument and run appropriate acquisition function.
+    Supported instruments: m4i digitizer, qtt fpga.
+    """
     try:
         isfpga = isinstance(
             minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
@@ -1381,7 +1384,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
 
     Args:
         parameters (dict): dictionary containing the following compulsory parameters:
-          -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
+          -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: see measuresegments.
           -read_ch (list of int): channel numbers to record.
           -period (float): time in seconds to record for each segment.
           -nsegments (int): number of segments to record.
@@ -1414,11 +1417,8 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
                                      xunit='s', location=location, loc_record={'label': 'save_segments'})
     else:
-        try:
-            ism4i = isinstance(
-                minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-        except:
-            ism4i = False
+        ism4i = isinstance(
+            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
             memsize = select_digitizer_memsize(minstrhandle, period)
             post_trigger = minstrhandle.posttrigger_memory_size()
