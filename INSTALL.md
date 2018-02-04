@@ -194,7 +194,7 @@ pip install git+https://github.com/telegraphic/hickle.git@dev
 
 Manual installation:
 ```
-> conda install numpy scipy pyqtgraph spyder nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
+> conda install numpy scipy pyqtgraph spyder autopep8 nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
 > cd [QTTDIR]
 > pip install --user -r develop_requirements.txt
 > conda install -c conda-forge opencv
