@@ -8,7 +8,6 @@ Created on Wed Mar  4 12:40:53 2015
 #%% Load packages
 from __future__ import division
 
-import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pyplot
@@ -22,8 +21,6 @@ except:
     pass
 
 _linetoolswarn = False
-
-import numpy as np
 
 try:
     import shapely
@@ -957,8 +954,8 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
     With the optional parameters psi (angle of transition line)
     The x, y, width are in mV. Angles in radians
 
-    param : array of floats
-        parameters of the model
+    Args:
+    param (array): parameters of the model
     samplesize (int): size of image patch in pixels
     l, w, lsegment : float
         parameters of the model in mV?. lsegment is the length of the 4 addition lines

@@ -1,6 +1,5 @@
 # %% Static variables
 
-mwindows = None
 liveplotwindow = None  # global handle for live plotting
 
 

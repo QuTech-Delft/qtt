@@ -63,12 +63,14 @@ lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
 
 def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     """ Converts the virtual gate matrix into a virtual gate mapping
-    Inputs:
+    
+    Args:
         physical_gates (list): containing all the physical gates in the setup
         virt_basis (list): containing all the virtual gates in the setup
         c (array): virtual gate matrix
-    Outputs: 
-        virtual_matrix (dict): dictionary, mapping of the virtual gates"""
+    Returns: 
+        virtual_matrix (dict): dictionary, mapping of the virtual gates
+    """
     virtual_matrix = OrderedDict()                                                                                            
     for ii, vname in enumerate(virt_basis):
         if verbose:
@@ -84,12 +86,13 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
 
 def create_virtual_matrix_dict_inv(cc_basis, physical_gates, c, verbose=1):
     """ Converts the virtual gate matrix into a virtual gate mapping needed for the ttraces
-    Inputs:
+    Args:
         physical_gates (list): containing all the physical gates in the setup
         cc_basis (list): containing all the virtual gates in the setup
         c (array or None): inverse virtual gate matrix
-    Outputs: 
-        virtual_matrix (dict): dictionary, mapping of the virtual gates needed for the ttraces """
+    Returns: 
+        virtual_matrix (dict): dictionary, mapping of the virtual gates needed for the ttraces
+    """
 
     if c is None:
         invc=None
@@ -760,9 +763,11 @@ class MultiTracePlot:
            
 
 def plot_ttraces(ttraces): 
-    """Plots the ttraces which are put on the AWG
-    Inputs:
-        ttraces: information of the ttraces put on the AWG"""
+    """ Plots the ttraces which are put on the AWG
+    
+    Args:
+        ttraces: information of the ttraces put on the AWG
+    """
     for ii, ttrace_element in enumerate(ttraces):
         v = ttrace_element.waveforms()
         kk = v[1].keys()
@@ -772,13 +777,15 @@ def plot_ttraces(ttraces):
        
       
 def read_FPGA_line(station, idx=[1,],Naverage=26):
-    """Reads the raw data
-    Inputs: 
+    """ Reads the raw data
+    
+    Args: 
         station: station at leas containing the FPGA
         idx: indexes of channels used
         Naverage: averaging filter over the readout function
-    Outputs: 
-        data_raw: the raw readout data ="""
+    Returns: 
+        data_raw: the raw readout data
+    """
     ReadDevice = ['FPGA_ch%d' % c for c in idx ]
     qq=station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
     data_raw = np.array([qq[i] for i in idx])
@@ -786,13 +793,15 @@ def read_FPGA_line(station, idx=[1,],Naverage=26):
 
 def parse_data(data_raw, ttraces,ttrace, clockbias = 1, verbose=1): #TODO: definition of datax and tx, try tho put it in the ttrace class
     """Read the data, split them in the different dimension sweeps
-    Inputs:
+    
+    Args:
         data_raw: the raw readout data
         ttraces,ttrace: information of the ttraces put on the AWG in order to now how to split the data
-    Outputs:
+    Returns:
         tt: containing information of the timing of the function
         datax:
-        tx: the actual signal which is can be used for further purposes """
+        tx: the actual signal which is can be used for further purposes
+    """
     samplingfreq=ttrace['samplingfreq']
     
     ttrace_element= ttraces[0]
@@ -850,11 +859,13 @@ def _plot_tracedata(tracedata, tf=1e3):
   
 def show_data(tt,tx, data_raw, ttrace, tf=1e3, fig=10, labels=None):
     """Plot the raw data and the parsed data of the resulting signal
-    Inputs:
-        tt: parsed data including timing
-        tx: the actual signal 
-        data_raw: raw readout data
-        ttrace: data about the traces put on the AWG"""
+
+    Args:
+        tt (obj): parsed data including timing
+        tx (obj): the actual signal 
+        data_raw (obj): raw readout data
+        ttrace (obj): data about the traces put on the AWG
+    """
     plt.figure(fig)
     plt.clf()
     for i in range(data_raw.shape[0]):
