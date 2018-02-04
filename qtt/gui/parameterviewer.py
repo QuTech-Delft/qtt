@@ -117,6 +117,15 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.expandAll()
         # self.label.setStyleSheet("QLabel { background-color : #baccba; margin: 2px; padding: 2px; }");
 
+
+    def setParamSingleStep(self, instr, param, value):
+        try:
+            box=self._itemsdict[instr][param]
+            box.setSingleStep(value)
+        except Exception as ex:
+            print(ex)
+            pass
+
     def setSingleStep(self, value, instrument_name=None):
         """ Set the default step size for parameters in the viewer """
         if instrument_name is None:
