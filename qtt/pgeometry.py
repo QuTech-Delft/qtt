@@ -11,10 +11,6 @@ For additional options also see
 
 :platform: Unix, Windows
 
-.. doctest::
-
-  >>> choose(6,2)
-  15
 
 Additions:
     Copyright 2012-2016   TNO
@@ -45,7 +41,7 @@ import logging
 import pkgutil
 import subprocess
 
-__version__ = '0.5'
+__version__ = '0.51'
 
 #%% Load pyqside or pyqt4
 # We want to do this before loading matplotlib
