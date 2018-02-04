@@ -1365,13 +1365,9 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
             minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
     elif minstrhandle == 'dummy':
         # for testing purposes
-<<<<<<< HEAD
         data = np.random.rand( 100, )
     elif is_simulation:
         data = minstrument.measuresegment(waveform, channels=read_ch)
-=======
-        data = np.random.rand(100, )
->>>>>>> metadata issue + autopep8
     else:
         raise Exception(
             'Unrecognized fast readout instrument %s' % minstrhandle)
@@ -2118,7 +2114,6 @@ def test_scan2D(verbose=0):
     data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
     scanjob = scanjob_t({'sweepdata': dict(
-<<<<<<< HEAD
         {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
     scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
     scanjob['stepvalues'] = np.array([[2*i, 3*i] for i in range(10)])
@@ -2128,14 +2123,6 @@ def test_scan2D(verbose=0):
         from colorama import Fore
         print(ex)
         print(Fore.RED + 'MultiParameter test failed!' + Fore.RESET)
-=======
-        {'param': {'dac1': 1}, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
-    scanjob['stepdata'] = {'param': MultiParameter(
-        'multi_param', [gates.dac2, gates.dac3])}
-    scanjob['stepvalues'] = np.array([[2 * i, 3 * i] for i in range(10)])
-    data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
->>>>>>> metadata issue + autopep8
     # not supported:
     try:
         scanjob = scanjob_t({'sweepdata': dict({'param': {
