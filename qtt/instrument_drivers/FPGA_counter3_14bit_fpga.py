@@ -105,10 +105,10 @@ class FPGApulse(VisaInstrument):
             return self.convert_bit_to_mV(self.ask_from_serial(163))
 
     def convert_bit_to_mV(self, bit):
-        """ ???? """
+        """ Helper function """
         return bit * 1
     def convert_mV_to_bit(self, mV):
-        """ ???? """
+        """  Helper function """
         return mV / 1
 
     def write_to_serial(self, address, value):
@@ -1128,9 +1128,9 @@ class FPGA_counter3_14bit_fpga(Instrument):
                 self.write_to_serial(162, value, fpga=2)
 
     def do_get_absolute_threshold(self, ch=1):
-        '''
+        """
         Returns one if the measurement is done, else returns zero
-        '''
+        """
 
         if ch == 1:
             return self.convert_bit_to_mV(self.ask_from_serial(132, fpga=1))
@@ -1447,7 +1447,8 @@ class FPGA_counter3_14bit_fpga(Instrument):
     def do_set_first_point_detection_mode(self, value, ch=1):
         '''
         Set how the first point of FIFO is going to be analyzed
-        input:
+        
+        Options for the value are
             4,2,1
             4:  THRESHOLD + hysteresis
             2:  THRESHOLD - hysteresis

@@ -56,7 +56,7 @@ Indices and tables
 License
 =======
 
-.. include:: ../LICENSE
+.. include:: ../LICENSE.txt
 
 
 Contributions
