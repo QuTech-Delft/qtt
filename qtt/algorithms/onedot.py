@@ -291,7 +291,6 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     opts['disp'] = verbose >= 2
     xx = scipy.optimize.minimize(ff, xx.x, method='Powell', options=powell_opts)
     x = xx.x
-    # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     cost, pts, imx = costscoreOD(x0[0], x0[1], x0[2:4], wwarea, output=True)
     balancefitpixel0 = pts.reshape((-1, 2)).T.copy()
     cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True)

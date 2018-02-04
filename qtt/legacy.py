@@ -37,8 +37,6 @@ from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.measurements.scans import pinchoffFilename, fixReversal
 from qtt.data import load_data, show2D
 from qtt.tools import diffImage, diffImageSmooth
-from qtt.measurements.scans import scan2D, scan1D
-from qtt.tools import stripDataset
 from qtt.algorithms.generic import smoothImage
 from qtt.measurements.scans import scanPinchValue
 
@@ -183,8 +181,8 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 
     step is in pixel/mV
 
-    Input
-    -----
+    Parameters
+    ----------
 
     im : array
         input image

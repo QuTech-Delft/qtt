@@ -34,15 +34,8 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-   start/index
-   help
-   user/index
-   community/index
+   contributing
    api/index
-   api/generated/qcodes.instrument_drivers
-   roadmap
-   changes/index
-   examples/index
 
 
 Indices and tables
