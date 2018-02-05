@@ -120,8 +120,8 @@ class OxfordInstruments_ILM200(VisaInstrument):
         return mes
 
     def get_idn(self):
-        """
-        Overides the function of Instrument since ILM does not support '*IDN?'
+        r"""
+        Overides the function of Instrument since ILM does not support '\*IDN?'
 
         This string is supposed to be a
         comma-separated list of vendor, model, serial, and firmware, but
@@ -129,7 +129,7 @@ class OxfordInstruments_ILM200(VisaInstrument):
         as well.
 
         Returns:
-            A dict containing vendor, model, serial, and firmware.
+            idn (dict): A dict containing vendor, model, serial, and firmware.
         """
         try:
             idstr = ''  # in case self.ask fails

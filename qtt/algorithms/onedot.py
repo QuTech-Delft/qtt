@@ -38,7 +38,6 @@ def onedotGetBlobs(fimg, fig=None):
     x = np.percentile(fimg, 99.5)
     thr = thr + (x - thr) * .5
     bim = 30 * (fimg > thr).astype(np.uint8)
-    # plt.clf(); plt.imshow(fimg, interpolation='nearest'); plt.colorbar();
 
     xx = detect_blobs_binary(bim)
 
@@ -116,7 +115,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
 
     The position is determined by scanning with Gabor filters and then performing blob detection
 
-    image should be in pixel coordinates
+    The image should be in pixel coordinates
 
     """
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
@@ -129,7 +128,6 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
         im = np.array(impixel)
 
     theta0 = baseangle  # np.deg2rad(-45)
-#    step = dd['sweepdata']['step']
     step = np.abs(np.nanmean(np.diff(vstep)))
 
     filters, angles, _ = qtt.algorithms.generic.makeCoulombFilter(theta0=theta0, step=step, fig=None)
@@ -164,9 +162,6 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
         plt.axis('image')
 
         xx = show2D(dd, impixel=fimg, fig=fig + 1, verbose=1, title='response image for gabor', units=units)
-        if od is not None:
-            pass
-            # plotPoints(pt0, '.m', markersize=16)
         plt.plot(pt[0], pt[1], '.', color=(0, .8, 0), markersize=16, label='balance point fine')
         plt.axis('image')
 
@@ -234,18 +229,18 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     This function performs a simple fitting of the open (conducting region).
     
     Args:
-        od (one-dot structure or None)
-        dd (2D dataset)
+        od (one-dot structure or None): data for one-dot
+        dd (2D dataset): data containing charge stability diagram
         
     Returns:
-        ....
+        od (obj): modified one-dot object
     
     """
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
     im, tr = qtt.data.dataset2image(dd)
 
-    extentImage = copy.deepcopy(tr.scan_image_extent() ) # [vsweep[0], vsweep[-1], vstep[-1], vstep[0]]  # matplotlib extent style
+    extentImage = copy.deepcopy(tr.scan_image_extent() ) 
     extentImageMatlab = tr.matplotlib_image_extent()
     
     ims = im.copy()
@@ -296,7 +291,6 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     opts['disp'] = verbose >= 2
     xx = scipy.optimize.minimize(ff, xx.x, method='Powell', options=powell_opts)
     x = xx.x
-    # print('  optimize: %f->%f' % (ff(x0), ff(xx.x)) )
     cost, pts, imx = costscoreOD(x0[0], x0[1], x0[2:4], wwarea, output=True)
     balancefitpixel0 = pts.reshape((-1, 2)).T.copy()
     cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True)

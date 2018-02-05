@@ -105,13 +105,14 @@ class VideoMode:
         resolution (1 x 2 list): for 2D the resolution
         nplots (int or None): number of plots to show. must be equal to the number of channels in the minstrument argument
         sample_rate (float): sample rate for acquisition device
+        crosshair (bool): enable crosshair
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
     # TODO: implement virtual gates functionality
 
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
-                 dorun=True, show_controls=True, add_ppt=True):
+                 dorun=True, show_controls=True, add_ppt=True, crosshair=False):
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
@@ -216,6 +217,7 @@ class VideoMode:
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
 
+        self.crosshair(show=crosshair)
 
         self.enable_averaging_slot(averaging=True)
         if dorun:
@@ -389,6 +391,10 @@ class VideoMode:
         """
         raise Exception('not implemented')
 
+    def crosshair(self, *args, **kwargs):
+        for l in self.lp:
+            l.crosshair(*args, **kwargs)
+            
     def makeDataset(self, data, Naverage=None):
         if data.ndim == 2:
             if (data.shape[0]>1):

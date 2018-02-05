@@ -94,16 +94,13 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
 def logistic(x, x0=0, alpha=1):
     """ Logistic function
 
-    Arguments:
-    x : array
-        values
-    x0, alpha : float
-        parameters of function
+    Args:
+        x (array): array with values
+        x0 (float):  parameters of function
+        alpha (float): parameters of function
 
-    Example
-    -------
-
-    >>> y=logistic(0, 1, alpha=1)
+    Example:
+        >>> y=logistic(0, 1, alpha=1)
     """
     f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
     return f

@@ -2,7 +2,7 @@
 """
 
 pgeometry
--------
+---------
 
 A collection of usefull functions.
 
@@ -11,10 +11,6 @@ For additional options also see
 
 :platform: Unix, Windows
 
-.. doctest::
-
-  >>> choose(6,2)
-  15
 
 Additions:
     Copyright 2012-2016   TNO
@@ -45,7 +41,7 @@ import logging
 import pkgutil
 import subprocess
 
-__version__ = '0.5'
+__version__ = '0.51'
 
 #%% Load pyqside or pyqt4
 # We want to do this before loading matplotlib
@@ -1663,8 +1659,7 @@ def auto_canny(image, sigma=0.33):
 def plotPoints(xx, *args, **kwargs):
     """ Plot 2D or 3D points
 
-
-    Arguments:
+    Args:
         xx (array): array of points to plot
         args: arguments passed to the plot function of matplotlib
         kwargs:  arguments passed to the plot function of matplotlib
@@ -2002,8 +1997,7 @@ def blur_measure(im, verbose=0):
 def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
     """ Create a Gabor filter of specified size
 
-
-    Input
+    Parameters
     -----
     ksize : integer
         kernel size in pixels
@@ -2012,7 +2006,7 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
     cut: boolean
         if True cut off the angular component after specified distance (in radians)
 
-    Output
+    Returns
     ------
 
     g : array
@@ -2106,7 +2100,7 @@ def toc(t0=None):
     """ Stop timer
 
     Returns:
-        time elapsed (in seconds) since the start of the timer
+        dt (float): time elapsed (in seconds) since the start of the timer
 
     See also: :func:`tic`
     """
