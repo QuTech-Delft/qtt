@@ -1631,7 +1631,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     return alldata
 
 
-def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=0, step=None):
+def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove_slow_gates=False, station=None, start=0, step=None):
     """Converts the sweepdata or stepdata of a scanjob in those needed for virtual vector scans
     
     Args:
@@ -1647,6 +1647,12 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=
     if hasattr(virtual_parameter, 'comb_map'):
         pp = dict([(p.name, r)
                    for p, r in virtual_parameter.comb_map if round(r, 5) != 0])
+        if remove_slow_gates == True:
+            try:
+                for xx in set(pp.keys()) - set(station.awg.awg_map.keys()):
+                    pp.pop(xx, None)    
+            except:
+                pass
     else:
         pp = {virtual_parameter.name: 1}
     sweeporstepdata = {'start': start, 'range': g_range,
