@@ -1384,7 +1384,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
 
     Args:
         parameters (dict): dictionary containing the following compulsory parameters:
-          -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: see measuresegments.
+          -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
           -read_ch (list of int): channel numbers to record.
           -period (float): time in seconds to record for each segment.
           -nsegments (int): number of segments to record.
