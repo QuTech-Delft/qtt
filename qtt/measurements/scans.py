@@ -1645,12 +1645,13 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     if hasattr(virtual_parameter, 'comb_map'):
         pp = dict([(p.name, r)
                    for p, r in virtual_parameter.comb_map if round(r, 5) != 0])
-        if remove_slow_gates == True:
+        if remove_slow_gates:
             try:
-                for xx in set(pp.keys()) - set(station.awg.awg_map.keys()):
-                    pp.pop(xx, None)    
-            except:
-                pass
+                for gate in pp.keys():
+                    if station.awg.awg_gate(gate):
+                        pp.pop(gate, None)    
+            except Exception as ex:
+                warnings.warn('error when removing slow gate from scan data')
     else:
         pp = {virtual_parameter.name: 1}
     sweeporstepdata = {'start': start, 'range': g_range,
