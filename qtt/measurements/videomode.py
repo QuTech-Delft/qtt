@@ -115,19 +115,7 @@ class VideoMode:
                  dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True):
         self.station = station
         self.verbose = verbose
-        
-        try:
-            for xx in set(sweepparams['gates_horz'].keys()) - set(station.awg.awg_map.keys()):
-                sweepparams['gates_horz'].pop(xx, None)
-        except: 
-            pass
-    
-        try:
-            for xx in set(sweepparams['gates_vert'].keys()) - set(station.awg.awg_map.keys()):
-                sweepparams['gates_vert'].pop(xx, None)   
-        except:
-            pass
-        
+
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
 

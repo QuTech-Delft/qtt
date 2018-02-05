@@ -1489,9 +1489,6 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dfastvec'
-        for xx in set(scanjob['sweepdata']['param'].keys()) - set(station.awg.awg_map.keys()):
-            scanjob['sweepdata']['param'].pop(xx, None)
-            
         fast_sweep_gates = scanjob['sweepdata']['param'].copy()
         if 'stepvalues' in scanjob:
             scanjob._start_end_to_range(scanfields=['sweepdata'])
@@ -1637,6 +1634,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     Args:
         virtual_parameter (obj): parameter of the virtual gate which is varied
         g_range (float): scan range
+        remove_slow_gates: Removes slow gates from the linear combination of gates. Useful if virtual gates include compensation ofn slow gates, but a fast measurement should be run.
         start (float): start if the scanjob data 
         step (None or float): if not None, then add to the scanning field
     Returns:
@@ -1730,12 +1728,6 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dturbovec'
-        for xx in set(scanjob['sweepdata']['param'].keys()) - set(station.awg.awg_map.keys()):
-            scanjob['sweepdata']['param'].pop(xx, None)
-            
-        for xx in set(scanjob['stepdata']['param'].keys()) - set(station.awg.awg_map.keys()):
-            scanjob['stepdata']['param'].pop(xx, None)
-        
         fast_sweep_gates = scanjob['sweepdata']['param'].copy()
         fast_step_gates = scanjob['stepdata']['param'].copy()
         scanjob._start_end_to_range()
