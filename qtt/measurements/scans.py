@@ -33,7 +33,7 @@ import qtt.algorithms.onedot
 import qtt.live
 from qtt.tools import deprecated
 
-from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain
+from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 
@@ -198,8 +198,8 @@ def get_instrument(instr, station=None):
 
     if isinstance(instr, tuple):
         # assume the tuple is (instrument, channel)
-        instr=instr[0]
-        
+        instr = instr[0]
+
     if not isinstance(instr, str):
         raise Exception('could not find instrument %s' % str(instr))
     try:
@@ -342,7 +342,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         if update_plot:
             if liveplotwindow:
                 myupdate()
-            pg.mkQApp().processEvents() # needed for the parameterviewer
+            pg.mkQApp().processEvents()  # needed for the parameterviewer
 
         if qtt.abort_measurements():
             print('  aborting measurement loop')
@@ -455,7 +455,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
-        pg.mkQApp().processEvents() # needed for the parameterviewer
+        pg.mkQApp().processEvents()  # needed for the parameterviewer
 
     dt = time.time() - t0
 
@@ -515,17 +515,19 @@ class sample_data_t (dict):
         bnds = self.get('gate_boundaries', {})
         b = bnds.get(gate, (None, None))
         if b[1] is not None:
-            value=min(value, b[1])
+            value = min(value, b[1])
         if b[0] is not None:
-            value=max(value, b[0])
+            value = max(value, b[0])
         return value
-    
+
+
 def test_sample_data():
-    s=sample_data_t()
-    s['gate_boundaries']={'D0': [-500,100]}
-    v=s.restrict_boundaries('D0', 1000)
-    assert(v==100)
-    
+    s = sample_data_t()
+    s['gate_boundaries'] = {'D0': [-500, 100]}
+    v = s.restrict_boundaries('D0', 1000)
+    assert(v == 100)
+
+
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
 
@@ -547,23 +549,23 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
-    def setWaitTimes(self, station, min_time = 0):
+    def setWaitTimes(self, station, min_time=0):
         """ Set default waiting times based on gate filtering """
 
-        gate_settle=getattr(station,'gate_settle', None)
-        t=.1
+        gate_settle = getattr(station, 'gate_settle', None)
+        t = .1
         if gate_settle is None:
-            t=0
-        for f in ['sweepdata', 'stepdata']:        
+            t = 0
+        for f in ['sweepdata', 'stepdata']:
             if f in self:
                 if gate_settle:
-                    if f=='stepdata':
-                        t=2.5*gate_settle(self[f]['param'])
+                    if f == 'stepdata':
+                        t = 2.5 * gate_settle(self[f]['param'])
                     else:
-                        t=gate_settle(self[f]['param'])
+                        t = gate_settle(self[f]['param'])
                 self[f]['wait_time'] = max(t, min_time)
-        self['wait_time_startscan']=.5+2*t
-        
+        self['wait_time_startscan'] = .5 + 2 * t
+
     def parse_stepdata(self, field, gates=None):
         """ Helper function for legacy code """
         stepdata = self[field]
@@ -640,7 +642,7 @@ class scanjob_t(dict):
 
     def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata']):
         """ Add range to stepdata and/or sweepdata in scanjob.
-        
+
         Note: This function also converts the start and end fields.        
         """
         if isinstance(scanfields, str):
@@ -656,8 +658,8 @@ class scanjob_t(dict):
                     scaninfo['start'] = -scaninfo['range'] / 2
                     scaninfo['end'] = scaninfo['range'] / 2
                 else:
-                    scaninfo['start'] = -scaninfo['range']/2
-                    scaninfo['end'] = scaninfo['range']/2
+                    scaninfo['start'] = -scaninfo['range'] / 2
+                    scaninfo['end'] = scaninfo['range'] / 2
 
     def _parse_2Dvec(self):
         """ Adjust the parameter field in the step- and sweepdata for 2D vector scans.
@@ -673,7 +675,7 @@ class scanjob_t(dict):
             pass
         else:
             vec_check = [(stepdata, isinstance(stepdata['param'], lin_comb_type)),
-                     (sweepdata, isinstance(sweepdata['param'], lin_comb_type))]
+                         (sweepdata, isinstance(sweepdata['param'], lin_comb_type))]
             for scaninfo, boolean in vec_check:
                 if boolean is False:
                     scaninfo['param'] = {scaninfo['param']: 1}
@@ -729,18 +731,21 @@ class scanjob_t(dict):
                 sweepdata['step'] = (sweepdata['end'] -
                                      sweepdata['start']) / sweeplength
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
-                last = sweepdata['start']+sweepdata['range']
-                scanvalues = sweepparam[sweepdata['start']:last:sweepdata['step']]
+                last = sweepdata['start'] + sweepdata['range']
+                scanvalues = sweepparam[sweepdata['start']
+                    :last:sweepdata['step']]
 
-                param_init = {param: gates.get(param) for param in sweepdata['param']}
-                self['phys_gates_vals'] = {param: np.zeros(len(scanvalues)) for param in sweepdata['param']}
-                sweep_array = np.linspace(-sweepdata['range']/2, sweepdata['range']/2, len(scanvalues))  
+                param_init = {param: gates.get(param)
+                              for param in sweepdata['param']}
+                self['phys_gates_vals'] = {param: np.zeros(
+                    len(scanvalues)) for param in sweepdata['param']}
+                sweep_array = np.linspace(-sweepdata['range'] / 2,
+                                          sweepdata['range'] / 2, len(scanvalues))
                 for param in sweepdata['param']:
                     self['phys_gates_vals'][param] = param_init[param] + \
                         sweep_array * sweepdata['param'][param]
             else:
-                scanvalues = sweepparam[sweepdata['start']
-                    :sweepdata['end']:sweepdata['step']]
+                scanvalues = sweepparam[sweepdata['start']                                        :sweepdata['end']:sweepdata['step']]
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
@@ -771,11 +776,11 @@ class scanjob_t(dict):
                     sweepname = self['sweepdata']['paramname']
                 else:
                     sweepname = 'sweepparam'
-                if stepvalues  is None:
+                if stepvalues is None:
                     stepparam = VectorParameter(name=stepname, comb_map=[(
-                            gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
+                        gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
                 else:
-                    stepparam = self['stepdata']['param']    
+                    stepparam = self['stepdata']['param']
                 sweepparam = VectorParameter(name=sweepname, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan2D', 'scan2Dfast', 'scan2Dturbo']:
@@ -787,22 +792,29 @@ class scanjob_t(dict):
                 if 'range' in sweepdata:
                     sweepdata['step'] = sweepdata['range'] / sweeplength
                 else:
-                    sweepdata['step'] = (sweepdata['end'] - sweepdata['start']) / sweeplength
+                    sweepdata['step'] = (
+                        sweepdata['end'] - sweepdata['start']) / sweeplength
             if steplength is not None:
                 if 'range' in stepdata:
                     stepdata['step'] = stepdata['range'] / steplength
                 else:
-                    stepdata['step'] = (stepdata['end'] - stepdata['start']) / steplength
+                    stepdata['step'] = (
+                        stepdata['end'] - stepdata['start']) / steplength
 
-            sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+            sweepvalues = sweepparam[sweepdata['start']
+                :sweepdata['end']:sweepdata['step']]
             if stepvalues is None:
-                stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
+                stepvalues = stepparam[stepdata['start']
+                    :stepdata['end']:stepdata['step']]
             scanvalues = [stepvalues, sweepvalues]
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
-                param_init = {param: gates.get(param) for param in sweepdata['param']}
-                self['phys_gates_vals'] = {param: np.zeros((len(stepvalues), len(sweepvalues))) for param in sweepdata['param']}
-                step_array2d = np.tile(np.array(stepvalues).reshape(-1, 1), (1, len(sweepvalues)))
-                sweep_array2d = np.tile(sweepvalues, (len(stepvalues), 1))   
+                param_init = {param: gates.get(param)
+                              for param in sweepdata['param']}
+                self['phys_gates_vals'] = {param: np.zeros(
+                    (len(stepvalues), len(sweepvalues))) for param in sweepdata['param']}
+                step_array2d = np.tile(
+                    np.array(stepvalues).reshape(-1, 1), (1, len(sweepvalues)))
+                sweep_array2d = np.tile(sweepvalues, (len(stepvalues), 1))
                 for param in sweepdata['param']:
                     if isinstance(stepvalues, np.ndarray):
                         self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * \
@@ -827,45 +839,49 @@ def delta_time(tprev, thr=2):
         update = 1
     return delta, tprev, update
 
+
 def parse_minstrument(scanjob):
     """ Extract the parameters to be measured from the scanjob """
     minstrument = scanjob.get('minstrument', None)
-    
+
     if minstrument is None:
         warnings.warn('use minstrument instead of keithleyidx')
         minstrument = scanjob.get('keithleyidx', None)
 
     return minstrument
 
+
 def awgGate(gate, station):
-    awg=getattr(station, 'awg', None)
+    awg = getattr(station, 'awg', None)
     if awg is None:
         return False
     return awg.awg_gate(gate)
-    
+
+
 def fastScan(scanjob, station):
     """ Returns whether we can do a fast scan using an awg 
-    
+
     Args:
         scanjob
-        
+
     Returns
         f (int): 0: no fast scan possible, 1: scan2Dfast, 2: all axis
-        
+
     """
-    
+
     if not 'awg' in station.components:
         return 0
-    
-    awg=getattr(station, 'awg')
-    
-    if not awg.awg_gate(scanjob['sweepdata']['param'] ):
+
+    awg = getattr(station, 'awg')
+
+    if not awg.awg_gate(scanjob['sweepdata']['param']):
         # sweep gate is not fast, so no fast scan possible
         return 0
     if 'stepdata' in scanjob:
         if awg.awg_gate(scanjob['stepdata'].get('param', None) ):
             return 2
     return 1
+
 
 lin_comb_type = dict
 """ Class to represent linear combinations of parameters  """
@@ -912,7 +928,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     else:
         scanjob['scantype'] = 'scan2D'
 
-    scanvalues = scanjob._convert_scanjob_vec(station, stepvalues=scanjob.get('stepvalues', None))
+    scanvalues = scanjob._convert_scanjob_vec(
+        station, stepvalues=scanjob.get('stepvalues', None))
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
 
@@ -928,13 +945,13 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if type(stepvalues) is np.ndarray:
         stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=mparams, location=location, loc_record={'label': scanjob['scantype']}, return_names=True)
+        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=mparams,
+                                                            location=location, loc_record={'label': scanjob['scantype']}, return_names=True)
     else:
         alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
-                                                        measure_names=mparams, location=location, loc_record={
-                                                            'label': scanjob['scantype']},
-                                                        return_names=True)
-
+                                                            measure_names=mparams, location=location, loc_record={
+                                                                'label': scanjob['scantype']},
+                                                            return_names=True)
 
     if verbose >= 2:
         print('scan2D: created dataset')
@@ -950,9 +967,10 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         if plotparam is 'all':
             for i in range(np.min(len(mparams))):
                 liveplotwindow.add(
-                        alldata.default_parameter_array(paramname=measure_names[i]), subplot=i+1)
+                    alldata.default_parameter_array(paramname=measure_names[i]), subplot=i + 1)
         else:
-            liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
+            liveplotwindow.add(
+                alldata.default_parameter_array(paramname=plotparam))
 
     tprev = time.time()
     
@@ -960,23 +978,25 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     alldata.write_period = None
     
     for ix, x in enumerate(stepvalues):
-        alldata.store((ix,), {stepvalues.parameter.name:x})
-        
+        alldata.store((ix,), {stepvalues.parameter.name: x})
+
         if verbose:
-            t1=time.time() - t0
-            t1_str=qtt.time.strftime('%H:%M:%S',qtt.time.gmtime(t1))
-            if(ix==0):
-                time_est=len(sweepvalues)*len(stepvalues)*scanjob['sweepdata'].get('wait_time', 0)*2
+            t1 = time.time() - t0
+            t1_str = qtt.time.strftime('%H:%M:%S', qtt.time.gmtime(t1))
+            if(ix == 0):
+                time_est = len(sweepvalues) * len(stepvalues) * \
+                    scanjob['sweepdata'].get('wait_time', 0) * 2
             else:
-                time_est=(t1)/ix*len(stepvalues)-t1
-            time_est_str=qtt.time.strftime('%H:%M:%S',qtt.time.gmtime(time_est))
+                time_est = (t1) / ix * len(stepvalues) - t1
+            time_est_str = qtt.time.strftime(
+                '%H:%M:%S', qtt.time.gmtime(time_est))
             if type(stepvalues) is np.ndarray:
-                tprint('scan2D: %d/%d, time %s (~%s remaining): setting %s to %s' % 
-                   (ix, len(stepvalues), t1_str, time_est_str, stepdata['param'].name, str(x)), dt=.5)
+                tprint('scan2D: %d/%d, time %s (~%s remaining): setting %s to %s' %
+                       (ix, len(stepvalues), t1_str, time_est_str, stepdata['param'].name, str(x)), dt=.5)
             else:
                 tprint('scan2D: %d/%d: time %s (~%s remaining): setting %s to %.3f' %
-                   (ix, len(stepvalues), t1_str, time_est_str, stepvalues.name, x), dt=1.5)
-                
+                       (ix, len(stepvalues), t1_str, time_est_str, stepvalues.name, x), dt=1.5)
+
         if scanjob['scantype'] == 'scan2Dvec':
             pass
         else:
@@ -994,10 +1014,10 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                     qtt.time.sleep(wait_time_step)
             if wait_time_sweep > 0:
                 time.sleep(wait_time_sweep)
-            
+
             datapoint = {}
             datapoint[sweepvalues.parameter.name] = y
-            
+
             for ii, p in enumerate(mparams):
                 datapoint[measure_names[ii]] = p.get()
             
@@ -1037,7 +1057,6 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
-
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
@@ -1122,13 +1141,15 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         width_vert = width[1]
         res_horz = int(resolution[0])
         res_vert = int(resolution[1])
-        
-        if resolution[0]%16 !=0 or resolution[1]%16 !=0 :
+
+        if resolution[0] % 16 != 0 or resolution[1] % 16 != 0:
             # send out warning, due to rounding of the digitizer memory buffers
             #this is not supported
             #print('resolution argument: %s'  % (resolution,) )
-            warnings.warn('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
-            raise Exception('resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,) )
+            warnings.warn(
+                'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
+            raise Exception(
+                'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
         npoints2 = width_horz * res_horz
         npoints2 = npoints2 - (npoints2 % 2)
         npoints3 = width_vert * res_vert
@@ -1241,7 +1262,7 @@ def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
     else:
         width = [waveform['width_horz'], waveform['width_vert']]
         resolution = waveform['resolution']
-        waittime = waveform['period']*Naverage
+        waittime = waveform['period'] * Naverage
         ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
         devicedata = fpga.readFPGA(
             Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
@@ -1260,26 +1281,28 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         data (numpy array)
 
     """
-    
+
     drate = digitizer.sample_rate()
     maxrate = digitizer.max_sample_rate()
     if drate == 0:
-        raise Exception('sample rate of m4i is zero, please reset the digitizer')
+        raise Exception(
+            'sample rate of m4i is zero, please reset the digitizer')
     if drate > maxrate:
-        raise Exception('sample rate of m4i is > %d MHz, this is not supported' % (maxrate//1e6))
+        raise Exception(
+            'sample rate of m4i is > %d MHz, this is not supported' % (maxrate // 1e6))
 
     # code for offsetting the data in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
     if signal_delay is None:
         signal_delay = 0
-    padding_offset=int(drate*signal_delay)
-        
+    padding_offset = int(drate * signal_delay)
+
     period = waveform['period']
     if 'resolution' in waveform:
         resolution = waveform['resolution']
     else:
         resolution = None
-        
+
     paddingpix = 16
     padding = paddingpix / drate
     pretrigger_period = 16 / drate  # waveform['markerdelay'],  16 / samp_freq
@@ -1290,7 +1313,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     if period is None:
         raise Exception('please set period for block measurements')
     memsize = select_digitizer_memsize(
-        digitizer, period+2*padding, pretrigger_period+padding, verbose=verbose >= 1)
+        digitizer, period + 2 * padding, pretrigger_period + padding, verbose=verbose >= 1)
     post_trigger = digitizer.posttrigger_memory_size()
 
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
@@ -1303,7 +1326,8 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     if isinstance(dataraw, tuple):
         dataraw = dataraw[0]
     data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
-    data = data[:, padding_offset+paddingpix:(padding_offset+paddingpix+int(period*drate))]
+    data = data[:, padding_offset +
+                paddingpix:(padding_offset + paddingpix + int(period * drate))]
 
     if verbose:
         print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
@@ -1320,7 +1344,10 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     return data
 
 
-def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
+def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
+    """Wrapper to identify measurement instrument and run appropriate acquisition function.
+    Supported instruments: m4i digitizer, qtt fpga.
+    """
     try:
         isfpga = isinstance(
             minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
@@ -1338,8 +1365,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
         data = measuresegment_fpga(minstrhandle, waveform, read_ch, Naverage)
     elif ism4i:
         data = measuresegment_m4i(
-            minstrhandle, waveform, read_ch, mV_range, Naverage, process=True)
-    elif minstrhandle=='dummy':
+            minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
+    elif minstrhandle == 'dummy':
         # for testing purposes
         data = np.random.rand( 100, )
     elif is_simulation:
@@ -1350,6 +1377,80 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000):
     if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
     return data
+
+
+def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None):
+    """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
+
+    Args:
+        parameters (dict): dictionary containing the following compulsory parameters:
+          -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
+          -read_ch (list of int): channel numbers to record.
+          -period (float): time in seconds to record for each segment.
+          -nsegments (int): number of segments to record.
+          -average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; if False, dataset will contain nsegments single time trace acquisitions.
+
+    Returns:
+        alldata (dataset): time trace(s) of the segments acquired.
+    """
+    minstrhandle = parameters['minstrhandle']
+    read_ch = parameters['read_ch']
+    period = parameters['period']
+    nsegments = parameters['nsegments']
+
+    t0 = time.time()
+    gates = station.gates
+    gatevals = gates.allvalues()
+
+    waveform = {'period': period, 'width': 0}
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
+    if len(read_ch) == 1:
+        measure_names = ['measured']
+    else:
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
+
+    if average:
+        data = measuresegment(waveform, nsegments,
+                              minstrhandle, read_ch, mV_range, process=False)
+        segment_time = np.linspace(0, period, len(data[0]))
+        alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
+                                     xunit='s', location=location, loc_record={'label': 'save_segments'})
+    else:
+        ism4i = isinstance(
+            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+        if ism4i:
+            memsize = select_digitizer_memsize(minstrhandle, period)
+            post_trigger = minstrhandle.posttrigger_memory_size()
+
+        for i in range(nsegments):
+            if ism4i:
+                dataraw = minstrhandle.single_trigger_acquisition(
+                    mV_range, memsize, post_trigger)
+                if isinstance(dataraw, tuple):
+                    dataraw = dataraw[0]
+                data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
+            else:
+                data = measuresegment(
+                    waveform, 1, minstrhandle, read_ch, mV_range)
+            if i == 0:
+                segment_num = np.arange(nsegments)
+                segment_time = np.linspace(0, period, len(data[0]))
+                alldata = makeDataSet2Dplain('segment_number', segment_num, 'time', segment_time,
+                                             zname=measure_names, xunit='s', location=location, loc_record={'label': 'save_segments'})
+            for idm, mname in enumerate(measure_names):
+                alldata.arrays[mname].ndarray[i] = data[idm]
+
+    dt = time.time() - t0
+    update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(
+        datetime.datetime.now()), allgatevalues=gatevals)
+
+    if save_to_disk:
+        alldata = qtt.tools.stripDataset(alldata)
+        alldata.write(write_metadata=True)
+
+    return alldata
 
 #%%
 
@@ -1418,7 +1519,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             gates.set(sweepdata['paramname'], float(sweepgate_value))
         if 'pulsedata' in scanjob:
             waveform, sweep_info = station.awg.sweepandpulse_gate(
-                {'gate':sweepdata['param'].name, 'sweeprange':sweeprange, 'period':period},
+                {'gate': sweepdata['param'].name,
+                    'sweeprange': sweeprange, 'period': period},
                 scanjob['pulsedata'])
         else:
             waveform, sweep_info = station.awg.sweep_gate(
@@ -1432,7 +1534,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if plotparam == 'measured':
             plotparam = measure_names[0]
 
-    scanvalues = scanjob._convert_scanjob_vec(station, data[0].shape[0], stepvalues=scanjob.get('stepvalues', None))
+    scanvalues = scanjob._convert_scanjob_vec(
+        station, data[0].shape[0], stepvalues=scanjob.get('stepvalues', None))
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
 
@@ -1443,11 +1546,12 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     if type(stepvalues) is np.ndarray:
         stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
-        alldata = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=measure_names, location=location, loc_record={'label': scanjob['scantype']})
+        alldata = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=measure_names,
+                                location=location, loc_record={'label': scanjob['scantype']})
     else:
         if stepvalues.name == sweepvalues.name:
             stepvalues.name = stepvalues.name + '_y'
-            sweepvalues.name = sweepvalues.name + '_x'            
+            sweepvalues.name = sweepvalues.name + '_x'
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
                                 location=location, loc_record={'label': scanjob['scantype']})
 
@@ -1463,11 +1567,11 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     for ix, x in enumerate(stepvalues):
         if type(stepvalues) is np.ndarray:
-            tprint('scan2Dfast: %d/%d: setting %s to %s' % 
+            tprint('scan2Dfast: %d/%d: setting %s to %s' %
                    (ix, len(stepvalues), stepdata['param'].name, str(x)), dt=.5)
         else:
             tprint('scan2Dfast: %d/%d: setting %s to %.3f' %
-               (ix, len(stepvalues), stepvalues.name, x), dt=.5)
+                   (ix, len(stepvalues), stepvalues.name, x), dt=.5)
         if scanjob['scantype'] == 'scan2Dfastvec' and isinstance(stepdata['param'], dict):
             for g in stepdata['param']:
                 gates.set(g, (scanjob['phys_gates_vals'][g][ix, 0] +
@@ -1634,7 +1738,8 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     if scanjob['scantype'] == 'scan2Dturbo' and 'start' in sweepdata:
         stepdata['param'].set((stepdata['end'] + stepdata['start']) / 2)
         sweepdata['param'].set((sweepdata['end'] + sweepdata['start']) / 2)
-        sweepranges = [sweepdata['end'] - sweepdata['start'], stepdata['end'] - stepdata['start']]
+        sweepranges = [sweepdata['end'] - sweepdata['start'],
+                       stepdata['end'] - stepdata['start']]
     else:
         sweepranges = [sweepdata['range'], stepdata['range']]
 
@@ -1979,6 +2084,7 @@ from qtt.instrument_drivers.gates import virtual_IVVI
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.structures import MultiParameter
 
+
 def test_scan2D(verbose=0):
     import qcodes
     import qtt.measurements.scans
@@ -2107,6 +2213,6 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
 
 
 #%% Unit testing
-            
-if __name__=='__main__':
+
+if __name__ == '__main__':
     test_sample_data()
