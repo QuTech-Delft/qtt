@@ -259,12 +259,13 @@ class virtual_awg(Instrument):
 
         return wave_raw
     
-    def make_pulses(self, voltages, waittimes, mvrange=None):
+    def make_pulses(self, voltages, waittimes, filtercutoff=None, mvrange=None):
         """Make a pulse sequence with custom voltage levels and wait times at each level.
         
         Arguments:
             voltages (list of floats): voltage levels to be applied in the sequence
             waittimes (list of floats): duration of each pulse in the sequence
+            filtercutoff (float): cutoff frequency of a 1st order butterworth filter to make the pulse steps smoother 
             
         Returns:
             wave_raw (array): raw data which represents the waveform
@@ -277,7 +278,10 @@ class virtual_awg(Instrument):
         v_wave = float((mvrange[0] - mvrange[1]) / self.ch_amp)
         v_prop = [2 * ((x - mvrange[1]) / (mvrange[0] - mvrange[1])) - 1 for x in voltages]
         wave_raw = np.concatenate([x * v_wave * np.ones(y) for x, y in zip(v_prop, samples)])
-        
+        if filtercutoff is not None:
+            b,a = scipy.signal.butter(1,0.5*filtercutoff/self.AWG_clock, btype='low', analog=False, output='ba')
+            wave_raw = scipy.signal.filtfilt(b,a,wave_raw)
+            
         return wave_raw
 
     def check_frequency_waveform(self, period, width):
@@ -394,6 +398,7 @@ class virtual_awg(Instrument):
         for g in gate_voltages:
             gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
         waittimes = pulsedata['waittimes']
+        filtercutoff = pulsedata.get('filtercutoff',None)
         
         pulsereps = int(period // sum(waittimes))
         waittimes = np.tile(waittimes, pulsereps)
@@ -407,7 +412,7 @@ class virtual_awg(Instrument):
         for g in gate_voltages:
             self.check_amplitude(g, sweeprange + (mvrange[0]-mvrange[1]))
             gate_voltages[g] = np.tile(gate_voltages[g], pulsereps)
-            wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, filtercutoff=filtercutoff, mvrange=mvrange)
             wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
             if sweepgate == g:
                 wave_raw += wave_sweep
@@ -633,7 +638,7 @@ class virtual_awg(Instrument):
 
         return data_processed
 
-    def pulse_gates(self, gate_voltages, waittimes, delete=True):
+    def pulse_gates(self, gate_voltages, waittimes, filtercutoff=None, delete=True):
         ''' Send a pulse sequence with the AWG that can span over any gate space.
         Sends a marker to measurement instrument at the start of the sequence.
         Only works with physical gates.
@@ -648,8 +653,6 @@ class virtual_awg(Instrument):
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
         '''
 
-# TO DO: Check sample rate of AWG, modify the sawtooth check function to a generic one?
-
         period = sum(waittimes)
         for g in gate_voltages:
             gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
@@ -657,7 +660,7 @@ class virtual_awg(Instrument):
         mvrange = [max(allvoltages), min(allvoltages)]
         waveform = dict()
         for g in gate_voltages:
-            wave_raw = self.make_pulses(gate_voltages[g], waittimes, mvrange)
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, filtercutoff=filtercutoff, mvrange=mvrange)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw / awg_to_plunger
             waveform[g] = dict()
