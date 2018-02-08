@@ -38,9 +38,9 @@ def analyseCoulombPeaks(alldata, fig=None):
     """ Find Coulomb peaks in a 1D dataset 
 
     Args:
-        alldata (DataSet)
+        alldata (DataSet): data to analyse
         fig (int or None): figure handle to plot
-    Returns
+    Returns:
         peaks (list): fitted peaks
     """
     x, y = qtt.data.dataset1Ddata(alldata)
@@ -60,11 +60,17 @@ def fitCoulombPeaks(x, y, lowvalue=None, verbose=1, fig=None, istep=1):
 
     Arguments
     ---------
-        x, y - array
+        x : array
             data series
-        istep - float
+        y : array
+            data series
+        istep : float
             sampling rate in [mV/pixel]
 
+    Returns
+    -------
+    peaks : list
+        list with detected peaks
 
     """
     minval = np.percentile(
@@ -681,14 +687,11 @@ def findSensingDotPosition(x, y, verbose=1, fig=None, plotLabels=True, plotScore
     """ Find best position for sensing dot
 
     Arguments:
-    x,y : array
-        data
-    verbose: integer
-        output level
-    Returns
-    -------
-    goodpeaks : list
-        list of detected positions
+        x,y (array): data
+    verbose (int): output level
+    
+    Returns:
+        goodpeaks (list): list of detected positions
 
     """
     goodpeaks = coulombPeaks(x, y, verbose=1, fig=None,

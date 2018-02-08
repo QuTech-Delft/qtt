@@ -8,12 +8,12 @@ import qcodes
 import warnings
 import functools
 import pickle
+import inspect
 import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
 
 
-from qcodes import DataArray
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
 try:
@@ -100,23 +100,30 @@ def dumpstring(txt):
 
 
 def deprecated(func):
-    '''This is a decorator which can be used to mark functions
+    """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
-    when the function is used.'''
+    when the function is used. """
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
+        try:
+            filename = inspect.getfile(func)
+        except:
+            filename = '?'
+        try:
+            lineno = inspect.getlineno(func)
+        except:
+            lineno = -1
         warnings.warn_explicit(
             "Call to deprecated function {}.".format(func.__name__),
             category=DeprecationWarning,
-            filename='?',  # func.func_code.co_filename,
-            lineno=-1,  # func.func_code.co_firstlineno + 1
+            filename=filename,
+            lineno=lineno, 
         )
         return func(*args, **kwargs)
     return new_func
 
 #%%
-
 
 def update_dictionary(alldata, **kwargs):
     """ Update elements of a dictionary
@@ -221,9 +228,9 @@ def resampleImage(im):
                               0][-facrem], im.shape[0])
             spx = np.tile(np.expand_dims(np.linspace(
                 setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
-            setpointy = DataArray(name='Resampled_' + setpoints[0].array_id, array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
+            setpointy = qcodes.DataArray(name='Resampled_' + setpoints[0].array_id, array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
                                   unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
-            setpointx = DataArray(name='Resampled_' + setpoints[1].array_id, array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
+            setpointx = qcodes.DataArray(name='Resampled_' + setpoints[1].array_id, array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
                                   unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpointy, setpointx]
         else:
@@ -241,7 +248,7 @@ def resampleImage(im):
             idy = setpoints[1].array_id
             if idy is None:
                 idy = 'y'
-            setpointx = DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
+            setpointx = qcodes.DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
                                   unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpoints[0], setpointx]
 
@@ -281,8 +288,8 @@ def diffImage(im, dy, size=None):
 def diffImageSmooth(im, dy='x', sigma=2):
     """ Simple differentiation of an image
 
-    Input
-    -----
+    Parameters
+    ----------
     im : array
         input image
     dy : string or integer
@@ -370,7 +377,7 @@ def scanTime(dd):
 
 
 def plot_parameter(data, default_parameter='amplitude'):
-    ''' Return parameter to be plotted '''
+    """ Return parameter to be plotted """
     if 'main_parameter' in data.metadata.keys():
         return data.metadata['main_parameter']
     if default_parameter in data.arrays.keys():
@@ -420,14 +427,14 @@ def showImage(im, extent=None, fig=None):
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values
 
-    Arguments
-    ---------
-        activegates : list or dict
-            list of gates to reset
-        basevalues: dict
-            new values for the gates
-        verbose : integer
-            output level
+    Parameters
+    ----------
+    activegates : list or dict
+        list of gates to reset
+    basevalues: dict
+        new values for the gates
+    verbose : integer
+        output level
 
     """
     if verbose:
@@ -436,8 +443,6 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
         if basevalues == None:
             val = 0
         else:
-            # print(g)
-            # print(basevalues)
             if g in basevalues.keys():
                 val = basevalues[g]
             else:

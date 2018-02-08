@@ -5,6 +5,7 @@ channels:
 dependencies:
 - libwebp
 - opencv
+- autopep8
 - babel
 - bleach
 - bzip2

@@ -70,13 +70,13 @@ def subpixelmax(A, mpos, verbose=0):
     """ Calculate maximum position with subpixel accuracy
     
     Args:
-        A (1D array)
-        mpos (array with integer indicess)
-        verbose (int)
+        A (1D array):
+        mpos (array with integer indicess):
+        verbose (int):
         
     Returns:
-        subpos (array with subpixel positions)
-        subval (array)
+        subpos (array with subpixel positions):
+        subval (array):
     """
     
     A=np.array(A)
@@ -133,21 +133,17 @@ def test_subpixel(fig=None):
 
 #%%
 
-
-
 def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None, fig=None):
     """ Scale image to make pixels at specified resolution
 
     Args:
       im (array): input image
-      imextend: list of 4 floats
-        coordinates of image region (x0, x1, y0, y1)
-      mvx, mvy (float or None)
-        number of units per pixel requested. If None then keep unchanged
+      imextend (list of 4 floats): coordinates of image region (x0, x1, y0, y1)
+      mvx, mvy (float or None): number of units per pixel requested. If None then keep unchanged
 
     Returns:
-       ims: transformed image
-       H: transformation matrix from units to pixels
+       ims (array): transformed image
+       H (array): transformation matrix from units to pixels
          H is the homogeneous transform from original to scaled image
        (mvx, mvy, fx, dy) : internal data
 
@@ -496,11 +492,10 @@ def getValuePixel(imx, pt):
     """ Return interpolated pixel value in an image
 
     Args:
-
         im (numpy array): input image
         pt (numpy array): list of points
+    
     Returns:
-
         vv (numpy array): interpolated value
     """
     ptf = np.array(pt).flatten()
