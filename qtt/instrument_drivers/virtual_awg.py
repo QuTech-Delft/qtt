@@ -40,7 +40,7 @@ class virtual_awg(Instrument):
         self.hardware = hardware
         self.verbose = verbose
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
-        self.corr = .02e-6
+        self.corr = .02e-6 # specific for FPGA
         self.maxdatapts = 16e6  # This used to be set to the fpga maximum, but that maximum should not be handled here
 
         self.awg_seq = None
