@@ -131,10 +131,6 @@ class VideoMode:
         self.diff_dir = diff_dir
         self.datalock = threading.Lock()
 
-        # for addPPT
-        self.scanparams = {'sweepparams': self.sweepparams,
-                           'sweepranges': self.sweepranges, 'minstrument': minstrument}
-
         # parse instrument
         if 'fpga' in station.components:
             self.sampling_frequency = station.fpga.sampling_frequency
@@ -151,6 +147,9 @@ class VideoMode:
                 self.sampling_frequency = minstrumenthandle.sample_rate
             except:
                 raise Exception('no fpga or digitizer found')
+
+        # for addPPT and debugging
+        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument, 'resolution': self.resolution, 'sampling_frequency': self.sampling_frequency() }
 
         self.idx = 0
         self.fps = qtt.pgeometry.fps_t(nn=6)
