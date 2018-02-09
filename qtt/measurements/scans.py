@@ -1630,13 +1630,15 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
 def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=0, step=None):
     """Converts the sweepdata or stepdata of a scanjob in those needed for virtual vector scans
-    Inputs:
-        virtual_parameter: parameter of the virtual gate which is varied
+    
+    Args:
+        virtual_parameter (obj): parameter of the virtual gate which is varied
         g_range (float): scan range
         start (float): start if the scanjob data 
         step (None or float): if not None, then add to the scanning field
-    Outputs:
-        sweeporstepdata (dict): sweepdata or stepdata needed in the scanjob for virtual vector scans"""
+    Returns:
+        sweeporstepdata (dict): sweepdata or stepdata needed in the scanjob for virtual vector scans
+    """
     if sweeporstepdata is None:
         sweeporstepdata = {}
     if hasattr(virtual_parameter, 'comb_map'):

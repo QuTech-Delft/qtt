@@ -29,10 +29,10 @@ More examples can be found in the example notebooks.
 
 
 Documentation
--------------
+=============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    contributing
    algorithms

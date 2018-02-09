@@ -378,9 +378,10 @@ class sensingdot_t:
 
         Args:
             fig (int or None): window for plotting results
-            ...
+            Naverage (int): number of averages
+            
         Returns:
-            value (float): value of plunger
+            plungervalue (float): value of plunger
             alldata (dataset): measured data
         """
 
