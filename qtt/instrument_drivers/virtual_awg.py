@@ -16,21 +16,36 @@ from qcodes import Instrument
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes import DataArray
 import qtt
+import qtt.tools.deprecated
 
 logger = logging.getLogger(__name__)
 #%%
 
 
 class virtual_awg(Instrument):
-    """ 
+    """ The virtual awg is a hardware independent interface to part of the AWG functionality
+    
+    Functionality:        
+    * abstruction of multiple AWGs
+    * uploading of qc_toolkit waveforms
+    * convenience functions for creating simple waveforms. these include:
+        * sawtooth waveforms (1D, 2D)
+        * pulse sequences with constants and ramps
+    * functionality for reading out data traces
+    * plotting the waveforms to matplotlib/qcodes format
+    
+    Main functions:
+        waveform = pulse_gates(...)
+        sweep_gate_virt/sweep_gate
+    
+    The waveform object a dict containing at least the qc_toolkit waveform definition
     
     Attributes:
         _awgs (list): handles to instruments
-        awg_map (dict)
+        awg_map (dict): translation of gate names into AWG channels
         hardware (Instrument): contains AWG to plunger values
-        corr (float): unknown
-        delay_FPGA (float): time delay of signals going through fridge
-        
+        parameters (dict): contains calibration parameters such as time delays
+              
     """
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
         super().__init__(name, **kwargs)
@@ -284,6 +299,7 @@ class virtual_awg(Instrument):
             
         return wave_raw
 
+    # FIXME: make internal function
     def check_frequency_waveform(self, period, width):
         """ Check whether a sawtooth waveform with specified period can be generated """
         old_sr = self.AWG_clock
@@ -292,6 +308,7 @@ class virtual_awg(Instrument):
             warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (old_sr / 1e6, new_sr / 1e6, 1e3 * period), UserWarning)
         return new_sr
 
+    # FIXME: make use if sweep_gate_virt
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the measurement instrument.
@@ -372,6 +389,8 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
 
+    # should be replaces by adding waveforms in the qc_toolkit framework?
+    @qtt.tools.deprecated
     def sweepandpulse_gate(self, sweepdata, pulsedata, wave_name=None, delete=True):
         ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
         a gate, with a pulse sequence. A marker is sent to the measurement instrument 
@@ -470,6 +489,8 @@ class virtual_awg(Instrument):
 
         return data_processed
 
+    # FIXME: make use of sweep_2D_virt
+    # FIXME: 
     def sweep_2D(self, samp_freq, sweepgates, sweepranges, resolution, width=.95, comp=None, delete=True):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
@@ -676,6 +697,7 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
    
+    # FIXME: document
     def reset_AWG(self, clock=1e8):
         """ Reset AWG to videomode and scanfast """
         self.AWG_clock = clock
@@ -692,6 +714,7 @@ class virtual_awg(Instrument):
         if self.awg_seq is not None:
             self._set_seq_mode(self.awg_seq)
             
+    # FIXME: keep?
     def set_amplitude(self, amplitude):
         """ Set the AWG peak-to-peak amplitude for all channels
 
