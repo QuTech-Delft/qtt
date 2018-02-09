@@ -1648,7 +1648,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
         if remove_slow_gates:
             try:
                 for gate in list(pp.keys()):
-                    if station.awg.awg_gate(gate):
+                    if not station.awg.awg_gate(gate):
                         pp.pop(gate, None)
                         
             except Exception as ex:
