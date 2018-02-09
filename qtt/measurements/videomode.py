@@ -653,3 +653,6 @@ if __name__ == '__main__':
         app.processEvents()
 
     mt.startreadout(callback=callback)
+    mt.updatefunction()
+    
+    mt.get_dataset()
