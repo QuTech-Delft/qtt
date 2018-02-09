@@ -33,6 +33,7 @@
 # ones.
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+#    'nbsphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax']
 

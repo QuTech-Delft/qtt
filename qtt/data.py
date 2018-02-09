@@ -52,7 +52,7 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
 def dataset2image2(dataset, arrayname=None):
     """ Extract image from dataset
 
-    Arguments
+    Args:
         dataset (DataSet): measured data
     Returns:
         imraw (array): raw image

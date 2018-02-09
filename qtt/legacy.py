@@ -750,7 +750,7 @@ def fillPoly(im, poly_verts, color=None):
         color (array or float): color to fill the polygon
     Returns:
         grid (array): resulting array
-        
+
     """
     ny, nx = im.shape[0], im.shape[1]
 
