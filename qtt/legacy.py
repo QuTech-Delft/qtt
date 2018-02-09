@@ -443,7 +443,7 @@ def polyfit2d(x, y, z, order=3):
     ij = itertools.product(range(order + 1), range(order + 1))
     for k, (i, j) in enumerate(ij):
         G[:, k] = x**i * y**j
-    m, _, _, _ = np.linalg.lstsq(G, z)
+    m, _, _, _ = np.linalg.lstsq(G, z, rcond=None)
     return m
 
 
