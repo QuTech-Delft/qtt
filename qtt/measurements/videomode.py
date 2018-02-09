@@ -115,7 +115,6 @@ class VideoMode:
                  dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True):
         self.station = station
         self.verbose = verbose
-
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
 
