@@ -4,6 +4,9 @@
 import copy
 import warnings
 import importlib
+import sys
+import distutils
+import distutils.version
 
 import qcodes
 import qtt.live
@@ -13,8 +16,6 @@ import qtt.algorithms
 import qtt.measurements
 import qtt.utilities.markup as markup
 
-import distutils
-import distutils.version
 
 from qtt.version import __version__
 
@@ -60,6 +61,8 @@ except:
 _qversion = '0.1.7'  # version of qcodes required
 check_version(_qversion, qcodes)
 
+if sys.version_info.minor<6:
+    warnings.warn('please upgrade to python 3.6, we will not support versions <= 3.5 in the near future')
 
 
 #%%

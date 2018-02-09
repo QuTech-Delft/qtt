@@ -40,7 +40,7 @@ Optional:
 
 ## Create a working Python environment
 
-You need 3.4, but we recommand Python 3.6+. For Unix python is installed by default, for windows 
+We recommend Python 3.6+. For Unix python is installed by default, for windows 
 we recommend using [Anaconda](https://www.continuum.io/downloads). For Windows you need admin rights, or create
  your [own environment](http://conda.pydata.org/docs/using/envs.html).
 
