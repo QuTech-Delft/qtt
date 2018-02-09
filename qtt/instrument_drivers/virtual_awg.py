@@ -296,7 +296,7 @@ class virtual_awg(Instrument):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the measurement instrument.
 
-        Arguments:
+        Args:
             gate (string): the name of the gate to sweep
             sweeprange (float): the range of voltages to sweep over
             period (float): the period of the triangular signal
@@ -306,8 +306,7 @@ class virtual_awg(Instrument):
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
 
         Example:
-        -------
-        >>> waveform, sweep_info = sweep_gate('P1',sweeprange=60,period=1e-3)
+            >>> waveform, sweep_info = sweep_gate('P1',sweeprange=60,period=1e-3)
         '''
 
         self.check_frequency_waveform(period, width)
@@ -378,7 +377,7 @@ class virtual_awg(Instrument):
         a gate, with a pulse sequence. A marker is sent to the measurement instrument 
         at the start of the waveform.
 
-        Arguments:
+        Args:
             sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width). 
             See sweep_gate for more info.
             pulsedata (dict): inputs for the pulse sequence (gate_voltages, waittimes).
@@ -452,7 +451,6 @@ class virtual_awg(Instrument):
             data_processed (array): The data after dropping part of it.
 
         Example:
-        -------
             >> data_processed = sweep_process(data, waveform, 25)
         """
         width = waveform['width']

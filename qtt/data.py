@@ -9,25 +9,15 @@ import qcodes as qc
 import datetime
 import warnings
 import pickle
-import scipy
 import logging
-
-try:
-    import hickle
-except:
-    pass
-
 import numpy.linalg
-from qtt import pgeometry
-
-import qtt.tools
-import qtt.algorithms.generic
-
-
 import matplotlib.pyplot as plt
 
-from qtt.tools import diffImageSmooth
 from qcodes import DataArray, new_data
+from qtt import pgeometry
+import qtt.tools
+import qtt.algorithms.generic
+from qtt.tools import diffImageSmooth
 
 
 #%%
@@ -37,7 +27,7 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
     """ Extract image from a dataset
 
     Args:
-        dataset
+        dataset (DataSet): structure with 2D data
         arrayname (None or str): name of array to select
         mode (str): if value is 'pixel' then the image is converted so that 
              it is in conventional coordinates, e.g. the step values
@@ -62,7 +52,7 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
 def dataset2image2(dataset, arrayname=None):
     """ Extract image from dataset
 
-    Arguments
+    Args:
         dataset (DataSet): measured data
     Returns:
         imraw (array): raw image

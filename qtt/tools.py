@@ -208,7 +208,7 @@ def resampleImage(im):
     Args:
         im (DataArray): input image
     Returns:
-        im (numpy array): resampled image
+        imr (numpy array): resampled image
         setpoints (list of 2 numpy arrays): setpoint arrays from resampled image
     """
     setpoints = im.set_arrays

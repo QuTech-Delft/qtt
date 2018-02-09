@@ -31,11 +31,11 @@ def set_distance_matrix(virt_gates, dists):
 
 def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     """ Converts the virtual gate matrix into a virtual gate mapping
-    Inputs:
+    Args:
         physical_gates (list): containing all the physical gates in the setup
         virt_basis (list): containing all the virtual gates in the setup
         c (array): virtual gate matrix
-    Outputs: 
+    Returns: 
         virtual_matrix (dict): dictionary, mapping of the virtual gates"""
     virtual_matrix = OrderedDict()                                                                                            
     for ii, vname in enumerate(virt_basis):

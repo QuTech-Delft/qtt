@@ -143,9 +143,11 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
 
     Returns:
        ims (array): transformed image
-       H (array): transformation matrix from units to pixels
-         H is the homogeneous transform from original to scaled image
-       (mvx, mvy, fx, dy) : internal data
+       H (array): transformation matrix from units to pixels. H is the homogeneous transform from original to scaled image
+       mvx (float): internal data
+       mvy (float): internal data
+       fx (float):  internal data
+       dy (float): internal data
 
     """
     if interpolation is None:
@@ -513,15 +515,14 @@ def getValuePixel(imx, pt):
 def smoothImage(im, k=3):
     """ Super simple image smoothing
 
-    Input
-    -----
+    Args:
 
     im : array
         input image
-    k (int): kernel size
+    k : int
+        kernel size
 
-    Output
-    ------
+    Returns:
 
     im : array
         smoothed image
