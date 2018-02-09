@@ -35,8 +35,7 @@ Documentation
    :maxdepth: 2
 
    contributing
-   api/index
-
+   algorithms
 
 Indices and tables
 ==================
