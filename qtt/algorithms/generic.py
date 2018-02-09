@@ -513,15 +513,14 @@ def getValuePixel(imx, pt):
 def smoothImage(im, k=3):
     """ Super simple image smoothing
 
-    Input
-    -----
+    Args:
 
     im : array
         input image
-    k (int): kernel size
+    k : int
+        kernel size
 
-    Output
-    ------
+    Returns:
 
     im : array
         smoothed image
