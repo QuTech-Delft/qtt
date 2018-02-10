@@ -2706,13 +2706,15 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
 
     if isinstance(lst, int):
         lst = [lst]
+    if isinstance(lst, numpy.ndarray):
+        lst = lst.flatten().astype(int)
 
     if verbose:
         print('tilefigs: ww %s, w %d h %d' % (str(ww), w, h))
     for ii, f in enumerate(lst):
         if isinstance(f, matplotlib.figure.Figure):
             fignum = f.number
-        elif isinstance(f, (int) ):
+        elif isinstance(f, (int, numpy.int32, numpy.int64) ):
             fignum = f
         else:
             # try
@@ -2722,7 +2724,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
                 fignum=-1
         if not plt.fignum_exists(fignum):
             if verbose >= 2:
-                print('tilefigs: fignum: %s' % str(fignum))
+                print('tilefigs: f %s fignum: %s' % (f, str(fignum)) )
             continue
         fig = plt.figure(fignum)
         iim = ii % np.prod(geometry)
