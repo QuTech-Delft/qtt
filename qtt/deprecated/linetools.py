@@ -60,6 +60,7 @@ except:
     print('networkx module is not available')
     pass
 
+warnings.warn('do not import this module, it will be removed in the future', DeprecationWarning)
 
 #%% Try numba support
 try:
