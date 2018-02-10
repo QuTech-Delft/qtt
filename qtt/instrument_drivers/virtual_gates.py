@@ -12,6 +12,7 @@ from qcodes.utils.validators import Numbers
 import numpy as np
 from collections import OrderedDict
 import warnings
+import matplotlib.pyplot as plt
 
 import qtt.measurements.scans
 
@@ -366,6 +367,35 @@ class virtual_gates(Instrument):
         for vg in list(base_map.keys()):
             print('\t'.join([vg] + [('%.3f' % value).rstrip('0').rstrip('.') for g, value in base_map[vg].items() ] ) )
 
+    def plot_matrix(self, fig=10, inverse=False):
+        """ Plot the cross-capacitance matrix as a figure
+        
+        Args:
+            fig (int): number of figure window
+        """
+        xlabels=self.pgates()
+        ylabels=self.vgates()
+        m=self.get_crosscap_matrix( )
+        x=range(0, len(xlabels))
+        y=range(0, len(ylabels))
+    
+        plt.figure(fig); plt.clf();
+        plt.imshow(m, interpolation='nearest')
+        ax=plt.gca()
+        #plt.axis('off')
+        plt.tick_params(
+            axis='y',        
+            left='off',    )
+        plt.tick_params(
+            axis='x',          # changes apply to the x-axis
+            which='both',      # both major and minor ticks are affected
+            bottom='off',      # ticks along the bottom edge are off
+            top='off',         # ticks along the top edge are off
+            labelbottom='off') # labels along the bottom edge are off
+        ax.xaxis.set_tick_params(labeltop='on')
+        plt.xticks(x, xlabels, rotation='vertical')
+        plt.yticks(y, ylabels) # , rotation='vertical')
+        
     def _update_rest(self, base_map, verbose=0):
         """Updates rest of the virtual gate variables
         
