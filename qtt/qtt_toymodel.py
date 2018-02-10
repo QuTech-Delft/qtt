@@ -29,6 +29,7 @@ from qtt.simulation.dotsystem import DotSystem, TripleDot, FourDot, GateTransfor
 from qtt.simulation.dotsystem import defaultDotValues
 from qtt.simulation.dotsystem import DoubleDot
 
+raise Exception('please do not use this code any more')
 
 #%%
 
