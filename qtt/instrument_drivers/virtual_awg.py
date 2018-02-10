@@ -389,8 +389,7 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
 
-    # should be replaces by adding waveforms in the qc_toolkit framework?
-    @qtt.tools.deprecated
+    # FIXME: should be replaced by adding waveforms in the qc_toolkit framework?
     def sweepandpulse_gate(self, sweepdata, pulsedata, wave_name=None, delete=True):
         ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
         a gate, with a pulse sequence. A marker is sent to the measurement instrument 
