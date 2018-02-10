@@ -2,32 +2,18 @@
 Contains functions to generate reports of scanned data
 """
 import numpy as np
-import scipy
-import os
-import sys
-import copy
-import logging
-import time
-import qcodes
-import datetime
-import qtpy
-
 import matplotlib.pyplot as plt
+import warnings
 
 try:
     from urllib import pathname2url as pathname2url
 except:
     from urllib.request import pathname2url as pathname2url
 
-from qtt.tools import tilefigs
-import qtt.tools
-
-
 import qtt.utilities.markup as markup
 from qtt import pgeometry
 
-from qtt.data import loadExperimentData
-import qtt.legacy  # should be removed in the future
+warnings.warn('please do not import this module, it will be removed in the future', DeprecationWarning)
 
 #%%
 
