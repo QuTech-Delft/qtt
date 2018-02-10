@@ -732,6 +732,7 @@ class MultiTracePlot:
                     self.ydata[jj][ii] = self.alpha *  ydata[jj][ii] + (1 - self.alpha) * self.ydata[jj][ii]    
         else:
             self.ydata = ydata
+        self.xdata = xdata
       
         self.fps.showloop(dt=15)
         self.fps.addtime(time.time())
@@ -741,7 +742,18 @@ class MultiTracePlot:
             yd=self.ydata[ii]
             for jj in range(min(ncurves, len(yd)) ):
                 p[jj].setData(xd, yd[jj])
-            
+    def get_dataset(self):
+        """ Return dataset for data in object
+        
+        Returns:
+            dd (list): list with a dataset for each trace
+        """
+        dd=[]
+        for ii, x in enumerate(self.xdata):
+            ds = qtt.data.makeDataSet1Dplain('x', x=x, yname='trace%d' % ii, y=self.ydata[ii] )
+            dd.append(ds)
+        return dd
+    
     def startreadout(self, callback=None, rate=1000, maxidx=None):
         if maxidx is not None:
             self.maxidx = maxidx
