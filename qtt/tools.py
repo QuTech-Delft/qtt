@@ -12,6 +12,7 @@ import inspect
 import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
+from functools import wraps
 
 
 # explicit import
@@ -129,7 +130,7 @@ def update_dictionary(alldata, **kwargs):
     """ Update elements of a dictionary
 
     Args:
-        alldata (dict)
+        alldata (dict): dictionary to be updated
         kwargs (dict): keyword arguments
 
     """
@@ -138,7 +139,11 @@ def update_dictionary(alldata, **kwargs):
 
 
 def stripDataset(dataset):
-    """ Make sure a dataset can be pickled """
+    """ Make sure a dataset can be pickled 
+    
+    Args: 
+        dataset (qcodes DataSet)
+    """
     dataset.sync()
     dataset.data_manager = None
     dataset.background_functions = {}
@@ -164,6 +169,13 @@ def negfloat(x):
 
 
 def checkPickle(obj, verbose=0):
+    """ Check whether an object can be pickled
+    
+    Args:
+        obj (object): object to be checked
+    Returns:
+        c (bool): True of the object can be pickled
+    """
     try:
         _ = pickle.dumps(obj)
     except Exception as ex:
@@ -171,9 +183,6 @@ def checkPickle(obj, verbose=0):
             print(ex)
         return False
     return True
-
-
-from functools import wraps
 
 
 def freezeclass(cls):
@@ -368,14 +377,15 @@ def test_image_operations(verbose=0):
 
 import dateutil
 
-
 def scanTime(dd):
+    """ Return date a scan was performed """
     w = dd.metadata.get('scantime', None)
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
     return w
 
 
+@deprecated
 def plot_parameter(data, default_parameter='amplitude'):
     """ Return parameter to be plotted """
     if 'main_parameter' in data.metadata.keys():
@@ -389,6 +399,7 @@ def plot_parameter(data, default_parameter='amplitude'):
         return None
 
 
+@deprecated
 def plot1D(dataset, fig=1):
     """ Simlpe plot function """
     if isinstance(dataset, qcodes.DataArray):
@@ -424,6 +435,8 @@ def showImage(im, extent=None, fig=None):
 
 
 #%% Measurement tools
+                
+@deprecated # part of the gates object
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values
 
@@ -454,6 +467,7 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
 #%% Tools from pmatlab
 
 
+@deprecated
 def plot2Dline(line, *args, **kwargs):
     """ Plot a 2D line in a matplotlib figure
 
@@ -531,81 +545,10 @@ except:
     pass
 
 
-@static_var('monitorindex', -1)
-def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False, verbose=0):
-    """ Tile figure windows on a specified area """
-    mngr = plt.get_current_fig_manager()
-    be = matplotlib.get_backend()
-    if ww is None:
-        ww = monitorSizes()[tilefigs.monitorindex]
-
-    w = ww[2] / geometry[0]
-    h = ww[3] / geometry[1]
-
-    # wm=plt.get_current_fig_manager()
-
-    if isinstance(lst, int):
-        lst = [lst]
-
-    if verbose:
-        print('tilefigs: ww %s, w %d h %d' % (str(ww), w, h))
-    for ii, f in enumerate(lst):
-        if isinstance(f, matplotlib.figure.Figure):
-            fignum = f.number
-        else:
-            fignum = f
-        if not plt.fignum_exists(fignum):
-            if verbose >= 2:
-                print('tilefigs: fignum: %s' % str(fignum))
-            continue
-        fig = plt.figure(fignum)
-        iim = ii % np.prod(geometry)
-        ix = iim % geometry[0]
-        iy = np.floor(float(iim) / geometry[0])
-        x = ww[0] + ix * w
-        y = ww[1] + iy * h
-        if verbose:
-            print('ii %d: %d %d: f %d: %d %d %d %d' %
-                  (ii, ix, iy, fignum, x, y, w, h))
-            if verbose >= 2:
-                print('  window %s' % mngr.get_window_title())
-        if be == 'WXAgg':
-            fig.canvas.manager.window.SetPosition((x, y))
-            fig.canvas.manager.window.SetSize((w, h))
-        if be == 'WX':
-            fig.canvas.manager.window.SetPosition((x, y))
-            fig.canvas.manager.window.SetSize((w, h))
-        if be == 'agg':
-            fig.canvas.manager.window.SetPosition((x, y))
-            fig.canvas.manager.window.resize(w, h)
-        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg':
-            # assume Qt canvas
-            try:
-                fig.canvas.manager.window.move(x, y)
-                fig.canvas.manager.window.resize(w, h)
-                fig.canvas.manager.window.setGeometry(x, y, w, h)
-                # mngr.window.setGeometry(x,y,w,h)
-            except Exception as e:
-                print('problem with window manager: ', )
-                print(be)
-                print(e)
-                pass
-        if raisewindows:
-            mngr.window.raise_()
-        if tofront:
-            plt.figure(f)
+from qtt.pgeometry import tilefigs, mkdirc # import for backwards compatibility
 
 
 #%% Helper tools
-
-def mkdirc(d):
-    """ Similar to mkdir, but no warnings if the directory already exists """
-    try:
-        os.mkdir(d)
-    except:
-        pass
-    return d
-
 
 def in_ipynb():
     try:
@@ -679,13 +622,12 @@ try:
         The interface to Powerpoint used is described here:
             https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
 
-        Example
-        -------
-        >>> title = 'An example title'
-        >>> fig = plt.figure(10)
-        >>> txt = 'Some comments on the figure'
-        >>> notes = 'some additional information' 
-        >>> addPPTslide(title,fig, subtitle = txt,notes = notes)
+        Example:
+            >>> title = 'An example title'
+            >>> fig = plt.figure(10)
+            >>> txt = 'Some comments on the figure'
+            >>> notes = 'some additional information' 
+            >>> addPPTslide(title,fig, subtitle = txt,notes = notes)
         '''
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
@@ -1060,14 +1002,14 @@ except Exception as ex:
     print('fail!')
     pass
 
-import time
-
 
 def updatePlotTitle(qplot, basetxt='Live plot'):
+    """ Update the plot title of a QtPlot window """
     txt = basetxt + ' (%s)' % time.asctime()
     qplot.win.setWindowTitle(txt)
 
 
+@deprecated
 def timeProgress(data):
     ''' Simpe progress meter, should be integrated with either loop or data object '''
     data.sync()
@@ -1088,8 +1030,14 @@ def timeProgress(data):
 
 def flatten(lst):
     ''' Flatten a list
-    >>> flatten([ [1,2], [3,4], [10] ])
-    [1, 2, 3, 4, 10]
+
+    Args:
+        lst (list): list to be flattened
+    Returns:
+        lstout (list): flattened list
+    Example:
+        >>> flatten([ [1,2], [3,4], [10] ])
+        [1, 2, 3, 4, 10]
     '''
     return list(chain(*lst))
 
