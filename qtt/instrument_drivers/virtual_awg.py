@@ -16,6 +16,7 @@ from qcodes import Instrument
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes import DataArray
 import qtt
+import qtt.tools
 
 logger = logging.getLogger(__name__)
 #%%
