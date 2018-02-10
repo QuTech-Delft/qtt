@@ -38,6 +38,8 @@ except Exception as inst:
     warnings.warn('could not import OpenCv, not all functionality available...')
     pass
 
+warnings.warn('do not import this module, it will be removed in the future', DeprecationWarning)
+
 #%% Custom packages
 from qtt import pgeometry as pmatlab
 
