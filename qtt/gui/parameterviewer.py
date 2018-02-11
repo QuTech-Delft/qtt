@@ -127,6 +127,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
 
     def setParamSingleStep(self, instr, param, value):
+        """ Set the default step size for a parameter in the viewer
+        
+        Args:
+            instr (str): instrument
+            param (str): parameter of the instrument
+            value (float): step size
+        """
         try:
             box=self._itemsdict[instr][param]
             box.setSingleStep(value)
@@ -134,17 +141,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             print(ex)
             pass
 
-
-    def setParamSingleStep(self, instr, param, value):
-        try:
-            box=self._itemsdict[instr][param]
-            box.setSingleStep(value)
-        except Exception as ex:
-            print(ex)
-            pass
 
     def setSingleStep(self, value, instrument_name=None):
-        """ Set the default step size for parameters in the viewer """
+        """ Set the default step size for all parameters in the viewer
+        
+        Args:
+            value (float): step size
+        """
         if instrument_name is None:
             names = self._instrumentnames
         else:
@@ -299,11 +302,10 @@ if __name__ == '__main__':
     self = p
     p.updatecallback()
 
-    p.setGeometry(1640, 60, 240, 600)
+    p.setGeometry(1540, 60, 360, 600)
 
     time.sleep(.1)
     ivvi.dac1.set(101)
-
     ivvi.dac2.set(102)
 
 #%%
