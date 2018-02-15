@@ -147,6 +147,7 @@ def scaleCmap(imx, setclim=True, verbose=0):
     return cl
 
 
+@qtt.tools.deprecated
 def writeBatchData(outputdir, tag, timestart, timecomplete):
     tt = datetime.datetime.now().strftime('%d%m%Y-%H%m%S')
     with open(os.path.join(outputdir, '%s-%s.txt' % (tag, tt)), 'wt') as fid:
@@ -432,30 +433,7 @@ def cmap_discretize(cmap, N, m=1024):
 
 #%%
 
-#%%
-
-
-
-def polyfit2d(x, y, z, order=3):
-    """ Fit a polynomial on 2D data """
-    ncols = (order + 1)**2
-    G = np.zeros((x.size, ncols))
-    ij = itertools.product(range(order + 1), range(order + 1))
-    for k, (i, j) in enumerate(ij):
-        G[:, k] = x**i * y**j
-    m, _, _, _ = np.linalg.lstsq(G, z, rcond=None)
-    return m
-
-
-def polyval2d(x, y, m):
-    """ Evaluate a 2D polynomial """
-    order = int(np.sqrt(len(m))) - 1
-    ij = itertools.product(range(order + 1), range(order + 1))
-    z = np.zeros_like(x)
-    for a, (i, j) in zip(m, ij):
-        z += a * x**i * y**j
-    return z
-
+from qtt.algorithms.misc import polyval2d, polyfit2d
 
 
 
@@ -576,6 +554,7 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
 
 
 
+@qtt.tools.deprecated
 def showIm(ims, fig=1, title='', showz=False):
     """ Show image with nearest neighbor interpolation and axis scaling """
     plt.figure(fig)
@@ -707,78 +686,7 @@ def showODresults(od, dd2d, fig=200, imx=None, ww=None):
 #%%
 
 
-def point_in_poly(x, y, poly):
-    ''' Return true if a point is contained in a polygon '''
-    n = len(poly)
-    inside = False
-
-    p1x, p1y = poly[0]
-    for i in range(n + 1):
-        p2x, p2y = poly[i % n]
-        if y > min(p1y, p2y):
-            if y <= max(p1y, p2y):
-                if x <= max(p1x, p2x):
-                    if p1y != p2y:
-                        xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                    if p1x == p2x or x <= xints:
-                        inside = not inside
-        p1x, p1y = p2x, p2y
-
-    return inside
-
-
-def points_in_poly(points, poly_verts):
-    ''' Determine whether points are contained in a polygon or not
-    '''
-    nn = points.shape[0]
-    rr = np.zeros((nn,))
-    for ii in range(nn):
-        rr[ii] = point_in_poly(points[ii, 0], points[ii, 1], poly_verts)
-
-    rr = rr.astype(np.bool)
-    return rr
-
-
-def fillPoly(im, poly_verts, color=None):
-    """ Fill a polygon in an image with the specified color
-
-    Replacement for OpenCV function cv2.fillConvexPoly
-
-    Arugments:
-        im (array): array to plot into
-        poly_verts (kx2 array): polygon vertices
-        color (array or float): color to fill the polygon
-    Returns:
-        grid (array): resulting array
-
-    """
-    ny, nx = im.shape[0], im.shape[1]
-
-    # Create vertex coordinates for each grid cell...
-    # (<0,0> is at the top left of the grid in this system)
-    x, y = np.meshgrid(np.arange(nx), np.arange(ny))
-    x, y = x.flatten(), y.flatten()
-
-    points = np.vstack((y, x)).T
-
-    npts = int(poly_verts.size / 2)
-    poly_verts = poly_verts.reshape((npts, 2))
-    poly_verts = poly_verts[:, [1, 0]]
-
-    try:
-        from matplotlib.path import Path
-        pp = Path(poly_verts)
-        r = pp.contains_points(points)
-    except:
-        # slow version...
-        r = points_in_poly(points, poly_verts)
-        pass
-    im.flatten()[r] = 1
-    grid = r
-    grid = grid.reshape((ny, nx))
-
-    return grid
-
+from qtt.algorithms.misc import point_in_poly, points_in_poly, fillPoly
 
 def getPinchvalues(od, xdir, verbose=1):
     """ Get pinch values from recorded data """
@@ -798,6 +706,7 @@ def getPinchvalues(od, xdir, verbose=1):
     return od
 
 
+@qtt.tools.deprecated
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
     xdir = os.path.join(resultsdir, 'one_dot')
@@ -901,12 +810,10 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
     return jobs
 
 
-if __name__ == '__main__':
-    jobs = createDoubleDotJobs(two_dots, one_dots, basevalues=basevalues0, resultsdir=outputdir, fig=None)
-
 
 #%%
 
+@qtt.tools.deprecated
 def stopbias(gates):
     """ Stop the bias currents in the sample """
     raise Exception('do not use this function')
@@ -917,6 +824,7 @@ def stopbias(gates):
             gates.set('bias_%d' % ii, 0)
 
 
+@qtt.tools.deprecated
 def printGateValues(gv, verbose=1):
     s = ', '.join(['%s: %.1f' % (x, gv[x]) for x in sorted(gv.keys())])
     return s

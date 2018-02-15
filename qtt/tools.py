@@ -100,7 +100,6 @@ def dumpstring(txt):
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
 
-
 def deprecated(func):
     """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
@@ -124,6 +123,43 @@ def deprecated(func):
         )
         return func(*args, **kwargs)
     return new_func
+
+def rdeprecated(txt=None):
+    """ This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used. 
+        
+    Args:
+        txt (str): reason for deprecation
+    """
+    def deprecated_inner(func):
+        """ This is a decorator which can be used to mark functions
+        as deprecated. It will result in a warning being emitted
+        when the function is used. """
+    
+        @functools.wraps(func)
+        def new_func(*args, **kwargs):
+            try:
+                filename = inspect.getfile(func)
+            except:
+                filename = '?'
+            try:
+                lineno = inspect.getlineno(func)
+            except:
+                lineno = -1
+            if txt is None:
+                etxt=''
+            else:
+                etxt=' ' + txt
+            warnings.warn_explicit(
+                "Call to deprecated function {}.{}".format(func.__name__, etxt),
+                category=DeprecationWarning,
+                filename=filename,
+                lineno=lineno, 
+            )
+            return func(*args, **kwargs)
+        return new_func
+    return deprecated_inner
 
 #%%
 
