@@ -21,6 +21,7 @@ try:
     from qcodes.plots.pyqtgraph import QtPlot
 except:
     pass
+from qcodes import DataArray
 
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import mpl2clipboard
