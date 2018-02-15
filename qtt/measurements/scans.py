@@ -374,7 +374,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 
 #%%
-def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1):
     """Fast 1D scan. 
 
     Args:
@@ -429,11 +429,11 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, verbose=1):
             sweeprange = (sweepdata['end'] - sweepdata['start'])
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
             gates.set(sweepdata['param'], float(sweepgate_value))
-        waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period)
+        waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
     else:
         sweeprange = sweepdata['range']
         waveform, sweep_info = station.awg.sweep_gate_virt(
-            fast_sweep_gates, sweeprange, period)
+            fast_sweep_gates, sweeprange, period, delete=delete)
 
     qtt.time.sleep(wait_time_startscan)
 
@@ -1628,12 +1628,13 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     return alldata
 
 
-def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=0, step=None):
+def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove_slow_gates=False, station=None, start=0, step=None):
     """Converts the sweepdata or stepdata of a scanjob in those needed for virtual vector scans
     
     Args:
         virtual_parameter (obj): parameter of the virtual gate which is varied
         g_range (float): scan range
+        remove_slow_gates: Removes slow gates from the linear combination of gates. Useful if virtual gates include compensation ofn slow gates, but a fast measurement should be run.
         start (float): start if the scanjob data 
         step (None or float): if not None, then add to the scanning field
     Returns:
@@ -1644,6 +1645,14 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, start=
     if hasattr(virtual_parameter, 'comb_map'):
         pp = dict([(p.name, r)
                    for p, r in virtual_parameter.comb_map if round(r, 5) != 0])
+        if remove_slow_gates:
+            try:
+                for gate in list(pp.keys()):
+                    if not station.awg.awg_gate(gate):
+                        pp.pop(gate, None)
+                        
+            except Exception as ex:
+                warnings.warn('error when removing slow gate from scan data')
     else:
         pp = {virtual_parameter.name: 1}
     sweeporstepdata = {'start': start, 'range': g_range,
