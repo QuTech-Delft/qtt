@@ -2186,34 +2186,6 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             scanjob[param] = min(scanjob[param], bstep[1] - eps)
 
 
-def enforce_boundaries(scanjob, sample_data, eps=1e-2):
-    """ Make sure a scanjob does not go outside sample boundaries
-
-    Args:
-        scanjob (scanjob_t or dict)
-        sample_data (sample_data_t)
-    """
-
-    if isinstance(scanjob, scanjob_t) or ('minstrument' in scanjob):
-        for field in ['stepdata', 'sweepdata']:
-
-            if field in scanjob:
-                bstep = sample_data.gate_boundaries(scanjob[field]['param'])
-                scanjob[field]['end'] = max(
-                    scanjob[field]['end'], bstep[0] + eps)
-                scanjob[field]['start'] = max(
-                    scanjob[field]['start'], bstep[0] + eps)
-                scanjob[field]['end'] = min(
-                    scanjob[field]['end'], bstep[1] - eps)
-                scanjob[field]['start'] = min(
-                    scanjob[field]['start'], bstep[1] - eps)
-    else:
-        for param in scanjob:
-            bstep = sample_data.gate_boundaries(param)
-            scanjob[param] = max(scanjob[param], bstep[0] + eps)
-            scanjob[param] = min(scanjob[param], bstep[1] - eps)
-
-
 #%% Unit testing
 
 if __name__ == '__main__':

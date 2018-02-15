@@ -18,15 +18,12 @@ User defines:
 
 import itertools
 import os
-
 import numpy as np
 import operator as op
 import functools
-
 import time
 
 try:
-    import multiprocessing
     import multiprocessing as mp
     from multiprocessing import Pool
     _have_mp = True
@@ -34,12 +31,11 @@ except:
     _have_mp = False
     pass
 
-
 from qtt.simulation.dotsystem import tprint, BaseDotSystem
 
 
 def ncr(n, r):
-    """ Calculating number of possible combinations: nCr"""
+    """ Calculating number of possible combinations: n choose r """
     r = min(r, n - r)
     if r == 0:
         return 1
@@ -168,6 +164,7 @@ class ClassicalDotSystem(BaseDotSystem):
 class TripleDot(ClassicalDotSystem):
 
     def __init__(self, name='tripledot', **kwargs):
+        """ Classical simulation of triple dot """
         super().__init__(name=name, ndots=3, ngates=3, **kwargs)
 
         self.makebasis(ndots=3)
@@ -187,6 +184,7 @@ class TripleDot(ClassicalDotSystem):
 class MultiDot(ClassicalDotSystem):
 
     def __init__(self, name='multidot', ndots=6, maxelectrons = 3,  **kwargs):
+        """ Classical simulation of multi dot """
         super().__init__(name=name, ndots=ndots, ngates=ndots, maxelectrons=maxelectrons, **kwargs)
 
         self.makebasis(ndots=ndots, maxelectrons=maxelectrons)
@@ -211,6 +209,7 @@ class MultiDot(ClassicalDotSystem):
 
 
 class DoubleDot(ClassicalDotSystem):
+    """ Classical simulation of double dot """
 
     def __init__(self, name='doubledot', **kwargs):
         super().__init__(name=name, ndots=2, ngates=2, **kwargs)
@@ -231,6 +230,7 @@ class DoubleDot(ClassicalDotSystem):
 class SquareDot(ClassicalDotSystem):
 
     def __init__(self, name='squaredot', **kwargs):
+        """ Classical simulation of a 2x2 dot configuration """
         super().__init__(name=name, ndots=4, ngates=4, **kwargs)
 
         self.makebasis(ndots=4)
@@ -253,16 +253,9 @@ def test_dotsystem():
     m=MultiDot('multidot', 4, maxelectrons=3)
     m.calculate_energies(np.random.rand(m.ndots))
     m.solve()
-    self=m
     if __name__=='__main__':
         m.showstates(8)
-    
-    
 
-if 0:
+if __name__=='__main__':
     test_dotsystem()
-    m=MultiDot('multidot', 4, maxelectrons=3)
-    m.calculate_energies(np.random.rand(m.ndots))
-    m.solve()
-    self=m
     

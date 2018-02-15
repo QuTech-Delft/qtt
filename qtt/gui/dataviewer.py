@@ -2,35 +2,32 @@
 
 import os
 import logging
+import argparse
 
 import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 from qtpy.QtWidgets import QWidget
 
 import pyqtgraph as pg
-import argparse
 
 import qcodes
 from qcodes.plots.pyqtgraph import QtPlot
-
 import qtt
 
 # %% Main class
-
 
 class DataViewer(QtWidgets.QWidget):
 
     def __init__(self, datadir=None, window_title='Data browser',
                  default_parameter='amplitude', extensions=['dat', 'hdf5'],
                  verbose=1):
-        ''' Simple viewer for Qcodes data
+        """ Simple viewer for Qcodes data
 
-        Arugments
-        ---------
+        Args:
 
             datadir (string or None): directory to scan for experiments
             default_parameter (string): name of default parameter to plot
-        '''
+        """
         super(DataViewer, self).__init__()
         self.verbose = verbose  # for debugging
         self.default_parameter = default_parameter
@@ -244,6 +241,7 @@ class DataViewer(QtWidgets.QWidget):
         return self.dataset.default_parameter_name()
 
     def selectedDatafile(self):
+        """ Return currently selected data file """
         return self.datatag
 
     def comboCallback(self, index):
@@ -349,15 +347,3 @@ if __name__ == '__main__':
 
     # app.exec()
 
-
-# %%
-
-if 0:
-    tag = list(list(dataviewer.logs.items())[0][1].items())[0][1]
-    data = qcodes.load_data(tag)
-
-    l = data.location
-
-    data.formatter = HDF5Format()
-    data.write()
-    data._h5_base_group.close()

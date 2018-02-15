@@ -22,6 +22,7 @@ import scipy.optimize
 import warnings
 import copy
 import qtt
+import qtt.tools
 
 try:
     import matplotlib.pyplot as plt
@@ -38,11 +39,13 @@ except Exception as inst:
     warnings.warn('could not import OpenCv, not all functionality available...')
     pass
 
+warnings.warn('do not import this module, it will be removed in the future', DeprecationWarning)
+
 #%% Custom packages
 from qtt import pgeometry as pmatlab
 
 
-
+@qtt.tools.deprecated
 def extent2fullextent(extent0, im):
     """ Convert extent to include half pixel border """
     nx = im.shape[1]
@@ -61,8 +64,9 @@ def extent2fullextent(extent0, im):
 ueV2Hz = scipy.constants.e / scipy.constants.h * 1e-6
 
 
+@qtt.tools.rdeprecated('replaced by pat_functions.one_ele_pat_model')
 def barrierModel(x, *p):
-    """ Model used for fitting tunnel barrier 
+    r""" Model used for fitting tunnel barrier 
 
     This is:
 
@@ -93,6 +97,7 @@ def barrierModel(x, *p):
 #%%
 
 
+@qtt.tools.rdeprecated('use pat_functions.plot_pat_fit')
 def plotBarrierFit(imq, imextent, pp, fig=400, title='Fitted model'):
     """ Plot the fitted model of a V-shape """
     pmatlab.cfigure(fig)
@@ -120,6 +125,7 @@ import scipy.optimize
 from qtt.pgeometry import robustCost
 
 
+@qtt.tools.deprecated
 def barrierScore(xd, yd, pp, weights=None, thr=3e9):
     """ Calculate score for barrier model """
     ppq = pp.copy()
@@ -135,6 +141,7 @@ def barrierScore(xd, yd, pp, weights=None, thr=3e9):
     return sc
 
 
+@qtt.tools.deprecated
 def preprocessPAT(imextent, im0, im, fig=None):
     """ Preprocess a pair of calibration and PAT image """
     im0s = qtt.algorithms.generic.smoothImage(im0)
@@ -181,6 +188,7 @@ def preprocessPAT(imextent, im0, im, fig=None):
     return imx, imq, im0s
 
 
+@qtt.tools.rdeprecated('replaced by pat_functions.detect_peaks')
 def detectVshape(imextent, xdata, ydata, imx, sigmamv=.25, fig=400, returndict=None):
     """ Helper function """
     scalefac = (imextent[1] - imextent[0]) / (imx.shape[1] - 1)  # mV/pixel
@@ -248,7 +256,7 @@ def detectVshape(imextent, xdata, ydata, imx, sigmamv=.25, fig=400, returndict=N
 
 #%%
 
-
+@qtt.tools.deprecated
 def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=None):
 
     # params: ['xoffset','leverarm','t']
