@@ -871,28 +871,7 @@ def Faces(edges, embedding, verbose=1):
 
 #%%
 
-
-def polyarea(p):
-    """ Return signed area of polygon
-
-    Arguments
-    ---------
-        p : 2xN array or list of vertices
-            vertices of polygon
-    Returns
-    -------
-        area : float
-            area of polygon
-
-    >>> polyarea( [ [0,0], [1,0], [1,1], [0,2]] )
-    1.5
-    """
-    def polysegments(p):
-        if isinstance(p, list):
-            return zip(p, p[1:] + [p[0]])
-        else:
-            return zip(p, np.vstack((p[1:], p[0:1])))
-    return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
+from qtt.algorithms.misc import polyarea
 
 #%%
 
@@ -924,10 +903,11 @@ def removeOuterFace(cc, xy, verbose=1):
     return cc
 
 
+@qtt.tools.deprecated
 def polygon_centroid(p):
     """ Return centroid of polygon, can also be computed with shapely """
     p = xy[c]
-    A = -linetools.polyarea(p)
+    A = -polyarea(p)
 
     X = 0
     Y = 0
@@ -975,12 +955,9 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
         psi = param[7]
         if verbose:
             print('createCross: psi set to %.1f [def]' % np.rad2deg(psi))
-    # aa=[0,0,0,0]
 
     if samplesize is None:
         cc = param[0:2].reshape((2, 1))
-        #if scale is None:
-        #    scale = 50
     else:
         #if scale is None:
         #    scale = np.mean(samplesize)
@@ -1003,7 +980,6 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
             ip[ii].flat = lp
         else:
             ip[ii].flat = hp
-        #op[ii] = ip[ii] + ((scale) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
         opr[ii] = ip[ii] + ((lsegment / istep) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
 
     if samplesize is not None:
@@ -1020,8 +996,6 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
                 semiLine(modelpatch, x0=ip[ii], theta=aa[ii], w=w / istep, l=l / istep, H=H)
         if addX:
             lx = np.linalg.norm(hp - lp, ord=2)
-            #print(hp); print(lp)
-            # print(lx)
             lineSegment(modelpatch, x0=np.array(hp.reshape((2, 1))), x1=np.array(lp.reshape((2, 1))), w=w / istep, l=lx, H=H)
 
     else:
@@ -1157,8 +1131,7 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
         results : dict
             more results
 
-
- """
+    """
     samplesize = np.array([ksize, ksize + dy])
     param = [None, None, sepmv / istep, 3 * np.pi /
              8, -7 * np.pi / 8, 11 * np.pi / 8, np.pi / 8]
@@ -1173,7 +1146,6 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
     rr = smoothImage(rr)
 
     thr = .65 * rr.max() + .35 * rr.mean()
-    #pts = pmatlab.detect_local_minima(-rr, thr=-thr)
     pts = localMaxima(rr, thr=thr, radius=10 / istep)
     pts = np.array(pts)
     pts = pts[[1, 0], :]
@@ -1185,7 +1157,6 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
     if fig is not None:
         showIm(imtmp, fig=fig)
-        #pt+=samplesize[::-1].reshape( (2,1))
         plt.plot(ptsim[0], ptsim[1], '.m', markersize=22)
         showIm(rr, fig=fig + 1)
         plt.colorbar()
@@ -1193,7 +1164,7 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
         plt.plot(pts[0], pts[1], '.m', markersize=22)
         plt.title('Template match')
 
-        tilefigs([fig, fig + 1])
+        qtt.pgeometry.tilefigs([fig, fig + 1])
 
     return ptsim, rr, dict({'modelpatch': modelpatch})
 
