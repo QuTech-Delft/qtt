@@ -361,7 +361,7 @@ class livePlot:
 
             vpen = pg.QtGui.QPen(pg.QtGui.QColor(
                 130, 130, 175, 60), 0, pg.QtCore.Qt.SolidLine)
-            gv = pg.InfiniteLine([0, 0], angle=0, pen=vpen)
+            gv = pg.InfiniteLine([0, 0], angle=90, pen=vpen)
             gv.setZValue(0)
             p1.addItem(gv)
             self._crosshair = [gv]
