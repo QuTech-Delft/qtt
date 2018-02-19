@@ -12,6 +12,9 @@ from functools import partial
 import numpy as np
 from qcodes.utils.validators import Numbers
 from qcodes.data.data_set import load_data
+import warnings
+import time
+
 try:
     import graphviz
 except:
@@ -31,20 +34,23 @@ class virtual_IVVI(Instrument):
         name (str): The name given to the virtual_IVVI object
         instruments (list):  the qcodes IVVI instruments
         gate_map (dict): the map between IVVI dac and gate
+        rc_times (dict): dictionary with rc times for the gates
     """
-    shared_kwargs = ['instruments']
 
-    # instruments will be a list of RemoteInstrument objects, which can be
-    # given to a server on creation but not later on, so it needs to be
-    # listed in shared_kwargs
-
-    def __init__(self, name, instruments, gate_map, rc_times={}, **kwargs):
+    def __init__(self, name, instruments, gate_map, rc_times= None, **kwargs):
         """ Inits gates with gate_map. """
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
         self._direct_gate_map = {} # fast access to parameters
         self._fast_readout = True
+        
+        if rc_times is None:
+            rc_times = {}
+        self._rc_times = rc_times
+        
+        self.add_parameter('rc_times', get_cmd=partial(self._get_variable, '_rc_times'), set_cmd=False)
+
         # Create all functions for the gates as defined in self._gate_map
         for gate in self._gate_map.keys():
             logging.debug('gates: make gate %s' % gate)
@@ -56,6 +62,9 @@ class virtual_IVVI(Instrument):
             self._direct_gate_map[gate]= getattr(i, igate)
         self.get_all()
 
+    def _get_variable(self, v):
+        return getattr(self, v)
+    
     def get_idn(self):
         """ Overrule because the default VISA command does not work. """
         IDN = {'vendor': 'QuTech', 'model': 'gates',
@@ -184,6 +193,27 @@ class virtual_IVVI(Instrument):
                 print('  setting gate %s to %.1f [mV]' % (g, val))
             gates.set(g, val )
 
+    def set_exact(self, gate, value, extra_delay=0.02):
+        """ Document .... """
+        gateparam = getattr(self, gate)
+        rc = self._rc_times.get(gate, None)
+        value0 = gateparam.get_latest()
+        dv = value-value0
+        
+        if rc is None:
+            warnings.warn('could not find rc time for gate %s'  % gate)
+            self.set(gate, value)
+            time.sleep(1.)
+        elif np.abs(dv)<5:
+            # hack for small steps
+            self.set(gate, value)
+            time.sleep(extra_delay)
+        else:
+            self.set(gate, value0+4*dv)
+            time.sleep(rc/3)
+            self.set(gate, value)
+            time.sleep(extra_delay)
+            
     def resettodataset(self, dataset):
         """ Reset gates to the values from a previous dataset
         Args:
