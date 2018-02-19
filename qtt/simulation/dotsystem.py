@@ -8,6 +8,7 @@ import itertools
 import matplotlib.pyplot as plt
 import time
 import copy
+from abc import abstractmethod
 from functools import partial
 import sys
 
@@ -17,7 +18,6 @@ except:
     pass
 
 try:
-    import multiprocessing
     import multiprocessing as mp
     from multiprocessing import Pool
 
@@ -26,10 +26,14 @@ except:
     _have_mp = False
     pass
 
+import qtt.tools
+from qtt import pgeometry 
+
 #%% Helper functions
 
 
 def showGraph(dot, fig=10):
+    """ Show graphviz object in matplotlib window """
     dot.format = 'png'
     outfile = dot.render('dot-dummy', view=False)
     print(outfile)
@@ -67,12 +71,13 @@ def tprint(string, dt=1, output=False):
 
 
 def isdiagonal(HH):
+    """ Helper function """
     return not(np.any(HH - np.diag(np.diagonal(HH))))
 
-''' helper function '''
 
 
 def simulate_row(i, ds, npointsy, usediag):
+    """ Helper function """
     dsx = copy.deepcopy(ds)
     paramnames = list(dsx.vals2D.keys())
     for j in range(npointsy):
@@ -87,7 +92,7 @@ def simulate_row(i, ds, npointsy, usediag):
 #%%
 # move into class?
 def defaultVmatrix(n):
-    """
+    """ Helper function 
     >>> m=defaultVmatrix(2)
     """
     Vmatrix = np.eye(n)
@@ -101,12 +106,9 @@ def defaultVmatrix(n):
     VmatrixF[0:n, 0:n] = Vmatrix
     return VmatrixF
 
-#%% FIXME: move into other submodule
-from qtt import pgeometry as pmatlab
-
-
 class GateTransform:
     ''' Class to describe virtual gate transformations '''
+    # FIXME: move into other submodule
 
     def __init__(self, Vmatrix, sourcenames, targetnames):
         self.Vmatrix = np.array(Vmatrix).astype(np.float32)
@@ -127,16 +129,12 @@ class GateTransform:
             xx = vals2D
             v = np.array(xx).astype(np.float32)
 
-        vout = pmatlab.projectiveTransformation(self.Vmatrix, v)
-        # vout = self.Vmatrix.dot(v)
+        vout = pgeometry.projectiveTransformation(self.Vmatrix, v)
 
         for j, n in enumerate(self.targetnames):
             vals2Dout[n] = vout[j].reshape(nn).astype(np.float)
         return vals2Dout
 #%%
-
-from abc import abstractmethod
-
 
 class BaseDotSystem():
 
@@ -474,8 +472,6 @@ class DotSystem(BaseDotSystem):
         for ii in range(self.ndots):
             setattr(self, 'det%d' % (ii + 1), value)
 
-    #% Output
-
     def showMmatrix(self, name='det1', fig=10):
         plt.figure(fig)
         plt.clf()
@@ -509,6 +505,7 @@ class DotSystem(BaseDotSystem):
         showGraph(dot, fig=fig)
 
 
+@qtt.tools.deprecated
 def setDotSystem(ds, gate_transform, gv):
     """ Set dot system values using gate transform """
     tv = gate_transform.transformGateScan(gv)
@@ -516,6 +513,7 @@ def setDotSystem(ds, gate_transform, gv):
         setattr(ds, k, val)
 
 
+@qtt.tools.deprecated
 def defaultDotValues(ds):
     for ii in range(ds.ndots):
         setattr(ds, 'osC%d' % (ii + 1), 55)
@@ -528,6 +526,7 @@ def defaultDotValues(ds):
 class OneDot(DotSystem):
 
     def __init__(self, name='doubledot', maxelectrons=3):
+        """ Simulation of a single quantum dot """
         super().__init__(name=name, ndots=1)
         self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
         self.varnames = ['det1', 'osC1', 'isC1']
@@ -543,6 +542,11 @@ class OneDot(DotSystem):
 class DoubleDot(DotSystem):
 
     def __init__(self, name='doubledot'):
+        """ Simulation of double-dot system
+        
+        See: DotSytem
+        """
+
         super().__init__(name=name, ndots=2)
         self.makebasis(ndots=self.ndots, maxelectrons=3)
         self.varnames = ['det1', 'det2',
@@ -559,6 +563,7 @@ class DoubleDot(DotSystem):
 class TripleDot(DotSystem):
 
     def __init__(self, name='tripledot', maxelectrons=3):
+        """ Simulation of triple-dot system """
         super().__init__(name=name, ndots=3)
         self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
         self.varnames = ['det1', 'det2', 'det3',
@@ -577,6 +582,7 @@ class TripleDot(DotSystem):
 class FourDot(DotSystem):
 
     def __init__(self, name='fourdot', use_tunneling=True, use_orbits=False, **kwargs):
+        """ Simulation of 4-dot system """
         super().__init__(name=name, ndots=4, **kwargs)
 
         self.use_tunneling = use_tunneling

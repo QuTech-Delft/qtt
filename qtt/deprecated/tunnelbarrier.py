@@ -39,6 +39,8 @@ except Exception as inst:
     warnings.warn('could not import OpenCv, not all functionality available...')
     pass
 
+warnings.warn('do not import this module, it will be removed in the future', DeprecationWarning)
+
 #%% Custom packages
 from qtt import pgeometry as pmatlab
 
@@ -64,7 +66,7 @@ ueV2Hz = scipy.constants.e / scipy.constants.h * 1e-6
 
 @qtt.tools.rdeprecated('replaced by pat_functions.one_ele_pat_model')
 def barrierModel(x, *p):
-    """ Model used for fitting tunnel barrier 
+    r""" Model used for fitting tunnel barrier 
 
     This is:
 
