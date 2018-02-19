@@ -209,8 +209,15 @@ class virtual_IVVI(Instrument):
             self.set(gate, value)
             time.sleep(extra_delay)
         else:
-            self.set(gate, value0+4*dv)
-            time.sleep(rc/3)
+            try:
+                self.set(gate, value0+4*dv)
+                time.sleep(rc/3)
+            except ValueError:
+                # outside safe boundaries
+                warnings.warn('set outside boundaries?')
+                self.set(gate, value)
+                time.sleep(rc)
+                    
             self.set(gate, value)
             time.sleep(extra_delay)
             
