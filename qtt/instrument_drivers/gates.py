@@ -38,7 +38,7 @@ class virtual_IVVI(Instrument):
     # given to a server on creation but not later on, so it needs to be
     # listed in shared_kwargs
 
-    def __init__(self, name, instruments, gate_map, **kwargs):
+    def __init__(self, name, instruments, gate_map, rc_times={}, **kwargs):
         """ Inits gates with gate_map. """
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
