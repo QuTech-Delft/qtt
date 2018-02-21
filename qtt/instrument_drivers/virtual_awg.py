@@ -411,6 +411,7 @@ class virtual_awg(Instrument):
         wave_sweep = self.make_sawtooth(sweeprange, period, width)
         for g in gate_voltages:
             self.check_amplitude(g, sweeprange + (mvrange[0]-mvrange[1]))
+        for g in gate_voltages:
             gate_voltages[g] = np.tile(gate_voltages[g], pulsereps)
             wave_raw = self.make_pulses(gate_voltages[g], waittimes, filtercutoff=filtercutoff, mvrange=mvrange)
             wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
