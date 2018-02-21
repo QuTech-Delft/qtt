@@ -354,6 +354,7 @@ class virtual_awg(Instrument):
         waveform = dict()
         for g in gate_comb:
             self.check_amplitude(g, gate_comb[g] * sweeprange)
+        for g in gate_comb:
             wave_raw = self.make_sawtooth(sweeprange, period, width)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gate_comb[g] / awg_to_plunger
@@ -575,6 +576,7 @@ class virtual_awg(Instrument):
         # horizontal virtual gate
         for g in gates_horz:
             self.check_amplitude(g, sweepranges[0] * gates_horz[g])
+        for g in gates_horz:
             wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[0])
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_horz[g] / awg_to_plunger
@@ -585,6 +587,7 @@ class virtual_awg(Instrument):
         # vertical virtual gate
         for g in gates_vert:
             self.check_amplitude(g, sweepranges[1] * gates_vert[g])
+        for g in gates_vert:
             wave_raw = self.make_sawtooth(sweepranges[1], period_vert)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_vert[g] / awg_to_plunger
