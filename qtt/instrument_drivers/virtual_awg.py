@@ -378,6 +378,7 @@ class virtual_awg(Instrument):
         ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
         a gate, with a pulse sequence. A marker is sent to the measurement instrument 
         at the start of the waveform.
+        IMPORTANT: The function offsets the voltages values so that the last point is 0 V on all gates (i.e. it centers the pulse sequence on the last point)
 
         Args:
             sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width). 
@@ -645,6 +646,7 @@ class virtual_awg(Instrument):
         ''' Send a pulse sequence with the AWG that can span over any gate space.
         Sends a marker to measurement instrument at the start of the sequence.
         Only works with physical gates.
+        IMPORTANT: The function offsets the voltages values so that the last point is 0 V on all gates (i.e. it centers the pulse sequence on the last point)
 
         Arguments:
             gate_voltages (dict): keys are gates to apply the sequence to, and values
