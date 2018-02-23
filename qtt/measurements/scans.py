@@ -1205,13 +1205,14 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
     return processed_data, (r1, r2)
 
 
-def select_digitizer_memsize(digitizer, period, trigger_delay=None, verbose=1):
+def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
     """ Select suitable memory size for a given period
 
     Args:
         digitizer (object)
         period (float): period of signal to measure
         trigger_delay (float): delay in seconds between ingoing signal and returning signal
+        nsegments (int): number of segments of period length to fit in memory
     Returns:
         memsize (int)
     """
@@ -1219,17 +1220,19 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, verbose=1):
     if drate == 0:
         raise Exception('digitizer samplerate is zero, please reset digitizer')
     npoints = int(period * drate)
-    memsize = int(np.ceil(npoints / 16) * 16)
-
+    segsize = int(np.ceil(npoints / 16) * 16)
+    memsize = segsize * nsegments
+    if memsize > digitizer.memory():
+        raise(Exception('Trying to acquire too many points. Reduce sampling rate, period or number segments'))
     digitizer.data_memory_size.set(memsize)
     if trigger_delay is None:
-        spare = np.ceil((memsize - npoints) / 16) * 16
+        spare = np.ceil((segsize - npoints) / 16) * 16
         pre_trigger = min(spare / 2, 512)
     else:
         pre_trigger = trigger_delay * drate
-    post_trigger = int(np.ceil((memsize - pre_trigger) // 16) * 16)
+    post_trigger = int(np.ceil((segsize - pre_trigger) // 16) * 16)
     digitizer.posttrigger_memory_size(post_trigger)
-    digitizer.pretrigger_memory_size(memsize - post_trigger)
+    digitizer.pretrigger_memory_size(segsize - post_trigger)
     if verbose:
         print('%s: sample rate %.3f Mhz, period %f [ms]' % (
             digitizer.name, drate / 1e6, period * 1e3))
@@ -1420,26 +1423,20 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
-            memsize = select_digitizer_memsize(minstrhandle, period)
+            memsize = select_digitizer_memsize(minstrhandle, period, nsegments=nsegments)
             post_trigger = minstrhandle.posttrigger_memory_size()
-
-        for i in range(nsegments):
-            if ism4i:
-                dataraw = minstrhandle.single_trigger_acquisition(
-                    mV_range, memsize, post_trigger)
-                if isinstance(dataraw, tuple):
-                    dataraw = dataraw[0]
-                data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
-            else:
-                data = measuresegment(
-                    waveform, 1, minstrhandle, read_ch, mV_range)
-            if i == 0:
-                segment_num = np.arange(nsegments)
-                segment_time = np.linspace(0, period, len(data[0]))
-                alldata = makeDataSet2Dplain('segment_number', segment_num, 'time', segment_time,
-                                             zname=measure_names, xunit='s', location=location, loc_record={'label': 'save_segments'})
-            for idm, mname in enumerate(measure_names):
-                alldata.arrays[mname].ndarray[i] = data[idm]
+            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
+            dataraw = minstrhandle.multiple_trigger_acquisition(
+                mV_range, memsize, memsize//nsegments, post_trigger)
+            if isinstance(dataraw, tuple):
+                dataraw = dataraw[0]
+            data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1)) 
+            segment_num = np.arange(nsegments)
+            segment_time = np.linspace(0, period, data.shape[2])
+            alldata = makeDataSet2Dplain('segment_number', segment_num, 'time', segment_time,
+                                             zname=measure_names, z=data, xunit='s', location=location, loc_record={'label': 'save_segments'})
+        else:
+            raise(Exception('Non-averaged acquisitions not supported for this measurement instrument'))
 
     dt = time.time() - t0
     update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
