@@ -354,6 +354,7 @@ class virtual_awg(Instrument):
         waveform = dict()
         for g in gate_comb:
             self.check_amplitude(g, gate_comb[g] * sweeprange)
+        for g in gate_comb:
             wave_raw = self.make_sawtooth(sweeprange, period, width)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gate_comb[g] / awg_to_plunger
@@ -377,6 +378,7 @@ class virtual_awg(Instrument):
         ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
         a gate, with a pulse sequence. A marker is sent to the measurement instrument 
         at the start of the waveform.
+        IMPORTANT: The function offsets the voltages values so that the last point is 0 V on all gates (i.e. it centers the pulse sequence on the last point)
 
         Args:
             sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width). 
@@ -411,6 +413,7 @@ class virtual_awg(Instrument):
         wave_sweep = self.make_sawtooth(sweeprange, period, width)
         for g in gate_voltages:
             self.check_amplitude(g, sweeprange + (mvrange[0]-mvrange[1]))
+        for g in gate_voltages:
             gate_voltages[g] = np.tile(gate_voltages[g], pulsereps)
             wave_raw = self.make_pulses(gate_voltages[g], waittimes, filtercutoff=filtercutoff, mvrange=mvrange)
             wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
@@ -574,6 +577,7 @@ class virtual_awg(Instrument):
         # horizontal virtual gate
         for g in gates_horz:
             self.check_amplitude(g, sweepranges[0] * gates_horz[g])
+        for g in gates_horz:
             wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[0])
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_horz[g] / awg_to_plunger
@@ -584,6 +588,7 @@ class virtual_awg(Instrument):
         # vertical virtual gate
         for g in gates_vert:
             self.check_amplitude(g, sweepranges[1] * gates_vert[g])
+        for g in gates_vert:
             wave_raw = self.make_sawtooth(sweepranges[1], period_vert)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_vert[g] / awg_to_plunger
@@ -641,6 +646,7 @@ class virtual_awg(Instrument):
         ''' Send a pulse sequence with the AWG that can span over any gate space.
         Sends a marker to measurement instrument at the start of the sequence.
         Only works with physical gates.
+        IMPORTANT: The function offsets the voltages values so that the last point is 0 V on all gates (i.e. it centers the pulse sequence on the last point)
 
         Arguments:
             gate_voltages (dict): keys are gates to apply the sequence to, and values
