@@ -1385,6 +1385,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
 def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
+    The saving to disk can take minutes or even longer.
+
     Args:
         parameters (dict): dictionary containing the following compulsory parameters:
           -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
