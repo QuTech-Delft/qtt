@@ -267,7 +267,10 @@ class virtual_awg(Instrument):
             voltages (list of floats): voltage levels to be applied in the sequence
             waittimes (list of floats): duration of each pulse in the sequence
             filtercutoff (float): cutoff frequency of a 1st order butterworth filter to make the pulse steps smoother
-            rampparams (dict): times (list of floats), proportions (list of length 2 tuples of floats from 0 to 1). Ramp happens at the end of each pulse.
+            rampparams (dict): the ramps cut into the end of each pulse, such that the original total length of the sequence is not affected.
+            rampparams keys:
+                times (list of floats): length of the ramp at the end of each pulse (times[i] < waittimes[i])
+                proportions (list of tuples): each tuple contains the (start,end) proportions of the ramps (e.g. (0,1) to make a ramp for the entire pulse transition voltage)
             
         Returns:
             wave_raw (array): raw data which represents the waveform
