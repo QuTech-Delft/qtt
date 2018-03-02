@@ -1232,14 +1232,13 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
         pre_trigger = trigger_delay * drate
     post_trigger = int(np.ceil((segsize - pre_trigger) // 16) * 16)
     digitizer.posttrigger_memory_size(post_trigger)
-    digitizer.pretrigger_memory_size(segsize - post_trigger)
     if verbose:
         print('%s: sample rate %.3f Mhz, period %f [ms]' % (
             digitizer.name, drate / 1e6, period * 1e3))
         print('%s: trace %d points, selected memsize %d' %
               (digitizer.name, npoints, memsize))
         print('%s: pre and post trigger: %d %d' % (digitizer.name,
-                                                   digitizer.pretrigger_memory_size(), digitizer.posttrigger_memory_size()))
+                                                   digitizer.data_memory_size() - digitizer.posttrigger_memory_size(), digitizer.posttrigger_memory_size()))
     return memsize
 
 
