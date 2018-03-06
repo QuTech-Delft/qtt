@@ -18,3 +18,4 @@ attrs
 Polygon3
 pyzmqrpc
 redis
+pandoc

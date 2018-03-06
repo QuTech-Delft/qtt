@@ -190,6 +190,12 @@ pip3 install --user -r develop_requirements.txt
 pip install git+https://github.com/telegraphic/hickle.git@dev
 ```
 
+### Development
+
+```
+> conda install pandoc redis ipython nbformat
+```
+
 ### Old commands
 
 Manual installation:
