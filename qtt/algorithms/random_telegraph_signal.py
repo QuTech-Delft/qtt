@@ -59,7 +59,7 @@ def transitions_durations(data, split):
 class FittingException(Exception):
     pass    
     
-def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_duration = 5, plungers = [], fig = None, verbose = 0):
+def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_duration = 5, plungers = [], fig = None, ppt = None, verbose = 0):
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels, 
     determines the durations in these two levels, fits a decaying exponantial on two arrays of durations, 
@@ -76,6 +76,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
             and a FittingException is raised
         min_duration (int): minimal number of datapoints a duration should last to be taking into account for the analysis
         fig (None or int): shows figures and sends them to the ppt when is not None
+        ppt (None or int): determines if the figures are send to a powerpoint presentation
         verbose (int): prints info to the console when > 0
         
     Returns:
@@ -113,7 +114,8 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         plt.xlabel('Time (ms)')
         plt.ylabel('Signal sensing dot (a.u.)')
         plt.title(title)
-        addPPTslide(title=title, fig=plt.figure(title))
+        if ppt:
+            addPPTslide(title=title, fig=plt.figure(title))
         
     # binning the data and determining the bincentres
     num_bins = int(np.sqrt(len(data)))
@@ -141,7 +143,8 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         plt.ylabel('Data points per bin')
         plt.legend()
         plt.title(title)
-        addPPTslide(title=title, fig=plt.figure(title), notes='Fit paramaters double gaussian:\n mean down: %.3f counts' % par_fit[4] +', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] +', std up:%.3f counts' % par_fit[3] +'.Separation between peaks gaussians: %.3f std' % separation +'. Split between two levels: %.3f' % split )
+        if ppt:
+            addPPTslide(title=title, fig=plt.figure(title), notes='Fit paramaters double gaussian:\n mean down: %.3f counts' % par_fit[4] +', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] +', std up:%.3f counts' % par_fit[3] +'.Separation between peaks gaussians: %.3f std' % separation +'. Split between two levels: %.3f' % split )
         
     if separation < min_sep:
         raise FittingException('Separation between the peaks of the gaussian is less then %.1f std, indicating that the fit was not succesfull.' % min_sep)
@@ -195,7 +198,8 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         plt.ylabel('Counts per bin')
         plt.legend()
         plt.title(title)
-        addPPTslide(title=title, fig=plt.figure(title))
+        if ppt:
+            addPPTslide(title=title, fig=plt.figure(title))
         
     # calculating the number of bins and counts for up level
     numbins_up = int(np.sqrt(len(durations_up_srt)))
@@ -225,7 +229,8 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         plt.ylabel('Data points per bin')
         plt.legend()
         plt.title(title)
-        addPPTslide(title=title, fig=plt.figure(title))
+        if ppt:
+            addPPTslide(title=title, fig=plt.figure(title))
         
     parameters = {'plunger value':plungervalue, 'sampling rate':samplerate, 'fit parameters double gaussian':par_fit, \
                                          'separations between peaks gaussians':separation, \
