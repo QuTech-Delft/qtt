@@ -873,6 +873,8 @@ def fastScan(scanjob, station):
         return 0
 
     awg = getattr(station, 'awg')
+    if awg is None:
+        return False
 
     if not awg.awg_gate(scanjob['sweepdata']['param']):
         # sweep gate is not fast, so no fast scan possible
