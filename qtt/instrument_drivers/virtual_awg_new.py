@@ -9,7 +9,7 @@ from qctoolkit.pulses.plotting import plot, render
 from qcodes.instrument.base import InstrumentBase
 import qcodes.instrument_drivers.Spectrum.M4i as M4i
 # import qcodes.instrument_drivers.Keysight.M3201A as M3201A
-from qcodes.instrument_drivers.tektronix.AWG5014 import Tektronix_AWG5014
+# from qcodes.instrument_drivers.tektronix.AWG5014 import Tektronix_AWG5014
 
 logger = logging.getLogger(__name__)
 
@@ -292,7 +292,7 @@ class VirtualAwg(InstrumentBase):
         if do_upload:
             try:
                 map(lambda awg: awg.delete_all_waveforms(), self.awgs)
-                for(awg_nr, awg_channel), info in sweep_info.items():
+                for (awg_nr, awg_channel), info in sweep_info.items():
                     self.awgs[awg_nr].send_waveform(info['waveform'],
                                                     info['marker1'],
                                                     info['marker2'],
