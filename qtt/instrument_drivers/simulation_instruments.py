@@ -70,47 +70,47 @@ class SimulationDigitizer(qcodes.Instrument):
         wtype = waveform.get('type')
 
         v = model.gate_transform.sourcenames
-        Vmatrix = np.eye(len(v)) 
+        Vmatrix = np.eye(len(v))
 
-        if wtype=='sweep_2D_virt':
+        if wtype == 'sweep_2D_virt':
             iih = [v.index(s) for s in sweepgates[0]]
             iiv = [v.index(s) for s in sweepgates[1]]
 
-            vh= list( sweepgates[0].values() )
-            vv= list( sweepgates[1].values() )
-            Vmatrix[0,:]=0
-            Vmatrix[1,:]=0
+            vh = list(sweepgates[0].values())
+            vv = list(sweepgates[1].values())
+            Vmatrix[0, :] = 0
+            Vmatrix[1, :] = 0
             for idx, j in enumerate(iih):
                 Vmatrix[0, j] = vh[idx]
                 #Vmatrix[j, 0] = vh[idx]
             for idx, j in enumerate(iiv):
                 Vmatrix[1, j] = vv[idx]
                 #Vmatrix[j, 1] = vv[idx]
- 
+
             if 0:
                 import scipy
-                X=scipy.linalg.orth(Vmatrix[0:2,:].T)
-                
-                A=Vmatrix[0:2,:]
-                n=qtt.pgeometry.null(A)
-                Vmatrix=np.vstack( (A,n[1].T))
-            
-            inverseV=Vmatrix.T
-            Vmatrix=None            
-            #np.linalg.inv(X)
+                X = scipy.linalg.orth(Vmatrix[0:2, :].T)
+
+                A = Vmatrix[0:2, :]
+                n = qtt.pgeometry.null(A)
+                Vmatrix = np.vstack((A, n[1].T))
+
+            inverseV = Vmatrix.T
+            Vmatrix = None
+            # np.linalg.inv(X)
             # FIXME: lines above might lead to degeneracy
-            #inverseV=np.linalg.inv(Vmatrix)
-            #inverseV=Vmatrix
-            #Vmatrix=np.linalg.inv(inverseV)
-                        
+            # inverseV=np.linalg.inv(Vmatrix)
+            # inverseV=Vmatrix
+            # Vmatrix=np.linalg.inv(inverseV)
+
         else:
             ii = [v.index(s) for s in sweepgates]
-      
+
             idx = np.array((range(len(v))))
             for i, j in enumerate(ii):
                 idx[i], idx[j] = idx[j], idx[i]
             Vmatrix = Vmatrix[:, idx].copy()
-            inverseV=np.linalg.inv(Vmatrix)
+            inverseV = np.linalg.inv(Vmatrix)
         sweeps = []
         for ii in range(ndim):
             sweeps.append(np.linspace(-rr[ii], rr[ii], nn[ii]))
@@ -131,7 +131,7 @@ class SimulationDigitizer(qcodes.Instrument):
         # for debugging
         self.debug['gate2Dparams'] = gate2Dparams
         self.debug['qq'] = qq
-        self.debug['inverseV']=inverseV
+        self.debug['inverseV'] = inverseV
 
         for ii in range(test_dot.ndots):
             test2Dparams[ii] = qq['det%d' % (ii + 1)].reshape(nnr)
@@ -170,13 +170,13 @@ class SimulationAWG(qcodes.Instrument):
 
     def awg_gate(self, name):
         return False
-        
+
     def sweep_2D_virt(self, samp_freq, gates_horz, gates_vert, sweepranges, resolution):
         self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates':  [gates_horz, gates_vert], 'sweepranges': sweepranges,
                               'type': 'sweep_2D_virt', 'samp_freq': samp_freq, 'resolution': resolution}
         waveform = self.current_sweep
         return waveform, None
-    
+
     def sweep_2D(self, samp_freq, sweepgates, sweepranges, resolution):
         self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates': sweepgates, 'sweepranges': sweepranges,
                               'type': 'sweep_2D', 'samp_freq': samp_freq, 'resolution': resolution}
@@ -197,5 +197,3 @@ class SimulationAWG(qcodes.Instrument):
 
     def stop(self):
         pass
-
-

@@ -2131,13 +2131,13 @@ def ginput(n=1, drawmode='', **kwargs):
     for ii in range(0, n):
         x = pylab.ginput(1)
         if len(x) == 0:
-            # x = x[:, 0:ii]
             break
         x = np.array(x).T
         xx = np.hstack((xx, x))
         if drawmode is not None:
             plt.plot(xx[0, :].T, xx[1, :].T, drawmode, **kwargs)
             plt.draw()
+    plt.pause(1e-3)
     return xx
 
 

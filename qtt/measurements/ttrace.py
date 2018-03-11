@@ -67,7 +67,7 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     Args:
         physical_gates (list): containing all the physical gates in the setup
         virt_basis (list): containing all the virtual gates in the setup
-        c (array): virtual gate matrix
+        c (array or None): virtual gate matrix
     Returns: 
         virtual_matrix (dict): dictionary, mapping of the virtual gates
     """
