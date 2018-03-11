@@ -7,9 +7,9 @@ from qctoolkit.pulses.sequencing import Sequencer
 from qctoolkit.pulses.plotting import plot, render
 
 from qcodes.instrument.base import InstrumentBase
-from qcodes.instrument_drivers.Spectrum import M4i
-from qcodes.instrument_drivers.Keysight import M3201A
-from qcodes.instrument_drivers.tektronix import AWG5014
+import qcodes.instrument_drivers.Spectrum.M4i as M4i
+# import qcodes.instrument_drivers.Keysight.M3201A as M3201A
+from qcodes.instrument_drivers.tektronix.AWG5014 import Tektronix_AWG5014
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +43,11 @@ def to_array(sequence: SequencePT, sample_rate: int):
 # qc-toolkit stuff... separate file?
 
 
-def make_sawtooth(vpp, period, width, reps=1):
+def make_sawtooth(name, vpp, period, width=0, reps=1):
     values = {'period': period, 'amplitude': vpp/2}
     data = (sawtooth_template(), values)
-    return SequencePT(*(data,)*reps)  # to dict with additional data.
+    return {'NAME': name, 'TYPE': DataType.QC_TOOLKIT,
+            'WAVE': SequencePT(*(data,)*reps)}
 
 
 def make_pulses(voltages, waittimes, filter_cutoff=None, mvrange=None):
@@ -55,9 +56,10 @@ def make_pulses(voltages, waittimes, filter_cutoff=None, mvrange=None):
 
 
 def sequence_to_waveform(sequence: SequencePT, sample_rate: int):
-    '''generates waveform from sequence'''
+    '''generates waveform from sequence.
+    '''
     sequencer = Sequencer()
-    sequencer.push(sequence)
+    sequencer.push(sequence['WAVE'])
     build = sequencer.build()
     if not sequencer.has_finished():
         raise ValueError
@@ -76,7 +78,7 @@ def plot_waveform(waveform, sample_rate: int):
 
 def plot_sequence(sequence, sample_rate):
     '''plots the qc-toolkit sequence.'''
-    plot(sequence, sample_rate)
+    plot(sequence['WAVE'], sample_rate)
 
 
 '''
@@ -100,58 +102,75 @@ class VirtualAwg(InstrumentBase):
             parameters (Parameters): parameter object with properties (e.g.
                 awg_map, clock_speed, marker_delay, etc.).
         '''
-        self.awgs, self.digitizer = VirtualAwg.__set_hardware(instruments)
         super().__init__(name, **kwargs)
+        self.awgs, self.digitizer = self.__set_hardware(instruments)
         self.parameters = parameters
         self.__check_parameters()
         self.__preset_awgs()
 
-    @staticmethod
-    def __set_hardware(instruments):
+    def __set_hardware(self, instruments):
+        ''' Adds the digitizers and awg's to the virual awg. For each device is
+            used via a derived VirtualAwgBase or VirtualDigitizerBase class.
+            This is done because we would like to use the same functionality
+            for different awg's and digizers with different command structures.
+
+        Arguments:
+            instruments (list): a list with qcodes instruments (implemented
+                awgs and digitizers will be correctly picked out).
+
+        Returns:
+            (awgs, digitizer) (list, object): the VirtualAwgBase objects with
+            the awgs as a list and the VirtualDigitizerBase with the digitzer.
+
+        '''
         awgs, digitizer = [], None
         for device in instruments:
-            if isinstance(device, AWG5014):
+            if isinstance(device, Tektronix_AWG5014):
                 awgs.append(TektronixVirtualAwg(device))
-            elif isinstance(device, M3201A):
-                awgs.append(KeysightVirtualAwg(device))
+#           elif isinstance(device, M3201A):
+#                awgs.append(KeysightVirtualAwg(device))
             elif isinstance(device, M4i):
-                if digitizer:
-                    raise VirtualAwgError((device, digitizer),
-                                          'Multiple digitizers not supported!')
                 digitizer = M4iVirtualDigitizer(device)
             else:
                 continue
         return awgs, digitizer
 
     def __check_parameters(self):
-        pass  # TODO !!!
+        ''' Checks whether the provided parameter object has the minimal
+            required values for using the virtual AWG. TODO !!!
+        '''
+        pass
 
     def __preset_awgs(self):
+        ''' Sets the awg's in continues or sequence mode, depending on the
+            amount and order of the presented awg's. The clock speed,
+            channel amplitudes will be set and all waveforms removed,
+            if one or two awg's are connected.
+        '''
         awg_count = len(self.awgs)
         if awg_count == 0:
             logger.warning("No physical awg's connected!")
             return
         if awg_count == 1:
             self.awgs[0].set_mode(RunMode.CONT)
-            logger.verbose("One physical awg's connected!")
+            logger.info("One physical awg's connected!")
         elif awg_count == 2:
             (awg_nr, _, _) = self.parameters.awg_map['awg_mk']
             self.awgs[awg_nr].set_mode(RunMode.CONT)
-            self.awgs[awg_nr + 1 % 2].seq_awg.set_mode(RunMode.SEQ)  # Why +1%2???
-            logger.verbose("Two physical awg's connected!")
+            self.awgs[awg_nr + 1 % 2].seq_awg.set_mode(RunMode.SEQ)  # Why+1%2???
+            logger.info("Two physical awg's connected!")
         else:
             class_name = self.__class__.__name__
             message = "Configuration not supported by {0}!".format(class_name)
             logger.error(message)
             raise VirtualAwgError(message)
         for awg in self.awgs:
-            awg.set_clock_speed(self.parameters.clock_speed)
-            awg.set_amplitudes(self.parameters.channel_amplitude)
+            awg.set_clock_speed(self.parameters.clock_speed())
+            awg.set_amplitudes(self.parameters.channel_amplitudes())
             awg.delete_all_waveforms()
-        return
 
     def are_awg_gates(self, gate_s):
-        ''' Return true if the gate or all given gates can be controlled
+        ''' Returns true if the gate or all given gates can be controlled
             by the awg(s).
 
         Arguments:
@@ -166,29 +185,40 @@ class VirtualAwg(InstrumentBase):
             return False
         if self.parameters.awg_map is None:
             return False
-        if isinstance(gate_s, dict):
-            return np.all([self.is_awg_gate(g) for g in gate_s])
+        if isinstance(gate_s, list):
+            return np.all([self.are_awg_gates(g) for g in gate_s])
         return True if gate_s in self.parameters.awg_map else False
 
     def reset_awgs(self):
-        ''' Resets all awg(s) and turns of all channels.
-        '''
+        ''' Resets all awg(s) and turns of all channels.'''
         map(lambda awg: awg.reset(), self.awgs)
-        logger.verbose("All awg's are reseted...")
+        logger.info("All awg's are reseted...")
 
     def stop_awgs(self):
-        ''' Stops all awg(s) and turns of all channels.
-        '''
-        map(lambda awg: awg.get.stop(), self.awgs)
-        logger.verbose("All awg's stopped...")
+        ''' Stops all awg(s) and turns off all channels.'''
+        map(lambda awg: awg.stop(), self.awgs)
+        logger.info("All awg's stopped...")
 
     @staticmethod
     def __get_data(waveform):
-        data_type = waveform['type']
+        ''' This function returns the raw array data given the waveform.
+            A waveform can hold different types of data dependend on the
+            used pulse library. Currently only raw array data and QC-toolkit
+            can be used.
+
+        Arguments:
+            waveform (dict): a waveform is a dictionary with "type" value
+            given the used pulse library. The "wave" value should contain
+            the actual wave-object.
+
+        Returns:
+            A numpy.ndarrays with the corresponding sampled voltages.
+        '''
+        data_type = waveform['TYPE']
         if data_type == DataType.RAW_DATA:
-            return waveform['wave']
+            return waveform['WAVE']
         if data_type == DataType.QC_TOOLKIT:
-            sample_rate = 1  # TODO GS/s !!!
+            sample_rate = 1  # set the sample rate... in GS/s ???
             return sequence_to_waveform(waveform['wave'], sample_rate)
 
     def sweep_init(self, waveforms, do_upload=True, sample_frequency=None):
@@ -215,7 +245,7 @@ class VirtualAwg(InstrumentBase):
         # wave data
         for gate, wave in waveforms:
             awg_channel = self.properties.awg_map[gate]
-            sweep_info[awg_channel] = {'name': wave['name'],
+            sweep_info[awg_channel] = {'name': wave['NAME'],
                                        'waveform': VirtualAwg.__get_data(wave),
                                        'marker1': np.zeros(data_count),
                                        'marker2': np.zeros(data_count)}
@@ -263,14 +293,13 @@ class VirtualAwg(InstrumentBase):
             try:
                 map(lambda awg: awg.delete_all_waveforms(), self.awgs)
                 for(awg_nr, awg_channel), info in sweep_info.items():
-                    self.awgs[awg_nr].send_waveform_to_list(info['waveform'],
-                                                            info['marker1'],
-                                                            info['marker2'],
-                                                            info['name'])
+                    self.awgs[awg_nr].send_waveform(info['waveform'],
+                                                    info['marker1'],
+                                                    info['marker2'],
+                                                    info['name'])
             except Exception as ex:
-                logger.error('({0}, {1}, {2}) = {3}'.format(
-                    info['waveform'].shape, info['marker1'].shape,
-                    info['marker2'].shape, ex))
+                logger.error('(%s, %s, %s) = %s', info['waveform'].shape,
+                             info['marker1'].shape, info['marker2'].shape, ex)
                 raise VirtualAwgError(ex)
 
         return sweep_info
@@ -299,7 +328,7 @@ class VirtualAwg(InstrumentBase):
             self.awgs[awg_nr].get.run()
         return
 
-    def sweep_process(self, data, waveform, Naverage=1, direction='forwards', start_offset=1):
+    def sweep_process(self, data, waveform, averages=1, direction='forwards', start_offset=1):
         '''Process the returned data using shape of the sawtooth send with the AWG.'''
         pass
 
@@ -371,6 +400,9 @@ class VirtualAwgBase():
     def delete_all_waveforms(self):
         raise NotImplementedError
 
+    def send_waveform(self, name, waveform, marker1=None, marker2=None):
+        raise NotImplementedError
+
     def set_amplitudes(self, value):
         raise NotImplementedError
 
@@ -421,9 +453,19 @@ class TektronixVirtualAwg(VirtualAwgBase):
         map(lambda i: self.__awg.set('ch{}_amp'.format(i), value),
             range(1, 5))
 
-    def stop():
+    def stop(self):
         self.__awg.stop()
         map(lambda i: self.__awg.set('ch{}_state'.format(i)), range(1, 5))
+
+    def reset(self):
+        raise NotImplementedError
+
+    def delete_all_waveforms(self):
+        self.__awg.delete_all_waveforms_from_list()
+
+    def send_waveform(self, name, waveform, marker1=None, marker2=None):
+        self.awgs[awg_nr].send_waveform_to_list(waveform, marker1,
+                                                marker2, name)
 
 
 class KeysightVirtualAwg(VirtualAwgBase):
