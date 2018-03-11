@@ -63,7 +63,6 @@ target/
 
 # Qcodes new dataset nonsense
 experiment.db
-experiments.db
 
 # Temporary files
 *~
@@ -82,4 +81,3 @@ test*.bin
 test*.pickle
 *.profile
 model.png
-test*py

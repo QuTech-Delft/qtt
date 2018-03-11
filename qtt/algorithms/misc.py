@@ -9,28 +9,6 @@ Created on Wed Aug 31 16:19:30 2016
 import itertools
 import numpy as np
 
-def polyarea(p):
-    """ Return signed area of polygon
-
-    Arguments
-    ---------
-        p : 2xN array or list of vertices
-            vertices of polygon
-    Returns
-    -------
-        area : float
-            area of polygon
-
-    >>> polyarea( [ [0,0], [1,0], [1,1], [0,2]] )
-    1.5
-    """
-    def polysegments(p):
-        if isinstance(p, list):
-            return zip(p, p[1:] + [p[0]])
-        else:
-            return zip(p, np.vstack((p[1:], p[0:1])))
-    return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
-
 def point_in_poly(x, y, poly):
     """ Return true if a point is contained in a polygon 
     

@@ -88,6 +88,8 @@ data = qtt.measurements.scans.scan2D(station, scanjob, liveplotwindow=plotQ)
 gates.set(param_right, -300); gates.set(param_left, -300)
 gv=gates.allvalues()
 
+#plotQ.clear(); plotQ.add(qtt.scans.getDefaultParameter(data))
+
 #%% Fit 1D pinch-off scan:
 
 adata = analyseGateSweep(data1d, fig=100)

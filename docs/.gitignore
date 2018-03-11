@@ -1,4 +1,2 @@
 # Docs that should be generated on the fly
 qtt*.rst
-notebooks/*
-_build
