@@ -27,17 +27,16 @@ from qtt.measurements.scans import plotData, makeDataset_sweep, makeDataset_swee
 
 class videomode_callback:
 
-    def __init__(self, station, waveform, Naverage, minstrument, waittime=0,
+    def __init__(self, station, waveform, Naverage, minstrument,
                  diff_dir=None, resolution=None):
         """ Create callback object for videmode data
 
         Args:
-            station
+            station (QCoDeS station)
             waveform
-            Naverage
+            Naverage (int): number of average to take
             minstrument (tuple): instrumentname, channel
-            waittime (float): ???
-            diff_dir
+            diff_dir (list or (int, str)): differentiation modes for the data
         """
         self.station = station
         self.waveform = waveform
@@ -48,8 +47,8 @@ class videomode_callback:
         if not isinstance(self.channels, list):
             self.channels = [self.channels]
 
-        self.waittime = waittime
-
+        self.unique_channels = list(np.unique(self.channels))
+        
         # for 2D scans
         self.resolution = resolution
         self.diffsigma = 1
@@ -67,15 +66,16 @@ class videomode_callback:
 
         minstrumenthandle = self.station.components[self.minstrument]
         data = qtt.measurements.scans.measuresegment(
-            self.waveform, self.Naverage, minstrumenthandle, self.channels)
+            self.waveform, self.Naverage, minstrumenthandle, self.unique_channels)
 
         if np.all(data == 0):
             self.stopreadout()
             raise Exception('data returned contained only zeros, aborting')
 
         dd = []
-        for ii in range(len(data)):
-            data_processed = np.array(data[ii])
+        for ii, channel in enumerate(self.channels):
+            uchannelidx= self.unique_channels.index(channel)
+            data_processed = np.array(data[uchannelidx])
 
             if self.diff_dir is not None:
                 if isinstance(self.diff_dir, (list, tuple)):
