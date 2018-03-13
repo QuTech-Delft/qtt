@@ -87,14 +87,17 @@ class onedot_t(dict):
         return d
 
 
-def test_spin_structures():
+def test_spin_structures(verbose=0):
     import pickle
     import json
     # station=qcodes.Station()
     o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)
-    # print(o)
+    if verbose:
+        print('test_spin_structures: %s' % (o,))
     _ = pickle.dumps(o)
-    # x=json.dumps(o)
+    x=json.dumps(o)
+    if verbose:
+        print('test_spin_structures: %s' % (x,))
 
 
 if __name__ == '__main__':
@@ -110,7 +113,7 @@ class sensingdot_t:
         """ Class representing a sensing dot 
 
         We assume the sensing dot can be controlled by two barrier gates and a single plunger gate
-         
+        An instrument to measure the current through the dot 
         Args:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
@@ -191,7 +194,7 @@ class sensingdot_t:
         return self.gg[1]
 
     def value(self):
-        """Return current through sensing dot."""
+        """Return current through sensing dot """
         if self.valuefunc is not None:
             return self.valuefunc()
         raise Exception(
@@ -235,23 +238,31 @@ class sensingdot_t:
 
         return alldata
 
-    def scan2D(sd, ds=90, stepsize=-4, fig=None):
+    def scan2D(sd, ds=90, stepsize=4, fig=None):
         """Make 2D-scan of the sensing dot."""
-        keithleyidx = [sd.index]
+        #keithleyidx = [sd.index]
+        
+        gv = sd.station.gates.allvalues()
+        
         gg = sd.gg
         sdval = sd.sdval
 
         sd.station.gates.set(gg[1], sdval[1])
 
-        scanjob = dict()
+        scanjob = qtt.measurements.scans.scanjob_t()
         scanjob['stepdata'] = dict(
-            {'param': [gg[0]], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
+            {'param': gg[0], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
         scanjob['sweepdata'] = dict(
-            {'param': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
-        scanjob['minstrument'] = keithleyidx
+            {'param': gg[2], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
+        scanjob['minstrument'] = sd.minstrument
 
-        alldata = qtt.measurements.scans.scan2D(scanjob)
+        if sd.verbose>=2:
+            print('scan2D:')
+            print(scanjob)
+        alldata = qtt.measurements.scans.scan2D(sd.station, scanjob)
 
+        sd.station.gates.resetgates(gv, gv, verbose=0)
+        
         if fig is not None:
             qtt.measurements.scans.plotData(alldata, fig=fig)
         return alldata
