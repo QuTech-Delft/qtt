@@ -125,7 +125,7 @@ class sensingdot_t:
         if gate_values is None:
             gate_values = [station.gates.get(g) for g in self.gg]
         self.sdval = gate_values
-        self.targetvalue = 800
+        self.targetvalue = np.NaN
         
         self._debug = {} # store debug data
         self.goodpeaks = None
@@ -320,68 +320,6 @@ class sensingdot_t:
             else:
                 # set sweep to center
                 gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
-
-    def fineTune(sd, fig=300, stephalfmv=8):
-        g = sd.tunegate()
-        readfunc = sd.value
-
-        if sd.verbose:
-            print('fineTune: delta %.1f [mV]' % (stephalfmv))
-
-        cvalstart = sd.sdval[1]
-        sdstart = autotunePlunger(
-            g, cvalstart, readfunc, dstep=.5, stephalfmv=stephalfmv, targetvalue=sd.targetvalue, fig=fig + 1)
-        sd.station.gates.set(g, sdstart)
-        sd.sdval[1] = sdstart
-        time.sleep(.5)
-        if sd.verbose:
-            print('fineTune: target %.1f, reached %.1f' %
-                  (sd.targetvalue, sd.value()))
-        return (sdstart, None)
-
-    def autoTuneFine(sd, sweepdata=None, scanjob=None, fig=300):
-        if sweepdata is None:
-            sweepdata = scanjob['sweepdata']
-            stepdata = scanjob.get('stepdata', None)
-        g = sd.tunegate()
-        gt = stepdata['param'][0]
-        cdata = stepdata
-        factor = sdInfluenceFactor(sd.index, gt)
-        d = factor * (cdata['start'] - cdata['end'])
-        readfunc = sd.value
-
-        if sd.verbose:
-            print('autoTuneFine: factor %.2f, delta %.1f' % (factor, d))
-
-        # set sweep to center
-        set_gate(sweepdata['param'][0], (sweepdata[
-                 'start'] + sweepdata['end']) / 2)
-
-        sdmiddle = sd.sdval[1]
-        if 1:
-            set_gate(cdata['gates'][0], (cdata['start'] + cdata['end']) / 2)
-
-            sdmiddle = autotunePlunger(
-                g, sd.sdval[1], readfunc, targetvalue=sd.targetvalue, fig=fig)
-
-        set_gate(cdata['gates'][0], cdata['start'])  # set step to start value
-        cvalstart = sdmiddle - d / 2
-        sdstart = autotunePlunger(
-            g, cvalstart, readfunc, targetvalue=sd.targetvalue, fig=fig + 1)
-        if sd.verbose >= 2:
-            print(' autoTuneFine: cvalstart %.1f, sdstart %.1f' %
-                  (cvalstart, sdstart))
-
-        set_gate(cdata['gates'][0], cdata['end'])  # set step to end value
-        # cvalstart2=((sdstart+d) + (sd.sdval[1]+d/2) )/2
-        cvalstart2 = sdmiddle + (sdmiddle - sdstart)
-        if sd.verbose >= 2:
-            print(' autoTuneFine: cvalstart2 %.1f = %.1f + %.1f (d %.1f)' %
-                  (cvalstart2, sdmiddle, (sdmiddle - sdstart), d))
-        sdend = autotunePlunger(
-            g, cvalstart2, readfunc, targetvalue=sd.targetvalue, fig=fig + 2)
-
-        return (sdstart, sdend, sdmiddle)
 
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False):
