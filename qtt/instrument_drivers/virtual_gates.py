@@ -353,6 +353,9 @@ class virtual_gates(Instrument):
         
     def print_matrix(self):
         self.print_map(self.get_crosscap_map() )
+
+    def print_inverse_matrix(self):
+        self.print_map(self.get_crosscap_map_inv() )
         
     @staticmethod
     def print_map(base_map):

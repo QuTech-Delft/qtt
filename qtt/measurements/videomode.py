@@ -354,13 +354,15 @@ class VideoMode:
                   (self.__class__.__name__,) + Fore.RESET)
 
         dim = self.scan_dimension()
+        awg = getattr(self.station, 'awg')
+        
         if dim == 1:
             # 1D scan
             if type(self.sweepparams) is str:
-                waveform, _ = self.station.awg.sweep_gate(
+                waveform, _ = awg.sweep_gate(
                     self.sweepparams, self.sweepranges, period=1e-3)
             elif type(self.sweepparams) is dict:
-                waveform, _ = self.station.awg.sweep_gate_virt(
+                waveform, _ = awg.sweep_gate_virt(
                     self.sweepparams, self.sweepranges, period=1e-3)
             else:
                 raise Exception('arguments not supported')
@@ -369,10 +371,10 @@ class VideoMode:
         elif dim == 2:
             # 2D scan
             if isinstance(self.sweepparams, list):
-                waveform, _ = self.station.awg.sweep_2D(self.sampling_frequency.get(
+                waveform, _ = awg.sweep_2D(self.sampling_frequency.get(
                 ), self.sweepparams, self.sweepranges, self.resolution)
             elif isinstance(self.sweepparams, dict):
-                waveform, _ = self.station.awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams[
+                waveform, _ = awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams[
                                                              'gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
             else:
                 raise Exception('arguments not supported')
@@ -419,7 +421,7 @@ class VideoMode:
                                            gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
         elif data.ndim == 3:
             if (data.shape[0] > 1):
-                raise Exception('not yet implemented')
+                raise Exception('getting dataset for multiple dimensions not yet implemented')
             data = data[0]
             alldata, _ = makeDataset_sweep_2D(data, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
                                               'label': 'videomode_2d_single'})

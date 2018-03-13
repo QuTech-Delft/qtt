@@ -143,9 +143,12 @@ qtt.measurements.scans.test_scan2D()
 #%% Start videomode
 
 digitizer=station.sdigitizer
+station.awg=station.vawg
 
 print('starting videomode in background...')
 vm = qtt.measurements.videomode.VideoMode(station, ['P1', 'P2'], [100]*2,    
-                                               minstrument=(digitizer.name,[1,2]), resolution = [96,96], diff_dir=[None, 'g'] )
-    
+                    minstrument=(digitizer.name,[1,1]), resolution = [96,96],
+                    diff_dir=[None, 'g'] )
+vm.crosshair(True)
+
                                                
