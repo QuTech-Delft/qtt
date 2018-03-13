@@ -109,12 +109,13 @@ class sensingdot_t:
     def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None):
         """ Class representing a sensing dot 
 
+        We assume the sensing dot can be controlled by two barrier gates and a single plunger gate
+         
         Args:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
             station (Qcodes station)
-            minstrument ( tuple): measurement instrument to use. tuple of
-                        instrument and channel index
+            minstrument (tuple): measurement instrument to use. tuple of instrument and channel index
 
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
@@ -125,6 +126,8 @@ class sensingdot_t:
             gate_values = [station.gates.get(g) for g in self.gg]
         self.sdval = gate_values
         self.targetvalue = 800
+        
+        self._debug = {} # store debug data
         self.goodpeaks = None
         self.station = station
         self.index = index
@@ -134,8 +137,9 @@ class sensingdot_t:
         self.data = {}
 
         if fpga_ch is None:
-            self.fpga_ch = None  # int(self.gg[1][2])
+            self.fpga_ch = None 
         else:
+            raise Exception('do not use fpga_ch argument, use minstrument instead')
             self.fpga_ch = fpga_ch
 
         # values for measurement
