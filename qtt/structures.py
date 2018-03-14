@@ -262,7 +262,7 @@ class sensingdot_t:
         
         gates=sd.station.gates
         gv0=gates.allvalues()
-        detunings=np.arange(-(nsteps-1)/2, nsteps/2)
+        detunings=stepsize * np.arange(-(nsteps-1)/2, nsteps/2)
         dd=[]
         pp=[]
         for ii, dt in enumerate(detunings):
@@ -331,7 +331,7 @@ class sensingdot_t:
         scanjob['minstrument'] = sd.minstrument
 
         if sd.verbose>=1:
-            print('`sensing dot %s: performing barrier-barrier scan' % (sd,))
+            print('sensing dot %s: performing barrier-barrier scan' % (sd,))
             if verbose>=2:
                 print(scanjob)
         alldata = qtt.measurements.scans.scan2D(sd.station, scanjob, verbose=verbose>=2)
