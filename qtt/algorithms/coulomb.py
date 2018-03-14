@@ -571,7 +571,7 @@ def coulombPeaks(x, y, verbose=1, fig=None, plothalf=False, istep=None):
     peaks = peakFindBottom(x, y, peaks, verbose=0)
     goodpeaks = filterPeaks(x, y, peaks, verbose=verbose)
 
-    peakScores(goodpeaks, x, y)
+    peakScores(goodpeaks, x, y, verbose=verbose)
     goodpeaks.sort(key=lambda x: -x['score'])
 
     if fig:

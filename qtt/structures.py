@@ -270,9 +270,9 @@ class sensingdot_t:
                 print('detuning_scan: iteration %d: detuning %.3f' % (ii, dt) )
             gates.resetgates(sd.gate_names(), gv0, verbose=0)
             sd.detune(dt)
-            p, result=sd1.fastTune(fig=None)
+            p, result=sd.fastTune(fig=None, verbose=verbose>=2)
             dd.append(result)
-            pp.append(sd1.goodpeaks[0])
+            pp.append(sd.goodpeaks[0])
         gates.resetgates(sd.gate_names(), gv0, verbose=0)
     
         scores=[ p['score'] for p in pp]
@@ -289,16 +289,18 @@ class sensingdot_t:
                 p=pp[ii]
                 y=ds.default_parameter_array()
                 x=y.set_arrays[0]
-                plt.plot(x, y, '-', label='%d score %.3f' % (ii, p['score']) )
+                plt.plot(x, y, '-', label='scan %d: score %.3f' % (ii, p['score']) )
                 xx=np.array([p['x'], p['y'] ]).reshape( (2,1))
                 qtt.pgeometry.plotLabels(xx, [scores[ii] ])
                 plt.title('Detuning scans for %s' % sd.__repr__() )
                 plt.xlabel(_scanlabel(result))
             plt.legend(numpoints=1)
-            plt.figure(fig+1); plt.clf()
-            plt.plot(detunings, scores, '.', label='Peak scores')
-            plt.xlabel('Detuning [mV?]')
-            plt.ylabel('Score')
+            if verbose>=2:
+                plt.figure(fig+1); plt.clf()
+                plt.plot(detunings, scores, '.', label='Peak scores')
+                plt.xlabel('Detuning [mV?]')
+                plt.ylabel('Score')
+                plt.title('Best peak scores for different detunings')
     
         return optimal, results
 
@@ -310,7 +312,7 @@ class sensingdot_t:
         gl.increment(self._detune_axis[0]*value)
         gr.increment(self._detune_axis[1]*value)
         
-    def scan2D(sd, ds=90, stepsize=4, fig=None):
+    def scan2D(sd, ds=90, stepsize=4, fig=None, verbose=1):
         """Make 2D-scan of the sensing dot."""
         #keithleyidx = [sd.index]
         
@@ -328,10 +330,11 @@ class sensingdot_t:
             {'param': gg[2], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
         scanjob['minstrument'] = sd.minstrument
 
-        if sd.verbose>=2:
-            print('scan2D:')
-            print(scanjob)
-        alldata = qtt.measurements.scans.scan2D(sd.station, scanjob)
+        if sd.verbose>=1:
+            print('`sensing dot %s: performing barrier-barrier scan' % (sd,))
+            if verbose>=2:
+                print(scanjob)
+        alldata = qtt.measurements.scans.scan2D(sd.station, scanjob, verbose=verbose>=2)
 
         sd.station.gates.resetgates(gv, gv, verbose=0)
         
@@ -359,7 +362,7 @@ class sensingdot_t:
                 'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
         return sd.sdval[1], alldata
 
-    def _process_scan(self, alldata, useslopes=True, fig=None):
+    def _process_scan(self, alldata, useslopes=True, fig=None, verbose=0):
         """ Determine peaks in 1D scan """
         istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = qtt.data.dataset1Ddata(alldata)
@@ -367,11 +370,11 @@ class sensingdot_t:
 
         if useslopes:
             goodpeaks = findSensingDotPosition(
-                x, y, useslopes=useslopes, fig=fig, verbose=1, istep=istep)
+                x, y, useslopes=useslopes, fig=fig, verbose=verbose, istep=istep)
         else:
 
             goodpeaks = coulombPeaks(
-                x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
+                x, y, verbose=verbose, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.xlabel('%s' % (self.tunegate(), ))
             plt.ylabel('%s' % (self.minstrument, ))
@@ -405,7 +408,7 @@ class sensingdot_t:
                 gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
 
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None,
-                 fig=201, sleeptime=2, delete=True, add_slopes=False):
+                 fig=201, sleeptime=2, delete=True, add_slopes=False, verbose=1):
         """Fast tuning of the sensing dot plunger.
 
         Args:

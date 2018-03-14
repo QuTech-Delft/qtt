@@ -994,7 +994,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 '%H:%M:%S', qtt.time.gmtime(time_est))
             if type(stepvalues) is np.ndarray:
                 tprint('scan2D: %d/%d, time %s (~%s remaining): setting %s to %s' %
-                       (ix, len(stepvalues), t1_str, time_est_str, stepdata['param'].name, str(x)), dt=.5)
+                       (ix, len(stepvalues), t1_str, time_est_str, stepdata['param'].name, str(x)), dt=1.5)
             else:
                 tprint('scan2D: %d/%d: time %s (~%s remaining): setting %s to %.3f' %
                        (ix, len(stepvalues), t1_str, time_est_str, stepvalues.name, x), dt=1.5)
