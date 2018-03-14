@@ -105,6 +105,15 @@ if __name__ == '__main__':
 
 #%%
 
+def _scanlabel(ds):
+    """ Helper function """
+    a=ds.default_parameter_array()
+    lx = a.set_arrays[0].label
+    unit=a.set_arrays[0].unit
+    if unit:
+        lx += '[' + unit +']'
+    return lx
+
 
 @freezeclass
 class sensingdot_t:
@@ -130,6 +139,8 @@ class sensingdot_t:
         self.sdval = gate_values
         self.targetvalue = np.NaN
         
+        self._detune_axis=np.array([1,-1])
+        self._detune_axis=self._detune_axis/np.linalg.norm(self._detune_axis)
         self._debug = {} # store debug data
         self.goodpeaks = None
         self.station = station
@@ -238,6 +249,67 @@ class sensingdot_t:
 
         return alldata
 
+    def detuning_scan(sd, stepsize=2, nsteps=5, verbose=1, fig=None):
+        """ Optimize the sensing dot by making multiple plunger scans for different detunings
+        
+        Args:
+            stepsize (float)
+            nsteps (int)
+        Returns:
+            best (list): list of optimal detuning and sd plunger value
+            results (dict)
+        """
+        
+        gates=sd.station.gates
+        gv0=gates.allvalues()
+        detunings=np.arange(-(nsteps-1)/2, nsteps/2)
+        dd=[]
+        pp=[]
+        for ii, dt in enumerate(detunings):
+            if verbose:
+                print('detuning_scan: iteration %d: detuning %.3f' % (ii, dt) )
+            gates.resetgates(sd.gate_names(), gv0, verbose=0)
+            sd.detune(dt)
+            p, result=sd1.fastTune(fig=None)
+            dd.append(result)
+            pp.append(sd1.goodpeaks[0])
+        gates.resetgates(sd.gate_names(), gv0, verbose=0)
+    
+        scores=[ p['score'] for p in pp]
+        bestidx = np.argmax(scores)
+        optimal=[detunings[bestidx], pp[bestidx]['x']]
+        if verbose:
+                print('detuning_scan: best %d: detuning %.3f' % (bestidx, optimal[0]) )
+        results={'detunings': detunings, 'scores': scores, 'bestpeak': pp[bestidx]}
+    
+        if fig:
+            plt.figure(fig); plt.clf()
+            for ii in range(len(detunings)):
+                ds=dd[ii]
+                p=pp[ii]
+                y=ds.default_parameter_array()
+                x=y.set_arrays[0]
+                plt.plot(x, y, '-', label='%d score %.3f' % (ii, p['score']) )
+                xx=np.array([p['x'], p['y'] ]).reshape( (2,1))
+                qtt.pgeometry.plotLabels(xx, [scores[ii] ])
+                plt.title('Detuning scans for %s' % sd.__repr__() )
+                plt.xlabel(_scanlabel(result))
+            plt.legend(numpoints=1)
+            plt.figure(fig+1); plt.clf()
+            plt.plot(detunings, scores, '.', label='Peak scores')
+            plt.xlabel('Detuning [mV?]')
+            plt.ylabel('Score')
+    
+        return optimal, results
+
+    def detune(self, value):
+        """ Detune the sensing dot by the specified amount """
+        
+        gl=getattr(self.station.gates, self.gg[0])
+        gr=getattr(self.station.gates, self.gg[2])
+        gl.increment(self._detune_axis[0]*value)
+        gr.increment(self._detune_axis[1]*value)
+        
     def scan2D(sd, ds=90, stepsize=4, fig=None):
         """Make 2D-scan of the sensing dot."""
         #keithleyidx = [sd.index]

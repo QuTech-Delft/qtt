@@ -14,7 +14,6 @@ import qtt.data
 
 import qtt.pgeometry as pmatlab
 import matplotlib.pyplot as plt
-#from qtt.algorithms.generic import *
 from qtt.algorithms.generic import issorted
 from qtt.algorithms.functions import logistic
 from qtt.algorithms.generic import localMaxima, nonmaxsuppts
@@ -339,7 +338,9 @@ def fitPeaks(XX, YY, pt, fig=None, verbose=0):
         p0 = [X[p], 1, 2 * Y[p]]  # Inital guess is a normal distribution
         # Distance to the target function
         errfunc = lambda p, x, y: gauss(x, p) - y
-        p1, success = opt.leastsq(errfunc, p0[:], args=(X, Y), maxfev=1400)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)    
+            p1, success = opt.leastsq(errfunc, p0[:], args=(X, Y), maxfev=1800)
         # errfunc = lambda p, x, y: -np.linalg.norm( gauss(x, p) - y ) # Distance to the target function
         # p1, success = opt.minimize(errfunc, p0[:], args=(X, Y),method='Powell')
 
