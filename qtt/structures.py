@@ -87,20 +87,32 @@ class onedot_t(dict):
         return d
 
 
-def test_spin_structures():
+def test_spin_structures(verbose=0):
     import pickle
     import json
     # station=qcodes.Station()
     o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)
-    # print(o)
+    if verbose:
+        print('test_spin_structures: %s' % (o,))
     _ = pickle.dumps(o)
-    # x=json.dumps(o)
+    x=json.dumps(o)
+    if verbose:
+        print('test_spin_structures: %s' % (x,))
 
 
 if __name__ == '__main__':
     test_spin_structures()
 
 #%%
+
+def _scanlabel(ds):
+    """ Helper function """
+    a=ds.default_parameter_array()
+    lx = a.set_arrays[0].label
+    unit=a.set_arrays[0].unit
+    if unit:
+        lx += '[' + unit +']'
+    return lx
 
 
 @freezeclass
@@ -109,12 +121,13 @@ class sensingdot_t:
     def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None):
         """ Class representing a sensing dot 
 
+        We assume the sensing dot can be controlled by two barrier gates and a single plunger gate
+        An instrument to measure the current through the dot 
         Args:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
             station (Qcodes station)
-            minstrument ( tuple): measurement instrument to use. tuple of
-                        instrument and channel index
+            minstrument (tuple): measurement instrument to use. tuple of instrument and channel index
 
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
@@ -124,7 +137,11 @@ class sensingdot_t:
         if gate_values is None:
             gate_values = [station.gates.get(g) for g in self.gg]
         self.sdval = gate_values
-        self.targetvalue = 800
+        self.targetvalue = np.NaN
+        
+        self._detune_axis=np.array([1,-1])
+        self._detune_axis=self._detune_axis/np.linalg.norm(self._detune_axis)
+        self._debug = {} # store debug data
         self.goodpeaks = None
         self.station = station
         self.index = index
@@ -134,8 +151,9 @@ class sensingdot_t:
         self.data = {}
 
         if fpga_ch is None:
-            self.fpga_ch = None  # int(self.gg[1][2])
+            self.fpga_ch = None 
         else:
+            raise Exception('do not use fpga_ch argument, use minstrument instead')
             self.fpga_ch = fpga_ch
 
         # values for measurement
@@ -187,7 +205,7 @@ class sensingdot_t:
         return self.gg[1]
 
     def value(self):
-        """Return current through sensing dot."""
+        """Return current through sensing dot """
         if self.valuefunc is not None:
             return self.valuefunc()
         raise Exception(
@@ -231,23 +249,95 @@ class sensingdot_t:
 
         return alldata
 
-    def scan2D(sd, ds=90, stepsize=-4, fig=None):
+    def detuning_scan(sd, stepsize=2, nsteps=5, verbose=1, fig=None):
+        """ Optimize the sensing dot by making multiple plunger scans for different detunings
+        
+        Args:
+            stepsize (float)
+            nsteps (int)
+        Returns:
+            best (list): list of optimal detuning and sd plunger value
+            results (dict)
+        """
+        
+        gates=sd.station.gates
+        gv0=gates.allvalues()
+        detunings=stepsize * np.arange(-(nsteps-1)/2, nsteps/2)
+        dd=[]
+        pp=[]
+        for ii, dt in enumerate(detunings):
+            if verbose:
+                print('detuning_scan: iteration %d: detuning %.3f' % (ii, dt) )
+            gates.resetgates(sd.gate_names(), gv0, verbose=0)
+            sd.detune(dt)
+            p, result=sd.fastTune(fig=None, verbose=verbose>=2)
+            dd.append(result)
+            pp.append(sd.goodpeaks[0])
+        gates.resetgates(sd.gate_names(), gv0, verbose=0)
+    
+        scores=[ p['score'] for p in pp]
+        bestidx = np.argmax(scores)
+        optimal=[detunings[bestidx], pp[bestidx]['x']]
+        if verbose:
+                print('detuning_scan: best %d: detuning %.3f' % (bestidx, optimal[0]) )
+        results={'detunings': detunings, 'scores': scores, 'bestpeak': pp[bestidx]}
+    
+        if fig:
+            plt.figure(fig); plt.clf()
+            for ii in range(len(detunings)):
+                ds=dd[ii]
+                p=pp[ii]
+                y=ds.default_parameter_array()
+                x=y.set_arrays[0]
+                plt.plot(x, y, '-', label='scan %d: score %.3f' % (ii, p['score']) )
+                xx=np.array([p['x'], p['y'] ]).reshape( (2,1))
+                qtt.pgeometry.plotLabels(xx, [scores[ii] ])
+                plt.title('Detuning scans for %s' % sd.__repr__() )
+                plt.xlabel(_scanlabel(result))
+            plt.legend(numpoints=1)
+            if verbose>=2:
+                plt.figure(fig+1); plt.clf()
+                plt.plot(detunings, scores, '.', label='Peak scores')
+                plt.xlabel('Detuning [mV?]')
+                plt.ylabel('Score')
+                plt.title('Best peak scores for different detunings')
+    
+        return optimal, results
+
+    def detune(self, value):
+        """ Detune the sensing dot by the specified amount """
+        
+        gl=getattr(self.station.gates, self.gg[0])
+        gr=getattr(self.station.gates, self.gg[2])
+        gl.increment(self._detune_axis[0]*value)
+        gr.increment(self._detune_axis[1]*value)
+        
+    def scan2D(sd, ds=90, stepsize=4, fig=None, verbose=1):
         """Make 2D-scan of the sensing dot."""
-        keithleyidx = [sd.index]
+        #keithleyidx = [sd.index]
+        
+        gv = sd.station.gates.allvalues()
+        
         gg = sd.gg
         sdval = sd.sdval
 
         sd.station.gates.set(gg[1], sdval[1])
 
-        scanjob = dict()
+        scanjob = qtt.measurements.scans.scanjob_t()
         scanjob['stepdata'] = dict(
-            {'param': [gg[0]], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
+            {'param': gg[0], 'start': sdval[0] + ds, 'end': sdval[0] - ds, 'step': stepsize})
         scanjob['sweepdata'] = dict(
-            {'param': [gg[2]], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
-        scanjob['minstrument'] = keithleyidx
+            {'param': gg[2], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
+        scanjob['minstrument'] = sd.minstrument
 
-        alldata = qtt.measurements.scans.scan2D(scanjob)
+        if sd.verbose>=1:
+            print('sensing dot %s: performing barrier-barrier scan' % (sd,))
+            if verbose>=2:
+                print(scanjob)
+        alldata = qtt.measurements.scans.scan2D(sd.station, scanjob, verbose=verbose>=2)
 
+        sd.station.gates.resetgates(gv, gv, verbose=0)
+        
         if fig is not None:
             qtt.measurements.scans.plotData(alldata, fig=fig)
         return alldata
@@ -272,7 +362,7 @@ class sensingdot_t:
                 'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
         return sd.sdval[1], alldata
 
-    def _process_scan(self, alldata, useslopes=True, fig=None):
+    def _process_scan(self, alldata, useslopes=True, fig=None, verbose=0):
         """ Determine peaks in 1D scan """
         istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = qtt.data.dataset1Ddata(alldata)
@@ -280,11 +370,11 @@ class sensingdot_t:
 
         if useslopes:
             goodpeaks = findSensingDotPosition(
-                x, y, useslopes=useslopes, fig=fig, verbose=1, istep=istep)
+                x, y, useslopes=useslopes, fig=fig, verbose=verbose, istep=istep)
         else:
 
             goodpeaks = coulombPeaks(
-                x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
+                x, y, verbose=verbose, fig=fig, plothalf=True, istep=istep)
         if fig is not None:
             plt.xlabel('%s' % (self.tunegate(), ))
             plt.ylabel('%s' % (self.minstrument, ))
@@ -317,70 +407,8 @@ class sensingdot_t:
                 # set sweep to center
                 gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
 
-    def fineTune(sd, fig=300, stephalfmv=8):
-        g = sd.tunegate()
-        readfunc = sd.value
-
-        if sd.verbose:
-            print('fineTune: delta %.1f [mV]' % (stephalfmv))
-
-        cvalstart = sd.sdval[1]
-        sdstart = autotunePlunger(
-            g, cvalstart, readfunc, dstep=.5, stephalfmv=stephalfmv, targetvalue=sd.targetvalue, fig=fig + 1)
-        sd.station.gates.set(g, sdstart)
-        sd.sdval[1] = sdstart
-        time.sleep(.5)
-        if sd.verbose:
-            print('fineTune: target %.1f, reached %.1f' %
-                  (sd.targetvalue, sd.value()))
-        return (sdstart, None)
-
-    def autoTuneFine(sd, sweepdata=None, scanjob=None, fig=300):
-        if sweepdata is None:
-            sweepdata = scanjob['sweepdata']
-            stepdata = scanjob.get('stepdata', None)
-        g = sd.tunegate()
-        gt = stepdata['param'][0]
-        cdata = stepdata
-        factor = sdInfluenceFactor(sd.index, gt)
-        d = factor * (cdata['start'] - cdata['end'])
-        readfunc = sd.value
-
-        if sd.verbose:
-            print('autoTuneFine: factor %.2f, delta %.1f' % (factor, d))
-
-        # set sweep to center
-        set_gate(sweepdata['param'][0], (sweepdata[
-                 'start'] + sweepdata['end']) / 2)
-
-        sdmiddle = sd.sdval[1]
-        if 1:
-            set_gate(cdata['gates'][0], (cdata['start'] + cdata['end']) / 2)
-
-            sdmiddle = autotunePlunger(
-                g, sd.sdval[1], readfunc, targetvalue=sd.targetvalue, fig=fig)
-
-        set_gate(cdata['gates'][0], cdata['start'])  # set step to start value
-        cvalstart = sdmiddle - d / 2
-        sdstart = autotunePlunger(
-            g, cvalstart, readfunc, targetvalue=sd.targetvalue, fig=fig + 1)
-        if sd.verbose >= 2:
-            print(' autoTuneFine: cvalstart %.1f, sdstart %.1f' %
-                  (cvalstart, sdstart))
-
-        set_gate(cdata['gates'][0], cdata['end'])  # set step to end value
-        # cvalstart2=((sdstart+d) + (sd.sdval[1]+d/2) )/2
-        cvalstart2 = sdmiddle + (sdmiddle - sdstart)
-        if sd.verbose >= 2:
-            print(' autoTuneFine: cvalstart2 %.1f = %.1f + %.1f (d %.1f)' %
-                  (cvalstart2, sdmiddle, (sdmiddle - sdstart), d))
-        sdend = autotunePlunger(
-            g, cvalstart2, readfunc, targetvalue=sd.targetvalue, fig=fig + 2)
-
-        return (sdstart, sdend, sdmiddle)
-
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None,
-                 fig=201, sleeptime=2, delete=True, add_slopes=False):
+                 fig=201, sleeptime=2, delete=True, add_slopes=False, verbose=1):
         """Fast tuning of the sensing dot plunger.
 
         Args:

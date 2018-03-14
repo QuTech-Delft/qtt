@@ -60,7 +60,6 @@ def load_instrument_configparser(instr, ifile, verbose=1):
             continue
         if verbose:
             print('%s: load %s' % (instr.name, pname))
-        # dd='%s/%s' % (instr.name, pname )
         try:
             val = jdict[instr.name][pname]
             v = p.get()
