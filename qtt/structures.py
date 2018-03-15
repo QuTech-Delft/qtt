@@ -483,6 +483,53 @@ class sensingdot_t:
 
         return self.sdval[1], alldata
 
+    def fastTune_virt(self, virt_gates, Naverage=50, sweeprange=79, period=.5e-3, location=None,
+                 fig=201, sleeptime=2, delete=True, add_slopes=False):
+        """Fast tuning of the sensing dot using the virtual plunger.
+
+        Args:
+            virt_gates (virtual_gates instrument): virtual gate object used for the scan
+            fig (int or None): window for plotting results
+            Naverage (int): number of averages
+            
+        Returns:
+            plungervalue (float): value of plunger
+            alldata (dataset): measured data
+        """
+
+        if self.minstrument is not None:
+            instrument = self.minstrument[0]
+            channel = self.minstrument[1]
+            vsensorgate=virt_gates.vgates()[virt_gates.pgates().index(sd.gg[1])] #name of the virtual plunger
+            scanjob = qtt.measurements.scans.scanjob_t(
+                {'Naverage': Naverage, })
+            scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True, station=self.station)
+            scanjob['sweepdata']['paramname'] = vsensorgate
+            scanjob['minstrument'] = [channel]
+            scanjob['minstrumenthandle'] = instrument
+            scanjob['wait_time_startscan'] = sleeptime
+
+            alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
+
+
+        alldata.add_metadata({'scanjob': scanjob, 'scantype': 'fastTune'})
+        alldata.add_metadata({'snapshot': self.station.snapshot()})
+
+        alldata.write(write_metadata=True)
+
+        goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig)
+
+        if len(goodpeaks) > 0:
+            self.sdval[1] = goodpeaks[0]['xhalfl']
+            self.targetvalue = goodpeaks[0]['yhalfl']
+        else:
+            print('autoTune: could not find good peak, may need to adjust mirrorfactor')
+
+        if self.verbose:
+            print(
+                'sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
+
+        return self.sdval[1], alldata    
 
 #%%
 class VectorParameter(qcodes.instrument.parameter.Parameter):
