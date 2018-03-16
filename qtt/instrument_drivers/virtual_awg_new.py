@@ -5,13 +5,8 @@ from enum import Enum
 from qctoolkit.pulses import SequencePT, TablePT
 from qctoolkit.pulses.sequencing import Sequencer
 from qctoolkit.pulses.plotting import plot, render
-
 from qcodes.instrument.base import InstrumentBase
-import qcodes.instrument_drivers.Spectrum.M4i as M4i
-# import qcodes.instrument_drivers.Keysight.M3201A as M3201A
-# from qcodes.instrument_drivers.tektronix.AWG5014 import Tektronix_AWG5014
 
-logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
 # qc-toolkit template pulses... separate file?
@@ -42,6 +37,10 @@ def to_array(sequence: SequencePT, sample_rate: int):
 # -----------------------------------------------------------------------------
 # qc-toolkit stuff... separate file?
 
+class DataType(Enum):
+    RAW_DATA = 0
+    QC_TOOLKIT = 1
+
 
 def make_sawtooth(name, vpp, period, width=0, reps=1):
     values = {'period': period, 'amplitude': vpp/2}
@@ -59,7 +58,7 @@ def sequence_to_waveform(sequence: SequencePT, sample_rate: int):
     '''generates waveform from sequence.
     '''
     sequencer = Sequencer()
-    sequencer.push(sequence['WAVE'])
+    sequencer.push(sequence)
     build = sequencer.build()
     if not sequencer.has_finished():
         raise ValueError
@@ -82,8 +81,8 @@ def plot_sequence(sequence, sample_rate):
 
 
 '''
-s = make_sawtooth(1, 1, 1, 2)
-plot(s, sample_rate=1e4)
+s = make_sawtooth('sample_01', 1, 1, 2)
+plot_sequence(s, sample_rate=1e4)
 d = sequence_to_waveform(s, sample_rate=1e4)
 '''
 
@@ -116,7 +115,7 @@ class VirtualAwg(InstrumentBase):
 
         Arguments:
             instruments (list): a list with qcodes instruments (implemented
-                awgs and digitizers will be correctly picked out).
+                awgs and digitizers. order must match!!!).
 
         Returns:
             (awgs, digitizer) (list, object): the VirtualAwgBase objects with
@@ -125,14 +124,15 @@ class VirtualAwg(InstrumentBase):
         '''
         awgs, digitizer = [], None
         for device in instruments:
-            if isinstance(device, Tektronix_AWG5014):
+            if type(device).__name__ == 'Tektronix_AWG5014':
                 awgs.append(TektronixVirtualAwg(device))
-#           elif isinstance(device, M3201A):
-#                awgs.append(KeysightVirtualAwg(device))
-            elif isinstance(device, M4i):
+            elif type(device).__name__ == 'M3201A':
+               awgs.append(KeysightVirtualAwg(device))
+            elif type(device).__name__ == 'M4i':
                 digitizer = M4iVirtualDigitizer(device)
             else:
-                continue
+                raise VirtualAwgError('Unusable instrument added!')
+        digitizer = M4iVirtualDigitizer(None) #  For testing...
         return awgs, digitizer
 
     def __check_parameters(self):
@@ -149,20 +149,20 @@ class VirtualAwg(InstrumentBase):
         '''
         awg_count = len(self.awgs)
         if awg_count == 0:
-            logger.warning("No physical awg's connected!")
+            logging.warning("No physical awg's connected!")
             return
         if awg_count == 1:
             self.awgs[0].set_mode(RunMode.CONT)
-            logger.info("One physical awg's connected!")
+            logging.info("One physical awg's connected!")
         elif awg_count == 2:
             (awg_nr, _, _) = self.parameters.awg_map['awg_mk']
             self.awgs[awg_nr].set_mode(RunMode.CONT)
             self.awgs[awg_nr + 1 % 2].seq_awg.set_mode(RunMode.SEQ)  # Why+1%2???
-            logger.info("Two physical awg's connected!")
+            logging.info("Two physical awg's connected!")
         else:
             class_name = self.__class__.__name__
             message = "Configuration not supported by {0}!".format(class_name)
-            logger.error(message)
+            logging.error(message)
             raise VirtualAwgError(message)
         for awg in self.awgs:
             awg.set_clock_speed(self.parameters.clock_speed())
@@ -192,15 +192,14 @@ class VirtualAwg(InstrumentBase):
     def reset_awgs(self):
         ''' Resets all awg(s) and turns of all channels.'''
         map(lambda awg: awg.reset(), self.awgs)
-        logger.info("All awg's are reseted...")
+        logging.info("All awg's are reseted...")
 
     def stop_awgs(self):
         ''' Stops all awg(s) and turns off all channels.'''
         map(lambda awg: awg.stop(), self.awgs)
-        logger.info("All awg's stopped...")
+        logging.info("All awg's stopped...")
 
-    @staticmethod
-    def __get_data(waveform):
+    def __get_data(self, waveform):
         ''' This function returns the raw array data given the waveform.
             A waveform can hold different types of data dependend on the
             used pulse library. Currently only raw array data and QC-toolkit
@@ -218,8 +217,8 @@ class VirtualAwg(InstrumentBase):
         if data_type == DataType.RAW_DATA:
             return waveform['WAVE']
         if data_type == DataType.QC_TOOLKIT:
-            sample_rate = 1  # set the sample rate... in GS/s ???
-            return sequence_to_waveform(waveform['wave'], sample_rate)
+            sample_rate = 50  # set the sample rate... in GS/s ???
+            return sequence_to_waveform(waveform['WAVE'], sample_rate)
 
     def sweep_init(self, waveforms, do_upload=True, sample_frequency=None):
         '''Sends the waveform(s) to gate(s).
@@ -238,69 +237,68 @@ class VirtualAwg(InstrumentBase):
         -------
         >>> sweep_info = <VirtualAwg>.sweep_init(waveforms)
         '''
-        data_count = len(waveforms[waveforms.keys()[0]]['wave'])  # ugly!!!
-        #  make sure all waveforms are of equal length.
-        self.digitizer.set_marker(self.properties, sample_frequency)
-        sweep_info = dict()
-        # wave data
-        for gate, wave in waveforms:
-            awg_channel = self.properties.awg_map[gate]
-            sweep_info[awg_channel] = {'name': wave['NAME'],
-                                       'waveform': VirtualAwg.__get_data(wave),
-                                       'marker1': np.zeros(data_count),
-                                       'marker2': np.zeros(data_count)}
-        # marker points
-        awg_marker = self.digitizer.marker_channel[:2]
-        marker_delay = self.digitizer.marker_delay
-        marker_points = np.zeros(data_count)
-        idx_start = int(marker_delay * self.parameters.clock_speed)
-        marker_points[idx_start:idx_start+data_count//20] = 1.0
-        if awg_marker in waveforms.values():
-            sweep_info[awg_marker]['delay'] = marker_delay
-        else:
-            sweep_info[awg_marker] = {'name': self.digitizer.marker_name,
-                                      'waveform': np.zeros(data_count),
-                                      'marker1': np.zeros(data_count),
-                                      'marker2': np.zeros(data_count),
-                                      'delay': marker_delay}
-        marker_nr = self.digitizer.marker_channel[2]
-        sweep_info[awg_marker][marker_nr] = marker_points
-        m_name = 'ch{0}_m{1}'.format(awg_marker[0], awg_marker[1])
-        self.awgs[marker_nr].set(m_name + '_low', self.digitizer.marker_low)
-        self.awgs[marker_nr].set(m_name + '_high', self.digitizer.marker_high)
+        self.digitizer.set_marker(self.parameters)
+        # make sure all waveforms are of equal length.
 
-        # awg marker
-        if self.seq_awg:
-            name = 'awg_mk'
-            awg_info = self.parameters.awg_map[name]
-            channel = awg_info[:2]
-            if channel not in sweep_info:
-                awg_nr = awg_info[0]
-                sweep_info[channel] = {'name': name,
-                                       'waveform': np.zeros(data_count),
-                                       'marker1': np.zeros(data_count),
-                                       'marker2': np.zeros(data_count)}
-            awg_marker_data = np.zeros(data_count)
-            awg_marker_data[0: data_count//20] = 1
-            delta = int(self.awgs[awg_nr].delay -
-                        self.awgs[awg_nr].clock_speed)
-            awg_marker_data = np.roll(awg_marker_data, data_count - delta)
-            a_name = 'ch{0}_m{1}'.format(channel[0], channel[1])
-            self.awgs[awg_nr].set(a_name + '_low', self.digitizer.marker_low)
-            self.awgs[awg_nr].set(a_name + '_high', self.digitizer.marker_high)
+        sweep_info = dict()
+        for gate, wave in waveforms.items():
+            # awg wave
+            awg_nr, awg_ch = self.parameters.awg_map[gate]
+            raw_wave = self.__get_data(wave)
+            raw_wave_length = len(raw_wave)
+            sweep_info[(awg_nr, awg_ch)] = {'name': wave['NAME'], 'waveform': raw_wave,
+                                            'marker1': np.zeros(raw_wave_length),
+                                            'marker2': np.zeros(raw_wave_length)}
+
+            # awg marker
+            mrk_awg, mkr_ch, mrk_nr = self.digitizer.marker_channel
+            marker_delay = self.digitizer.marker_delay()
+            if (mrk_awg, mkr_ch) in waveforms.values():
+                sweep_info[(mrk_awg, mkr_ch)]['delay'] = marker_delay
+            else:
+                sweep_info[(mrk_awg, mkr_ch)] = {'name': self.digitizer.marker_name,
+                                                 'waveform': np.zeros(raw_wave_length),
+                                                 'marker1': np.zeros(raw_wave_length),
+                                                 'marker2': np.zeros(raw_wave_length),
+                                                 'delay': marker_delay}
+
+            marker_points = np.zeros(raw_wave_length)
+            idx_start = int(marker_delay * self.parameters.clock_speed())
+            marker_points[idx_start:idx_start+raw_wave_length//20] = 1.0  # create marker_waveform
+            sweep_info[(mrk_awg, mkr_ch)]['marker%d' % mrk_nr] = marker_points
+            marker_name = 'ch{0}_m{1}'.format(mrk_awg, mrk_nr)
+            self.awgs[mrk_awg].set_marker(marker_name, self.digitizer.marker_low,
+                                          self.digitizer.marker_high)
+
+            # seq awg marker
+            if len(self.awgs) == 2:
+                name = 'awg_mk'
+                sawg_nr, sawg_ch, sawg_mrk = self.parameters.awg_map[name]
+                if (sawg_nr, sawg_ch) not in sweep_info:
+                    sweep_info[sawg_ch] = {'name': name,
+                                           'waveform': np.zeros(raw_wave_length),
+                                           'marker1': np.zeros(raw_wave_length),
+                                           'marker2': np.zeros(raw_wave_length)}
+                awg_marker_data = np.zeros(raw_wave_length)
+                awg_marker_data[0: raw_wave_length//20] = 1.0
+                delta = int(self.awgs[awg_nr].delay - self.awgs[awg_nr].clock_speed)
+                awg_marker_data = np.roll(awg_marker_data, raw_wave_length - delta)
+                marker_name = 'ch{0}_m{1}'.format(sawg_nr, sawg_ch)
+                self.awgs[sawg_nr].set_marker(marker_name, self.digitizer.marker_low,
+                                              self.digitizer.marker_high)
 
         if do_upload:
             try:
                 map(lambda awg: awg.delete_all_waveforms(), self.awgs)
                 for (awg_nr, awg_channel), info in sweep_info.items():
-                    self.awgs[awg_nr].send_waveform(info['waveform'],
+                    self.awgs[awg_nr].send_waveform(info['name'],
+                                                    info['waveform'],
                                                     info['marker1'],
-                                                    info['marker2'],
-                                                    info['name'])
+                                                    info['marker2'])
             except Exception as ex:
-                logger.error('(%s, %s, %s) = %s', info['waveform'].shape,
-                             info['marker1'].shape, info['marker2'].shape, ex)
-                raise VirtualAwgError(ex)
+                logging.error('(%s, %s, %s, %s) = %s', info['waveform'].shape,
+                             info['marker1'].shape, info['marker2'].shape, info['name'], ex)
+                raise
 
         return sweep_info
 
@@ -313,18 +311,18 @@ class VirtualAwg(InstrumentBase):
         '''
         for (awg_nr, awg_channel), info in sweep_info.items():
             awg = self.awgs[awg_nr]
-            if self.seq_awg and self.seq_awg == self.awgs[awg_channel]:
-                awg.set_sqel_waveform(info['name'], awg_channel, 1)
-                awg.set_sqel_loopcnt_to_inf(1)
-                awg.set_sqel_event_jump_target_index(awg_channel, 1)
-                awg.set_sqel_event_jump_type(1, 'IND')
+            if len(self.awgs) == 2 and self.awgs[1] == self.awgs[awg_channel]:
+                awg.get.set_sqel_waveform(info['name'], awg_channel, 1)
+                awg.get.set_sqel_loopcnt_to_inf(1)
+                awg.get.set_sqel_event_jump_target_index(awg_channel, 1)
+                awg.get.set_sqel_event_jump_type(1, 'IND')
             else:
-                awg.set('ch{}_waveform'.format(awg_channel), info['name'])
+                awg.get.set('ch{}_waveform'.format(awg_channel), info['name'])
 
-        for (awg_nr, awg_channel), info in sweep_info:
-            self.awgs[awg_nr].set('ch{}_state'.format(awg_channel), 1)
+        for (awg_nr, awg_channel) in sweep_info.keys():
+            self.awgs[awg_nr].get.set('ch{}_state'.format(awg_channel), 1)
 
-        for awg_nr in sweep_info.keys:
+        for (awg_nr, awg_channel) in sweep_info.keys():
             self.awgs[awg_nr].get.run()
         return
 
@@ -378,11 +376,6 @@ class RunMode(Enum):
     CONT = 'CONT'
 
 
-class DataType(Enum):
-    RAW_DATA = 0
-    QC_TOOLKIT = 1
-
-
 class VirtualAwgBase():
 
     channels = 4
@@ -390,6 +383,12 @@ class VirtualAwgBase():
 
     def set_continues_mode(self):
         raise NotImplementedError
+
+    def set_master(self):
+        pass
+    
+    def set_slave(self):
+        pass
 
     def set_mode(self, value):
         raise NotImplementedError
@@ -453,19 +452,21 @@ class TektronixVirtualAwg(VirtualAwgBase):
         map(lambda i: self.__awg.set('ch{}_amp'.format(i), value),
             range(1, 5))
 
+    def set_marker(self, name, low, high):
+        self.__awg.parameters[name + '_low'] = low
+        self.__awg.parameters[name + '_high'] = high
+
     def stop(self):
         self.__awg.stop()
-        map(lambda i: self.__awg.set('ch{}_state'.format(i)), range(1, 5))
 
     def reset(self):
-        raise NotImplementedError
+        self.__awg.reset()
 
     def delete_all_waveforms(self):
         self.__awg.delete_all_waveforms_from_list()
 
-    def send_waveform(self, name, waveform, marker1=None, marker2=None):
-        self.awgs[awg_nr].send_waveform_to_list(waveform, marker1,
-                                                marker2, name)
+    def send_waveform(self, name, waveform, marker1, marker2):
+        self.__awg.send_waveform_to_list(waveform, marker1, marker2, name)
 
 
 class KeysightVirtualAwg(VirtualAwgBase):
@@ -480,7 +481,7 @@ class M4iVirtualDigitizer(DigitizerBase):
         self.__digitizer = digitizer
 
     def set_marker(self, properties):
-        names = [key.startswith('dig_') for key in properties.awg_amp]
+        names = [key for key in properties.awg_map.keys() if key.startswith('dig_')]
         if len(names) == 1:
             self.marker_name = names[0]
             self.marker_delay = properties.marker_delay
@@ -488,7 +489,7 @@ class M4iVirtualDigitizer(DigitizerBase):
             self.marker_low = 0.0
             self.marker_high = 2.6
             return
-        raise(KeyError)
+        raise KeyError('No digital marker in parameters!')
 
 # -----------------------------------------------------------------------------
 
