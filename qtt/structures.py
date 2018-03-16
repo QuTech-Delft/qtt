@@ -500,7 +500,7 @@ class sensingdot_t:
         if self.minstrument is not None:
             instrument = self.minstrument[0]
             channel = self.minstrument[1]
-            vsensorgate=virt_gates.vgates()[virt_gates.pgates().index(sd.gg[1])] #name of the virtual plunger
+            vsensorgate=virt_gates.vgates()[virt_gates.pgates().index(self.gg[1])] #name of the virtual plunger
             scanjob = qtt.measurements.scans.scanjob_t(
                 {'Naverage': Naverage, })
             scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True, station=self.station)
