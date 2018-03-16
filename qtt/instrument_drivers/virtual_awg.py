@@ -676,7 +676,44 @@ class virtual_awg(Instrument):
                 waveform['markerdelay'] = sweep_info[channels]['delay']
 
         return waveform, sweep_info
-   
+
+    def pulse_gates_arr(self, pulse_sequences, awg_clock=None, delete=True):
+        """ Send generic pulses to gates based on numpy arrays    
+        
+        The duration of the pulse sequence depends on the length of the numpy array
+        and the clock speed of the awg. 
+        
+        Args:    
+            pulse_sequences (dict): gates are keys, values are numpy arrays
+        
+        Returns:
+            waveform (dict): The waveform being send with the AWG.
+            sweep_info (dict): the keys are tuples of the awgs and channels to activate
+        """
+        if awg_clock is not None:
+            self._AWG_clock = awg_clock
+            for a in self._awgs:
+                a.clock_freq.set(awg_clock)
+        
+        waveform = dict()
+        for g in pulse_sequences:
+            wave_raw = pulse_sequences[g]
+            awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
+            wave = wave_raw / awg_to_plunger
+            waveform[g] = dict()
+            waveform[g]['wave'] = wave
+            waveform[g]['name'] = 'pulses_gen_%s' % g
+    
+        awg_samplerate = 1 / self.AWG_clock
+        sweep_info = self.sweep_init(waveform, delete=delete)
+        self.sweep_run(sweep_info)
+        waveform['samplerate'] = awg_samplerate
+        for channels in sweep_info:
+            if 'delay' in sweep_info[channels]:
+                waveform['markerdelay'] = sweep_info[channels]['delay']
+        
+        return waveform, sweep_info
+
     def reset_AWG(self, clock=1e8):
         """ Reset AWG to videomode and scanfast """
         self.AWG_clock = clock
