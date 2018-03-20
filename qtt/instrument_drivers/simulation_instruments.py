@@ -33,7 +33,7 @@ class SimulationDigitizer(qcodes.Instrument):
 
         sd1, sd2 = self.myhoneycomb()
         time.sleep(.1)
-        return [sd1, sd2][0:len(channels)]
+        return [sd1.T, sd2.T][0:len(channels)]
 
     def myhoneycomb(self, multiprocess=False, verbose=0):
         """
@@ -97,12 +97,6 @@ class SimulationDigitizer(qcodes.Instrument):
 
             inverseV = Vmatrix.T
             Vmatrix = None
-            # np.linalg.inv(X)
-            # FIXME: lines above might lead to degeneracy
-            # inverseV=np.linalg.inv(Vmatrix)
-            # inverseV=Vmatrix
-            # Vmatrix=np.linalg.inv(inverseV)
-
         else:
             ii = [v.index(s) for s in sweepgates]
 
@@ -113,7 +107,7 @@ class SimulationDigitizer(qcodes.Instrument):
             inverseV = np.linalg.inv(Vmatrix)
         sweeps = []
         for ii in range(ndim):
-            sweeps.append(np.linspace(-rr[ii], rr[ii], nn[ii]))
+            sweeps.append(np.linspace(-rr[ii]/2, rr[ii]/2, nn[ii]))
         meshgrid = np.meshgrid(*sweeps)
         mm = tuple([xv.flatten() for xv in meshgrid])
         w = np.vstack((*mm, np.zeros((ng - ndim, mm[0].size))))
@@ -157,6 +151,7 @@ class SimulationDigitizer(qcodes.Instrument):
             sd1 = sd1.reshape((-1,))
             sd2 = sd2.reshape((-1,))
         #plt.figure(1000); plt.clf(); plt.plot(sd1, '.b'); plt.plot(sd2,'.r')
+        self.debug['sd']=sd1, sd2
         return sd1, sd2
 
 
@@ -175,12 +170,14 @@ class SimulationAWG(qcodes.Instrument):
         self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates':  [gates_horz, gates_vert], 'sweepranges': sweepranges,
                               'type': 'sweep_2D_virt', 'samp_freq': samp_freq, 'resolution': resolution}
         waveform = self.current_sweep
+        self._waveform  = waveform
         return waveform, None
 
     def sweep_2D(self, samp_freq, sweepgates, sweepranges, resolution):
         self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates': sweepgates, 'sweepranges': sweepranges,
                               'type': 'sweep_2D', 'samp_freq': samp_freq, 'resolution': resolution}
         waveform = self.current_sweep
+        self._waveform  = waveform
         return waveform, None
 
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
@@ -193,7 +190,10 @@ class SimulationAWG(qcodes.Instrument):
         waveform['sweepranges'] = [waveform['sweeprange']]
 
         sweep_info = None
+        self._waveform  = waveform
         return waveform, sweep_info
 
     def stop(self):
         pass
+
+

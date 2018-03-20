@@ -8,6 +8,7 @@ import time
 import datetime
 import threading
 import numpy as np
+import warnings
 import logging
 from scipy import ndimage
 from colorama import Fore
@@ -135,6 +136,7 @@ class VideoMode:
         self.sample_rate = sample_rate
         self.diff_dir = diff_dir
         self.datalock = threading.Lock()
+        self.datafunction_result = None
 
         # parse instrument
         if 'fpga' in station.components:
@@ -329,6 +331,7 @@ class VideoMode:
         """ Return latest recorded dataset """
         with self.datalock:
             if run:
+                warnings.warn('not supported')
                 # [l.datafunction_result for l in self.lp]
                 data = self.datafunction_result
                 data = np.array(data)
