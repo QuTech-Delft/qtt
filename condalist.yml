@@ -76,6 +76,7 @@ dependencies:
 - simplegeneric
 - sip
 - six
+- sympy
 - snowballstemmer
 - sphinx
 - sphinxcontrib
