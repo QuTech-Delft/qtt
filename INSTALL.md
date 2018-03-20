@@ -31,6 +31,7 @@ The git commands are:
 > git clone https://github.com/VandersypenQutech/Qcodes.git
 > git clone https://github.com/VandersypenQutech/qtt.git
 > git clone https://github.com/VandersypenQutech/spin-projects.git
+> git clone https://github.com/VandersypenQutech/qc-toolkit.git
 ```
 
 Optional:
@@ -71,10 +72,10 @@ For Mac OS with anaconda type from the command line:
 
 
 
-## Install packages
+## Install local packages
 
 - Register the qcodes, qtt and spin-projects repositories with Python. Open a command prompt, change to your environment and run the following command
-in the directories `Qcodes`, `qtt`, `spin-projects` and `spin-projects/stations`.
+in the directories `Qcodes`, `qtt`, `qc-toolkit`, `spin-projects` and `spin-projects/stations`.
 ```
 > python setup.py develop    (Anaconda, while in your environment)
 ```
@@ -200,7 +201,7 @@ pip install git+https://github.com/telegraphic/hickle.git@dev
 
 Manual installation:
 ```
-> conda install numpy scipy pyqtgraph spyder autopep8 nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
+> conda install numpy scipy pyqtgraph sympy spyder autopep8 nose pandas scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
 > cd [QTTDIR]
 > pip install --user -r develop_requirements.txt
 > conda install -c conda-forge opencv

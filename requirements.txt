@@ -7,5 +7,5 @@ apscheduler
 scikit-image
 pyqt
 qtpy
-
+sympy
 
