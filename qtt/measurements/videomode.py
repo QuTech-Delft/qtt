@@ -337,8 +337,10 @@ class VideoMode:
                 data = np.array(data)
             else:
                 data = self.datafunction_result
-                data = np.array(data)
-            self.alldata = self.makeDataset(data, Naverage=None)
+                if data is not None:
+                    data = np.array(data)
+            if data is not None:
+                self.alldata = self.makeDataset(data, Naverage=None)
             return self.alldata
 
     def scan_dimension(self):
