@@ -118,7 +118,7 @@ def _scanlabel(ds):
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None):
+    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None, virt_gates=None):
         """ Class representing a sensing dot 
 
         We assume the sensing dot can be controlled by two barrier gates and a single plunger gate
@@ -128,9 +128,9 @@ class sensingdot_t:
             gate_values (array or None): values to be set on the gates
             station (Qcodes station)
             minstrument (tuple): measurement instrument to use. tuple of instrument and channel index
-
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
+            virt_gates (object): virtual gates object (optional)
         """
         self.verbose = 1
         self.gg = gate_names
@@ -147,6 +147,7 @@ class sensingdot_t:
         self.index = index
         self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
+        self.virt_gates = virt_gates
 
         self.data = {}
 
@@ -409,8 +410,8 @@ class sensingdot_t:
 
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, verbose=1):
-        """Fast tuning of the sensing dot plunger.
-
+        """Fast tuning of the sensing dot plunger. If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used for the sweep.
+        
         Args:
             fig (int or None): window for plotting results
             Naverage (int): number of averages
@@ -423,13 +424,22 @@ class sensingdot_t:
         if self.minstrument is not None:
             instrument = self.minstrument[0]
             channel = self.minstrument[1]
-            gate = self.gg[1]
-            sdplg = getattr(self.station.gates, gate)
-            cc = self.station.gates.get(gate)
-            scanjob = qtt.measurements.scans.scanjob_t(
-                {'Naverage': Naverage, })
-            scanjob['sweepdata'] = {'param':  gate, 'start': cc -
-                                    sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
+            
+            if self.virt_gates is not None:
+                vsensorgate=self.virt_gates.vgates()[self.virt_gates.pgates().index(self.gg[1])] 
+                scanjob = qtt.measurements.scans.scanjob_t(
+                    {'Naverage': Naverage, })
+                scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(self.virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True, station=self.station)
+                scanjob['sweepdata']['paramname'] = vsensorgate
+            else:
+                gate = self.gg[1]
+                sdplg = getattr(self.station.gates, gate)
+                cc = self.station.gates.get(gate)
+                scanjob = qtt.measurements.scans.scanjob_t(
+                    {'Naverage': Naverage, })
+                scanjob['sweepdata'] = {'param':  gate, 'start': cc -
+                                        sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
+            
             scanjob['minstrument'] = [channel]
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
@@ -483,53 +493,6 @@ class sensingdot_t:
 
         return self.sdval[1], alldata
 
-    def fastTune_virt(self, virt_gates, Naverage=50, sweeprange=79, period=.5e-3, location=None,
-                 fig=201, sleeptime=2, delete=True, add_slopes=False):
-        """Fast tuning of the sensing dot using the virtual plunger.
-
-        Args:
-            virt_gates (virtual_gates instrument): virtual gate object used for the scan
-            fig (int or None): window for plotting results
-            Naverage (int): number of averages
-            
-        Returns:
-            plungervalue (float): value of plunger
-            alldata (dataset): measured data
-        """
-
-        if self.minstrument is not None:
-            instrument = self.minstrument[0]
-            channel = self.minstrument[1]
-            vsensorgate=virt_gates.vgates()[virt_gates.pgates().index(self.gg[1])] #name of the virtual plunger
-            scanjob = qtt.measurements.scans.scanjob_t(
-                {'Naverage': Naverage, })
-            scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True, station=self.station)
-            scanjob['sweepdata']['paramname'] = vsensorgate
-            scanjob['minstrument'] = [channel]
-            scanjob['minstrumenthandle'] = instrument
-            scanjob['wait_time_startscan'] = sleeptime
-
-            alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
-
-
-        alldata.add_metadata({'scanjob': scanjob, 'scantype': 'fastTune'})
-        alldata.add_metadata({'snapshot': self.station.snapshot()})
-
-        alldata.write(write_metadata=True)
-
-        goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig)
-
-        if len(goodpeaks) > 0:
-            self.sdval[1] = goodpeaks[0]['xhalfl']
-            self.targetvalue = goodpeaks[0]['yhalfl']
-        else:
-            print('autoTune: could not find good peak, may need to adjust mirrorfactor')
-
-        if self.verbose:
-            print(
-                'sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
-
-        return self.sdval[1], alldata    
 
 #%%
 class VectorParameter(qcodes.instrument.parameter.Parameter):
