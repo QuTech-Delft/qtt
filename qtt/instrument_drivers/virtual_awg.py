@@ -289,8 +289,8 @@ class virtual_awg(Instrument):
                     raise Exception('Ramp proportions must be between 0 and 1')
             ramptimes = rampparams['times']
             rampprops = rampparams['proportions']
+            ramples = [int(x * self.AWG_clock) for x in ramptimes]
         samples = [int(x * self.AWG_clock) for x in waittimes]
-        ramples = [int(x * self.AWG_clock) for x in ramptimes]
         if mvrange is None:
             mvrange = [max(voltages), min(voltages)]
         v_wave = float((mvrange[0] - mvrange[1]) / self.ch_amp)
