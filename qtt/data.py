@@ -19,6 +19,48 @@ import qtt.tools
 import qtt.algorithms.generic
 from qtt.tools import diffImageSmooth
 
+#%%
+
+def datasetCentre(ds, ndim=None):
+    """ Return centre position for dataset
+    Args:
+        ds (DataSet):
+    Returns:
+        cc (list of floats): centre position
+    """
+    p=ds.default_parameter_array()
+    if ndim is None:
+        ndim = len(p.set_arrays)
+    if ndim==1:
+        x = p.set_arrays[0]
+        mx=np.nanmean(x)        
+        cc=[mx]
+    else:
+        x = p.set_arrays[1]
+        y = p.set_arrays[0]
+        mx=np.nanmean(x)        
+        my=np.nanmean(y)        
+        cc=[mx, my]
+    return cc
+
+def drawCrosshair(ds, ax=None, ndim=None):
+    """ Draw a crosshair on the centre of the dataset
+    
+    Args:
+        ds (DataSet):
+        ax (None or matplotlib axis handle)
+        ndim (None or int): dimension of dataset
+    """
+
+    cc=datasetCentre(ds, ndim=ndim)    
+    
+    if ax is None:
+        ax=plt.gca()
+    ax.axvline(x=cc[0], linestyle=':', color='c')
+    if len(cc)==2:
+        ax.axhline(y=cc[1], linestyle=':', color='c')
+    
+
 
 #%%
 
