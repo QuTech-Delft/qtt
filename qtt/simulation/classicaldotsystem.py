@@ -163,11 +163,11 @@ class ClassicalDotSystem(BaseDotSystem):
 
 class TripleDot(ClassicalDotSystem):
 
-    def __init__(self, name='tripledot', **kwargs):
+    def __init__(self, name='tripledot', maxelectrons=2, **kwargs):
         """ Classical simulation of triple dot """
         super().__init__(name=name, ndots=3, ngates=3, **kwargs)
 
-        self.makebasis(ndots=3)
+        self.makebasis(ndots=3, maxelectrons=maxelectrons)
 
         vardict = {}
 
