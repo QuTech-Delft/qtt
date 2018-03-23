@@ -78,7 +78,7 @@ setup(name='qtt',
       packages=find_packages(),
       #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
       install_requires=[
-          'matplotlib', 'pandas', 'attrs', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
+          'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
           'numpy>=1.10',
           'IPython>=0.1',
           'qcodes>=0.1.5',

@@ -13,6 +13,7 @@ pyvisa
 slacker
 apscheduler
 spyder
+dulwich
 colorama
 attrs
 Polygon3

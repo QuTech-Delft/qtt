@@ -209,7 +209,7 @@ Manual installation:
 ```
 
 ```
-> pip install slacker attrs pyserial redis pyvisa Polygon3 colorama pyvisa
+> pip install slacker attrs pyserial redis dulwich pyvisa Polygon3 colorama pyvisa
 ```
 
 There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
