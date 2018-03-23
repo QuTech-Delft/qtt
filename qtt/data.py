@@ -21,6 +21,7 @@ from qtt.tools import diffImageSmooth
 
 #%%
 
+
 def datasetCentre(ds, ndim=None):
     """ Return centre position for dataset
     Args:
@@ -28,45 +29,46 @@ def datasetCentre(ds, ndim=None):
     Returns:
         cc (list of floats): centre position
     """
-    p=ds.default_parameter_array()
+    p = ds.default_parameter_array()
     if ndim is None:
         ndim = len(p.set_arrays)
-    if ndim==1:
+    if ndim == 1:
         x = p.set_arrays[0]
-        mx=np.nanmean(x)        
-        cc=[mx]
+        mx = np.nanmean(x)
+        cc = [mx]
     else:
         x = p.set_arrays[1]
         y = p.set_arrays[0]
-        mx=np.nanmean(x)        
-        my=np.nanmean(y)        
-        cc=[mx, my]
+        mx = np.nanmean(x)
+        my = np.nanmean(y)
+        cc = [mx, my]
     return cc
+
 
 def drawCrosshair(ds, ax=None, ndim=None):
     """ Draw a crosshair on the centre of the dataset
-    
+
     Args:
         ds (DataSet):
         ax (None or matplotlib axis handle)
         ndim (None or int): dimension of dataset
     """
 
-    cc=datasetCentre(ds, ndim=ndim)    
-    
+    cc = datasetCentre(ds, ndim=ndim)
+
     if ax is None:
-        ax=plt.gca()
+        ax = plt.gca()
     ax.axvline(x=cc[0], linestyle=':', color='c')
-    if len(cc)==2:
+    if len(cc) == 2:
         ax.axhline(y=cc[1], linestyle=':', color='c')
-    
+
 
 def test_dataset():
     import qcodes.tests.data_mocks
-    ds=qcodes.tests.data_mocks.DataSet2D()
-    cc=datasetCentre(ds) 
-    assert(cc[0]==1.5)
-    
+    ds = qcodes.tests.data_mocks.DataSet2D()
+    cc = datasetCentre(ds)
+    assert(cc[0] == 1.5)
+
 #%%
 
 
@@ -409,7 +411,7 @@ class image_transform:
 
         self._istep = dataset_get_istep(dataset)
         if self.verbose:
-            print('image_transform: istep %.2f, unitsperpixel %s' % ( self._istep, unitsperpixel ))
+            print('image_transform: istep %.2f, unitsperpixel %s' % (self._istep, unitsperpixel))
 
         nx = len(vsweep)
         ny = len(vstep)
@@ -433,7 +435,7 @@ class image_transform:
                 self.flipY = True
                 self.H = Hy.dot(self.H)
 
-        self._imraw = np.array(dataset.arrays[arrayname] )
+        self._imraw = np.array(dataset.arrays[arrayname])
 
         if isinstance(unitsperpixel, (float, int)):
             unitsperpixel = [unitsperpixel, unitsperpixel]
@@ -714,11 +716,13 @@ def getTimeString(t=None):
     dstr = t.strftime('%H-%M-%S')
     return dstr
 
+
 def dateString(t=None):
     """ Return date string with timezone """
     if t is None:
         t = datetime.datetime.now()
-    return t.strftime('%Y-%m-%d %H:%M:%S.%f %z %Z' ).strip()
+    return t.strftime('%Y-%m-%d %H:%M:%S.%f %z %Z').strip()
+
 
 def getDateString(t=None, full=False):
     """ Return date string
