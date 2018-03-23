@@ -61,7 +61,12 @@ def drawCrosshair(ds, ax=None, ndim=None):
         ax.axhline(y=cc[1], linestyle=':', color='c')
     
 
-
+def test_dataset():
+    import qcodes.tests.data_mocks
+    ds=qcodes.tests.data_mocks.DataSet2D()
+    cc=datasetCentre(ds) 
+    assert(cc[0]==1.5)
+    
 #%%
 
 
@@ -70,7 +75,7 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
 
     Args:
         dataset (DataSet): structure with 2D data
-        arrayname (None or str): name of array to select
+        arrayname (None or str): nafme of array to select
         mode (str): if value is 'pixel' then the image is converted so that 
              it is in conventional coordinates, e.g. the step values
              (vertical axis) go from low to high (bottom to top).
@@ -592,15 +597,17 @@ class image_transform:
         return ptpixel
 
 
-def test_image_transform():
+def test_image_transform(verbose=0):
     from qcodes.tests.data_mocks import DataSet2D
     ds = DataSet2D()
     tr = image_transform(ds)
     im = tr.image()
-    print('transform: im.shape %s' % (str(im.shape),))
+    if verbose:
+        print('transform: im.shape %s' % (str(im.shape),))
     tr = image_transform(ds, unitsperpixel=[None, 2])
     im = tr.image()
-    print('transform: im.shape %s' % (str(im.shape),))
+    if verbose:
+        print('transform: im.shape %s' % (str(im.shape),))
 
 
 if __name__ == '__main__':
