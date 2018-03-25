@@ -7,9 +7,13 @@ Please contact Pieter Eendebak pieter.eendebak@tno.nl
 ### Code style
 
 * Try to follow the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide. Many editors support [autopep8](https://pypi.python.org/pypi/autopep8) that can help with coding style.
+ To allow longer lines, make a `.pep8` config file like:
+ ```
+[pep8]
+max-line-length = 120
+```
 * Document your functions
 * For more guidelines see the Qcodes documentation
-
 ### Uploading code
 
 To upload code use `git commit` and `git push`. For the `Qcodes` and `qtt` repositories always make a branch first.
