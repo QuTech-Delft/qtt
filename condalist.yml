@@ -95,6 +95,7 @@ dependencies:
   - jupyter-core
   - prompt-toolkit
   - apscheduler
+  - dulwich
   - pyserial
   - pyzmqrpc
   - Polygon3

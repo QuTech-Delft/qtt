@@ -39,6 +39,46 @@ import subprocess
 import glob
 import time
 from colorama import Fore
+import importlib
+from dulwich.repo import Repo
+
+#%%
+
+def code_version(verbose=0):
+    """ Return dictionary containing most import versions and git tags
+    
+    Args:
+        verbose (int): output level
+    Returns:
+        r (dict)
+    """
+    r={'version': {}, 'git': {}}
+   
+    for p in ['qcodes', 'qtt', 'numpy', 'scipy', 'qctoolkit']:        
+        m=importlib.import_module(p)
+        v=getattr(m, '__version__', 'none')
+        if verbose:
+            print('module %s: %s' % (p, v))
+        r['version'][p]=v
+    for p in ['qcodes', 'qtt', 'projects', 'pycqed']:        
+        m=importlib.import_module(p)
+        try:
+            f=m.__file__
+            x=os.path.split(f)[0]
+            x=os.path.join(x, '..')
+            repo=Repo(x)
+            tag=repo.head()
+            tag=tag.decode('ascii')
+        except:
+            tag='none'    
+        if verbose:
+            print('repo %s: %s' % (p, tag ))
+        r['git'][p]=tag
+
+    return r
+
+def test_code_version():
+    _=code_version()
 
 #%% Jupyter kernel tools
 
