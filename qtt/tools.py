@@ -13,7 +13,9 @@ import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
 from functools import wraps
-
+from pip import get_installed_distributions
+from dulwich.repo import Repo, NotGitRepository
+from dulwich import porcelain
 
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -43,45 +45,106 @@ import importlib
 try:
     from dulwich.repo import Repo
 except ModuleNotFoundError:
-    warnings.warn('please install dulwich: pip install dulwich')
+    warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
     
+
 #%%
 
-def code_version(verbose=0):
-    """ Return dictionary containing most import versions and git tags
-    
-    Args:
-        verbose (int): output level
-    Returns:
-        r (dict)
-    """
-    r={'version': {}, 'git': {}}
-   
-    for p in ['qcodes', 'qtt', 'numpy', 'scipy', 'qctoolkit']:        
-        m=importlib.import_module(p)
-        v=getattr(m, '__version__', 'none')
-        if verbose:
-            print('module %s: %s' % (p, v))
-        r['version'][p]=v
-    for p in ['qcodes', 'qtt', 'projects', 'pycqed']:        
-        m=importlib.import_module(p)
-        try:
-            f=m.__file__
-            x=os.path.split(f)[0]
-            x=os.path.join(x, '..')
-            repo=Repo(x)
-            tag=repo.head()
-            tag=tag.decode('ascii')
-        except:
-            tag='none'    
-        if verbose:
-            print('repo %s: %s' % (p, tag ))
-        r['git'][p]=tag
+def get_distibutions(modules=None, verbose=0):
+    ''' Returns dictionary with pip packages with version number, location, etc.
 
+    Args:
+        modules: (list(str), optional): the requested modules, returns all when not given
+        verbose (int): output level
+
+    Returns:
+        distributions (list): list with Distribution objects with location, version, etc.
+    '''
+    dists = get_installed_distributions(local_only=True)
+    if not modules:
+        if verbose:
+            [print(dist) for dist in dists]
+        return dists
+    d = []
+    for module in modules:
+        dist = next((dist for dist in dists if dist.key==module), None)
+        if dist:
+            d.append(dist)
+        if verbose:
+            print(dist)
+    return d
+
+def get_module_versions(modules, verbose=0):
+    ''' Returns the module version of the given pip packages.
+
+        Args:
+            modules ([str]): a list with pip packages, e.g. ['qtt', 'numpy']
+
+        Returns:
+            r (dict): dictionary with package names and version number for each given module.
+    '''
+    modules = get_distibutions(modules, verbose)
+    return {mod.key:mod.version for mod in modules}
+
+def get_python_version(verbose=0):
+    '''Retuns the python version as dictionary item.'''
+    version = sys.version
+    if verbose:
+        print('Python', version)
+    return {'python' : version}
+
+def get_code_versions(repos, verbose=0):
+    ''' Returns the repository head guid and dirty status and package version number if installed via pip.
+        The version is only returned if the repo is installed as pip package without edit mode.
+        NOTE: currently the dirty status is not working correctly due to a bug in dulwich...
+
+        Args:
+            repos ([str]): a list with pip packages, e.g. ['qtt', 'numpy']
+
+        Retuns:
+            r (dict): dictionary with repo head guid, dirty status and package version number for
+                      each given repository.
+    '''
+    dists = get_distibutions(repos, verbose)
+    r = {}
+    for dist in dists:
+        try:
+            location = dist.location
+            repository = Repo(location)
+            tag = repository.head()
+            tag = tag.decode('ascii')
+            status = porcelain.status(repository)
+            is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 
+                           for item in status.staged.values())
+            r[dist.key] = {'version': dist.version, 'git': tag, 'dirty': is_dirty}
+        except NotGitRepository:
+            r[dist.key] = {'version': dist.version}
+        if verbose:
+            print('{0}: {1}'.format(dist.key, r[dist.key]))
     return r
 
-def test_code_version():
-    _=code_version()
+def get_versions(verbose=0):
+    ''' Returns the python version; module version for numpy, scipy, qctoolkit;
+        and the git guid and dirty status for qcodes, qtt, spin-projects and pycqed
+        if present on the machine. NOTE: currently the dirty status is not working 
+        correctly due to a bug in dulwich...
+
+    Args:
+        verbose (int): output level
+
+    Returns:
+        status (dict): python, modules and git repos status.
+    '''
+    python = get_python_version(verbose)
+    modules = get_module_versions(['numpy', 'scipy', 'qctoolkit'], verbose)
+    gits = get_code_versions(['qcodes', 'qtt', 'spin-projects', 'pycqed'], verbose)
+    return {**python, **modules, **gits}
+
+def test_python_code_modules_and_versions():
+    _ = get_python_version()
+    _ = get_module_versions(['numpy'])
+    _ = get_code_versions(['qtt'])
+    _ = get_versions()
 
 #%% Jupyter kernel tools
 
