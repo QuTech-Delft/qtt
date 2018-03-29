@@ -22,6 +22,7 @@ import numpy as np
 import operator as op
 import functools
 import time
+import logging
 
 try:
     import multiprocessing as mp
@@ -49,6 +50,7 @@ class ClassicalDotSystem(BaseDotSystem):
     def __init__(self, name='dotsystem', ndots=3, ngates=3, maxelectrons=3, **kwargs):
         self.name = name
         
+        logging.info('ClassicalDotSystem: maxelectrons %d' % maxelectrons)
         self.makebasis(ndots=ndots, maxelectrons=maxelectrons)
         self.ngates = ngates
         
@@ -165,7 +167,9 @@ class TripleDot(ClassicalDotSystem):
 
     def __init__(self, name='tripledot', maxelectrons=2, **kwargs):
         """ Classical simulation of triple dot """
-        super().__init__(name=name, ndots=3, ngates=3, **kwargs)
+        super().__init__(name=name, ndots=3, ngates=3, maxelectrons=maxelectrons, **kwargs)
+
+        logging.info('TripleDot: maxelectrons %d' % maxelectrons)
 
         self.makebasis(ndots=3, maxelectrons=maxelectrons)
 
