@@ -23,6 +23,7 @@ Example notebooks
 
 
 * :doc:`notebooks/example_sensingdottuning`
+* :doc:`notebooks/example_ohmic`
 * :doc:`notebooks/example_polFitting`
 * :doc:`notebooks/example_coulomb_peak`
 * :doc:`notebooks/example_PAT_simulations`

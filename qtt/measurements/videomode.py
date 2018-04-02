@@ -447,6 +447,18 @@ class VideoMode:
         self.datafunction.Naverage = value
         self.box.setValue(value)
 
+    @staticmethod
+    def all_instances():
+        """ Return all VideoMode instances """
+        lst = qtt.pgeometry.list_objects(VideoMode)
+        return lst
+
+    @staticmethod
+    def stop_all_instances():
+        """ Stop readout on all all VideoMode instances """
+        lst = qtt.pgeometry.list_objects(VideoMode)
+        for v in lst:
+            v.stopreadout()
 
 
 #%% Testing
