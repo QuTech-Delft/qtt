@@ -40,8 +40,11 @@ import glob
 import time
 from colorama import Fore
 import importlib
-from dulwich.repo import Repo
-
+try:
+    from dulwich.repo import Repo
+except ModuleNotFoundError:
+    warnings.warn('please install dulwich: pip install dulwich')
+    
 #%%
 
 def code_version(verbose=0):
