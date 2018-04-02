@@ -2769,8 +2769,9 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
 def robustCost(x, thr, method='L1'):
     """ Robust cost function
 
-    method : string
-        method to be used. use 'show' to show the options
+    x (array): data to be transformed
+    thr (float or None): threshold. If None use automatic detection (at 95th percentile)
+    method (str): method to be used. use 'show' to show the options
 
     Example
     -------
@@ -2780,6 +2781,17 @@ def robustCost(x, thr, method='L1'):
     1
     >>> methods=robustCost(np.arange(-5,5,.2), thr=2, method='show')
     """
+    if thr is None:
+        ax=np.abs(x)
+        thr = np.percentile(ax, 95.)
+        mean = np.mean(ax)
+        if thr<=2*mean:
+            warnings.warn('estimation of robust cost threshold failed')
+            
+        if method=='L2' or method=='square':
+            thr=thr*thr
+
+        print('thr is %.3f' % thr)
     if method == 'L1':
         y = np.minimum(np.abs(x), thr)
     elif method == 'L2' or method == 'square':
