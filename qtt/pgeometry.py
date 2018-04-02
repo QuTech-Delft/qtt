@@ -2791,7 +2791,6 @@ def robustCost(x, thr, method='L1'):
         if method=='L2' or method=='square':
             thr=thr*thr
 
-        print('thr is %.3f' % thr)
     if method == 'L1':
         y = np.minimum(np.abs(x), thr)
     elif method == 'L2' or method == 'square':
