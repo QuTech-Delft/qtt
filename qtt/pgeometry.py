@@ -2784,9 +2784,11 @@ def robustCost(x, thr, method='L1'):
     if thr is None:
         ax=np.abs(x)
         thr = np.percentile(ax, 95.)
-        mean = np.mean(ax)
-        if thr<=2*mean:
-            warnings.warn('estimation of robust cost threshold failed')
+        p50 = np.percentile(ax, 50)
+        if thr==p50:
+            thr = np.percentile(ax, 99.)
+        if thr<=0:
+            warnings.warn('estimation of robust cost threshold failed (p50 %f, thr %f' % (p50, thr))
             
         if method=='L2' or method=='square':
             thr=thr*thr
