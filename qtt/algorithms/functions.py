@@ -3,6 +3,7 @@
 import numpy as np
 import scipy
 import scipy.constants
+import qtt
 
 
 def gaussian(x, mean, s, amplitude=1, offset=0):
@@ -119,22 +120,26 @@ def exp_function(x, a, b, c):
     y = a + b * np.exp(-c * x)
     return y
 
-def cost_exp_decay(x_data, y_data, params):
+def cost_exp_decay(x_data, y_data, params, threshold = None):
     """ Cost function for exponential decay.
     
     Args:
         x_data (array): the data for the input variable
         y_data (array): the data for the measured variable
         params (array): parameters of the exponential decay function, [A,B, gamma]
+        threshold (float or None): if the difference between data and model is larger then the threshold, these data are not taken into account.
+            If None use automatic detection (at 95th percentile)
         
     Returns:
         cost (float): value which indicates the difference between the data and the fit
     """
-    model = exp_function(x_data, params[1], params[0], params[2])
-    cost = np.linalg.norm(y_data - model)
+    model = exp_function(x_data, params[0], params[1], params[2])
+    cost = qtt.pgeometry.robustCost(y_data - model, thr=threshold)
+    cost = np.linalg.norm(cost)
     return cost
 
-def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
+
+def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, par_guess=None, threshold = None):
     """ Fit a exponential decay. 
     
     Args:
@@ -144,22 +149,26 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, par_gues
         maxfun (int): maximum number of function evaluations to make
         verbose (int): set to >0 to print convergence messages
         par_guess (None or array): optional, initial guess for the fit parameters: [A,B, gamma]
+        threshold (float or None): threshold for the cost function.
+            If the difference between data and model is larger then the threshold, these data are not taken into account for the fit. 
+            If None use automatic detection (at 95th percentile)
         
     Returns:
         par_fit (array): fit parameters of the exponential decay, [A,B, gamma]
        
     """
-    func = lambda params: cost_exp_decay(x_data, y_data, params)
+    func = lambda params: cost_exp_decay(x_data, y_data, params, threshold)
     if par_guess is None:
         maxsignal = np.percentile(y_data,98)
         minsignal = np.percentile(y_data,2)
-        gamma = 10e3
-        A = maxsignal
-        B = minsignal
+        gamma = 1/(x_data[int(len(x_data)/2)])
+        A = minsignal
+        B = maxsignal
         par_guess = np.array([A, B, gamma])
 
     par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     return par_fit
+
 
 def linear_function(x, a, b):
     """ Linear function with offset"""
