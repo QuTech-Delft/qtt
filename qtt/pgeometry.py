@@ -2770,7 +2770,7 @@ def robustCost(x, thr, method='L1'):
     """ Robust cost function
 
     x (array): data to be transformed
-    thr (float or None): threshold. If None use automatic detection (at 95th percentile)
+    thr (float or 'auto' or None): threshold. If None then the input x is returned unmodified. If 'auto' then use automatic detection (at 95th percentile)
     method (str): method to be used. use 'show' to show the options
 
     Example
@@ -2782,6 +2782,8 @@ def robustCost(x, thr, method='L1'):
     >>> methods=robustCost(np.arange(-5,5,.2), thr=2, method='show')
     """
     if thr is None:
+        return x
+    if thr is 'auto':
         ax=np.abs(x)
         thr = np.percentile(ax, 95.)
         p50 = np.percentile(ax, 50)
