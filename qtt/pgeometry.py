@@ -2843,102 +2843,10 @@ def robustCost(x, thr, method='L1'):
 
 #%%
 
-
-class timeConverter:
-
-    """ Class to convert time between current time and cyclic log times """
-    tstart = None
-    tstop = None
-    starttimeNow = None
-    deltaTime = None
-    hh = 0
-
-    def __init__(self, tstart, tstop, startnow):
-        self.tstart = tstart
-        self.tstop = tstop
-        self.loopTime = tstop - tstart
-        self.starttimeNow = startnow
-        self.deltaTime = startnow - tstart
-
-    def __repr__(self):
-        s = 'timeConverter: looptime %.1f [s]' % self.loopTime
-        return s
-
-    def current2cyclic(self, t):
-        return ((t - self.deltaTime) - self.tstart) % self.loopTime + self.tstart
-
-    def fraction(self, t):
-        s = (t - self.starttimeNow)
-        f = (s % self.loopTime) / self.loopTime
-        return f
-
-    def loopindexlog(self, logtime):
-        loopidx = math.floor(float(logtime - self.tstart) / self.loopTime)
-        return loopidx
-
-    def loopindex(self, tnow):
-        loopidx = math.floor(float(tnow - self.starttimeNow) / self.loopTime)
-        return loopidx
-
-    def cyclic2current(self, clt, currenttime, verbose=0):
-        tau = currenttime - clt - self.deltaTime
-        k = tau / self.loopTime
-        loopidx = round(k)
-        current = clt + loopidx * self.loopTime + self.deltaTime
-        return current
-
-    def passLog(tc, clt, tnow):
-        """ Determine whether at current time (tnow) we have passed an entry in the log """
-
-        # logtimenow = tc.cyclic2current(clt, tnow)
-
-        return tc.cyclic2current(clt, tnow) < tnow
-
-    def current2logtime(self, t):
-        return t - self.deltaTime
-
-    def cyclic2logtime(self, clt, currenttime, verbose=0):
-        current = self.cyclic2current(clt, currenttime, verbose)
-        return current - self.deltaTime
-
-    def logtime2current(self, logtime):
-        return logtime + self.deltaTime
-
-    def getidx(tc, tnow, logtimes):
-        tcylic = tc.current2cyclic(tnow)
-
-        N = logtimes.size
-        idx = np.interp(tcylic, logtimes, np.arange(N))
-        idx = int(idx)
-        idx = np.minimum(idx, N - 1)
-        idx = np.maximum(idx, 0)
-        return idx
-
-#%% Testing area
-
-
-def testTimeconverter():
-    """ Testing function for the TimeConverter class """
-    tc = timeConverter(0, 100, -20)
-
-    tthenlin = np.arange(0, 500, 0.1)
-    tcyclic = tthenlin % tc.loopTime
-    tnow = tthenlin.copy()
-    tthen = tthenlin.copy()
-    for ii in range(tnow.size):
-        tnow[ii] = tc.cyclic2current(tcyclic[ii], tnow[ii], 0)
-        tthen[ii] = tc.cyclic2logtime(tcyclic[ii], tnow[ii], 0)
-
-    plt.figure(100)
-    plt.clf()
-    plt.plot(tthenlin, tcyclic, '-r')
-    plt.plot(tthenlin, tthen, '.b')
-    plt.plot(tthenlin, tnow, '.g')
-    plt.xlabel('Logtime')
-    plt.ylabel('Current time')
-    plot2Dline([-1, 0, tc.starttimeNow], 'g')
-
-# testTimeconverter()
+def test_robustCost():
+    x=np.array([0,1,2,3,4,5])
+    _=robustCost(x, 2)
+    _=robustCost(x, 'auto')
 
 #%% Wrapper to read video files
 
@@ -2987,7 +2895,6 @@ class videoreader_t:
 
         if self.resize:
             im = cv2.resize(im, None, fx=.25, fy=.25)
-        # cap = cv2.VideoCapture(vidfile)
         return r, im
     def close():
         pass
