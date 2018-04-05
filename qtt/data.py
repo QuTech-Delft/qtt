@@ -856,7 +856,7 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
         xname, yname (string): the name of the setpoint array
         x, y (array): the setpoint data
         zname (str or list): the name of the measured array
-        z (array): the measured data
+        z (array or list): the measured data
     '''
     xx = np.array(x)
     yy0 = np.array(y)
@@ -869,6 +869,8 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     if isinstance(zname, str):
         zname = [zname]
+        if isinstance(z, np.ndarray):
+            z=[z]
     for ii, name in enumerate(zname):
         za = DataArray(name=name, array_id=name, label=name,
                        preset_data=np.copy(zz), unit=zunit, set_arrays=(xa, ya))
