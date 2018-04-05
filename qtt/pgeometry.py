@@ -2992,129 +2992,6 @@ class videoreader_t:
     def close():
         pass
 
-#%% Camera control
-
-
-class uvccamera:
-
-    """ Class representing a UVC camera
-
-    Implementation is Linux only...
-    """
-    camid = None
-    verbose = 0
-
-    def __init__(self, camid):
-        self.camid = camid
-
-    def commandoutput(self, cmd):
-        # print(cmd)
-        # print(cmd.split(' '))
-        r = subprocess.check_output(cmd, shell=True)
-        # r=subprocess.check_output(cmd.split(' '), shell=False)
-        r = r.decode('ASCII').strip()
-        return r
-
-    def command(self, cmd):
-        if platform.os.name == 'posix':
-            r = os.system(cmd)
-        else:
-            print('uvc camera setting not supported on your OS')
-
-    def devicename(self):
-        return '/dev/video%d' % self.camid
-
-    def __repr__(self):
-        s = 'uvccamera: device %s' % self.devicename()
-        return s
-
-    def editControls(self):
-        cmd = 'guvcview -o -d %s &' % self.devicename()
-        self.command(cmd)
-
-    def ledOff(self):
-        cmd = 'uvcdynctrl -d %s --set="LED1 Mode" 0' % self.devicename()
-        self.command(cmd)
-
-    def setFocus(self, fc=None):
-        camname = self.devicename()
-        if fc is None:
-            cmd = 'uvcdynctrl -d %s --set="Focus, Auto" 1' % camname
-            return
-        cmd = 'uvcdynctrl -d %s --set="Focus, Auto" 0' % camname
-        self.command(cmd)
-        fcx = fc + 130
-        cmd = 'uvcdynctrl -d %s --set="Focus (absolute)" %d' % (camname, fcx)
-        if self.verbose:
-            print('  ' + cmd)
-        self.command(cmd)
-        time.sleep(.35)
-        cmd = 'uvcdynctrl -d %s --set="Focus (absolute)" %d' % (camname, fc)
-        if self.verbose:
-            print('  ' + cmd)
-        self.command(cmd)
-
-    def listProperties(self):
-        # cmd = 'uvcdynctrl -c -d %s' % self.devicename()
-        # self.command(cmd)
-        import subprocess
-        lst = subprocess.check_output(['uvcdynctrl', '-c', '-d', '%s' % self.devicename()])
-        lst = lst.decode('ASCII').split('\n')
-        lst = [l.strip() for l in lst[1:]]
-
-        lst = [l for l in lst if len(l) > 1]
-
-        for l in lst:
-            # l='Brightness'
-            time.sleep(.02)
-            # r=self.commandoutput('uvcdynctrl -d /dev/video0 --get="%s"' % l )
-            r = self.getProperty(l)
-
-            # r=self.commandoutput('uvcdynctrl -d /dev/video0 --get="%s"' % l)
-            # cmd = 'uvcdynctrl -d %s --get="%s"' % ('/dev/video0', 'Brightness')
-            # r=self.commandoutput(cmd)
-            print('prop %s: %s' % (l, r))
-
-    def getProperty(self, prop):
-        camname = self.devicename()
-        cmd = 'uvcdynctrl -d %s --get="%s"' % (camname, prop)
-        r = self.commandoutput(cmd)
-        return r
-
-    def setProperty(self, prop, value):
-        camname = self.devicename()
-        cmd = 'uvcdynctrl -d %s --set="%s" %s' % (camname, prop, value)
-        if self.verbose:
-            print('uvccamera: set property:  ' + cmd)
-        self.command(cmd)
-
-    def ledBlink(self, freq=10):
-        camname = self.devicename()
-        cmd = 'uvcdynctrl -d %s --set="LED1 Mode" 2' % camname
-        if self.verbose:
-            print('ledBlink: ' + cmd)
-        r = os.system(cmd)
-        cmd = 'uvcdynctrl -d %s --set="LED1 Frequency" %d' % (camname, freq)
-        # print('  ' + cmd)
-        self.command(cmd)
-
-    def listControls(self):
-        cmd = 'uvcdynctrl -c -d %s' % self.devicename()
-        # self.command(cmd)
-        r = subprocess.check_output(cmd.split(' ')).decode('ASCII')
-        print(r)
-
-    @staticmethod
-    def listCameras():
-        # cmd = 'uvcdynctrl -l'
-        if platform.os.name == 'posix':
-            r = subprocess.check_output(['uvcdynctrl', '-l']).decode('ASCII')
-            print(r)
-            # r = os.system(cmd)
-        else:
-            print('uvc camera setting not supported on your OS')
-
-
 #%%
 
 def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
@@ -3273,7 +3150,8 @@ def otsu(im, fig=None):
 
 
 def histogram(x, nbins=30, fig=1):
-    """
+    """ Return histogram of data
+    
     >>> _=histogram(np.random.rand(1,100))
     """
     nn, bin_edges = np.histogram(x, bins=nbins)
@@ -3354,11 +3232,13 @@ def decomposeProjectiveTransformation(H, verbose=0):
 
 
 def points_in_polygon(pts, pp):
-    """
+    """ Return all points contained in a polygon
 
-    Arguments:
-        pt (Nx2 array): point
+    Args:
+        pt (Nx2 array): points
         pp (Nxk array): polygon
+    Returns:
+        rr (bool array)
     """
     rr = np.zeros(len(pts))
     for i, pt in enumerate(pts):
@@ -3368,15 +3248,23 @@ def points_in_polygon(pts, pp):
 
 
 def point_in_polygon(pt, pp):
-    """
+    """ Return True if point is in polygon
 
-    Arguments:
-        pt (2x1 array): point
-        pp (2xN array): polygon
+    Args:
+        pt (1x2 array): point
+        pp (Nx2 array): polygon
+    Returns:
+        r (float): 1.0 if point is inside 1.0, otherwise -1.0
     """
     r = cv2.pointPolygonTest(pp, (pt[0], pt[1]), measureDist=False)
     return r
 
+def test_polygon_functions():
+    pp= np.array( [[0,0], [4,0], [0,4]])
+    assert(point_in_polygon( [1,1], pp )== 1 )
+    assert(point_in_polygon( [-1,1], pp ) == -1 )
+
+    assert(np.all( points_in_polygon( np.array( [[-1,1],[1,1], [.5,.5]]), pp ) == np.array([-1,1,1]) ) )
 
 def minAlg_5p4(A):
     """ Algebraic minimization function
@@ -3413,145 +3301,6 @@ def fitPlane(X):
     AA = np.vstack((X.T, np.ones(X.shape[0]))).T
     t = minAlg_5p4(AA)
     return t
-
-#%% Point clouds
-
-try:
-    from plyfile import PlyData, PlyElement
-    from pyqtgraph.Qt import QtCore, QtGui
-    import pyqtgraph.opengl as gl
-    import pyqtgraph as pg
-
-    class MyView(gl.GLViewWidget):
-
-        def pan(self, dx, dy, dz, relative=False):
-            """
-            Moves the center (look-at) position while holding the camera in place.
-
-            If relative=True, then the coordinates are interpreted such that x
-            if in the global xy plane and points to the right side of the view, y is
-            in the global xy plane and orthogonal to x, and z points in the global z
-            direction. Distances are scaled roughly such that a value of 1.0 moves
-            by one pixel on screen.
-
-            """
-            if not relative:
-                self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
-            else:
-                cPos = self.cameraPosition()
-                cVec = self.opts['center'] - cPos
-                dist = cVec.length()  # distance from camera to center
-                xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)  # approx. width of view at distance of center point
-                xScale = xDist / self.width()
-                zVec = QtGui.QVector3D(0, 0, 1)
-                xVec = QtGui.QVector3D.crossProduct(zVec, cVec).normalized()
-                # xVec = QtGui.QVector3D(0,1,0)
-                # yVec = QtGui.QVector3D.crossProduct(xVec, zVec).normalized()
-                yVec = QtGui.QVector3D(0, 0, 1)
-                self.opts['center'] = self.opts['center'] + xVec * xScale * dx + yVec * xScale * dy + zVec * xScale * dz
-            self.update()
-
-    class pointcloud_t:
-
-        def __init__(self):
-
-            self.X = np.array((0, 3))
-            self.color = None
-            self.faces = None
-
-        def transform(self, T):
-            pc0 = pointcloud_t()
-            pc0.X = projectiveTransformation(T, self.X.T).T
-            pc0.color = self.color
-            pc0.faces = self.faces
-            return pc0
-
-        def nVertices(self):
-            """ Return the number of vertices in the cloud """
-            return self.X.shape[0]
-
-        def __repr__(self):
-            return 'pointcloud_t: %d vertices' % self.X.shape[0]
-
-        def loadPly(self, plyfile):
-            pd = PlyData.read(plyfile)
-
-            self.X = np.vstack((pd['vertex']['x'], pd['vertex']['y'], pd['vertex']['z'])).T
-            try:
-                self.color = np.vstack((pd['vertex']['diffuse_red'], pd['vertex']['diffuse_green'], pd['vertex']['diffuse_blue'])).T
-            except:
-                pass
-            return pd
-
-        @staticmethod
-        def addPoints(glview, X, color=None, size=.1):
-            nn = X.shape[0]
-            if color is None:
-                col = np.zeros((nn, 4))
-                col[:, 1] = 1
-                col[:, -1] = 1
-            else:
-                if color.size == 4:
-                    col = np.repeat(color.reshape(1, 4), nn, axis=0)
-                else:
-                    col = color
-            sizedata = size * np.ones(nn)
-            sp1 = gl.GLScatterPlotItem(pos=X, size=sizedata, color=col, pxMode=False)
-            glview.addItem(sp1)
-            return sp1
-
-        @staticmethod
-        def drawLine(glview, c1, c2, color=None, nn=20, width=5):
-            X = np.array([c1.flatten(), c2.flatten()])
-            nn = 2
-            if color is None:
-                col = np.zeros((nn, 4))
-                col[:, 1] = 1
-                col[:, -1] = 1
-            else:
-                if color.size == 4:
-                    col = np.repeat(color.reshape(1, 4), nn, axis=0)
-                else:
-                    col = color
-            # sizedata=size*np.ones( nn)
-            sp1 = gl.GLLinePlotItem(pos=X, color=col, width=width)  # pxMode=False)
-            glview.addItem(sp1)
-            return sp1
-
-        @staticmethod
-        def show_cloud(pc=None, addgrid=False):
-            _ = pg.mkQApp()
-            w = gl.GLViewWidget()
-            w.opts['distance'] = 20
-            w.show()
-            w.setWindowTitle('pointcloud_t')
-
-            if addgrid:
-                g = gl.GLGridItem()
-                w.addItem(g)
-
-            if pc is not None:
-                nn = pc.nVertices()
-                sz = float(np.mean(np.std(pc.X, axis=0)) / 400.)
-
-                size = sz * np.ones(pc.X.shape[0])
-                color = .25 * np.ones((nn, 4))
-                if pc.color is None:
-                    color = None
-                else:
-                    color[:, 0:3] = .5 * (pc.color / 255.)
-                pointcloud_t.addPoints(w, pc.X, color, size=size)
-            return w
-
-        @staticmethod
-        def clearPlot(w):
-            while len(w.items) > 0:
-                w.removeItem(w.items[0])
-
-
-except:
-    # no pointcloud functionality available
-    pass
 
 
 #%% Debugging
