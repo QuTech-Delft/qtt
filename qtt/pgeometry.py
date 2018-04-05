@@ -39,9 +39,11 @@ import pickle
 import re
 import logging
 import pkgutil
+import scipy.io
+import numpy
 import subprocess
 
-__version__ = '0.52q'
+__version__ = '0.6'
 
 #%% Load pyqside or pyqt4
 # We want to do this before loading matplotlib
@@ -356,33 +358,6 @@ def partiala(method, **kwargs):
     return t
 
 
-def createCheckerboard(wh, outfile=None, fac=100, fig=None):
-    """ Create a checkerboard image of specific size
-    Example:
-        >>> B,Br=createCheckerboard( [4,6], fac=1, fig=100)
-
-    """
-    B = 225 * np.ones((wh[0] + 2, wh[1] + 2))
-    B[1:-1, 1:-1] = 0
-    for ii in range(B.shape[0]):
-        for jj in range(B.shape[1]):
-            if ((ii + jj) % 2 == 0) and B[ii, jj] == 0:
-                B[ii, jj] = 255
-
-    if fig:
-        plt.figure(10)
-        plt.clf()
-        plt.gray()
-        plt.imshow(B, interpolation='nearest')
-
-    Br = cv2.resize(B, (B.shape[1] * fac, B.shape[0] * fac), interpolation=0)
-
-    if not outfile is None:
-        #        cv2.imwrite('/home/eendebakpt/tmp/cb.png', B);
-        cv2.imwrite(outfile, Br)
-    return B, Br
-
-
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
     """ Update font sizes for a plot """
     if ax is None:
@@ -555,32 +530,6 @@ def breakLoop(wk=None, dt=0.001, verbose=0):
         return True
     return False
 
-#%% Camera functions
-
-
-def camera2opengl(mtx, far=100, near=1):
-    """ Convert intrinsic camera calibration to opengl projection matrix
-
-    See http://kgeorge.github.io/2014/03/08/calculating-opengl-perspective-matrix-from-opencv-intrinsic-matrix/
-    http://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
-
-    """
-
-    alpha = mtx[0, 0]
-    beta = mtx[1, 1]
-    cx = mtx[0, 2]
-    cy = mtx[1, 2]
-    f = far
-    n = near
-    s = 1
-    M = np.array([[alpha / cx, 0, 0, 0], [0, beta / cy, 0, 0],
-                 [0, 0, -(f + n) / (f - n), -2 * f * n / (f - n)], [0, 0, -1, 0]])
-    return M
-
-#%%
-
-import scipy.io
-import numpy
 
 
 def hom(x):
