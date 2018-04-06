@@ -47,6 +47,9 @@ class SimulationDigitizer(qcodes.Instrument):
         waveform = self._waveform
         model = self.model
         sweepgates = waveform['sweepgates']
+        if isinstance(sweepgates, dict):
+            sweepgates=[sweepgates]
+            
         ndim = len(sweepgates)
 
         nn = waveform['resolution']
@@ -89,7 +92,7 @@ class SimulationDigitizer(qcodes.Instrument):
             inverseV = Vmatrix.T
             Vmatrix = None
         else:
-            ii = [v.index(s) for s in sweepgates]
+            ii = [v.index(s) for s in sweepgates[0]]
 
             idx = np.array((range(len(v))))
             for i, j in enumerate(ii):
