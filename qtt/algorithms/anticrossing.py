@@ -27,6 +27,10 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
                        optionally the cost for fitting and the figure number
     """
     abs_val = True
+    
+    a=dataset.default_parameter_array().set_arrays
+    labels = [x.name for x in a]
+    
     im, tr = qtt.data.dataset2image(dataset)
     imextent = tr.scan_image_extent()
 
@@ -71,6 +75,9 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
     ccpixel_straight =cdata[0]    
     ccpixel=qtt.pgeometry.projectiveTransformation(np.linalg.inv(Hstraight), (istepmodel/istep)*ccpixel_straight)
     
+    if verbose:
+        print('fit_anticrossing: patch size %s' % (patch.shape, ))
+        
     def convert_coordinates(xpix):
         ccpixel=qtt.pgeometry.projectiveTransformation(np.linalg.inv(Hstraight), (istepmodel/istep)*xpix)
         return tr.pixel2scan(ccpixel)
@@ -83,7 +90,7 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
     ip=convert_coordinates(np.array(ip).T)
     op=convert_coordinates(np.array(op).T)
 
-    anticross_fit = {}
+    anticross_fit = {'labels': labels}
     anticross_fit['centre']=tr.pixel2scan(ccpixel)
     anticross_fit['fitpoints']={'centre': centre, 'lp':lp,'hp': hp, 'ip': ip, 'op': op}
 
