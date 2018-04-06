@@ -125,7 +125,7 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
     plt.clf()
     
     if ds is not None:
-        MatPlot(ds.default_parameter_array('diff_dir_g'), num=100)
+        MatPlot(ds.default_parameter_array('diff_dir_g'), num=fig)
     cc=fitpoints['centre']
     plt.plot(cc[0], cc[1], '.m', markersize=12, label='fit centre')
     
