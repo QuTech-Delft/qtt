@@ -47,6 +47,9 @@ class SimulationDigitizer(qcodes.Instrument):
         waveform = self._waveform
         model = self.model
         sweepgates = waveform['sweepgates']
+        if isinstance(sweepgates, dict):
+            sweepgates=[sweepgates]
+            
         ndim = len(sweepgates)
 
         nn = waveform['resolution']
@@ -82,23 +85,14 @@ class SimulationDigitizer(qcodes.Instrument):
             Vmatrix[1, :] = 0
             for idx, j in enumerate(iih):
                 Vmatrix[0, j] = vh[idx]
-                #Vmatrix[j, 0] = vh[idx]
             for idx, j in enumerate(iiv):
                 Vmatrix[1, j] = vv[idx]
-                #Vmatrix[j, 1] = vv[idx]
 
-            if 0:
-                import scipy
-                X = scipy.linalg.orth(Vmatrix[0:2, :].T)
-
-                A = Vmatrix[0:2, :]
-                n = qtt.pgeometry.null(A)
-                Vmatrix = np.vstack((A, n[1].T))
 
             inverseV = Vmatrix.T
             Vmatrix = None
         else:
-            ii = [v.index(s) for s in sweepgates]
+            ii = [v.index(s) for s in sweepgates[0]]
 
             idx = np.array((range(len(v))))
             for i, j in enumerate(ii):
@@ -166,6 +160,30 @@ class SimulationAWG(qcodes.Instrument):
     def awg_gate(self, name):
         return False
 
+    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
+        self.current_sweep = {'waveform': 'simulation_awg', 'gate': gate, 'sweeprange': sweeprange,
+                              'type': 'sweep_gate', 'period': period, 'width': width, 'wave_name': wave_name}
+
+        waveform = self.current_sweep
+        waveform['resolution'] = [int(period * self.sampling_frequency())]
+        waveform['sweepgates'] = [waveform['gate']]
+        waveform['sweepranges'] = [waveform['sweeprange']]
+
+        sweep_info = None
+        self._waveform  = waveform
+        return waveform, sweep_info
+
+    def sweep_gate_virt(self, fast_sweep_gates, sweeprange, period, delete=None):
+        self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates':  [fast_sweep_gates], 'sweeprange': sweeprange,
+                              'type': 'sweep_1D_virt', 'period': period, }
+        waveform = self.current_sweep
+
+        waveform['resolution'] = [int(period * self.sampling_frequency())]
+        waveform['sweepranges'] = [waveform['sweeprange']]
+
+        self._waveform  = waveform
+        return waveform, None
+
     def sweep_2D_virt(self, samp_freq, gates_horz, gates_vert, sweepranges, resolution):
         self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates':  [gates_horz, gates_vert], 'sweepranges': sweepranges,
                               'type': 'sweep_2D_virt', 'samp_freq': samp_freq, 'resolution': resolution}
@@ -180,18 +198,6 @@ class SimulationAWG(qcodes.Instrument):
         self._waveform  = waveform
         return waveform, None
 
-    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
-        self.current_sweep = {'waveform': 'simulation_awg', 'gate': gate, 'sweeprange': sweeprange,
-                              'type': 'sweep_gate', 'period': period, 'width': width, 'wave_name': wave_name}
-
-        waveform = self.current_sweep
-        waveform['resolution'] = [int(period * self.sampling_frequency())]
-        waveform['sweepgates'] = [waveform['gate']]
-        waveform['sweepranges'] = [waveform['sweeprange']]
-
-        sweep_info = None
-        self._waveform  = waveform
-        return waveform, sweep_info
 
     def stop(self):
         pass
