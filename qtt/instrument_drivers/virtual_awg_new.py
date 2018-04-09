@@ -266,8 +266,25 @@ class VirtualAwg(InstrumentBase):
         """ Turns on the AWG channels selected using the gates. Used after sweep_init."""
         [awg.run() for awg in self.awgs]
 
-    def sweep_gates(self, gate_s, period, marker_delay, width=0.95):
+    def sweep_gates(self, gate_s, period, marker_delay=0, width=0.95):
+        """ Creates sawtooth waveforms for the given gates with marker channel for
+            the digitizer.
 
+        Arguments:
+            gate_s (dict): A dictionary with a gate as key and sweep range Vpp as value.
+            period (float): The duration of the sawtooth in seconds.
+            marker_delay (float): The delay of the marker pulse in seconds. The marker_delay must always
+                                  be less than the period.
+            width (float): the width of the sawtooth.
+
+        Returns:
+            waveform_s (dict): A dictonary with the waveforms and sweep properties (width, period,
+                              range, sample rate and marker delay)
+
+        Example:
+        -------
+        >>> <VirtualAwg>.sweep_gates({'X1': 0.5, 'P2': 1.0}, period=10e-7)
+        """
         if not self.are_awg_gates(list(gate_s.keys())):
             raise VirtualAwgError('Unusable gate selected!')
 
