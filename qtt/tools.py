@@ -130,7 +130,7 @@ def get_versions(get_dirty_status=False, verbose=0):
         status (dict): python, modules and git repos status.
     """
     python = get_python_version(verbose)
-    gits = get_code_versions(['qcodes', 'qtt', 'spin-projects', 'pycqed'], get_dirty_status, verbose)
+    gits = get_code_versions(['qcodes', 'qtt', 'projects', 'pycqed'], get_dirty_status, verbose)
     modules = get_module_versions(['numpy', 'scipy', 'qctoolkit'], verbose)
     timestamp = {'timestamp':  time.asctime()}
     return {**python, **modules, **gits, **timestamp}
