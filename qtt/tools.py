@@ -49,48 +49,7 @@ import importlib
 
 #%%
 
-def get_distibutions(modules=None, verbose=0):
-    """ Returns dictionary with pip packages with version number, location, etc.
-
-    Args:
-        modules: (list(str), optional): the requested modules, returns all when not given
-        verbose (int): output level
-
-    Returns:
-        distributions (list): list with Distribution objects with location, version, etc.
-    """
-    dists = get_installed_distributions(local_only=True)
-    if not modules:
-        if verbose:
-            [print(dist) for dist in dists]
-        return dists
-    d = []
-    for module in modules:
-        dist = next((dist for dist in dists if dist.key == module), None)
-        if dist:
-            d.append(dist)
-        if verbose:
-            print(dist)
-    return d
-
-
 def get_module_versions(modules, verbose=0):
-    """ Returns the module version of the given pip packages.
-
-        Args:
-            modules ([str]): a list with pip packages, e.g. ['qtt', 'numpy']
-
-        Returns:
-            r (dict): dictionary with package names and version number for each given module.
-    """
-    modules = get_distibutions(modules, verbose)
-    module_versions = {mod.key: mod.version for mod in modules}
-    if verbose:
-        print(module_versions)
-    return module_versions
-
-
-def get_module_versions_old(modules, verbose=0):
     """ Returns the module version of the given pip packages.
 
         Args:
@@ -101,20 +60,15 @@ def get_module_versions_old(modules, verbose=0):
     """
     module_versions = dict()
     for module in modules:
-        package = importlib.import_module(module)
-        version = getattr(package, '__version__', 'none')
-        module_versions[module] = version
+        try:
+            package = importlib.import_module(module)
+            version = getattr(package, '__version__', 'none')
+            module_versions[module] = version
+        except ModuleNotFoundError:
+            module_versions[module] = 'none'
         if verbose:
             print('module {0} {1}'.format(package, version))
     return module_versions
-
-
-def get_python_version(verbose=0):
-    """ Retuns the python version as dictionary item."""
-    version = sys.version
-    if verbose:
-        print('Python', version)
-    return {'python': version}
 
 
 def get_code_versions(repos, get_dirty_status=False, verbose=0):
@@ -131,22 +85,35 @@ def get_code_versions(repos, get_dirty_status=False, verbose=0):
             r (dict): dictionary with repo head guid, dirty status and package version number for
                       each given repository.
     """
-    dists = get_distibutions(repos, verbose)
-    r = {}
-    for dist in dists:
+    r = dict()
+    for repo in repos:
         try:
-            repository = Repo(dist.location)
+            package = importlib.import_module(repo)
+            version = getattr(package, '__version__', 'none')
+            init_location = os.path.split(package.__file__)[0]
+            repo_location = os.path.join(init_location, '..')
+            repository = Repo(repo_location)
             tag = repository.head().decode('ascii')
-            r[dist.key] = {'version': dist.version, 'git': tag}
+            r[repo] = {'version': version, 'git': tag}
             if get_dirty_status:
                 status = porcelain.status(repository)
                 is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 for item in status.staged.values())
-                r[dist.key]['dirty'] = is_dirty
+                r[repo]['dirty'] = is_dirty
         except NotGitRepository:
-            r[dist.key] = {'version': dist.version}
+            r[repo] = {'version': version}
+        except ModuleNotFoundError:
+            r[repo] = 'none'
         if verbose:
-            print('{0}: {1}'.format(dist.key, r[dist.key]))
+            print('{0}: {1}'.format(repo, r[repo]))
     return r
+
+
+def get_python_version(verbose=0):
+    """ Returns the python version as dictionary item."""
+    version = sys.version
+    if verbose:
+        print('Python', version)
+    return {'python': version}
 
 
 def get_versions(get_dirty_status=False, verbose=0):
@@ -234,6 +201,7 @@ def dumpstring(txt):
     """ Dump a string to temporary file on disk """
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
+
 
 def deprecated(func):
     """ This is a decorator which can be used to mark functions
