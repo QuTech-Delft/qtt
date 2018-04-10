@@ -41,12 +41,15 @@ try:
 except:
     pass
 
+import datetime
 import subprocess
 import glob
 import time
 from colorama import Fore
 import importlib
+import platform
 
+    
 # %%
 
 
@@ -106,7 +109,6 @@ def get_git_versions(repos, get_dirty_status=False, verbose=0):
             print('{0}: {1}'.format(repo, heads[repo]))
     return (heads, dirty_stats)
 
-
 def get_python_version(verbose=0):
     """ Returns the python version."""
     version = sys.version
@@ -141,9 +143,11 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
     result['python'] = get_python_version(verbose)
     result['git'] = repository_stats
     result['version'] = get_module_versions(package_names, verbose)
-    result['timestamp'] = time.asctime()
+    result['timestamp'] = datetime.datetime.now().isoformat() # ISO 8601
+    result['system']={'node': platform.node()}
     if get_dirty_status:
         result['dirty'] = dirty_stats
+        
     return result
 
 
