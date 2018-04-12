@@ -39,9 +39,11 @@ import pickle
 import re
 import logging
 import pkgutil
+import scipy.io
+import numpy
 import subprocess
 
-__version__ = '0.51'
+__version__ = '0.6'
 
 #%% Load pyqside or pyqt4
 # We want to do this before loading matplotlib
@@ -356,33 +358,6 @@ def partiala(method, **kwargs):
     return t
 
 
-def createCheckerboard(wh, outfile=None, fac=100, fig=None):
-    """ Create a checkerboard image of specific size
-    Example:
-        >>> B,Br=createCheckerboard( [4,6], fac=1, fig=100)
-
-    """
-    B = 225 * np.ones((wh[0] + 2, wh[1] + 2))
-    B[1:-1, 1:-1] = 0
-    for ii in range(B.shape[0]):
-        for jj in range(B.shape[1]):
-            if ((ii + jj) % 2 == 0) and B[ii, jj] == 0:
-                B[ii, jj] = 255
-
-    if fig:
-        plt.figure(10)
-        plt.clf()
-        plt.gray()
-        plt.imshow(B, interpolation='nearest')
-
-    Br = cv2.resize(B, (B.shape[1] * fac, B.shape[0] * fac), interpolation=0)
-
-    if not outfile is None:
-        #        cv2.imwrite('/home/eendebakpt/tmp/cb.png', B);
-        cv2.imwrite(outfile, Br)
-    return B, Br
-
-
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
     """ Update font sizes for a plot """
     if ax is None:
@@ -555,32 +530,6 @@ def breakLoop(wk=None, dt=0.001, verbose=0):
         return True
     return False
 
-#%% Camera functions
-
-
-def camera2opengl(mtx, far=100, near=1):
-    """ Convert intrinsic camera calibration to opengl projection matrix
-
-    See http://kgeorge.github.io/2014/03/08/calculating-opengl-perspective-matrix-from-opencv-intrinsic-matrix/
-    http://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/building-basic-perspective-projection-matrix
-
-    """
-
-    alpha = mtx[0, 0]
-    beta = mtx[1, 1]
-    cx = mtx[0, 2]
-    cy = mtx[1, 2]
-    f = far
-    n = near
-    s = 1
-    M = np.array([[alpha / cx, 0, 0, 0], [0, beta / cy, 0, 0],
-                 [0, 0, -(f + n) / (f - n), -2 * f * n / (f - n)], [0, 0, -1, 0]])
-    return M
-
-#%%
-
-import scipy.io
-import numpy
 
 
 def hom(x):
@@ -599,459 +548,6 @@ def null(a, rtol=1e-5):
     u, s, v = np.linalg.svd(a)
     rank = (s > rtol * s[0]).sum()
     return rank, v[rank:].T.copy()
-
-
-class camera_t():
-
-    """ Class representating a camera """
-
-    def __init__(self, T=np.matrix(np.eye(4)), mtx=None, distcoeff=None, imsize=None, matlabcalibfile=None, im=None, fc=None):
-        """ Create a camera structure
-
-        .T : world-to-camera matrix
-
-        Arguments
-        ---------
-            distcoeff : array
-                distortion coefficients: [k1,k2,p1,p2, k3] (as in OpenCV)
-            mtx : array
-                matrix with internal calibration
-            imsize : array, optional
-                size of image
-
-        """
-        self.T = T  # world-to-camera matrix
-        self.mtx = None
-        self.distcoeff = np.array(distcoeff)
-        self.imsize = imsize
-
-        if not matlabcalibfile is None:
-            self.loadMatlabCalibration(matlabcalibfile)
-            return
-
-        if im is not None:
-            self.idealCamera(im, fc)
-            self.im = im
-            return
-
-        if T is None:
-            raise Exception('T matrix should be 4x4 numpy matrix')
-        self.T = np.array(T)
-        if mtx is None:
-            self.mtx = np.array(np.eye(3))
-        else:
-            self.mtx = np.array(mtx)
-        if distcoeff is None:
-            self.distcoeff = np.zeros(5,)
-        else:
-            self.distcoeff = distcoeff
-        if imsize is None:
-            self.imsize = np.array([0, 0])
-        else:
-            self.imsize = imsize
-
-    def resizeCamera(self, factor):
-        """ Resize a camera to desired size """
-        newimsize = (factor * self.imsize).astype(int)
-        newmtx = self.mtx.copy()
-
-        newmtx[0, 0] *= factor  # rescale mtx
-        newmtx[1, 1] *= factor
-
-        cc = self.mtx[0:2, -1]
-        ccnew = (cc - 0.5) * factor
-        newmtx[0:2, -1] = ccnew
-
-        newcam = camera_t(self.T, newmtx, self.distcoeff, newimsize)
-        return newcam
-
-    def back_project(self, xim, plane=None, verbose=1):
-        """ Project image points to plane in world
-
-        TODO: add distortion to camera backprojection
-
-        Arguments:
-            xim (Nx2 array): image points
-            plane (4x1 array or None): plane in 3D
-            verbose (int): output level
-
-
-        >>> ecam = camera_t()
-        >>> plane = np.array([[0,0,1,1]]).T
-        >>> X = ecam.back_project( np.array( [[10,0]] ), plane )
-        """
-        ecam = self
-
-        if plane is None:
-            plane = np.array([0, 0, 1, 0])
-
-        N = xim.shape[0]
-        Xproj = np.zeros((N, 3))
-
-        cc = ecam.cameraCentre()
-
-        # TODO: vectorize code
-        for i in range(N):
-            pt = xim[i, :]
-            # TODO: here we assume no distortion
-            v = np.linalg.inv(ecam.mtx) .dot(hom(pt.reshape(2, 1)))
-            vv = projectiveTransformation(np.matrix(np.linalg.inv(ecam.T)), v)
-            # linedir=vv.flatten()-cc
-
-            # linedir=-linedir/np.linalg.norm(linedir)
-            # pt2=cc.reshape(3,1)+10*linedir.reshape(3,1)
-            Ldual = np.hstack((hom(cc.reshape(3, 1)), hom(vv)))
-            r, L = null(Ldual.T)
-
-            AA = np.hstack((L, plane.reshape(4, 1)))
-            _, pt = null(AA.T)
-
-            Xproj[i, :] = dehom(pt).flatten()
-
-        return Xproj  # , ( pt, pt2) # np.array( [0,0,0]).reshape( (1,3))
-
-    def idealCamera(self, im, fc=None):
-        """ Set the camera to an ideal camera for the specified image """
-        self.imsize = np.array([im.shape[1], im.shape[0]])
-        cc1 = float(self.imsize[0]) / 2 - .5
-        cc2 = float(self.imsize[1]) / 2 - .5
-        if fc is None:
-            fc = self.imsize[0]
-        self.mtx = np.matrix([[fc, 0, cc1], [0, fc, cc2], [0, 0, 1]])
-        self.T = np.matrix(np.eye(4))
-        self.distcoeff = np.zeros(5,)
-
-    def undistortImage(self, im):
-        if im is None:
-            return None
-        if self.mtx is None:
-            imu = im.copy()
-            return imu
-        else:
-            # w,h=self.imsize[0], self.imsize[1]
-            # mapx,mapy = cv2.initUndistortRectifyMap(self.mtx,self.distcoeff,None,self.mtx,(w,h),5)
-            # imu = cv2.remap(im,mapx,mapy,cv2.INTER_LINEAR)
-            imu = cv2.undistort(im, self.mtx, self.distcoeff, None, self.mtx)
-            return imu
-
-    def writeCalibration(self, filename, verbose=1):
-        with open(filename, 'wt') as fid:
-            for m in self.mtx:
-                mm = ' '.join(
-                    ['%f' % x for x in (np.array(m).flatten()).tolist()])
-                fid.write('%s\n' % mm)
-
-            fid.write('%s\n' % ' '.join(['%f' % float(x)
-                      for x in np.array(self.distcoeff).flatten()]))
-            fid.write('%d %d\n' % (self.imsize[0], self.imsize[1]))
-            fid.write('-1 -1\n')
-
-    def loadMatlabCalibration(self, matlabcalibfile, verbose=1):
-        """ Load Matlab calibration generated by the Camera Calibration toolbox (Bougueut) """
-        m = scipy.io.loadmat(matlabcalibfile)
-
-        if ('cam' in m) and not ('fc' in m):
-            try:
-                # print('here')
-                m = m['cam']
-                fc = m['fc'][0, 0]
-                cc = m['cc'][0, 0]
-                distc = np.array(m['kc'][0, 0])
-                imsize = np.array([m['nx'][0, 0], m['ny'][0, 0]]).flatten()
-            except:
-                raise Exception('error loading calibration file')
-                pass
-        else:
-            # normal calibration file
-            fc = m['fc']
-            cc = m['cc']
-            distc = np.array(m['kc'])
-            imsize = np.array([m['nx'], m['ny']]).flatten()
-        mtx = np.matrix(np.eye(3))
-        mtx[0, 0] = fc[0]
-        mtx[1, 1] = fc[1]
-        mtx[0:2, -1] = cc
-
-        self.T = np.matrix(np.eye(4))
-        self.mtx = np.matrix(mtx)
-        self.distcoeff = distc
-        self.imsize = imsize
-        if verbose:
-            print('camera_t: loaded Matlab calibration fc %.3f' %
-                  self.focallength())
-
-    def cameraCentre(self):
-        """ Returns the centre of the camera in world coordinates """
-        return np.array(np.linalg.inv(self.T)[0:3, 3])
-
-    def Twc(self):
-        """ Return world-to-camera matrix """
-        return self.T
-
-    def heading(self):
-        """ Return heading of the camera """
-        vd = self.viewDirection()
-        heading = np.arctan2(vd[0], vd[1])[0, 0]
-        return heading
-
-    def fieldOfView(self, imsize, verbose=1):
-        """ Return field of view for a camera """
-        imsize = np.array(imsize)
-        fov = 2 * np.arctan(((imsize / 2.) / self.focallength()))
-        if verbose:
-            print('camera: horizontal field of view = %.2f degrees\n' %
-                  np.rad2deg(fov[0]))
-
-        return fov
-
-    def rpy(self):
-        return RBE2euler(self.T[0:3, 0:3])
-
-    def drawHorizon(self, img, height=0, color=(255, 0, 0), thickness=3):
-        """ Draw camera horizon on image """
-        mtx = self.mtx
-        dist = self.distcoeff
-        rvecs, tvecs = self.rvectvec()
-
-        vd = self.viewDirection()
-        up = self.upDirection()
-        side = np.cross(vd.flat, up.flat)
-        cc = self.cameraCentre()
-        xx = 10000
-        gside = np.cross(vd.flat, [0, 0, 1])
-
-        vv2 = np.linspace(-xx, xx, 100) * gside.reshape((3, 1))
-        vv1 = cc + vd * xx
-        Xhor = vv1 + vv2
-        Xhor[2, :] += height
-        xhor = self.projectPoints(Xhor)
-        # hidx=pointsinrect(xhor, [[1;1] [1600;1200]]);
-        # xhor=xhor(:, hidx);
-
-        imgpts = xhor.astype(int)
-        img = img.copy()
-        corner = tuple(imgpts[0].ravel())
-        for ii, x in enumerate(imgpts):
-            xx = tuple(x.ravel())
-            r = cv2.line(img, corner, xx, color=color, thickness=thickness)
-            corner = xx
-        return img
-
-    def drawAxis(self, img, scale=0.23):
-        """ Draw coordinate axis on image
-
-        Arguments
-        ---------
-            img : array
-                input image
-            scale: float
-                scale of axis to plot
-        """
-        mtx = self.mtx
-        dist = self.distcoeff
-        rvecs, tvecs = self.rvectvec()
-        cc = scale * \
-            np.array([[0, 0, 0.], [1, 0, 0], [0, 1, 0], [0, 0, 1]]).astype(
-                np.float32)
-        imgpts = cv2.projectPoints(cc, rvecs, tvecs, mtx, dist)[0]
-        img = img.copy()
-        corner = tuple(imgpts[0].ravel())
-        r = cv2.line(img, corner, tuple(imgpts[1].ravel()), (255, 0, 0), 5)
-        r = cv2.line(img, corner, tuple(imgpts[2].ravel()), (0, 255, 0), 5)
-        r = cv2.line(img, corner, tuple(imgpts[3].ravel()), (0, 0, 255), 5)
-        return img
-
-    def upDirection(self):
-        """ Return the current up direction
-        """
-        vd = np.linalg.inv(self.T[0:3, 0:3]).dot(np.array([[0], [-1], [0]]))
-        return vd / np.linalg.norm(vd)
-
-    def viewDirection(self):
-        """ Return the current viewing direction """
-        vd = np.linalg.inv(self.T[0:3, 0:3]).dot(numpy.array([[0], [0], [1]]))
-        return vd / np.linalg.norm(vd)
-
-    def viewYDirection(self):
-        """ Return the current y-image direction """
-        vd = np.linalg.inv(self.T[0:3, 0:3]).dot(np.array([[0], [1], [0]]))
-        return vd / np.linalg.norm(vd)
-
-    def viewXDirection(self):
-        """ Return the current x-image direction """
-        vd = np.linalg.inv(self.T[0:3, 0:3]).dot(np.array([[1], [0], [0]]))
-        return vd / np.linalg.norm(vd)
-
-    def focallength(self):
-        """ return focal length of the camera """
-        return (self.mtx[0, 0] + self.mtx[1, 1]) / 2
-
-    def rvectvec(self):
-        """ Return OpenCV pose """
-        rvec, tvec = T2opencv(self.T)
-        return rvec, tvec
-
-    def __repr__(self):
-        try:
-            cc = self.cameraCentre()
-            vd = self.viewDirection()
-            return 'camera_t object: center %s, viewdir %s' % (cc.ravel(), vd.ravel())
-        except:
-            return 'camera_t object: '
-
-    def projectPoints(ecam, X):
-        """ Project a set of points to image coordinates
-            The 3D points X should be an Nx3 array.
-
-        """
-        rvec, tvec = T2opencv(ecam.T)
-        if X.shape[0] == 3 and X.shape[1] != 3:
-            # legacy mode
-            if X.size > 0:
-                xim = cv2.projectPoints(
-                    X.transpose(), rvec, tvec, ecam.mtx, ecam.distcoeff)[0]
-            else:
-                xim = np.zeros((0, 1, 2))
-        else:
-            xim = cv2.projectPoints(X, rvec, tvec, ecam.mtx, ecam.distcoeff)[0]
-
-        return xim
-
-    def reprojectionError(ecam, X, xim):
-        r""" Calculate reprojection error for a set of 3D and 2D points
-
-        The error calculated is:
-
-        .. math::
-            E = \sqrt{ \sum_j ||PX_j-y_j ||^2 }
-
-        """
-
-        xxl = ecam.projectPoints(X).squeeze().transpose()
-        dd = xxl - xim
-        err = np.linalg.norm(dd, axis=0)
-        cost = np.mean(err)
-        return cost, err
-
-    def upCamera(self):
-        """ Return camera with same position and viewing direction but with camera y-axis aligned to world z-axis """
-        cc = self.cameraCentre()
-        vd = self.viewDirection()
-        side = np.cross(vd.T, np.array([0, 0, 1])).T
-        if np.linalg.norm(side) < 1e-6:
-            # side=np.array([[1,0,0]]).T
-            side = np.cross(vd.T, np.array([0, -1, 0])).T
-        side = side / np.linalg.norm(side)
-        side = side / np.linalg.norm(side)
-        down = np.cross(vd.T, side.T).T
-        down = down / np.linalg.norm(down)
-        Tnew = pg_rotation2H(np.hstack((side, down, vd)))
-        Tnew[0:3, 3] = cc
-
-        upcam = camera_t(np.linalg.inv(Tnew), self.mtx, self.distcoeff)
-        return upcam
-
-    def frontFilterFast(ecam, X, verbose=0, rect=None, neardist=0.01):
-        """ Select points which are in front of the camera (and in a certain region)
-            Points in a Nx3 np.array and rect is a 2x5 np.array.float32
-        """
-        mtx = ecam.mtx
-        distcoeff = ecam.distcoeff
-        rvec, tvec = ecam.rvectvec()
-        Twc = ecam.T
-        # Tcw = np.linalg.inv(Twc)
-        # apply to all points
-        xx = projectiveTransformation(Twc, X.T)
-        # valid and invalid indices
-        ind = (xx[2, :] >= neardist).nonzero()[0]
-
-        # notind = (bools==False).nonzero()[0]
-        if ind.size == 0:
-            xim = np.zeros((0, 1, 2))
-        else:
-            xim = cv2.projectPoints(X[ind, :], rvec, tvec, mtx, distcoeff)[0]
-
-        if verbose >= 2:
-            plt.figure(100)
-            plt.clf()
-            plotPoints(rect, '-m')
-            plotPoints(xim.T, '.b')
-            if verbose >= 3:
-                plotPoints(ximu.T, 'or')
-            plt.axis('image')
-
-        return xim, ind
-
-    def frontFilter(ecam, X, verbose=0, rect=None, neardist=0.01):
-        """ Select points which are in front of the camera (and in a certain region)
-            Points in a 3xN np.array.float32 and rect with in a 2x5 np.array.float32
-        """
-
-        mtx = ecam.mtx
-        distcoeff = ecam.distcoeff
-        rvec, tvec = ecam.rvectvec()
-        Twc = ecam.T
-        # Tcw = Twc.I
-        # apply to all points
-        xx = projectiveTransformation(Twc, X)
-        ximall = cv2.projectPoints(
-            X.transpose(), rvec, tvec, mtx, distcoeff)[0]
-        ximuall = cv2.projectPoints(X.transpose(), rvec, tvec, mtx, None)[0]
-
-        # do the z buffer test
-        bools = xx[2, :] > neardist
-        # do the 2d projection test
-        if not rect is None:
-            for ii, pt in enumerate(ximuall):
-                ptx = tuple(pt.flatten())
-                v = cv2.pointPolygonTest(rect.T, ptx, False)
-                bools[ii] = bools[ii] and v > 0
-
-        # valid and invalid indices
-        ind = (bools == True).nonzero()[0]
-        notind = (bools == False).nonzero()[0]
-        if ind.size == 0:
-            ximu = np.zeros((0, 1, 2))
-            xim = np.zeros((0, 1, 2))
-            ximall = -np.ones((xx.shape[1], 1, 2))
-        else:
-            ximu = cv2.projectPoints(
-                X[:, ind].transpose(), rvec, tvec, mtx, None)[0]
-            xim = cv2.projectPoints(
-                X[:, ind].transpose(), rvec, tvec, mtx, distcoeff)[0]
-            ximall[notind, :, :] = -1
-
-        if verbose >= 2:
-            plt.figure(100)
-            plt.clf()
-            plotPoints(rect, '-m')
-            plotPoints(xim.T, '.b')
-            if verbose >= 3:
-                plotPoints(ximu.T, 'or')
-            plt.axis('image')
-
-        return xim, ind, ximall
-
-    def estimatePose(ecam, XX, xim):
-        try:
-            pnpmode = cv2.EPNP  # opencv3 dev
-            # pnpmode = cv2.CV_ITERATIVE # opencv3 dev
-            pnpmodeiter = cv2.CV_ITERATIVE  # opencv3 dev
-        except:
-            pnpmode = cv2.SOLVEPNP_EPNP  # opencv2?
-            pnpmodeiter = cv2.SOLVEPNP_ITERATIVE  # opencv3 dev
-            pass
-#        pnpmode= cv2.SOLVEPNP_ITERATIVE
-
-        mtx = ecam.mtx
-        distcoeff = ecam.distcoeff
-        # tvec=init_tvec, rvec=init_rvec, useExtrinsicGuess=1 )
-        found, rvec, tvec = cv2.solvePnP(XX, xim.reshape(
-            (-1, 1, 2)), mtx, distcoeff, None, None, False, pnpmode)
-        Tgood = opencv2T(rvec, tvec)  # world-to-camera
-        ecamx = camera_t(Tgood, mtx, distcoeff)
-        return ecamx
-
 
 
 def runcmd(cmd, verbose=0):
@@ -2770,7 +2266,7 @@ def robustCost(x, thr, method='L1'):
     """ Robust cost function
 
     x (array): data to be transformed
-    thr (float or None): threshold. If None use automatic detection (at 95th percentile)
+    thr (float or 'auto' or None): threshold. If None then the input x is returned unmodified. If 'auto' then use automatic detection (at 95th percentile)
     method (str): method to be used. use 'show' to show the options
 
     Example
@@ -2782,6 +2278,8 @@ def robustCost(x, thr, method='L1'):
     >>> methods=robustCost(np.arange(-5,5,.2), thr=2, method='show')
     """
     if thr is None:
+        return x
+    if thr is 'auto':
         ax=np.abs(x)
         thr = np.percentile(ax, 95.)
         p50 = np.percentile(ax, 50)
@@ -2841,102 +2339,10 @@ def robustCost(x, thr, method='L1'):
 
 #%%
 
-
-class timeConverter:
-
-    """ Class to convert time between current time and cyclic log times """
-    tstart = None
-    tstop = None
-    starttimeNow = None
-    deltaTime = None
-    hh = 0
-
-    def __init__(self, tstart, tstop, startnow):
-        self.tstart = tstart
-        self.tstop = tstop
-        self.loopTime = tstop - tstart
-        self.starttimeNow = startnow
-        self.deltaTime = startnow - tstart
-
-    def __repr__(self):
-        s = 'timeConverter: looptime %.1f [s]' % self.loopTime
-        return s
-
-    def current2cyclic(self, t):
-        return ((t - self.deltaTime) - self.tstart) % self.loopTime + self.tstart
-
-    def fraction(self, t):
-        s = (t - self.starttimeNow)
-        f = (s % self.loopTime) / self.loopTime
-        return f
-
-    def loopindexlog(self, logtime):
-        loopidx = math.floor(float(logtime - self.tstart) / self.loopTime)
-        return loopidx
-
-    def loopindex(self, tnow):
-        loopidx = math.floor(float(tnow - self.starttimeNow) / self.loopTime)
-        return loopidx
-
-    def cyclic2current(self, clt, currenttime, verbose=0):
-        tau = currenttime - clt - self.deltaTime
-        k = tau / self.loopTime
-        loopidx = round(k)
-        current = clt + loopidx * self.loopTime + self.deltaTime
-        return current
-
-    def passLog(tc, clt, tnow):
-        """ Determine whether at current time (tnow) we have passed an entry in the log """
-
-        # logtimenow = tc.cyclic2current(clt, tnow)
-
-        return tc.cyclic2current(clt, tnow) < tnow
-
-    def current2logtime(self, t):
-        return t - self.deltaTime
-
-    def cyclic2logtime(self, clt, currenttime, verbose=0):
-        current = self.cyclic2current(clt, currenttime, verbose)
-        return current - self.deltaTime
-
-    def logtime2current(self, logtime):
-        return logtime + self.deltaTime
-
-    def getidx(tc, tnow, logtimes):
-        tcylic = tc.current2cyclic(tnow)
-
-        N = logtimes.size
-        idx = np.interp(tcylic, logtimes, np.arange(N))
-        idx = int(idx)
-        idx = np.minimum(idx, N - 1)
-        idx = np.maximum(idx, 0)
-        return idx
-
-#%% Testing area
-
-
-def testTimeconverter():
-    """ Testing function for the TimeConverter class """
-    tc = timeConverter(0, 100, -20)
-
-    tthenlin = np.arange(0, 500, 0.1)
-    tcyclic = tthenlin % tc.loopTime
-    tnow = tthenlin.copy()
-    tthen = tthenlin.copy()
-    for ii in range(tnow.size):
-        tnow[ii] = tc.cyclic2current(tcyclic[ii], tnow[ii], 0)
-        tthen[ii] = tc.cyclic2logtime(tcyclic[ii], tnow[ii], 0)
-
-    plt.figure(100)
-    plt.clf()
-    plt.plot(tthenlin, tcyclic, '-r')
-    plt.plot(tthenlin, tthen, '.b')
-    plt.plot(tthenlin, tnow, '.g')
-    plt.xlabel('Logtime')
-    plt.ylabel('Current time')
-    plot2Dline([-1, 0, tc.starttimeNow], 'g')
-
-# testTimeconverter()
+def test_robustCost():
+    x=np.array([0,1,2,3,4,5])
+    _=robustCost(x, 2)
+    _=robustCost(x, 'auto')
 
 #%% Wrapper to read video files
 
@@ -2985,133 +2391,9 @@ class videoreader_t:
 
         if self.resize:
             im = cv2.resize(im, None, fx=.25, fy=.25)
-        # cap = cv2.VideoCapture(vidfile)
         return r, im
     def close():
         pass
-
-#%% Camera control
-
-
-class uvccamera:
-
-    """ Class representing a UVC camera
-
-    Implementation is Linux only...
-    """
-    camid = None
-    verbose = 0
-
-    def __init__(self, camid):
-        self.camid = camid
-
-    def commandoutput(self, cmd):
-        # print(cmd)
-        # print(cmd.split(' '))
-        r = subprocess.check_output(cmd, shell=True)
-        # r=subprocess.check_output(cmd.split(' '), shell=False)
-        r = r.decode('ASCII').strip()
-        return r
-
-    def command(self, cmd):
-        if platform.os.name == 'posix':
-            r = os.system(cmd)
-        else:
-            print('uvc camera setting not supported on your OS')
-
-    def devicename(self):
-        return '/dev/video%d' % self.camid
-
-    def __repr__(self):
-        s = 'uvccamera: device %s' % self.devicename()
-        return s
-
-    def editControls(self):
-        cmd = 'guvcview -o -d %s &' % self.devicename()
-        self.command(cmd)
-
-    def ledOff(self):
-        cmd = 'uvcdynctrl -d %s --set="LED1 Mode" 0' % self.devicename()
-        self.command(cmd)
-
-    def setFocus(self, fc=None):
-        camname = self.devicename()
-        if fc is None:
-            cmd = 'uvcdynctrl -d %s --set="Focus, Auto" 1' % camname
-            return
-        cmd = 'uvcdynctrl -d %s --set="Focus, Auto" 0' % camname
-        self.command(cmd)
-        fcx = fc + 130
-        cmd = 'uvcdynctrl -d %s --set="Focus (absolute)" %d' % (camname, fcx)
-        if self.verbose:
-            print('  ' + cmd)
-        self.command(cmd)
-        time.sleep(.35)
-        cmd = 'uvcdynctrl -d %s --set="Focus (absolute)" %d' % (camname, fc)
-        if self.verbose:
-            print('  ' + cmd)
-        self.command(cmd)
-
-    def listProperties(self):
-        # cmd = 'uvcdynctrl -c -d %s' % self.devicename()
-        # self.command(cmd)
-        import subprocess
-        lst = subprocess.check_output(['uvcdynctrl', '-c', '-d', '%s' % self.devicename()])
-        lst = lst.decode('ASCII').split('\n')
-        lst = [l.strip() for l in lst[1:]]
-
-        lst = [l for l in lst if len(l) > 1]
-
-        for l in lst:
-            # l='Brightness'
-            time.sleep(.02)
-            # r=self.commandoutput('uvcdynctrl -d /dev/video0 --get="%s"' % l )
-            r = self.getProperty(l)
-
-            # r=self.commandoutput('uvcdynctrl -d /dev/video0 --get="%s"' % l)
-            # cmd = 'uvcdynctrl -d %s --get="%s"' % ('/dev/video0', 'Brightness')
-            # r=self.commandoutput(cmd)
-            print('prop %s: %s' % (l, r))
-
-    def getProperty(self, prop):
-        camname = self.devicename()
-        cmd = 'uvcdynctrl -d %s --get="%s"' % (camname, prop)
-        r = self.commandoutput(cmd)
-        return r
-
-    def setProperty(self, prop, value):
-        camname = self.devicename()
-        cmd = 'uvcdynctrl -d %s --set="%s" %s' % (camname, prop, value)
-        if self.verbose:
-            print('uvccamera: set property:  ' + cmd)
-        self.command(cmd)
-
-    def ledBlink(self, freq=10):
-        camname = self.devicename()
-        cmd = 'uvcdynctrl -d %s --set="LED1 Mode" 2' % camname
-        if self.verbose:
-            print('ledBlink: ' + cmd)
-        r = os.system(cmd)
-        cmd = 'uvcdynctrl -d %s --set="LED1 Frequency" %d' % (camname, freq)
-        # print('  ' + cmd)
-        self.command(cmd)
-
-    def listControls(self):
-        cmd = 'uvcdynctrl -c -d %s' % self.devicename()
-        # self.command(cmd)
-        r = subprocess.check_output(cmd.split(' ')).decode('ASCII')
-        print(r)
-
-    @staticmethod
-    def listCameras():
-        # cmd = 'uvcdynctrl -l'
-        if platform.os.name == 'posix':
-            r = subprocess.check_output(['uvcdynctrl', '-l']).decode('ASCII')
-            print(r)
-            # r = os.system(cmd)
-        else:
-            print('uvc camera setting not supported on your OS')
-
 
 #%%
 
@@ -3271,7 +2553,8 @@ def otsu(im, fig=None):
 
 
 def histogram(x, nbins=30, fig=1):
-    """
+    """ Return histogram of data
+    
     >>> _=histogram(np.random.rand(1,100))
     """
     nn, bin_edges = np.histogram(x, bins=nbins)
@@ -3352,11 +2635,13 @@ def decomposeProjectiveTransformation(H, verbose=0):
 
 
 def points_in_polygon(pts, pp):
-    """
+    """ Return all points contained in a polygon
 
-    Arguments:
-        pt (Nx2 array): point
+    Args:
+        pt (Nx2 array): points
         pp (Nxk array): polygon
+    Returns:
+        rr (bool array)
     """
     rr = np.zeros(len(pts))
     for i, pt in enumerate(pts):
@@ -3366,15 +2651,23 @@ def points_in_polygon(pts, pp):
 
 
 def point_in_polygon(pt, pp):
-    """
+    """ Return True if point is in polygon
 
-    Arguments:
-        pt (2x1 array): point
-        pp (2xN array): polygon
+    Args:
+        pt (1x2 array): point
+        pp (Nx2 array): polygon
+    Returns:
+        r (float): 1.0 if point is inside 1.0, otherwise -1.0
     """
     r = cv2.pointPolygonTest(pp, (pt[0], pt[1]), measureDist=False)
     return r
 
+def test_polygon_functions():
+    pp= np.array( [[0,0], [4,0], [0,4]])
+    assert(point_in_polygon( [1,1], pp )== 1 )
+    assert(point_in_polygon( [-1,1], pp ) == -1 )
+
+    assert(np.all( points_in_polygon( np.array( [[-1,1],[1,1], [.5,.5]]), pp ) == np.array([-1,1,1]) ) )
 
 def minAlg_5p4(A):
     """ Algebraic minimization function
@@ -3411,145 +2704,6 @@ def fitPlane(X):
     AA = np.vstack((X.T, np.ones(X.shape[0]))).T
     t = minAlg_5p4(AA)
     return t
-
-#%% Point clouds
-
-try:
-    from plyfile import PlyData, PlyElement
-    from pyqtgraph.Qt import QtCore, QtGui
-    import pyqtgraph.opengl as gl
-    import pyqtgraph as pg
-
-    class MyView(gl.GLViewWidget):
-
-        def pan(self, dx, dy, dz, relative=False):
-            """
-            Moves the center (look-at) position while holding the camera in place.
-
-            If relative=True, then the coordinates are interpreted such that x
-            if in the global xy plane and points to the right side of the view, y is
-            in the global xy plane and orthogonal to x, and z points in the global z
-            direction. Distances are scaled roughly such that a value of 1.0 moves
-            by one pixel on screen.
-
-            """
-            if not relative:
-                self.opts['center'] += QtGui.QVector3D(dx, dy, dz)
-            else:
-                cPos = self.cameraPosition()
-                cVec = self.opts['center'] - cPos
-                dist = cVec.length()  # distance from camera to center
-                xDist = dist * 2. * np.tan(0.5 * self.opts['fov'] * np.pi / 180.)  # approx. width of view at distance of center point
-                xScale = xDist / self.width()
-                zVec = QtGui.QVector3D(0, 0, 1)
-                xVec = QtGui.QVector3D.crossProduct(zVec, cVec).normalized()
-                # xVec = QtGui.QVector3D(0,1,0)
-                # yVec = QtGui.QVector3D.crossProduct(xVec, zVec).normalized()
-                yVec = QtGui.QVector3D(0, 0, 1)
-                self.opts['center'] = self.opts['center'] + xVec * xScale * dx + yVec * xScale * dy + zVec * xScale * dz
-            self.update()
-
-    class pointcloud_t:
-
-        def __init__(self):
-
-            self.X = np.array((0, 3))
-            self.color = None
-            self.faces = None
-
-        def transform(self, T):
-            pc0 = pointcloud_t()
-            pc0.X = projectiveTransformation(T, self.X.T).T
-            pc0.color = self.color
-            pc0.faces = self.faces
-            return pc0
-
-        def nVertices(self):
-            """ Return the number of vertices in the cloud """
-            return self.X.shape[0]
-
-        def __repr__(self):
-            return 'pointcloud_t: %d vertices' % self.X.shape[0]
-
-        def loadPly(self, plyfile):
-            pd = PlyData.read(plyfile)
-
-            self.X = np.vstack((pd['vertex']['x'], pd['vertex']['y'], pd['vertex']['z'])).T
-            try:
-                self.color = np.vstack((pd['vertex']['diffuse_red'], pd['vertex']['diffuse_green'], pd['vertex']['diffuse_blue'])).T
-            except:
-                pass
-            return pd
-
-        @staticmethod
-        def addPoints(glview, X, color=None, size=.1):
-            nn = X.shape[0]
-            if color is None:
-                col = np.zeros((nn, 4))
-                col[:, 1] = 1
-                col[:, -1] = 1
-            else:
-                if color.size == 4:
-                    col = np.repeat(color.reshape(1, 4), nn, axis=0)
-                else:
-                    col = color
-            sizedata = size * np.ones(nn)
-            sp1 = gl.GLScatterPlotItem(pos=X, size=sizedata, color=col, pxMode=False)
-            glview.addItem(sp1)
-            return sp1
-
-        @staticmethod
-        def drawLine(glview, c1, c2, color=None, nn=20, width=5):
-            X = np.array([c1.flatten(), c2.flatten()])
-            nn = 2
-            if color is None:
-                col = np.zeros((nn, 4))
-                col[:, 1] = 1
-                col[:, -1] = 1
-            else:
-                if color.size == 4:
-                    col = np.repeat(color.reshape(1, 4), nn, axis=0)
-                else:
-                    col = color
-            # sizedata=size*np.ones( nn)
-            sp1 = gl.GLLinePlotItem(pos=X, color=col, width=width)  # pxMode=False)
-            glview.addItem(sp1)
-            return sp1
-
-        @staticmethod
-        def show_cloud(pc=None, addgrid=False):
-            _ = pg.mkQApp()
-            w = gl.GLViewWidget()
-            w.opts['distance'] = 20
-            w.show()
-            w.setWindowTitle('pointcloud_t')
-
-            if addgrid:
-                g = gl.GLGridItem()
-                w.addItem(g)
-
-            if pc is not None:
-                nn = pc.nVertices()
-                sz = float(np.mean(np.std(pc.X, axis=0)) / 400.)
-
-                size = sz * np.ones(pc.X.shape[0])
-                color = .25 * np.ones((nn, 4))
-                if pc.color is None:
-                    color = None
-                else:
-                    color[:, 0:3] = .5 * (pc.color / 255.)
-                pointcloud_t.addPoints(w, pc.X, color, size=size)
-            return w
-
-        @staticmethod
-        def clearPlot(w):
-            while len(w.items) > 0:
-                w.removeItem(w.items[0])
-
-
-except:
-    # no pointcloud functionality available
-    pass
 
 
 #%% Debugging
