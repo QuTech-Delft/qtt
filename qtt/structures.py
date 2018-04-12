@@ -130,7 +130,7 @@ class sensingdot_t:
             minstrument (tuple): measurement instrument to use. tuple of instrument and channel index
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
-            virt_gates (object): virtual gates object (optional)
+            virt_gates (None or object): virtual gates object (optional)
         """
         self.verbose = 1
         self.gg = gate_names
@@ -314,9 +314,7 @@ class sensingdot_t:
         gr.increment(self._detune_axis[1]*value)
         
     def scan2D(sd, ds=90, stepsize=4, fig=None, verbose=1):
-        """Make 2D-scan of the sensing dot."""
-        #keithleyidx = [sd.index]
-        
+        """Make 2D-scan of the sensing dot."""       
         gv = sd.station.gates.allvalues()
         
         gg = sd.gg
@@ -345,6 +343,7 @@ class sensingdot_t:
 
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, step=-2.,
                  max_wait_time=1., scanrange=300, add_slopes=False):
+        """ Automatically determine optimal value of plunger """
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
         alldata = sd.scan1D(outputdir=outputdir, step=step,
@@ -410,7 +409,9 @@ class sensingdot_t:
 
     def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, verbose=1):
-        """Fast tuning of the sensing dot plunger. If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used for the sweep.
+        """Fast tuning of the sensing dot plunger.
+        
+        If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used for the sweep.
         
         Args:
             fig (int or None): window for plotting results
