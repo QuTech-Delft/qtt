@@ -122,8 +122,9 @@ class sensingdot_t:
     def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None, virt_gates=None):
         """ Class representing a sensing dot 
 
-        We assume the sensing dot can be controlled by two barrier gates and a single plunger gate
-        An instrument to measure the current through the dot 
+        We assume the sensing dot can be controlled by two barrier gates and a single plunger gate.
+        An instrument to measure the current through the dot is provided by the minstrument argument.
+        
         Args:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
@@ -203,7 +204,7 @@ class sensingdot_t:
             gates.set(gg[ii], self.sdval[ii])
 
     def tunegate(self):
-        """Return the gate used for tuning."""
+        """Return the gate used for tuning the potential in the dot """
         return self.gg[1]
 
     def value(self):
@@ -349,6 +350,10 @@ class sensingdot_t:
         """ Automatically determine optimal value of plunger """
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
+            
+        if sdvirt_gates is not None:
+            raise Exception('virtual gates for slow scan not supported')
+            
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
@@ -429,10 +434,10 @@ class sensingdot_t:
             instrument = self.minstrument[0]
             channel = self.minstrument[1]
 
+            scanjob = qtt.measurements.scans.scanjob_t(
+                    {'Naverage': Naverage, })
             if self.virt_gates is not None:
                 vsensorgate = self.virt_gates.vgates()[self.virt_gates.pgates().index(self.gg[1])]
-                scanjob = qtt.measurements.scans.scanjob_t(
-                    {'Naverage': Naverage, })
                 scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(
                     self.virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True, station=self.station)
                 scanjob['sweepdata']['paramname'] = vsensorgate
@@ -440,8 +445,6 @@ class sensingdot_t:
                 gate = self.gg[1]
                 sdplg = getattr(self.station.gates, gate)
                 cc = self.station.gates.get(gate)
-                scanjob = qtt.measurements.scans.scanjob_t(
-                    {'Naverage': Naverage, })
                 scanjob['sweepdata'] = {'param':  gate, 'start': cc -
                                         sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
 
