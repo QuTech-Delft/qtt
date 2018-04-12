@@ -83,3 +83,5 @@ test*.pickle
 *.profile
 model.png
 test*py
+.pytest_cache
+

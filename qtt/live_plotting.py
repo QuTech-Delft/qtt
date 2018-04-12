@@ -477,12 +477,16 @@ class livePlot:
                 self.plot.setImage(self.data_avg.T)
                 if None not in (self.sweepInstrument,
                                 self.sweepparams, self.sweepranges):
-                    if type(self.sweepparams) is dict:
+                    if isinstance(self.sweepparams, dict):
                         value_x = 0
                         value_y = 0
                     else:
-                        value_x = self.sweepInstrument.get(self.sweepparams[0])
-                        value_y = self.sweepInstrument.get(self.sweepparams[1])
+                        if isinstance(self.sweepparams[0], dict):
+                            value_x = 0
+                            value_y = 0
+                        else:
+                            value_x = self.sweepInstrument.get(self.sweepparams[0])
+                            value_y = self.sweepInstrument.get(self.sweepparams[1])
                     self.horz_low = value_x - self.sweepranges[0] / 2
                     self.horz_range = self.sweepranges[0]
                     self.vert_low = value_y - self.sweepranges[1] / 2
