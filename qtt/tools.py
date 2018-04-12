@@ -35,11 +35,14 @@ try:
 except:
     pass
 
+import datetime
 import subprocess
 import glob
 import time
 from colorama import Fore
 import importlib
+import platform
+
 try:
     from dulwich.repo import Repo
 except ModuleNotFoundError:
@@ -77,6 +80,10 @@ def code_version(verbose=0):
         if verbose:
             print('repo %s: %s' % (p, tag ))
         r['git'][p]=tag
+
+    r['system']={'node': platform.node()}
+    t = datetime.datetime.now()
+    r['date'] = t.strftime('%Y-%m-%d %H:%M:%S.%f %z %Z').strip()
 
     return r
 

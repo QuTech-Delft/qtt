@@ -92,7 +92,11 @@ class SimulationDigitizer(qcodes.Instrument):
             inverseV = Vmatrix.T
             Vmatrix = None
         else:
-            ii = [v.index(s) for s in sweepgates[0]]
+            if isinstance(sweepgates[0], str):
+                gatenames = [sweepgates[0]]
+            else:
+                gatenames = sweepgates[0].keys()
+            ii = [v.index(s) for s in gatenames]
 
             idx = np.array((range(len(v))))
             for i, j in enumerate(ii):
