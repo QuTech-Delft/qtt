@@ -99,7 +99,7 @@ def get_code_versions(repos, get_dirty_status=False, verbose=0):
                 status = porcelain.status(repository)
                 is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 for item in status.staged.values())
                 r[repo]['dirty'] = is_dirty
-        except NotGitRepository:
+        except (NotGitRepository, AttributeError):
             r[repo] = {'version': version}
         except ModuleNotFoundError:
             r[repo] = 'none'
