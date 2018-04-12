@@ -95,7 +95,7 @@ def test_spin_structures(verbose=0):
     if verbose:
         print('test_spin_structures: %s' % (o,))
     _ = pickle.dumps(o)
-    x=json.dumps(o)
+    x = json.dumps(o)
     if verbose:
         print('test_spin_structures: %s' % (x,))
 
@@ -105,32 +105,34 @@ if __name__ == '__main__':
 
 #%%
 
+
 def _scanlabel(ds):
     """ Helper function """
-    a=ds.default_parameter_array()
+    a = ds.default_parameter_array()
     lx = a.set_arrays[0].label
-    unit=a.set_arrays[0].unit
+    unit = a.set_arrays[0].unit
     if unit:
-        lx += '[' + unit +']'
+        lx += '[' + unit + ']'
     return lx
 
 
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None):
+    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None, virt_gates=None):
         """ Class representing a sensing dot 
 
-        We assume the sensing dot can be controlled by two barrier gates and a single plunger gate
-        An instrument to measure the current through the dot 
+        We assume the sensing dot can be controlled by two barrier gates and a single plunger gate.
+        An instrument to measure the current through the dot is provided by the minstrument argument.
+        
         Args:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
             station (Qcodes station)
             minstrument (tuple): measurement instrument to use. tuple of instrument and channel index
-
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
+            virt_gates (None or object): virtual gates object (optional)
         """
         self.verbose = 1
         self.gg = gate_names
@@ -138,20 +140,21 @@ class sensingdot_t:
             gate_values = [station.gates.get(g) for g in self.gg]
         self.sdval = gate_values
         self.targetvalue = np.NaN
-        
-        self._detune_axis=np.array([1,-1])
-        self._detune_axis=self._detune_axis/np.linalg.norm(self._detune_axis)
-        self._debug = {} # store debug data
+
+        self._detune_axis = np.array([1, -1])
+        self._detune_axis = self._detune_axis / np.linalg.norm(self._detune_axis)
+        self._debug = {}  # store debug data
         self.goodpeaks = None
         self.station = station
         self.index = index
         self.minstrument = minstrument
         self.instrument = 'keithley%d' % index
+        self.virt_gates = virt_gates
 
         self.data = {}
 
         if fpga_ch is None:
-            self.fpga_ch = None 
+            self.fpga_ch = None
         else:
             raise Exception('do not use fpga_ch argument, use minstrument instead')
             self.fpga_ch = fpga_ch
@@ -201,7 +204,7 @@ class sensingdot_t:
             gates.set(gg[ii], self.sdval[ii])
 
     def tunegate(self):
-        """Return the gate used for tuning."""
+        """Return the gate used for tuning the potential in the dot """
         return self.gg[1]
 
     def value(self):
@@ -237,7 +240,7 @@ class sensingdot_t:
         scanjob1 = qtt.measurements.scans.scanjob_t()
         scanjob1['sweepdata'] = dict(
             {'param': gg[1], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
-        scanjob1['wait_time_startscan'] = .2+3*wait_time
+        scanjob1['wait_time_startscan'] = .2 + 3 * wait_time
         scanjob1['minstrument'] = keithleyidx
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
@@ -251,7 +254,7 @@ class sensingdot_t:
 
     def detuning_scan(sd, stepsize=2, nsteps=5, verbose=1, fig=None):
         """ Optimize the sensing dot by making multiple plunger scans for different detunings
-        
+
         Args:
             stepsize (float)
             nsteps (int)
@@ -259,65 +262,65 @@ class sensingdot_t:
             best (list): list of optimal detuning and sd plunger value
             results (dict)
         """
-        
-        gates=sd.station.gates
-        gv0=gates.allvalues()
-        detunings=stepsize * np.arange(-(nsteps-1)/2, nsteps/2)
-        dd=[]
-        pp=[]
+
+        gates = sd.station.gates
+        gv0 = gates.allvalues()
+        detunings = stepsize * np.arange(-(nsteps - 1) / 2, nsteps / 2)
+        dd = []
+        pp = []
         for ii, dt in enumerate(detunings):
             if verbose:
-                print('detuning_scan: iteration %d: detuning %.3f' % (ii, dt) )
+                print('detuning_scan: iteration %d: detuning %.3f' % (ii, dt))
             gates.resetgates(sd.gate_names(), gv0, verbose=0)
             sd.detune(dt)
-            p, result=sd.fastTune(fig=None, verbose=verbose>=2)
+            p, result = sd.fastTune(fig=None, verbose=verbose >= 2)
             dd.append(result)
             pp.append(sd.goodpeaks[0])
         gates.resetgates(sd.gate_names(), gv0, verbose=0)
-    
-        scores=[ p['score'] for p in pp]
+
+        scores = [p['score'] for p in pp]
         bestidx = np.argmax(scores)
-        optimal=[detunings[bestidx], pp[bestidx]['x']]
+        optimal = [detunings[bestidx], pp[bestidx]['x']]
         if verbose:
-                print('detuning_scan: best %d: detuning %.3f' % (bestidx, optimal[0]) )
-        results={'detunings': detunings, 'scores': scores, 'bestpeak': pp[bestidx]}
-    
+            print('detuning_scan: best %d: detuning %.3f' % (bestidx, optimal[0]))
+        results = {'detunings': detunings, 'scores': scores, 'bestpeak': pp[bestidx]}
+
         if fig:
-            plt.figure(fig); plt.clf()
+            plt.figure(fig)
+            plt.clf()
             for ii in range(len(detunings)):
-                ds=dd[ii]
-                p=pp[ii]
-                y=ds.default_parameter_array()
-                x=y.set_arrays[0]
-                plt.plot(x, y, '-', label='scan %d: score %.3f' % (ii, p['score']) )
-                xx=np.array([p['x'], p['y'] ]).reshape( (2,1))
-                qtt.pgeometry.plotLabels(xx, [scores[ii] ])
-                plt.title('Detuning scans for %s' % sd.__repr__() )
+                ds = dd[ii]
+                p = pp[ii]
+                y = ds.default_parameter_array()
+                x = y.set_arrays[0]
+                plt.plot(x, y, '-', label='scan %d: score %.3f' % (ii, p['score']))
+                xx = np.array([p['x'], p['y']]).reshape((2, 1))
+                qtt.pgeometry.plotLabels(xx, [scores[ii]])
+                plt.title('Detuning scans for %s' % sd.__repr__())
                 plt.xlabel(_scanlabel(result))
             plt.legend(numpoints=1)
-            if verbose>=2:
-                plt.figure(fig+1); plt.clf()
+            if verbose >= 2:
+                plt.figure(fig + 1)
+                plt.clf()
                 plt.plot(detunings, scores, '.', label='Peak scores')
                 plt.xlabel('Detuning [mV?]')
                 plt.ylabel('Score')
                 plt.title('Best peak scores for different detunings')
-    
+
         return optimal, results
 
     def detune(self, value):
         """ Detune the sensing dot by the specified amount """
-        
-        gl=getattr(self.station.gates, self.gg[0])
-        gr=getattr(self.station.gates, self.gg[2])
-        gl.increment(self._detune_axis[0]*value)
-        gr.increment(self._detune_axis[1]*value)
-        
+
+        gl = getattr(self.station.gates, self.gg[0])
+        gr = getattr(self.station.gates, self.gg[2])
+        gl.increment(self._detune_axis[0] * value)
+        gr.increment(self._detune_axis[1] * value)
+
     def scan2D(sd, ds=90, stepsize=4, fig=None, verbose=1):
         """Make 2D-scan of the sensing dot."""
-        #keithleyidx = [sd.index]
-        
         gv = sd.station.gates.allvalues()
-        
+
         gg = sd.gg
         sdval = sd.sdval
 
@@ -330,22 +333,27 @@ class sensingdot_t:
             {'param': gg[2], 'start': sdval[2] + ds, 'end': sdval[2] - ds, 'step': stepsize})
         scanjob['minstrument'] = sd.minstrument
 
-        if sd.verbose>=1:
+        if sd.verbose >= 1:
             print('sensing dot %s: performing barrier-barrier scan' % (sd,))
-            if verbose>=2:
+            if verbose >= 2:
                 print(scanjob)
-        alldata = qtt.measurements.scans.scan2D(sd.station, scanjob, verbose=verbose>=2)
+        alldata = qtt.measurements.scans.scan2D(sd.station, scanjob, verbose=verbose >= 2)
 
         sd.station.gates.resetgates(gv, gv, verbose=0)
-        
+
         if fig is not None:
             qtt.measurements.scans.plotData(alldata, fig=fig)
         return alldata
 
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, step=-2.,
                  max_wait_time=1., scanrange=300, add_slopes=False):
+        """ Automatically determine optimal value of plunger """
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
+            
+        if sdvirt_gates is not None:
+            raise Exception('virtual gates for slow scan not supported')
+            
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
@@ -411,10 +419,12 @@ class sensingdot_t:
                  fig=201, sleeptime=2, delete=True, add_slopes=False, verbose=1):
         """Fast tuning of the sensing dot plunger.
 
+        If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used for the sweep.
+
         Args:
             fig (int or None): window for plotting results
             Naverage (int): number of averages
-            
+
         Returns:
             plungervalue (float): value of plunger
             alldata (dataset): measured data
@@ -423,13 +433,21 @@ class sensingdot_t:
         if self.minstrument is not None:
             instrument = self.minstrument[0]
             channel = self.minstrument[1]
-            gate = self.gg[1]
-            sdplg = getattr(self.station.gates, gate)
-            cc = self.station.gates.get(gate)
+
             scanjob = qtt.measurements.scans.scanjob_t(
-                {'Naverage': Naverage, })
-            scanjob['sweepdata'] = {'param':  gate, 'start': cc -
-                                    sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
+                    {'Naverage': Naverage, })
+            if self.virt_gates is not None:
+                vsensorgate = self.virt_gates.vgates()[self.virt_gates.pgates().index(self.gg[1])]
+                scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(
+                    self.virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True, station=self.station)
+                scanjob['sweepdata']['paramname'] = vsensorgate
+            else:
+                gate = self.gg[1]
+                sdplg = getattr(self.station.gates, gate)
+                cc = self.station.gates.get(gate)
+                scanjob['sweepdata'] = {'param':  gate, 'start': cc -
+                                        sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
+
             scanjob['minstrument'] = [channel]
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
@@ -573,13 +591,13 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
     """
 
     def __init__(self, name, params, label=None, unit='a.u.', **kwargs):
-        super().__init__(name, vals = qcodes.utils.validators.Anything(), unit = unit, **kwargs)
+        super().__init__(name, vals=qcodes.utils.validators.Anything(), unit=unit, **kwargs)
         self.params = params
         if label is None:
             self.label = self.name
         else:
             self.label = label
-        
+
         # for backwards compatibility
         self.has_get = True
         self.has_set = True
