@@ -39,7 +39,7 @@ if __name__ == '__main__':
 import virtualDot
 
 nr_dots = 3
-station = virtualDot.initialize(reinit=True, nr_dots=nr_dots)
+station = virtualDot.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2)
 
 keithley1 = station.keithley1
 keithley3 = station.keithley3
@@ -151,5 +151,7 @@ vm = qtt.measurements.videomode.VideoMode(station, ['P1', 'P2'], [160]*2,
                     minstrument=(digitizer.name,[1,1]), resolution = [96,96],
                     diff_dir=[None, 'g'] )
 vm.crosshair(True)
+vm.stopreadout()
+vm.updatebg()
 
                                                

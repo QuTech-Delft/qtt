@@ -328,7 +328,12 @@ class VideoMode:
         self.mainwin.close()
 
     def get_dataset(self, run=False):
-        """ Return latest recorded dataset """
+        """ Return latest recorded dataset
+        
+        Returns:
+            alldata (dataset or list of datasets)
+            
+        """
         with self.datalock:
             if run:
                 warnings.warn('not supported')
@@ -418,25 +423,34 @@ class VideoMode:
             l.crosshair(*args, **kwargs)
 
     def makeDataset(self, data, Naverage=None):
+        """ Helper function """
+        metadata = {'scantime': str(datetime.datetime.now(
+        )), 'station': self.station.snapshot(), 'allgatevalues': self.station.gates.allvalues()}
+        metadata['Naverage'] = Naverage
+        if hasattr(self.datafunction, 'diff_dir'):
+            metadata['diff_dir'] = self.datafunction.diff_dir
+
         if data.ndim == 2:
             if (data.shape[0] > 1):
                 raise Exception('not yet implemented')
             data = data[0]
             alldata, _ = makeDataset_sweep(data, self.sweepparams, self.sweepranges,
                                            gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
+            alldata.metadata=metadata
         elif data.ndim == 3:
             if (data.shape[0] > 1):
-                raise Exception('getting dataset for multiple dimensions not yet implemented')
-            data = data[0]
-            alldata, _ = makeDataset_sweep_2D(data, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
+                warnings.warn('getting dataset for multiple dimensions not yet tested')
+            
+            import copy
+            alldata=[None]*len(data)
+            for jj in range(len(data)):
+                datax = data[0]
+                alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
                                               'label': 'videomode_2d_single'})
+                alldatax.metadata=copy.copy(metadata)
+                alldata[jj]=alldatax
         else:
             raise Exception('makeDataset: data.ndim %d' % data.ndim)
-        alldata.metadata = {'scantime': str(datetime.datetime.now(
-        )), 'station': self.station.snapshot(), 'allgatevalues': self.station.gates.allvalues()}
-        alldata.metadata['Naverage'] = Naverage
-        if hasattr(self.datafunction, 'diff_dir'):
-            alldata.metadata['diff_dir'] = self.datafunction.diff_dir
         return alldata
 
     def _get_Naverage(self):
