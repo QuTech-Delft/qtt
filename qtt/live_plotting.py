@@ -472,6 +472,7 @@ class livePlot:
                     sweepvalues = np.linspace(
                         paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
+                    self._sweepvalues=[sweepvalues]
                     self.crosshair(show=None, pos=[paramval, 0])
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data_avg.T)
@@ -495,6 +496,7 @@ class livePlot:
                         self.horz_low, self.vert_low, self.horz_range, self.vert_range)
                     self.plot.setRect(self.rect)
                     self.crosshair(show=None, pos=[value_x, value_y])
+                    self._sweepvalues=[np.linspace(self.horz_low, self.horz_low+self.horz_range, self.data.shape[1]), np.linspace(self.vert_low, self.vert_low+self.vert_range, self.data.shape[0])]
             else:
                 raise Exception('ndim %d not supported' % self.data.ndim)
 
