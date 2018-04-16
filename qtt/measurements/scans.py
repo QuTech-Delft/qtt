@@ -185,6 +185,26 @@ def plot1D(data, fig=100, mstyle='-b'):
 
 #%%
 
+def get_instrument_parameter( handle):
+    """ Return handle to instrument parameter or channel
+
+    Args:
+        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname)
+    Returns:
+        h (object)
+    """
+    if isinstance(handle, str):
+        istr, pstr = handle.split('.')
+    else:
+        istr, pstr = handle
+        
+    if isinstance(istr, str):
+        instrument = qcodes.Instrument.find_instrument(istr)
+    else:
+        instrument = istr
+        
+    param = getattr(instrument, pstr)
+    return param
 
 def get_instrument(instr, station=None):
     """ Return handle to instrument
@@ -214,6 +234,15 @@ def get_instrument(instr, station=None):
     raise Exception('could not find instrument %s' % str(instr))
 
 
+def test_get_instrument_parameter():
+    i=qtt.instrument_drivers.virtual_instruments.VirtualIVVI(qtt.measurements.scans.instrumentName('test'), None)    
+    p=get_instrument_parameter( (i.name, 'dac2') )
+    assert(id(p)==id(i.dac2))
+    p=get_instrument_parameter( (i, 'dac2') )
+    assert(id(p)==id(i.dac2))
+    p=get_instrument_parameter( i.name +'.dac2') 
+    assert(id(p)==id(i.dac2))
+    
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
