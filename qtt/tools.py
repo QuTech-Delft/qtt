@@ -47,13 +47,14 @@ import time
 from colorama import Fore
 import importlib
 
-#%%
+# %%
+
 
 def get_module_versions(modules, verbose=0):
     """ Returns the module version of the given pip packages.
 
         Args:
-            modules ([str]): a list with pip packages, e.g. ['qtt', 'numpy']
+            modules ([str]): a list with pip packages, e.g. ['numpy', 'scipy']
 
         Returns:
             r (dict): dictionary with package names and version number for each given module.
@@ -71,77 +72,86 @@ def get_module_versions(modules, verbose=0):
     return module_versions
 
 
-def get_code_versions(repos, get_dirty_status=False, verbose=0):
+def get_git_versions(repos, get_dirty_status=False, verbose=0):
     """ Returns the repository head guid and dirty status and package version number if installed via pip.
         The version is only returned if the repo is installed as pip package without edit mode.
         NOTE: currently the dirty status is not working correctly due to a bug in dulwich...
 
         Args:
-            repos ([str]): a list with pip packages, e.g. ['qtt', 'numpy']
+            repos ([str]): a list with repositories, e.g. ['qtt', 'qcodes']
             get_dirty_status (bool): selects whether to use the dulwich package and collect the local code
                                 changes for the repositories.
 
         Retuns:
-            r (dict): dictionary with repo head guid, dirty status and package version number for
-                      each given repository.
+            r (dict): dictionary with repo names, head guid and (optionally) dirty status for each given repository.
     """
-    r = dict()
+    heads = dict()
+    dirty_stats = dict()
     for repo in repos:
         try:
             package = importlib.import_module(repo)
-            version = getattr(package, '__version__', 'none')
             init_location = os.path.split(package.__file__)[0]
             repo_location = os.path.join(init_location, '..')
             repository = Repo(repo_location)
-            tag = repository.head().decode('ascii')
-            r[repo] = {'version': version, 'git': tag}
+            heads[repo] = repository.head().decode('ascii')
             if get_dirty_status:
                 status = porcelain.status(repository)
                 is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 for item in status.staged.values())
-                r[repo]['dirty'] = is_dirty
-        except (NotGitRepository, AttributeError):
-            r[repo] = {'version': version}
-        except ModuleNotFoundError:
-            r[repo] = 'none'
+                dirty_stats[repo] = is_dirty
+        except (AttributeError, ModuleNotFoundError, NotGitRepository):
+            heads[repo] = 'none'
+            if get_dirty_status:
+                dirty_stats[repo] = 'none'
         if verbose:
-            print('{0}: {1}'.format(repo, r[repo]))
-    return r
+            print('{0}: {1}'.format(repo, heads[repo]))
+    return (heads, dirty_stats)
 
 
 def get_python_version(verbose=0):
-    """ Returns the python version as dictionary item."""
+    """ Returns the python version."""
     version = sys.version
     if verbose:
         print('Python', version)
-    return {'python': version}
+    return version
 
 
-def get_versions(get_dirty_status=False, verbose=0):
+def code_version(repository_names=None, package_names=None, get_dirty_status=False, verbose=0):
     """ Returns the python version, module version for; numpy, scipy, qctoolkit
         and the git guid and dirty status for; qcodes, qtt, spin-projects and pycqed,
         if present on the machine. NOTE: currently the dirty status is not working
         correctly due to a bug in dulwich...
 
     Args:
-        verbose (int): output level
+        repository_names ([str]): a list with repositories, e.g. ['qtt', 'qcodes'].
+        package_names ([str]): a list with pip packages, e.g. ['numpy', 'scipy'].
         get_dirty_status (bool): selects whether the local code has changed for the repositories.
+        verbose (int): output level
 
     Returns:
         status (dict): python, modules and git repos status.
     """
+    _default_git_versions = ['qcodes', 'qtt', 'projects', 'pycqed']
     _default_module_versions = ['numpy', 'scipy', 'qctoolkit', 'h5py', 'skimage']
-    python = get_python_version(verbose)
-    gits = get_code_versions(['qcodes', 'qtt', 'projects', 'pycqed'], get_dirty_status, verbose)
-    modules = get_module_versions(_default_module_versions, verbose)
-    timestamp = {'timestamp':  time.asctime()}
-    return {**python, **modules, **gits, **timestamp}
+    if not repository_names:
+        repository_names = _default_git_versions
+    if not package_names:
+        package_names = _default_module_versions
+    result = dict()
+    repository_stats, dirty_stats = get_git_versions(repository_names, get_dirty_status, verbose)
+    result['python'] = get_python_version(verbose)
+    result['git'] = repository_stats
+    result['version'] = get_module_versions(package_names, verbose)
+    result['timestamp'] = time.asctime()
+    if get_dirty_status:
+        result['dirty'] = dirty_stats
+    return result
 
 
 def test_python_code_modules_and_versions():
     _ = get_python_version()
     _ = get_module_versions(['numpy'])
-    _ = get_code_versions(['qtt'])
-    _ = get_versions()
+    _ = get_git_versions(['qtt'])
+    _ = code_version()
 
 # %% Jupyter kernel tools
 
