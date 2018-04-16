@@ -13,6 +13,12 @@ import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
 from functools import wraps
+from pip import get_installed_distributions
+try:
+    from dulwich.repo import Repo, NotGitRepository
+    from dulwich import porcelain
+except ModuleNotFoundError:
+    warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
 
 
 # explicit import
@@ -40,50 +46,114 @@ import glob
 import time
 from colorama import Fore
 import importlib
-try:
-    from dulwich.repo import Repo
-except ModuleNotFoundError:
-    warnings.warn('please install dulwich: pip install dulwich')
-    
-#%%
 
-def code_version(verbose=0):
-    """ Return dictionary containing most import versions and git tags
-    
-    Args:
-        verbose (int): output level
-    Returns:
-        r (dict)
+# %%
+
+
+def get_module_versions(modules, verbose=0):
+    """ Returns the module version of the given pip packages.
+
+        Args:
+            modules ([str]): a list with pip packages, e.g. ['numpy', 'scipy']
+
+        Returns:
+            r (dict): dictionary with package names and version number for each given module.
     """
-    r={'version': {}, 'git': {}}
-   
-    for p in ['qcodes', 'qtt', 'numpy', 'scipy', 'qctoolkit']:        
-        m=importlib.import_module(p)
-        v=getattr(m, '__version__', 'none')
-        if verbose:
-            print('module %s: %s' % (p, v))
-        r['version'][p]=v
-    for p in ['qcodes', 'qtt', 'projects', 'pycqed']:        
-        m=importlib.import_module(p)
+    module_versions = dict()
+    for module in modules:
         try:
-            f=m.__file__
-            x=os.path.split(f)[0]
-            x=os.path.join(x, '..')
-            repo=Repo(x)
-            tag=repo.head()
-            tag=tag.decode('ascii')
-        except:
-            tag='none'    
+            package = importlib.import_module(module)
+            version = getattr(package, '__version__', 'none')
+            module_versions[module] = version
+        except ModuleNotFoundError:
+            module_versions[module] = 'none'
         if verbose:
-            print('repo %s: %s' % (p, tag ))
-        r['git'][p]=tag
+            print('module {0} {1}'.format(package, version))
+    return module_versions
 
-    return r
 
-def test_code_version():
-    _=code_version()
+def get_git_versions(repos, get_dirty_status=False, verbose=0):
+    """ Returns the repository head guid and dirty status and package version number if installed via pip.
+        The version is only returned if the repo is installed as pip package without edit mode.
+        NOTE: currently the dirty status is not working correctly due to a bug in dulwich...
 
-#%% Jupyter kernel tools
+        Args:
+            repos ([str]): a list with repositories, e.g. ['qtt', 'qcodes']
+            get_dirty_status (bool): selects whether to use the dulwich package and collect the local code
+                                changes for the repositories.
+
+        Retuns:
+            r (dict): dictionary with repo names, head guid and (optionally) dirty status for each given repository.
+    """
+    heads = dict()
+    dirty_stats = dict()
+    for repo in repos:
+        try:
+            package = importlib.import_module(repo)
+            init_location = os.path.split(package.__file__)[0]
+            repo_location = os.path.join(init_location, '..')
+            repository = Repo(repo_location)
+            heads[repo] = repository.head().decode('ascii')
+            if get_dirty_status:
+                status = porcelain.status(repository)
+                is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 for item in status.staged.values())
+                dirty_stats[repo] = is_dirty
+        except (AttributeError, ModuleNotFoundError, NotGitRepository):
+            heads[repo] = 'none'
+            if get_dirty_status:
+                dirty_stats[repo] = 'none'
+        if verbose:
+            print('{0}: {1}'.format(repo, heads[repo]))
+    return (heads, dirty_stats)
+
+
+def get_python_version(verbose=0):
+    """ Returns the python version."""
+    version = sys.version
+    if verbose:
+        print('Python', version)
+    return version
+
+
+def code_version(repository_names=None, package_names=None, get_dirty_status=False, verbose=0):
+    """ Returns the python version, module version for; numpy, scipy, qctoolkit
+        and the git guid and dirty status for; qcodes, qtt, spin-projects and pycqed,
+        if present on the machine. NOTE: currently the dirty status is not working
+        correctly due to a bug in dulwich...
+
+    Args:
+        repository_names ([str]): a list with repositories, e.g. ['qtt', 'qcodes'].
+        package_names ([str]): a list with pip packages, e.g. ['numpy', 'scipy'].
+        get_dirty_status (bool): selects whether the local code has changed for the repositories.
+        verbose (int): output level
+
+    Returns:
+        status (dict): python, modules and git repos status.
+    """
+    _default_git_versions = ['qcodes', 'qtt', 'projects', 'pycqed']
+    _default_module_versions = ['numpy', 'scipy', 'qctoolkit', 'h5py', 'skimage']
+    if not repository_names:
+        repository_names = _default_git_versions
+    if not package_names:
+        package_names = _default_module_versions
+    result = dict()
+    repository_stats, dirty_stats = get_git_versions(repository_names, get_dirty_status, verbose)
+    result['python'] = get_python_version(verbose)
+    result['git'] = repository_stats
+    result['version'] = get_module_versions(package_names, verbose)
+    result['timestamp'] = time.asctime()
+    if get_dirty_status:
+        result['dirty'] = dirty_stats
+    return result
+
+
+def test_python_code_modules_and_versions():
+    _ = get_python_version()
+    _ = get_module_versions(['numpy'])
+    _ = get_git_versions(['qtt'])
+    _ = code_version()
+
+# %% Jupyter kernel tools
 
 
 def get_jupyter_kernel(verbose=2):
@@ -142,6 +212,7 @@ def dumpstring(txt):
     """ Dump a string to temporary file on disk """
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
+
 
 def deprecated(func):
     """ This is a decorator which can be used to mark functions
