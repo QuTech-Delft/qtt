@@ -207,6 +207,11 @@ class sensingdot_t:
         """Return the gate used for tuning the potential in the dot """
         return self.gg[1]
 
+    def plungervalue(self):
+        """ Return current value of the chemical potential plunger """
+        gates = self.station.gates
+        return gates.get(self.tunegate())
+    
     def value(self):
         """Return current through sensing dot """
         if self.valuefunc is not None:

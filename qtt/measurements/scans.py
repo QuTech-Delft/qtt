@@ -185,6 +185,29 @@ def plot1D(data, fig=100, mstyle='-b'):
 
 #%%
 
+def get_instrument_parameter( handle):
+    """ Return handle to instrument parameter or channel
+
+    Args:
+        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname)
+    Returns:
+        h (object)
+    """
+    if isinstance(handle, str):
+        istr, pstr = handle.split('.')
+    else:
+        istr, pstr = handle
+        
+    if isinstance(istr, str):
+        instrument = qcodes.Instrument.find_instrument(istr)
+    else:
+        instrument = istr
+        
+    if isinstance(pstr, int):
+        pstr='channel_%d'  % pstr
+        
+    param = getattr(instrument, pstr)
+    return instrument, param
 
 def get_instrument(instr, station=None):
     """ Return handle to instrument
@@ -209,11 +232,21 @@ def get_instrument(instr, station=None):
         pass
     if station is not None:
         if instr in station.components:
-            ref = station.conponents[instr]
+            ref = station.components[instr]
             return ref
     raise Exception('could not find instrument %s' % str(instr))
 
 
+def test_get_instrument_parameter():
+    i=qtt.instrument_drivers.virtual_instruments.VirtualIVVI(qtt.measurements.scans.instrumentName('test'), None)    
+    ix, p=get_instrument_parameter( (i.name, 'dac2') )
+    assert(id(ix)==id(i))
+    assert(id(p)==id(i.dac2))
+    ix, p=get_instrument_parameter( (i, 'dac2') )
+    assert(id(p)==id(i.dac2))
+    ix, p=get_instrument_parameter( i.name +'.dac2') 
+    assert(id(p)==id(i.dac2))
+    
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
@@ -231,9 +264,11 @@ def get_measurement_params(station, mparams):
             params += [getattr(station, 'keithley%d' % x).amplitude]
         elif isinstance(x, tuple):
             # pair of instrument and channel
-            instrument = get_instrument(x[0])
-
-            params += [getattr(instrument, 'channel_%d' % x[1])]
+            #instrument = get_instrument(x[0])
+            #param = getattr(instrument, 'channel_%d' % x[1])
+            
+            instrument, param = get_instrument_parameter(x)
+            params += [param]
 
         elif isinstance(x, str):
             if x.startswith('digitizer'):
