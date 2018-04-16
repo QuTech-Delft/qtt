@@ -145,7 +145,12 @@ qcodes.Parameter.__getstate__ = lambda self: str(self)
 def _setstate(self, d):
     self.name = d
     self._instrument = None
-
+    
+    def _get():
+        print('instrument %s was serialized, no get available' % self.name)
+        raise Exception('no get function defined')
+    self.get = _get
+    
 
 qcodes.Instrument.__setstate__ = _setstate
 qcodes.Parameter.__setstate__ = _setstate
