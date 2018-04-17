@@ -238,7 +238,7 @@ def deprecated(func):
         return func(*args, **kwargs)
     return new_func
 
-def rdeprecated(txt=None):
+def rdeprecated(txt=None, expire=None):
     """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used. 
@@ -246,6 +246,16 @@ def rdeprecated(txt=None):
     Args:
         txt (str): reason for deprecation
     """
+    import datetime
+    from dateutil import parser
+    if expire is not None:
+        now= datetime.datetime.now()
+        expiredate = parser.parse(expire)
+        dt = expiredate-now
+        expired = dt.total_seconds()<0
+    else:
+        expired = None
+        
     def deprecated_inner(func):
         """ This is a decorator which can be used to mark functions
         as deprecated. It will result in a warning being emitted
@@ -265,16 +275,38 @@ def rdeprecated(txt=None):
                 etxt=''
             else:
                 etxt=' ' + txt
-            warnings.warn_explicit(
-                "Call to deprecated function {}.{}".format(func.__name__, etxt),
-                category=DeprecationWarning,
-                filename=filename,
-                lineno=lineno, 
-            )
+            
+            if expire is not None:
+                if expired:
+                    raise Exception("Call to deprecated function {}.{}".format(func.__name__, etxt) ) 
+                else:
+                    warnings.warn_explicit(
+                        "Call to deprecated function {} (will expire on {}).{}".format(func.__name__, expiredate, etxt),
+                        category=DeprecationWarning,
+                        filename=filename,
+                        lineno=lineno, 
+                    )                   
+            else:
+                warnings.warn_explicit(
+                    "Call to deprecated function {}.{}".format(func.__name__, etxt),
+                    category=DeprecationWarning,
+                    filename=filename,
+                    lineno=lineno, 
+                )
             return func(*args, **kwargs)
         return new_func
     return deprecated_inner
 
+def test_rdeprecated():
+    
+    @rdeprecated('hello')
+    def dummy():
+        pass
+
+    @rdeprecated('hello', expire='1-1-2400')
+    def dummy2():
+        pass
+       
 #%%
 
 def update_dictionary(alldata, **kwargs):
