@@ -437,6 +437,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         'minstrumenthandle', 'fpga'), station=station)
 
     read_ch = scanjob['minstrument']
+    if isinstance(read_ch, tuple):
+        read_ch = read_ch[1]
+        
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
@@ -594,10 +597,15 @@ class scanjob_t(dict):
         for f in ['sweepdata', 'stepdata']:
             if f in self:
                 if gate_settle:
-                    if f == 'stepdata':
-                        t = 2.5 * gate_settle(self[f]['param'])
+                    if isinstance( self[f]['param'], dict):
+                        gs = float(np.min( [ gate_settle(g) for g in self[f]['param'] ] ) )
                     else:
-                        t = gate_settle(self[f]['param'])
+                        gs = gate_settle(self[f]['param'])
+
+                    if f == 'stepdata':
+                        t = 2.5 * gs
+                    else:
+                        t = gs
                 self[f]['wait_time'] = max(t, min_time)
         self['wait_time_startscan'] = .5 + 2 * t
 
@@ -768,7 +776,7 @@ class scanjob_t(dict):
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 last = sweepdata['start'] + sweepdata['range']
                 scanvalues = sweepparam[sweepdata['start']
-                    :last:sweepdata['step']]
+                    :last:sweepdata.get('step', 1.)]
 
                 param_init = {param: gates.get(param)
                               for param in sweepdata['param']}
@@ -1489,7 +1497,21 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
 
 #%%
 
+def get_minstrument_channels(minstrument):
+    if isinstance(minstrument, tuple):
+        minstrument = minstrument[1]
 
+    if isinstance(minstrument, int):
+        read_ch = [minstrument]
+        return read_ch
+    
+    if isinstance(minstrument, list):
+        read_ch = minstrument
+        return read_ch
+
+
+    raise Exception('could not parse %s into channels'  % minstrument)
+        
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create qcodes dataset to store on disk.
 
@@ -1516,11 +1538,10 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     scanjob.parse_param('stepdata', station, paramtype='slow')
 
-    minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
-
-    read_ch = scanjob['minstrument']
-    if isinstance(read_ch, int):
-        read_ch = [read_ch]
+    #minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
+    minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'fpga') )
+        
+    read_ch = get_minstrument_channels(scanjob['minstrument'])
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dfastvec'
@@ -1668,7 +1689,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     
     Args:
         virtual_parameter (obj): parameter of the virtual gate which is varied
-        g_range (float): scan range
+        g_range (float): scan range (total range)
         remove_slow_gates: Removes slow gates from the linear combination of gates. Useful if virtual gates include compensation ofn slow gates, but a fast measurement should be run.
         start (float): start if the scanjob data 
         step (None or float): if not None, then add to the scanning field

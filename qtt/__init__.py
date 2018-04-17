@@ -136,6 +136,7 @@ from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, St
 for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str
 
+#qcodes.DataArray.omit_delegate_attrs += ['__deepcopy__']
 
 # make a qcodes instrument pickable
 qcodes.Instrument.__getstate__ = lambda self: str(self)
