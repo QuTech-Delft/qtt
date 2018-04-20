@@ -1,29 +1,24 @@
 import logging
 import itertools
 import numpy as np
-
 from enum import Enum
-from qcodes.instrument.base import InstrumentBase
+from functools import reduce
 
+from qcodes.instrument.base import InstrumentBase
 from qctoolkit.pulses import SequencePT, TablePT
 from qctoolkit.pulses.sequencing import Sequencer
 from qctoolkit.pulses.plotting import plot, render, PlottingNotPossibleException
 
-# -------------------------------------------------------------------------------------------------
+"""
+import importlib
+importlib.reload(qtt.instrument_drivers.virtual_awg_new)
+"""
 
+# %%
 
-def pulsewave_template(name: str='pulse'):
-    return TablePT({name: [(0, 'amplitude'), ('width', 0), ('holdtime', 0)]})
-
-
-def sawtooth_template(name: str='sawtooth'):
-    return TablePT({name: [(0, 0), ('period/4', 'amplitude', 'linear'),
-                           ('period*3/4', '-amplitude', 'linear'),
-                           ('period', 0, 'linear')]})
-
-
-def wait_template(name: str='wait'):
-    return TablePT({name: [(0, 0), ('holdtime', 0)]})
+class DataType(Enum):
+    RAW_DATA = 0
+    QC_TOOLKIT = 1
 
 
 def to_array(template, samples_per_ns):
@@ -48,29 +43,10 @@ def to_array(template, samples_per_ns):
     if not sequencer.has_finished():
         raise PlottingNotPossibleException(template)
     (_, voltages) = render(sequence, samples_per_ns)
-    return voltages[next(iter(voltages))]  # ugly!!!
-
-# -----------------------------------------------------------------------------
+    return voltages[next(iter(voltages))]
 
 
-class DataType(Enum):
-    RAW_DATA = 0
-    QC_TOOLKIT = 1
-
-
-def make_sawtooth(vpp, period, repetitions=1):
-    values = {'period': period, 'amplitude': vpp/2}
-    data = (sawtooth_template(), values)
-    return {'TYPE': DataType.QC_TOOLKIT, 'WAVE':
-            SequencePT(*((data,)*repetitions))}
-
-
-def make_pulses(voltages, waittimes, filter_cutoff=None, mvrange=None):
-    sequence = []
-    return sequence
-
-
-def plot_waveform(waveform, sample_rate: int):
+def plot_waveform(waveform, sample_rate):
     """ Plots the waveform array."""
     from matplotlib import pyplot as plt
     sample_count = len(waveform)
@@ -83,8 +59,30 @@ def plot_sequence(sequence, sample_rate):
     """ Plots the qc-toolkit sequence."""
     plot(sequence['WAVE'], sample_rate=sample_rate)
 
-# -------------------------------------------------------------------------------------------------
 
+def pulsewave_template(name='pulse'):
+    return TablePT({name: [(0, 'amplitude'), ('width', 0), ('holdtime', 0)]})
+
+
+def sawtooth_template(name='sawtooth'):
+    return TablePT({name: [(0, 0), ('period/4', 'amplitude', 'linear'),
+                           ('period*3/4', '-amplitude', 'linear'),
+                           ('period', 0, 'linear')]})
+
+
+def wait_template(name: str='wait'):
+    return TablePT({name: [(0, 0), ('holdtime', 0)]})
+
+
+def make_sawtooth(vpp, period, repetitions=1, name='sawtooth'):
+    seq_data = (sawtooth_template(), {'period': period, 'amplitude': vpp/2})
+    return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)), 'TYPE': DataType.QC_TOOLKIT}
+
+
+def make_pulses(voltages, waittimes, filter_cutoff=None, mvrange=None, name='pulses'):
+    return {'NAME': name, 'WAVE': None, 'TYPE': DataType.QC_TOOLKIT}
+
+# %%
 
 class VirtualAwg(InstrumentBase):
 
@@ -364,6 +362,7 @@ class TektronixVirtualAwg(VirtualAwgBase):
 
     def __init__(self, awg):
         self.__awg = awg
+        self.waveform_channels = [1,2,3,4]
 
     @property
     def get(self):
@@ -436,9 +435,9 @@ class TektronixVirtualAwg(VirtualAwgBase):
         goto_states = [0]*data_count
         trigger_waits = [0]*data_count
         self.jump_tos[-1] = 1
-        self.__awg.make_send_and_load_awg_file(self.waveforms, self.marker1s, self.marker2s,
-                                               self.nreps, trigger_waits, self.jump_tos, goto_states,
-                                               self.waveform_channels)
+        self.make_send_and_load_awg_file(self.waveforms, self.marker1s, self.marker2s,
+                                         self.nreps, trigger_waits, self.jump_tos, goto_states,
+                                         self.waveform_channels)
 
     #def add_sequence_index(self, element, repeats=1):
     #    for ch_index in range(len(self.waveform_channels)):
@@ -447,6 +446,50 @@ class TektronixVirtualAwg(VirtualAwgBase):
     #        self.marker2s[ch_index].append(element.marker2[ch_index])
     #    self.jump_tos.append(len(self.jump_tos) + 2)
     #    self.nreps.append(repeats)
+
+    def make_send_and_load_awg_file(self, names, waveforms, m1s, m2s, sequence,
+                                    nreps, trig_waits, goto_states, jump_tos, params):
+        #assert all names are equal and unique
+        #len equal names, waveforms, m1s, m2s : check with pack_waveforms
+        #check sequence and for that nreps, trig_waits, goto_states
+        
+        packed_waveforms = dict()
+        pack_count = len(names)
+        for i in range(pack_count):
+            name = names[i]
+            package = self.__awg.pack_waveform(waveforms[i], m1s[i], m2s[i])
+            packed_waveforms[name] = package
+        
+        amplitude = params.channel_amplitudes()
+        offset = params.channel_offset()
+        marker_low = params.marker_low()
+        marker_high = params.marker_high()
+        channel_cfg = {'ANALOG_METHOD_1': 1, 'CHANNEL_STATE_1': 1, 'ANALOG_AMPLITUDE_1': amplitude, 'ANALOG_OFFSET_1': offset,
+                       'MARKER1_METHOD_1': 2, 'MARKER1_LOW_1': marker_low, 'MARKER1_HIGH_1': marker_high,
+                       'MARKER2_METHOD_1': 2, 'MARKER2_LOW_1': marker_low, 'MARKER2_HIGH_1': marker_high,
+                       
+                       'ANALOG_METHOD_2': 1, 'CHANNEL_STATE_2': 1, 'ANALOG_AMPLITUDE_2': amplitude, 'ANALOG_OFFSET_2': offset,
+                       'MARKER1_METHOD_2': 2, 'MARKER1_LOW_2': marker_low, 'MARKER1_HIGH_2': marker_high,
+                       'MARKER2_METHOD_2': 2, 'MARKER2_LOW_2': marker_low, 'MARKER2_HIGH_2': marker_high,
+                       
+                       'ANALOG_METHOD_3': 1, 'CHANNEL_STATE_3': 1, 'ANALOG_AMPLITUDE_3': amplitude, 'ANALOG_OFFSET_3': offset,
+                       'MARKER1_METHOD_3': 2, 'MARKER1_LOW_3': marker_low, 'MARKER1_HIGH_3': marker_high,
+                       'MARKER2_METHOD_3': 2, 'MARKER2_LOW_3': marker_low, 'MARKER2_HIGH_3': marker_high,
+                       
+                       'ANALOG_METHOD_4': 1, 'CHANNEL_STATE_4': 1, 'ANALOG_AMPLITUDE_4': amplitude, 'ANALOG_OFFSET_4': offset,
+                       'MARKER1_METHOD_4': 2, 'MARKER1_LOW_4': marker_low, 'MARKER1_HIGH_4': marker_high,
+                       'MARKER2_METHOD_4': 2, 'MARKER2_LOW_4': marker_low, 'MARKER2_HIGH_4': marker_high}
+        
+        file_name = 'costum_awg_file.awg'
+        
+        self.__awg.visa_handle.write('MMEMory:CDIRectory "C:\\Users\\OEM\\Documents"')
+        awg_file = self.__awg.generate_awg_file(packed_waveforms, np.array(sequence), nreps, trig_waits,
+                                                goto_states, jump_tos, channel_cfg)
+        self.__awg.send_awg_file(file_name, awg_file)
+        current_dir = self.__awg.visa_handle.query('MMEMory:CDIRectory?')
+        current_dir = current_dir.replace('"','')
+        current_dir = current_dir.replace('\n','\\')
+        self.__awg.load_awg_file('{0}{1}'.format(current_dir, file_name))
 
     def __get_rescaled_waveform(self, channel, waveform):
         amplitude = self.get_amplitude(channel)
