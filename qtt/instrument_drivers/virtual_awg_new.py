@@ -9,24 +9,20 @@ from qctoolkit.pulses import SequencePT, TablePT
 from qctoolkit.pulses.sequencing import Sequencer
 from qctoolkit.pulses.plotting import plot, render, PlottingNotPossibleException
 
-"""
-import importlib
-importlib.reload(qtt.instrument_drivers.virtual_awg_new)
-"""
+# %%-----------------------------------------------------------------------------------------------
 
-# %%
 
 class DataType(Enum):
     RAW_DATA = 0
     QC_TOOLKIT = 1
 
 
-def to_array(template, samples_per_ns):
+def qc_toolkit_template_to_array(template, sampling_rate):
     """ Renders the QC toolkit template as voltages array.
 
     Arguments:
         template (*PT): A QC Toolkit template of type; pulsePT,
-                        functionPT, pointPT or sequencePT.
+                        functionPT, pointPT or sequencePT, or other.
         samples_per_ns (float): The number of samples per nanosecond.
 
     Returns:
@@ -42,22 +38,44 @@ def to_array(template, samples_per_ns):
     sequence = sequencer.build()
     if not sequencer.has_finished():
         raise PlottingNotPossibleException(template)
-    (_, voltages) = render(sequence, samples_per_ns)
+    (_, voltages) = render(sequence, sampling_rate/10**9)
     return voltages[next(iter(voltages))]
 
 
-def plot_waveform(waveform, sample_rate):
+def get_raw_data(self, waveform, sampling_rate):
+    """ This function returns the raw array data given the waveform.
+        A waveform can hold different types of data dependend on the
+        used pulse library. Currently only raw array data and QC-toolkit
+        can be used.
+
+    Arguments:
+        waveform (dict): a waveform is a dictionary with "type" value
+        given the used pulse library. The "wave" value should contain
+        the actual wave-object.
+        sampling_rate: a sample rate of the awg in samples per sec.
+
+    Returns:
+        A numpy.ndarrays with the corresponding sampled voltages.
+    """
+    data_type = waveform['TYPE']
+    if data_type == DataType.RAW_DATA:
+        return waveform['WAVE']
+    if data_type == DataType.QC_TOOLKIT:
+        return qc_toolkit_template_to_array(waveform['WAVE'], sampling_rate)
+
+
+def plot_waveform_array(array, sampling_rate):
     """ Plots the waveform array."""
     from matplotlib import pyplot as plt
-    sample_count = len(waveform)
-    total_time = sample_count / sample_rate
+    sample_count = len(array)
+    total_time = array / sampling_rate
     times = np.linspace(0, total_time, num=sample_count)
-    plt.plot(times, waveform)
+    plt.plot(times, array)
 
 
-def plot_sequence(sequence, sample_rate):
+def plot_sequence(sequence, sampling_rate):
     """ Plots the qc-toolkit sequence."""
-    plot(sequence['WAVE'], sample_rate=sample_rate)
+    plot(sequence['WAVE'], sample_rate=sampling_rate/10**9)
 
 
 def pulsewave_template(name='pulse'):
@@ -76,13 +94,15 @@ def wait_template(name: str='wait'):
 
 def make_sawtooth(vpp, period, repetitions=1, name='sawtooth'):
     seq_data = (sawtooth_template(), {'period': period, 'amplitude': vpp/2})
-    return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)), 'TYPE': DataType.QC_TOOLKIT}
+    return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)),
+            'TYPE': DataType.QC_TOOLKIT}
 
 
 def make_pulses(voltages, waittimes, filter_cutoff=None, mvrange=None, name='pulses'):
     return {'NAME': name, 'WAVE': None, 'TYPE': DataType.QC_TOOLKIT}
 
-# %%
+# %%-----------------------------------------------------------------------------------------------
+
 
 class VirtualAwg(InstrumentBase):
 
@@ -139,14 +159,14 @@ class VirtualAwg(InstrumentBase):
             channel amplitudes will be set and all waveforms removed,
             if one or two awg's are connected.
         '''
-        awg_count = len(self.awgs)
-        if awg_count == 0:
+        self.awg_count = len(self.awgs)
+        if self.awg_count == 0:
             logging.warning("No physical awg's connected!")
             return
-        if awg_count == 1:
+        if self.awg_count == 1:
             self.awgs[0].set_sequence_mode()
             logging.info("One physical awg's connected!")
-        elif awg_count == 2:
+        elif self.awg_count == 2:
             (awg_nr, _, _) = self.parameters.awg_map['awg_mk']
             self.awgs[awg_nr].set_sequence_mode()
             self.awgs[awg_nr + 1 % 2].set_sequence_mode()
@@ -178,6 +198,18 @@ class VirtualAwg(InstrumentBase):
             return np.all([self.are_awg_gates(g) for g in gate_s])
         return True if gate_s in self.parameters.awg_map else False
 
+    def run_awgs(self):
+        """ Turns on the AWG channels selected using the gates."""
+        [awg.run() for awg in self.awgs]
+
+    def enable_channels_awgs(self):
+        [awg.set_state_channels(True) for awg in self.awgs]
+        logging.info("Enabled awg's channels.")
+
+    def disable_channels_awgs(self):
+        [awg.set_state_channels(False) for awg in self.awgs]
+        logging.info("Disable awg's channel states.")
+
     def stop_awgs(self):
         """ Stops all awg(s) and turns off all channels."""
         [awg.stop() for awg in self.awgs]
@@ -186,29 +218,7 @@ class VirtualAwg(InstrumentBase):
     def reset_awgs(self):
         """ Resets all awg(s) and turns of all channels."""
         [awg.reset() for awg in self.awgs]
-        [awg.set_awg_properties(self.parameters) for awg in self.awgs]
         logging.info("All awg's are reseted...")
-
-    def __get_raw_data(self, waveform, sampling_rate):
-        """ This function returns the raw array data given the waveform.
-            A waveform can hold different types of data dependend on the
-            used pulse library. Currently only raw array data and QC-toolkit
-            can be used.
-
-        Arguments:
-            waveform (dict): a waveform is a dictionary with "type" value
-            given the used pulse library. The "wave" value should contain
-            the actual wave-object.
-            sampling_rate: a sample rate of the awg in samples per sec.
-
-        Returns:
-            A numpy.ndarrays with the corresponding sampled voltages.
-        """
-        data_type = waveform['TYPE']
-        if data_type == DataType.RAW_DATA:
-            return waveform['WAVE']
-        if data_type == DataType.QC_TOOLKIT:
-            return to_array(waveform['WAVE'], sampling_rate/10**9)
 
     def sweep_init(self, waveforms, do_upload=True, period=None, delete=None, samp_freq=None):
         """ Sends the waveform(s) to gate(s) and markers(s).
@@ -228,8 +238,7 @@ class VirtualAwg(InstrumentBase):
             raise VirtualAwgError('Depricated arguments!')
 
         # get awg_channels for each awg
-        awg_count = len(self.awgs)
-        awg_channels = [set() for x in range(awg_count)]
+        awg_channels = [set() for x in range(self.awg_count)]
         for gate, _ in waveforms.items():
             (awg_nr, channel_nr, *_) = self.parameters.awg_map[gate]
             awg_channels[awg_nr].add(channel_nr)
@@ -237,8 +246,8 @@ class VirtualAwg(InstrumentBase):
 
         # create and fill elements...
         element_count = 1  # max(len(seqs) for seqs in waveforms.values())
-        elements = [[Element(awg_channels[awg_index], [1, 2]) for x in range(element_count)] 
-                             for awg_index in range(len(self.awgs))]
+        elements = [[Element(awg_channels[awg_index], [1, 2]) for x in range(element_count)]
+                             for awg_index in range(self.awg_count)]
         for gate, waveform in waveforms.items():
             (awg_nr, channel_nr, *marker_nr) = self.parameters.awg_map[gate]
             #for wave in waveform:
@@ -259,10 +268,6 @@ class VirtualAwg(InstrumentBase):
                 self.awgs[awg_nr].reset_waveform_channels(awg_channels[awg_nr])
                 self.awgs[awg_nr].set_sequences(elements[awg_nr])
                 self.awgs[awg_nr].send_waveforms()
-
-    def sweep_run(self):
-        """ Turns on the AWG channels selected using the gates. Used after sweep_init."""
-        [awg.run() for awg in self.awgs]
 
     def sweep_gates(self, gate_s, period, marker_delay=0, width=0.95):
         """ Creates sawtooth waveforms for the given gates with marker channel for
@@ -322,11 +327,11 @@ class VirtualAwg(InstrumentBase):
 
 class VirtualAwgBase():
 
-    channels = 4
-    markers = 2
-
-    def set_master(self):
-        pass
+    def __init__(self, channels, markers):
+        self.channel_count = len(channels)
+        self.waveform_channels = channels
+        self.marker_count = len(markers)
+        self.marker_channels = markers
 
     def set_slave(self):
         pass
@@ -361,8 +366,8 @@ class VirtualAwgBase():
 class TektronixVirtualAwg(VirtualAwgBase):
 
     def __init__(self, awg):
+        super.__init__(self, channels=[1, 2, 3, 4], markers=[1, 2])
         self.__awg = awg
-        self.waveform_channels = [1,2,3,4]
 
     @property
     def get(self):
@@ -373,8 +378,6 @@ class TektronixVirtualAwg(VirtualAwgBase):
 
     def set_sequence_mode(self):
         self.__awg.set('run_mode', 'SEQ')
-        # self.__awg.sequence_length.set(1)
-        # self.__awg.set_sqel_trigger_wait(1, 0)
 
     def set_sampling_rate(self, value=1e9):
         self.__awg.set('clock_freq', value)
@@ -398,11 +401,13 @@ class TektronixVirtualAwg(VirtualAwgBase):
             self.__awg.set('ch{0}_m2_del'.format(channel), parameters.marker_delay())
 
     def run(self):
-        [self.__awg.set('ch{0}_state'.format(ch), 1) for ch in self.waveform_channels]
         self.__awg.run()
 
+    def set_state_channels(self, is_enabled):
+        state = 1 if is_enabled else 0
+        [self.__awg.set('ch{0}_state'.format(ch), state) for ch in super.channels]
+
     def stop(self):
-        [self.__awg.set('ch{0}_state'.format(ch), 0) for ch in self.waveform_channels]
         self.__awg.stop()
 
     def reset(self):
@@ -487,8 +492,8 @@ class TektronixVirtualAwg(VirtualAwgBase):
                                                 goto_states, jump_tos, channel_cfg)
         self.__awg.send_awg_file(file_name, awg_file)
         current_dir = self.__awg.visa_handle.query('MMEMory:CDIRectory?')
-        current_dir = current_dir.replace('"','')
-        current_dir = current_dir.replace('\n','\\')
+        current_dir = current_dir.replace('"', '')
+        current_dir = current_dir.replace('\n', '\\')
         self.__awg.load_awg_file('{0}{1}'.format(current_dir, file_name))
 
     def __get_rescaled_waveform(self, channel, waveform):
@@ -537,13 +542,16 @@ class Element:
                 raise VirtualAwgError('{0} lengths are unequal!'.format(name))
 
 
-# -------------------------------------------------------------------------------------------------
+# %%-----------------------------------------------------------------------------------------------
 
 
 class KeysightVirtualAwg(VirtualAwgBase):
-    pass
 
-# -------------------------------------------------------------------------------------------------
+    def __init__(self, awg):
+        super.__init__(channels=[1,2,3,4], markers=[1])
+        self.__awg = awg
+
+# %%-----------------------------------------------------------------------------------------------
 
 
 class VirtualAwgError(Exception):
