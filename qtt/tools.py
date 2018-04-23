@@ -233,24 +233,35 @@ def deprecated(func):
             "Call to deprecated function {}.".format(func.__name__),
             category=DeprecationWarning,
             filename=filename,
-            lineno=lineno, 
+            lineno=lineno,
         )
         return func(*args, **kwargs)
     return new_func
 
-def rdeprecated(txt=None):
+
+def rdeprecated(txt=None, expire=None):
     """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used. 
-        
+
     Args:
         txt (str): reason for deprecation
     """
+    import datetime
+    from dateutil import parser
+    if expire is not None:
+        now = datetime.datetime.now()
+        expiredate = parser.parse(expire)
+        dt = expiredate - now
+        expired = dt.total_seconds() < 0
+    else:
+        expired = None
+
     def deprecated_inner(func):
         """ This is a decorator which can be used to mark functions
         as deprecated. It will result in a warning being emitted
         when the function is used. """
-    
+
         @functools.wraps(func)
         def new_func(*args, **kwargs):
             try:
@@ -262,20 +273,44 @@ def rdeprecated(txt=None):
             except:
                 lineno = -1
             if txt is None:
-                etxt=''
+                etxt = ''
             else:
-                etxt=' ' + txt
-            warnings.warn_explicit(
-                "Call to deprecated function {}.{}".format(func.__name__, etxt),
-                category=DeprecationWarning,
-                filename=filename,
-                lineno=lineno, 
-            )
+                etxt = ' ' + txt
+
+            if expire is not None:
+                if expired:
+                    raise Exception("Call to deprecated function {}.{}".format(func.__name__, etxt))
+                else:
+                    warnings.warn_explicit(
+                        "Call to deprecated function {} (will expire on {}).{}".format(func.__name__, expiredate, etxt),
+                        category=DeprecationWarning,
+                        filename=filename,
+                        lineno=lineno,
+                    )
+            else:
+                warnings.warn_explicit(
+                    "Call to deprecated function {}.{}".format(func.__name__, etxt),
+                    category=DeprecationWarning,
+                    filename=filename,
+                    lineno=lineno,
+                )
             return func(*args, **kwargs)
         return new_func
     return deprecated_inner
 
+
+def test_rdeprecated():
+
+    @rdeprecated('hello')
+    def dummy():
+        pass
+
+    @rdeprecated('hello', expire='1-1-2400')
+    def dummy2():
+        pass
+
 #%%
+
 
 def update_dictionary(alldata, **kwargs):
     """ Update elements of a dictionary
@@ -291,7 +326,7 @@ def update_dictionary(alldata, **kwargs):
 
 def stripDataset(dataset):
     """ Make sure a dataset can be pickled 
-    
+
     Args: 
         dataset (qcodes DataSet)
     """
@@ -321,7 +356,7 @@ def negfloat(x):
 
 def checkPickle(obj, verbose=0):
     """ Check whether an object can be pickled
-    
+
     Args:
         obj (object): object to be checked
     Returns:
@@ -389,9 +424,9 @@ def resampleImage(im):
             spx = np.tile(np.expand_dims(np.linspace(
                 setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
             setpointy = qcodes.DataArray(name='Resampled_' + setpoints[0].array_id, array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
-                                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
+                                         unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
             setpointx = qcodes.DataArray(name='Resampled_' + setpoints[1].array_id, array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
-                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+                                         unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpointy, setpointx]
         else:
             facrem = im.shape[1] % factor
@@ -409,7 +444,7 @@ def resampleImage(im):
             if idy is None:
                 idy = 'y'
             setpointx = qcodes.DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
-                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+                                         unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpoints[0], setpointx]
 
     return im, setpoints
@@ -474,7 +509,7 @@ def diffImageSmooth(im, dy='x', sigma=2):
     elif dy == -1:
         imx = -ndimage.gaussian_filter1d(im, axis=0,
                                          sigma=sigma, order=1, mode='nearest')
-    elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2' or dy=='g' or dy=='x2my2' or dy=='x2y2' :
+    elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2' or dy == 'g' or dy == 'x2my2' or dy == 'x2y2':
         imx0 = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
         imx1 = ndimage.gaussian_filter1d(
@@ -495,6 +530,7 @@ def diffImageSmooth(im, dy='x', sigma=2):
     else:
         raise Exception('differentiation method %s not supported' % dy)
     return imx
+
 
 def test_array(location=None, name=None):
     # DataSet with one 2D array with 4 x 6 points
@@ -527,6 +563,7 @@ def test_image_operations(verbose=0):
 
 
 import dateutil
+
 
 def scanTime(dd):
     """ Return date a scan was performed """
@@ -570,7 +607,7 @@ def plot1D(dataset, fig=1):
 
 def showImage(im, extent=None, fig=None):
     """ Show image in figure window
-    
+
     Args:
         im (array)
         extend (list): matplotlib style image extent
@@ -586,8 +623,8 @@ def showImage(im, extent=None, fig=None):
 
 
 #%% Measurement tools
-                
-@deprecated # part of the gates object
+
+@deprecated  # part of the gates object
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values
 
@@ -696,7 +733,7 @@ except:
     pass
 
 
-from qtt.pgeometry import tilefigs, mkdirc # import for backwards compatibility
+from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 
 
 #%% Helper tools
@@ -855,26 +892,26 @@ try:
                 fig = plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
-                           fig.__class__.__name__=='MultiTracePlot':
-                    figtemp = fig.plotwin.grab()
-                    figtemp.save(fname)
-            elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__=='VideoMode':
+                    fig.__class__.__name__ == 'MultiTracePlot':
+                figtemp = fig.plotwin.grab()
+                figtemp.save(fname)
+            elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__ == 'VideoMode':
                 if isinstance(fig.lp, list):
                     # do NOT change this into a list comprehension
-                    ff=[]
-                    for jj in range(len(fig.lp)):    
-                        ff.append(fig.lp[jj].plotwin.grab() )
+                    ff = []
+                    for jj in range(len(fig.lp)):
+                        ff.append(fig.lp[jj].plotwin.grab())
 
-                    sz=ff[0].size()
-                    sz = QtCore.QSize(sz.width()*len(ff), sz.height())
-                    figtemp=QtGui.QPixmap(sz)
-                    p=QtGui.QPainter(figtemp)
-                    offset=0
+                    sz = ff[0].size()
+                    sz = QtCore.QSize(sz.width() * len(ff), sz.height())
+                    figtemp = QtGui.QPixmap(sz)
+                    p = QtGui.QPainter(figtemp)
+                    offset = 0
                     for ii in range(len(ff)):
                         p.drawPixmap(offset, 0, ff[ii])
-                        offset+=ff[ii].size().width()                    
+                        offset += ff[ii].size().width()
                     figtemp.save(fname)
-                    p.end()                    
+                    p.end()
                 else:
                     # new Qt style
                     figtemp = fig.lp.plotwin.grab()
@@ -882,7 +919,7 @@ try:
             elif isinstance(fig, QtGui.QWidget):
                 # generic method
                 figtemp = fig.plotwin.grab()
-                figtemp.save(fname)                    
+                figtemp.save(fname)
             elif isinstance(fig, QtWidgets.QWidget):
                 try:
                     figtemp = QtGui.QPixmap.grabWidget(fig)
@@ -926,7 +963,7 @@ try:
             gates = getattr(station, 'gates', None)
             notes = reshape_metadata(station, printformat='s', add_scanjob=True)
             if extranotes is not None:
-                notes = '\n' + extranotes +'\n'+ notes
+                notes = '\n' + extranotes + '\n' + notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
         if isinstance(notes, qcodes.DataSet):
@@ -1021,7 +1058,7 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict', add_scanjob = True, verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob=True, verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
@@ -1116,7 +1153,7 @@ def test_reshape_metadata():
         pass
     if dataset is not None:
         _ = reshape_metadata(dataset, printformat='dict')
-    st=qcodes.Station(qcodes.Instrument('_dummy123' ))
+    st = qcodes.Station(qcodes.Instrument('_dummy123'))
     _ = reshape_metadata(st, printformat='dict')
 
 
