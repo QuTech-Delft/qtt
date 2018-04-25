@@ -155,7 +155,10 @@ def test_python_code_modules_and_versions():
     _ = get_python_version()
     _ = get_module_versions(['numpy'])
     _ = get_git_versions(['qtt'])
-    _ = code_version()
+    c = code_version()
+    assert('python' in c)
+    assert('timestamp' in c)
+    assert('system' in c)
 
 # %% Jupyter kernel tools
 
