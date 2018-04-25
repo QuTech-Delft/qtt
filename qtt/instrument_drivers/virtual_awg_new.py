@@ -212,13 +212,19 @@ class VirtualAwg(InstrumentBase):
         """ Turns on the AWG channels selected using the gates."""
         [awg.run() for awg in self.awgs]
 
-    def enable_channels_awgs(self):
-        [awg.set_state_channels(True) for awg in self.awgs]
-        logging.info("Enabled awg's channels.")
+    def enable_channels_outputs(self, awg_nr=None, channels=None):
+        if awg_nr:
+            self.awgs[awg_nr].set_state_channels(True, channels)
+        else:
+            [awg.set_state_channels(True, channels) for awg in self.awgs]
+        logging.info("Enabled AWG outputs.")
 
-    def disable_channels_awgs(self):
-        [awg.set_state_channels(False) for awg in self.awgs]
-        logging.info("Disable awg's channel states.")
+    def disable_channels_outputs(self, awg_nr=None, channels=None):
+        if awg_nr:
+            self.awgs[awg_nr].set_state_channels(False, channels)
+        else:
+            [awg.set_state_channels(False, channels) for awg in self.awgs]
+        logging.info("Disabled AWG outputs.")
 
     def stop_awgs(self):
         """ Stops all awg(s) and turns off all channels."""
@@ -263,6 +269,11 @@ class VirtualAwg(InstrumentBase):
             logging.error('Arguments: period, delete, samp_rate are depricated!')
             raise VirtualAwgError('Depricated arguments!')
 
+        # per awg:
+        #    waveform_names
+        #    waveforms
+        
+        
         count = len(gates)
         if count != len(waveforms):
             raise VirtualAwgError('Invalid number of gates/waveforms!')
@@ -299,8 +310,8 @@ class VirtualAwg(InstrumentBase):
                 raw_wave = get_raw_data(waveform, sampling_rate)
                 if not marker_nr:
                     elements[awg_nr][0].set_channel(channel_nr, raw_wave)
-                else if marker_nr:
-                elements[awg_nr][0].set_marker(channel_nr, marker_nr[0], raw_wave)
+                elif marker_nr:
+                    elements[awg_nr][0].set_marker(channel_nr, marker_nr[0], raw_wave)
 
         # fill other empty elements.
         for awg_nr, element_nr in itertools.product(range(awg_count), range(element_count)):
@@ -313,10 +324,8 @@ class VirtualAwg(InstrumentBase):
                 self.awgs[awg_nr].set_sequences(elements[awg_nr])
                 self.awgs[awg_nr].send_waveforms()
 
-
-
-        (names, waveforms, m1s, m2s, sequence,
-         nreps, trig_waits, goto_states, jump_tos, params):
+        #(names, waveforms, m1s, m2s, sequence,
+        #nreps, trig_waits, goto_states, jump_tos, params):
 
 
     def sweep_gates(self, gate_s, period, marker_delay=0, width=0.95):
@@ -379,36 +388,10 @@ class VirtualAwgBase():
 
     def __init__(self, channels, markers):
         self.channel_count = len(channels)
-        self.waveform_channels = channels
+        self.channels = channels
         self.marker_count = len(markers)
-        self.marker_channels = markers
-
-    def set_slave(self):
-        pass
-
-    def delete_all_waveforms(self):
-        raise NotImplementedError
-
-    def send_waveform(self, name, waveform, marker1=None, marker2=None):
-        raise NotImplementedError
-
-    def set_amplitudes(self, value):
-        raise NotImplementedError
-
-    def set_clock_speed(self, value):
-        raise NotImplementedError
-
-    def prepare_run(self):
-        raise NotImplementedError
-
-    def run(self):
-        raise NotImplementedError
-
-    def stop(self):
-        raise NotImplementedError
-
-    def reset(self):
-        raise NotImplementedError
+        self.markers = markers
+        # TODO change to ab_class...
 
 # -------------------------------------------------------------------------------------------------
 
@@ -416,7 +399,7 @@ class VirtualAwgBase():
 class TektronixVirtualAwg(VirtualAwgBase):
 
     def __init__(self, awg):
-        super.__init__(self, channels=[1, 2, 3, 4], markers=[1, 2])
+        super().__init__(channels=[1, 2, 3, 4], markers=[1, 2])
         self.__awg = awg
 
     @property
@@ -452,11 +435,9 @@ class TektronixVirtualAwg(VirtualAwgBase):
     def run(self):
         self.__awg.run()
 
-    def set_states(self, is_enabled, channels=None):
+    def set_outputs(self, is_enabled, channels=None):
         if not channels:
-            channels = super.channels
-        if not all(channels in super.channels):
-            raise VirtualAwgError('Invalid channel numbers!')
+            channels = self.channels
         state = 1 if is_enabled else 0
         [self.__awg.set('ch{0}_state'.format(ch), state) for ch in channels]
 
@@ -466,44 +447,37 @@ class TektronixVirtualAwg(VirtualAwgBase):
     def reset(self):
         self.__awg.reset()
 
-    def delete_all_waveforms(self):
-        self.__awg.delete_all_waveforms_from_list()
+    def set_sequence(self, channels, sequence, waits=None, repeats=None, gotos=None):
+        if waits or repeats or gotos:
+            raise NotImplementedError("Wait, repeats, gotos currently not implemented!")
+        if not sequence or len(sequence) != len(channels):
+            raise VirtualAwgError('Invalid sequence and channel count!')
+        if not all(len(idx) == len(sequence[0]) for idx in sequence):
+            raise VirtualAwgError('Invalid sequence list lengthts!')
+        request_rows = len(sequence[0])
+        current_rows = self.__get_sequence_length()
+        if request_rows != current_rows:
+            self.__set_sequence_length(request_rows)
+        for row_index in range(request_rows):
+            for channel in self.channels:
+                if channel in channels:
+                    ch_index = channels.index(channel)
+                    wave_name = sequence[ch_index][row_index]
+                    self.__awg.set_sqel_waveform(wave_name, channel, row_index + 1)
+                else:
+                    self.__awg.set_sqel_waveform("", channel, row_index + 1)
+        self.__awg.set_sqel_goto_state(request_rows, 1)
 
-    # waveforms = [[seq1, seq2], [seq3, seq4]]
-    #   markers = [_ [[None, None], [mk1, None]], [[mk2, None], [None, None]] _]
+    def delete_sequence(self):
+            self.__set_sequence_length(0)
 
-    def upload_waveforms(self, names, waveforms, rows, params):
-        sequence = [['']*rows]
-        trig_waits = [0]*rows
-        jump_tos = [0]*rows
-        nreps = [1]*rows
-        gotos = [0]*rows
-        gotos[-1] = 1
-        [wfs, m1s, m2s] = list(map(list, zip(*waveforms)))
-        self.__make_send_and_load_awg_file(names, waveforms, m1s, m2s, sequence,
-                                           nreps, trig_waits, goto_states, jump_tos, params)
-
-    #  names = [['X1', 'X2'], ['X1', 'P1']],
-    #  channels = [1, 3]
-
-    def set_sequence(self, names, channels):
-        if len(names) != len(channels):
-            raise VirtualAwgError('Invalid names and channel count!')
-        count = len(names)
-        for idx in range(count):
-            channel = channels[idx]
-            names_in_row = names[idx]
-            row_count = len(names_in_row)
-            [self.__awg.get_sqel_waveform(names_in_row[i], channel, i)
-             for i in range(row_count)]
-
-    def __make_send_and_load_awg_file(self, names, waveforms, m1s, m2s, sequence,
-                                      nreps, trig_waits, goto_states, jump_tos, params):
-        packed_waveforms = dict()
+    def upload_waveforms(self, names, waveforms, params):
         pack_count = len(names)
+        packed_waveforms = dict()
+        [wfs, m1s, m2s] = list(map(list, zip(*waveforms)))
         for i in range(pack_count):
             name = names[i]
-            package = self.__awg.pack_waveform(waveforms[i], m1s[i], m2s[i])
+            package = self.__awg.pack_waveform(wfs[i], m1s[i], m2s[i])
             packed_waveforms[name] = package
 
         amplitude = params.channel_amplitudes()
@@ -532,13 +506,22 @@ class TektronixVirtualAwg(VirtualAwgBase):
 
         file_name = 'costum_awg_file.awg'
         self.__awg.visa_handle.write('MMEMory:CDIRectory "C:\\Users\\OEM\\Documents"')
-        awg_file = self.__awg.generate_awg_file(packed_waveforms, np.array(sequence), nreps, trig_waits,
-                                                goto_states, jump_tos, channel_cfg)
+        awg_file = self.__awg.generate_awg_file(packed_waveforms, np.array([]), [], [], [], [], channel_cfg)
         self.__awg.send_awg_file(file_name, awg_file)
         current_dir = self.__awg.visa_handle.query('MMEMory:CDIRectory?')
         current_dir = current_dir.replace('"', '')
         current_dir = current_dir.replace('\n', '\\')
         self.__awg.load_awg_file('{0}{1}'.format(current_dir, file_name))
+
+    def delete_waveforms(self):
+        self.__awg.delete_all_waveforms_from_list()
+
+    def __set_sequence_length(self, count):
+        self.__awg.write('SEQuence:LENGth {0}'.format(count))
+
+    def __get_sequence_length(self):
+        row_count = self.__awg.ask('SEQuence:LENGth?')
+        return int(row_count)
 
     def __get_rescaled_waveform(self, channel, waveform):
         amplitude = self.get_amplitude(channel)
@@ -546,62 +529,16 @@ class TektronixVirtualAwg(VirtualAwgBase):
             logging.error('Waveform contains invalid values! Will set items to zero.')
         return [(lambda value: 0 if value > amplitude else value/amplitude)(value) for value in waveform]
 
-
-class Element:
-
-    def __init__(self, channels, markers):
-        self.channel_count = len(channels)
-        self.waveform_channels = channels
-        self.marker_count = len(markers)
-        self.marker_channels = markers
-        self.waveforms = [None]*self.channel_count
-
-    def __add_waveform(self, marker_count):
-        class Channel:
-            def __init__(self, markers):
-                self.channel = None
-                self.markers = [None]*markers
-        return Channel(marker_count)
-
-    def set_channel(self, channel, waveform):
-        index = self.channels.index(channel)
-        self.waveforms[index] = waveform
-
-    def set_marker(self, channel, marker, waveform):
-        index = self.channels.index(channel)
-        if marker == 1:
-            self.markers1[index] = waveform
-        elif marker == 2:
-            self.markers2[index] = waveform
-
-    def finalize_element(self):
-        wave_data_count = next((len(w) for w in self.waveforms if w is not None), 0)
-        marker1_data_count = next((len(m1) for m1 in self.markers1 if m1 is not None), 0)
-        marker2_data_count = next((len(m2) for m2 in self.markers2 if m2 is not None), 0)
-        data_count = max(wave_data_count, marker1_data_count, marker2_data_count)
-        self.__set_element_items('Waveform', self.waveforms, data_count)
-        self.__set_element_items('Marker1', self.markers1, data_count)
-        self.__set_element_items('Marker2', self.markers2, data_count)
-
-    def __set_element_items(self, name, data_list, max_data_count):
-        for index in range(len(data_list)):
-            if data_list[index] is None:
-                data_list[index] = np.zeros(max_data_count)
-            elif len(data_list[index]) != max_data_count:
-                logging.error('{0} lengths are unequal!'.format(name))
-                raise VirtualAwgError('{0} lengths are unequal!'.format(name))
-
-
-# %%-----------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------
 
 
 class KeysightVirtualAwg(VirtualAwgBase):
 
     def __init__(self, awg):
-        super.__init__(channels=[1,2,3,4], markers=[1])
+        super().__init__(channels=[1,2,3,4], markers=[1])
         self.__awg = awg
 
-# %%-----------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------
 
 
 class VirtualAwgError(Exception):
