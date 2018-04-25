@@ -132,8 +132,8 @@ def cost_exp_decay(x_data, y_data, params, threshold=None):
         x_data (array): the data for the input variable
         y_data (array): the data for the measured variable
         params (array): parameters of the exponential decay function, [A,B, gamma]
-        threshold (float or None): if the difference between data and model is larger then the threshold, these data are not taken into account.
-            If None use automatic detection (at 95th percentile)
+        threshold (float or None or 'auto'): if the difference between data and model is larger then the threshold, then the cost penalty is reduced.
+            If None use normal cost function. If 'auto' use automatic detection (at 95th percentile)
     Returns:
         cost (float): value which indicates the difference between the data and the fit
     """
@@ -143,7 +143,18 @@ def cost_exp_decay(x_data, y_data, params, threshold=None):
     return cost
 
 
-
+def test_cost_exp_decay():
+    params=[0,1,1]
+    x_data=np.arange(0, 20)
+    y_data=exp_function(x_data, *params)
+    y_data[-1]+=10
+    c=cost_exp_decay(x_data, y_data, params)
+    assert(c==10.0)
+    c=cost_exp_decay(x_data, y_data, params, threshold=None)
+    assert(c==10.0)
+    c=cost_exp_decay(x_data, y_data, params, threshold='auto')
+    assert(c<10.0)
+    
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, par_guess=None, threshold=None):
     """ Fit a exponential decay. 
 
