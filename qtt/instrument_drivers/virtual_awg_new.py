@@ -220,7 +220,21 @@ class VirtualAwg(InstrumentBase):
         [awg.reset() for awg in self.awgs]
         logging.info("All awg's are reseted...")
 
-    def sweep_init(self, waveforms, do_upload=True, period=None, delete=None, samp_freq=None):
+    def sequence_gates(self, gates, waveforms, repetitions, gotos):
+        # TODO check lengths...
+
+        all_outputs = [dict() for awg in self.awg_count]
+        for gate in gates:
+            (awg_nr, channel_nr, *marker_nr) = self.parameters.awg_map[gate]
+            all_outputs[awg_nr].keys()
+
+
+
+    def reorder_sequence(self, names, repetitions, gotos):
+        pass
+
+
+    def sweep_init(self, gates, waveforms, do_upload=True, period=None, delete=None, samp_freq=None):
         """ Sends the waveform(s) to gate(s) and markers(s).
 
         Arguments:
@@ -231,11 +245,29 @@ class VirtualAwg(InstrumentBase):
 
         Example:
         -------
-        >>> <VirtualAwg>.sweep_init(waveforms)
+        >>> gates = ['X1', 'P1', 'mk1']
+        >>> waveforms = [[seq1, seq2],[seq3, seq4], [seq2, seq1]]
+        >>> <VirtualAwg>.sweep_init(gates, waveforms)
         """
         if period or delete or samp_freq:
             logging.error('Arguments: period, delete, samp_rate are depricated!')
             raise VirtualAwgError('Depricated arguments!')
+
+        count = len(gates)
+        if count != len(waveforms):
+            raise VirtualAwgError('Invalid number of gates/waveforms!')
+
+        for index in range(count):
+            gate = gates[index]
+            sequences = waveforms[index]
+
+
+        for gate, waveform in waveforms.items():
+            (awg_nr, channel_nr, *marker_nr) = self.parameters.awg_map[gate]
+            sampling_rate = self.awgs[awg_nr].get_sampling_rate()
+            raw_wave = self.__get_raw_data(waveform, sampling_rate)
+            
+
 
         # get awg_channels for each awg
         awg_channels = [set() for x in range(self.awg_count)]
@@ -244,18 +276,20 @@ class VirtualAwg(InstrumentBase):
             awg_channels[awg_nr].add(channel_nr)
         awg_channels = [list(item) for item in awg_channels]
 
+
         # create and fill elements...
-        element_count = 1  # max(len(seqs) for seqs in waveforms.values())
+        element_count = max(len(seqs) for seqs in waveforms.values())
         elements = [[Element(awg_channels[awg_index], [1, 2]) for x in range(element_count)]
                              for awg_index in range(self.awg_count)]
+
         for gate, waveform in waveforms.items():
             (awg_nr, channel_nr, *marker_nr) = self.parameters.awg_map[gate]
-            #for wave in waveform:
             sampling_rate = self.awgs[awg_nr].get_sampling_rate()
-            raw_wave = self.__get_raw_data(waveform, sampling_rate)
-            if not marker_nr:
-                elements[awg_nr][0].set_channel(channel_nr, raw_wave)
-            else:
+            for wf in waveform:
+                raw_wave = get_raw_data(waveform, sampling_rate)
+                if not marker_nr:
+                    elements[awg_nr][0].set_channel(channel_nr, raw_wave)
+                else if marker_nr:
                 elements[awg_nr][0].set_marker(channel_nr, marker_nr[0], raw_wave)
 
         # fill other empty elements.
@@ -268,6 +302,12 @@ class VirtualAwg(InstrumentBase):
                 self.awgs[awg_nr].reset_waveform_channels(awg_channels[awg_nr])
                 self.awgs[awg_nr].set_sequences(elements[awg_nr])
                 self.awgs[awg_nr].send_waveforms()
+
+
+
+        (names, waveforms, m1s, m2s, sequence,
+         nreps, trig_waits, goto_states, jump_tos, params):
+
 
     def sweep_gates(self, gate_s, period, marker_delay=0, width=0.95):
         """ Creates sawtooth waveforms for the given gates with marker channel for
@@ -370,7 +410,7 @@ class TektronixVirtualAwg(VirtualAwgBase):
         self.__awg = awg
 
     @property
-    def get(self):
+    def get_base_awg(self):
         return self.__awg
 
     def set_continues_mode(self):
@@ -389,7 +429,6 @@ class TektronixVirtualAwg(VirtualAwgBase):
         return self.__awg.get('ch{0}_amp'.format(channel))
 
     def set_awg_properties(self, parameters):
-        self.__awg.set('clock_freq', parameters.sampling_rate())
         for channel in range(1, 5):
             self.__awg.set('ch{0}_amp'.format(channel), parameters.channel_amplitudes())
             self.__awg.set('ch{0}_offset'.format(channel), parameters.channel_offset())
@@ -403,9 +442,13 @@ class TektronixVirtualAwg(VirtualAwgBase):
     def run(self):
         self.__awg.run()
 
-    def set_state_channels(self, is_enabled):
+    def set_states(self, is_enabled, channels=None):
+        if not channels:
+            channels = super.channels
+        if not all(channels in super.channels):
+            raise VirtualAwgError('Invalid channel numbers!')
         state = 1 if is_enabled else 0
-        [self.__awg.set('ch{0}_state'.format(ch), state) for ch in super.channels]
+        [self.__awg.set('ch{0}_state'.format(ch), state) for ch in channels]
 
     def stop(self):
         self.__awg.stop()
@@ -416,77 +459,68 @@ class TektronixVirtualAwg(VirtualAwgBase):
     def delete_all_waveforms(self):
         self.__awg.delete_all_waveforms_from_list()
 
-    def reset_waveform_channels(self, channels=[1, 2, 3, 4]):
-        self.waveform_channels = channels
-        self.marker_channels = [1, 2]
-        self.waveforms = [[] for x in range(len(channels))]
-        self.marker1s = [[] for x in range(len(channels))]
-        self.marker2s = [[] for x in range(len(channels))]
-        self.jump_tos = []
-        self.nreps = []
+    # waveforms = [[seq1, seq2], [seq3, seq4]]
+    #   markers = [_ [[None, None], [mk1, None]], [[mk2, None], [None, None]] _]
 
-    def set_sequences(self, elements, repeats=1):
-        for element in elements:
-            for ch_index in range(len(self.waveform_channels)):
-                self.waveforms[ch_index].append(element.waveforms[ch_index])
-                self.marker1s[ch_index].append(element.markers1[ch_index])
-                self.marker2s[ch_index].append(element.markers2[ch_index])
-            self.jump_tos.append(len(self.jump_tos) + 2)
-            self.nreps.append(repeats)
+    def upload_waveforms(self, names, waveforms, rows, params):
+        sequence = [['']*rows]
+        trig_waits = [0]*rows
+        jump_tos = [0]*rows
+        nreps = [1]*rows
+        gotos = [0]*rows
+        gotos[-1] = 1
+        [wfs, m1s, m2s] = list(map(list, zip(*waveforms)))
+        self.__make_send_and_load_awg_file(names, waveforms, m1s, m2s, sequence,
+                                           nreps, trig_waits, goto_states, jump_tos, params)
 
-    def send_waveforms(self):
-        data_count = len(self.nreps)
-        assert(data_count != 0)
-        goto_states = [0]*data_count
-        trigger_waits = [0]*data_count
-        self.jump_tos[-1] = 1
-        self.make_send_and_load_awg_file(self.waveforms, self.marker1s, self.marker2s,
-                                         self.nreps, trigger_waits, self.jump_tos, goto_states,
-                                         self.waveform_channels)
+    #  names = [['X1', 'X2'], ['X1', 'P1']],
+    #  channels = [1, 3]
 
-    #def add_sequence_index(self, element, repeats=1):
-    #    for ch_index in range(len(self.waveform_channels)):
-    #        self.waveforms[ch_index].append(element.waveform[ch_index])
-    #        self.marker1s[ch_index].append(element.marker1[ch_index])
-    #        self.marker2s[ch_index].append(element.marker2[ch_index])
-    #    self.jump_tos.append(len(self.jump_tos) + 2)
-    #    self.nreps.append(repeats)
+    def set_sequence(self, names, channels):
+        if len(names) != len(channels):
+            raise VirtualAwgError('Invalid names and channel count!')
+        count = len(names)
+        for idx in range(count):
+            channel = channels[idx]
+            names_in_row = names[idx]
+            row_count = len(names_in_row)
+            [self.__awg.get_sqel_waveform(names_in_row[i], channel, i)
+             for i in range(row_count)]
 
-    def make_send_and_load_awg_file(self, names, waveforms, m1s, m2s, sequence,
-                                    nreps, trig_waits, goto_states, jump_tos, params):
-        #assert all names are equal and unique
-        #len equal names, waveforms, m1s, m2s : check with pack_waveforms
-        #check sequence and for that nreps, trig_waits, goto_states
-        
+    def __make_send_and_load_awg_file(self, names, waveforms, m1s, m2s, sequence,
+                                      nreps, trig_waits, goto_states, jump_tos, params):
         packed_waveforms = dict()
         pack_count = len(names)
         for i in range(pack_count):
             name = names[i]
             package = self.__awg.pack_waveform(waveforms[i], m1s[i], m2s[i])
             packed_waveforms[name] = package
-        
+
         amplitude = params.channel_amplitudes()
         offset = params.channel_offset()
         marker_low = params.marker_low()
         marker_high = params.marker_high()
-        channel_cfg = {'ANALOG_METHOD_1': 1, 'CHANNEL_STATE_1': 1, 'ANALOG_AMPLITUDE_1': amplitude, 'ANALOG_OFFSET_1': offset,
+        channel_cfg = {'ANALOG_METHOD_1': 1, 'CHANNEL_STATE_1': 1, 'ANALOG_AMPLITUDE_1': amplitude,
+                       'ANALOG_OFFSET_1': offset,
                        'MARKER1_METHOD_1': 2, 'MARKER1_LOW_1': marker_low, 'MARKER1_HIGH_1': marker_high,
                        'MARKER2_METHOD_1': 2, 'MARKER2_LOW_1': marker_low, 'MARKER2_HIGH_1': marker_high,
-                       
-                       'ANALOG_METHOD_2': 1, 'CHANNEL_STATE_2': 1, 'ANALOG_AMPLITUDE_2': amplitude, 'ANALOG_OFFSET_2': offset,
+
+                       'ANALOG_METHOD_2': 1, 'CHANNEL_STATE_2': 1, 'ANALOG_AMPLITUDE_2': amplitude,
+                       'ANALOG_OFFSET_2': offset,
                        'MARKER1_METHOD_2': 2, 'MARKER1_LOW_2': marker_low, 'MARKER1_HIGH_2': marker_high,
                        'MARKER2_METHOD_2': 2, 'MARKER2_LOW_2': marker_low, 'MARKER2_HIGH_2': marker_high,
-                       
-                       'ANALOG_METHOD_3': 1, 'CHANNEL_STATE_3': 1, 'ANALOG_AMPLITUDE_3': amplitude, 'ANALOG_OFFSET_3': offset,
+
+                       'ANALOG_METHOD_3': 1, 'CHANNEL_STATE_3': 1, 'ANALOG_AMPLITUDE_3': amplitude,
+                       'ANALOG_OFFSET_3': offset,
                        'MARKER1_METHOD_3': 2, 'MARKER1_LOW_3': marker_low, 'MARKER1_HIGH_3': marker_high,
                        'MARKER2_METHOD_3': 2, 'MARKER2_LOW_3': marker_low, 'MARKER2_HIGH_3': marker_high,
-                       
-                       'ANALOG_METHOD_4': 1, 'CHANNEL_STATE_4': 1, 'ANALOG_AMPLITUDE_4': amplitude, 'ANALOG_OFFSET_4': offset,
+
+                       'ANALOG_METHOD_4': 1, 'CHANNEL_STATE_4': 1, 'ANALOG_AMPLITUDE_4': amplitude,
+                       'ANALOG_OFFSET_4': offset,
                        'MARKER1_METHOD_4': 2, 'MARKER1_LOW_4': marker_low, 'MARKER1_HIGH_4': marker_high,
                        'MARKER2_METHOD_4': 2, 'MARKER2_LOW_4': marker_low, 'MARKER2_HIGH_4': marker_high}
-        
+
         file_name = 'costum_awg_file.awg'
-        
         self.__awg.visa_handle.write('MMEMory:CDIRectory "C:\\Users\\OEM\\Documents"')
         awg_file = self.__awg.generate_awg_file(packed_waveforms, np.array(sequence), nreps, trig_waits,
                                                 goto_states, jump_tos, channel_cfg)
@@ -506,12 +540,18 @@ class TektronixVirtualAwg(VirtualAwgBase):
 class Element:
 
     def __init__(self, channels, markers):
-        channel_count = len(channels)
-        self.channels = channels
-        self.markers = markers  # TODO!!!
-        self.waveforms = [None]*channel_count
-        self.markers1 = [None]*channel_count
-        self.markers2 = [None]*channel_count
+        self.channel_count = len(channels)
+        self.waveform_channels = channels
+        self.marker_count = len(markers)
+        self.marker_channels = markers
+        self.waveforms = [None]*self.channel_count
+
+    def __add_waveform(self, marker_count):
+        class Channel:
+            def __init__(self, markers):
+                self.channel = None
+                self.markers = [None]*markers
+        return Channel(marker_count)
 
     def set_channel(self, channel, waveform):
         index = self.channels.index(channel)
