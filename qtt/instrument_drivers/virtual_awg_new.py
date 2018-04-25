@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 from enum import Enum
 from functools import reduce
+from matplotlib import pyplot as plt
 
 from qcodes.instrument.base import InstrumentBase
 from qctoolkit.pulses import SequencePT, TablePT
@@ -38,11 +39,11 @@ def qc_toolkit_template_to_array(template, sampling_rate):
     sequence = sequencer.build()
     if not sequencer.has_finished():
         raise PlottingNotPossibleException(template)
-    (_, voltages) = render(sequence, sampling_rate/10**9)
+    (_, voltages) = render(sequence, sampling_rate/1e9)
     return voltages[next(iter(voltages))]
 
 
-def get_raw_data(self, waveform, sampling_rate):
+def get_raw_data(waveform, sampling_rate):
     """ This function returns the raw array data given the waveform.
         A waveform can hold different types of data dependend on the
         used pulse library. Currently only raw array data and QC-toolkit
@@ -66,16 +67,16 @@ def get_raw_data(self, waveform, sampling_rate):
 
 def plot_waveform_array(array, sampling_rate):
     """ Plots the waveform array."""
-    from matplotlib import pyplot as plt
     sample_count = len(array)
-    total_time = array / sampling_rate
-    times = np.linspace(0, total_time, num=sample_count)
-    plt.plot(times, array)
+    total_time = (sample_count - 1)/sampling_rate*1e9
+    times = np.linspace(0, total_time, num=sample_count, dtype=float)
+    plt.step(times, array, where='post')
+    plt.show()
 
 
 def plot_sequence(sequence, sampling_rate):
     """ Plots the qc-toolkit sequence."""
-    plot(sequence['WAVE'], sample_rate=sampling_rate/10**9)
+    plot(sequence['WAVE'], sample_rate=sampling_rate/1e9)
 
 
 def pulsewave_template(name='pulse'):
@@ -93,13 +94,22 @@ def wait_template(name: str='wait'):
 
 
 def make_sawtooth(vpp, period, repetitions=1, name='sawtooth'):
-    seq_data = (sawtooth_template(), {'period': period, 'amplitude': vpp/2})
+    seq_data = (sawtooth_template(), {'period': period*1e9, 'amplitude': vpp/2})
     return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)),
             'TYPE': DataType.QC_TOOLKIT}
 
 
 def make_pulses(voltages, waittimes, filter_cutoff=None, mvrange=None, name='pulses'):
     return {'NAME': name, 'WAVE': None, 'TYPE': DataType.QC_TOOLKIT}
+
+
+def test_make_sawtooth_HasCorrectProperties():
+    sampling_rate = 1e9
+    sawtooth_sequence = make_sawtooth(1.5, period=1e-7)
+    plot_sequence(sawtooth_sequence, sampling_rate)
+
+    array = get_raw_data(sawtooth_sequence, sampling_rate)
+    plot_waveform_array(array, sampling_rate)
 
 # %%-----------------------------------------------------------------------------------------------
 
