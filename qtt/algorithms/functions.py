@@ -162,7 +162,7 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, par_gues
 
     """
 
-    def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
+    func = lambda params: cost_exp_decay(x_data, y_data, params, threshold)
     if par_guess is None:
         maxsignal = np.percentile(y_data, 98)
         minsignal = np.percentile(y_data, 2)
