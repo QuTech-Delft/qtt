@@ -54,7 +54,6 @@ def transitions_durations(data, split):
 
     return duration_dn, duration_up
 
-
 #%% function to analyse the RTS data
 class FittingException(Exception):
     pass    
@@ -108,7 +107,6 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         Z, xedges, yedges = np.histogram2d(xdata, data, bins=[int(np.sqrt(len(xdata)))/2,int(np.sqrt(len(data)))/2])
         title = '2d histogram RTS'
         plt.figure(title)
-        plt.clf()
         plt.pcolormesh(xedges, yedges, Z.T)
         cb = plt.colorbar()
         cb.set_label('Data points per bin')
@@ -129,7 +127,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
     split = result_dict['split']
      
     if verbose:
-        print('Fit parameters double gaussian:\n mean down: %.3f counts' % par_fit[4] +', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] +', std up:%.3f counts' % par_fit[3])
+        print('Fit paramaters double gaussian:\n mean down: %.3f counts' % par_fit[4] +', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] +', std up:%.3f counts' % par_fit[3])
         print('Separation between peaks gaussians: %.3f std' % separation)
         print('Split between two levels: %.3f' % split)
         
@@ -137,7 +135,6 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
     if fig:
         title = 'Histogram of two levels RTS'
         plt.figure(title)
-        plt.clf()
         counts, bins, _ = plt.hist(data, bins=num_bins)
         plt.plot(bincentres, double_gaussian(bincentres, par_fit), 'r', label = 'Fitted double gaussian')
         plt.plot(split, double_gaussian(split, par_fit), 'ro', markersize=8, label = 'split: %.3f' % split)
@@ -149,10 +146,10 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
             addPPTslide(title=title, fig=plt.figure(title), notes='Fit paramaters double gaussian:\n mean down: %.3f counts' % par_fit[4] +', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] +', std up:%.3f counts' % par_fit[3] +'.Separation between peaks gaussians: %.3f std' % separation +'. Split between two levels: %.3f' % split )
         
     if separation < min_sep:
-        raise FittingException('Separation between the peaks of the gaussian %.1f is less then %.1f std, indicating that the fit was not succesfull.' % (separation, min_sep) )
+        raise FittingException('Separation between the peaks of the gaussian is less then %.1f std, indicating that the fit was not succesfull.' % min_sep)
         
     if separation > max_sep:
-        raise FittingException('Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (separation, max_sep) )
+        raise FittingException('Separation between the peaks of the gaussian is more then %.1f std, indicating that the fit was not succesfull.' % max_sep)
    
     
     # count the number of transitions and their duration
@@ -194,9 +191,9 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
     if fig:
         title = 'Fitted exponantial decay, level down'
         plt.figure(title)
-        plt.clf()
         plt.plot(bincentres_dn, counts_dn, 'o', label='Counts down') 
-        plt.plot(bincentres_dn, exp_function(bincentres_dn,  B_dn_fit, A_dn_fit, gamma_dn_fit),'r', label='Fitted exponantial decay \n t_dn: %.1f kHz' % tunnelrate_dn)
+        #plt.plot(bincentres_dn, exp_function(bincentres_dn,  B_dn_fit, A_dn_fit, gamma_dn_fit),'r', label='Fitted exponantial decay \n t_dn: %.1f kHz' % tunnelrate_dn)
+        plt.plot(bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),'r', label='Fitted exponantial decay \n t_dn: %.1f kHz' % tunnelrate_dn)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Counts per bin')
         plt.legend()
@@ -227,7 +224,8 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         title = 'Fitted exponantial decay, level up'
         plt.figure(title)
         plt.plot(bincentres_up, counts_up, 'o', label='Counts up') 
-        plt.plot(bincentres_up, exp_function(bincentres_up,  B_dn_fit, A_up_fit, gamma_up_fit),'r', label='Fitted exponantial decay \n t_up: %.1f kHz' % tunnelrate_up)
+        #plt.plot(bincentres_up, exp_function(bincentres_up,  B_dn_fit, A_up_fit, gamma_up_fit),'r', label='Fitted exponantial decay \n t_up: %.1f kHz' % tunnelrate_up)
+        plt.plot(bincentres_up, exp_function(bincentres_up,  A_dn_fit, B_up_fit, gamma_up_fit),'r', label='Fitted exponantial decay \n t_up: %.1f kHz' % tunnelrate_up)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Data points per bin')
         plt.legend()
@@ -245,22 +243,16 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
 
 #%%
 def test_RTS():
-    data = np.random.rand( 10000, )
-    try:
-        r=tunnelrates_RTS(data, plungers=[])
-        raise Exception('data should for fit to RTS')
-    except FittingException as ex:
-        # fitting exception is good, since data is random
-        pass
-
     data = np.zeros( (100000,))
     for i in range(1, data.size):
         if np.random.rand()>.98:
             data[i]=1-data[i-1]
         else:
             data[i]=data[i-1]
-    data=data+np.random.normal(size=data.size)/10 # add noise
-    r=tunnelrates_RTS(data, plungers=[], samplerate=10e6, fig=None)
+    data=data+np.random.rand( 100000, )/5
+    noise = np.random.normal(0, 0.1, data.size)
+    rtsdata = data + noise
+    r=tunnelrates_RTS(rtsdata, plungers=[], samplerate=10e6)
  
 if __name__ == '__main__':
     test_RTS()
