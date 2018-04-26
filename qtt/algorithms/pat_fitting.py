@@ -296,20 +296,20 @@ def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, Tru
 
     if xoffset is None:
         def ff(x): return pat_model_score(xd, yd, x, weights=weights)
-        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': True}))
+        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': verbose>=1}))
         ppx = r['x']
     else:
         def ff(x): return pat_model_score(xd, yd, np.array([xoffset, x[0], x[1]]), weights=weights)
-        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]), method='Powell', options=dict({'disp': True}))
+        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]), method='Powell', options=dict({'disp': verbose>=1}))
         ppx = np.insert(r['x'], 0, xoffset)
 
     if xoffset is None:
         def ff(x): return pat_model_score(xd, yd, x, weights=weights, thr=.5e9)
-        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': True}))
+        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': verbose>=1}))
         ppx = r['x']
     else:
         def ff(x): return pat_model_score(xd, yd, np.array([xoffset, x[0], x[1]]), weights=weights)
-        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]), method='Powell', options=dict({'disp': True}))
+        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]), method='Powell', options=dict({'disp': verbose>=1}))
         ppx = np.insert(r['x'], 0, xoffset)
 
     sc0 = pat_model_score(xd, yd, pp, weights=weights)
@@ -323,7 +323,7 @@ def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, Tru
 
 
 def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
-            even_branches=[True, True, True], par_guess=None, xoffset=None):
+            even_branches=[True, True, True], par_guess=None, xoffset=None, verbose=1):
     """ Wrapper for fitting the energy transitions in a PAT scan.
 
     Args:
@@ -424,3 +424,21 @@ def show_traces(x_data, z_data, fig=100, direction='h', title=None):
         if title is None:
             title = 'Blue: top lines, red: bottom lines'
         plt.title(title)
+
+
+def test_pat_fitting(fig=None):
+    pp0=[0, 50, 5]
+    x_data=np.arange(-3, 3, 0.1)
+    y_data=np.arange(.5e9, 10e9, .5e9)
+    z_data=np.zeros( (y_data.size, x_data.size))
+    background=np.zeros( x_data.size)
+    for ii, x in enumerate(x_data):
+        y=one_ele_pat_model(x, pp0)
+        jj=np.argmin(np.abs(y_data-y))
+        z_data[jj, ii]=1
+    pp, pat_fit = fit_pat(x_data, y_data, z_data, background, verbose=0)
+    imx, imq, _ = pre_process_pat(x_data, y_data, background, z_data, fig=100)
+
+    if fig is not None:
+        pat_fit_fig = plt.figure(fig); plt.clf()
+        plot_pat_fit(x_data, y_data, imq, pp, fig=pat_fit_fig.number, label='fitted model')
