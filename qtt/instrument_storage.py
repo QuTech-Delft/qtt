@@ -2,6 +2,7 @@
 import numpy as np
 import json
 import numbers
+import configparser
 
 
 def save_instrument_json(instr, ifile, verbose=1):
@@ -30,9 +31,6 @@ def load_instrument_json(instr, ifile, verbose=1):
         val = jdict[dd]
         p.set(val)
     return jdict
-
-import configparser
-
 
 def save_instrument_configparser(instr, ifile, verbose=1):
     jdict = configparser.ConfigParser()
