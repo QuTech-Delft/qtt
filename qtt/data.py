@@ -672,6 +672,7 @@ def write_data(mfile: str, data):
     #_=deepdish.io.save(mfile, data)
 
 
+@qtt.tools.rdeprecated(expire='1-1-2019')
 def loadDataset(path):
     ''' Wrapper function
 
@@ -685,6 +686,7 @@ def loadDataset(path):
     return dataset, metadata
 
 
+@qtt.tools.rdeprecated(expire='1-1-2019')
 def writeDataset(path, dataset, metadata=None):
     ''' Wrapper function
 
