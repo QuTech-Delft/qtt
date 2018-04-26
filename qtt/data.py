@@ -949,7 +949,7 @@ def test_makeDataSet1Dplain():
 #%%
 
 
-def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues'):
+def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbose=1):
     """ Compare metadata from two different datasets.
 
     Outputs the differences in metadata from dataset1 to dataset2.
@@ -978,7 +978,7 @@ def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues'):
 def test_compare():
     import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet2D()
-    compare_dataset_metadata(ds, ds)
+    compare_dataset_metadata(ds, ds, verbose=0)
 
 #%%
 
@@ -998,3 +998,5 @@ if __name__ == '__main__':
 
     test_numpy_on_dataset()
     test_makeDataSet2D()
+    test_makeDataSet1Dplain()
+    test_compare()
