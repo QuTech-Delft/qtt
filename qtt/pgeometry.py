@@ -617,13 +617,6 @@ def T2opencv(T):
     return rvec, tvec
 
 
-def frame2T(f):
-    """ Convert frame into 4x4 transformation matrix """
-    T = np.matrix(np.eye(4))
-    T[0:3, 0:3] = euler2RBE(f[3:7])
-    T[0:3, 3] = f[0:3].reshape(3, 1)
-    return T
-
 
 def euler2RBE(theta):
     """ Convert Euler angles to rotation matrix
@@ -760,7 +753,15 @@ def dir2R(d, a=None):
     return R
 
 
-@static_var("b", np.matrix(np.zeros((2, 2))))
+
+def frame2T(f):
+    """ Convert frame into 4x4 transformation matrix """
+    T = np.array(np.eye(4))
+    T[0:3, 0:3] = euler2RBE(f[3:7])
+    T[0:3, 3] = f[0:3].reshape(3, 1)
+    return T
+
+@static_var("b", np.array(np.zeros((2, 2))))
 def rot2D(phi):
     """ Return 2x2 rotation matrix from angle
 
@@ -787,63 +788,23 @@ def rot2D(phi):
     r.itemset(3, c)
     return r
 
-
 def pg_rotx(phi):
     """ Rotate around the x-axis with angle """
     c = math.cos(phi)
     s = math.sin(phi)
-    R = np.eye(3)
-    R[1, 1] = c
-    R[2, 1] = s
-    R[1, 2] = -s
-    R[2, 2] = c
-    return np.matrix(R)
+    R = np.zeros((3, 3))
+    R.flat = [1, 0, 0, 0, c, -s, 0, s, c]
+    return R
 
-if platform.node() == 'woelmuis':
-    # transition code to convert all elements to np.array type (and use python 3.5 @ operator)
-    # np.array is faster, and with the @ operator we get cleaner code
-
-    def frame2T(f):
-        """ Convert frame into 4x4 transformation matrix """
-        T = np.array(np.eye(4))
-        T[0:3, 0:3] = euler2RBE(f[3:7])
-        T[0:3, 3] = f[0:3].reshape(3, 1)
-        return T
-
-    @static_var("b", np.array(np.zeros((2, 2))))
-    def rot2D(phi):
-        """ Return 2x2 rotation matrix from angle
-
-        Arguments
-        ---------
-        phi : float
-            Angle in radians
-        Returns
-        -------
-            R : array
-                The 2x2 rotation matrix
-
-        Examples
-        --------
-        >>> R = rot2D(np.pi)
-
-        """
-        r = rot2D.b.copy()
-        c = math.cos(phi)
-        s = math.sin(phi)
-        r.itemset(0, c)
-        r.itemset(1, -s)
-        r.itemset(2, s)
-        r.itemset(3, c)
-        return r
-
-    def pg_rotx(phi):
-        """ Rotate around the x-axis with angle """
-        c = math.cos(phi)
-        s = math.sin(phi)
-        R = np.zeros((3, 3))
-        R.flat = [1, 0, 0, 0, c, -s, 0, s, c]
-        return R
+def pcolormesh_centre(x, y, im, *args, **kwargs):
+    """ Wrapper for pcolormesh to plot pixel centres at data points """
+    dx=np.diff(x)
+    dy=np.diff(y)
+    dx=np.hstack( (dx[0], dx, dx[-1]))
+    dy=np.hstack( (dy[0], dy, dy[-1]))
+    xx=np.hstack( (x, x[-1]+dx[-1]))-dx/2
+    yy=np.hstack( (y, y[-1]+dy[-1]))-dy/2
+    plt.pcolormesh(xx, yy, im, *args, **kwargs)
 
 
 def imshowz(im, *args, **kwargs):
@@ -959,58 +920,6 @@ def setregion(im, subim, pos, mask=None, clip=False):
     return im
 
 
-def frontFilter(X, rvec, tvec, mtx, verbose=0, distcoeff=None, rect=None, neardist=0.01, returnall=False):
-    """ Select points which are in front of the camera (and in a certain region)
-        Points in a 3xN np.array.float32 and rect with in a 2x5 np.array.float32
-    """
-    T = opencv2T(rvec, tvec)
-
-    # apply to all points
-    xx = projectiveTransformation(T, X)
-    ximuall = cv2.projectPoints(X.transpose(), rvec, tvec, mtx, None)[0]
-
-    # do the z buffer test
-    bools = xx[2, :] > neardist
-    # do the 2d projection test
-    if not rect is None:
-        for ii, pt in enumerate(ximuall):
-            ptx = tuple(pt.flatten())
-            v = cv2.pointPolygonTest(rect.T, ptx, False)
-            bools[ii] = bools[ii] and v > 0
-
-    # valid and invalid indices
-    ind = (bools == True).nonzero()[0]
-    notind = (bools == False).nonzero()[0]
-    if ind.size == 0:
-        ximu = np.zeros((0, 1, 2))
-        xim = np.zeros((0, 1, 2))
-    else:
-        ximu = cv2.projectPoints(
-            X[:, ind].transpose(), rvec, tvec, mtx, None)[0]
-        xim = cv2.projectPoints(
-            X[:, ind].transpose(), rvec, tvec, mtx, distcoeff)[0]
-
-    if verbose >= 2:
-        plt.figure(100)
-        plt.clf()
-        plt.imshow(rgb)
-        plotPoints(xim.T, '.b')
-        plotPoints(ximu.T, 'or')
-
-    if returnall:
-        if ind.size == 0:
-            ximall = -np.ones((xx.shape[1], 1, 2))
-        else:
-            ximall = cv2.projectPoints(
-                X.transpose(), rvec, tvec, mtx, distcoeff)[0]
-            ximall[notind, :, :] = -1
-        return xim, ind, ximall
-    else:
-        return xim, ind
-
-# import matplotlib
-# matplotlib.use('TkAgg')
-
 
 def region2poly(rr):
     """ Convert a region (bounding box xxyy) to polygon """
@@ -1025,8 +934,6 @@ def region2poly(rr):
     # poly.flat =rr.flat[ [0,1,1,0, 0, 2,2,3,3,2] ]
     poly = rr.flat[[0, 1, 1, 0, 0, 2, 2, 3, 3, 2]].reshape((2, 5))
 
-    # poly = np.array([rr[:, 0:1], np.array([[rr[0, 1]], [rr[1, 0]]]), rr[ :,
-    # 1:2], np.array([[rr[0, 0]], [rr[1, 1]]]), rr[:, 0:1]]).reshape((5, 2)).T
     return poly
 
 
@@ -1055,8 +962,6 @@ def plotLabels(xx, *args, **kwargs):
     # plt.text(xx[0:], xx[1,:], lbl, **kwargs)
     nn = xx.shape[1]
     ax = plt.gca()
-    # print(nn)
-    # print(lbl)
     th = [None] * nn
     for ii in range(nn):
         # print('-- %d' % ii)
