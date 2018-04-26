@@ -379,9 +379,7 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
 
 
 if __name__ == '__main__' and 0:
-    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-        alldata, arrayname=None)
-    _ = pix2scan(np.zeros((2, 4)), alldata)
+    test_dataset()
 
 #%%
 
@@ -449,8 +447,8 @@ class image_transform:
             self.H = Hs @ self.H
 
         if verbose:
-            print('image_transform: tr._imraw.shape %s' % (tr._imraw.shape, ))
-            print('image_transform: tr._im.shape %s' % (tr._im.shape, ))
+            print('image_transform: tr._imraw.shape %s' % (self._imraw.shape, ))
+            print('image_transform: tr._im.shape %s' % (self._im.shape, ))
         self._im = self._transform(self._imraw)
         self.Hi = numpy.linalg.inv(self.H)
 
@@ -611,17 +609,9 @@ def test_image_transform(verbose=0):
 
 
 if __name__ == '__main__':
-    import pdb
     test_image_transform()
 
 #%%
-
-try:
-    import deepdish
-except:
-    pass
-#    warnings.warn('could not load deepdish...')
-
 
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
