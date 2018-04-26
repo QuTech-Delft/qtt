@@ -18,6 +18,7 @@ from qtt import pgeometry
 import qtt.tools
 import qtt.algorithms.generic
 from qtt.tools import diffImageSmooth
+from qcodes.plots.qcmatplotlib import MatPlot
 
 #%%
 
@@ -44,7 +45,13 @@ def datasetCentre(ds, ndim=None):
         cc = [mx, my]
     return cc
 
-
+def test_dataset():
+    import qcodes.tests.data_mocks
+    ds = qcodes.tests.data_mocks.DataSet2D()
+    cc = datasetCentre(ds)
+    assert(cc[0] == 1.5)
+    zz=dataset_labels(ds)
+    
 def drawCrosshair(ds, ax=None, ndim=None):
     """ Draw a crosshair on the centre of the dataset
 
@@ -62,12 +69,6 @@ def drawCrosshair(ds, ax=None, ndim=None):
     if len(cc) == 2:
         ax.axhline(y=cc[1], linestyle=':', color='c')
 
-
-def test_dataset():
-    import qcodes.tests.data_mocks
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    cc = datasetCentre(ds)
-    assert(cc[0] == 1.5)
 
 #%%
 
@@ -139,20 +140,31 @@ def dataset_get_istep(alldata, mode=None):
 
 
 def dataset1Ddata(alldata):
-    ''' Parse a dataset into the x and y scan values '''
+    ''' Parse a dataset into the x and y scan values
+    
+    Returns:
+        x (array)
+        y (array)
+    '''
     y = alldata.default_parameter_array()
     x = y.set_arrays[0]
     return x, y
 
 
 def dataset_labels(alldata, tag=None):
+    """ Return label for axis of dataset
+    
+    Args:
+        ds (DataSet): dataset
+        tag (str): can be 'x', 'y' or 'z'
+    """
     if tag == 'x':
         d = alldata.default_parameter_array()
         return d.set_arrays[0].label
     if tag == 'y':
         d = alldata.default_parameter_array()
         return d.set_arrays[1].label
-    if tag is None:
+    if tag is None or tag=='z':
         d = alldata.default_parameter_array()
         return d.label
     return '?'
@@ -168,9 +180,6 @@ def uniqueArrayName(dataset, name0):
         if ii > 1000:
             raise Exception('too many arrays in DataSet')
     return name
-
-
-from qcodes.plots.qcmatplotlib import MatPlot
 
 
 def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measured'):
@@ -207,6 +216,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
 
 
 def sweepgate(scanjob):
+    """ Return the sweepgate in a scanjob """
     g = scanjob['sweepdata'].get('param', None)
     if isinstance(g, str):
         return g
@@ -217,6 +227,7 @@ def sweepgate(scanjob):
 
 
 def stepgate(scanjob):
+    """ Return the step gate in a scanjob """
     g = scanjob['stepdata'].get('param', None)
     if isinstance(g, str):
         return g
@@ -242,10 +253,8 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
         else:
             pass
-            # impixel = tr.transform(im)
     else:
         pass
-    # XX = array # dd['data_array']
 
     labels = [s.name for s in array.set_arrays]
 
@@ -254,14 +263,10 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     ny = vstep.size
     nx = vsweep.size
 
-    # im=diffImage(im, dy)
     im = diffImageSmooth(impixel, dy=dy, sigma=sigma)
 
     if verbose:
         print('show2D: nx %d, ny %d' % (nx, ny,))
-
-    # plt.clf()
-    # plt.hist(im.flatten(), 256, fc='k', ec='k') # range=(0.0,1.0)
 
     if verbose >= 2:
         print('extent: %s' % xx)
@@ -289,10 +294,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
             plt.xlabel('%s' % labelx + unitstr)
         else:
             pass
-            # try:
-            #    plt.xlabel('%s' % dd2d['argsd']['sweep_gates'][0] + unitstr)
-            # except:
-            #    pass
 
         if scanjob.get('stepdata', None) is not None:
             if units is None:
@@ -302,9 +303,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
         if not title is None:
             plt.title(title)
-    # plt.axis('image')
-    # ax=plt.gca()
-    # ax.invert_yaxis()
         if colorbar:
             plt.colorbar()
         if verbose >= 2:
