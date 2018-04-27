@@ -260,7 +260,9 @@ def test_RTS():
         else:
             data[i]=data[i-1]
     data=data+np.random.normal(size=data.size)/10 # add noise
-    r=tunnelrates_RTS(data, plungers=[], samplerate=10e6, fig=None)
+    with warnings.catch_warnings(): # catch any warnings
+        warnings.simplefilter("ignore")
+        r=tunnelrates_RTS(data, plungers=[], samplerate=10e6, fig=None)
  
 if __name__ == '__main__':
     test_RTS()
