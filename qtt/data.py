@@ -21,6 +21,63 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 #%%
 
+def load_dataset(location, io = None):
+    """ Load a dataset from storage
+    
+    An attempt is made to automatically detect the formatter. Supported are currently GNUPlotFormat and HDF5Format
+    
+    Args:
+        location (str): either the relative or full location
+        io (None or 
+    Returns:
+        dataset (DataSet or None)
+    """
+    from qcodes.data.hdf5_format import HDF5Format
+    from qcodes.data.gnuplot_format import GNUPlotFormat
+    
+    if io is None:
+        io = qcodes.DataSet.default_io
+    formatters = [qcodes.DataSet.default_formatter, HDF5Format(), GNUPlotFormat()]
+    
+    data = None
+    for ii, hformatter in enumerate(formatters):        
+        try:
+            data = qcodes.load_data(location, formatter=hformatter, io=io)
+            logging.debug('load_data: loaded %s with %s' % (location, hformatter) )
+        except Exception as ex:
+            logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
+            #print(ex)
+            pass            
+    return data
+
+
+def test_load_dataset(verbose=0):
+    import tempfile
+    h=qcodes.data.hdf5_format.HDF5Format()
+    g=qcodes.data.gnuplot_format.GNUPlotFormat()
+    
+    io=qcodes.data.io.DiskIO(tempfile.mkdtemp())
+    dd=[]
+    name=qcodes.DataSet.location_provider.base_record['name']
+    for jj,fmt in enumerate([g, h]):
+        ds = qcodes.tests.data_mocks.DataSet2D(name='format%d' % jj)
+        ds.formatter=fmt
+        ds.io = io
+        ds.add_metadata({'1': 1, '2': [2, 'x'], 'np': np.array([1,2.])})
+        ds.write(write_metadata=True)
+        dd.append(ds.location)
+        time.sleep(.1)
+    qcodes.DataSet.location_provider.base_record['name']=name
+
+    for ii, location in enumerate(dd):
+        if verbose:
+            print('load %s' % location)
+        r=load_dataset(location, io=io)
+        if verbose:
+            print(r)
+
+#%%
+
 
 def datasetCentre(ds, ndim=None):
     """ Return centre position for dataset
