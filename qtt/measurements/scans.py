@@ -1158,7 +1158,7 @@ def process_fpga_trace(data, width, resolution=None, Naverage=1, direction='forw
     return data_processed
 
 
-def process_digitizer_trace(data, width, period, samplerate, resolution=None, padding=0,
+def process_digitizer_trace(data, width, period, samplerate, resolution=None, padding=0, start_zero=False,
                             fig=None, pre_trigger=None):
     """ Process data from the M4i and a sawtooth trace 
 
@@ -1180,8 +1180,14 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         npoints2 = npoints2 - (npoints2 % 2)
         r1 = int(padding)
         r2 = int(npoints2)
+        if start_zero:
+            delta = int(period * samplerate*(1-width[0])/2)
+            r1 += delta
+            r2+= delta     
         processed_data = data[r1:r2, :].T
     else:
+        if start_zero:
+            raise Exception('not implemented')
         width_horz = width[0]
         width_vert = width[1]
         res_horz = int(resolution[0])
@@ -1226,9 +1232,6 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         plt.plot(data, label='raw data')
         plt.title('Processing of digitizer trace')
         plt.axis('tight')
-        # cc=data.shape[0]*(.5-rwidth/2)
-        # dcc=int(data.shape[0]/2)
-        # cc=dcc
 
         qtt.pgeometry.plot2Dline(
             [-1, 0, cctrigger], ':g', linewidth=3, label='trigger')
@@ -1345,10 +1348,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     padding_offset = int(drate * signal_delay)
 
     period = waveform['period']
-    if 'resolution' in waveform:
-        resolution = waveform['resolution']
-    else:
-        resolution = None
+    resolution = waveform.get('resolution', None)
 
     paddingpix = 16
     padding = paddingpix / drate
@@ -1383,13 +1383,14 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         samplerate = digitizer.sample_rate()
         pre_trigger = digitizer.pretrigger_memory_size()
 
+        start_zero = waveform.get('start_zero', False)
+     
         data, (r1, r2) = process_digitizer_trace(data.T, width, period,
-                                                 samplerate, pre_trigger=pre_trigger, resolution=resolution)
+                                                 samplerate, pre_trigger=pre_trigger, resolution=resolution, start_zero=start_zero)
 
         if verbose:
             print('measuresegment_m4i: processing data: r1 %s, r2 %s' % (r1, r2))
     return data
-
 
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
