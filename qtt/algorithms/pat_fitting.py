@@ -64,6 +64,7 @@ def two_ele_pat_model(x_data, pp):
 class pat_score():
 
     def __init__(self, even_branches=[True, True, True]):
+        """ Class to calculate scores for PAT fitting """
         self.even_branches = even_branches
 
     def pat_one_ele_score(self, xd, yd, pp, weights=None, thr=2e9):
@@ -97,10 +98,11 @@ class pat_score():
             pp (array): model parameters
         """
         ymodel = two_ele_pat_model(xd, pp)
-        charge_changes = []
-        charge_changes.append(1 / 2 * (1 + pp[1] * (xd - pp[0]) / np.sqrt((pp[1] * (xd - pp[0]))**2 + 8 * pp[2]**2)))
-        charge_changes.append(np.abs(pp[1] * (xd - pp[0]) / np.sqrt((pp[1] * (xd - pp[0]))**2 + 8 * pp[2]**2)))
-        charge_changes.append(1 / 2 * (1 - pp[1] * (xd - pp[0]) / np.sqrt((pp[1] * (xd - pp[0]))**2 + 8 * pp[2]**2)))
+        denom = np.sqrt((pp[1] * (xd - pp[0]))**2 + 8 * pp[2]**2)
+        charge_changes = []        
+        charge_changes.append(1 / 2 * (1 + pp[1] * (xd - pp[0]) / denom))
+        charge_changes.append(np.abs(pp[1] * (xd - pp[0]) / denom))
+        charge_changes.append(1 / 2 * (1 - pp[1] * (xd - pp[0]) / denom))
         sc = np.inf * np.ones(ymodel[0].shape[0])
         for idval, val in enumerate(self.even_branches):
             if val:
@@ -125,9 +127,11 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
         y_data (array): frequency (Hz)
         background (array): e.g. sensor signal of POL scan
         z_data (array): sensor signal of PAT scan
+        fig (None or int)
     Returns:
         imx (array)
         imq (array)
+        backgr_sm (array)
     """
     backgr_sm = scipy.ndimage.gaussian_filter(background, sigma=5)
 
@@ -353,7 +357,7 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
     yd = xx[1, :]
 
     if par_guess is None:
-        par_guess = np.array([0, 65, 10])
+        par_guess = np.array([np.nanmean(x_data), 65, 10])
 
     weights = None
     pp = fit_pat_to_peaks(par_guess, xd, yd, trans=trans, even_branches=even_branches, weights=weights, xoffset=xoffset, verbose=0)
@@ -369,7 +373,7 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
 
 
 def plot_pat_fit(x_data, y_data, z_data, pp, trans='one_ele', fig=400, title='Fitted model', label='model'):
-    """ Plot the fitted model of the PAT transition(s). 
+    """ Plot the fitted model of the PAT transition(s)
 
     Args:
         x_data (array): detuning in millivolts
@@ -411,6 +415,7 @@ def show_traces(x_data, z_data, fig=100, direction='h', title=None):
         x_data (array): detuning in millivolts
         z_data (array): input image. rows are taken as the traces
         fig (int): number for figure window to use
+        direction (str): can be 'h' or 'v'
     """
     plt.figure(fig)
     plt.clf()
