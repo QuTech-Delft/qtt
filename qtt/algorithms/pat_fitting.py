@@ -5,7 +5,7 @@ Created on Fri Jul 14 22:54:23 2017
 @author: diepencjv / eendebakpt
 """
 
-#%%
+#%% Load packages
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.ndimage
@@ -24,6 +24,9 @@ def one_ele_pat_model(x_data, pp):
     Args:
         x_data (array): detuning (mV)
         pp (array): xoffset (mV), leverarm (ueV/mV) and t (ueV)
+        
+    For more details see: https://arxiv.org/abs/1803.10352
+    
     """
     if len(pp) == 1:
         pp = pp[0]
@@ -32,9 +35,6 @@ def one_ele_pat_model(x_data, pp):
     t = pp[2]
     y = np.sqrt(np.power((x_data - xoffset) * leverarm, 2) + 4 * t**2) * ueV2Hz
     return y
-
-#%%
-
 
 def two_ele_pat_model(x_data, pp):
     r""" Model for two electron pat
@@ -45,6 +45,7 @@ def two_ele_pat_model(x_data, pp):
     Args:
         x_data (array): detuning (mV)
         pp (array): xoffset (mV), leverarm (ueV/mV) and t (ueV)
+
     """
     if len(pp) == 1:
         pp = pp[0]
@@ -184,14 +185,16 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
     thr2 = .6
 
     # chop off part of the data, because T1 is relatively long
-    mvedge = .1 * (np.max(x_data) - np.min(x_data)) # FIXME: ?????
+    mvedge = .1 * (np.max(x_data) - np.min(x_data)) 
     if model == 'two_ele':
         mvthr = (np.max(x_data) - np.min(x_data)) * .25e-3 / period  # T1 \approx .1 ms [Ref]
         horz_vals = x_data[(x_data > (np.min(x_data) + np.maximum(mvthr, mvedge))) & (x_data < (np.max(x_data) - mvedge))]
         z_data = imx[:, (x_data > (np.min(x_data) + np.maximum(mvthr, mvedge))) & (x_data < (np.max(x_data) - mvedge))]
-    else:
+    elif model == 'one_ele':
         horz_vals = x_data[(x_data > (np.min(x_data) + mvedge)) & (x_data < (np.max(x_data) - mvedge))]
         z_data = imx[:, (x_data > (np.min(x_data) + mvedge)) & (x_data < (np.max(x_data) - mvedge))]
+    else:
+        raise Exception('no such model')
 
     scalefac = (np.max(horz_vals) - np.min(horz_vals)) / (z_data.shape[1] - 1)  # mV/pixel
 
@@ -265,7 +268,7 @@ def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, Tru
     elif trans is 'two_ele':
         pat_model_score = pat_score_class.pat_two_ele_score
     else:
-        raise('This model is not implemented.')
+        raise Exception('This model %s is not implemented.' % trans)
 
     if 0:
         def ff(x): return pat_model_score(xd, yd, [pp[0], pp[1], x], weights=weights)
@@ -326,11 +329,14 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
             even_branches=[True, True, True], par_guess=None, xoffset=None, verbose=1):
     """ Wrapper for fitting the energy transitions in a PAT scan.
 
+    For more details see: https://arxiv.org/abs/1803.10352
+
     Args:
         x_data (array): detuning (mV)
         y_data (array): frequencies (Hz)
         z_data (array): sensor signal of PAT scan
         background (array): sensor signal of POL scan
+        trans (str): can be 'one_ele' or 'two_ele'
 
     Returns:
         pp (array): fitted xoffset (mV), leverarm (ueV/mV) and t (ueV)
