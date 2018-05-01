@@ -63,10 +63,11 @@ def two_ele_pat_model(x_data, pp):
 
 class pat_score():
 
-    def __init__(self, even_branches=[True, True, True]):
+    def __init__(self, even_branches=[True, True, True], branch_reduction = None):
         """ Class to calculate scores for PAT fitting """
         self.even_branches = even_branches
-
+        self.branch_reduction = branch_reduction
+        
     def pat_one_ele_score(self, xd, yd, pp, weights=None, thr=2e9):
         """ Calculate score for pat one electron model 
 
@@ -103,10 +104,20 @@ class pat_score():
         charge_changes.append(1 / 2 * (1 + pp[1] * (xd - pp[0]) / denom))
         charge_changes.append(np.abs(pp[1] * (xd - pp[0]) / denom))
         charge_changes.append(1 / 2 * (1 - pp[1] * (xd - pp[0]) / denom))
-        sc = np.inf * np.ones(ymodel[0].shape[0])
-        for idval, val in enumerate(self.even_branches):
-            if val:
-                sc = np.minimum(sc, np.abs(ymodel[idval] - yd))
+        linesize = ymodel[0].shape[0]
+        if self.branch_reduction is None or self.branch_reduction=='minimum':
+            sc = np.inf * np.ones(linesize)
+            for idval, val in enumerate(self.even_branches):
+                if val:
+                    sc = np.minimum(sc, np.abs(ymodel[idval] - yd))
+        elif self.branch_reduction=='mean':
+            sc = []
+            for idval, val in enumerate(self.even_branches):
+                if val:
+                    sc.append(np.abs(ymodel[idval] - yd) )
+            sc = np.mean( np.array(sc), axis=1)
+        else:
+            raise NotImplementedError('branch_reduction %s not implemented' % self.branch_reduction)
         scalefac = thr
         sc = np.sqrt(robustCost(sc / scalefac, thr / scalefac, 'BZ0')) * scalefac
         if weights is not None:
@@ -254,7 +265,7 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
 #%%
 
 
-def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, True], weights=None, xoffset=None, verbose=1):
+def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, True], weights=None, xoffset=None, verbose=1, branch_reduction=None):
     """ Core fitting function for PAT measurements, based on detected resonance
     peaks (see detect_peaks).
 
@@ -263,37 +274,21 @@ def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, Tru
         xd (array): x coordinates of peaks in sensor signal (mV)
         yd (array): y coordinates of peaks in sensor signal (Hz)
         trans (string): 'one_ele' or 'two_ele'
-        xoffset (float): the offset from zero detuning in voltage
+        xoffset (float): the offset from zero detuning in voltage. If this has been determined before, then fixing this
+            parameter reduces the fitting time.
     """
     ppx = pp.copy()
-    pat_score_class = pat_score(even_branches=even_branches)
-    if trans is 'one_ele':
+    pat_score_class = pat_score(even_branches=even_branches, branch_reduction=branch_reduction)
+    if trans == 'one_ele':
         pat_model_score = pat_score_class.pat_one_ele_score
-    elif trans is 'two_ele':
+    elif trans == 'two_ele':
         pat_model_score = pat_score_class.pat_two_ele_score
     else:
         raise Exception('This model %s is not implemented.' % trans)
 
-    if 0:
-        def ff(x): return pat_model_score(xd, yd, [pp[0], pp[1], x], weights=weights)
-        r = scipy.optimize.brute(ff, ranges=[(0, 100)], Ns=20, disp=False)
-        ppx[2] = r
-        sc0 = pat_model_score(xd, yd, pp, weights=weights)
-        sc = pat_model_score(xd, yd, ppx, weights=weights)
-        if verbose >= 2:
-            print('fit_pat_model: %s: %.4f -> %.4f' % (['%.2f' % x for x in ppx], sc0 / 1e6, sc / 1e6))
 
     if xoffset is None:
         def ff(x): return pat_model_score(xd, yd, [x, pp[1], ppx[2]], weights=weights)
-        r = scipy.optimize.brute(ff, ranges=[(pp[0] - 2, pp[0] + 2)], Ns=20, disp=False)
-        ppx[0] = r
-        sc0 = pat_model_score(xd, yd, pp, weights=weights)
-        sc = pat_model_score(xd, yd, ppx, weights=weights)
-        if verbose >= 2:
-            print('fit_pat_model: %s: %.4f -> %.4f' % (['%.2f' % x for x in ppx], sc0 / 1e6, sc / 1e6))
-    if 0:
-        def ff(x): return pat_model_score(xd, yd, x, weights=weights)
-
         r = scipy.optimize.brute(ff, ranges=[(pp[0] - 2, pp[0] + 2)], Ns=20, disp=False)
         ppx[0] = r
         sc0 = pat_model_score(xd, yd, pp, weights=weights)
