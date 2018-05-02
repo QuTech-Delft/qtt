@@ -95,13 +95,13 @@ dependencies:
   - jupyter-core
   - prompt-toolkit
   - apscheduler
-  - dulwich
   - pyserial
   - pyzmqrpc
   - Polygon3
   - pyvisa
   - redis
   - rope-py3k
+  - spirack
   - slacker
 #prefix: C:\Users\eendebakpt\AppData\Local\Continuum\Anaconda3\envs\qtt
 

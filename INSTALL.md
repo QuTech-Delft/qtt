@@ -54,6 +54,11 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 > activate [yourname]
 ```
 
+Install dulwich
+```
+> pip install dulwich --global-option="--pure"
+```
+
 To install dev version of hicke:
 ```
 pip install git+https://github.com/telegraphic/hickle.git@dev
