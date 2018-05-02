@@ -774,7 +774,7 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
     write_data(path, dataset)
 
 
-def makeDataSet1Dplain(xname, x, yname, y, xunit=None, yunit=None, location=None, loc_record=None):
+def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location=None, loc_record=None):
     ''' Make DataSet with one 1D array and one setpoint array
 
     Arguments:
@@ -784,7 +784,10 @@ def makeDataSet1Dplain(xname, x, yname, y, xunit=None, yunit=None, location=None
         y (array): the measured data
     '''
     xx = np.array(x)
-    yy = np.array(y)
+    if y is not None:
+        yy = np.array(y)
+    else:
+        yy = np.NaN * np.ones(xx.size)
     x = DataArray(name=xname, array_id=xname, preset_data=xx,
                   unit=xunit, is_setpoint=True)
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
@@ -858,14 +861,14 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
         zname (str or list): the name of the measured array
         z (array or list): the measured data
     '''
-    xx = np.array(x)
-    yy0 = np.array(y)
-    yy = np.tile(yy0, [xx.size, 1])
-    zz = np.NaN * np.ones((xx.size, yy0.size))
-    xa = DataArray(name=xname, array_id=xname, preset_data=xx,
-                   unit=xunit, is_setpoint=True)
+    yy = np.array(y)
+    xx0 = np.array(x)
+    xx = np.tile(xx0, [yy.size, 1])
+    zz = np.NaN * np.ones((yy.size, xx0.size))
     ya = DataArray(name=yname, array_id=yname, preset_data=yy,
-                   unit=yunit, set_arrays=(xa,), is_setpoint=True)
+                   unit=yunit, is_setpoint=True)
+    xa = DataArray(name=xname, array_id=xname, preset_data=xx,
+                   unit=xunit, set_arrays=(ya,), is_setpoint=True)
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     if isinstance(zname, str):
         zname = [zname]
@@ -873,7 +876,7 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
             z=[z]
     for ii, name in enumerate(zname):
         za = DataArray(name=name, array_id=name, label=name,
-                       preset_data=np.copy(zz), unit=zunit, set_arrays=(xa, ya))
+                       preset_data=np.copy(zz), unit=zunit, set_arrays=(ya, xa))
         dd.add_array(za)
         if z is not None:
             getattr(dd, name).ndarray = np.array(z[ii])
