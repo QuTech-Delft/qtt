@@ -17,7 +17,7 @@ from qcodes import DataArray, new_data
 from qtt import pgeometry
 import qtt.tools
 import qtt.algorithms.generic
-from qtt.tools import diffImageSmooth
+#from qtt.tools import diffImageSmooth
 
 #%%
 
@@ -185,7 +185,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
     """
     meas_arr_name = alldata.default_parameter_name(meas_arr_name)
     meas_array = alldata.arrays[meas_arr_name]
-    imx = qtt.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
+    imx = qtt.tools.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
     data_arr = qcodes.DataArray(
@@ -245,7 +245,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
             # impixel = tr.transform(im)
     else:
         pass
-    # XX = array # dd['data_array']
 
     labels = [s.name for s in array.set_arrays]
 
@@ -254,8 +253,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     ny = vstep.size
     nx = vsweep.size
 
-    # im=diffImage(im, dy)
-    im = diffImageSmooth(impixel, dy=dy, sigma=sigma)
+    im = qtt.tools.diffImageSmooth(impixel, dy=dy, sigma=sigma)
 
     if verbose:
         print('show2D: nx %d, ny %d' % (nx, ny,))

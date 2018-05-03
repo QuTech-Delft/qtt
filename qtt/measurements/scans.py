@@ -31,7 +31,6 @@ import qtt.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.live
-from qtt.tools import deprecated
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
@@ -1893,7 +1892,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 #%%
 
 
-@deprecated
+@qtt.tools.deprecated
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 
