@@ -18,7 +18,7 @@ class DataType(Enum):
     QC_TOOLKIT = 1
 
 
-def qc_toolkit_template_to_array(template, sampling_rate):
+def qc_toolkit_template_to_array(template, sampling_rate, parameters=None):
     """ Renders the QC toolkit template as voltages array.
 
     Arguments:
@@ -31,7 +31,8 @@ def qc_toolkit_template_to_array(template, sampling_rate):
                              the template.
     """
     channels = template.defined_channels
-    parameters = dict()
+    if parameters is None:
+        parameters = dict()
     sequencer = Sequencer()
     sequencer.push(template, parameters,
                    channel_mapping={ch: ch for ch in channels},
@@ -97,11 +98,6 @@ def make_sawtooth(vpp, period, repetitions=1, name='sawtooth'):
     seq_data = (sawtooth_template(), {'period': period*1e9, 'amplitude': vpp/2})
     return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)),
             'TYPE': DataType.QC_TOOLKIT}
-
-
-def make_pulses(voltages, waittimes, filter_cutoff=None, mvrange=None, name='pulses'):
-    return {'NAME': name, 'WAVE': None, 'TYPE': DataType.QC_TOOLKIT}
-
 
 def test_make_sawtooth_HasCorrectProperties():
     sampling_rate = 1e9
@@ -374,9 +370,9 @@ class VirtualAwg(InstrumentBase):
     def sweep_2D_process(self, data, waveform, diff_dir=None):
         pass
 
-    def pulse_gates(self, gate_voltages, waittimes, filtercutoff=None, delete=True):
+    def pulse_gates(self, gate_voltages, waittimes, ramp_params=None, delete=True):
         pass
-
+    
     def sweep_process(self, data, waveform, averages=1, direction='forwards', start_offset=1):
         '''Process the returned data using shape of the sawtooth send with the AWG.'''
         pass
