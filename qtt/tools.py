@@ -32,6 +32,8 @@ from qcodes import DataArray
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import mpl2clipboard
 
+from qtt.measurements.ttrace import MultiTracePlot
+    
 # do NOT load any other qtt submodules here
 
 try:
@@ -889,7 +891,7 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
-            elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
+            elif isinstance(fig, MultiTracePlot) or \
                     fig.__class__.__name__ == 'MultiTracePlot':
                 figtemp = fig.plotwin.grab()
                 figtemp.save(fname)
