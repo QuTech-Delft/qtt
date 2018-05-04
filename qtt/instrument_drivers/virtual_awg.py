@@ -41,7 +41,7 @@ class virtual_awg(Instrument):
         self.hardware = hardware
         self.verbose = verbose
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
-        self.corr = .02e-6 # specific for FPGA
+        self.corr = .0 # legacy code, specific for FPGA board not used any more
         self.maxdatapts = 16e6  # This used to be set to the fpga maximum, but that maximum should not be handled here
 
         self.awg_seq = None
@@ -491,6 +491,8 @@ class virtual_awg(Instrument):
 #        if resolution[0] * resolution[1] > self.maxdatapts:
 #            raise Exception('resolution is set higher than FPGA memory allows')
 
+        if self.corr != 0:
+            raise Exception('please do not use the .corr setting any more')
         error_corr = resolution[0] * self.corr
         period_horz = resolution[0] / samp_freq + error_corr
         period_vert = resolution[1] * period_horz
