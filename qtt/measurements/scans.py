@@ -400,6 +400,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
 
@@ -504,6 +505,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata = qtt.tools.stripDataset(alldata)
 
@@ -1107,6 +1109,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata.write(write_metadata=True)
 
@@ -1678,6 +1681,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata.write(write_metadata=True)
 
@@ -1872,12 +1876,6 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
 
-#    if scanjob['scantype'] == 'scan2Dturbovec':
-#        for param in scanjob['phys_gates_vals']:
-#            parameter = gates.parameters[param]
-#            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
-#            alldata.add_array(arr)
-
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
@@ -1885,6 +1883,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata.write(write_metadata=True)
 
