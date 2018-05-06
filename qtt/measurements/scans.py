@@ -246,6 +246,20 @@ def test_get_instrument_parameter():
     assert(id(p)==id(i.dac2))
     ix, p=get_instrument_parameter( i.name +'.dac2') 
     assert(id(p)==id(i.dac2))
+
+def get_minstrument_channels(minstrument):
+    if isinstance(minstrument, tuple):
+        minstrument = minstrument[1]
+
+    if isinstance(minstrument, int):
+        read_ch = [minstrument]
+        return read_ch
+    
+    if isinstance(minstrument, list):
+        read_ch = minstrument
+        return read_ch
+
+    raise Exception('could not parse %s into channels'  % minstrument)
     
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
@@ -373,7 +387,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             value = p.get()
             alldata.arrays[measure_names[ii]].ndarray[ix] = value
 
-        delta, tprev, update_plot = delta_time(tprev, thr=.25)
+        delta, tprev, update_plot = _delta_time(tprev, thr=.25)
         if update_plot:
             if liveplotwindow:
                 myupdate()
@@ -874,7 +888,7 @@ class scanjob_t(dict):
         return scanvalues
 
 
-def delta_time(tprev, thr=2):
+def _delta_time(tprev, thr=2):
     """ Helper function to prevent too many updates """
     t = time.time()
     update = 0
@@ -897,6 +911,7 @@ def parse_minstrument(scanjob):
 
 
 def awgGate(gate, station):
+    """ Return True if the specified gate can be controlled by the AWG """
     awg = getattr(station, 'awg', None)
     if awg is None:
         return False
@@ -1076,7 +1091,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 alldata.last_write = time.time()
         if update_period is not None:
             if ix % update_period == update_period -1:
-                delta, tprev, update = delta_time(tprev, thr=0.5)
+                delta, tprev, update = _delta_time(tprev, thr=0.5)
                 
                 if update and liveplotwindow:
                     liveplotwindow.update_plot()
@@ -1499,22 +1514,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
     return alldata
 
 #%%
-
-def get_minstrument_channels(minstrument):
-    if isinstance(minstrument, tuple):
-        minstrument = minstrument[1]
-
-    if isinstance(minstrument, int):
-        read_ch = [minstrument]
-        return read_ch
-    
-    if isinstance(minstrument, list):
-        read_ch = minstrument
-        return read_ch
-
-
-    raise Exception('could not parse %s into channels'  % minstrument)
-        
+      
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create qcodes dataset to store on disk.
 
@@ -1645,7 +1645,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         for idm, mname in enumerate(measure_names):
             alldata.arrays[mname].ndarray[ix] = data[idm]
 
-        delta, tprev, update = delta_time(tprev, thr=1.)
+        delta, tprev, update = _delta_time(tprev, thr=1.)
         if update:
             if liveplotwindow is not None:
                 liveplotwindow.update_plot()
@@ -2220,8 +2220,6 @@ def test_scan2D(verbose=0):
 
     gates.close()
 
-if __name__=='__main__':    
-    test_scan2D()
     
 def enforce_boundaries(scanjob, sample_data, eps=1e-2):
     """ Make sure a scanjob does not go outside sample boundaries
@@ -2254,3 +2252,4 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
 
 if __name__ == '__main__':
     test_sample_data()
+    test_scan2D()
