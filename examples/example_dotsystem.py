@@ -249,11 +249,11 @@ if 0:
     removeoutliers = True
     # removeoutliers=False
     if sigma is None:
-        imx = diffImage(im, dy=dy, size='same')
+        imx = qtt.tools.diffImage(im, dy=dy, size='same')
     else:
-        imx = diffImageSmooth(im, dy=dy, sigma=sigma)
+        imx = qtt.tools.diffImageSmooth(im, dy=dy, sigma=sigma)
     order = 3
-    vv = fitBackground(imx, smooth=True, verbose=verbose, fig=400, order=int(order), removeoutliers=removeoutliers)
+    vv = qtt.legacy.fitBackground(imx, smooth=True, verbose=verbose, fig=400, order=int(order), removeoutliers=removeoutliers)
 
     pmatlab.tilefigs([130, 131, 400])
 

@@ -1722,7 +1722,7 @@ def plotData(alldata, diff_dir=None, fig=1):
     figure = plt.figure(fig)
     plt.clf()
     if diff_dir is not None:
-        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        imx = qtt.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
         data_arr = qcodes.DataArray(name=name, label=name, array_id=name,

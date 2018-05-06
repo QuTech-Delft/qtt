@@ -638,7 +638,7 @@ class virtual_awg(Instrument):
         data_processed = chunks_ch1[:int(width_vert * len(chunks_ch1))]
 
         if diff_dir is not None:
-            data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
+            data_processed = qtt.tools.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
 
         return data_processed
 
@@ -784,6 +784,6 @@ def sweep_2D_process(data, waveform, diff_dir=None):
     data_processed = chunks_ch1[:int(width_vert * len(chunks_ch1))]
 
     if diff_dir is not None:
-        data_processed = qtt.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
+        data_processed = qtt.tools.diffImageSmooth(data_processed, dy=diff_dir, sigma=1)
 
     return data_processed

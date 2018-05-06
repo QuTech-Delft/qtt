@@ -83,7 +83,7 @@ class videomode_callback:
                     diff_dir = self.diff_dir[ii]
                 else:
                     diff_dir = self.diff_dir
-                data_processed = qtt.diffImageSmooth(
+                data_processed = qtt.tools.diffImageSmooth(
                     data_processed, dy=diff_dir, sigma=self.diffsigma)
 
             if self.smoothing:
