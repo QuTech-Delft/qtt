@@ -31,7 +31,6 @@ import qtt.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.live
-from qtt.tools import deprecated
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
@@ -1727,7 +1726,7 @@ def plotData(alldata, diff_dir=None, fig=1):
     figure = plt.figure(fig)
     plt.clf()
     if diff_dir is not None:
-        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        imx = qtt.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
         data_arr = qcodes.DataArray(name=name, label=name, array_id=name,
@@ -1892,7 +1891,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 #%%
 
 
-@deprecated
+@qtt.tools.deprecated
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 

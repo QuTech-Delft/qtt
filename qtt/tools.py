@@ -31,7 +31,7 @@ from qcodes import DataArray
 
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import mpl2clipboard
-
+  
 # do NOT load any other qtt submodules here
 
 try:
@@ -891,7 +891,7 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        import qtt.measurements.ttrace
+        import qtt.measurements.ttrace # should be moved to top when circular references are fixed
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
@@ -900,7 +900,7 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
-            elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
+            elif isinstance(fig, qtt.measuremsts.ttrace.MultiTracePlot) or \
                     fig.__class__.__name__ == 'MultiTracePlot':
                 figtemp = fig.plotwin.grab()
                 figtemp.save(fname)

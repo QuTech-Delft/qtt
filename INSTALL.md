@@ -54,11 +54,6 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 > activate [yourname]
 ```
 
-To install dev version of hicke:
-```
-pip install git+https://github.com/telegraphic/hickle.git@dev
-```
-
 For Mac OS with anaconda type from the command line:
 ```
 > cd [MYLOCALDIR]/qtt
@@ -96,7 +91,7 @@ For Unix systems the proper command is `python setup.py develop --user`.
 
 - To install the low-level SPI driver run:
 ```
-pip install git+https://github.com/Rubenknex/SPI-rack.git
+pip install spirack
 
 ```
 ## Spyder
@@ -188,6 +183,7 @@ sudo apt-get install python3-spyder python3-nose python3-pyqtgraph python3-scipy
 sudo apt-get install python3-rope python3-redis python3-skimage python3-sklearn python3-websockets
 cd [QTTDIR]
 pip3 install --user -r develop_requirements.txt
+pip install dulwich --global-option="--pure"
 pip install git+https://github.com/telegraphic/hickle.git@dev
 ```
 
@@ -205,6 +201,7 @@ Manual installation:
 > cd [QTTDIR]
 > pip install --user -r develop_requirements.txt
 > conda install -c conda-forge opencv
+> pip install dulwich --global-option="--pure"
 > pip install git+https://github.com/telegraphic/hickle.git@dev
 ```
 

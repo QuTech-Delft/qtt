@@ -17,13 +17,16 @@ import qtt
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
 
-import pycqed
-from pycqed.measurement.waveform_control import pulse
-from pycqed.measurement.waveform_control import pulsar as ps
-
-from pycqed.measurement.waveform_control.sequence import Sequence
-from pycqed.measurement.waveform_control import element
-
+try:
+    import pycqed
+    from pycqed.measurement.waveform_control import pulse
+    from pycqed.measurement.waveform_control import pulsar as ps
+    
+    from pycqed.measurement.waveform_control.sequence import Sequence
+    from pycqed.measurement.waveform_control import element
+except ModuleNotFoundError:
+    warnings.warn('could not import pycqed, not all functionality available')
+    
 #%% Virtual
 
 
@@ -56,11 +59,14 @@ def awg_info(awgs):
         print('  awg trigger sources %s'  % (a.trigger_source(),     ) )
 
 
-sq_pulse = pulse.SquarePulse(channel='ch1', name='A square pulse')
-sq_pulse_marker = pulse.SquarePulse(
-    channel='ch1_marker1', name='A square pulse on MW pmod')
-lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
-
+try:
+    sq_pulse = pulse.SquarePulse(channel='ch1', name='A square pulse')
+    sq_pulse_marker = pulse.SquarePulse(
+        channel='ch1_marker1', name='A square pulse on MW pmod')
+    lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
+except NameError: # pycqed not available
+    pass
+    
 def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     """ Converts the virtual gate matrix into a virtual gate mapping
     
