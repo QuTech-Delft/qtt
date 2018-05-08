@@ -1030,7 +1030,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
     if type(stepvalues) is np.ndarray:
-        stepvalues = stepdata['param'][list(stepvalues[:, 0])]
+        stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
         alldata, (set_names, measure_names) = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=mparams,
                                                             location=location, loc_record={'label': scanjob['scantype']}, return_names=True)
     else:
