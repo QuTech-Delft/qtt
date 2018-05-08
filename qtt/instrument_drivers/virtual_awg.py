@@ -240,7 +240,7 @@ class virtual_awg(Instrument):
         for nr in awgnrs:
             self._awgs[nr].run()
 
-    def make_sawtooth(self, sweeprange, period, width=.95, repetitionnr=1):
+    def make_sawtooth(self, sweeprange, period, width=.95, repetitionnr=1, start_zero=False):
         '''Make a sawtooth with a decline width determined by width. Not yet scaled with
         awg_to_plunger value.
 
@@ -257,6 +257,9 @@ class virtual_awg(Instrument):
         wave_raw = (v_wave / 2) * scipy.signal.sawtooth(2 * np.pi * tt / period, width=width)
 #        idx_zero = np.argmin(np.abs(wave_raw))
 #        wave_raw = np.roll(wave_raw, wave_raw.size-idx_zero)
+        if start_zero:
+            o=int((wave_raw.size)*(1-width)/2)
+            wave_raw = np.roll(wave_raw, o)
 
         return wave_raw
     
@@ -313,8 +316,9 @@ class virtual_awg(Instrument):
         self.check_frequency_waveform(period, width)
         self.check_amplitude(gate, sweeprange)
 
+        start_zero=True
         waveform = dict()
-        wave_raw = self.make_sawtooth(sweeprange, period, width)
+        wave_raw = self.make_sawtooth(sweeprange, period, width, start_zero=start_zero)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
         wave = wave_raw / awg_to_plunger
         waveform[gate] = dict()
@@ -326,6 +330,7 @@ class virtual_awg(Instrument):
         sweep_info = self.sweep_init(waveform, period, delete)
         self.sweep_run(sweep_info)
         waveform['width'] = width
+        waveform['start_zero']=start_zero
         waveform['sweeprange'] = sweeprange
         waveform['samplerate'] = 1 / self.AWG_clock
         waveform['period'] = period
