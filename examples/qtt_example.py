@@ -39,7 +39,7 @@ if __name__ == '__main__':
 import virtualDot
 
 nr_dots = 3
-station = virtualDot.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2, start_manager=False)
+station = virtualDot.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2)
 
 keithley1 = station.keithley1
 keithley3 = station.keithley3
