@@ -628,6 +628,7 @@ class scanjob_t(dict):
     """
 
     def check_format(self):
+        """ Check the format of the scanjob for consistency and legacy style arguments """
         if 'stepvalues' in self:
             warnings.warn('please do not use the stepvalues field any more!')
             
@@ -1595,6 +1596,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     gates = station.gates
     gatevals = gates.allvalues()
 
+    scanjob.check_format()
+    
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan2Dfast')
 
