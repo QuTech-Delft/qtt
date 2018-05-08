@@ -56,6 +56,7 @@ dependencies:
 - pyqt
 - pyqtgraph>=0.10
 - pytables
+- pytest
 - pywin32
 - python>=3.5
 - python-dateutil
@@ -103,5 +104,8 @@ dependencies:
   - rope-py3k
   - spirack
   - slacker
+  - "git+https://github.com/telegraphic/hickle.git@dev#egg=hickle-dev"
+  - "dulwich --global-option='--pure'"
+
 #prefix: C:\Users\eendebakpt\AppData\Local\Continuum\Anaconda3\envs\qtt
 
