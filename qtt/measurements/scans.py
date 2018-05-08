@@ -627,6 +627,10 @@ class scanjob_t(dict):
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
+    def check_format(self):
+        if 'stepvalues' in self:
+            warnings.warn('please do not use the stepvalues field any more!')
+            
     def setWaitTimes(self, station, min_time=0):
         """ Set default waiting times based on gate filtering """
 
@@ -828,7 +832,7 @@ class scanjob_t(dict):
                     self['phys_gates_vals'][param] = param_init[param] + \
                         sweep_array * sweepdata['param'][param]
             else:
-                scanvalues = sweepparam[sweepdata['start']                                        :sweepdata['end']:sweepdata['step']]
+                scanvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
@@ -991,6 +995,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     gates = station.gates
     gatevals = gates.allvalues()
 
+    scanjob.check_format()
+
     minstrument = parse_minstrument(scanjob)
     mparams = get_measurement_params(station, minstrument)
 
@@ -998,6 +1004,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
+    
     scanjob.parse_stepdata('stepdata', gates)
     scanjob.parse_stepdata('sweepdata', gates)
 
@@ -1030,8 +1037,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
     if type(stepvalues) is np.ndarray:
-        stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=mparams,
+        stepvalues = stepdata['param'][list(stepvalues[:, 0])]
+        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues, measure_names=mparams,
                                                             location=location, loc_record={'label': scanjob['scantype']}, return_names=True)
     else:
         alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
