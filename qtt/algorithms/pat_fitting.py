@@ -356,9 +356,9 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
 
     weights = None
     pp = fit_pat_to_peaks(par_guess, xd, yd, trans=trans, even_branches=even_branches, weights=weights, xoffset=xoffset, verbose=0)
-    if trans is 'one_ele':
+    if trans == 'one_ele':
         model = one_ele_pat_model
-    elif trans is 'two_ele':
+    elif trans == 'two_ele':
         model = two_ele_pat_model
     ydf = model(xd, pp)
 
