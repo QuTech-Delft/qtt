@@ -784,24 +784,17 @@ def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location
         y (array): the measured data
     '''
     xx = np.array(x)
-    if y is not None:
-        yy = np.array(y)
-    else:
-        yy = np.NaN * np.ones(xx.size)
-    x = DataArray(name=xname, array_id=xname, preset_data=xx,
-                  unit=xunit, is_setpoint=True)
+    yy = np.NaN * np.ones(xx.size) if y is None else np.array(y)
+    x = DataArray(name=xname, array_id=xname, preset_data=xx, unit=xunit, is_setpoint=True)
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     dd.add_array(x)
     if isinstance(yname, str):
-        y = DataArray(name=yname, array_id=yname,
-                      preset_data=yy, unit=yunit, set_arrays=(x,))
+        y = DataArray(name=yname, array_id=yname, preset_data=yy, unit=yunit, set_arrays=(x,))
         dd.add_array(y)
     else:
         for ii, name in enumerate(yname):
-            y = DataArray(name=name, array_id=name,
-                          preset_data=yy[ii], unit=yunit, set_arrays=(x,))
+            y = DataArray(name=name, array_id=name, preset_data=yy[ii], unit=yunit, set_arrays=(x,))
             dd.add_array(y)
-
     return dd
 
 
