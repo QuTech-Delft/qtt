@@ -66,7 +66,7 @@ snapshotdata = station.snapshot()
 
 param_left=station.model.bottomgates[0]
 param_right=station.model.bottomgates[-1]
-scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 1, 'step': .8, 'wait_time': 3e-3}), 'minstrument': [keithley3.amplitude]})
+scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 1, 'step': .8, 'wait_time': 3e-3}), 'minstrument': ['keithley3.amplitude']})
 data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 
 
