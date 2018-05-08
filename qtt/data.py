@@ -17,7 +17,7 @@ from qcodes import DataArray, new_data
 from qtt import pgeometry
 import qtt.tools
 import qtt.algorithms.generic
-#from qtt.tools import diffImageSmooth
+from qcodes.plots.qcmatplotlib import MatPlot
 
 #%%
 
@@ -44,7 +44,13 @@ def datasetCentre(ds, ndim=None):
         cc = [mx, my]
     return cc
 
-
+def test_dataset():
+    import qcodes.tests.data_mocks
+    ds = qcodes.tests.data_mocks.DataSet2D()
+    cc = datasetCentre(ds)
+    assert(cc[0] == 1.5)
+    zz=dataset_labels(ds)
+    
 def drawCrosshair(ds, ax=None, ndim=None):
     """ Draw a crosshair on the centre of the dataset
 
@@ -62,12 +68,6 @@ def drawCrosshair(ds, ax=None, ndim=None):
     if len(cc) == 2:
         ax.axhline(y=cc[1], linestyle=':', color='c')
 
-
-def test_dataset():
-    import qcodes.tests.data_mocks
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    cc = datasetCentre(ds)
-    assert(cc[0] == 1.5)
 
 #%%
 
@@ -139,20 +139,31 @@ def dataset_get_istep(alldata, mode=None):
 
 
 def dataset1Ddata(alldata):
-    ''' Parse a dataset into the x and y scan values '''
+    ''' Parse a dataset into the x and y scan values
+    
+    Returns:
+        x (array)
+        y (array)
+    '''
     y = alldata.default_parameter_array()
     x = y.set_arrays[0]
     return x, y
 
 
 def dataset_labels(alldata, tag=None):
+    """ Return label for axis of dataset
+    
+    Args:
+        ds (DataSet): dataset
+        tag (str): can be 'x', 'y' or 'z'
+    """
     if tag == 'x':
         d = alldata.default_parameter_array()
         return d.set_arrays[0].label
     if tag == 'y':
         d = alldata.default_parameter_array()
         return d.set_arrays[1].label
-    if tag is None:
+    if tag is None or tag=='z':
         d = alldata.default_parameter_array()
         return d.label
     return '?'
@@ -168,9 +179,6 @@ def uniqueArrayName(dataset, name0):
         if ii > 1000:
             raise Exception('too many arrays in DataSet')
     return name
-
-
-from qcodes.plots.qcmatplotlib import MatPlot
 
 
 def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measured'):
@@ -207,6 +215,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
 
 
 def sweepgate(scanjob):
+    """ Return the sweepgate in a scanjob """
     g = scanjob['sweepdata'].get('param', None)
     if isinstance(g, str):
         return g
@@ -217,6 +226,7 @@ def sweepgate(scanjob):
 
 
 def stepgate(scanjob):
+    """ Return the step gate in a scanjob """
     g = scanjob['stepdata'].get('param', None)
     if isinstance(g, str):
         return g
@@ -242,7 +252,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
         else:
             pass
-            # impixel = tr.transform(im)
     else:
         pass
 
@@ -254,12 +263,8 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     nx = vsweep.size
 
     im = qtt.tools.diffImageSmooth(impixel, dy=dy, sigma=sigma)
-
     if verbose:
         print('show2D: nx %d, ny %d' % (nx, ny,))
-
-    # plt.clf()
-    # plt.hist(im.flatten(), 256, fc='k', ec='k') # range=(0.0,1.0)
 
     if verbose >= 2:
         print('extent: %s' % xx)
@@ -287,10 +292,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
             plt.xlabel('%s' % labelx + unitstr)
         else:
             pass
-            # try:
-            #    plt.xlabel('%s' % dd2d['argsd']['sweep_gates'][0] + unitstr)
-            # except:
-            #    pass
 
         if scanjob.get('stepdata', None) is not None:
             if units is None:
@@ -300,9 +301,6 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
 
         if not title is None:
             plt.title(title)
-    # plt.axis('image')
-    # ax=plt.gca()
-    # ax.invert_yaxis()
         if colorbar:
             plt.colorbar()
         if verbose >= 2:
@@ -379,9 +377,7 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
 
 
 if __name__ == '__main__' and 0:
-    extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
-        alldata, arrayname=None)
-    _ = pix2scan(np.zeros((2, 4)), alldata)
+    test_dataset()
 
 #%%
 
@@ -449,8 +445,8 @@ class image_transform:
             self.H = Hs @ self.H
 
         if verbose:
-            print('image_transform: tr._imraw.shape %s' % (tr._imraw.shape, ))
-            print('image_transform: tr._im.shape %s' % (tr._im.shape, ))
+            print('image_transform: tr._imraw.shape %s' % (self._imraw.shape, ))
+            print('image_transform: tr._im.shape %s' % (self._im.shape, ))
         self._im = self._transform(self._imraw)
         self.Hi = numpy.linalg.inv(self.H)
 
@@ -611,17 +607,9 @@ def test_image_transform(verbose=0):
 
 
 if __name__ == '__main__':
-    import pdb
     test_image_transform()
 
 #%%
-
-try:
-    import deepdish
-except:
-    pass
-#    warnings.warn('could not load deepdish...')
-
 
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
@@ -670,6 +658,7 @@ def write_data(mfile: str, data):
     #_=deepdish.io.save(mfile, data)
 
 
+@qtt.tools.rdeprecated(expire='1-1-2019')
 def loadDataset(path):
     ''' Wrapper function
 
@@ -683,6 +672,7 @@ def loadDataset(path):
     return dataset, metadata
 
 
+@qtt.tools.rdeprecated(expire='1-1-2019')
 def writeDataset(path, dataset, metadata=None):
     ''' Wrapper function
 
@@ -957,7 +947,7 @@ def test_makeDataSet1Dplain():
 #%%
 
 
-def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues'):
+def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbose=1):
     """ Compare metadata from two different datasets.
 
     Outputs the differences in metadata from dataset1 to dataset2.
@@ -986,7 +976,7 @@ def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues'):
 def test_compare():
     import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet2D()
-    compare_dataset_metadata(ds, ds)
+    compare_dataset_metadata(ds, ds, verbose=0)
 
 #%%
 
@@ -1006,3 +996,5 @@ if __name__ == '__main__':
 
     test_numpy_on_dataset()
     test_makeDataSet2D()
+    test_makeDataSet1Dplain()
+    test_compare()

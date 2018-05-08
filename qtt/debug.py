@@ -1,25 +1,10 @@
 #%% Tools for debugging code
 
-import numpy as np
-import scipy
-import matplotlib
-import sys
 import os
-import inspect
 import functools
 import tempfile
 import time
 import datetime
-import logging
-import pickle
-
-# explicit import
-import qcodes
-from qcodes.plots.pyqtgraph import QtPlot
-from qcodes.plots.qcmatplotlib import MatPlot
-
-from qtt import pgeometry as pmatlab
-import tempfile
 
 #%% Debugging
 

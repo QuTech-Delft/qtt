@@ -147,7 +147,7 @@ def scaleCmap(imx, setclim=True, verbose=0):
     return cl
 
 
-@qtt.tools.deprecated
+@qtt.tools.rdeprecated(expire='1-1-2019')
 def writeBatchData(outputdir, tag, timestart, timecomplete):
     tt = datetime.datetime.now().strftime('%d%m%Y-%H%m%S')
     with open(os.path.join(outputdir, '%s-%s.txt' % (tag, tt)), 'wt') as fid:
@@ -570,8 +570,6 @@ def showIm(ims, fig=1, title='', showz=False):
 
 def getTwoDotValues(td, ods, basevaluestd=dict({}), verbose=1):
     """ Return settings for a 2-dot, based on one-dot settings """
-    # basevalues=dict()
-
     if verbose >= 2:
         print('getTwoDotValues: start: basevalues td: ')
         print(basevaluestd)
@@ -813,23 +811,13 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
 #%%
 
-@qtt.tools.deprecated
-def stopbias(gates):
-    """ Stop the bias currents in the sample """
-    raise Exception('do not use this function')
-    gates.set_bias_1(0)
-    gates.set_bias_2(0)
-    for ii in [3]:
-        if hasattr(gates, 'set_bias_%d' % ii):
-            gates.set('bias_%d' % ii, 0)
-
-
-@qtt.tools.deprecated
+@qtt.tools.rdeprecated(expire='1-1-2019')
 def printGateValues(gv, verbose=1):
     s = ', '.join(['%s: %.1f' % (x, gv[x]) for x in sorted(gv.keys())])
     return s
 
 
+@qtt.tools.rdeprecated(expire='1-1-2019')
 def getODbalancepoint(od):
     bp = od['balancepoint']
     if 'balancepointfine' in od:
@@ -838,6 +826,7 @@ def getODbalancepoint(od):
 
 
 
+@qtt.tools.rdeprecated(expire='1-6-2018')
 def loadpickle(pkl_file):
     """ Load objects from file """
     try:
