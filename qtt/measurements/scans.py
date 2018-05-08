@@ -188,8 +188,8 @@ def get_instrument_parameter( handle):
     """ Return handle to instrument parameter or channel
 
     Args:
-        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname). A string is of the 
-            format 'instrument.parameter'
+        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname). A string is
+        of the form 'instrument.parameter', e.g. 'keithley3.amplitude'
     Returns:
         h (object)
     """
@@ -285,10 +285,6 @@ def get_measurement_params(station, mparams):
             params += [getattr(station, 'keithley%d' % x).amplitude]
             warnings.warn('please use a string to specify your parameter, e.g. \'keithley3.amplitude\'!')
         elif isinstance(x, tuple):
-            # pair of instrument and channel
-            #instrument = get_instrument(x[0])
-            #param = getattr(instrument, 'channel_%d' % x[1])
-            
             instrument, param = get_instrument_parameter(x)
             params += [param]
 
@@ -297,9 +293,11 @@ def get_measurement_params(station, mparams):
                 channels.append(int(x[-1]))
                 digi_flag = True
                 params += [getattr(station.digitizer, 'channel_%c' % x[-1])]
-            else:
+            elif '.' in x:
                 params += [get_instrument_parameter(x)[1]]
-                #params += [getattr(station, x).amplitude]
+            else:
+                warnings.warn('legacy style argument, please use \'keithley1.amplitude\' or (keithley1.name, \'amplitude\')')
+                params += [getattr(station, x).amplitude]
         else:
             params += [x]
     if digi_flag:
