@@ -12,6 +12,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from imp import reload  # python3
 
+raise Exception('no not use this module any more!')
+
 import numpy as np
 import math
 import scipy.signal
