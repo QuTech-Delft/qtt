@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.pyplot
 import scipy
 import copy
+import warnings
 import skimage.filters
 
 try:
@@ -39,18 +40,16 @@ except:
         #warnings.warn('module descartes not found')
         _linetoolswarn = True
 
+import qtt
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import *
 from qtt import pgeometry
+
+from qtt.utilities.imagetools import createCross
+
 import cv2
 
-try:
-    import igraph
-except:
-    if not _linetoolswarn:
-        pass
-
-import qtt.legacy
+#import qtt.legacy
 
 from qtt.algorithms.generic import scaleImage, smoothImage, localMaxima
 
@@ -533,30 +532,10 @@ def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=No
     return res
 
 
-def Vtrace(cdata, param, fig=None):
-    """ Calculate position of next V-trace from fitted model """
-    cc = cdata[0]
-    psi = param[-1]
-
-    q = np.array([10, 0]).reshape((2, 1))
-    p1 = cc + pmatlab.rot2D(psi).dot(q)
-    p2 = cc + pmatlab.rot2D(np.pi + psi).dot(q)
-    pp = np.array(np.hstack((p1, cc, p2)))
-    pp = np.array(np.hstack((p1, p2)))
-    if fig is not None:
-        plt.figure(fig)
-
-        pmatlab.plotPoints(pp, '--k', markersize=20, linewidth=3, label='scan line')
-        pmatlab.plotPoints(pp, '.y', markersize=20)
-        try:
-            plt.legend(numpoints=1, fontsize=14, loc=0)
-        except:
-            # fontsize does not work with older matplotlib versions...
-            pass
-    psi, slope = calcSlope(pp)
-    return pp, cc, slope
 
 
+
+@qtt.tools.rdeprecated(expire='1-1-2018')
 def calcSlope(pp):
     q = -np.diff(pp, axis=1)
     psi = math.atan2(q[1], q[0])
@@ -688,7 +667,7 @@ if __name__ == '__main__' and 0:
 
 import scipy
 from scipy.optimize import minimize
-from qtt.deprecated.linetools import costFunctionLine
+#from qtt.deprecated.linetools import costFunctionLine
 
 
 def fitLine(alldata, param0=None, fig=None):

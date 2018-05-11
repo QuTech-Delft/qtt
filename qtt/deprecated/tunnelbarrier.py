@@ -10,10 +10,6 @@
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from imp import reload  # python3
-
-import pytest
-pytest.skip()
 
 raise Exception('no not use this module any more!')
 
@@ -264,15 +260,10 @@ def detectVshape(imextent, xdata, ydata, imx, sigmamv=.25, fig=400, returndict=N
 @qtt.tools.deprecated
 def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=None):
 
-    # params: ['xoffset','leverarm','t']
-    #pp0=[xd.mean()+1, 40, 1]
-
-    #ydatax=barrierModel(xdata, pp0)
     if curvefit:
         pp, pcov = scipy.optimize.curve_fit(barrierModel, xd.flatten(), yd.flatten(), pp0)
     else:
         pp = pp0.copy()
-    #pp, pcov=scipy.optimize.curve_fit(barrierModel, xd.flatten(), yd.flatten(), pp)
 
     ppx = pp.copy()
 
@@ -315,9 +306,6 @@ def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=Non
         r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': True}))
         ppx = r['x']
 
-    # pp=ppx.copy()
-    # ppx[0]+=.005
-
     sc0 = barrierScore(xd, yd, pp, weights=weights)
     sc = barrierScore(xd, yd, ppx, weights=weights)
     if verbose:
@@ -328,4 +316,3 @@ def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=Non
         dd['weights'] = weights
     return ppx
 
-    #qutechalgorithms.savePaper(outputdir=picturedir, name='Vshape', ext='pdf')

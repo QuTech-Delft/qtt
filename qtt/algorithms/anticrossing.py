@@ -10,7 +10,7 @@ import copy
 import numpy as np
 import qtt
 from qtt.legacy import cleanSensingImage, straightenImage
-from qtt.deprecated.linetools import evaluateCross, Vtrace, fitModel
+from qtt.deprecated.linetools import evaluateCross, fitModel
 import matplotlib.pyplot as plt
 
 from qcodes import MatPlot
