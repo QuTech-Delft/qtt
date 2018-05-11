@@ -32,12 +32,23 @@ def load_dataset(location, io = None):
     Returns:
         dataset (DataSet or None)
     """
-    from qcodes.data.hdf5_format import HDF5Format
-    from qcodes.data.gnuplot_format import GNUPlotFormat
     
     if io is None:
         io = qcodes.DataSet.default_io
-    formatters = [qcodes.DataSet.default_formatter, HDF5Format(), GNUPlotFormat()]
+    formatters = [qcodes.DataSet.default_formatter]
+
+    try:
+        from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
+        formatters += [HDF5FormatHickle()]
+    except:
+        pass
+
+    from qcodes.data.hdf5_format import HDF5Format
+    formatters += [HDF5Format()]
+    
+    
+    from qcodes.data.gnuplot_format import GNUPlotFormat
+    formatters += [GNUPlotFormat()]
     
     data = None
     for ii, hformatter in enumerate(formatters):        
