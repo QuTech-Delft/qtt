@@ -185,6 +185,29 @@ def plot1D(data, fig=100, mstyle='-b'):
 
 #%%
 
+def get_instrument_parameter( handle):
+    """ Return handle to instrument parameter or channel
+
+    Args:
+        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname)
+    Returns:
+        h (object)
+    """
+    if isinstance(handle, str):
+        istr, pstr = handle.split('.')
+    else:
+        istr, pstr = handle
+        
+    if isinstance(istr, str):
+        instrument = qcodes.Instrument.find_instrument(istr)
+    else:
+        instrument = istr
+        
+    if isinstance(pstr, int):
+        pstr='channel_%d'  % pstr
+        
+    param = getattr(instrument, pstr)
+    return instrument, param
 
 def get_instrument(instr, station=None):
     """ Return handle to instrument
@@ -209,11 +232,21 @@ def get_instrument(instr, station=None):
         pass
     if station is not None:
         if instr in station.components:
-            ref = station.conponents[instr]
+            ref = station.components[instr]
             return ref
     raise Exception('could not find instrument %s' % str(instr))
 
 
+def test_get_instrument_parameter():
+    i=qtt.instrument_drivers.virtual_instruments.VirtualIVVI(qtt.measurements.scans.instrumentName('test'), None)    
+    ix, p=get_instrument_parameter( (i.name, 'dac2') )
+    assert(id(ix)==id(i))
+    assert(id(p)==id(i.dac2))
+    ix, p=get_instrument_parameter( (i, 'dac2') )
+    assert(id(p)==id(i.dac2))
+    ix, p=get_instrument_parameter( i.name +'.dac2') 
+    assert(id(p)==id(i.dac2))
+    
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
     params = []
@@ -231,9 +264,11 @@ def get_measurement_params(station, mparams):
             params += [getattr(station, 'keithley%d' % x).amplitude]
         elif isinstance(x, tuple):
             # pair of instrument and channel
-            instrument = get_instrument(x[0])
-
-            params += [getattr(instrument, 'channel_%d' % x[1])]
+            #instrument = get_instrument(x[0])
+            #param = getattr(instrument, 'channel_%d' % x[1])
+            
+            instrument, param = get_instrument_parameter(x)
+            params += [param]
 
         elif isinstance(x, str):
             if x.startswith('digitizer'):
@@ -402,6 +437,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         'minstrumenthandle', 'fpga'), station=station)
 
     read_ch = scanjob['minstrument']
+    if isinstance(read_ch, tuple):
+        read_ch = read_ch[1]
+        
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
@@ -559,10 +597,15 @@ class scanjob_t(dict):
         for f in ['sweepdata', 'stepdata']:
             if f in self:
                 if gate_settle:
-                    if f == 'stepdata':
-                        t = 2.5 * gate_settle(self[f]['param'])
+                    if isinstance( self[f]['param'], dict):
+                        gs = float(np.min( [ gate_settle(g) for g in self[f]['param'] ] ) )
                     else:
-                        t = gate_settle(self[f]['param'])
+                        gs = gate_settle(self[f]['param'])
+
+                    if f == 'stepdata':
+                        t = 2.5 * gs
+                    else:
+                        t = gs
                 self[f]['wait_time'] = max(t, min_time)
         self['wait_time_startscan'] = .5 + 2 * t
 
@@ -733,7 +776,7 @@ class scanjob_t(dict):
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 last = sweepdata['start'] + sweepdata['range']
                 scanvalues = sweepparam[sweepdata['start']
-                    :last:sweepdata['step']]
+                    :last:sweepdata.get('step', 1.)]
 
                 param_init = {param: gates.get(param)
                               for param in sweepdata['param']}
@@ -1454,7 +1497,21 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
 
 #%%
 
+def get_minstrument_channels(minstrument):
+    if isinstance(minstrument, tuple):
+        minstrument = minstrument[1]
 
+    if isinstance(minstrument, int):
+        read_ch = [minstrument]
+        return read_ch
+    
+    if isinstance(minstrument, list):
+        read_ch = minstrument
+        return read_ch
+
+
+    raise Exception('could not parse %s into channels'  % minstrument)
+        
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create qcodes dataset to store on disk.
 
@@ -1481,11 +1538,10 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     scanjob.parse_param('stepdata', station, paramtype='slow')
 
-    minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
-
-    read_ch = scanjob['minstrument']
-    if isinstance(read_ch, int):
-        read_ch = [read_ch]
+    #minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
+    minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'fpga') )
+        
+    read_ch = get_minstrument_channels(scanjob['minstrument'])
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dfastvec'
@@ -1633,7 +1689,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     
     Args:
         virtual_parameter (obj): parameter of the virtual gate which is varied
-        g_range (float): scan range
+        g_range (float): scan range (total range)
         remove_slow_gates: Removes slow gates from the linear combination of gates. Useful if virtual gates include compensation ofn slow gates, but a fast measurement should be run.
         start (float): start if the scanjob data 
         step (None or float): if not None, then add to the scanning field

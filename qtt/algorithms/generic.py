@@ -82,8 +82,9 @@ def subpixelmax(A, mpos, verbose=0):
     A=np.array(A)
     if np.array(mpos).size==0:
         # corner case
-        subpos = mpos
-        return
+        import copy
+        subpos = copy.copy(mpos)
+        return subpos, []
     
     dsize=A.size
     val=A[mpos]

@@ -13,6 +13,12 @@ import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
 from functools import wraps
+from pip import get_installed_distributions
+try:
+    from dulwich.repo import Repo, NotGitRepository
+    from dulwich import porcelain
+except ModuleNotFoundError:
+    warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
 
 
 # explicit import
@@ -40,50 +46,114 @@ import glob
 import time
 from colorama import Fore
 import importlib
-try:
-    from dulwich.repo import Repo
-except ModuleNotFoundError:
-    warnings.warn('please install dulwich: pip install dulwich')
-    
-#%%
 
-def code_version(verbose=0):
-    """ Return dictionary containing most import versions and git tags
-    
-    Args:
-        verbose (int): output level
-    Returns:
-        r (dict)
+# %%
+
+
+def get_module_versions(modules, verbose=0):
+    """ Returns the module version of the given pip packages.
+
+        Args:
+            modules ([str]): a list with pip packages, e.g. ['numpy', 'scipy']
+
+        Returns:
+            r (dict): dictionary with package names and version number for each given module.
     """
-    r={'version': {}, 'git': {}}
-   
-    for p in ['qcodes', 'qtt', 'numpy', 'scipy', 'qctoolkit']:        
-        m=importlib.import_module(p)
-        v=getattr(m, '__version__', 'none')
-        if verbose:
-            print('module %s: %s' % (p, v))
-        r['version'][p]=v
-    for p in ['qcodes', 'qtt', 'projects', 'pycqed']:        
-        m=importlib.import_module(p)
+    module_versions = dict()
+    for module in modules:
         try:
-            f=m.__file__
-            x=os.path.split(f)[0]
-            x=os.path.join(x, '..')
-            repo=Repo(x)
-            tag=repo.head()
-            tag=tag.decode('ascii')
-        except:
-            tag='none'    
+            package = importlib.import_module(module)
+            version = getattr(package, '__version__', 'none')
+            module_versions[module] = version
+        except ModuleNotFoundError:
+            module_versions[module] = 'none'
         if verbose:
-            print('repo %s: %s' % (p, tag ))
-        r['git'][p]=tag
+            print('module {0} {1}'.format(package, version))
+    return module_versions
 
-    return r
 
-def test_code_version():
-    _=code_version()
+def get_git_versions(repos, get_dirty_status=False, verbose=0):
+    """ Returns the repository head guid and dirty status and package version number if installed via pip.
+        The version is only returned if the repo is installed as pip package without edit mode.
+        NOTE: currently the dirty status is not working correctly due to a bug in dulwich...
 
-#%% Jupyter kernel tools
+        Args:
+            repos ([str]): a list with repositories, e.g. ['qtt', 'qcodes']
+            get_dirty_status (bool): selects whether to use the dulwich package and collect the local code
+                                changes for the repositories.
+
+        Retuns:
+            r (dict): dictionary with repo names, head guid and (optionally) dirty status for each given repository.
+    """
+    heads = dict()
+    dirty_stats = dict()
+    for repo in repos:
+        try:
+            package = importlib.import_module(repo)
+            init_location = os.path.split(package.__file__)[0]
+            repo_location = os.path.join(init_location, '..')
+            repository = Repo(repo_location)
+            heads[repo] = repository.head().decode('ascii')
+            if get_dirty_status:
+                status = porcelain.status(repository)
+                is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 for item in status.staged.values())
+                dirty_stats[repo] = is_dirty
+        except (AttributeError, ModuleNotFoundError, NotGitRepository):
+            heads[repo] = 'none'
+            if get_dirty_status:
+                dirty_stats[repo] = 'none'
+        if verbose:
+            print('{0}: {1}'.format(repo, heads[repo]))
+    return (heads, dirty_stats)
+
+
+def get_python_version(verbose=0):
+    """ Returns the python version."""
+    version = sys.version
+    if verbose:
+        print('Python', version)
+    return version
+
+
+def code_version(repository_names=None, package_names=None, get_dirty_status=False, verbose=0):
+    """ Returns the python version, module version for; numpy, scipy, qctoolkit
+        and the git guid and dirty status for; qcodes, qtt, spin-projects and pycqed,
+        if present on the machine. NOTE: currently the dirty status is not working
+        correctly due to a bug in dulwich...
+
+    Args:
+        repository_names ([str]): a list with repositories, e.g. ['qtt', 'qcodes'].
+        package_names ([str]): a list with pip packages, e.g. ['numpy', 'scipy'].
+        get_dirty_status (bool): selects whether the local code has changed for the repositories.
+        verbose (int): output level
+
+    Returns:
+        status (dict): python, modules and git repos status.
+    """
+    _default_git_versions = ['qcodes', 'qtt', 'projects', 'pycqed']
+    _default_module_versions = ['numpy', 'scipy', 'qctoolkit', 'h5py', 'skimage']
+    if not repository_names:
+        repository_names = _default_git_versions
+    if not package_names:
+        package_names = _default_module_versions
+    result = dict()
+    repository_stats, dirty_stats = get_git_versions(repository_names, get_dirty_status, verbose)
+    result['python'] = get_python_version(verbose)
+    result['git'] = repository_stats
+    result['version'] = get_module_versions(package_names, verbose)
+    result['timestamp'] = time.asctime()
+    if get_dirty_status:
+        result['dirty'] = dirty_stats
+    return result
+
+
+def test_python_code_modules_and_versions():
+    _ = get_python_version()
+    _ = get_module_versions(['numpy'])
+    _ = get_git_versions(['qtt'])
+    _ = code_version()
+
+# %% Jupyter kernel tools
 
 
 def get_jupyter_kernel(verbose=2):
@@ -143,6 +213,7 @@ def dumpstring(txt):
     with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
         fid.write(txt + '\n')
 
+
 def deprecated(func):
     """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
@@ -162,24 +233,35 @@ def deprecated(func):
             "Call to deprecated function {}.".format(func.__name__),
             category=DeprecationWarning,
             filename=filename,
-            lineno=lineno, 
+            lineno=lineno,
         )
         return func(*args, **kwargs)
     return new_func
 
-def rdeprecated(txt=None):
+
+def rdeprecated(txt=None, expire=None):
     """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used. 
-        
+
     Args:
         txt (str): reason for deprecation
     """
+    import datetime
+    from dateutil import parser
+    if expire is not None:
+        now = datetime.datetime.now()
+        expiredate = parser.parse(expire)
+        dt = expiredate - now
+        expired = dt.total_seconds() < 0
+    else:
+        expired = None
+
     def deprecated_inner(func):
         """ This is a decorator which can be used to mark functions
         as deprecated. It will result in a warning being emitted
         when the function is used. """
-    
+
         @functools.wraps(func)
         def new_func(*args, **kwargs):
             try:
@@ -191,20 +273,44 @@ def rdeprecated(txt=None):
             except:
                 lineno = -1
             if txt is None:
-                etxt=''
+                etxt = ''
             else:
-                etxt=' ' + txt
-            warnings.warn_explicit(
-                "Call to deprecated function {}.{}".format(func.__name__, etxt),
-                category=DeprecationWarning,
-                filename=filename,
-                lineno=lineno, 
-            )
+                etxt = ' ' + txt
+
+            if expire is not None:
+                if expired:
+                    raise Exception("Call to deprecated function {}.{}".format(func.__name__, etxt))
+                else:
+                    warnings.warn_explicit(
+                        "Call to deprecated function {} (will expire on {}).{}".format(func.__name__, expiredate, etxt),
+                        category=DeprecationWarning,
+                        filename=filename,
+                        lineno=lineno,
+                    )
+            else:
+                warnings.warn_explicit(
+                    "Call to deprecated function {}.{}".format(func.__name__, etxt),
+                    category=DeprecationWarning,
+                    filename=filename,
+                    lineno=lineno,
+                )
             return func(*args, **kwargs)
         return new_func
     return deprecated_inner
 
+
+def test_rdeprecated():
+
+    @rdeprecated('hello')
+    def dummy():
+        pass
+
+    @rdeprecated('hello', expire='1-1-2400')
+    def dummy2():
+        pass
+
 #%%
+
 
 def update_dictionary(alldata, **kwargs):
     """ Update elements of a dictionary
@@ -220,7 +326,7 @@ def update_dictionary(alldata, **kwargs):
 
 def stripDataset(dataset):
     """ Make sure a dataset can be pickled 
-    
+
     Args: 
         dataset (qcodes DataSet)
     """
@@ -250,7 +356,7 @@ def negfloat(x):
 
 def checkPickle(obj, verbose=0):
     """ Check whether an object can be pickled
-    
+
     Args:
         obj (object): object to be checked
     Returns:
@@ -318,9 +424,9 @@ def resampleImage(im):
             spx = np.tile(np.expand_dims(np.linspace(
                 setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
             setpointy = qcodes.DataArray(name='Resampled_' + setpoints[0].array_id, array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
-                                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
+                                         unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
             setpointx = qcodes.DataArray(name='Resampled_' + setpoints[1].array_id, array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
-                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+                                         unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpointy, setpointx]
         else:
             facrem = im.shape[1] % factor
@@ -338,7 +444,7 @@ def resampleImage(im):
             if idy is None:
                 idy = 'y'
             setpointx = qcodes.DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
-                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+                                         unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpoints[0], setpointx]
 
     return im, setpoints
@@ -403,7 +509,7 @@ def diffImageSmooth(im, dy='x', sigma=2):
     elif dy == -1:
         imx = -ndimage.gaussian_filter1d(im, axis=0,
                                          sigma=sigma, order=1, mode='nearest')
-    elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2' or dy=='g' or dy=='x2my2' or dy=='x2y2' :
+    elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2' or dy == 'g' or dy == 'x2my2' or dy == 'x2y2':
         imx0 = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
         imx1 = ndimage.gaussian_filter1d(
@@ -424,6 +530,7 @@ def diffImageSmooth(im, dy='x', sigma=2):
     else:
         raise Exception('differentiation method %s not supported' % dy)
     return imx
+
 
 def test_array(location=None, name=None):
     # DataSet with one 2D array with 4 x 6 points
@@ -456,6 +563,7 @@ def test_image_operations(verbose=0):
 
 
 import dateutil
+
 
 def scanTime(dd):
     """ Return date a scan was performed """
@@ -499,7 +607,7 @@ def plot1D(dataset, fig=1):
 
 def showImage(im, extent=None, fig=None):
     """ Show image in figure window
-    
+
     Args:
         im (array)
         extend (list): matplotlib style image extent
@@ -515,8 +623,8 @@ def showImage(im, extent=None, fig=None):
 
 
 #%% Measurement tools
-                
-@deprecated # part of the gates object
+
+@deprecated  # part of the gates object
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values
 
@@ -625,7 +733,7 @@ except:
     pass
 
 
-from qtt.pgeometry import tilefigs, mkdirc # import for backwards compatibility
+from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 
 
 #%% Helper tools
@@ -784,26 +892,26 @@ try:
                 fig = plt.figure(fig)
                 fig.savefig(fname)
             elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
-                           fig.__class__.__name__=='MultiTracePlot':
-                    figtemp = fig.plotwin.grab()
-                    figtemp.save(fname)
-            elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__=='VideoMode':
+                    fig.__class__.__name__ == 'MultiTracePlot':
+                figtemp = fig.plotwin.grab()
+                figtemp.save(fname)
+            elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__ == 'VideoMode':
                 if isinstance(fig.lp, list):
                     # do NOT change this into a list comprehension
-                    ff=[]
-                    for jj in range(len(fig.lp)):    
-                        ff.append(fig.lp[jj].plotwin.grab() )
+                    ff = []
+                    for jj in range(len(fig.lp)):
+                        ff.append(fig.lp[jj].plotwin.grab())
 
-                    sz=ff[0].size()
-                    sz = QtCore.QSize(sz.width()*len(ff), sz.height())
-                    figtemp=QtGui.QPixmap(sz)
-                    p=QtGui.QPainter(figtemp)
-                    offset=0
+                    sz = ff[0].size()
+                    sz = QtCore.QSize(sz.width() * len(ff), sz.height())
+                    figtemp = QtGui.QPixmap(sz)
+                    p = QtGui.QPainter(figtemp)
+                    offset = 0
                     for ii in range(len(ff)):
                         p.drawPixmap(offset, 0, ff[ii])
-                        offset+=ff[ii].size().width()                    
+                        offset += ff[ii].size().width()
                     figtemp.save(fname)
-                    p.end()                    
+                    p.end()
                 else:
                     # new Qt style
                     figtemp = fig.lp.plotwin.grab()
@@ -811,7 +919,7 @@ try:
             elif isinstance(fig, QtGui.QWidget):
                 # generic method
                 figtemp = fig.plotwin.grab()
-                figtemp.save(fname)                    
+                figtemp.save(fname)
             elif isinstance(fig, QtWidgets.QWidget):
                 try:
                     figtemp = QtGui.QPixmap.grabWidget(fig)
@@ -855,7 +963,7 @@ try:
             gates = getattr(station, 'gates', None)
             notes = reshape_metadata(station, printformat='s', add_scanjob=True)
             if extranotes is not None:
-                notes = '\n' + extranotes +'\n'+ notes
+                notes = '\n' + extranotes + '\n' + notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
         if isinstance(notes, qcodes.DataSet):
@@ -950,7 +1058,7 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict', add_scanjob = True, verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob=True, verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
@@ -1045,7 +1153,7 @@ def test_reshape_metadata():
         pass
     if dataset is not None:
         _ = reshape_metadata(dataset, printformat='dict')
-    st=qcodes.Station(qcodes.Instrument('_dummy123' ))
+    st = qcodes.Station(qcodes.Instrument('_dummy123'))
     _ = reshape_metadata(st, printformat='dict')
 
 
