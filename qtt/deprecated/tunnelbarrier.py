@@ -12,6 +12,9 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from imp import reload  # python3
 
+import pytest
+pytest.skip()
+
 raise Exception('no not use this module any more!')
 
 import numpy as np
@@ -40,7 +43,7 @@ except Exception as inst:
     # print(inst)
     warnings.warn('could not import OpenCv, not all functionality available...')
     pass
-
+ 
 warnings.warn('do not import this module, it will be removed in the future', DeprecationWarning)
 
 #%% Custom packages

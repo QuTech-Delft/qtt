@@ -11,13 +11,13 @@ import cv2
 import time
 import math
 import pickle
+import warnings
 
 import qcodes
 # explicit import
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
 from qtt.algorithms.images import straightenImage
-import itertools
 
 import qtt.data
 from qtt.data import loadExperimentData
@@ -30,7 +30,6 @@ from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
 #%%
 
-from qtt.deprecated import linetools
 from qtt.data import dataset2Dmetadata, dataset2image
 
 from qtt.algorithms.onedot import onedotGetBalanceFine
@@ -43,6 +42,8 @@ from qtt.measurements.scans import scanPinchValue
 
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import plotPoints, tilefigs
+
+warnings.warn('please do not this import this module')
 
 #%%
 

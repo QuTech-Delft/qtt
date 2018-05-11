@@ -228,6 +228,7 @@ def lineSegment(im, x0, x1=None, theta=None, w=2, l=12, H=200, ml=0):
 #%%
 
 
+@qtt.tools.rdeprecated('use qtt.utilties.imagetools.semiLine instead', '1-1-2018')
 def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
     """ Plot half-line into image 
 
@@ -281,8 +282,6 @@ def createH(samplesize, pp, scale=1):
     H.itemset(3, scale * s)
     H.itemset(4, scale * c)
     H.itemset(5, scale * (-s * cc[0] - c * cc[1]) + cx[1])
-    #H[0,:] = [c, -s, -c*cc[0]+s*cc[1] + cx[0] ]
-    #H[1,:] = [s, c, -s*cc[0]-c*cc[1] + cx[1]]
     return H
 
 #%%
