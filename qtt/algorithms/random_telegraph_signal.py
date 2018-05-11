@@ -161,6 +161,13 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
     durations_dn_min_duration = durations_dn_idx > min_duration
     durations_dn = durations_dn_idx[durations_dn_min_duration]
     
+        
+    if len(durations_up) < 1:
+        raise FittingException('All durations_up are shorter than the minimal duration.')
+        
+    if len(durations_dn) < 1:
+        raise FittingException('All durations_dn are shorter than the minimal duration.')
+    
     # calculating durations in seconds
     durations_dn= durations_dn/samplerate
     durations_up= durations_up/samplerate
