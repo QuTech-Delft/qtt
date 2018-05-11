@@ -9,11 +9,13 @@ Created on Wed Jul 12 08:08:57 2017
 import copy
 import numpy as np
 import qtt
-from qtt.legacy import cleanSensingImage, straightenImage
-from qtt.deprecated.linetools import evaluateCross, Vtrace, fitModel
+from qtt.algorithms.images import straightenImage
+from qtt.utilities.imagetools import cleanSensingImage
+from qtt.utilities.imagetools import evaluateCross, fitModel
 import matplotlib.pyplot as plt
 
 from qcodes import MatPlot
+
 #%%
 def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2.5,
                  diff_dir='dx', plot=False, verbose=1, param={}):
