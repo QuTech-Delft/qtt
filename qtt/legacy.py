@@ -48,7 +48,7 @@ warnings.warn('please do not this import this module')
 #%%
 
 
-
+@qtt.tools.rdeprecated(expire='1-7-2018')
 def positionScanjob(scanjob, pt):
     """ Helper function
 
@@ -70,7 +70,7 @@ def positionScanjob(scanjob, pt):
 #%%
 
 
-
+@qtt.tools.rdeprecated(expire='1-7-2018')
 def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, cache=False, full=0, verbose=1):
     """ Scan the pinch-off values for the 3 main gates of a 1-dot """
     od['pinchvalue'] = np.zeros((3, 1))
@@ -87,6 +87,7 @@ def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, 
 #%%
 
 
+@qtt.tools.rdeprecated(expire='1-7-2018')
 def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """ Save matplotlib figure to disk
 
@@ -113,6 +114,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     return imfilerel, imfile
 
 
+@qtt.tools.rdeprecated(expire='1-7-2019')
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     """ Plot a circle in a matplotlib figure
 
@@ -436,122 +438,14 @@ def cmap_discretize(cmap, N, m=1024):
 
 from qtt.algorithms.misc import polyval2d, polyfit2d
 
+from qtt.utilities.imagetools import fitBackground as fitBackgroundGood
+from qtt.utilities.imagetools import cleanSensingImage
+
+fitBackground= qtt.tools.deprecated(fitBackgroundGood)
 
 
-def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=False, returndict=None):
-    """ Fit smooth background to 1D or 2D image """
-
-    kk = len(im.shape)
-    im = np.array(im)
-    ny = im.shape[0]
-    ydata0 = np.arange(0., ny)
-
-    is1d = kk == 1
-    if kk > 1:
-        # 2d signal
-        nx = im.shape[1]
-        xdata0 = np.arange(0., nx)
-    else:
-        # 1D signal
-        xdata0 = [0.]
-    xx, yy = np.meshgrid(xdata0, ydata0)
-
-    if smooth:
-        ims = smoothImage(im)
-    else:
-        ims = im
-
-    if 0:
-        s2d = scipy.interpolate.RectBivariateSpline(ydata0, xdata0, im)
-        vv = s2d.ev(xx, yy)
-
-    if verbose:
-        print('fitBackground: is1d %d, order %d' % (is1d, order))
-
-    xxf = xx.flatten()
-    yyf = yy.flatten()
-    imsf = ims.flatten()
-    s2d = polyfit2d(xxf, yyf, imsf, order=order)
-    vv = polyval2d(xx, yy, s2d)
-
-    if removeoutliers:
-        ww = im - vv
-        gidx = np.abs(ims.flatten() - vv.flatten()) < ww.std()
-        # gidx=gidx.flatten()
-        if verbose:
-            print('fitBackGround: inliers %d/%d (std %.2f)' %
-                  (gidx.sum(), gidx.size, ww.std()))
-        s2d = polyfit2d(xxf[gidx], yyf[gidx], imsf[gidx], order=order)
-        vv = polyval2d(xx, yy, s2d)
-
-    if not fig is None:
-        if kk == 1:
-            plt.figure(fig)
-            plt.clf()
-            plt.subplot(2, 1, 1)
-            plt.plot(im, '.b', label='signal')
-            plt.plot(ims, 'og')
-            # plt.plot(ims, '.c', label='signal');
-
-            plt.plot(vv, '.-r', label='background')
-            # plt.axis('image')
-            plt.legend()
-            plt.title('fitBackground: image')
-
-            plt.subplot(2, 1, 2)
-            plt.plot(ww, '.m')
-            plt.title('Diff plot')
-        else:
-            plt.figure(fig)
-            plt.clf()
-            plt.subplot(3, 1, 1)
-            plt.imshow(im, interpolation='nearest')
-            plt.axis('image')
-            plt.title('fitBackground: image')
-            plt.subplot(3, 1, 2)
-            plt.imshow(vv, interpolation='nearest')
-            plt.axis('image')
-            # plt.colorbar()
-            plt.title('fitBackground: interpolation')
-            plt.subplot(3, 1, 3)
-            plt.imshow(im - vv, interpolation='nearest')
-            plt.axis('image')
-            plt.title('fitBackground: difference')
-
-    if not returndict is None:
-        # returndict['ww'] = ww
-        returndict['xx'] = xx
-        returndict['yy'] = yy
-        returndict['ims'] = ims
-    return vv
 
 
-def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
-    """ Clean up image from sensing dot
-    
-    Args:
-        im (numpy array)
-        dy (int or str): direction for differentiation
-        order (int)
-        fixreversal (bool)
-        removeoutliers (bool)
-    
-    """
-    verbose = int(verbose)
-    removeoutliers = bool(removeoutliers)
-    im = np.array(im)
-    if sigma is None:
-        imx = diffImage(im, dy=dy, size='same')
-    else:
-        imx = diffImageSmooth(im, dy=dy, sigma=sigma)
-    if order >= 0:
-        vv = fitBackground(imx, smooth=True, verbose=verbose, fig=None, order=int(order), removeoutliers=removeoutliers)
-        ww = (imx - vv).copy()
-    else:
-        ww = imx.copy()
-    if fixreversal:
-        ww = fixReversal(ww, verbose=verbose)
-    return ww
 
 
 

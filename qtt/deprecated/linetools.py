@@ -247,17 +247,27 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
 from qtt.utilities.imagetools import evaluateCross
 
-def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=None, 
+@qtt.tools.rdeprecated('use qtt.utilities.imagetools.fitModel instead', expire='1-6-2018')
+def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None, 
              istepmodel=.5, cb=None, use_abs=False, w=2.5):
-    """ Fit model of an anti-crossing """
+    """ Fit model of an anti-crossing 
+    
+    This is a wrapper around evaluateCross and the scipy optimization routines.
+    
+    Args:
+        param0 (array): parameters for the anti-crossing model
+        imx (array): input image
+        
+    
+    """
+    
     samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
-    #costfun = lambda param0: evaluateCrossX(param0, imx, samplesize, fig=None, istepmodel=istepmodel, istep=istep)[0]
     costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
 
-    #costfun = lambda x0: costFunction(x0, pglobal, ims)
     vv = []
     def fmCallback(plocal, pglobal):
+        """ Helper function to store intermediate results """
         vv.append((plocal, pglobal))
     if cfig is not None:
         cb = lambda x: fmCallback(x, None)
@@ -276,9 +286,6 @@ def fitModel(param0, imx, docb=False, verbose=1, cfig=None, ksizemv=41, istep=No
         paramy = param0
     res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead', options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
     #res = scipy.optimize.minimize(costfun, res.x, method='Powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
-
-    # for kk in range(1000):
-    #    xxx=evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, istep=istep)[0]
 
     if verbose:
         print('fitModel: score %.2f -> %.2f' % (costfun(param0), res.fun))
