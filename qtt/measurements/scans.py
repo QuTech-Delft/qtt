@@ -31,7 +31,6 @@ import qtt.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.live
-from qtt.tools import deprecated
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
@@ -246,6 +245,20 @@ def test_get_instrument_parameter():
     assert(id(p)==id(i.dac2))
     ix, p=get_instrument_parameter( i.name +'.dac2') 
     assert(id(p)==id(i.dac2))
+
+def get_minstrument_channels(minstrument):
+    if isinstance(minstrument, tuple):
+        minstrument = minstrument[1]
+
+    if isinstance(minstrument, int):
+        read_ch = [minstrument]
+        return read_ch
+    
+    if isinstance(minstrument, list):
+        read_ch = minstrument
+        return read_ch
+
+    raise Exception('could not parse %s into channels'  % minstrument)
     
 def get_measurement_params(station, mparams):
     """ Get qcodes parameters from an index or string or parameter """
@@ -373,7 +386,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             value = p.get()
             alldata.arrays[measure_names[ii]].ndarray[ix] = value
 
-        delta, tprev, update_plot = delta_time(tprev, thr=.25)
+        delta, tprev, update_plot = _delta_time(tprev, thr=.25)
         if update_plot:
             if liveplotwindow:
                 myupdate()
@@ -400,6 +413,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
 
@@ -504,6 +518,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata = qtt.tools.stripDataset(alldata)
 
@@ -872,7 +887,7 @@ class scanjob_t(dict):
         return scanvalues
 
 
-def delta_time(tprev, thr=2):
+def _delta_time(tprev, thr=2):
     """ Helper function to prevent too many updates """
     t = time.time()
     update = 0
@@ -895,6 +910,7 @@ def parse_minstrument(scanjob):
 
 
 def awgGate(gate, station):
+    """ Return True if the specified gate can be controlled by the AWG """
     awg = getattr(station, 'awg', None)
     if awg is None:
         return False
@@ -1074,7 +1090,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 alldata.last_write = time.time()
         if update_period is not None:
             if ix % update_period == update_period -1:
-                delta, tprev, update = delta_time(tprev, thr=0.5)
+                delta, tprev, update = _delta_time(tprev, thr=0.5)
                 
                 if update and liveplotwindow:
                     liveplotwindow.update_plot()
@@ -1107,6 +1123,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata.write(write_metadata=True)
 
@@ -1158,7 +1175,7 @@ def process_fpga_trace(data, width, resolution=None, Naverage=1, direction='forw
     return data_processed
 
 
-def process_digitizer_trace(data, width, period, samplerate, resolution=None, padding=0,
+def process_digitizer_trace(data, width, period, samplerate, resolution=None, padding=0, start_zero=False,
                             fig=None, pre_trigger=None):
     """ Process data from the M4i and a sawtooth trace 
 
@@ -1180,8 +1197,14 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         npoints2 = npoints2 - (npoints2 % 2)
         r1 = int(padding)
         r2 = int(npoints2)
+        if start_zero:
+            delta = int(period * samplerate*(1-width[0])/2)
+            r1 += delta
+            r2+= delta     
         processed_data = data[r1:r2, :].T
     else:
+        if start_zero:
+            raise Exception('not implemented')
         width_horz = width[0]
         width_vert = width[1]
         res_horz = int(resolution[0])
@@ -1226,9 +1249,6 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         plt.plot(data, label='raw data')
         plt.title('Processing of digitizer trace')
         plt.axis('tight')
-        # cc=data.shape[0]*(.5-rwidth/2)
-        # dcc=int(data.shape[0]/2)
-        # cc=dcc
 
         qtt.pgeometry.plot2Dline(
             [-1, 0, cctrigger], ':g', linewidth=3, label='trigger')
@@ -1345,10 +1365,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     padding_offset = int(drate * signal_delay)
 
     period = waveform['period']
-    if 'resolution' in waveform:
-        resolution = waveform['resolution']
-    else:
-        resolution = None
+    resolution = waveform.get('resolution', None)
 
     paddingpix = 16
     padding = paddingpix / drate
@@ -1383,13 +1400,14 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         samplerate = digitizer.sample_rate()
         pre_trigger = digitizer.pretrigger_memory_size()
 
+        start_zero = waveform.get('start_zero', False)
+     
         data, (r1, r2) = process_digitizer_trace(data.T, width, period,
-                                                 samplerate, pre_trigger=pre_trigger, resolution=resolution)
+                                                 samplerate, pre_trigger=pre_trigger, resolution=resolution, start_zero=start_zero)
 
         if verbose:
             print('measuresegment_m4i: processing data: r1 %s, r2 %s' % (r1, r2))
     return data
-
 
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
@@ -1496,22 +1514,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
     return alldata
 
 #%%
-
-def get_minstrument_channels(minstrument):
-    if isinstance(minstrument, tuple):
-        minstrument = minstrument[1]
-
-    if isinstance(minstrument, int):
-        read_ch = [minstrument]
-        return read_ch
-    
-    if isinstance(minstrument, list):
-        read_ch = minstrument
-        return read_ch
-
-
-    raise Exception('could not parse %s into channels'  % minstrument)
-        
+      
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
     """Make a 2D scan and create qcodes dataset to store on disk.
 
@@ -1642,7 +1645,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         for idm, mname in enumerate(measure_names):
             alldata.arrays[mname].ndarray[ix] = data[idm]
 
-        delta, tprev, update = delta_time(tprev, thr=1.)
+        delta, tprev, update = _delta_time(tprev, thr=1.)
         if update:
             if liveplotwindow is not None:
                 liveplotwindow.update_plot()
@@ -1678,6 +1681,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata.write(write_metadata=True)
 
@@ -1723,7 +1727,7 @@ def plotData(alldata, diff_dir=None, fig=1):
     figure = plt.figure(fig)
     plt.clf()
     if diff_dir is not None:
-        imx = qtt.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        imx = qtt.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
         data_arr = qcodes.DataArray(name=name, label=name, array_id=name,
@@ -1872,12 +1876,6 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
 
-#    if scanjob['scantype'] == 'scan2Dturbovec':
-#        for param in scanjob['phys_gates_vals']:
-#            parameter = gates.parameters[param]
-#            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
-#            alldata.add_array(arr)
-
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
@@ -1885,6 +1883,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version() )
 
     alldata.write(write_metadata=True)
 
@@ -1893,7 +1892,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 #%%
 
 
-@deprecated
+@qtt.tools.deprecated
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 
@@ -2221,8 +2220,6 @@ def test_scan2D(verbose=0):
 
     gates.close()
 
-if __name__=='__main__':    
-    test_scan2D()
     
 def enforce_boundaries(scanjob, sample_data, eps=1e-2):
     """ Make sure a scanjob does not go outside sample boundaries
@@ -2255,3 +2252,4 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
 
 if __name__ == '__main__':
     test_sample_data()
+    test_scan2D()

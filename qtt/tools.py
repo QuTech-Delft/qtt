@@ -31,7 +31,7 @@ from qcodes import DataArray
 
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import mpl2clipboard
-
+  
 # do NOT load any other qtt submodules here
 
 try:
@@ -41,11 +41,14 @@ try:
 except:
     pass
 
+import datetime
 import subprocess
 import glob
 import time
 from colorama import Fore
 import importlib
+import platform
+
 
 # %%
 
@@ -141,9 +144,11 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
     result['python'] = get_python_version(verbose)
     result['git'] = repository_stats
     result['version'] = get_module_versions(package_names, verbose)
-    result['timestamp'] = time.asctime()
+    result['timestamp'] = datetime.datetime.now().isoformat()  # ISO 8601
+    result['system'] = {'node': platform.node()}
     if get_dirty_status:
         result['dirty'] = dirty_stats
+
     return result
 
 
@@ -151,7 +156,10 @@ def test_python_code_modules_and_versions():
     _ = get_python_version()
     _ = get_module_versions(['numpy'])
     _ = get_git_versions(['qtt'])
-    _ = code_version()
+    c = code_version()
+    assert('python' in c)
+    assert('timestamp' in c)
+    assert('system' in c)
 
 # %% Jupyter kernel tools
 
@@ -282,7 +290,8 @@ def rdeprecated(txt=None, expire=None):
                     raise Exception("Call to deprecated function {}.{}".format(func.__name__, etxt))
                 else:
                     warnings.warn_explicit(
-                        "Call to deprecated function {} (will expire on {}).{}".format(func.__name__, expiredate, etxt),
+                        "Call to deprecated function {} (will expire on {}).{}".format(
+                            func.__name__, expiredate, etxt),
                         category=DeprecationWarning,
                         filename=filename,
                         lineno=lineno,
@@ -882,7 +891,7 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        import qtt.measurements.ttrace
+        import qtt.measurements.ttrace # should be moved to top when circular references are fixed
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
@@ -891,7 +900,7 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
-            elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
+            elif isinstance(fig, qtt.measuremsts.ttrace.MultiTracePlot) or \
                     fig.__class__.__name__ == 'MultiTracePlot':
                 figtemp = fig.plotwin.grab()
                 figtemp.save(fname)

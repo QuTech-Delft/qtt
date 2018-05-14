@@ -83,7 +83,7 @@ class videomode_callback:
                     diff_dir = self.diff_dir[ii]
                 else:
                     diff_dir = self.diff_dir
-                data_processed = qtt.diffImageSmooth(
+                data_processed = qtt.tools.diffImageSmooth(
                     data_processed, dy=diff_dir, sigma=self.diffsigma)
 
             if self.smoothing:
@@ -137,7 +137,8 @@ class VideoMode:
         self.diff_dir = diff_dir
         self.datalock = threading.Lock()
         self.datafunction_result = None
-
+        self.update_sleep = 1e-5
+        
         # parse instrument
         if 'fpga' in station.components:
             self.sampling_frequency = station.fpga.sampling_frequency
@@ -286,7 +287,7 @@ class VideoMode:
 
         if self.fps.framerate() < 10:
             time.sleep(0.1)
-        time.sleep(0.00001)
+        time.sleep(self.update_sleep)
 
     def is_running(self):
         return self.timer.isActive()
