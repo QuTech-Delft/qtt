@@ -299,16 +299,7 @@ class DataViewer(QtWidgets.QWidget):
 
     def loadData(self, filename, tag):
         location = os.path.split(filename)[0]
-        try:
-            from qcodes.data.hdf5_format import HDF5Format
-            hformatter = HDF5Format()
-            data = qcodes.load_data(location, formatter=hformatter, io=self.io)
-            logging.debug('loaded HDF5 dataset %s' % tag)
-        except Exception as ex:
-            from qcodes.data.gnuplot_format import GNUPlotFormat
-            hformatter = GNUPlotFormat()
-            data = qcodes.load_data(location, formatter=hformatter, io=self.io)
-            logging.debug('loaded GNUPlotFormat dataset %s' % tag)
+        data = qtt.data.load_dataset(location)
         return data
 
     def updatePlot(self, parameter):
