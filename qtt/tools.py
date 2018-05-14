@@ -338,6 +338,8 @@ def stripDataset(dataset):
 
     Args: 
         dataset (qcodes DataSet)
+    Returns:
+        dataset (qcodes DataSet): the dataset from the function argument
     """
     dataset.sync()
     dataset.data_manager = None

@@ -106,11 +106,11 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
 
     """
     sweepdata = dict(
-        {'param': g1, 'start': r1[0], 'end': r1[1], 'step': step})
+        {'param': g1, 'start': r1[0], 'end': r1[1], 'step': float(step) })
     scanjob = scanjob_t({'sweepdata': sweepdata, 'minstrument': keithleyidx})
     if not g2 is None:
         stepdata = dict(
-            {'param': g2, 'start': r2[0], 'end': r2[1], 'step': step})
+            {'param': g2, 'start': r2[0], 'end': r2[1], 'step': float(step) })
         scanjob['stepdata'] = stepdata
 
     return scanjob
@@ -1143,8 +1143,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if scanjob['scantype'] == 'scan2Dvec':
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
-            if type(stepvalues) is np.ndarray:
-                stepvalues = stepvalues_tmp
+            #if type(stepvalues) is np.ndarray:
+            #    stepvalues = stepvalues_tmp
             arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(
                 alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
             alldata.add_array(arr)
@@ -2053,10 +2053,10 @@ def pinchoffFilename(g, od=None):
 
 
 def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
+    """ Scan pinch-off value for a gate """
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
-    figfile = os.path.join(outputdir, 'one_dot', basename + '.png')
 
     if cache and os.path.exists(outputfile):
         if verbose:
