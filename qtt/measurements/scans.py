@@ -1540,6 +1540,41 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
 
     return alldata
 
+def single_shot_readout(minstparams, length, shots, threshold=None):
+    """Acquires several measurement traces, averages the signal over the entire trace for each shot and returns the proportion of shots that are above a defined threshold.
+    NOTE: The AWG marker delay should be set so that the triggered acquisition starts at the correct part of the readout pulse.
+    
+    Args:
+        minstparams (dict): required parameters of the digitizer (handle, read_ch, mV_range)
+        length (float): length of each shot, in seconds
+        shots (int): number of shots to acquire
+        threshold (float): signal discrimination threshold. If None, readout proportion is not calculated.
+        
+    Returns:
+        proportion (float [0,1]): proportion of shots above the threshold
+        allshots (array of floats): average signal of every shot taken
+    """
+    minstrhandle = minstparams['handle']
+    if not isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+        raise(Exception('single shot readout is only supported for M4i digitizer'))
+    read_ch = minstparams['read_ch']
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
+    if len(read_ch) > 1:
+        raise(Exception('cannot do single shot readout with multiple channels'))
+    mV_range = minstparams.setdefault('mV_range', 2000)
+    memsize = select_digitizer_memsize(minstrhandle, length, nsegments=shots, verbose=0)
+    post_trigger = minstrhandle.posttrigger_memory_size()
+    minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
+    dataraw = minstrhandle.multiple_trigger_acquisition(mV_range, memsize, memsize//shots, post_trigger)
+    data = np.reshape(dataraw, (shots, -1))
+    allshots = np.mean(data, 1)
+    if threshold is None:
+        proportion = None
+    else:
+        proportion = sum(allshots > threshold) / shots        
+    
+    return proportion, allshots
 #%%
       
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
