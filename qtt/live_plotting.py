@@ -587,8 +587,7 @@ class MockCallback_2d(qcodes.Instrument):
             'q', parameter_class=qcodes.ManualParameter, initial_value=30)
 
     def __call__(self):
-        import qtt.deprecated
-        import qtt.deprecated.linetools as lt
+        import qtt.utilities.imagetools as lt
 
         data = np.random.rand(self.nx * self.nx)
         data_reshaped = data.reshape(self.nx, self.nx)
@@ -609,6 +608,9 @@ def test_mock2d():
 # %% Example
 
 if __name__ == '__main__':
+    
+    test_mock2d()
+    
     lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')), sweepInstrument=None,
                   sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)

@@ -11,13 +11,13 @@ import cv2
 import time
 import math
 import pickle
+import warnings
 
 import qcodes
 # explicit import
 from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.plots.qcmatplotlib import MatPlot
 from qtt.algorithms.images import straightenImage
-import itertools
 
 import qtt.data
 from qtt.data import loadExperimentData
@@ -30,7 +30,6 @@ from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
 #%%
 
-from qtt.deprecated import linetools
 from qtt.data import dataset2Dmetadata, dataset2image
 
 from qtt.algorithms.onedot import onedotGetBalanceFine
@@ -44,10 +43,12 @@ from qtt.measurements.scans import scanPinchValue
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import plotPoints, tilefigs
 
+warnings.warn('please do not this import this module')
+
 #%%
 
 
-
+@qtt.tools.rdeprecated(expire='1-7-2018')
 def positionScanjob(scanjob, pt):
     """ Helper function
 
@@ -69,7 +70,7 @@ def positionScanjob(scanjob, pt):
 #%%
 
 
-
+@qtt.tools.rdeprecated(expire='1-7-2018')
 def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, cache=False, full=0, verbose=1):
     """ Scan the pinch-off values for the 3 main gates of a 1-dot """
     od['pinchvalue'] = np.zeros((3, 1))
@@ -86,6 +87,7 @@ def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, 
 #%%
 
 
+@qtt.tools.rdeprecated(expire='1-7-2018')
 def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """ Save matplotlib figure to disk
 
@@ -112,6 +114,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     return imfilerel, imfile
 
 
+@qtt.tools.rdeprecated(expire='1-7-2019')
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     """ Plot a circle in a matplotlib figure
 
@@ -222,156 +225,6 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 
 
 
-def singleRegion(pt, imx, istep, fig=100, distmv=10, widthmv=70, phi=np.deg2rad(10)):
-    """ Determine region where we have no electrons
-
-    The output region is in pixel coordinates.
-
-    Arguments
-    ---------
-        pt : array
-            position of (0,0) point
-        imx : array
-            input image
-        istep : float
-            scale factor
-
-    """
-    pt0 = pt + np.array([-distmv, distmv]) / istep
-    dd = widthmv / istep  # [mV]
-
-    phi1 = np.deg2rad(np.pi + phi)
-    phi2 = np.deg2rad(np.pi / 2 - phi)
-    rr0 = np.zeros((4, 2))
-    rr0[0] = pt0
-
-    if 1:
-        rr0[1] = pt0 + (np.array([-dd, 0]))
-        rr0[3] = pt0 + (np.array([0, dd]))
-        rr0[1][1] += (rr0[1][0] - rr0[0][0]) * math.sin(phi)
-        rr0[3][0] += (rr0[3][1] - rr0[0][1]) * math.sin(phi)
-    else:
-        rr0[1] = pt0 + pmatlab.rot2D(phi1).dot(np.array([dd, 0]))
-        rr0[3] = pt0 + pmatlab.rot2D(phi2).dot(np.array([dd, 0]))
-    rr0[2] = np.array([rr0[1][0], rr0[3][1]])
-    # make sure we are inside scan region. we add 1.0 to fix differentiaion issues at the border
-    rr0[[1, 2], 0] = np.maximum(rr0[[1, 2], 0], 1.0)
-
-    rr = np.vstack((rr0, rr0[0:1, :]))
-    # print(rr0)
-
-    if fig is not None:
-        showIm(imx, fig=fig)
-        plt.plot(pt[0], pt[1], '.m', markersize=20)
-
-        plt.plot(rr[:, 0], rr[:, 1], '.-g', markersize=14)
-    return rr0
-
-
-from qtt.algorithms.generic import scaleImage
-
-
-def singleElectronCheck(pt, imx, istep, fig=50, verbose=1):
-    """ Check whether we are in the single-electron regime
-
-    Arguments
-    ---------
-        pt : array
-            zero-zero point
-        imx : array
-            2D scan image
-        istep : float
-            parameter
-
-    Returns
-    -------
-        check : integer
-            0: false, 1: undetermined, 2: good
-    """
-    rr0 = singleRegion(pt, imx, istep, fig=None)
-    rr = np.vstack((rr0, rr0[0:1, :]))
-
-    imtmp = imx.copy()
-    pts = rr.reshape((-1, 1, 2)).astype(int)
-
-    mask = 0 * imtmp.copy().astype(np.uint8)
-    cv2.fillConvexPoly(mask, pts, color=[1])
-
-    if 0:
-        vvbg = fitBackground(imx, smooth=True, verbose=verbose, fig=None, order=int(3), removeoutliers=True)
-    else:
-        vvx = imx + filterBG(imx, ksize=math.ceil(45. / istep))
-        vvbg = imx - filterBG(imx, ksize=math.ceil(45. / istep))
-        # vv=vvbg
-        if 0:
-            showIm(imx, fig=123)
-            showIm(imx - vvbg, fig=124, title='imx-vvbg')
-            showIm(vvbg, fig=125, title='vvbg')
-            showIm(imx - vvx, fig=126, title='imx-vvx')
-        # imf=fourierHighPass(imx, nc=30)
-
-    qq0 = cv2.meanStdDev(imx - vvbg)
-    qq = cv2.meanStdDev(imx - vvbg, mask=mask)
-    if verbose >= 2:
-        print('qq0 %s' % (str(qq0)))
-        print('qq %s' % (str(qq)))
-        # print(qq)
-
-    thr = 3. * qq[1]
-    # thr=3.5*qq[1]
-    imf = imx - vvbg
-    # imf=smoothImage(imf)
-    # imf=anisodiff(imf,niter=25,kappa=50)
-
-    for ii in range(1):
-        imf = smoothImage(imf)
-
-    res = (np.abs(imf) > thr).astype(np.uint8)
-    kernel = np.ones((3, 1)).astype(np.uint8)
-    for ii in range(0):
-        res = cv2.morphologyEx(res, cv2.MORPH_OPEN, kernel)
-
-    if fig is not None:
-
-        showIm(mask, fig=fig, title='mask')
-        plt.plot(rr[:, 0], rr[:, 1], '.-g', markersize=14)
-        if verbose >= 2:
-            showIm(imf, fig=fig + 1)
-            plt.colorbar()
-            plt.title('filtered image')
-            img = cv2.cvtColor(scaleImage(imx - vvbg), cv2.COLOR_GRAY2RGB)
-            img = scaleImage(imx - vvbg)
-            imq = np.hstack((img, scaleImage(res)))
-            showIm(imq, fig=fig + 10)
-            plt.title('filtered image + thresholded')
-
-            plt.plot(rr[:, 0], rr[:, 1], '.-g', markersize=12)
-            rr2 = rr + np.array([imx.shape[1], 0])
-            plt.plot(rr2[:, 0], rr2[:, 1], '.-g', markersize=12)
-
-            showIm(res, fig=fig + 11)
-            # showIm(imf, fig=fig+11);
-            plt.plot(rr[:, 0], rr[:, 1], '.-g', markersize=14)
-
-    pixthr = (2.5 / istep)**2
-    if (np.sum(res * mask) <= pixthr):
-        if np.abs(pmatlab.polyarea(rr)) < ((40 / istep)**2):
-            check = 1
-        else:
-            check = 2
-    else:
-        check = 0
-    if verbose >= 2:
-        print('singleElectronCheck: area of region: %.1f/%.1f [mv]^2' % (np.abs(pmatlab.polyarea(rr)), (40 / istep)**2))
-    if verbose >= 2:
-        print('singleElectronCheck: np.sum(res*mask) %d/%d ' % (np.sum(res * mask), pixthr))
-    checks = dict({0: 'false', 1: 'undetermined', 2: 'good'})
-
-    if verbose:
-        print('singleElectronCheck: check %s: %s' % (check, checks[check]))
-    return check, rr0, res, thr
-
-
 #%%
 
 #import matplotlib
@@ -435,122 +288,14 @@ def cmap_discretize(cmap, N, m=1024):
 
 from qtt.algorithms.misc import polyval2d, polyfit2d
 
+from qtt.utilities.imagetools import fitBackground as fitBackgroundGood
+from qtt.utilities.imagetools import cleanSensingImage
+
+fitBackground= qtt.tools.deprecated(fitBackgroundGood)
 
 
-def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=False, returndict=None):
-    """ Fit smooth background to 1D or 2D image """
-
-    kk = len(im.shape)
-    im = np.array(im)
-    ny = im.shape[0]
-    ydata0 = np.arange(0., ny)
-
-    is1d = kk == 1
-    if kk > 1:
-        # 2d signal
-        nx = im.shape[1]
-        xdata0 = np.arange(0., nx)
-    else:
-        # 1D signal
-        xdata0 = [0.]
-    xx, yy = np.meshgrid(xdata0, ydata0)
-
-    if smooth:
-        ims = smoothImage(im)
-    else:
-        ims = im
-
-    if 0:
-        s2d = scipy.interpolate.RectBivariateSpline(ydata0, xdata0, im)
-        vv = s2d.ev(xx, yy)
-
-    if verbose:
-        print('fitBackground: is1d %d, order %d' % (is1d, order))
-
-    xxf = xx.flatten()
-    yyf = yy.flatten()
-    imsf = ims.flatten()
-    s2d = polyfit2d(xxf, yyf, imsf, order=order)
-    vv = polyval2d(xx, yy, s2d)
-
-    if removeoutliers:
-        ww = im - vv
-        gidx = np.abs(ims.flatten() - vv.flatten()) < ww.std()
-        # gidx=gidx.flatten()
-        if verbose:
-            print('fitBackGround: inliers %d/%d (std %.2f)' %
-                  (gidx.sum(), gidx.size, ww.std()))
-        s2d = polyfit2d(xxf[gidx], yyf[gidx], imsf[gidx], order=order)
-        vv = polyval2d(xx, yy, s2d)
-
-    if not fig is None:
-        if kk == 1:
-            plt.figure(fig)
-            plt.clf()
-            plt.subplot(2, 1, 1)
-            plt.plot(im, '.b', label='signal')
-            plt.plot(ims, 'og')
-            # plt.plot(ims, '.c', label='signal');
-
-            plt.plot(vv, '.-r', label='background')
-            # plt.axis('image')
-            plt.legend()
-            plt.title('fitBackground: image')
-
-            plt.subplot(2, 1, 2)
-            plt.plot(ww, '.m')
-            plt.title('Diff plot')
-        else:
-            plt.figure(fig)
-            plt.clf()
-            plt.subplot(3, 1, 1)
-            plt.imshow(im, interpolation='nearest')
-            plt.axis('image')
-            plt.title('fitBackground: image')
-            plt.subplot(3, 1, 2)
-            plt.imshow(vv, interpolation='nearest')
-            plt.axis('image')
-            # plt.colorbar()
-            plt.title('fitBackground: interpolation')
-            plt.subplot(3, 1, 3)
-            plt.imshow(im - vv, interpolation='nearest')
-            plt.axis('image')
-            plt.title('fitBackground: difference')
-
-    if not returndict is None:
-        # returndict['ww'] = ww
-        returndict['xx'] = xx
-        returndict['yy'] = yy
-        returndict['ims'] = ims
-    return vv
 
 
-def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
-    """ Clean up image from sensing dot
-    
-    Args:
-        im (numpy array)
-        dy (int or str): direction for differentiation
-        order (int)
-        fixreversal (bool)
-        removeoutliers (bool)
-    
-    """
-    verbose = int(verbose)
-    removeoutliers = bool(removeoutliers)
-    im = np.array(im)
-    if sigma is None:
-        imx = diffImage(im, dy=dy, size='same')
-    else:
-        imx = diffImageSmooth(im, dy=dy, sigma=sigma)
-    if order >= 0:
-        vv = fitBackground(imx, smooth=True, verbose=verbose, fig=None, order=int(order), removeoutliers=removeoutliers)
-        ww = (imx - vv).copy()
-    else:
-        ww = imx.copy()
-    if fixreversal:
-        ww = fixReversal(ww, verbose=verbose)
-    return ww
 
 
 
@@ -568,119 +313,10 @@ def showIm(ims, fig=1, title='', showz=False):
 
 
 
-def getTwoDotValues(td, ods, basevaluestd=dict({}), verbose=1):
-    """ Return settings for a 2-dot, based on one-dot settings """
-    if verbose >= 2:
-        print('getTwoDotValues: start: basevalues td: ')
-        print(basevaluestd)
-
-    bpleft = getODbalancepoint(ods[0])
-    bpright = getODbalancepoint(ods[1])
-
-    tddata = dict()
-
-    if td['gates'][2] == td['gates'][3]:
-        ggg = [None] * 3
-        ggL = ods[0]['gates']
-        ggR = ods[1]['gates']
-
-        p1 = basevaluestd[ggL[1]]
-        p2 = basevaluestd[ggR[1]]
-
-        val = [bpleft[1, 0], p1, bpleft[0, 0]]
-        leftval = val[0]
-        ggg[0] = ggL[0]
-        ggg[1] = ggL[2]
-        for g, v in zip(ggL, val):
-            basevaluestd[g] = v
-        val = [bpright[1, 0], p2, bpright[0, 0]]
-        rightval = val[2]
-        for g, v in zip(ggR, val):
-            basevaluestd[g] = v
-        ggg[2] = ggR[2]
-
-        g = ods[0]['gates'][2]
-        v1 = bpleft[0, 0]
-        v2 = bpright[1, 0]
-        v = (v1 + v2) / 2
-        if verbose:
-            print(
-                'getTwoDotValues: one-dots share a gate: %s: %.1f, %.1f [mV]' % (g, v1, v2))
-        basevaluestd[g] = float(v)
-
-        tddata['gates'] = [ggg[0], ggL[1], ggg[1], ggR[1], ggg[2]]
-        tddata['gatevaluesleft'] = [bpleft[1, 0], basevaluestd[ggL[1]], bpleft[0, 0]]
-        tddata['gatevaluesright'] = [bpright[1, 0], basevaluestd[ggR[1]], bpright[0, 0]]
-
-        fac = .10
-        fac = 0
-        facplunger = .1
-
-        cc = [-rightval * fac, -facplunger * rightval, -(leftval + rightval) * fac / 2, -facplunger * leftval, -leftval * fac]
-        print('getTwoDotValues: one-dots share a gate: %s: compensate %s' %
-              (str(tddata['gates']), str(cc)))
-        for ii, g in enumerate(tddata['gates']):
-            basevaluestd[g] += float(cc[ii])
-            # basevalues[ggg[ii]]+=10
-
-        tddata['v'] = [v1, v2, v]
-        tddata['gatecorrection'] = cc
-        tddata['gatevalues'] = [basevaluestd[gx] for gx in tddata['gates']]
-        tddata['ods'] = ods
-    else:
-        gg = ods[0]['gates']
-        val = [ods[0]['balancepoint'][1, 0], 0, ods[0]['balancepoint'][0, 0]]
-        for g, v in zip(gg, val):
-            basevaluestd[g] = v
-        gg = ods[1]['gates']
-        val = [ods[1]['balancepoint'][1, 0], 0, ods[0]['balancepoint'][0, 0]]
-        for g, v in zip(gg, val):
-            basevaluestd[g] = float(v)
-
-    # make sure all values are nice floats (not scalar numpy arrays)
-    for k in basevaluestd:
-        basevaluestd[k] = float(basevaluestd[k])
-
-    if verbose >= 2:
-        print('getTwoDotValues: return basevalues: ')
-        print(basevaluestd)
-
-    return basevaluestd, tddata
-
 
 #%%
 
-def showODresults(od, dd2d, fig=200, imx=None, ww=None):
-    ''' Show results of a 1-dot fit ? '''
-    balancepoint = od['balancepoint']
-    ptv0 = od['balancepoint0']
-    if not fig:
-        return
 
-    tmp = show2D(dd2d, fig=fig, verbose=0)
-
-    _ = show2D(dd2d, fig=fig + 1, verbose=0)
-    plt.title('result')
-    plt.axis('image')
-    plotPoints(balancepoint, '.m', markersize=18)
-    plotPoints(od['balancefit'], '--c')
-
-    plotPoints(ptv0, 'or', markersize=10, mew=2.5, fillstyle='none')
-
-    if not ww is None:
-        plt.figure(fig + 2)
-        plt.clf()
-        plt.imshow(imx)
-        plt.title('polygon')
-
-        plt.figure(fig + 3)
-        plt.clf()
-        plt.imshow(imx == ww)
-        plt.title('difference')
-        plt.axis('image')
-        # plotPoints(pt, '.m', markersize=18)
-
-    tilefigs([fig, fig + 1, fig + 2], [3, 2])
 #%%
 
 

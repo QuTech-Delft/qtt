@@ -188,12 +188,20 @@ def get_instrument_parameter( handle):
     """ Return handle to instrument parameter or channel
 
     Args:
-        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname)
+        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname). A string is of the 
+            format 'instrument.parameter'
     Returns:
         h (object)
     """
     if isinstance(handle, str):
-        istr, pstr = handle.split('.')
+        try:
+            istr, pstr = handle.split('.')
+        except Exception as ex:
+            # probably legacy code
+            istr = handle
+            pstr = 'amplitude'
+            warnings.warn('incorrect format for instrument+parameter handle %s' % (handle,))
+            
     else:
         istr, pstr = handle
         
@@ -275,6 +283,7 @@ def get_measurement_params(station, mparams):
     for x in mparams:
         if isinstance(x, int):
             params += [getattr(station, 'keithley%d' % x).amplitude]
+            warnings.warn('please use a string to specify your parameter, e.g. \'keithley3.amplitude\'!')
         elif isinstance(x, tuple):
             # pair of instrument and channel
             #instrument = get_instrument(x[0])
@@ -289,7 +298,8 @@ def get_measurement_params(station, mparams):
                 digi_flag = True
                 params += [getattr(station.digitizer, 'channel_%c' % x[-1])]
             else:
-                params += [getattr(station, x).amplitude]
+                params += [get_instrument_parameter(x)[1]]
+                #params += [getattr(station, x).amplitude]
         else:
             params += [x]
     if digi_flag:
@@ -481,11 +491,28 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
             sweeprange = (sweepdata['end'] - sweepdata['start'])
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
             gates.set(sweepdata['param'], float(sweepgate_value))
-        waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
+        if 'pulsedata' in scanjob:
+            waveform, sweep_info = station.awg.sweepandpulse_gate(
+                {'gate': sweepdata['param'].name,
+                    'sweeprange': sweeprange, 'period': period},
+                scanjob['pulsedata'])
+        else:
+            waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
     else:
         sweeprange = sweepdata['range']
-        waveform, sweep_info = station.awg.sweep_gate_virt(
-            fast_sweep_gates, sweeprange, period, delete=delete)
+        if 'pulsedata' in scanjob:
+            sg = []
+            for g, v in fast_sweep_gates.items():
+                if v != 0:
+                    sg.append(g)
+            if len(sg) > 1:
+                raise(Exception('AWG pulses does not yet support virtual gates'))
+            waveform, sweep_info = station.awg.sweepandpulse_gate(
+                {'gate':sg[0], 'sweeprange':sweeprange, 'period':period},
+                scanjob['pulsedata'])
+        else:
+            waveform, sweep_info = station.awg.sweep_gate_virt(
+                    fast_sweep_gates, sweeprange, period, delete=delete)
 
     qtt.time.sleep(wait_time_startscan)
 
@@ -1513,6 +1540,41 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
 
     return alldata
 
+def single_shot_readout(minstparams, length, shots, threshold=None):
+    """Acquires several measurement traces, averages the signal over the entire trace for each shot and returns the proportion of shots that are above a defined threshold.
+    NOTE: The AWG marker delay should be set so that the triggered acquisition starts at the correct part of the readout pulse.
+    
+    Args:
+        minstparams (dict): required parameters of the digitizer (handle, read_ch, mV_range)
+        length (float): length of each shot, in seconds
+        shots (int): number of shots to acquire
+        threshold (float): signal discrimination threshold. If None, readout proportion is not calculated.
+        
+    Returns:
+        proportion (float [0,1]): proportion of shots above the threshold
+        allshots (array of floats): average signal of every shot taken
+    """
+    minstrhandle = minstparams['handle']
+    if not isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+        raise(Exception('single shot readout is only supported for M4i digitizer'))
+    read_ch = minstparams['read_ch']
+    if isinstance(read_ch, int):
+        read_ch = [read_ch]
+    if len(read_ch) > 1:
+        raise(Exception('cannot do single shot readout with multiple channels'))
+    mV_range = minstparams.setdefault('mV_range', 2000)
+    memsize = select_digitizer_memsize(minstrhandle, length, nsegments=shots, verbose=0)
+    post_trigger = minstrhandle.posttrigger_memory_size()
+    minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
+    dataraw = minstrhandle.multiple_trigger_acquisition(mV_range, memsize, memsize//shots, post_trigger)
+    data = np.reshape(dataraw, (shots, -1))
+    allshots = np.mean(data, 1)
+    if threshold is None:
+        proportion = None
+    else:
+        proportion = sum(allshots > threshold) / shots        
+    
+    return proportion, allshots
 #%%
       
 def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
@@ -1567,8 +1629,19 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     if scanjob['scantype'] == 'scan2Dfastvec':
         scanjob._parse_2Dvec()
-        waveform, sweep_info = station.awg.sweep_gate_virt(
-            fast_sweep_gates, sweepdata['range'], period)
+        if 'pulsedata' in scanjob:
+            sg = []
+            for g, v in fast_sweep_gates.items():
+                if v != 0:
+                    sg.append(g)
+            if len(sg) > 1:
+                raise(Exception('AWG pulses does not yet support virtual gates'))
+            waveform, sweep_info = station.awg.sweepandpulse_gate(
+                {'gate':sg[0], 'sweeprange':sweepdata['range'], 'period':period},
+                scanjob['pulsedata'])
+        else:
+            waveform, sweep_info = station.awg.sweep_gate_virt(
+                fast_sweep_gates, sweepdata['range'], period)
     else:
         if 'range' in sweepdata:
             sweeprange = sweepdata['range']
