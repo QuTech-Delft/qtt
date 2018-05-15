@@ -81,6 +81,17 @@ Note: the following does NOT work with anaconda
 ```
 For Unix systems the proper command is `python setup.py develop --user`.
 
+## Optional: QI packages
+
+Run:
+```
+pip install control-software --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/control-software
+```
+If you have access, you can also get more recent versions using:
+```
+pip install git+https://github.com/qutech-sd/control-software
+```
+
 ## Hardware 
 
 - If necessary install the drivers for your hardware. Some links:
