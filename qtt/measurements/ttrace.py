@@ -64,7 +64,7 @@ try:
     sq_pulse_marker = pulse.SquarePulse(
         channel='ch1_marker1', name='A square pulse on MW pmod')
     lin_pulse = pulse.LinearPulse(channel='ch1', name='Linear pulse')
-except NameError: # pycqed not available
+except (NameError, AttributeError): # pycqed not available
     pass
     
 def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
