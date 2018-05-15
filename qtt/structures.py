@@ -356,7 +356,7 @@ class sensingdot_t:
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
             
-        if sdvirt_gates is not None:
+        if sd.virt_gates is not None:
             raise Exception('virtual gates for slow scan not supported')
             
         alldata = sd.scan1D(outputdir=outputdir, step=step,
@@ -420,7 +420,7 @@ class sensingdot_t:
                 # set sweep to center
                 gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
 
-    def fastTune(self, Naverage=50, sweeprange=79, period=.5e-3, location=None,
+    def fastTune(self, Naverage=90, sweeprange=79, period=.5e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, verbose=1):
         """Fast tuning of the sensing dot plunger.
 
@@ -459,6 +459,7 @@ class sensingdot_t:
 
             alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
         else:
+            raise Exception('legacy code, please do not use')
             waveform, sweep_info = self.station.awg.sweep_gate(
                 self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
 
