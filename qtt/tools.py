@@ -13,7 +13,7 @@ import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
 from functools import wraps
-from pip import get_installed_distributions
+
 try:
     from dulwich.repo import Repo, NotGitRepository
     from dulwich import porcelain
