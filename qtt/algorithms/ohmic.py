@@ -9,7 +9,7 @@ import qtt
 import scipy.optimize
 
 
-def fitOhmic(ds, verbose=1, fig=None, gainy=1e-7, gainx=1e3):
+def fitOhmic(ds, verbose=1, fig=None, gainy=1e-7, gainx=1e-6):
     """ Fit data to a linear function 
 
     Arguments:
@@ -24,8 +24,8 @@ def fitOhmic(ds, verbose=1, fig=None, gainy=1e-7, gainx=1e3):
 
     .. seealso:: linear_function
     """
-    xdata = gainx * np.array(ds.default_parameter_array().set_arrays[0])
-    ydata = gainy * np.array(ds.default_parameter_array())
+    xdata = gainx * np.array(ds.default_parameter_array().set_arrays[0]) # [V]
+    ydata = gainy * np.array(ds.default_parameter_array()) # [A]
 
     ydata = ydata
     # initial values: offset and slope

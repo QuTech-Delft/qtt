@@ -67,22 +67,7 @@ def positionScanjob(scanjob, pt):
     return scanjob
 
 
-#%%
 
-
-@qtt.tools.rdeprecated(expire='1-7-2018')
-def onedotScanPinchValues(station, od, basevalues, outputdir, sample_data=None, cache=False, full=0, verbose=1):
-    """ Scan the pinch-off values for the 3 main gates of a 1-dot """
-    od['pinchvalue'] = np.zeros((3, 1))
-    keithleyidx = [od['instrument']]
-
-    for jj, g in enumerate(od['gates']):
-        alldata = scanPinchValue(station, outputdir, gate=g, basevalues=basevalues, sample_data=sample_data, minstrument=keithleyidx, cache=cache, full=full)
-
-        adata = alldata.metadata['adata']
-        od['pinchvalue'][jj] = adata['pinchvalue']
-
-    return od
 
 #%%
 

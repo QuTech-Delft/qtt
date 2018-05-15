@@ -106,11 +106,11 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
 
     """
     sweepdata = dict(
-        {'param': g1, 'start': r1[0], 'end': r1[1], 'step': step})
+        {'param': g1, 'start': r1[0], 'end': r1[1], 'step': float(step) })
     scanjob = scanjob_t({'sweepdata': sweepdata, 'minstrument': keithleyidx})
     if not g2 is None:
         stepdata = dict(
-            {'param': g2, 'start': r2[0], 'end': r2[1], 'step': step})
+            {'param': g2, 'start': r2[0], 'end': r2[1], 'step': float(step) })
         scanjob['stepdata'] = stepdata
 
     return scanjob
@@ -188,8 +188,8 @@ def get_instrument_parameter( handle):
     """ Return handle to instrument parameter or channel
 
     Args:
-        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname). A string is of the 
-            format 'instrument.parameter'
+        handle (tuple or str): name of instrument or handle. Tuple is a pair (instrument, paramname). A string is
+        of the form 'instrument.parameter', e.g. 'keithley3.amplitude'
     Returns:
         h (object)
     """
@@ -285,10 +285,6 @@ def get_measurement_params(station, mparams):
             params += [getattr(station, 'keithley%d' % x).amplitude]
             warnings.warn('please use a string to specify your parameter, e.g. \'keithley3.amplitude\'!')
         elif isinstance(x, tuple):
-            # pair of instrument and channel
-            #instrument = get_instrument(x[0])
-            #param = getattr(instrument, 'channel_%d' % x[1])
-            
             instrument, param = get_instrument_parameter(x)
             params += [param]
 
@@ -297,9 +293,11 @@ def get_measurement_params(station, mparams):
                 channels.append(int(x[-1]))
                 digi_flag = True
                 params += [getattr(station.digitizer, 'channel_%c' % x[-1])]
-            else:
+            elif '.' in x:
                 params += [get_instrument_parameter(x)[1]]
-                #params += [getattr(station, x).amplitude]
+            else:
+                warnings.warn('legacy style argument, please use \'keithley1.amplitude\' or (keithley1.name, \'amplitude\')')
+                params += [getattr(station, x).amplitude]
         else:
             params += [x]
     if digi_flag:
@@ -611,24 +609,29 @@ def test_sample_data():
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
 
-    A typical scanjob contains the following fields:
+    A typical scanjob contains the following (optional) fields:
 
     Fields:
         sweepdata (dict):
         stepdata (dict)
         minstrument (str, Parameter or tuple)
-
+        wait_time_startscan (float):
+        
     The sweepdata and stepdata are structures with the following fields:
 
         param (str, Parameter or dict): parameter to vary
         start, end, step (float)
         wait_time (float)
 
-    If the param field 
 
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
 
+    def check_format(self):
+        """ Check the format of the scanjob for consistency and legacy style arguments """
+        if 'stepvalues' in self:
+            warnings.warn('please do not use the stepvalues field any more!')
+            
     def setWaitTimes(self, station, min_time=0):
         """ Set default waiting times based on gate filtering """
 
@@ -830,7 +833,7 @@ class scanjob_t(dict):
                     self['phys_gates_vals'][param] = param_init[param] + \
                         sweep_array * sweepdata['param'][param]
             else:
-                scanvalues = sweepparam[sweepdata['start']                                        :sweepdata['end']:sweepdata['step']]
+                scanvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
@@ -993,6 +996,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     gates = station.gates
     gatevals = gates.allvalues()
 
+    scanjob.check_format()
+
     minstrument = parse_minstrument(scanjob)
     mparams = get_measurement_params(station, minstrument)
 
@@ -1000,6 +1005,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
+    
     scanjob.parse_stepdata('stepdata', gates)
     scanjob.parse_stepdata('sweepdata', gates)
 
@@ -1032,8 +1038,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.info('scan2D: wait_time_step %f' % wait_time_step)
 
     if type(stepvalues) is np.ndarray:
-        stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=mparams,
+        stepvalues = stepdata['param'][list(stepvalues[:, 0])]
+        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues, measure_names=mparams,
                                                             location=location, loc_record={'label': scanjob['scantype']}, return_names=True)
     else:
         alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
@@ -1137,8 +1143,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if scanjob['scantype'] == 'scan2Dvec':
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
-            if type(stepvalues) is np.ndarray:
-                stepvalues = stepvalues_tmp
+            #if type(stepvalues) is np.ndarray:
+            #    stepvalues = stepvalues_tmp
             arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(
                 alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
             alldata.add_array(arr)
@@ -1590,6 +1596,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     gates = station.gates
     gatevals = gates.allvalues()
 
+    scanjob.check_format()
+    
     if 'sd' in scanjob:
         warnings.warn('sd argument is not supported in scan2Dfast')
 
@@ -2045,10 +2053,10 @@ def pinchoffFilename(g, od=None):
 
 
 def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None, cache=False, verbose=1, fig=10, full=0, background=False):
+    """ Scan pinch-off value for a gate """
     basename = pinchoffFilename(gate, od=None)
     outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
     outputfile = os.path.join(outputdir, 'one_dot', basename)
-    figfile = os.path.join(outputdir, 'one_dot', basename + '.png')
 
     if cache and os.path.exists(outputfile):
         if verbose:
