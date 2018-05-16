@@ -11,6 +11,7 @@ qtpy
 h5py
 pyvisa
 slacker
+autopep8
 apscheduler
 spyder
 dulwich
