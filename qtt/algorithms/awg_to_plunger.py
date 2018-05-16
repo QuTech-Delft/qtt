@@ -4,6 +4,9 @@ import numpy as np
 import qtt.pgeometry
 import qcodes
 import copy
+import matplotlib.pyplot as plt
+
+from qcodes import MatPlot
 
 def get_dataset(ds):
     """ Get a dataset from a results dict, a string or a dataset """    
@@ -107,6 +110,8 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
     return result
         
 def plot_awg_to_plunger(result, fig=10):
+    angle=result['angle']
+    
     ds=get_dataset(result)
     plt.figure(fig); plt.clf()
     MatPlot(ds.default_parameter_array(), num=fig)
