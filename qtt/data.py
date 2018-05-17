@@ -536,6 +536,12 @@ class image_transform:
     def image(self):
         return self._im
 
+    def istep_sweep(self):
+        return np.mean(np.diff(self.vsweep))
+    
+    def istep_step(self):
+        return np.mean(np.diff(self.vstep))
+            
     def istep(self):
         return self._istep
 
