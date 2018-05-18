@@ -336,6 +336,7 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
         z_data (array): sensor signal of PAT scan
         background (array): sensor signal of POL scan
         trans (str): can be 'one_ele' or 'two_ele'
+        even_branches (list of booleans): indicated which branches of the model to use for fitting
 
     Returns:
         pp (array): fitted xoffset (mV), leverarm (ueV/mV) and t (ueV)
