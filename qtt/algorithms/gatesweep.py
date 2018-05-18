@@ -49,14 +49,14 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
 
     # crude estimate of noise
-    noise = np.percentile(np.abs(np.diff(value)), 50)
-    lowvalue = np.percentile(value, 1)
-    highvalue = np.percentile(value, 90)
+    noise = np.nanpercentile(np.abs(np.diff(value)), 50)
+    lowvalue = np.nanpercentile(value, 1)
+    highvalue = np.nanpercentile(value, 90)
     # sometimes a channel is almost completely closed, then the percentile
     # approach does not function well
     ww = value[value >= (lowvalue + highvalue) / 2]
     #[np.percentile(ww, 1), np.percentile(ww, 50), np.percentile(ww, 91) ]
-    highvalue = np.percentile(ww, 90)
+    highvalue = np.nanpercentile(ww, 90)
 
     if verbose >= 2:
         print('analyseGateSweep: lowvalue %.1f highvalue %.1f' %
