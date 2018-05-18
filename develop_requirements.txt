@@ -11,6 +11,8 @@ qtpy
 h5py
 pyvisa
 slacker
+simplejson
+autopep8
 apscheduler
 spyder
 dulwich
