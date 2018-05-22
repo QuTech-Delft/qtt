@@ -22,7 +22,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 #%%
 
 
-def load_dataset(location, io=None):
+def load_dataset(location, io=None, verbose=0):
     """ Load a dataset from storage
 
     An attempt is made to automatically detect the formatter. Supported are currently GNUPlotFormat and HDF5Format
@@ -53,12 +53,23 @@ def load_dataset(location, io=None):
     data = None
     for ii, hformatter in enumerate(formatters):
         try:
+            if verbose:
+                print('%d: %s' % (ii, hformatter) )
             data = qcodes.load_data(location, formatter=hformatter, io=io)
+            if len(data.arrays)==0:
+                data = None
+                raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
             logging.debug('load_data: loaded %s with %s' % (location, hformatter))
         except Exception as ex:
             logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
-            # print(ex)
+            if verbose:
+                print(ex)
             pass
+        finally:
+            if data is not None:
+                if verbose:
+                    print('succes with formatter %s' % hformatter)
+                break
     return data
 
 

@@ -218,7 +218,7 @@ class zmqLoggingGUI(QtWidgets.QDialog):
 
     def close(self):
         self.scheduler.pause()
-        self.pub.close()
+        self.sub.close()
                 
     def _callback(self, verbose=1):
         logging.debug('ZMQ logger: logging...')
