@@ -287,6 +287,7 @@ def package_versions(verbose=1):
         print('sip %s'  % sip.SIP_VERSION_STR)
     except:
         pass
+    
 def freezeclass(cls):
     """ Decorator to freeze a class """
     cls.__frozen = False
