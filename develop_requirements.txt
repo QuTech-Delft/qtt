@@ -15,7 +15,8 @@ simplejson
 autopep8
 apscheduler
 spyder
-dulwich
+urllib3
+certifi
 colorama
 attrs
 Polygon3
