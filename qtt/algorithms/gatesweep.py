@@ -198,7 +198,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             plt.plot(x[leftidx], leftval, '--m', markersize=15, linewidth=1, label='leftval')
 
 
-    adata = dict({'description': 'pichoff analysis', 'pinchvalue': float(midpoint2 - 50),
+    adata = dict({'description': 'pinchoff analysis', 'pinchvalue': float(midpoint2 - 50),
                   '_pinchvalueX': midpoint1 - 50, 'goodgate': goodgate})
     adata['lowvalue'] = lowvalue
     adata['highvalue'] = highvalue
