@@ -106,6 +106,7 @@ dependencies:
   - rope-py3k
   - spirack
   - slacker
+  - wrapt
   - "git+https://github.com/telegraphic/hickle.git@dev#egg=hickle-dev"
   - "dulwich --global-option='--pure'"
 
