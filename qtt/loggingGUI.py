@@ -227,36 +227,38 @@ class zmqLoggingGUI(QtWidgets.QDialog):
 
         try:
             sub = self.sub
-            level, message = sub.recv_multipart(zmq.NOBLOCK)
-            # level, message = sub.recv_multipart()
-            message = message.decode('ascii')
-            if message.endswith('\n'):
-                # trim trailing newline, which will get appended again
-                message = message[:-1]
-            level = level.lower().decode('ascii')
-            log = getattr(logging, level)
-            lvlvalue = dlg.imap.get(level, None)
-
-            if verbose >= 2:
-                log(message)
-            dlg.addMessage(message + '\n', lvlvalue)
-
-            if dlg.nkill > 0:
-                print('check pid')
-                m = re.match(r'pid (\d*): heartbeat', message)
-                dlg.nkill = dlg.nkill - 1
-                if m is not None:
-                    pid = int(m.group(1))
-                    print('killing pid %d' % pid)
-                    mysignal = getattr(signal, 'SIGKILL', signal.SIGTERM)
-                    try:
-                        os.kill(pid, mysignal)  # or signal.SIGKILL
-                        dlg.addMessage(
-                            'send kill signal to pid %d\n' % pid, logging.CRITICAL)
-                    except Exception:
-                        dlg.addMessage(
-                            'kill signal to pid %d failed\n' % pid, logging.CRITICAL)
-                        pass
+            for ij in range(10):
+                # process at most 10 messages at a time
+                level, message = sub.recv_multipart(zmq.NOBLOCK)
+                # level, message = sub.recv_multipart()
+                message = message.decode('ascii')
+                if message.endswith('\n'):
+                    # trim trailing newline, which will get appended again
+                    message = message[:-1]
+                level = level.lower().decode('ascii')
+                log = getattr(logging, level)
+                lvlvalue = dlg.imap.get(level, None)
+    
+                if verbose >= 2:
+                    log(message)
+                dlg.addMessage(message + '\n', lvlvalue)
+    
+                if dlg.nkill > 0:
+                    print('check pid')
+                    m = re.match(r'pid (\d*): heartbeat', message)
+                    dlg.nkill = dlg.nkill - 1
+                    if m is not None:
+                        pid = int(m.group(1))
+                        print('killing pid %d' % pid)
+                        mysignal = getattr(signal, 'SIGKILL', signal.SIGTERM)
+                        try:
+                            os.kill(pid, mysignal)  # or signal.SIGKILL
+                            dlg.addMessage(
+                                'send kill signal to pid %d\n' % pid, logging.CRITICAL)
+                        except Exception:
+                            dlg.addMessage(
+                                'kill signal to pid %d failed\n' % pid, logging.CRITICAL)
+                            pass
             app.processEvents()
 
             if verbose >= 2:
@@ -266,7 +268,7 @@ class zmqLoggingGUI(QtWidgets.QDialog):
             app = QtWidgets.QApplication.instance()
 
             app.processEvents()
-            time.sleep(.06)
+            time.sleep(.03)
             message = ''
             level = None
         if dlg.nkill > 0:
