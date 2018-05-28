@@ -240,7 +240,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
 
     im, tr = qtt.data.dataset2image(dd)
 
-    extentImage = copy.deepcopy(tr.scan_image_extent() ) 
+    #extentImage = copy.deepcopy(tr.scan_image_extent() ) 
     extentImageMatlab = tr.matplotlib_image_extent()
     
     ims = im.copy()
@@ -307,8 +307,8 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     fitresults['setpoint'] = fitresults['balancepoint'] + 8
     fitresults['x0'] = x0
     fitresults['gatevalues']=dd.metadata['allgatevalues']
-    fitresults['gatevalues'][od['gates'][2]] = fitresults['balancepoint'][0]
-    fitresults['gatevalues'][od['gates'][0]] = fitresults['balancepoint'][1]
+    fitresults['gatevalues'][od['gates'][2]] = float(fitresults['balancepoint'][0])
+    fitresults['gatevalues'][od['gates'][0]] = float(fitresults['balancepoint'][1])
 
 
     ptv = fitresults['balancepoint']
@@ -351,40 +351,6 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=17, label='balancepoint')
         plt.axis('image')
 
-        #plt.xlabel('%s (mV)' % g2)
-        #plt.ylabel('%s (mV)' % g0)  
-        
-
-        qtt.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
-        plt.axis('image')
-        plt.title('Smoothed image')
-        pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=16, label='balancepoint')
-        #plt.xlabel('%s (mV)' % g2)
-        #plt.ylabel('%s (mV)' % g0)
-
-        qtt.tools.showImage(ims > lv, None, fig=fig + 2)
-        # plt.imshow(ims > lv, extent=None, interpolation='nearest')
-        pmatlab.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
-        pmatlab.plotPoints(fitresults['balancefitpixel'], '--c', markersize=16, label='balancefit')
-        pmatlab.plotLabels(fitresults['balancefitpixel'])
-        plt.axis('image')
-        plt.title('thresholded area')
-        #plt.xlabel('%s' % g2)
-        #plt.ylabel('%s' % g0)
-        pmatlab.tilefigs([fig, fig + 1, fig + 2], [2, 2])
-
-        if verbose >= 2:
-            qq = ims.flatten()
-            plt.figure(fig+3)
-            plt.clf()
-            plt.hist(qq, 20)
-            plot2Dline([-1, 0, np.percentile(ims, 1)], '--m', label='percentile 1')
-            plot2Dline([-1, 0, np.percentile(ims, 2)], '--m', label='percentile 2')
-            plot2Dline([-1, 0, np.percentile(ims, 99)], '--m', label='percentile 99')
-            plot2Dline([-1, 0, lv], '--r', linewidth=2, label='lv')
-            plt.legend(numpoints=1)
-            plt.title('Histogram of image intensities')
-            plt.xlabel('Image (smoothed) values')
 
     return fitresults, od, ptv, pt, ims, lv, wwarea
 

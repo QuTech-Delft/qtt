@@ -48,7 +48,7 @@ warnings.warn('please do not this import this module')
 #%%
 
 
-@qtt.tools.rdeprecated(expire='1-7-2018')
+@qtt.tools.rdeprecated(expire='7-1-2018')
 def positionScanjob(scanjob, pt):
     """ Helper function
 

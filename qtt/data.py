@@ -336,7 +336,13 @@ def stepgate(scanjob):
 
 
 def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
-    """ Show result of a 2D scan """
+    """ Show result of a 2D scan 
+    
+    Args:
+        dd (DataSet)
+        impixel (array or None)
+        im (array or None)
+    """
     if dd is None:
         return None
 
