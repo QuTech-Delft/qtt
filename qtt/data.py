@@ -298,6 +298,8 @@ def sweepgate(scanjob):
     g = scanjob['sweepdata'].get('param', None)
     if isinstance(g, str):
         return g
+    if isinstance(g, qcodes.Parameter):
+        return g.name
     g = scanjob['sweepdata'].get('gate', None)
     if g is None:
         g = scanjob['sweepdata'].get('gates', [None])[0]
@@ -309,6 +311,8 @@ def stepgate(scanjob):
     g = scanjob['stepdata'].get('param', None)
     if isinstance(g, str):
         return g
+    if isinstance(g, qcodes.Parameter):
+        return g.name
     g = scanjob['stepdata'].get('gate', None)
     if g is None:
         g = scanjob['stepdata'].get('gates', [None])[0]
