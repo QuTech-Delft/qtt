@@ -306,6 +306,11 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     fitresults['balancefit1'] = tr.pixel2scan(balancefitpixel0)
     fitresults['setpoint'] = fitresults['balancepoint'] + 8
     fitresults['x0'] = x0
+    fitresults['gatevalues']=dd.metadata['allgatevalues']
+    fitresults['gatevalues'][od['gates'][2]] = fitresults['balancepoint'][0]
+    fitresults['gatevalues'][od['gates'][0]] = fitresults['balancepoint'][1]
+
+
     ptv = fitresults['balancepoint']
 
     if od is not None:
@@ -335,6 +340,8 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         
         #%
     if fig is not None:
+        plot_onedot(fitresults, ds = dd, verbose=2, fig=100, linecolor='c', ims=ims, extentImageMatlab=extentImageMatlab, lv=lv)
+        
         qtt.tools.showImage(im, extentImageMatlab, fig=fig)
 
         if verbose >= 2 or drawpoly:
@@ -344,17 +351,16 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=17, label='balancepoint')
         plt.axis('image')
 
-        plt.title('image')
-        plt.xlabel('%s (mV)' % g2)
-        plt.ylabel('%s (mV)' % g0)  
+        #plt.xlabel('%s (mV)' % g2)
+        #plt.ylabel('%s (mV)' % g0)  
         
 
         qtt.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
         plt.axis('image')
         plt.title('Smoothed image')
         pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=16, label='balancepoint')
-        plt.xlabel('%s (mV)' % g2)
-        plt.ylabel('%s (mV)' % g0)
+        #plt.xlabel('%s (mV)' % g2)
+        #plt.ylabel('%s (mV)' % g0)
 
         qtt.tools.showImage(ims > lv, None, fig=fig + 2)
         # plt.imshow(ims > lv, extent=None, interpolation='nearest')
@@ -363,13 +369,13 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         pmatlab.plotLabels(fitresults['balancefitpixel'])
         plt.axis('image')
         plt.title('thresholded area')
-        plt.xlabel('%s' % g2)
-        plt.ylabel('%s' % g0)
+        #plt.xlabel('%s' % g2)
+        #plt.ylabel('%s' % g0)
         pmatlab.tilefigs([fig, fig + 1, fig + 2], [2, 2])
 
         if verbose >= 2:
             qq = ims.flatten()
-            plt.figure(123)
+            plt.figure(fig+3)
             plt.clf()
             plt.hist(qq, 20)
             plot2Dline([-1, 0, np.percentile(ims, 1)], '--m', label='percentile 1')
@@ -380,11 +386,65 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
             plt.title('Histogram of image intensities')
             plt.xlabel('Image (smoothed) values')
 
-    return od, ptv, pt, ims, lv, wwarea
+    return fitresults, od, ptv, pt, ims, lv, wwarea
 
+def plot_dataset(dataset, fig):
+    plt.figure(fig); plt.clf()
+    m=qcodes.MatPlot(dataset.default_parameter_array(), num=fig)
+    return m
+
+def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = None, extentImageMatlab=None, lv=None):
+    """ Plot results of a barrier-barrier scan of a single dot """
+    
+    if ds is None:
+        ds=qtt.data.get_dataset(results)
+    
+    if fig is not None:
+        plot_dataset(ds, fig)
+        
+        if verbose >= 2:
+            pmatlab.plotPoints(results['balancefit'], '--', color=linecolor, linewidth=2, label='balancefit')
+        if verbose >= 2:
+            pmatlab.plotPoints(results['balancepoint0'], '.r', markersize=13, label='balancepoint0')
+        pmatlab.plotPoints(results['balancepoint'], '.m', markersize=17, label='balancepoint')
+        
+        if ims is not None:
+            qtt.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
+            plt.axis('image')
+            plt.title('Smoothed image')
+            pmatlab.plotPoints(results['balancepoint'], '.m', markersize=16, label='balancepoint')
+            #plt.xlabel('%s (mV)' % g2)
+            #plt.ylabel('%s (mV)' % g0)
+    
+            qtt.tools.showImage(ims > lv, None, fig=fig + 2)
+            # plt.imshow(ims > lv, extent=None, interpolation='nearest')
+            #pmatlab.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
+            pmatlab.plotPoints(results['balancefitpixel'], '--c', markersize=16, label='balancefit')
+            pmatlab.plotLabels(results['balancefitpixel'])
+            plt.axis('image')
+            plt.title('thresholded area')
+            #plt.xlabel('%s' % g2)
+            #plt.ylabel('%s' % g0)
+            pmatlab.tilefigs([fig, fig + 1, fig + 2], [2, 2])
+    
+            if verbose >= 2:
+                qq = ims.flatten()
+                plt.figure(fig+3)
+                plt.clf()
+                plt.hist(qq, 20)
+                plot2Dline([-1, 0, np.percentile(ims, 1)], '--m', label='percentile 1')
+                plot2Dline([-1, 0, np.percentile(ims, 2)], '--m', label='percentile 2')
+                plot2Dline([-1, 0, np.percentile(ims, 99)], '--m', label='percentile 99')
+                plot2Dline([-1, 0, lv], '--r', linewidth=2, label='lv')
+                plt.legend(numpoints=1)
+                plt.title('Histogram of image intensities')
+                plt.xlabel('Image (smoothed) values')
+    
 if __name__ == '__main__':
     from imp import reload
     reload(qtt.data)
     #from qtt.algorithms.onedot import *
-    dd = alldata
-    od, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)
+    alldata=qtt.data.get_dataset(result)
+    fitresultsx, odx, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)
+
+    plot_onedot(result, ds = None, verbose=2, fig=100, linecolor='c')
