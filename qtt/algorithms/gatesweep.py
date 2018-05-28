@@ -206,6 +206,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     adata['_mp'] = mp
     adata['midpoint'] = float(midpoint2)
     adata['midvalue'] = midvalue
+    adata['dataset']=dd.location
+    adata['type']='gatesweep'
 
     if verbose >= 2:
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %
@@ -221,5 +223,37 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
 #%% Testing
 
+def plot_pinchoff(result, ds=None, fig=10):
+    """ Plot result of a pinchoff scan """
+    if ds is None:
+        ds = qtt.data.get_dataset(result)
+    
+    if not result.get('type', 'none') in ['gatesweep', 'pinchoff']:
+        raise Exception('calibration result of incorrect type')
+    
+    if fig is not None:
+        plt.figure(fig)
+        plt.clf()
+        qcodes.MatPlot(ds.default_parameter_array(), num=fig)
+        
+        lowvalue=result['lowvalue']
+        highvalue=result['highvalue']
+        pinchvalue=result['pinchvalue']
+        midpoint=result['midpoint']
+        midvalue=result['midvalue']
+
+        plot2Dline([0, -1, lowvalue], '--c', alpha=.5, label='low value')
+        plot2Dline([0, -1, highvalue], '--c', alpha=.5, label='high value')
+
+        plot2Dline([-1, 0, midpoint], ':m', linewidth=2, alpha=0.5, label='midpoint')
+        plt.plot(midpoint, midvalue, '.m', label='midpoint')
+        plot2Dline([-1, 0, pinchvalue], '--g', linewidth=1, alpha=0.5, label='pinchvalue')
+
 if __name__ == '__main__':
-    adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None)
+    adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None, verbose=0)
+
+if __name__ == '__main__':
+            
+    plot_pinchoff(adata, ds=ds, fig=20)
+    plt.legend(numpoints=1)
+            
