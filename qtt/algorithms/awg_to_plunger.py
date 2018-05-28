@@ -236,14 +236,5 @@ if __name__ == '__main__':
     test_awg_to_plunger(fig=10)
 
 
-# TODO
-#
-# 0. Test on V1/XLD to see the conventions are ok
-# 1. Clean up code
-# 2. Add documentation
-# 3. Add more unit tests
-# 4. Add example
-# 5. Add method 'click' to manually determine the awg_to_plunger
-# 6. Use code on V1
 
         
