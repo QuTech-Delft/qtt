@@ -21,6 +21,22 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 #%%
 
+def get_dataset(ds):
+    """ Get a dataset from a results dictionary, a string or a dataset
+    
+    Args:
+        ds (str, dict or DataSet):
+            
+    Returns:
+        ds (DataSet)
+    """
+    if isinstance(ds, dict):
+        ds = ds.get('dataset', None)
+    if ds is None:
+        return None
+    if isinstance(ds, str):
+        ds = qtt.data.load_dataset(ds)
+    return ds
 
 def load_dataset(location, io=None, verbose=0):
     """ Load a dataset from storage
