@@ -32,7 +32,7 @@ def measure_awg_to_plunger(station, gate, minstrument, sweeprange=100, method='h
     """ Perform measurement for awg to plunger
     
     """
-    from qtt.measureents.scans import scanjob_t
+    from qtt.measurements.scans import scanjob_t
     gates=station.gates
     value0=gates.get(gate)
     scanjob=scanjob_t({'sweepdata': {'param': gate, 'range': sweeprange}, 'stepdata':{'param': gate, 'range':100, 'step': 3, 'start': value0-sweeprange/2} })
@@ -54,6 +54,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
         ....
     
     """
+    assert(result.get('type')=='awg_to_plunger')
     ds = get_dataset(result)
 
     if method == 'hough':
