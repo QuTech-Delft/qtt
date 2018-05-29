@@ -43,14 +43,13 @@ class rda_t:
         self.r = redis.Redis(host='127.0.0.1', port=6379)  # , password='test')
 
         try:
-            self.set('dummy_rda_t', -1)
+            self.set('dummy_rda_t', -3141592)
             v = self.get_float('dummy_rda_t')
-            if (not v == -1):
+            if (not v == -3141592):
                 raise Exception('set not equal to get')
-        except Exception as e:
-            print(e)
+        except redis.exceptions.ConnectionError as e:
             print('rda_t: check whether redis is installed and the server is running')
-            raise Exception('rda_t: communication failure')
+            raise e
 
     def get_float(self, key, default_value=None):
         """ Get value by key and convert to a float """
