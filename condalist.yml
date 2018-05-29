@@ -10,6 +10,7 @@ dependencies:
 - bleach
 - bzip2
 - chardet
+- certifi
 - colorama
 - coverage
 - cycler
@@ -84,6 +85,7 @@ dependencies:
 - sphinxcontrib-websupport
 - spyder>=3.2
 - testpath
+- urllib3
 - vs2015_runtime
 - wheel
 - widgetsnbextension
@@ -104,6 +106,7 @@ dependencies:
   - rope-py3k
   - spirack
   - slacker
+  - wrapt
   - "git+https://github.com/telegraphic/hickle.git@dev#egg=hickle-dev"
   - "dulwich --global-option='--pure'"
 

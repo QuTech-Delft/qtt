@@ -21,8 +21,24 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 #%%
 
+def get_dataset(ds):
+    """ Get a dataset from a results dictionary, a string or a dataset
+    
+    Args:
+        ds (str, dict or DataSet):
+            
+    Returns:
+        ds (DataSet)
+    """
+    if isinstance(ds, dict):
+        ds = ds.get('dataset', None)
+    if ds is None:
+        return None
+    if isinstance(ds, str):
+        ds = qtt.data.load_dataset(ds)
+    return ds
 
-def load_dataset(location, io=None):
+def load_dataset(location, io=None, verbose=0):
     """ Load a dataset from storage
 
     An attempt is made to automatically detect the formatter. Supported are currently GNUPlotFormat and HDF5Format
@@ -53,12 +69,23 @@ def load_dataset(location, io=None):
     data = None
     for ii, hformatter in enumerate(formatters):
         try:
+            if verbose:
+                print('%d: %s' % (ii, hformatter) )
             data = qcodes.load_data(location, formatter=hformatter, io=io)
+            if len(data.arrays)==0:
+                data = None
+                raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
             logging.debug('load_data: loaded %s with %s' % (location, hformatter))
         except Exception as ex:
             logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
-            # print(ex)
+            if verbose:
+                print(ex)
             pass
+        finally:
+            if data is not None:
+                if verbose:
+                    print('succes with formatter %s' % hformatter)
+                break
     return data
 
 
@@ -287,6 +314,8 @@ def sweepgate(scanjob):
     g = scanjob['sweepdata'].get('param', None)
     if isinstance(g, str):
         return g
+    if isinstance(g, qcodes.Parameter):
+        return g.name
     g = scanjob['sweepdata'].get('gate', None)
     if g is None:
         g = scanjob['sweepdata'].get('gates', [None])[0]
@@ -298,6 +327,8 @@ def stepgate(scanjob):
     g = scanjob['stepdata'].get('param', None)
     if isinstance(g, str):
         return g
+    if isinstance(g, qcodes.Parameter):
+        return g.name
     g = scanjob['stepdata'].get('gate', None)
     if g is None:
         g = scanjob['stepdata'].get('gates', [None])[0]
@@ -305,7 +336,13 @@ def stepgate(scanjob):
 
 
 def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
-    """ Show result of a 2D scan """
+    """ Show result of a 2D scan 
+    
+    Args:
+        dd (DataSet)
+        impixel (array or None)
+        im (array or None)
+    """
     if dd is None:
         return None
 
@@ -521,6 +558,12 @@ class image_transform:
     def image(self):
         return self._im
 
+    def istep_sweep(self):
+        return np.mean(np.diff(self.vsweep))
+    
+    def istep_step(self):
+        return np.mean(np.diff(self.vstep))
+            
     def istep(self):
         return self._istep
 

@@ -5,19 +5,22 @@ Created on Wed Feb  8 13:36:01 2017
 @author: diepencjv
 """
 
-#%%
+# %%
 from qcodes import Instrument
 import logging
 from functools import partial
 import numpy as np
 from qcodes.utils.validators import Numbers
 from qcodes.data.data_set import load_data
+import warnings
+import time
+
 try:
     import graphviz
 except:
     pass
 
-#%%
+# %%
 
 
 class virtual_IVVI(Instrument):
@@ -31,20 +34,24 @@ class virtual_IVVI(Instrument):
         name (str): The name given to the virtual_IVVI object
         instruments (list):  the qcodes IVVI instruments
         gate_map (dict): the map between IVVI dac and gate
+        rc_times (dict): dictionary with rc times for the gates
     """
-    shared_kwargs = ['instruments']
 
-    # instruments will be a list of RemoteInstrument objects, which can be
-    # given to a server on creation but not later on, so it needs to be
-    # listed in shared_kwargs
-
-    def __init__(self, name, instruments, gate_map, rc_times={}, **kwargs):
+    def __init__(self, name, instruments, gate_map, rc_times=None, **kwargs):
         """ Inits gates with gate_map. """
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
-        self._direct_gate_map = {} # fast access to parameters
+        self._direct_gate_map = {}  # fast access to parameters
         self._fast_readout = True
+
+        if rc_times is None:
+            rc_times = {}
+        self._rc_times = rc_times
+
+        self.add_parameter('rc_times', get_cmd=partial(
+            self._get_variable, '_rc_times'), set_cmd=False)
+
         # Create all functions for the gates as defined in self._gate_map
         for gate in self._gate_map.keys():
             logging.debug('gates: make gate %s' % gate)
@@ -53,8 +60,11 @@ class virtual_IVVI(Instrument):
             gatemap = self._gate_map[gate]
             i = self._instrument_list[gatemap[0]]
             igate = 'dac%d' % gatemap[1]
-            self._direct_gate_map[gate]= getattr(i, igate)
+            self._direct_gate_map[gate] = getattr(i, igate)
         self.get_all()
+
+    def _get_variable(self, v):
+        return getattr(self, v)
 
     def get_idn(self):
         """ Overrule because the default VISA command does not work. """
@@ -69,14 +79,14 @@ class virtual_IVVI(Instrument):
             if verbose:
                 print('%s: %f' % (gate, self.get(gate)))
 
-    def _get(self, gate, fast_readout = False):
+    def _get(self, gate, fast_readout=False):
         if self._direct_gate_map is not None:
             param = self._direct_gate_map[gate]
             if fast_readout:
                 return param.get_latest()
             else:
                 return param.get()
-        
+
         gatemap = self._gate_map[gate]
         gate = 'dac%d' % gatemap[1]
         if fast_readout:
@@ -86,12 +96,12 @@ class virtual_IVVI(Instrument):
 
     def _set(self, value, gate):
         value = float(value)
-        
+
         if self._direct_gate_map is not None:
             param = self._direct_gate_map[gate]
             param.set(value)
             return
-        
+
         gatemap = self._gate_map[gate]
         i = self._instrument_list[gatemap[0]]
         gate = 'dac%d' % gatemap[1]
@@ -127,13 +137,13 @@ class virtual_IVVI(Instrument):
         for g, bnds in gate_boundaries.items():
             logging.debug('gate %s: %s' % (g, bnds))
 
-            gx=self._gate_map.get(g, None)
+            gx = self._gate_map.get(g, None)
             if gx is None:
                 # gate is not connected
                 continue
             instrument = self._instrument_list[gx[0]]
             param = self.get_instrument_parameter(g)
-            param.vals= Numbers(bnds[0], max_value=bnds[1]) 
+            param.vals = Numbers(bnds[0], max_value=bnds[1])
             if hasattr(instrument, 'adjust_parameter_validator'):
                 instrument.adjust_parameter_validator(param)
 
@@ -147,7 +157,8 @@ class virtual_IVVI(Instrument):
         """ Return all gate values in a simple dict. """
         if self._fast_readout:
             # or: do a get on each first gate of an instrument and get_latest on all subsequent ones
-            vals = [(gate, self.parameters[gate].get_latest()) for gate in sorted(self._gate_map)]
+            vals = [(gate, self.parameters[gate].get_latest())
+                    for gate in sorted(self._gate_map)]
         else:
             vals = [(gate, self.get(gate)) for gate in sorted(self._gate_map)]
         return dict(vals)
@@ -155,7 +166,8 @@ class virtual_IVVI(Instrument):
     def allvalues_string(self, fmt='%.3f'):
         """ Return all gate values in string format. """
         vals = self.allvalues()
-        s = '{' + ','.join(['\'%s\': '  % (x,) + fmt % (vals[x], ) for x in vals]) + '}'
+        s = '{' + ','.join(['\'%s\': ' % (x,) + fmt % (vals[x], )
+                            for x in vals]) + '}'
         return s
 
     def resetgates(gates, activegates, basevalues=None, verbose=2):
@@ -182,7 +194,46 @@ class virtual_IVVI(Instrument):
                     val = 0
             if verbose >= 2:
                 print('  setting gate %s to %.1f [mV]' % (g, val))
-            gates.set(g, val )
+            gates.set(g, val)
+
+    def set_overshoot(self, gate, value, extra_delay=0.02, overshoot=4):
+        """ Set gate to a value with overshoot
+
+        This function can be used for gates with a slow RC value on the bias-T. 
+        The actual overshoot is determined by the rc_times in the object.
+
+        Args:
+            gate (str): gate to set
+            value (float): value to set at the gate
+            extra_delay (float): ...
+            overshoot (float): overshoot factor
+
+        """
+        gateparam = getattr(self, gate)
+        rc = self._rc_times.get(gate, None)
+        value0 = gateparam.get_latest()
+        dv = value-value0
+
+        if rc is None:
+            warnings.warn('could not find rc time for gate %s' % gate)
+            self.set(gate, value)
+            time.sleep(1.)
+        elif np.abs(dv) < 5:
+            # hack for small steps
+            self.set(gate, value)
+            time.sleep(extra_delay)
+        else:
+            try:
+                self.set(gate, value0+4*dv)
+                time.sleep(rc/3)
+            except ValueError:
+                # outside safe boundaries
+                warnings.warn('set outside boundaries?')
+                self.set(gate, value)
+                time.sleep(rc)
+
+            self.set(gate, value)
+            time.sleep(extra_delay)
 
     def resettodataset(self, dataset):
         """ Reset gates to the values from a previous dataset
@@ -192,8 +243,8 @@ class virtual_IVVI(Instrument):
         if isinstance(dataset, str):
             dataset = load_data(dataset)
         gatevals = dataset.metadata['allgatevalues']
-        self.resetgates(gatevals,gatevals)
-    
+        self.resetgates(gatevals, gatevals)
+
     def visualize(self, fig=1):
         """ Create a graphical representation of the system (needs graphviz). """
         gates = self
@@ -238,5 +289,3 @@ class virtual_IVVI(Instrument):
             dot.edge(str(g), str(ix))
 
         return dot
-    
-    

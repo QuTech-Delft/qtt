@@ -49,14 +49,14 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
 
     # crude estimate of noise
-    noise = np.percentile(np.abs(np.diff(value)), 50)
-    lowvalue = np.percentile(value, 1)
-    highvalue = np.percentile(value, 90)
+    noise = np.nanpercentile(np.abs(np.diff(value)), 50)
+    lowvalue = np.nanpercentile(value, 1)
+    highvalue = np.nanpercentile(value, 90)
     # sometimes a channel is almost completely closed, then the percentile
     # approach does not function well
     ww = value[value >= (lowvalue + highvalue) / 2]
     #[np.percentile(ww, 1), np.percentile(ww, 50), np.percentile(ww, 91) ]
-    highvalue = np.percentile(ww, 90)
+    highvalue = np.nanpercentile(ww, 90)
 
     if verbose >= 2:
         print('analyseGateSweep: lowvalue %.1f highvalue %.1f' %
@@ -198,14 +198,16 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             plt.plot(x[leftidx], leftval, '--m', markersize=15, linewidth=1, label='leftval')
 
 
-    adata = dict({'description': 'pichoff analysis', 'pinchvalue': midpoint2 - 50,
+    adata = dict({'description': 'pinchoff analysis', 'pinchvalue': float(midpoint2 - 50),
                   '_pinchvalueX': midpoint1 - 50, 'goodgate': goodgate})
     adata['lowvalue'] = lowvalue
     adata['highvalue'] = highvalue
     adata['xlabel'] = 'Sweep %s [mV]' % g
     adata['_mp'] = mp
-    adata['midpoint'] = midpoint2
+    adata['midpoint'] = float(midpoint2)
     adata['midvalue'] = midvalue
+    adata['dataset']=dd.location
+    adata['type']='gatesweep'
 
     if verbose >= 2:
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %
@@ -221,5 +223,37 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
 #%% Testing
 
+def plot_pinchoff(result, ds=None, fig=10):
+    """ Plot result of a pinchoff scan """
+    if ds is None:
+        ds = qtt.data.get_dataset(result)
+    
+    if not result.get('type', 'none') in ['gatesweep', 'pinchoff']:
+        raise Exception('calibration result of incorrect type')
+    
+    if fig is not None:
+        plt.figure(fig)
+        plt.clf()
+        qcodes.MatPlot(ds.default_parameter_array(), num=fig)
+        
+        lowvalue=result['lowvalue']
+        highvalue=result['highvalue']
+        pinchvalue=result['pinchvalue']
+        midpoint=result['midpoint']
+        midvalue=result['midvalue']
+
+        plot2Dline([0, -1, lowvalue], '--c', alpha=.5, label='low value')
+        plot2Dline([0, -1, highvalue], '--c', alpha=.5, label='high value')
+
+        plot2Dline([-1, 0, midpoint], ':m', linewidth=2, alpha=0.5, label='midpoint')
+        plt.plot(midpoint, midvalue, '.m', label='midpoint')
+        plot2Dline([-1, 0, pinchvalue], '--g', linewidth=1, alpha=0.5, label='pinchvalue')
+
 if __name__ == '__main__':
-    adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None)
+    adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None, verbose=0)
+
+if __name__ == '__main__':
+            
+    plot_pinchoff(adata, ds=ds, fig=20)
+    plt.legend(numpoints=1)
+            
