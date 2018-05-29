@@ -119,19 +119,36 @@ class virtual_gates(Instrument):
         self._gates_list = list(self._crosscap_map[list(self._crosscap_map.keys())[0]].keys())
         self._virts_list = list(self._crosscap_map.keys())
         self._crosscap_map_inv = self.convert_matrix_to_map(np.linalg.inv(self.get_crosscap_matrix()), gates=self._virts_list, vgates=self._gates_list)
+        self._fast_readout=True
 
+        self._create_parameters()
+        self.allvalues()
+
+    def to_dictionary(self):
+        """ Convert a virtual gates object to a dictionary for storage """
+        def without_keys(d, keys):
+             return {x: d[x] for x in d if x not in keys}
+        d = without_keys(self.__dict__, 'parameters') 
+        d['gates']=str(d['gates'])
+        return d
+    
+    @staticmethod
+    def from_dictionary(dict):
+        raise NotImplementedError('instrument  annot be reconstructed')
+           
+    def _create_parameters(self):
         for g in self._virts_list:
             self.add_parameter(g,
                                label='%s' % g,
                                unit='mV',
                                get_cmd=partial(self._get, gate=g),
                                set_cmd=partial(self._set, gate=g),
-                               vals=Numbers())  # TODO: Adjust the validator range based on that of the gates
+                               vals=Numbers()) 
+
+        self.add_parameter('virtual_matrix', get_cmd=self.get_crosscap_matrix) 
 
         self._update_virt_parameters()
-        self.allvalues()
-        self._fast_readout=True
-
+        
     def vgates(self):
         """ Return the names of the virtual gates """
         return self._virts_list
@@ -481,7 +498,7 @@ class virtual_gates(Instrument):
         return converted_map
 
     def _update_virt_parameters(self, crosscap_map_inv = None, verbose=0):
-        """Redefining the cross capacitance values in the virts Parameter.
+        """ Redefining the cross capacitance values in the virts Parameter.
         
         Needs the crosscap_map_inv information as an input.
 
@@ -552,6 +569,12 @@ def test_virtual_gates(verbose=0):
     
     virts.set_distances(1./np.arange(1,5))
 
+    d=virts.to_dictionary()
+    
+    import pickle
+    s = pickle.dumps(virts)
+    virts2=pickle.loads(s)
+    
     vgates=virts.vgates() + ['vP4']
     pgates=virts.pgates() + ['P4']
     virts2= extend_virtual_gates(vgates, pgates, virts, name='vgates')
