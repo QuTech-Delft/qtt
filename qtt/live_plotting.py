@@ -16,7 +16,6 @@ import scipy.ndimage as ndimage
 import pyqtgraph as pg
 import pyqtgraph
 import pyqtgraph.multiprocess as mp
-
 import qcodes
 import qtt
 from qtt import pgeometry
@@ -111,7 +110,25 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.name = name
         self.rda_variable = rda_variable
         self.rda = rda_t()
-
+        
+        #text field for qtt_live_value1
+        self.lblVal = QtWidgets.QLabel()
+        self.lblVal.setText('qtt_live_value1:')
+        self.EditVal = QtWidgets.QTextEdit()
+        try:
+            self.EditVal.setText(self.rda.get('qtt_live_value1', '').decode('utf-8'))
+        except Exception as Ex:
+            print(Ex)
+        
+        self.ButtonVal = QtWidgets.QPushButton()
+        self.ButtonVal.setText('Send')
+        self.ButtonVal.setStyleSheet("background-color: rgb(255,150,100);")
+        self.ButtonVal.clicked.connect(self.sendVal1)
+        
+        vbox.addWidget(self.lblVal)
+        vbox.addWidget(self.EditVal)
+        vbox.addWidget(self.ButtonVal)
+        
         self.text = QtWidgets.QLabel()
         self.updateStatus()
         vbox.addWidget(self.text)
@@ -158,8 +175,12 @@ class MeasurementControl(QtWidgets.QMainWindow):
 
         self.rda.set(self.rda_variable, 1)
         self.updateStatus()
-
-
+    
+    def sendVal1(self, rda_variable):
+        """ send value1 """
+        self.rda.set('qtt_live_value1', self.EditVal.toPlainText())
+       
+        
 if __name__ == '__main__' and 0:
     app = pg.mkQApp()
 
@@ -607,7 +628,7 @@ def test_mock2d():
 
 # %% Example
 
-if __name__ == '__main__':
+if __name__ == '__main__' and False:
     
     test_mock2d()
     
