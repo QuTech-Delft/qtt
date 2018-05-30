@@ -1,8 +1,5 @@
 numpy >= 1.12
 scipy >= 0.18
-freetype-py
-pypng
-matplotlib >= 2.0
 coverage
 pandas
 apscheduler
