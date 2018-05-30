@@ -4,6 +4,4 @@ coverage
 pandas
 apscheduler
 scikit-image
-pyqt
-qtpy
 sympy
