@@ -3,5 +3,4 @@ scipy >= 0.18
 coverage
 pandas
 apscheduler
-scikit-image
 sympy
