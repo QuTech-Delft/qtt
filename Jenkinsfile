@@ -9,7 +9,6 @@ pipeline {
         stage('Test') {
             steps {
                 sh 'python --version'
-                sh 'pwd'
                 sh 'ls -lah'
                 sh 'pip install --cache-dir /var/pip_cache -r "requirements.txt"'
                 sh 'python qtt/test.py'
