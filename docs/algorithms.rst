@@ -28,5 +28,15 @@ Example notebooks
 * :doc:`notebooks/example_coulomb_peak`
 * :doc:`notebooks/example_PAT_simulations`
 
+z
+
+.. toctree::
+    :caption: Example notebooks
+    :maxdepth: 3
+    :titlesonly:
+    :glob:
+
+    notebooks/example_*
+
 
 Back to the :doc:`main page <index>`.

@@ -37,6 +37,16 @@ Documentation
    contributing
    algorithms
 
+Bla
+
+.. toctree::
+    :caption: Example notebooks
+    :maxdepth: 2
+    :glob:
+
+    notebooks/example_*rst
+
+    
 Indices and tables
 ==================
 

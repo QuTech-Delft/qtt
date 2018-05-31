@@ -79,7 +79,7 @@ def fillPoly(im, poly_verts, color=None):
 
     Replacement for OpenCV function cv2.fillConvexPoly
 
-    Arugments:
+    Args:
         im (array): array to plot into
         poly_verts (kx2 array): polygon vertices
         color (array or float): color to fill the polygon

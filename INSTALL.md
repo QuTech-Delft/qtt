@@ -203,10 +203,9 @@ pip install git+https://github.com/telegraphic/hickle.git@dev
 
 ### Manual installation:
 ```
-> conda install numpy scipy pyqtgraph sympy spyder nose pandas pytables scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
+> conda install numpy scipy pyqtgraph dulwich sympy spyder nose pandas pytables scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
 > cd [QTTDIR]
 > conda install -c conda-forge opencv
-> pip install dulwich --global-option="--pure"
 > pip install spirack
 > pip install git+https://github.com/telegraphic/hickle.git@dev
 > pip install --user -r develop_requirements.txt
@@ -223,6 +222,10 @@ pip install git+https://github.com/telegraphic/hickle.git@dev
 ```
 
 ### Old commands
+
+```
+pip install dulwich --global-option="--pure"
+```
 
 There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do
 ```

@@ -33,6 +33,7 @@
 # ones.
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx_rtd_theme',
 #    'nbsphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax']
@@ -43,8 +44,9 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+
+source_suffix = ['.rst', '.md'] # need package recommonmark
+#source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
@@ -75,7 +77,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'qtt/legacy.py',  'qtt/scans.py', 'qtt/deprecated/*']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -91,6 +93,7 @@ todo_include_todos = False
 #
 html_theme = 'alabaster'
 html_theme = 'classic'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
