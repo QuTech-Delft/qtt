@@ -16,10 +16,9 @@ An example:
 
 .. code:: python
 
-   # imports
    import qtt
    # load data
-   dataset = load_data('example')
+   dataset = qtt.data.load_dataset('example')
    # analyse
    results = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=100)
    
