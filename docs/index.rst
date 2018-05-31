@@ -32,19 +32,10 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 3
-
+   :maxdepth: 2
    contributing
    algorithms
-
-Bla
-
-.. toctree::
-    :caption: Example notebooks
-    :maxdepth: 2
-    :glob:
-
-    notebooks/example_*rst
+   
 
     
 Indices and tables
@@ -61,5 +52,4 @@ License
 .. include:: ../LICENSE.txt
 
 
-Contributions
-=============
+.. include:: ../Contributors.md

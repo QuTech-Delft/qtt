@@ -18,17 +18,6 @@ Qubits
 * T1
 * ...
 
-Example notebooks
------------------
-
-
-* :doc:`notebooks/example_sensingdottuning`
-* :doc:`notebooks/example_ohmic`
-* :doc:`notebooks/example_polFitting`
-* :doc:`notebooks/example_coulomb_peak`
-* :doc:`notebooks/example_PAT_simulations`
-
-z
 
 .. toctree::
     :caption: Example notebooks
@@ -37,6 +26,17 @@ z
     :glob:
 
     notebooks/example_*
+
+.. Manual list of notebooks
+
+    Example notebooks
+    -----------------
+    
+    * :doc:`notebooks/example_sensingdottuning`
+    * :doc:`notebooks/example_ohmic`
+    * :doc:`notebooks/example_polFitting`
+    * :doc:`notebooks/example_coulomb_peak`
+    * :doc:`notebooks/example_PAT_simulations`
 
 
 Back to the :doc:`main page <index>`.
