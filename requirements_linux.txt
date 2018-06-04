@@ -4,6 +4,7 @@ matplotlib >= 2.0
 pandas
 apscheduler
 sympy
+pathlib
 qcodes
 attrs
 dulwich
