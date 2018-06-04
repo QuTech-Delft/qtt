@@ -1,7 +1,7 @@
 pipeline {
     agent {
-        docker {
-            image 'jfloff/alpine-python'
+        dockerfile {
+            image 'Dockerfile.build'
             args '-v pip_cache:/var/pip_cache'
         }
     }
