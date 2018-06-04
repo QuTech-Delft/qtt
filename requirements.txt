@@ -6,3 +6,4 @@ pandas
 apscheduler
 scikit-image
 sympy
+qcodes
