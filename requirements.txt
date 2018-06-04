@@ -1,6 +1,10 @@
 numpy >= 1.12
+scipy >= 0.18
+matplotlib >= 2.0
 coverage
 pandas
 apscheduler
+scikit-image
+pyqt
+qtpy
 sympy
-qcodes
