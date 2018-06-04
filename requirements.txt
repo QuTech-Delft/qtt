@@ -4,6 +4,14 @@ matplotlib >= 2.0
 coverage
 pandas
 apscheduler
-scikit-image
 sympy
+pyqt5
 qcodes
+attrs
+dulwich
+nose
+slacker
+hickle
+pyzmqrpc
+IPython
+Polygon3
