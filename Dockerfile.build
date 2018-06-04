@@ -1,3 +1,3 @@
 FROM jfloff/alpine-python
 
-RUN apk update && apk add freetype-dev libpng-dev libblas-dev liblapack-dev gfortran
+RUN apk update && apk add freetype-dev libpng-dev lapack-dev openblas-dev
