@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """ Example to solve bias-T compensation 
-Created on Mon Jun  4 12:00:14 2018
 
 @author: eendebakpt
 """
@@ -57,8 +56,8 @@ print('accumulation of charge at end of pulse: %.2f' % (y[-1],))
 plt.figure(100); plt.clf()
 plt.plot(1e3*t,pulse, ':c', label='Pulse')
 plt.plot(1e3*t,y, '--g', label='Condensator charge')
-plt.plot(1e3*t,pulse-y.flatten(), 'r', label='V')
+plt.plot(1e3*t,pulse-y.flatten(), 'r', label='Voltage on sample')
 plt.xlabel('time [ms]')
-plt.ylabel('y(t)')
+plt.ylabel('Voltages [V]')
 plt.show()
 plt.legend()
