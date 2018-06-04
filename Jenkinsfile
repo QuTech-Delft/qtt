@@ -10,8 +10,7 @@ pipeline {
             steps {
                 sh 'python --version'
                 sh 'ls -lah'
-                sh 'pip install --cache-dir /var/pip_cache -r "requirements.txt"'
-                sh 'pip install -e .'
+                sh 'pip install --cache-dir /var/pip_cache -r "requirements_linux.txt"'
                 sh 'python qtt/test.py'
                 sh 'py.test'
             }
