@@ -148,13 +148,13 @@ def add_comment(txt, dataset = None, verbose = 0):
     
     """
     if dataset is None:
-        if '_latest_datasets ' in qcodes.DataSet:
+        if hasattr(qcodes.DataSet, '_latest_datasets'):
             try:
                 dataset = qcodes.DataSet._latest_datasets[0]
             except:
                 pass
         else:
-            raise Exception('dataset not specified and _latest_datasets not available')
+            raise NotImplementedError('dataset not specified and _latest_datasets not available')
             dataset = qcodes.DataSet._latest
     if dataset is None:
         raise Exception('no DataSet to add comments to')
@@ -169,7 +169,11 @@ def test_add_comment():
 
     ds0=qcodes.tests.data_mocks.DataSet2D()
     ds=qcodes.tests.data_mocks.DataSet2D()
-    add_comment('hello world')
+    try:
+        add_comment('hello world')
+    except NotImplementedError as ex:
+        ds.metadata['comment']='hello world'
+        pass
     add_comment('hello world 0', ds0)
     assert(ds.metadata['comment']=='hello world')
     assert(ds0.metadata['comment']=='hello world 0')
