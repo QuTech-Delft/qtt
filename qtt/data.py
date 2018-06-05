@@ -161,7 +161,7 @@ def add_comment(txt, dataset = None, verbose = 0):
         
     dataset.add_metadata({'comment': txt})
     if verbose:
-        print('added comments to DataSet %s' % ds.location)
+        print('added comments to DataSet %s' % dataset.location)
     
     
 def test_add_comment():
