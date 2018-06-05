@@ -119,6 +119,7 @@ def test_load_dataset(verbose=0):
 #%% Monkey patch qcodes to store latest dataset
 from functools import wraps
 
+@qtt.tools.deprecated
 def store_latest_decorator(function, obj):    
     """ Decorator to store latest result of a function in an object """
     if not hasattr(obj, '_latest'):
@@ -132,7 +133,7 @@ def store_latest_decorator(function, obj):
     wrapper._special = 'yes'
     return wrapper
 
-qcodes.data.data_set.new_data = store_latest_decorator(qcodes.new_data, qcodes.DataSet)
+#qcodes.data.data_set.new_data = store_latest_decorator(qcodes.new_data, qcodes.DataSet)
 
 def get_latest_dataset():
     """ Return latest dataset that was created """
@@ -147,7 +148,14 @@ def add_comment(txt, dataset = None, verbose = 0):
     
     """
     if dataset is None:
-        dataset = qcodes.DataSet._latest
+        if '_latest_datasets ' in qcodes.DataSet:
+            try:
+                dataset = qcodes.DataSet._latest_datasets[0]
+            except:
+                pass
+        else:
+            raise Exception('dataset not specified and _latest_datasets not available')
+            dataset = qcodes.DataSet._latest
     if dataset is None:
         raise Exception('no DataSet to add comments to')
         
