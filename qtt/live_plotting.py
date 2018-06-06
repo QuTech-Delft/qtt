@@ -100,8 +100,10 @@ class rda_t:
 class MeasurementControl(QtWidgets.QMainWindow):
 
     def __init__(self, name='Measurement Control',
-                 rda_variable='qtt_abort_running_measurement', **kwargs):
-        """ Simple control for stopping running measurements """
+                 rda_variable='qtt_abort_running_measurement', text_vars = [], 
+                 **kwargs):
+       
+        """ Simple control for running measurements """
         super().__init__(**kwargs)
         w = self
         w.setWindowTitle(name)
@@ -111,24 +113,32 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.rda_variable = rda_variable
         self.rda = rda_t()
         
-        #text field for qtt_live_value1
-        self.lblVal = QtWidgets.QLabel()
-        self.lblVal.setText('qtt_live_value1:')
-        self.EditVal = QtWidgets.QTextEdit()
-        try:
-            self.EditVal.setText(self.rda.get('qtt_live_value1', '').decode('utf-8'))
-        except Exception as Ex:
-            print(Ex)
+        self.text_vars = text_vars
         
-        self.ButtonVal = QtWidgets.QPushButton()
-        self.ButtonVal.setText('Send')
-        self.ButtonVal.setStyleSheet("background-color: rgb(255,150,100);")
-        self.ButtonVal.clicked.connect(self.sendVal1)
+        if len(text_vars) > 0:
+            self.vLabels = {}
+            self.vEdits = {}
+            self.vButtons = {}
+            self.vActions = []
+            for tv in text_vars:
+                self.vLabels[tv] = QtWidgets.QLabel()
+                self.vLabels[tv].setText('%s:' % tv)
+                self.vEdits[tv] =(QtWidgets.QTextEdit())
+                try:
+                    self.vEdits[tv].setText(self.rda.get(tv, '').decode('utf-8'))
+                except Exception as Ex:
+                    print('could not retrieve value %s: %s' %(tv, str(Ex)))
         
-        vbox.addWidget(self.lblVal)
-        vbox.addWidget(self.EditVal)
-        vbox.addWidget(self.ButtonVal)
+                self.vButtons[tv]=QtWidgets.QPushButton()
+                self.vButtons[tv].setText('Send')
+                self.vButtons[tv].setStyleSheet("background-color: rgb(255,150,100);")
+                
+                self.vButtons[tv].clicked.connect(partial(self.sendVal,tv))
         
+                vbox.addWidget(self.vLabels[tv] )
+                vbox.addWidget(self.vEdits[tv])
+                vbox.addWidget(self.vButtons[tv])
+            
         self.text = QtWidgets.QLabel()
         self.updateStatus()
         vbox.addWidget(self.text)
@@ -148,7 +158,15 @@ class MeasurementControl(QtWidgets.QMainWindow):
         widget = QtWidgets.QWidget()
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
-
+        
+        menuBar = self.menuBar()
+        fileMenu = menuBar.addMenu('&Help')
+        
+        newAction = QtWidgets.QAction('&Info', self)        
+        newAction.triggered.connect(self.showHelpBox)
+        
+        fileMenu.addAction(newAction)
+        
         w.resize(300, 300)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updateStatus)  # this also works
@@ -176,9 +194,19 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.rda.set(self.rda_variable, 1)
         self.updateStatus()
     
-    def sendVal1(self, rda_variable):
-        """ send value1 """
-        self.rda.set('qtt_live_value1', self.EditVal.toPlainText())
+    def sendVal(self, tv):
+        """ send text value """
+        print('sending value %s' %tv)
+        self.rda.set(tv, self.vEdits[tv].toPlainText())
+    
+    def showHelpBox(self):
+        """ Show help dialog """
+        self.infotext = "This widget is used for live control of your \
+        measurement via inter-process communication. \n\n To add additional \
+        variables (str) to the control use the text_vars argmument. To access \
+        values, use the qtt.redisvalue method."
+        QtWidgets.QMessageBox.information(self,'qtt measurement control info',
+                                          self.infotext)
        
         
 if __name__ == '__main__' and 0:
