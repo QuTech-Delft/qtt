@@ -105,6 +105,10 @@ def _abort_measurement():
         v = 0
     return int(v)
 
+def _enable_measurement():
+    """ reset qtt_abort_running_measurement """
+    _redis_connection.set('qtt_abort_running_measurement', 0)
+
 def _redisStrValue(handle = 'qtt_live_value1'):
     """ Return live control value retrieved from redis server 
         and convert to string """
@@ -119,7 +123,9 @@ def _redisStrSet(value, handle = 'qtt_live_value1'):
 
 liveValue = _redisStrValue
 liveValueSet = _redisStrSet
+
 abort_measurements = _abort_measurement
+enable_measurements = _enable_measurement
 
 # patch the qcodes abort function
 qcodes.loops.abort_measurements = _abort_measurement
