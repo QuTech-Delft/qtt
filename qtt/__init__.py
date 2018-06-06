@@ -113,7 +113,12 @@ def _redisStrValue(handle = 'qtt_live_value1'):
     v = _redis_connection.get(handle)
     return v.decode('utf-8')
 
+def _redisStrSet(value, handle = 'qtt_live_value1'):
+    """ Set live control value on redis server """
+    _redis_connection.set(value, handle)
+
 liveValue = _redisStrValue
+liveValueSet = _redisStrSet
 abort_measurements = _abort_measurement
 
 # patch the qcodes abort function
