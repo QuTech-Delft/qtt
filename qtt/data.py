@@ -182,7 +182,7 @@ if __name__=='__main__':
     test_add_comment() 
 
     #ds=qcodes.tests.data_mocks.DataSet2D()
-    #print('latest dataset %s' % (qcodes.DataSet._latest.location, ))
+    #print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
         
 #%%
 
