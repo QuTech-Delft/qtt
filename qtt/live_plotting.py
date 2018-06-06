@@ -99,16 +99,15 @@ class rda_t:
 class MeasurementControl(QtWidgets.QMainWindow):
 
     def __init__(self, name='Measurement Control',
-                 rda_variable='qtt_abort_running_measurement', text_vars = [], 
+                 rda_variable='qtt_abort_running_measurement', text_vars=[],
                  **kwargs):
-       
         """ Simple control for running measurements
-        
+
         Args:
             name (str): used as window title
             rda_variable (str): 
             text_vars (list): 
-            
+
         """
         super().__init__(**kwargs)
         w = self
@@ -118,9 +117,9 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.name = name
         self.rda_variable = rda_variable
         self.rda = rda_t()
-        
+
         self.text_vars = text_vars
-        
+
         if len(text_vars) > 0:
             self.vLabels = {}
             self.vEdits = {}
@@ -129,22 +128,22 @@ class MeasurementControl(QtWidgets.QMainWindow):
             for tv in text_vars:
                 self.vLabels[tv] = QtWidgets.QLabel()
                 self.vLabels[tv].setText('%s:' % tv)
-                self.vEdits[tv] =(QtWidgets.QTextEdit())
+                self.vEdits[tv] = (QtWidgets.QTextEdit())
                 try:
                     self.vEdits[tv].setText(self.rda.get(tv, '').decode('utf-8'))
                 except Exception as Ex:
-                    print('could not retrieve value %s: %s' %(tv, str(Ex)))
-        
-                self.vButtons[tv]=QtWidgets.QPushButton()
+                    print('could not retrieve value %s: %s' % (tv, str(Ex)))
+
+                self.vButtons[tv] = QtWidgets.QPushButton()
                 self.vButtons[tv].setText('Send')
                 self.vButtons[tv].setStyleSheet("background-color: rgb(255,150,100);")
-                
-                self.vButtons[tv].clicked.connect(partial(self.sendVal,tv))
-        
-                vbox.addWidget(self.vLabels[tv] )
+
+                self.vButtons[tv].clicked.connect(partial(self.sendVal, tv))
+
+                vbox.addWidget(self.vLabels[tv])
                 vbox.addWidget(self.vEdits[tv])
                 vbox.addWidget(self.vButtons[tv])
-            
+
         self.text = QtWidgets.QLabel()
         self.updateStatus()
         vbox.addWidget(self.text)
@@ -164,15 +163,15 @@ class MeasurementControl(QtWidgets.QMainWindow):
         widget = QtWidgets.QWidget()
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
-        
+
         menuBar = self.menuBar()
         fileMenu = menuBar.addMenu('&Help')
-        
-        newAction = QtWidgets.QAction('&Info', self)        
+
+        newAction = QtWidgets.QAction('&Info', self)
         newAction.triggered.connect(self.showHelpBox)
-        
+
         fileMenu.addAction(newAction)
-        
+
         w.resize(300, 300)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updateStatus)  # this also works
@@ -199,19 +198,19 @@ class MeasurementControl(QtWidgets.QMainWindow):
 
         self.rda.set(self.rda_variable, 1)
         self.updateStatus()
-    
+
     def sendVal(self, tv):
         """ send text value """
-        print('sending value %s' %tv)
+        print('sending value %s' % tv)
         self.rda.set(tv, self.vEdits[tv].toPlainText())
-    
+
     def showHelpBox(self):
         """ Show help dialog """
         self.infotext = "This widget is used for live control of your measurement via inter-process communication.<br/><br/>To add additional variables (str) to the control use the text_vars argmument. To access values, use the <code>qtt.redisvalue</code> method."
-        QtWidgets.QMessageBox.information(self,'qtt measurement control info',
+        QtWidgets.QMessageBox.information(self, 'qtt measurement control info',
                                           self.infotext)
-       
-        
+
+
 if __name__ == '__main__' and 0:
     app = pg.mkQApp()
 
@@ -524,7 +523,7 @@ class livePlot:
                     sweepvalues = np.linspace(
                         paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
-                    self._sweepvalues=[sweepvalues]
+                    self._sweepvalues = [sweepvalues]
                     self.crosshair(show=None, pos=[paramval, 0])
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data_avg.T)
@@ -548,7 +547,8 @@ class livePlot:
                         self.horz_low, self.vert_low, self.horz_range, self.vert_range)
                     self.plot.setRect(self.rect)
                     self.crosshair(show=None, pos=[value_x, value_y])
-                    self._sweepvalues=[np.linspace(self.horz_low, self.horz_low+self.horz_range, self.data.shape[1]), np.linspace(self.vert_low, self.vert_low+self.vert_range, self.data.shape[0])]
+                    self._sweepvalues = [np.linspace(self.horz_low, self.horz_low + self.horz_range, self.data.shape[1]), np.linspace(
+                        self.vert_low, self.vert_low + self.vert_range, self.data.shape[0])]
             else:
                 raise Exception('ndim %d not supported' % self.data.ndim)
 
@@ -660,9 +660,9 @@ def test_mock2d():
 # %% Example
 
 if __name__ == '__main__' and False:
-    
+
     test_mock2d()
-    
+
     lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')), sweepInstrument=None,
                   sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)
