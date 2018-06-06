@@ -102,7 +102,14 @@ class MeasurementControl(QtWidgets.QMainWindow):
                  rda_variable='qtt_abort_running_measurement', text_vars = [], 
                  **kwargs):
        
-        """ Simple control for running measurements """
+        """ Simple control for running measurements
+        
+        Args:
+            name (str): used as window title
+            rda_variable (str): 
+            text_vars (list): 
+            
+        """
         super().__init__(**kwargs)
         w = self
         w.setWindowTitle(name)
@@ -200,10 +207,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
     
     def showHelpBox(self):
         """ Show help dialog """
-        self.infotext = "This widget is used for live control of your \
-        measurement via inter-process communication. \n\n To add additional \
-        variables (str) to the control use the text_vars argmument. To access \
-        values, use the qtt.redisvalue method."
+        self.infotext = "This widget is used for live control of your measurement via inter-process communication.<br/><br/>To add additional variables (str) to the control use the text_vars argmument. To access values, use the <code>qtt.redisvalue</code> method."
         QtWidgets.QMessageBox.information(self,'qtt measurement control info',
                                           self.infotext)
        
