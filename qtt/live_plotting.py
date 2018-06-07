@@ -25,7 +25,7 @@ import qtt.algorithms.generic
 
 try:
     import redis
-except:
+except BaseException:
     pass
 
 
@@ -105,8 +105,8 @@ class MeasurementControl(QtWidgets.QMainWindow):
 
         Args:
             name (str): used as window title
-            rda_variable (str): 
-            text_vars (list): 
+            rda_variable (str):
+            text_vars (list):
 
         """
         super().__init__(**kwargs)
@@ -130,13 +130,15 @@ class MeasurementControl(QtWidgets.QMainWindow):
                 self.vLabels[tv].setText('%s:' % tv)
                 self.vEdits[tv] = (QtWidgets.QTextEdit())
                 try:
-                    self.vEdits[tv].setText(self.rda.get(tv,b'').decode('utf-8'))
+                    self.vEdits[tv].setText(
+                        self.rda.get(tv, b'').decode('utf-8'))
                 except Exception as Ex:
                     print('could not retrieve value %s: %s' % (tv, str(Ex)))
 
                 self.vButtons[tv] = QtWidgets.QPushButton()
                 self.vButtons[tv].setText('Send')
-                self.vButtons[tv].setStyleSheet("background-color: rgb(255,150,100);")
+                self.vButtons[tv].setStyleSheet(
+                    "background-color: rgb(255,150,100);")
 
                 self.vButtons[tv].clicked.connect(partial(self.sendVal, tv))
 
@@ -165,14 +167,16 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.setCentralWidget(widget)
 
         menuBar = self.menuBar()
-        
-        menuDict = {'&Edit':{'&Get all Values' :  self.getAllValues},
-                    '&Help':{'&Info':     self.showHelpBox}}
-                
+
+        menuDict = {
+            '&Edit': {'&Get all Values': self.getAllValues},
+            '&Help': {'&Info': self.showHelpBox}
+        }
+
         for (k, menu) in menuDict.items():
             mb = menuBar.addMenu(k)
             for (kk, action) in menu.items():
-                
+
                 act = QtWidgets.QAction(kk, self)
                 mb.addAction(act)
                 act.triggered.connect(action)
@@ -208,10 +212,10 @@ class MeasurementControl(QtWidgets.QMainWindow):
         """ send text value """
         print('sending value %s' % tv)
         self.rda.set(tv, self.vEdits[tv].toPlainText())
-    
+
     def getVal(self, tv):
         """ get text value """
-        value = self.rda.get(tv,b'').decode('utf-8')
+        value = self.rda.get(tv, b'').decode('utf-8')
         self.vEdits[tv].setText(value)
 
     def showHelpBox(self):
@@ -219,7 +223,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.infotext = "This widget is used for live control of your measurement via inter-process communication.<br/><br/>To add additional variables (str) to the control use the text_vars argmument. To access values, use the <code>qtt.redisvalue</code> method."
         QtWidgets.QMessageBox.information(self, 'qtt measurement control info',
                                           self.infotext)
-    
+
     def getAllValues(self):
         """ get all string values """
         for tv in self.text_vars:
@@ -340,9 +344,18 @@ class livePlot:
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
-                 sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view',
-                 plot_title=None, is1dscan=None):
+    def __init__(
+            self,
+            datafunction=None,
+            sweepInstrument=None,
+            sweepparams=None,
+            sweepranges=None,
+            alpha=.3,
+            verbose=1,
+            show_controls=True,
+            window_title='live view',
+            plot_title=None,
+            is1dscan=None):
         """Return a new livePlot object."""
 
         self.window_title = window_title
@@ -392,10 +405,14 @@ class livePlot:
         self.alpha = alpha
 
         if is1dscan is None:
-            is1dscan = (isinstance(self.sweepparams, str) or (isinstance(
-                self.sweepparams, (list, dict)) and len(self.sweepparams) == 1))
+            is1dscan = (
+                isinstance(
+                    self.sweepparams, str) or (
+                    isinstance(
+                        self.sweepparams, (list, dict)) and len(
+                        self.sweepparams) == 1))
             if isinstance(self.sweepparams, dict):
-                if not 'gates_horz' in self.sweepparams:
+                if 'gates_horz' not in self.sweepparams:
                     is1dscan = True
 
         if verbose:
@@ -489,7 +506,7 @@ class livePlot:
         self.data = None
 
     def crosshair(self, show=None, pos=None):
-        """ Enable or disable crosshair 
+        """ Enable or disable crosshair
 
         Args:
             show (None, True or False)
@@ -536,7 +553,9 @@ class livePlot:
                             self.sweepInstrument, self.sweepparams)
                         paramval = sweep_param.get_latest()
                     sweepvalues = np.linspace(
-                        paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
+                        paramval - self.sweepranges / 2,
+                        self.sweepranges / 2 + paramval,
+                        len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
                     self._sweepvalues = [sweepvalues]
                     self.crosshair(show=None, pos=[paramval, 0])
@@ -552,8 +571,10 @@ class livePlot:
                             value_x = 0
                             value_y = 0
                         else:
-                            value_x = self.sweepInstrument.get(self.sweepparams[0])
-                            value_y = self.sweepInstrument.get(self.sweepparams[1])
+                            value_x = self.sweepInstrument.get(
+                                self.sweepparams[0])
+                            value_y = self.sweepInstrument.get(
+                                self.sweepparams[1])
                     self.horz_low = value_x - self.sweepranges[0] / 2
                     self.horz_range = self.sweepranges[0]
                     self.vert_low = value_y - self.sweepranges[1] / 2
@@ -562,8 +583,17 @@ class livePlot:
                         self.horz_low, self.vert_low, self.horz_range, self.vert_range)
                     self.plot.setRect(self.rect)
                     self.crosshair(show=None, pos=[value_x, value_y])
-                    self._sweepvalues = [np.linspace(self.horz_low, self.horz_low + self.horz_range, self.data.shape[1]), np.linspace(
-                        self.vert_low, self.vert_low + self.vert_range, self.data.shape[0])]
+                    self._sweepvalues = [
+                        np.linspace(
+                            self.horz_low,
+                            self.horz_low +
+                            self.horz_range,
+                            self.data.shape[1]),
+                        np.linspace(
+                            self.vert_low,
+                            self.vert_low +
+                            self.vert_range,
+                            self.data.shape[0])]
             else:
                 raise Exception('ndim %d not supported' % self.data.ndim)
 
@@ -578,7 +608,7 @@ class livePlot:
             QtWidgets.QApplication.processEvents()
 
     def updatebg(self):
-        """ Update function for the widget 
+        """ Update function for the widget
 
         Calls the datafunction() and update() function
         """
@@ -678,8 +708,17 @@ if __name__ == '__main__' and False:
 
     test_mock2d()
 
-    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')), sweepInstrument=None,
-                  sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
+    lp = livePlot(
+        datafunction=MockCallback_2d(
+            qtt.measurements.scans.instrumentName('mock')),
+        sweepInstrument=None,
+        sweepparams=[
+            'L',
+            'R'],
+        sweepranges=[
+            50,
+            50],
+        show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
     self = lp
