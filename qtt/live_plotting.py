@@ -130,7 +130,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
                 self.vLabels[tv].setText('%s:' % tv)
                 self.vEdits[tv] = (QtWidgets.QTextEdit())
                 try:
-                    self.vEdits[tv].setText(self.rda.get(tv, '').decode('utf-8'))
+                    self.vEdits[tv].setText(self.rda.get(tv,b'').decode('utf-8'))
                 except Exception as Ex:
                     print('could not retrieve value %s: %s' % (tv, str(Ex)))
 
@@ -165,12 +165,17 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.setCentralWidget(widget)
 
         menuBar = self.menuBar()
-        fileMenu = menuBar.addMenu('&Help')
-
-        newAction = QtWidgets.QAction('&Info', self)
-        newAction.triggered.connect(self.showHelpBox)
-
-        fileMenu.addAction(newAction)
+        
+        menuDict = {'&Edit':{'&Get all Values' :  self.getAllValues},
+                    '&Help':{'&Info':     self.showHelpBox}}
+                
+        for (k, menu) in menuDict.items():
+            mb = menuBar.addMenu(k)
+            for (kk, action) in menu.items():
+                
+                act = QtWidgets.QAction(kk, self)
+                mb.addAction(act)
+                act.triggered.connect(action)
 
         w.resize(300, 300)
         self.timer = QtCore.QTimer()
@@ -203,12 +208,22 @@ class MeasurementControl(QtWidgets.QMainWindow):
         """ send text value """
         print('sending value %s' % tv)
         self.rda.set(tv, self.vEdits[tv].toPlainText())
+    
+    def getVal(self, tv):
+        """ get text value """
+        value = self.rda.get(tv,b'').decode('utf-8')
+        self.vEdits[tv].setText(value)
 
     def showHelpBox(self):
         """ Show help dialog """
         self.infotext = "This widget is used for live control of your measurement via inter-process communication.<br/><br/>To add additional variables (str) to the control use the text_vars argmument. To access values, use the <code>qtt.redisvalue</code> method."
         QtWidgets.QMessageBox.information(self, 'qtt measurement control info',
                                           self.infotext)
+    
+    def getAllValues(self):
+        """ get all string values """
+        for tv in self.text_vars:
+            self.getVal(tv)
 
 
 if __name__ == '__main__' and 0:
