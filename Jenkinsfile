@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'miniconda3'
+            image 'continuumio/miniconda3'
             args '-v pip_cache:/var/pip_cache'
         }
     }
