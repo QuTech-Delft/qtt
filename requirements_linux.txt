@@ -13,7 +13,7 @@ IPython
 Polygon3
 pytest
 coverage
-pyqt4
+pyqt
 colorama
 scikit-image
 pyqtgraph
