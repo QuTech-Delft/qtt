@@ -16,4 +16,11 @@ coverage
 pyqt5
 colorama
 scikit-image
+scikit-learn
 pyqtgraph
+spyder
+nose
+pytables
+rope
+h5py
+pywin32
