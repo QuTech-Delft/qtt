@@ -1,8 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'ubuntu'
-            args '-v pip_cache:/var/pip_cache'
+            image 'python:3.6'
         }
     }
     stages {
