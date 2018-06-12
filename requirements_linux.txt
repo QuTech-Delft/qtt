@@ -22,4 +22,3 @@ spyder
 nose
 rope
 h5py
-pywin32
