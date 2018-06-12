@@ -22,3 +22,5 @@ spyder
 nose
 rope
 h5py
+hickle
+slacker
