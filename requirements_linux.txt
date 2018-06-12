@@ -14,3 +14,4 @@ Polygon3
 pytest
 coverage
 pyqt5
+colorama
