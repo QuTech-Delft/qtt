@@ -1,7 +1,8 @@
 pipeline {
     agent {
         docker {
-            image 'python:3.6'
+            image 'miniconda3'
+            args '-v pip_cache:/var/pip_cache'
         }
     }
     stages {
@@ -9,7 +10,7 @@ pipeline {
             steps {
                 sh 'python --version'
                 sh 'ls -lah'
-                sh 'pip install -r "requirements_linux.txt"'
+                sh 'pip install --cache-dir /var/pip_cache -r "requirements_linux.txt"'
                 sh 'pip install .'
                 sh 'python qtt/test.py'
                 sh 'py.test'
