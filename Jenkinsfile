@@ -8,8 +8,7 @@ pipeline {
     stages {
         stage('Test') {
             steps {
-                sh 'apt update'
-                sh 'apt install libgl1-mesa-glx'
+                sh 'apt-get update && apt-get install libgl1-mesa-glx -y'
                 sh 'python --version'
                 sh 'ls -lah'
                 sh 'pip install --cache-dir /var/pip_cache -r "requirements_linux.txt"'
