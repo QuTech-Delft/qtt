@@ -16,3 +16,4 @@ coverage
 pyqt5
 colorama
 scikit-image
+pyqtgraph
