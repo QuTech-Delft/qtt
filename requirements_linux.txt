@@ -13,3 +13,4 @@ IPython
 Polygon3
 pytest
 coverage
+pyqt5
