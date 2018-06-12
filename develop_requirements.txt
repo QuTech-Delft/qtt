@@ -24,3 +24,4 @@ pyzmqrpc
 redis
 pandoc
 wrapt
+sphinx_rtd_theme

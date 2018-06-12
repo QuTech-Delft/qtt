@@ -410,6 +410,7 @@ class virtual_awg(Instrument):
         filtercutoff = pulsedata.get('filtercutoff',None)
         
         pulsesamp = [int(round(x * self.AWG_clock)) for x in waittimes]
+        sawsamp = int(round(period * width * self.AWG_clock))
         pulsereps = int(np.ceil(self.AWG_clock * period * width / sum(pulsesamp)))
         allvoltages = np.concatenate([v for v in gate_voltages.values()])
         mvrange = [max(allvoltages), min(allvoltages)]
@@ -422,6 +423,7 @@ class virtual_awg(Instrument):
             self.check_amplitude(g, sweeprange + (mvrange[0]-mvrange[1]))
         for g in gate_voltages:
             wave_raw = self.make_pulses(gate_voltages[g], waittimes, reps=pulsereps, filtercutoff=filtercutoff, mvrange=mvrange)
+            wave_raw = wave_raw[:sawsamp]
             wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
             if sweepgate == g:
                 wave_raw += wave_sweep

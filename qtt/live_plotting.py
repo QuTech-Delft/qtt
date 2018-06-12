@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 10 15:55:21 2015
-
-@author: tud205521
-"""
-
-#%% Load packages
+# %% Load packages
 import time
 import logging
 import numpy as np
@@ -21,11 +14,11 @@ import qtt
 from qtt import pgeometry
 import qtt.algorithms.generic
 
-#%% Communication
+# %% Communication
 
 try:
     import redis
-except:
+except BaseException:
     pass
 
 
@@ -41,16 +34,14 @@ class rda_t:
 
         # we use redis as backend now
         self.r = redis.Redis(host='127.0.0.1', port=6379)  # , password='test')
-
         try:
-            self.set('dummy_rda_t', -1)
+            self.set('dummy_rda_t', -3141592)
             v = self.get_float('dummy_rda_t')
-            if (not v == -1):
+            if (not v == -3141592):
                 raise Exception('set not equal to get')
-        except Exception as e:
-            print(e)
+        except redis.exceptions.ConnectionError as e:
             print('rda_t: check whether redis is installed and the server is running')
-            raise Exception('rda_t: communication failure')
+            raise e
 
     def get_float(self, key, default_value=None):
         """ Get value by key and convert to a float """
@@ -92,7 +83,6 @@ class rda_t:
             key (str): key
             value (str): the value to be set
         """
-
         self.r.set(key, value)
         pass
 
@@ -100,8 +90,16 @@ class rda_t:
 class MeasurementControl(QtWidgets.QMainWindow):
 
     def __init__(self, name='Measurement Control',
-                 rda_variable='qtt_abort_running_measurement', **kwargs):
-        """ Simple control for stopping running measurements """
+                 rda_variable='qtt_abort_running_measurement', text_vars=[],
+                 **kwargs):
+        """ Simple control for running measurements
+
+        Args:
+            name (str): used as window title
+            rda_variable (str):
+            text_vars (list):
+
+        """
         super().__init__(**kwargs)
         w = self
         w.setWindowTitle(name)
@@ -110,45 +108,59 @@ class MeasurementControl(QtWidgets.QMainWindow):
         self.name = name
         self.rda_variable = rda_variable
         self.rda = rda_t()
-        
-        #text field for qtt_live_value1
-        self.lblVal = QtWidgets.QLabel()
-        self.lblVal.setText('qtt_live_value1:')
-        self.EditVal = QtWidgets.QTextEdit()
-        try:
-            self.EditVal.setText(self.rda.get('qtt_live_value1', '').decode('utf-8'))
-        except Exception as Ex:
-            print(Ex)
-        
-        self.ButtonVal = QtWidgets.QPushButton()
-        self.ButtonVal.setText('Send')
-        self.ButtonVal.setStyleSheet("background-color: rgb(255,150,100);")
-        self.ButtonVal.clicked.connect(self.sendVal1)
-        
-        vbox.addWidget(self.lblVal)
-        vbox.addWidget(self.EditVal)
-        vbox.addWidget(self.ButtonVal)
-        
+        self.text_vars = text_vars
+        if len(text_vars) > 0:
+            self.vLabels = {}
+            self.vEdits = {}
+            self.vButtons = {}
+            self.vActions = []
+            for tv in text_vars:
+                self.vLabels[tv] = QtWidgets.QLabel()
+                self.vLabels[tv].setText('%s:' % tv)
+                self.vEdits[tv] = (QtWidgets.QTextEdit())
+                try:
+                    self.vEdits[tv].setText(
+                        self.rda.get(tv, b'').decode('utf-8'))
+                except Exception as Ex:
+                    print('could not retrieve value %s: %s' % (tv, str(Ex)))
+                self.vButtons[tv] = QtWidgets.QPushButton()
+                self.vButtons[tv].setText('Send')
+                self.vButtons[tv].setStyleSheet(
+                    "background-color: rgb(255,150,100);")
+                self.vButtons[tv].clicked.connect(partial(self.sendVal, tv))
+                vbox.addWidget(self.vLabels[tv])
+                vbox.addWidget(self.vEdits[tv])
+                vbox.addWidget(self.vButtons[tv])
         self.text = QtWidgets.QLabel()
         self.updateStatus()
         vbox.addWidget(self.text)
-
         self.abortbutton = QtWidgets.QPushButton()
         self.abortbutton.setText('Abort measurement')
         self.abortbutton.setStyleSheet("background-color: rgb(255,150,100);")
         self.abortbutton.clicked.connect(self.abort_measurements)
         vbox.addWidget(self.abortbutton)
-
         self.enable_button = QtWidgets.QPushButton()
         self.enable_button.setText('Enable measurements')
         self.enable_button.setStyleSheet("background-color: rgb(255,150,100);")
         self.enable_button.clicked.connect(self.enable_measurements)
         vbox.addWidget(self.enable_button)
-
         widget = QtWidgets.QWidget()
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
 
+        menuBar = self.menuBar()
+
+        menuDict = {
+            '&Edit': {'&Get all Values': self.getAllValues},
+            '&Help': {'&Info': self.showHelpBox}
+        }
+        for (k, menu) in menuDict.items():
+            mb = menuBar.addMenu(k)
+            for (kk, action) in menu.items():
+
+                act = QtWidgets.QAction(kk, self)
+                mb.addAction(act)
+                act.triggered.connect(action)
         w.resize(300, 300)
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updateStatus)  # this also works
@@ -172,18 +184,34 @@ class MeasurementControl(QtWidgets.QMainWindow):
         """ Abort the current measurement """
         if self.verbose:
             print('%s: setting %s to 1' % (self.name, self.rda_variable))
-
         self.rda.set(self.rda_variable, 1)
         self.updateStatus()
-    
-    def sendVal1(self, rda_variable):
-        """ send value1 """
-        self.rda.set('qtt_live_value1', self.EditVal.toPlainText())
-       
-        
+
+    def sendVal(self, tv):
+        """ send text value """
+        print('sending value %s' % tv)
+        self.rda.set(tv, self.vEdits[tv].toPlainText())
+
+    def getVal(self, tv):
+        """ get text value """
+        value = self.rda.get(tv, b'').decode('utf-8')
+        self.vEdits[tv].setText(value)
+
+    def showHelpBox(self):
+        """ Show help dialog """
+        self.infotext = "This widget is used for live control of your measurement via inter-process communication.\
+                        <br/><br/>To add additional variables (str) to the control use the text_vars argmument. \
+                        To access values, use the <code>qtt.redisvalue</code> method."
+        QtWidgets.QMessageBox.information(self, 'qtt measurement control info', self.infotext)
+
+    def getAllValues(self):
+        """ get all string values """
+        for tv in self.text_vars:
+            self.getVal(tv)
+
+
 if __name__ == '__main__' and 0:
     app = pg.mkQApp()
-
     mc = MeasurementControl()
     mc.verbose = 1
     mc.setGeometry(1700, 50, 300, 400)
@@ -195,21 +223,19 @@ def start_measurement_control(doexec=False):
     Args:
         doexec(bool): if True run the event loop
     """
-    #import warnings
-    #from pyqtgraph.multiprocess.remoteproxy import RemoteExceptionWarning
-    #warnings.simplefilter('ignore', RemoteExceptionWarning)
+    # import warnings
+    # from pyqtgraph.multiprocess.remoteproxy import RemoteExceptionWarning
+    # warnings.simplefilter('ignore', RemoteExceptionWarning)
     proc = mp.QtProcess()
     lp = proc._import('qtt.live_plotting')
     mc = lp.MeasurementControl()
-
     qtt._dummy_mc = mc
-
     app = pyqtgraph.mkQApp()
     if doexec:
         app.exec()
 
 
-#%%
+# %%
 
 class RdaControl(QtWidgets.QMainWindow):
 
@@ -226,7 +252,7 @@ class RdaControl(QtWidgets.QMainWindow):
         self.rda = rda_t()
         self.boxes = boxes
         self.widgets = {}
-        for ii, b in enumerate(self.boxes):
+        for _, b in enumerate(self.boxes):
             self.widgets[b] = {}
             hbox = QtWidgets.QHBoxLayout()
             self.widgets[b]['hbox'] = hbox
@@ -235,10 +261,8 @@ class RdaControl(QtWidgets.QMainWindow):
             dbox = QtWidgets.QDoubleSpinBox()
             # do not emit signals when still editing
             dbox.setKeyboardTracking(False)
-
             self.widgets[b]['dbox'] = dbox
             val = self.rda.get_float(b, 100)
-
             dbox.setMinimum(-10000)
             dbox.setMaximum(10000)
             dbox.setSingleStep(10)
@@ -248,16 +272,14 @@ class RdaControl(QtWidgets.QMainWindow):
             hbox.addWidget(tbox)
             hbox.addWidget(dbox)
             vbox.addLayout(hbox)
-
         widget = QtWidgets.QWidget()
         widget.setLayout(vbox)
         self.setCentralWidget(widget)
-
         self.update_values()
         self.show()
 
     def update_values(self):
-        for ii, b in enumerate(self.boxes):
+        for _, b in enumerate(self.boxes):
             val = self.rda.get_float(b)
             if val is None:
                 # default...
@@ -278,7 +300,7 @@ class RdaControl(QtWidgets.QMainWindow):
 # legacy name
 LivePlotControl = RdaControl
 
-#%% Liveplot object
+# %% Liveplot object
 
 
 class livePlot:
@@ -295,17 +317,24 @@ class livePlot:
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    def __init__(self, datafunction=None, sweepInstrument=None, sweepparams=None,
-                 sweepranges=None, alpha=.3, verbose=1, show_controls=True, window_title='live view',
-                 plot_title=None, is1dscan=None):
+    def __init__(
+            self,
+            datafunction=None,
+            sweepInstrument=None,
+            sweepparams=None,
+            sweepranges=None,
+            alpha=.3,
+            verbose=1,
+            show_controls=True,
+            window_title='live view',
+            plot_title=None,
+            is1dscan=None):
         """Return a new livePlot object."""
 
         self.window_title = window_title
-
         win = QtWidgets.QWidget()
         win.resize(800, 600)
         win.setWindowTitle(self.window_title)
-
         vertLayout = QtWidgets.QVBoxLayout()
 
         self._averaging_enabled = True
@@ -315,20 +344,15 @@ class livePlot:
             win.stop_button = QtWidgets.QPushButton('Stop')
             win.averaging_box = QtWidgets.QCheckBox('Averaging')
             win.averaging_box.setChecked(self._averaging_enabled)
-
             for b in [win.start_button, win.stop_button]:
                 b.setMaximumHeight(24)
-
             topLayout.addWidget(win.start_button)
             topLayout.addWidget(win.stop_button)
             topLayout.addWidget(win.averaging_box)
             vertLayout.addLayout(topLayout)
-
         plotwin = pg.GraphicsWindow(title="Live view")
         vertLayout.addWidget(plotwin)
-
         win.setLayout(vertLayout)
-
         self.setGeometry = win.setGeometry
         self.win = win
         self.plotwin = plotwin
@@ -342,20 +366,20 @@ class livePlot:
         self.sweepranges = sweepranges
         self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
-
         self.datafunction_result = None
         self.alpha = alpha
-
         if is1dscan is None:
-            is1dscan = (isinstance(self.sweepparams, str) or (isinstance(
-                self.sweepparams, (list, dict)) and len(self.sweepparams) == 1))
+            is1dscan = (
+                isinstance(
+                    self.sweepparams, str) or (
+                    isinstance(
+                        self.sweepparams, (list, dict)) and len(
+                        self.sweepparams) == 1))
             if isinstance(self.sweepparams, dict):
-                if not 'gates_horz' in self.sweepparams:
+                if 'gates_horz' not in self.sweepparams:
                     is1dscan = True
-
         if verbose:
             print('live_plotting: is1dscan %s' % is1dscan)
-
         if self.sweepparams is None:
             p1 = plotwin.addPlot(title="Videomode")
             p1.setLabel('left', 'param2')
@@ -379,7 +403,6 @@ class livePlot:
             dd = np.zeros((0,))
             plot = p1.plot(dd, pen='b')
             self.plot = plot
-
             vpen = pg.QtGui.QPen(pg.QtGui.QColor(
                 130, 130, 175, 60), 0, pg.QtCore.Qt.SolidLine)
             gv = pg.InfiniteLine([0, 0], angle=90, pen=vpen)
@@ -411,7 +434,6 @@ class livePlot:
         else:
             raise Exception(
                 'The number of sweep parameters should be either None, 1 or 2.')
-
         self.plothandle = p1
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
@@ -419,9 +441,9 @@ class livePlot:
 
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
-            #@Slot()
+            # @Slot()
             def signal_drop_arguments(*args, **kwargs):
-                #print('call %s' % target)
+                # print('call %s' % target)
                 target()
             return signal_drop_arguments
 
@@ -444,7 +466,7 @@ class livePlot:
         self.data = None
 
     def crosshair(self, show=None, pos=None):
-        """ Enable or disable crosshair 
+        """ Enable or disable crosshair
 
         Args:
             show (None, True or False)
@@ -466,10 +488,8 @@ class livePlot:
             print('livePlot: update: idx %d ' % self.idx)
         if data is not None:
             self.data = np.array(data)
-
             if self.data_avg is None:
                 self.data_avg = self.data
-
             # depending on value of self.averaging_enabled either do or
             # don't do the averaging
             if self._averaging_enabled:
@@ -477,7 +497,6 @@ class livePlot:
                     (1 - self.alpha) * self.data_avg
             else:
                 self.data_avg = self.data
-
             if self.data.ndim == 1:
                 if None in (self.sweepInstrument, self.sweepparams,
                             self.sweepranges):
@@ -491,9 +510,11 @@ class livePlot:
                             self.sweepInstrument, self.sweepparams)
                         paramval = sweep_param.get_latest()
                     sweepvalues = np.linspace(
-                        paramval - self.sweepranges / 2, self.sweepranges / 2 + paramval, len(data))
+                        paramval - self.sweepranges / 2,
+                        self.sweepranges / 2 + paramval,
+                        len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
-                    self._sweepvalues=[sweepvalues]
+                    self._sweepvalues = [sweepvalues]
                     self.crosshair(show=None, pos=[paramval, 0])
             elif self.data.ndim == 2:
                 self.plot.setImage(self.data_avg.T)
@@ -507,8 +528,10 @@ class livePlot:
                             value_x = 0
                             value_y = 0
                         else:
-                            value_x = self.sweepInstrument.get(self.sweepparams[0])
-                            value_y = self.sweepInstrument.get(self.sweepparams[1])
+                            value_x = self.sweepInstrument.get(
+                                self.sweepparams[0])
+                            value_y = self.sweepInstrument.get(
+                                self.sweepparams[1])
                     self.horz_low = value_x - self.sweepranges[0] / 2
                     self.horz_range = self.sweepranges[0]
                     self.vert_low = value_y - self.sweepranges[1] / 2
@@ -517,13 +540,21 @@ class livePlot:
                         self.horz_low, self.vert_low, self.horz_range, self.vert_range)
                     self.plot.setRect(self.rect)
                     self.crosshair(show=None, pos=[value_x, value_y])
-                    self._sweepvalues=[np.linspace(self.horz_low, self.horz_low+self.horz_range, self.data.shape[1]), np.linspace(self.vert_low, self.vert_low+self.vert_range, self.data.shape[0])]
+                    self._sweepvalues = [
+                        np.linspace(
+                            self.horz_low,
+                            self.horz_low +
+                            self.horz_range,
+                            self.data.shape[1]),
+                        np.linspace(
+                            self.vert_low,
+                            self.vert_low +
+                            self.vert_range,
+                            self.data.shape[0])]
             else:
                 raise Exception('ndim %d not supported' % self.data.ndim)
-
         else:
             pass
-
         self.idx = self.idx + 1
         if self.idx > self.maxidx:
             self.idx = 0
@@ -532,7 +563,7 @@ class livePlot:
             QtWidgets.QApplication.processEvents()
 
     def updatebg(self):
-        """ Update function for the widget 
+        """ Update function for the widget
 
         Calls the datafunction() and update() function
         """
@@ -552,7 +583,6 @@ class livePlot:
         else:
             self.stopreadout()
             dd = None
-
         if self.fps.framerate() < 10:
             time.sleep(0.1)
         time.sleep(0.00001)
@@ -592,48 +622,38 @@ class livePlot:
         self.timer.stop()
         self.win.setWindowTitle('Live view stopped')
 
-#%% Some default callbacks
+# %% Some default callbacks
 
 
 class MockCallback_2d(qcodes.Instrument):
 
     def __init__(self, name, nx=80, **kwargs):
         super().__init__(name, **kwargs)
-
         self.nx = nx
-
-        self.add_parameter(
-            'p', parameter_class=qcodes.ManualParameter, initial_value=-20)
-        self.add_parameter(
-            'q', parameter_class=qcodes.ManualParameter, initial_value=30)
+        self.add_parameter('p', parameter_class=qcodes.ManualParameter, initial_value=-20)
+        self.add_parameter('q', parameter_class=qcodes.ManualParameter, initial_value=30)
 
     def __call__(self):
         import qtt.utilities.imagetools as lt
-
         data = np.random.rand(self.nx * self.nx)
         data_reshaped = data.reshape(self.nx, self.nx)
-
         lt.semiLine(data_reshaped, [self.nx / 2, self.nx / 2],
                     np.deg2rad(self.p()), w=2, l=self.nx / 3, H=2)
         lt.semiLine(data_reshaped, [self.nx / 2, self.nx / 2],
                     np.deg2rad(self.q()), w=2, l=self.nx / 4, H=3)
-
         return data_reshaped
 
 
 def test_mock2d():
-    m = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d'))
-    d = m()
+    mock_callback = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d'))
+    mock_callback()
 
 
 # %% Example
-
-if __name__ == '__main__' and False:
-    
+if __name__ == '__main__' and 0:
     test_mock2d()
-    
-    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')), sweepInstrument=None,
-                  sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
+    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
+                  sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)
     lp.startreadout()
     self = lp

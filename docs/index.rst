@@ -16,10 +16,9 @@ An example:
 
 .. code:: python
 
-   # imports
    import qtt
    # load data
-   dataset = load_data('example')
+   dataset = qtt.data.load_dataset('example')
    # analyse
    results = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=100)
    
@@ -32,11 +31,13 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 3
-
+   :maxdepth: 2
+   
    contributing
    algorithms
+   
 
+    
 Indices and tables
 ==================
 
@@ -51,5 +52,4 @@ License
 .. include:: ../LICENSE.txt
 
 
-Contributions
-=============
+.. include:: ../Contributors.md
