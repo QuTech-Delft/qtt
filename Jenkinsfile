@@ -1,7 +1,7 @@
 pipeline {
     agent {
-        dockerfile {
-            filename 'Dockerfile.build'
+        docker {
+            image 'python:3.6'
             args '-v pip_cache:/var/pip_cache'
         }
     }
