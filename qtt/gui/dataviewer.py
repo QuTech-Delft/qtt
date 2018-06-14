@@ -149,8 +149,26 @@ class DataViewer(QtWidgets.QWidget):
         self.qplot.copyToClipboard()
     
     def getArrayStr(self, metadata):
-        infotxt = ' ,'.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if v['is_setpoint']])
-        infotxt = infotxt + '  vs  ' + ', '.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if not v['is_setpoint']])
+        if 'loop' in metadata.keys():
+            params = []
+            sv = metadata['loop']['sweep_values']
+            params.append('%s [%.2f to %.2f %s]' % (sv['parameter']['label'], 
+                         sv['values'][0]['last'], 
+                         sv['values'][0]['last'], 
+                         sv['parameter']['unit']))
+            
+            for act in metadata['loop']['actions']:
+                if 'sweep_values' in act.keys():
+                    sv = act['sweep_values']
+                    params.append('%s (%.2f - %.2f %s)' % (sv['parameter']['label'], 
+                                 sv['values'][0]['last'], 
+                                 sv['values'][0]['last'], 
+                                 sv['parameter']['unit']))
+            infotxt = ' ,'.join(params)
+        else:    
+            infotxt = ' ,'.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if v['is_setpoint']])
+            
+        infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if not v['is_setpoint']])
         
         return infotxt
     
