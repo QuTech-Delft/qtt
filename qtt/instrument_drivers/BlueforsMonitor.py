@@ -4,9 +4,9 @@ import glob
 import getopt
 
 from datetime import datetime
+from functools import partial
 from qtt.instrument_drivers.DistributedInstrument import InstrumentDataClient
 from qtt.instrument_drivers.DistributedInstrument import InstrumentDataServer
-
 # -----------------------------------------------------------------------------
 
 
@@ -36,7 +36,14 @@ class FridgeDataReceiver(InstrumentDataClient):
                                      params={'item': 'cpawarn'})
         self.add_measurable_quantity('datetime', '', -1,
                                      'The server date and time (for testing)')
-
+        
+        def get_temp(key):
+            return self.temperatures()[key][0]
+        
+        for key in ['Magnet', 'Still', 'PT2', 'PT1', 'MC']:
+            self.add_parameter('T'+key.lower(), unit = 'K', 
+                           get_cmd = partial(get_temp, key))
+            
 # -----------------------------------------------------------------------------
 
 
