@@ -40,7 +40,7 @@ class FridgeDataReceiver(InstrumentDataClient):
         def get_temp(key):
             return self.temperatures()[key][0]
         
-        for key in ['Magnet', 'Still', 'PT2', 'PT1', 'MC']:
+        for key in self.temperatures().keys():
             self.add_parameter('T'+key.lower(), unit = 'K', 
                            get_cmd = partial(get_temp, key))
             
