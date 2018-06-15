@@ -37,8 +37,10 @@ class FridgeDataReceiver(InstrumentDataClient):
         self.add_measurable_quantity('datetime', '', -1,
                                      'The server date and time (for testing)')
         
+        self.temperatures.get_latest.max_val_age = 1
+        
         def get_temp(key):
-            return self.temperatures()[key][0]
+            return self.temperatures.get_latest()[key][0]
         
         for key in self.temperatures().keys():
             self.add_parameter('T'+key.lower(), unit = 'K', 
