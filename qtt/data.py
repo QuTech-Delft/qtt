@@ -116,6 +116,76 @@ def test_load_dataset(verbose=0):
 
 #%%
 
+#%% Monkey patch qcodes to store latest dataset
+from functools import wraps
+
+@qtt.tools.deprecated
+def store_latest_decorator(function, obj):    
+    """ Decorator to store latest result of a function in an object """
+    if not hasattr(obj, '_latest'):
+        obj._latest = None
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        #print('func %s: arguments: %s %s' % (function, args, kwargs) )
+        ds = function(*args, **kwargs)
+        obj._latest = ds # store the latest result
+        return ds 
+    wrapper._special = 'yes'
+    return wrapper
+
+#qcodes.data.data_set.new_data = store_latest_decorator(qcodes.new_data, qcodes.DataSet)
+
+def get_latest_dataset():
+    """ Return latest dataset that was created """
+    return getattr(qcodes.DataSet._latest, None)
+
+def add_comment(txt, dataset = None, verbose = 0):
+    """ Add a comment to a DataSet
+    
+    Args:
+        comment (str): comment to be added to the DataSet metadata
+        dataset (None or DataSet): DataSet to add the comments to
+    
+    """
+    if dataset is None:
+        if hasattr(qcodes.DataSet, '_latest_datasets'):
+            try:
+                dataset = qcodes.DataSet._latest_datasets[0]
+            except:
+                pass
+        else:
+            raise NotImplementedError('dataset not specified and _latest_datasets not available')
+            dataset = qcodes.DataSet._latest
+    if dataset is None:
+        raise Exception('no DataSet to add comments to')
+        
+    dataset.add_metadata({'comment': txt})
+    if verbose:
+        print('added comments to DataSet %s' % dataset.location)
+    
+    
+def test_add_comment():
+    import qcodes.tests.data_mocks
+
+    ds0=qcodes.tests.data_mocks.DataSet2D()
+    ds=qcodes.tests.data_mocks.DataSet2D()
+    try:
+        add_comment('hello world')
+    except NotImplementedError as ex:
+        ds.metadata['comment']='hello world'
+        pass
+    add_comment('hello world 0', ds0)
+    assert(ds.metadata['comment']=='hello world')
+    assert(ds0.metadata['comment']=='hello world 0')
+    
+if __name__=='__main__':    
+    test_add_comment() 
+
+    #ds=qcodes.tests.data_mocks.DataSet2D()
+    #print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
+        
+#%%
+
 
 def datasetCentre(ds, ndim=None):
     """ Return centre position for dataset
@@ -553,7 +623,7 @@ class image_transform:
             print('image_transform: tr._imraw.shape %s' % (self._imraw.shape, ))
             print('image_transform: tr._im.shape %s' % (self._im.shape, ))
         self._im = self._transform(self._imraw)
-        self.Hi = numpy.linalg.inv(self.H)
+        self.Hi = np.linalg.inv(self.H)
 
     def image(self):
         return self._im
