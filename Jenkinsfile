@@ -1,19 +1,17 @@
 pipeline {
     agent {
-        docker {
-            image 'continuumio/anaconda3'
-            args '-v pip_cache:/var/pip_cache'
+        dockerfile {
+            filename 'Dockerfile.build'
         }
     }
     stages {
         stage('Test') {
             steps {
-                sh 'apt-get update && apt-get install libgl1-mesa-glx libx11-xcb1 -y'
                 sh 'python --version'
                 sh 'ls -lah'
-                sh 'pip install --cache-dir /var/pip_cache -r "requirements_linux.txt"'
-                sh 'pip install .'
-                sh 'python qtt/test.py'
+                sh 'pip3 install --cache-dir /var/pip_cache -r "requirements_linux.txt"'
+                sh 'pip3 install .'
+                sh 'python3 qtt/test.py'
                 sh 'py.test'
             }
         }

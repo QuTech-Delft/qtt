@@ -1,7 +1,4 @@
-FROM jfloff/alpine-python
+FROM ubuntu:16.04
 
-RUN apk update
-RUN echo "http://dl-8.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-RUN apk --no-cache --update-cache add gcc gfortran python python-dev py-pip build-base wget freetype-dev libpng-dev openblas-dev
-RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
-RUN pip3 install --no-cache-dir numpy scipy matplotlib pandas pathlib
+RUN apt-get update && \
+    apt-get -y install gcc python3-dev python3-pip libgl1-mesa-glx libx11-xcb1
