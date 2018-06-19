@@ -181,26 +181,26 @@ def plot_awg_to_plunger(result, fig=10):
     plt.title('Detected line direction')
 
 
-
-
-#%% Test functions
+# %% Test functions
 
 def test_awg_to_plunger(fig=None):
-    
-    x=np.arange(0,80,1.).astype(np.float32)
-    y=np.arange(0,60).astype(np.float32)
-    z=np.meshgrid(x, y); z=.01*z[0].astype(np.uint8)
-    angle=-.7*(np.pi/4)
-    qtt.utilities.imagetools.semiLine(z, np.array([[0],[y.max()]]), angle, w=2.2,l=30, H=.52)
-    ds=qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z )
-    
-    result={'dataset': ds}
-    r=analyse_awg_to_plunger(result, method='hough', fig=fig)
-    if fig is not None:
+    x = np.arange(0, 80, 1.0).astype(np.float32)
+    y = np.arange(0, 60).astype(np.float32)
+    z = np.meshgrid(x, y)
+    z = 0.01 * z[0].astype(np.uint8)
+    angle = -0.7 * (np.pi/4.0)
+    qtt.utilities.imagetools.semiLine(z, np.array([[0], [y.max()]]), angle, w=2.2, l=30, H=0.52)
+    ds = qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z)
+    result = {'dataset': ds, 'type': 'awg_to_plunger'}
+    r = analyse_awg_to_plunger(result, method='hough', fig=fig)
+    if fig:
         print(r)
-        print('ange input %.3f: fit %s' % (angle, str(r['angle'])) )
-if __name__=='__main__':
-   test_awg_to_plunger(fig=10)
+        print('ange input %.3f: fit %s' % (angle, str(r['angle'])))
+
+
+if __name__ == '__main__':
+    test_awg_to_plunger(fig=10)
+
 
 # TODO
 #
