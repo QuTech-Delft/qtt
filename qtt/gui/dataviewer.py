@@ -162,7 +162,7 @@ class DataViewer(QtWidgets.QWidget):
                     if 'sweep_values' in act.keys():
                         sv = act['sweep_values']
                         params.append('%s [%.2f - %.2f %s]' % (sv['parameter']['label'], 
-                                     sv['values'][0]['last'], 
+                                     sv['values'][0]['first'], 
                                      sv['values'][0]['last'], 
                                      sv['parameter']['unit']))
                 infotxt = ' ,'.join(params)
