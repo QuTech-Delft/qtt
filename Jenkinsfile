@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Test') {
             steps {
-                sh 'python --version'
+                sh 'python3 --version'
                 sh 'ls -lah'
                 sh 'pip3 install --cache-dir /var/pip_cache -r "requirements_linux.txt"'
                 sh 'pip3 install .'
