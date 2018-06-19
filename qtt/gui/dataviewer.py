@@ -149,27 +149,39 @@ class DataViewer(QtWidgets.QWidget):
         self.qplot.copyToClipboard()
     
     def getArrayStr(self, metadata):
-        if 'loop' in metadata.keys():
-            params = []
-            sv = metadata['loop']['sweep_values']
-            params.append('%s [%.2f to %.2f %s]' % (sv['parameter']['label'], 
-                         sv['values'][0]['last'], 
-                         sv['values'][0]['last'], 
-                         sv['parameter']['unit']))
+        params = []
+        try:
+            if 'loop' in metadata.keys():
+                sv = metadata['loop']['sweep_values']
+                params.append('%s [%.2f to %.2f %s]' % (sv['parameter']['label'], 
+                             sv['values'][0]['first'], 
+                             sv['values'][0]['last'], 
+                             sv['parameter']['unit']))
+                
+                for act in metadata['loop']['actions']:
+                    if 'sweep_values' in act.keys():
+                        sv = act['sweep_values']
+                        params.append('%s [%.2f - %.2f %s]' % (sv['parameter']['label'], 
+                                     sv['values'][0]['last'], 
+                                     sv['values'][0]['last'], 
+                                     sv['parameter']['unit']))
+                infotxt = ' ,'.join(params)
+                infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if not v['is_setpoint']])
+                
+            elif 'scanjob' in metadata.keys():
+                sd = metadata['scanjob']['sweepdata']
+                params.append('%s [%.2f to %.2f]' % (sd['param'], sd['start'], sd['end']))
+                if 'stepdata' in metadata['scanjob']:
+                    sd = metadata['scanjob']['stepdata']
+                    params.append('%s [%.2f to %.2f]' % (sd['param'], sd['start'], sd['end']))
+                infotxt = ' ,'.join(params)
+                infotxt = infotxt + '  |  ' + ', '.join(metadata['scanjob']['minstrument'])
+            else:
+                infotxt = 'info about plot'
+                
+        except:
+            infotxt = 'info about plot'
             
-            for act in metadata['loop']['actions']:
-                if 'sweep_values' in act.keys():
-                    sv = act['sweep_values']
-                    params.append('%s (%.2f - %.2f %s)' % (sv['parameter']['label'], 
-                                 sv['values'][0]['last'], 
-                                 sv['values'][0]['last'], 
-                                 sv['parameter']['unit']))
-            infotxt = ' ,'.join(params)
-        else:    
-            infotxt = ' ,'.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if v['is_setpoint']])
-            
-        infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if not v['is_setpoint']])
-        
         return infotxt
     
     
