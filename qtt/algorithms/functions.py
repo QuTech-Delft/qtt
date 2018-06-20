@@ -186,6 +186,74 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, par_gues
     return par_fit
 
 
+def gauss_ramsey(x_data, params):
+    """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase of the second pulse 
+    is made dependent on the free evolution time.
+    
+    $$ gauss_ramsey = A * exp(-(C*x_data)**2) * sin(2pi*ramseyfreq * x_data - angle) +B  $$
+    
+    Args:
+        x_data (array): the data for the input variable
+        params (array): parameters of the gauss_ramsey function, [A,C,ramseyfreq,angle,B]
+        
+    Result:
+        gauss_ramsey (array): model for the gauss_ramsey
+    """
+    [A,C,ramseyfreq,angle,B] = params    
+    gauss_ramsey = A * np.exp(-(C*x_data)**2) * np.sin(2*np.pi*ramseyfreq * x_data - angle) +B 
+    return gauss_ramsey
+
+
+def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
+    """ Cost function for gauss_ramsey. 
+    
+    Args:
+        x_data (array): the data for the input variable
+        y_data (array): the data for the measured variable
+        params (array): parameters of the gauss_ramsey function, [A,C,ramseyfreq,angle,B]
+        weight_power (float)
+        
+    Returns:
+        cost (float): value which indicates the difference between the data and the fit
+    """
+    model = gauss_ramsey(x_data, params)
+    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2*(np.array(x_data)[1:]-np.array(x_data)[:-1])**weight_power])
+    return cost
+
+def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
+    """ Fit a gauss_ramsey. 
+    
+    Args:
+        x_data (array): the data for the input variable
+        y_data (array): the data for the measured variable
+        weight_power (float)
+        maxiter (int): maximum number of iterations to perform
+        maxfun (int): maximum number of function evaluations to make
+        verbose (int): set to >0 to print convergence messages
+        par_guess (None or array): optional, initial guess for the fit parameters: [A,C,ramseyfreq,angle,B]
+        
+    Returns:
+        result_dict (dict): dictionary containing the par_fit and par_guess
+        par_fit (array): array with the fit parameters: [A,C,ramseyfreq,angle,B]
+    
+    """
+    func = lambda params: cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
+    if par_guess is None:
+        A = (np.max(y_data) - np.min(y_data))/2
+        C = 1/(1e-6)
+        ramseyfreq = 1/(1e-6)
+        angle = 0
+        B = (np.min(y_data) + (np.max(y_data) - np.min(y_data))/2)
+        par_guess = np.array([A,C,ramseyfreq,angle,B])
+        
+    par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    
+    result_dict = {'parameters fit': par_fit,'parameters initial guess': par_guess}
+    
+    return par_fit, result_dict
+
+
+
 def linear_function(x, a, b):
     """ Linear function with offset"""
     return a * x + b
