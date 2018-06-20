@@ -120,7 +120,7 @@ def _redisStrValue(var = 'qtt_live_value1'):
 
 def _redisStrSet(value, var = 'qtt_live_value1'):
     """ Set live control value on redis server """
-    _redis_connection.set(value, var)
+    _redis_connection.set(var, value)
 
 liveValue = _redisStrValue
 liveValueSet = _redisStrSet
