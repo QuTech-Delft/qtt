@@ -46,6 +46,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+2018-*
 
 # Translations
 *.mo
@@ -84,4 +85,4 @@ test*.pickle
 model.png
 test*py
 .pytest_cache
-
+.vscode
