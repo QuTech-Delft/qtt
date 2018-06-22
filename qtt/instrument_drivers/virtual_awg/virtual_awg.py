@@ -36,15 +36,15 @@ class VirtualAwg:
     def reset_awgs(self):
         [awg.reset() for awg in self.awgs]
 
-    def enable_outputs(self, awg_nr, channels):
-        if awg_nr not in self.__awg_range:
-            raise VirtualAwgError('Invalid AWG nr {}!'.format(awg_nr))
-        self.awgs[awg_nr].enable_outputs(channels)
+    def enable_outputs(self, gate_names):
+        for name in gate_names:
+            (awg_nr, channel_nr) = self.__gate_map[name]
+            self.awgs[awg_nr].enable_outputs([channel_nr])
 
-    def disable_outputs(self, awg_nr, channels):
-        if awg_nr not in self.__awg_range:
-            raise VirtualAwgError('Invalid AWG nr {}!'.format(awg_nr))
-        self.awgs[awg_nr].disable_outputs(channels)
+    def disable_outputs(self, gate_names):
+        for name in gate_names:
+            (awg_nr, channel_nr) = self.__gate_map[name]
+            self.awgs[awg_nr].disable_outputs([channel_nr])
 
     def update_setting(self, awg_nr, setting, value):
         if awg_nr not in self.__awg_range:
