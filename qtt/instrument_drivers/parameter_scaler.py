@@ -147,7 +147,7 @@ class ParameterScaler(Parameter):
         self._multiplier = gain
 
     # Getter and setter for the real value
-    def get(self) -> Union[int, float]:
+    def get_raw(self) -> Union[int, float]:
         """
         Returns:
             number: value at which was set at the sample
@@ -168,7 +168,7 @@ class ParameterScaler(Parameter):
         """
         return self._wrapper_param.get()
 
-    def set(self, value: Union[int, float]) -> None:
+    def set_raw(self, value: Union[int, float]) -> None:
         """
         Se the value on the instrument, accounting for the scaling
         """
