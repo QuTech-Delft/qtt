@@ -7,7 +7,7 @@ from qtt.instrument_drivers.virtual_awg.awgs.common import AwgCommon, AwgCommonE
 class Tektronix5014C_AWG(AwgCommon):
 
     def __init__(self, awg):
-        super('Tektronix_AWG5014', channels=[1, 2, 3, 4], markers=[1, 2])
+        super().__init__('Tektronix_AWG5014', channel_numbers=[1, 2, 3, 4], marker_numbers=[1, 2])
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
         self.__settings = {'sampling_rate': Setting('GS/s', 1.0e9, 1.0e7, 1.2e9),
@@ -35,20 +35,21 @@ class Tektronix5014C_AWG(AwgCommon):
     def enable_outputs(self, channels=None):
         if not channels:
             channels = self._channel_numbers
-        if channels not in self._channel_numbers:
+        if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError("Invalid channel numbers {}".format(channels))
         [self.__awg.set('ch{}_state'.format(ch), 1) for ch in channels]
 
     def disable_outputs(self, channels=None):
         if not channels:
             channels = self._channel_numbers
-        if channels not in self._channel_numbers:
+        if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError("Invalid channel numbers {}".format(channels))
         [self.__awg.set('ch{}_state'.format(ch), 0) for ch in channels]
 
     def update_settings(self):
         self.set_sampling_rate(self.__settings['sampling_rate'].value)
-        self.set_gain(self.__settings['amplitudes'].value)
+        for channel in self._channel_numbers:
+            self.set_gain(channel, self.__settings['amplitudes'].value)
 
     def change_setting(self, key, value):
         if key not in self.__settings.keys():
@@ -72,8 +73,8 @@ class Tektronix5014C_AWG(AwgCommon):
     def set_sampling_rate(self, sampling_rate):
         self.__awg.set('clock_freq', sampling_rate)
 
-    def get_sampling_rate(self, sampling_rate):
-        self.__awg.get('clock_freq')
+    def get_sampling_rate(self):
+        return self.__awg.get('clock_freq')
 
     def set_gain(self, channel, gain):
         return self.__awg.set('ch{0}_amp'.format(channel), gain)
@@ -99,6 +100,9 @@ class Tektronix5014C_AWG(AwgCommon):
                 else:
                     self.__awg.set_sqel_waveform("", channel, row_index + 1)
         self.__awg.set_sqel_goto_state(request_rows, 1)
+
+    def get_sequence(self, channels):
+        raise NotImplemented
 
     def delete_sequence(self, channel):
             self.__set_sequence_length(0)

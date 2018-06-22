@@ -2,6 +2,8 @@ import logging
 import numpy as np
 
 from qtt.instrument_drivers.virtual_awg.sequencer import Sequencer
+from qtt.instrument_drivers.virtual_awg.awgs.Tektronix5014C import Tektronix5014C_AWG
+
 
 
 class VirtualAwgError(Exception):
@@ -11,11 +13,19 @@ class VirtualAwgError(Exception):
 class VirtualAwg:
 
     def __init__(self, awgs, gate_map, logger=logging):
-        self.__awg_range = range(0, len(awgs))
-        self.__awg_count = len(awgs)
-        self.awgs = awgs
         self.__gate_map = gate_map
+        self.__set_hardware(awgs)
         self.__logger = logger
+
+    def __set_hardware(self, awgs):
+        self.awgs = list()
+        for awg in awgs:
+            if type(awg).__name__ == 'Tektronix_AWG5014':
+                self.awgs.append(Tektronix5014C_AWG(awg))
+            else:
+                raise VirtualAwgError('Unusable device added!')
+        self.__awg_range = range(0, len(self.awgs))
+        self.__awg_count = len(self.awgs)
 
     def run_awgs(self):
         [awg.run() for awg in self.awgs]
@@ -50,7 +60,8 @@ class VirtualAwg:
 
     def sweep_gates(self, gate_names, amplitudes, period):
         sequences = list()
-        for amplitude in amplitudes:
+        for gate_name, amplitude in zip(gate_names, amplitudes):
+            (awg_nr, channel_nr) = self.__gate_map[gate_name]
             sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
             sequences.append(sawtooth)
         self.sequence_gates(gate_names, sequences)
@@ -72,16 +83,19 @@ class VirtualAwg:
             [awg.delete_waveforms() for awg in self.awgs]
         for awg_nr in self.__awg_range:
             channel_data = dict()
-            sequence_data = dict()
+            waveform_data = dict()
             for (gate_name, sequence) in zip(gate_names, sequences):
-                (nr, channel_nr) = gate_names[gate_name]
+                (nr, channel_nr) = self.__gate_map[gate_name]
                 if nr == awg_nr:
                     sequence_name = '{}_{}'.format(gate_name, sequence['NAME'])
-                    sequence_data[sequence_name] = sequence
+                    sampling_rate = self.awgs[awg_nr].get_sampling_rate()
+                    sequence_data = Sequencer.get_data(sequence, sampling_rate)
+                    data_count = len(sequence_data)
+                    waveform_data[sequence_name] = [sequence_data, np.zeros(data_count), np.zeros(data_count)]
                     channel_data.setdefault(channel_nr, []).append(sequence_name)
             if do_upload:
-                self.awgs[awg_nr].upload_waveforms(sequence_data.keys(), sequence_data.values())
-            self.awgs[awg_nr].set_sequence(channel_data.keys(), list(channel_data.values()))
+                self.awgs[awg_nr].upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))
+            self.awgs[awg_nr].set_sequence(list(channel_data.keys()), list(channel_data.values()))
 
     def sweep_gates_2D(self, gate_names, amplitudes, period):
         pass
