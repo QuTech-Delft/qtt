@@ -157,6 +157,10 @@ class Sequencer:
         seq_data = (Templates.square(name), {'period': period*1e9, 'amplitude': amplitude})
         return {'NAME': name, 'WAVE': SequencePT(*(seq_data,)*repetitions), 'TYPE': DataTypes.QC_TOOLKIT}
 
+    @staticmethod
+    def make_marker(period, repetitions=1, uptime=0.2, name='marker'):
+        seq_data = (Templates.marker(name), {'period': period*1e9, 'uptime': uptime})
+        return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)), 'TYPE': DataTypes.QC_TOOLKIT}
 
 # UNITTESTS #
 

@@ -61,9 +61,13 @@ class VirtualAwg:
     def sweep_gates(self, gate_names, amplitudes, period):
         sequences = list()
         for gate_name, amplitude in zip(gate_names, amplitudes):
-            (awg_nr, channel_nr) = self.__gate_map[gate_name]
-            sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
-            sequences.append(sawtooth)
+            (awg_nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
+            if marker_nr:
+                marker = Sequencer.make_marker(period)
+                sequences.append(marker)
+            else:
+                sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
+                sequences.append(sawtooth)
         self.sequence_gates(gate_names, sequences)
 
     def pulse_gates(self, gate_names, amplitudes, period):
@@ -85,13 +89,23 @@ class VirtualAwg:
             channel_data = dict()
             waveform_data = dict()
             for (gate_name, sequence) in zip(gate_names, sequences):
-                (nr, channel_nr) = self.__gate_map[gate_name]
+                (nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
+                if marker_nr:
+                    continue
                 if nr == awg_nr:
                     sequence_name = '{}_{}'.format(gate_name, sequence['NAME'])
                     sampling_rate = self.awgs[awg_nr].get_sampling_rate()
                     sequence_data = Sequencer.get_data(sequence, sampling_rate)
                     data_count = len(sequence_data)
                     waveform_data[sequence_name] = [sequence_data, np.zeros(data_count), np.zeros(data_count)]
+                    # ...
+                    for (gate_name_t, sequence_t) in zip(gate_names, sequences):
+                        (awg_nr_t, channel_nr_t, *marker_nr_t) = self.__gate_map[gate_name_t]
+                        if awg_nr_t == awg_nr and channel_nr_t == channel_nr and marker_nr_t:
+                            marker_data = Sequencer.get_data(sequence_t, sampling_rate)
+                            if len(marker_data) != data_count:
+                                raise VirtualAwgError('Cannot add marker with unequal data-lenght!')
+                            waveform_data[sequence_name][marker_nr_t[0]] = marker_data
                     channel_data.setdefault(channel_nr, []).append(sequence_name)
             if do_upload:
                 self.awgs[awg_nr].upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))

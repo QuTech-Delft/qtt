@@ -45,3 +45,15 @@ class Templates:
             The sequence with the wait pulse.
         """
         return TablePT({name: [(0, 'offset'), ('holdtime', 'offset')]})
+
+    @staticmethod
+    def marker(name):
+        """Creates a TTL pulse QC toolkit template for sequencing.
+
+        Arguments:
+            name (str): The user defined name of the sequence.
+
+        Returns:
+            The sequence with the wait pulse.
+        """
+        return TablePT({name: [(0, 1), ('period*uptime', 0), ('period', 0)]})
