@@ -202,7 +202,7 @@ def plot_awg_to_plunger(result, fig=10):
             if offset is 0:
                 label = 'detected angle'
             qtt.pgeometry.plot2Dline(
-                [np.cos(angle), np.sin(angle), offset], 'm', label=label)
+                [np.cos(angle), -np.sin(angle), offset], 'm', label=label)
     plt.title('Detected line direction')
 
 
