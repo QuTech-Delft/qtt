@@ -28,65 +28,58 @@ import qtt.tools
 import qtt.data
 import qtt.algorithms
 import qtt.measurements
+import qtt.exceptions
 
 from qtt.version import __version__
 from qtt.tools import cfigure, plot2Dline
-#from qtt.data import *
-#from qtt.algorithms.functions import logistic
 from qtt.measurements.storage import save_state, load_state
-from qtt.loggingGUI import installZMQlogger
 
 import qtt.live_plotting
 import qtt.gui.parameterviewer
 from qtt.gui.parameterviewer import createParameterWidget
 
 from qtt.gui.dataviewer import DataViewer
-import qtt.exceptions
 
 #%% Check packages
 
 
-def check_version(version, module=qcodes):
+def check_version(version, module=qcodes, optional = False):
+    """ Check whether a module has the corret version """
     if isinstance(module, str):
         try:
             m = importlib.import_module(module)
             module = m
         except ModuleNotFoundError:
-            raise Exception('could not load module %s' % module)
+            if optional:
+                warnings.warn('optional package %s is not available' % module, qtt.exceptions.MissingOptionalPackageWarning)
+                return
+            else:
+                raise Exception('could not load module %s' % module)
             
     mversion = getattr(module, '__version__', None)
     if mversion is None:
         raise Exception(' module %s has no __version__ attribute' % (module,))
 
+            
     if distutils.version.StrictVersion(mversion) < distutils.version.StrictVersion(version):
-        raise Exception(' from %s need version %s' % (module, version))
+        if optional:
+            warnings.warn('package %s has incorrect version' % module, qtt.exceptions.PackageVersionWarning)
+        else:
+            raise Exception(' from %s need version %s (version is %s)' % (module, version, mversion))
 
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'colorama')
-try:
-    check_version('0.1', 'redis')
-except:
-    warnings.warn('missing redis package', qtt.exceptions.MissingOptionalPackageWarning)
+check_version('0.1', 'redis', optional=True)
+check_version('0.1.7', qcodes) # version of qcodes required
 
-_qversion = '0.1.7'  # version of qcodes required
-check_version(_qversion, qcodes)
-
-if sys.version_info.minor<6:
-    warnings.warn('please upgrade to python 3.6, we will not support versions <= 3.5 in the near future')
-
-
-#%%
-
-if qcodes.config['user'].get('deprecation_warnings', True):
-    # enable deprecation warnings
-    warnings.simplefilter("default", DeprecationWarning)
 
 #%% Load often used constructions
 
 from qtt.live_plotting import start_measurement_control
 
 
+@qtt.tools.deprecated
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()
