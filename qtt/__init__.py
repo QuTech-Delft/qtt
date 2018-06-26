@@ -1,4 +1,18 @@
-# set up the qtt namespace
+""" QuTech Tuning
+
+The QTT package contains functionality for the tuning and calibration of spin-qubits. The package is
+divided into subpacakges:
+
+    - Measurements: functionality to perform measurements on devices
+    - Algorithms: functionality to analyse measurements 
+    - Simulation: contains simulations of quantom dot systems
+    - Tools: misc tools
+    - Gui: Several gui element for visualization of data
+    - Instrument drivers: contains QCoDeS drivers for various instruments
+
+For more information see https://github.com/VandersypenQutech/qtt
+
+"""
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
 import copy
@@ -14,14 +28,11 @@ import qtt.tools
 import qtt.data
 import qtt.algorithms
 import qtt.measurements
-import qtt.utilities.markup as markup
-
 
 from qtt.version import __version__
-
 from qtt.tools import cfigure, plot2Dline
-from qtt.data import *
-from qtt.algorithms.functions import logistic
+#from qtt.data import *
+#from qtt.algorithms.functions import logistic
 from qtt.measurements.storage import save_state, load_state
 from qtt.loggingGUI import installZMQlogger
 
@@ -183,7 +194,7 @@ try:
     from qtpy import QtWidgets
     from qcodes.plots.pyqtgraph import QtPlot
 
-    def keyPressEvent(self, e):
+    def _qtt_keyPressEvent(self, e):
         ''' Patch to add a callback to the QtPlot figure window '''
         if e.key() == Qt.Key_P:
             print('key P pressed: copy figure window to powerpoint')
@@ -191,7 +202,7 @@ try:
         super(QtPlot, self).keyPressEvent(e)
 
     # update the keypress callback function
-    QtPlot.keyPressEvent = keyPressEvent
+    QtPlot.keyPressEvent = _qtt_keyPressEvent
 except:
     pass
 
