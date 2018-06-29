@@ -65,7 +65,8 @@ class videomode_callback:
             data (list or array): either a list with length the number of channels or a numpy array with all data
         """
 
-        minstrumenthandle = self.station.components[self.minstrument]
+        minstrumenthandle = qtt.measurements.scans.get_instrument(self.minstrument)
+
         data = qtt.measurements.scans.measuresegment(
             self.waveform, self.Naverage, minstrumenthandle, self.unique_channels)
 

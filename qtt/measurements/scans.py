@@ -220,15 +220,15 @@ def get_instrument(instr, station=None):
     """ Return handle to instrument
 
     Args:
-        instr (str, Instrument ): name of instrument or handle
+        instr (str, Instrument, tuple): name of instrument or handle
     """
-
-    if isinstance(instr, Instrument):
-        return instr
 
     if isinstance(instr, tuple):
         # assume the tuple is (instrument, channel)
         instr = instr[0]
+
+    if isinstance(instr, Instrument):
+        return instr
 
     if not isinstance(instr, str):
         raise Exception('could not find instrument %s' % str(instr))
