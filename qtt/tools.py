@@ -19,6 +19,7 @@ try:
     from dulwich import porcelain
 except ModuleNotFoundError:
     warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
+    NotGitRepository = Exception
 
 
 # explicit import
