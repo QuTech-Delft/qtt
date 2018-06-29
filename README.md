@@ -19,11 +19,15 @@ QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` 
   
 ## Installation
 
-For more detailed instructions read the file [INSTALL.md](INSTALL.md).
+Currently there are no pip packages for qtt. To install download the source code and install using the command:
+```
+python setup.py develop
+```
+For for Vandersypen research group there are more detailed instructions, read the file [INSTALL-spinqubits.md](INSTALL-spinqubits.md).
 
 ### Updating QTT
 
-If you registered Qcodes with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`
+If you registered qtt with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`
 
 ## Usage
 
