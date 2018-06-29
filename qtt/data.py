@@ -526,8 +526,8 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     Returns:
 
         extent (list): x1,x2,y1,y2
-        g0 (string): step gate
-        g1 (string): sweep gate
+        g0 (str): step gate (array_id)
+        g1 (str): sweep gate (array_id)
         vstep (array): step values
         vsweep (array): sweep values
         arrayname (string): identifier of the main array 
@@ -539,11 +539,10 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
 
     A = alldata.arrays[arrayname]
 
-    g0 = A.set_arrays[0].name
-    g1 = A.set_arrays[1].name
+    g0 = A.set_arrays[0].array_id
+    g1 = A.set_arrays[1].array_id
     vstep = np.array(A.set_arrays[0])
     vsweep = np.array(A.set_arrays[1])[0]
-    # extent = [vstep[0], vstep[-1], vsweep[0], vsweep[-1]] # change order?
     extent = [vsweep[0], vsweep[-1], vstep[0], vstep[-1]]  # change order?
 
     if verbose:
