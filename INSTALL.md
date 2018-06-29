@@ -52,7 +52,6 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 ```
 > conda env create -n [yourname] -f condalist.yml
 > activate [yourname]
-> pip install git+https://github.com/telegraphic/hickle.git@dev
 ```
 
 For Mac OS with anaconda type from the command line:
@@ -197,7 +196,7 @@ sudo apt-get install python3-rope python3-redis python3-skimage python3-sklearn 
 cd [QTTDIR]
 pip3 install --user -r develop_requirements.txt
 pip install dulwich --global-option="--pure"
-pip install git+https://github.com/telegraphic/hickle.git@dev
+pip install hickle
 ```
 
 
@@ -206,8 +205,7 @@ pip install git+https://github.com/telegraphic/hickle.git@dev
 > conda install numpy scipy pyqtgraph dulwich sympy spyder nose pandas pytables scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
 > cd [QTTDIR]
 > conda install -c conda-forge opencv
-> pip install spirack
-> pip install git+https://github.com/telegraphic/hickle.git@dev
+> pip install spirack hickle
 > pip install --user -r develop_requirements.txt
 ```
 
@@ -225,6 +223,7 @@ pip install git+https://github.com/telegraphic/hickle.git@dev
 
 ```
 pip install dulwich --global-option="--pure"
+pip install git+https://github.com/telegraphic/hickle.git@dev
 ```
 
 There was a bug in qtconsole, see [qtconsole#145](https://github.com/jupyter/qtconsole/pull/145), so do

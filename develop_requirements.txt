@@ -23,5 +23,9 @@ Polygon3
 pyzmqrpc
 redis
 pandoc
+hickle>= 3.1
 wrapt
+
+# for documentation building
 sphinx_rtd_theme
+sphinxcontrib.bibtex
