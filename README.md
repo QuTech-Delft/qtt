@@ -1,6 +1,6 @@
 # QuTech Tuning
 
-QTT is a Python-based framework developed by QuTech (TU Delft/TNO) for automated tuning of qubits.
+QTT is a Python-based framework developed by QuTech (TU Delft/TNO) for tuning and calibration of spin-qubits.
 
 Also see
 - [QuTech](https://http://qutech.nl/)
@@ -17,9 +17,6 @@ QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` 
 * [qtt](https://github.com/VandersypenQutech/qtt): contains additional functionality and algorithms
 * [spin-projects](https://github.com/VandersypenQutech/spin-projects): Contains hardware descriptions for experimential setups and project data.
   
-* (OLD) [stations](https://github.com/VandersypenQutech/stations): Contains hardware descriptions for experimential setups. There should be only one version of this repository and it should always match the current hardware.
-* (OLD) [users](https://github.com/VandersypenQutech/users): contains scripts and functions written by individual users
-
 ## Installation
 
 For more detailed instructions read the file [INSTALL.md](INSTALL.md).

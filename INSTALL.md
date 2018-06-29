@@ -54,19 +54,6 @@ Go to the location `[MYLOCALDIR]`/qtt and run
 > activate [yourname]
 ```
 
-For Mac OS with anaconda type from the command line:
-```
-> cd [MYLOCALDIR]/qtt
-> conda install --file requirements_mac.txt
-> conda install -c menpo opencv3
-> conda install -c nmearl pyqtgraph
-> pip install pyvisa
-```
-
-(For Mac OS using Python 3.4, follow instruction in this [blog post](http://www.pyimagesearch.com/2015/06/29/install-opencv-3-0-and-python-3-4-on-osx/) to install `openCV`)
-
-
-
 ## Install local packages
 
 - Register the qcodes, qtt and spin-projects repositories with Python. Open a command prompt, change to your environment and run the following command
@@ -74,24 +61,7 @@ in the directories `Qcodes`, `qtt`, `qc-toolkit`, `spin-projects` and `spin-proj
 ```
 > python setup.py develop    (Anaconda, while in your environment)
 ```
-
-Note: the following does NOT work with anaconda
-```
-> python setup.py develop --user
-```
 For Unix systems the proper command is `python setup.py develop --user`.
-
-## Optional: QI packages
-
-Run:
-```
-pip install --upgrade coverage aiozmq zmq serialize
-pip install control-software --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/control-software
-```
-If you have access, you can also get more recent versions using:
-```
-pip install git+https://github.com/qutech-sd/control-software
-```
 
 ## Hardware 
 
@@ -106,6 +76,18 @@ pip install git+https://github.com/qutech-sd/control-software
 pip install spirack
 
 ```
+
+## Install redis
+
+For Windows install redis from https://github.com/MSOpenTech/redis.
+To start the redis server use `redis-server.exe` from the command line (if this is not done automatically).
+
+For Unix systems follow the instructions of your OS. For Ubuntu it is:
+```
+sudo apt-get install redis-server
+sudo apt-get install python3-redis
+```
+
 ## Spyder
 
 * Use the IPython console and set the IPhyton backend graphics option to QT5. This ensures
@@ -115,7 +97,19 @@ Tools->Preferences->IPython console->Graphics->Backend
 ```
 * In Tools->Preferences->Python interpreter, uncheck the box Enable UMR 
 
-## Create startup shortcuts
+## Optional: QI packages
+
+Run:
+```
+pip install --upgrade coverage aiozmq zmq serialize
+pip install control-software --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/control-software
+```
+If you have access, you can also get more recent versions using:
+```
+pip install git+https://github.com/qutech-sd/control-software
+```
+
+## Optional: Create startup shortcuts
 
 For Spyder one can use something like:
 
@@ -156,16 +150,6 @@ jupyter notebook
 call deactivate %USERNAME%
 ```
 
-## Install redis
-
-For Windows install redis from https://github.com/MSOpenTech/redis.
-To start the redis server use `redis-server.exe` from the command line (if this is not done automatically).
-
-For Unix systems follow the instructions of your OS. For Ubuntu it is:
-```
-sudo apt-get install redis-server
-sudo apt-get install python3-redis
-```
 
 
 ## Git credentials
@@ -201,6 +185,9 @@ pip install hickle
 
 
 ### Manual installation:
+
+To update packages on an old installation, or to do manual installation of the packages one can use the following commands:
+
 ```
 > conda install numpy scipy pyqtgraph dulwich sympy spyder nose pandas pytables scikit-learn scikit-image rope jupyter matplotlib h5py pywin32 
 > cd [QTTDIR]
@@ -213,13 +200,18 @@ pip install hickle
 > pip install slacker attrs pyserial redis dulwich pyvisa Polygon3 colorama pyvisa
 ```
 
-### Development
+### Optional: Development
+
+For development (e.g. documentation building, debugging, etc.) additional pacakges are needed:
 
 ```
 > conda install pandoc redis ipython nbformat
+> pip install -r develop_requirements.txt
 ```
 
 ### Old commands
+
+Below are some commands that are not needed any more, but kept for reference.
 
 ```
 pip install dulwich --global-option="--pure"
