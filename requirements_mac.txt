@@ -1,7 +1,0 @@
-numpy
-qtpy
-spyder
-scipy
-pyqtgraph
-matplotlib
-ipywidgets
