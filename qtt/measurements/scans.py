@@ -387,7 +387,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         else:
             sweepvalues.set(x)
         if ix == 0:
-            qtt.time.sleep(wait_time_startscan)
+            time.sleep(wait_time_startscan)
         else:
             time.sleep(wait_time)
         for ii, p in enumerate(mparams):
@@ -478,7 +478,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     period = scanjob['sweepdata'].get('period', 1e-3)
 
-    t0 = qtt.time.time()
+    t0 = time.time()
 
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
@@ -512,7 +512,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
             waveform, sweep_info = station.awg.sweep_gate_virt(
                     fast_sweep_gates, sweeprange, period, delete=delete)
 
-    qtt.time.sleep(wait_time_startscan)
+    time.sleep(wait_time_startscan)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
 
@@ -1052,7 +1052,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
 
-    t0 = qtt.time.time()
+    t0 = time.time()
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
@@ -1076,14 +1076,14 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
         if verbose:
             t1 = time.time() - t0
-            t1_str = qtt.time.strftime('%H:%M:%S', qtt.time.gmtime(t1))
+            t1_str = time.strftime('%H:%M:%S', time.gmtime(t1))
             if(ix == 0):
                 time_est = len(sweepvalues) * len(stepvalues) * \
                     scanjob['sweepdata'].get('wait_time', 0) * 2
             else:
                 time_est = (t1) / ix * len(stepvalues) - t1
-            time_est_str = qtt.time.strftime(
-                '%H:%M:%S', qtt.time.gmtime(time_est))
+            time_est_str = time.strftime(
+                '%H:%M:%S', time.gmtime(time_est))
             if type(stepvalues) is np.ndarray:
                 tprint('scan2D: %d/%d, time %s (~%s remaining): setting %s to %s' %
                        (ix, len(stepvalues), t1_str, time_est_str, stepdata['param'].name, str(x)), dt=1.5)
@@ -1103,9 +1103,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 sweepvalues.set(y)
             if iy == 0:
                 if ix == 0:
-                    qtt.time.sleep(wait_time_startscan)
+                    time.sleep(wait_time_startscan)
                 else:
-                    qtt.time.sleep(wait_time_step)
+                    time.sleep(wait_time_step)
             if wait_time_sweep > 0:
                 time.sleep(wait_time_sweep)
 
@@ -1132,7 +1132,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
-    dt = qtt.time.time() - t0
+    dt = time.time() - t0
 
     if liveplotwindow:
         liveplotwindow.update_plot()
@@ -1682,7 +1682,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
     logging.info('scan2D: wait_time %f' % wait_time)
 
-    t0 = qtt.time.time()
+    t0 = time.time()
 
     if type(stepvalues) is np.ndarray:
         stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
@@ -1719,9 +1719,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         else:
             stepdata['param'].set(x)
         if ix == 0:
-            qtt.time.sleep(wait_time_startscan)
+            time.sleep(wait_time_startscan)
         else:
-            qtt.time.sleep(wait_time)
+            time.sleep(wait_time)
         data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
         for idm, mname in enumerate(measure_names):
             alldata.arrays[mname].ndarray[ix] = data[idm]
@@ -1736,7 +1736,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             break
     station.awg.stop()
 
-    dt = qtt.time.time() - t0
+    dt = time.time() - t0
 
     if liveplotwindow is not None:
         # final update
@@ -1883,7 +1883,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     Naverage = scanjob.get('Naverage', 20)
     resolution = scanjob.get('resolution', [80, 80])
 
-    t0 = qtt.time.time()
+    t0 = time.time()
 
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
@@ -1925,7 +1925,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         waveform, sweep_info = station.awg.sweep_2D_virt(
             samp_freq, fast_sweep_gates, fast_step_gates, sweepranges, resolution, delete=delete)
 
-    qtt.time.sleep(wait_time_startscan)
+    time.sleep(wait_time_startscan)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
 
@@ -1949,7 +1949,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
                                 preset_data=data, location=location, loc_record={'label': scanjob['scantype']})
 
-    dt = qtt.time.time() - t0
+    dt = time.time() - t0
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
