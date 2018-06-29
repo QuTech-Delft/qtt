@@ -19,7 +19,6 @@ QTT depends on Qcodes. Other repositories are the `user` scripts and `stations` 
 * [spin-projects](https://github.com/VandersypenQutech/spin-projects): Contains hardware descriptions for experimential setups and project data.
   
 
->>>>>>> clean up code
 ## Installation
 
 Currently there are no pip packages for qtt. To install download the source code and install using the command:
