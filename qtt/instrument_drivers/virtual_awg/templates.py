@@ -31,8 +31,8 @@ class Templates:
         Returns:
             The sequence with the sawtooth wave.
         """
-        return TablePT({name: [(0, 0), ('period/4', 'amplitude', 'linear'),
-                               ('period*3/4', '-amplitude', 'linear'), ('period', 0, 'linear')]})
+        return TablePT({name: [(0, 0), ('period*(1-width)/2', '-amplitude', 'linear'),
+                               ('period*(1-(1-width)/2)', 'amplitude', 'linear'), ('period', 0, 'linear')]})
 
     @staticmethod
     def hold(name):
@@ -56,4 +56,4 @@ class Templates:
         Returns:
             The sequence with the wait pulse.
         """
-        return TablePT({name: [(0, 1), ('period*uptime', 0), ('period', 0)]})
+        return TablePT({name: [(0, 0), ('period*offset', 1), ('period*(offset+uptime)', 0), ('period', 0)]})
