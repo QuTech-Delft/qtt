@@ -21,22 +21,35 @@ class KeysightM3202A_AWG(AwgCommon):
 
     @property
     def get(self):
-        raise NotImplementedError
+        return self.__awg        
 
     def run(self):
-        raise NotImplementedError
+        bit_mask = int('1'*self._channel_count, 2)
+        self.__awg.awg_start_multiple(bit_mask)
 
     def stop(self):
-        raise NotImplementedError
+        bit_mask = int('1'*self._channel_count, 2)
+        self.__awg.awg_start_multiple(bit_mask)
 
     def reset(self):
-        raise NotImplementedError
+        for channel in self._channel_numbers:
+            self.__awg.awg.AWGreset(channel)
 
     def enable_outputs(self, channels=None):
-        raise NotImplementedError
+        if not channels:
+            self.run()
+        if channels not in self._channel_numbers:
+            raise AwgCommonError('Invalid channel numbers!')
+        bit_mask = ''.join(['1' if ch in channels else '0' for ch in self._channel_numbers])
+        self.__awg.awg_start_multiple(bit_mask)
 
     def disable_outputs(self, channels=None):
-        raise NotImplementedError
+        if not channels:
+            self.stop()
+        if channels not in self._channel_numbers:
+            raise AwgCommonError('Invalid channel numbers!')
+        bit_mask = ''.join(['1' if ch in channels else '0' for ch in self._channel_numbers])
+        self.__awg.awg_stop_multiple(bit_mask)
 
     def change_setting(self, setting, value):
         raise NotImplementedError
@@ -51,7 +64,8 @@ class KeysightM3202A_AWG(AwgCommon):
         raise NotImplementedError
 
     def set_sampling_rate(self, sampling_rate):
-        raise NotImplementedError
+        for channel in self._channel_numbers:
+            self.__awg
 
     def get_sampling_rate(self, sampling_rate):
         raise NotImplementedError
