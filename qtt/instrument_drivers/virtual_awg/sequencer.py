@@ -126,7 +126,7 @@ class Sequencer:
         return serializer.deserialize(json_string)
 
     @staticmethod
-    def make_sawtooth_wave(amplitude, period, repetitions=1, name='sawtooth'):
+    def make_sawtooth_wave(amplitude, period, width=0.95, repetitions=1, name='sawtooth'):
         """Creates a sawtooth waveform of the type QC toolkit template.
 
         Arguments:
@@ -138,7 +138,9 @@ class Sequencer:
         Returns:
            (dict) A dictionary with name, type and template of the waveform.
         """
-        seq_data = (Templates.sawtooth(name), {'period': period*1e9, 'amplitude': amplitude/2})
+        if width <= 0 or width >= 1:
+            raise ValueError('Invalid argument value (0 < width < 1)!')
+        seq_data = (Templates.sawtooth(name), {'period': period*1e9, 'amplitude': amplitude, 'width': width})
         return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)), 'TYPE': DataTypes.QC_TOOLKIT}
 
     @staticmethod
@@ -158,8 +160,12 @@ class Sequencer:
         return {'NAME': name, 'WAVE': SequencePT(*(seq_data,)*repetitions), 'TYPE': DataTypes.QC_TOOLKIT}
 
     @staticmethod
-    def make_marker(period, repetitions=1, uptime=0.2, name='marker'):
-        seq_data = (Templates.marker(name), {'period': period*1e9, 'uptime': uptime})
+    def make_marker(period, uptime=0.2, offset=0.0, repetitions=1, name='marker'):
+        if uptime <= 0 or offset <= 0:
+            raise ValueError('Invalid argument value (uptime < 0 or offset < 0)!')
+        if uptime + offset > 1:
+            raise ValueError('Invalid argument value (uptime + offset > 1)!')
+        seq_data = (Templates.marker(name), {'period': period*1e9, 'uptime': uptime, 'offset': offset})
         return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)), 'TYPE': DataTypes.QC_TOOLKIT}
 
 # UNITTESTS #

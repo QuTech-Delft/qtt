@@ -1,8 +1,10 @@
 import logging
 import numpy as np
 
+from qcodes import Instrument
 from qtt.instrument_drivers.virtual_awg.sequencer import Sequencer
 from qtt.instrument_drivers.virtual_awg.awgs.Tektronix5014C import Tektronix5014C_AWG
+
 
 
 
@@ -10,9 +12,10 @@ class VirtualAwgError(Exception):
     """Exception for a specific error related to the virtual AWG."""
 
 
-class VirtualAwg:
+class VirtualAwg(Instrument):
 
-    def __init__(self, awgs, gate_map, logger=logging):
+    def __init__(self, awgs, gate_map, logger=logging, **kwargs):
+        super().__init__('virtual_awg', **kwargs)
         self.__gate_map = gate_map
         self.__set_hardware(awgs)
         self.__logger = logger
