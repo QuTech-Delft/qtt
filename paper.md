@@ -1,13 +1,15 @@
 ---
-title: qtt: QuTech Tuning. A package for tuning and calibration of spin-qubits
-tas:
-   - quantun dots
+title: 'qtt ( QuTech Tuning): a package for tuning and calibration of spin-qubits'
+tags:
+   - quantum dots
    - spin qubits
    - tuning
    - calibration
-authors
+authors:
   - name: Pieter Eendebak
     affiliation: "1 2"
+  - name: additional authors
+    affiliation: "2"
 affiliations:
   - name: TNO
     index: 1
@@ -20,20 +22,21 @@ bibliography: paper.bib
 # Summary
 
 The QuTech Tuning package (qtt) is a software package containing measurement routines and analysis functions 
-for the tuning and calibration of spin-qubits. An introduction to spin-qubits can be found~\cite{Lieven}.
+for the tuning and calibration of spin-qubits. An introduction to spin-qubits can be found~[@LievenSpins].
 
 The package is organized in the following subpackages:
 
 * Measurements
 * Algorithms
-* Tools
-* ...
+* Utilities
+* Gui
+* Instrument Drivers
 
 bla bla bla
 
 Conventions: qcodes Dataset, return arguments are dicts, etc.
 
-The methods from this paper have been used in the following papers: \cite{Baart2016}, \cite{Diepen2018}.
+The methods from this paper have been used in the following papers: [@Baart2016], [@Diepen2018].
 
 # Acknowledgements
 

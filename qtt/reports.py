@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 
+import qtt.tools
+
 try:
     from urllib import pathname2url as pathname2url
 except:
@@ -18,6 +20,7 @@ warnings.warn('please do not import this module, it will be removed in the futur
 #%%
 
 
+@qtt.tools.deprecated
 def reportTemplate(title):
     """ Create a markup object for a HTML page """
     page = markup.page()

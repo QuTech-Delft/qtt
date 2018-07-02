@@ -209,6 +209,9 @@ For development (e.g. documentation building, debugging, etc.) additional pacakg
 > pip install -r develop_requirements.txt
 ```
 
+### Optional: Generating documentation
+
+
 ### Old commands
 
 Below are some commands that are not needed any more, but kept for reference.
