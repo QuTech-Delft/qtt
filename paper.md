@@ -1,11 +1,11 @@
 ---
-title: qtt: QuTech Tuning. A package for tuning and calibration of spin-qubits
-tas:
-   - quantun dots
+title: 'qtt ( QuTech Tuning): a package for tuning and calibration of spin-qubits'
+tags:
+   - quantum dots
    - spin qubits
    - tuning
    - calibration
-authors
+authors:
   - name: Pieter Eendebak
     affiliation: "1 2"
 affiliations:
