@@ -32,9 +32,10 @@ Documentation
 
 .. toctree::
    :maxdepth: 2
-   
-   contributing
+
+   calibrations   
    algorithms
+   contributing
    
 
     
