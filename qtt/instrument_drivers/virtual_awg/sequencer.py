@@ -161,8 +161,8 @@ class Sequencer:
 
     @staticmethod
     def make_marker(period, uptime=0.2, offset=0.0, repetitions=1, name='marker'):
-        if uptime <= 0 or offset <= 0:
-            raise ValueError('Invalid argument value (uptime < 0 or offset < 0)!')
+        if uptime <= 0 or offset < 0:
+            raise ValueError('Invalid argument value (uptime <= 0 or offset < 0)!')
         if uptime + offset > 1:
             raise ValueError('Invalid argument value (uptime + offset > 1)!')
         seq_data = (Templates.marker(name), {'period': period*1e9, 'uptime': uptime, 'offset': offset})

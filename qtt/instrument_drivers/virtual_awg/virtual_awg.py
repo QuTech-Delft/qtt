@@ -13,8 +13,8 @@ class VirtualAwgError(Exception):
 
 class VirtualAwg(Instrument):
 
-    def __init__(self, awgs, gate_map, logger=logging, **kwargs):
-        super().__init__('virtual_awg', **kwargs)
+    def __init__(self, awgs, gate_map, name='virtual_awg', logger=logging, **kwargs):
+        super().__init__(name, **kwargs)
         self.__gate_map = gate_map
         self.__set_hardware(awgs)
         self.__logger = logger
@@ -24,7 +24,7 @@ class VirtualAwg(Instrument):
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
                 self.awgs.append(Tektronix5014C_AWG(awg))
-            if type(awg).__name__ == 'Keysight_M3201A':
+            elif type(awg).__name__ == 'Keysight_M3201A':
                 self.awgs.append(KeysightM3202A_AWG(awg))
             else:
                 raise VirtualAwgError('Unusable device added!')
@@ -62,15 +62,15 @@ class VirtualAwg(Instrument):
             return np.all([self.are_awg_gates(g) for g in gate_names])
         return True if gate_names in self.__gate_map else False
 
-    def sweep_gates(self, gate_names, amplitudes, period):
+    def sweep_gates(self, gate_names, amplitudes, period, width=0.95, marker_uptime=0.2, marker_offset=0.0):
         sequences = list()
         for gate_name, amplitude in zip(gate_names, amplitudes):
             (awg_nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
             if marker_nr:
-                marker = Sequencer.make_marker(period)
+                marker = Sequencer.make_marker(period, marker_uptime, marker_offset)
                 sequences.append(marker)
             else:
-                sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
+                sawtooth = Sequencer.make_sawtooth_wave(amplitude, period, width)
                 sequences.append(sawtooth)
         self.sequence_gates(gate_names, sequences)
 
