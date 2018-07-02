@@ -230,13 +230,15 @@ class DotSystem(BaseDotSystem):
 
 
 
-    def makevars(self):
+    def makevars(self, gates=False):
+        if gates:
+            self.la_mat = np.identity(self.ndots)
         for name in self.varnames:
             exec('self.' + name + ' = 0')
             # also define that these are float32 numbers!
             exec('self.M' + name + '= np.full((self.Nt, self.Nt), 0, dtype=int)')
 
-    def makevarMs(self):
+    def makevarMs(self, ring=False):
         ''' Create matrices for the interactions '''
         m = np.zeros((self.ndots), dtype=int)
 
@@ -254,7 +256,13 @@ class DotSystem(BaseDotSystem):
                         exec('self.Mdet' + str(dot) + '[' + str(i) + ',' + str(i) + '] =' + str([0, -1, -2, -3][n]))  # chemical potential
                         exec('self.MosC' + str(dot) + '[' + str(i) + ',' + str(i) + '] =' + str([0, 0, 1, 3][n]))  # on site charging energy?
                         n2 = self.basis[i, dot % self.ndots]
-                        exec('self.MisC' + str(dot) + '[' + str(i) + ',' + str(i) + '] =' + str(n * n2))  # next site charging energy?
+                        n3 = self.basis[i,(dot+1) % self.ndots]
+                        exec('self.MisC' + str(dot) + '[' + str(i) + ',' + str(i) + '] =' + str(n*n2)) # nearest-neighbour charging energy
+                        if hasattr(self, 'isC'+str(self.ndots+1)):
+                            if i % 2:
+                                exec('self.MisC'+str(self.ndots+2) + '[' + str(i) + ',' + str(i) + '] =' + str(n*n3)) # next-nearest-neighbour charging energy
+                            else:
+                                exec('self.MisC' + str(self.ndots+1) + '['+str(i) + ',' + str(i) + '] =' + str(n*n3)) # next-nearest-neighbour charging energy
                         for orb in range(1, n + 1):
                             var = 'self.Meps' + str(dot) + str(orb)
                             if hasattr(self, var):
@@ -262,14 +270,12 @@ class DotSystem(BaseDotSystem):
                 else:
                     statediff = self.basis[i, :] - self.basis[j, :]
 
-                    for p in range(self.ndots - 1):
+                    for p in range(self.ndots-1):   
                         pn = p + 1
-                        if (statediff == mkb(p, p + 1)).all():
-                            if hasattr(self, 'self.Mtun%d' % pn):
-                                exec('self.Mtun%d[' % pn + str(i) + ',' + str(j) + '] = -1')
-                        elif (statediff == mkb(p + 1, p)).all():
-                            if hasattr(self, 'self.Mtun%d' % pn):
-                                exec('self.Mtun%d[' % pn + str(i) + ',' + str(j) + '] = -1')
+                        if (statediff == mkb(p,pn)).all() or (statediff == mkb(pn,p)).all():
+                            exec('self.Mtun' + str(pn) + '[' + str(i) + ',' + str(j) + '] = -1')
+                        elif ring and ((statediff == mkb(0,self.ndots-1)).all() or (statediff == mkb(self.ndots-1,0)).all()):
+                            exec('self.Mtun' + str(self.ndots) + '[' + str(i) + ',' + str(j) + '] = -1')
                         pass
 
         self.initSparse()
@@ -339,6 +345,47 @@ class DotSystem(BaseDotSystem):
         return self.energies, self.eigenstates
 
     #%% Helper functions
+    def getall(self, param):
+        ''' Return all stored values for a particular parameter (e.g. 'det', 'tun', etc.) '''
+        return [getattr(self, param+str(i+1)) for i in range(self.ndots)]
+    
+    def setall(self, param, vals):
+        ''' Sets all values for a particular parameter (e.g. 'det', 'tun', etc.) '''
+        if param is 'P':
+            numvars = self.ndots
+        else:
+            numvars = 0
+            for var in self.varnames:
+                if param in var: numvars += 1
+        if len(vals) != numvars: raise(Exception('Need same amount of values as '+param))
+        for i in range(numvars):
+            setattr(self, param+str(i+1), vals[i])
+    
+    def setdetfromgates(self):
+        ''' After manually setting gates, run this function to set the correct det values that match that gate combination '''
+        pvals = np.array([getattr(self, 'P%d' % (i+1)) for i in range(self.ndots)])
+        dets = np.dot(self.la_mat,pvals)
+#        dets = []
+        for i in range(self.ndots):
+#            dets.append(np.sum(self.la_mat[i,:] * np.array(pvals)))
+            setattr(self, 'det%d' % (i+1), dets[i])
+        return dets
+    
+    def setgatesfromdet(self):
+        ''' After manually setting det variables, run this function to set the correct gate values '''
+        dvals = [getattr(self, 'det%d' % (i+1)) for i in range(self.ndots)]
+        gates = np.dot(np.linalg.inv(self.la_mat),dvals)
+        for i in range(self.ndots):
+#            gate = np.sum(vg_mat[i,:] * np.array(dvals))
+            setattr(self, 'P%d' % (i+1), gates[i])
+            
+    def increment(self, param, value):
+        ''' Increment the value of a gate or chemical potential '''
+        setattr(self, param, getattr(self, param) + value)
+        if 'P' in param:
+            self.setdetfromgates()
+        elif 'det' in param:
+            self.setgatesfromdet()
 
     def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
         self.vals2D = {}
@@ -352,6 +399,7 @@ class DotSystem(BaseDotSystem):
         for each point, search for transitions and save in self.honeycomb'''
         t0 = time.time()
         paramnames = list(self.vals2D.keys())
+        initparamvalues = self.getall('det')
         npointsx = np.shape(self.vals2D[paramnames[0]])[0]
         npointsy = np.shape(self.vals2D[paramnames[0]])[1]
         self.hcgs = np.empty((npointsx, npointsy, self.ndots))
@@ -372,10 +420,13 @@ class DotSystem(BaseDotSystem):
                 for j in range(npointsy):
                     for name in paramnames:
                         setattr(self, name, self.vals2D[name][i][j])
+                    if 'P' in paramnames[0]: self.setdetfromgates()
                     self.makeHsparse()
                     self.solveH(usediag=usediag)
                     self.hcgs[i, j] = self.OCC
         self.honeycomb, self.deloc = self.findtransitions(self.hcgs)
+        self.setall('det', initparamvalues)
+        if hasattr(self,'P1'): self.setgatesfromdet()            
 
         if verbose:
             print('simulatehoneycomb: %.2f [s]' % (time.time() - t0))
@@ -396,6 +447,7 @@ class DotSystem(BaseDotSystem):
             for j in range(npointsy):
                 for name in paramnames:
                     exec('self.' + name + ' = self.vals2D[name][' + str(i) + '][' + str(j) + ']')
+				
                 self.makeH()
                 self.solveH(usediag=usediag)
                 self.hcgs[i, j] = self.OCC
@@ -597,6 +649,21 @@ class FourDot(DotSystem):
             self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
         self.makevars()
         self.makevarMs()
+        # initial run
+        self.makeH()
+        self.solveH()
+        self.findcurrentoccupancy()
+
+class TwoXTwo(DotSystem):    
+    def __init__(self, name='2x2'):
+        super().__init__(name=name, ndots=4)									
+        self.makebasis(ndots=self.ndots, maxelectrons=2)
+        self.varnames = ['det1','det2','det3','det4',
+                         'osC1','osC2','osC3','osC4',
+                         'isC1','isC2','isC3','isC4','isC5','isC6',
+                         'tun1','tun2','tun3','tun4']
+        self.makevars(gates=True)
+        self.makevarMs(ring=True)
         # initial run
         self.makeH()
         self.solveH()
