@@ -1,10 +1,10 @@
 import logging
 import numpy as np
+import qtt.instrument_drivers.virtual_awg.awgs.Tektronix5014C as Tektronix5014C
+import qtt.instrument_drivers.virtual_awg.awgs.KeysightM3202A as KeysightM3202A
 
 from qcodes import Instrument
 from qtt.instrument_drivers.virtual_awg.sequencer import Sequencer
-from qtt.instrument_drivers.virtual_awg.awgs.Tektronix5014C import Tektronix5014C_AWG
-from qtt.instrument_drivers.virtual_awg.awgs.KeysightM3202A import KeysightM3202A_AWG
 
 
 class VirtualAwgError(Exception):
@@ -13,8 +13,11 @@ class VirtualAwgError(Exception):
 
 class VirtualAwg(Instrument):
 
-    def __init__(self, awgs, gate_map, name='virtual_awg', logger=logging, **kwargs):
+    __volt_to_millivolt = 1e-3
+    
+    def __init__(self, awgs, gate_map, hardware, name='virtual_awg', logger=logging, **kwargs):
         super().__init__(name, **kwargs)
+        self.__hardware = hardware
         self.__gate_map = gate_map
         self.__set_hardware(awgs)
         self.__logger = logger
@@ -23,9 +26,9 @@ class VirtualAwg(Instrument):
         self.awgs = list()
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
-                self.awgs.append(Tektronix5014C_AWG(awg))
+                self.awgs.append(Tektronix5014C.Tektronix5014C_AWG(awg))
             elif type(awg).__name__ == 'Keysight_M3201A':
-                self.awgs.append(KeysightM3202A_AWG(awg))
+                self.awgs.append(KeysightM3202A.KeysightM3202A_AWG(awg))
             else:
                 raise VirtualAwgError('Unusable device added!')
         self.__awg_range = range(0, len(self.awgs))
@@ -63,6 +66,9 @@ class VirtualAwg(Instrument):
         return True if gate_names in self.__gate_map else False
 
     def sweep_gates(self, gate_names, amplitudes, period, width=0.95, marker_uptime=0.2, marker_offset=0.0):
+        if type(gate_names) == 'str':
+            gate_names = [gate_names]
+            amplitudes = [amplitudes]
         sequences = list()
         for gate_name, amplitude in zip(gate_names, amplitudes):
             (awg_nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
@@ -70,22 +76,32 @@ class VirtualAwg(Instrument):
                 marker = Sequencer.make_marker(period, marker_uptime, marker_offset)
                 sequences.append(marker)
             else:
-                sawtooth = Sequencer.make_sawtooth_wave(amplitude, period, width)
+                volt_peak_to_peak = amplitude * VirtualAwg.__volt_to_millivolt
+                sawtooth = Sequencer.make_sawtooth_wave(volt_peak_to_peak, period, width)
                 sequences.append(sawtooth)
         self.sequence_gates(gate_names, sequences)
 
-    def pulse_gates(self, gate_names, amplitudes, period):
+    def pulse_gates(self, gate_names, amplitudes, period, marker_uptime=0.2, marker_offset=0.0):
+        if type(gate_names) == 'str':
+            gate_names = [gate_names]
+            amplitudes = [amplitudes]
         sequences = list()
-        for amplitude in amplitudes:
-            sawtooth = Sequencer.make_square_wave(amplitude, period)
-            sequences.append(sawtooth)
+        for gate_name, amplitude in zip(gate_names, amplitudes):
+            (awg_nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
+            if marker_nr:
+                marker = Sequencer.make_marker(period, marker_uptime, marker_offset)
+                sequences.append(marker)
+            else:
+                sawtooth = Sequencer.make_square_wave(amplitude, period)
+                sequences.append(sawtooth)
         self.sequence_gates(gate_names, sequences)
 
     def sequence_gates(self, gate_names, sequences, do_upload=True):
+        if type(gate_names) == 'str':
+            gate_names = [gate_names]
+            sequences = [sequences]
         if len(gate_names) != len(sequences):
             raise VirtualAwgError('Gate and sequence count do not match!')
-        if len(gate_names) == 0:
-            raise VirtualAwgError('Cannot upload an empty set of gates/sequences.')
         # check value gate_names and lengths of sequences per row...
         if do_upload:
             [awg.delete_waveforms() for awg in self.awgs]
@@ -99,9 +115,18 @@ class VirtualAwg(Instrument):
                 if nr == awg_nr:
                     sequence_name = '{}_{}'.format(gate_name, sequence['NAME'])
                     sampling_rate = self.awgs[awg_nr].get_sampling_rate()
-                    sequence_data = Sequencer.get_data(sequence, sampling_rate)
+                    vpp_amplitude = self.awgs[awg_nr].get_setting('amplitudes')
+                    awg_to_plunger = self.__hardware.parameters['awg_to_{}'.format(gate_name)].get()
+                    self.sequence = sequence
+                    scaling_ratio = 1e3 / awg_to_plunger / vpp_amplitude * 2.0
+                    sample_data = Sequencer.get_data(sequence, sampling_rate)
+                    sequence_data = sample_data * scaling_ratio
+                    print('min {0}, max {1}, scaling {2}, values {3}'.format(min(sample_data), max(sample_data), scaling_ratio, max(sample_data) * scaling_ratio))
+                    self.pre_data = sample_data
+                    self.seq_data = sequence_data
                     data_count = len(sequence_data)
                     waveform_data[sequence_name] = [sequence_data, np.zeros(data_count), np.zeros(data_count)]
+
                     # ...
                     for (gate_name_t, sequence_t) in zip(gate_names, sequences):
                         (awg_nr_t, channel_nr_t, *marker_nr_t) = self.__gate_map[gate_name_t]

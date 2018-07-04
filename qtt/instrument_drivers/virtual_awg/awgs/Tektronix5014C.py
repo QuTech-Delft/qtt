@@ -61,6 +61,11 @@ class Tektronix5014C_AWG(AwgCommon):
                                  value, setting.minimum, setting.maximum))
         self.update_settings()
 
+    def get_setting(self, key):
+        if key not in self.__settings.keys():
+            raise AwgCommonError('Invalid setting {}'.format(key))
+        return self.__settings[key].value
+
     def set_mode(self, mode):
         modes = ['CONT', 'SEQ']
         if mode not in modes:
@@ -77,7 +82,7 @@ class Tektronix5014C_AWG(AwgCommon):
         return self.__awg.get('clock_freq')
 
     def set_gain(self, channel, gain):
-        return self.__awg.set('ch{0}_amp'.format(channel), gain)
+        self.__awg.set('ch{0}_amp'.format(channel), gain)
 
     def get_gain(self, channel):
         return self.__awg.get('ch{0}_amp'.format(channel))
