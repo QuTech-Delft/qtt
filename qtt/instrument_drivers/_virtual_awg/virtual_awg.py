@@ -113,7 +113,7 @@ class VirtualAwg(Instrument):
                 if marker_nr:
                     continue
                 if nr == awg_nr:
-                    sequence_name = '{}_{}'.format(gate_name, sequence['NAME'])
+                    sequence_name = '{}_{}'.format(gate_name, sequence['name'])
                     sampling_rate = self.awgs[awg_nr].get_sampling_rate()
                     vpp_amplitude = self.awgs[awg_nr].get_setting('amplitudes')
                     awg_to_plunger = self.__hardware.parameters['awg_to_{}'.format(gate_name)].get()

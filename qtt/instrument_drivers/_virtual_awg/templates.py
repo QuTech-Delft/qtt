@@ -3,8 +3,8 @@ from qctoolkit.pulses import TablePT
 
 class DataTypes:
     """ The possible data types for the pulse creation."""
-    RAW_DATA = 'RAW_DATA'
-    QC_TOOLKIT = 'QC_TOOLKIT'
+    RAW_DATA = 'rawdata'
+    QC_TOOLKIT = 'qctoolkit'
 
 
 class Templates:
@@ -56,4 +56,4 @@ class Templates:
         Returns:
             The sequence with the wait pulse.
         """
-        return TablePT({name: [(0, 0), ('period*offset', 1), ('period*(offset+uptime)', 0), ('period', 0)]})
+        return TablePT({name: [(0, 0), ('offset', 1), ('offset+uptime', 0), ('period', 0)]})
