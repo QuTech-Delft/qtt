@@ -1,18 +1,18 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from qctoolkit.pulses import SequencePT, TablePT
+from qctoolkit.pulses import SequencePT
 from qctoolkit.pulses.plotting import (PlottingNotPossibleException, plot, render)
 from qctoolkit.pulses.sequencing import Sequencer as Sequencing
 from qctoolkit.serialization import Serializer, DictBackend
 from qtt.instrument_drivers._virtual_awg.templates import DataTypes, Templates
-from qtt.instrument_drivers._virtual_awg.serializer import StringBackend
+# from qtt.instrument_drivers._virtual_awg.serializer import StringBackend
 
 
 class Sequencer:
 
     """Conversion factor from seconds to nano-seconds."""
-    __sec_to_ns = 1e-9
+    __sec_to_ns = 1e9
 
     @staticmethod
     def __qc_toolkit_template_to_array(sequence, sampling_rate):
@@ -28,14 +28,14 @@ class Sequencer:
             voltages (np.array): The array with voltages generated from the template.
         """
         sequencer = Sequencing()
-        template = sequence['WAVE']
+        template = sequence['wave']
         channels = template.defined_channels
         sequencer.push(template, dict(), channel_mapping={ch: ch for ch in channels},
                        window_mapping={w: w for w in template.measurement_names})
         instructions = sequencer.build()
         if not sequencer.has_finished():
             raise PlottingNotPossibleException(template)
-        (_, voltages) = render(instructions, sampling_rate * Sequencer.__sec_to_ns)
+        (_, voltages) = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
         return voltages[next(iter(voltages))]
 
     @staticmethod
@@ -51,7 +51,7 @@ class Sequencer:
         Returns:
             voltages (np.array): The array with voltages generated from the template.
         """
-        return sequence['WAVE']
+        return sequence['wave']
 
     @staticmethod
     def get_data(sequence, sampling_rate):
@@ -69,7 +69,7 @@ class Sequencer:
         Returns:
             A numpy.ndarray with the corresponding sampled voltages.
         """
-        data_type = sequence['TYPE']
+        data_type = sequence['type']
         switch = {DataTypes.RAW_DATA: Sequencer.__raw_data_to_array,
                   DataTypes.QC_TOOLKIT: Sequencer.__qc_toolkit_template_to_array}
         to_array_function = switch[data_type]
@@ -88,14 +88,14 @@ class Sequencer:
     @staticmethod
     def __qc_toolkit_template_plot(sequence, sampling_rate):
         """Plots a QC toolkit sequence."""
-        ns_sample_rate = sampling_rate * Sequencer.__sec_to_ns
-        plot(sequence['WAVE'], sample_rate=ns_sample_rate)
+        ns_sample_rate = sampling_rate / Sequencer.__sec_to_ns
+        plot(sequence['wave'], sample_rate=ns_sample_rate)
         plt.show()
 
     @staticmethod
     def plot(sequence, sampling_rate):
         """Creates a plot for viewing the sequence."""
-        data_type = sequence['TYPE']
+        data_type = sequence['type']
         switch = {DataTypes.RAW_DATA: Sequencer.__raw_data_plot,
                   DataTypes.QC_TOOLKIT: Sequencer.__qc_toolkit_template_plot}
         plot_function = switch[data_type]
@@ -113,11 +113,11 @@ class Sequencer:
 
     @staticmethod
     def serialize(sequence):
-        data_type = sequence['TYPE']
+        data_type = sequence['type']
         switch = {DataTypes.RAW_DATA: Sequencer.__raw_data_serialize,
                   DataTypes.QC_TOOLKIT: Sequencer.__qc_toolkit_serialize}
         serialize_function = switch[data_type]
-        return serialize_function(sequence['WAVE'])
+        return serialize_function(sequence['wave'])
 
     @staticmethod
     def deserialize(json_string):
@@ -140,8 +140,9 @@ class Sequencer:
         """
         if width <= 0 or width >= 1:
             raise ValueError('Invalid argument value (0 < width < 1)!')
-        seq_data = (Templates.sawtooth(name), {'period': period*1e9, 'amplitude': amplitude, 'width': width})
-        return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)), 'TYPE': DataTypes.QC_TOOLKIT}
+        input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0, 'width': width}
+        sequence_data = (Templates.sawtooth(name), input_variables)
+        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)), 'type': DataTypes.QC_TOOLKIT}
 
     @staticmethod
     def make_square_wave(amplitude, period, repetitions=1, name='pulse'):
@@ -156,31 +157,50 @@ class Sequencer:
         Returns:
             (dict): A dictionary with name, type and template of the waveform.
         """
-        seq_data = (Templates.square(name), {'period': period*1e9, 'amplitude': amplitude})
-        return {'NAME': name, 'WAVE': SequencePT(*(seq_data,)*repetitions), 'TYPE': DataTypes.QC_TOOLKIT}
+        input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0}
+        sequence_data = (Templates.square(name), input_variables)
+        return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions), 'type': DataTypes.QC_TOOLKIT}
 
     @staticmethod
     def make_marker(period, uptime=0.2, offset=0.0, repetitions=1, name='marker'):
+        """Creates a marker block waveforms of the type QC toolkit template.
+
+        Arguments:
+            period (float): The period of the waveform in seconds.
+            uptime (float): The marker up period in seconds.
+            offset (float): The marker delay in seconds.
+            repetitions (int): The number of oscillations in the sequence.
+            name (str): The name of the returned sequence.
+
+        Returns:
+            (dict): A dictionary with name, type and template of the waveform.
+        """
         if uptime <= 0 or offset < 0:
             raise ValueError('Invalid argument value (uptime <= 0 or offset < 0)!')
-        if uptime + offset > 1:
-            raise ValueError('Invalid argument value (uptime + offset > 1)!')
-        seq_data = (Templates.marker(name), {'period': period*1e9, 'uptime': uptime, 'offset': offset})
-        return {'NAME': name, 'WAVE': SequencePT(*((seq_data,)*repetitions)), 'TYPE': DataTypes.QC_TOOLKIT}
+        if uptime + offset > period:
+            raise ValueError('Invalid argument value (uptime + offset > period)!')
+        input_variables = {'period': period*Sequencer.__sec_to_ns,
+                           'uptime': uptime*Sequencer.__sec_to_ns,
+                           'offset': offset*Sequencer.__sec_to_ns}
+        sequence_data = (Templates.marker(name), input_variables)
+        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)), 'type': DataTypes.QC_TOOLKIT}
+
 
 # UNITTESTS #
 
 def test_make_sawtooth_HasCorrectProperties():
-    period = 1e-6
+    epsilon = 1e-14
+    period = 1e-3
     amplitude = 1.5
     sampling_rate = 1e9
-    sawtooth_sequence = Sequencer.make_sawtooth_wave(amplitude, period=period)
+    sawtooth_sequence = Sequencer.make_sawtooth_wave(amplitude, period)
     raw_data = Sequencer.get_data(sawtooth_sequence, sampling_rate)
-    assert(np.max(raw_data) == amplitude/2)
-    assert(np.min(raw_data) == -amplitude/2)
     assert(len(raw_data) == sampling_rate*period+1)
-
+    assert(np.abs(np.min(raw_data) + amplitude/2) <= epsilon)
+    assert(np.abs(np.max(raw_data) - amplitude/2) <= epsilon)
 
 def test_serializer():
-    sawtooth = Sequencer.make_sawtooth_wave(1.5, 1e-6, repetitions=1)
+    period =1e-6
+    amplitude = 1.5
+    sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
     return Sequencer.serialize(sawtooth)
