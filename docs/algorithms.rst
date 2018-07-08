@@ -1,7 +1,7 @@
 Algorithms
 ============
 
-Algorithms have as input data (typically as a QCoDeS dataset) and parameters of the algorihm. 
+Algorithms have as input data (typically as a QCoDeS dataset) and parameters of the algorithm. 
 The output is a dictionary with the main results as keys of the dictionary.
 
 
