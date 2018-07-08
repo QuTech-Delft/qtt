@@ -35,6 +35,7 @@ Documentation
 
    calibrations   
    algorithms
+   simulation
    contributing
    
 
