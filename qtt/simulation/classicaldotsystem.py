@@ -83,7 +83,7 @@ class ClassicalDotSystem(BaseDotSystem):
 
         idx = np.argsort(self.energies)
         self.energies = self.energies[idx]
-        self.eigenstates[:] = 0  # =np.zeros( (self.Nt, self.Nt), dtype=float)
+        self.eigenstates[:] = 0  
         for i, j in enumerate(idx):
             self.eigenstates[j, i] = 1
         return energies

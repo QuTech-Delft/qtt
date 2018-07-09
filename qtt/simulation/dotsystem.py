@@ -597,6 +597,7 @@ class DotSystem(BaseDotSystem):
             print(name + ' = ' + str(eval('self.' + name)))
         print(' ')
 
+    @qtt.tools.deprecated
     def getHn(self, numberofelectrons):
         inds = np.where(self.nbasis == numberofelectrons)[0]
         return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]
