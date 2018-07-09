@@ -695,3 +695,13 @@ class TwoXTwo(DotSystem):
         self.makeH()
         self.solveH()
         self.findcurrentoccupancy()
+
+def test_twoxtwo():
+    m=TwoXTwo()
+    m.calculate_energies(np.random.rand(m.ndots))
+    m.solveH()
+    if __name__=='__main__':
+        m.showstates(81)
+
+if __name__=='__main__':
+    test_twoxtwo()
