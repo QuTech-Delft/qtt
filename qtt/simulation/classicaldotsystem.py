@@ -61,32 +61,24 @@ class ClassicalDotSystem(BaseDotSystem):
         self.W = np.zeros((ncr(ndots, 2),))  # coulomb repulsion
         self.alpha = np.zeros((ndots, ngates))  # virtual gate matrix, mapping gates to chemical potentials
 
-        self.makebasis_extra()
+        self._makebasis_extra()
 
-    def makebasis_extra(self):
+    def _makebasis_extra(self):
         """ Define a basis of occupancy states """
         # make addition energy basis
-        self.add_basis = self.basis.copy()
-        self.coulomb_energy = np.zeros((self.basis.shape[0], self.W.size))
+        self._add_basis = self.basis.copy()
+        self._coulomb_energy = np.zeros((self.basis.shape[0], self.W.size))
         for i in range(self.Nt):
-            self.add_basis[i] = (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
-            self.coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
+            self._add_basis[i] = (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
+            self._coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
 
     def calculate_energies(self, gatevalues):
         """ Calculate the energies of all dot states, given a set of gate values. Returns array of energies. """
         energies = np.zeros((self.Nt,))
         tmp1 = -(self.mu0 + np.dot(self.alpha, gatevalues))
-        if 0:
-            for i in range(self.Nt):
-                energy = 0
-                energy += np.dot(tmp1, self.basis[i])
-                energy += np.dot(self.coulomb_energy[i], self.W)
-                energy += np.dot(self.add_basis[i], self.Eadd)
-                energies[i] = energy
-        else:
-            energies += self.basis.dot(tmp1) # chemical potentiol times number of electrons
-            energies += self.coulomb_energy.dot(self.W) # coulomb repulsion
-            energies += self.add_basis.dot(self.Eadd) # addition energy
+        energies += self.basis.dot(tmp1) # chemical potential times number of electrons
+        energies += self._coulomb_energy.dot(self.W) # coulomb repulsion
+        energies += self._add_basis.dot(self.Eadd) # addition energy
         self.energies = energies
 
         idx = np.argsort(self.energies)
