@@ -40,6 +40,8 @@ extras = {
     'colorama': ('colorama', '0.1', None),    
     'apscheduler': ('apscheduler', '3.4', None),    
     'Polygon3': ('Polygon', '0.1', None),    
+    'pyqtgraph': ('pyqtgraph', '0.11', None),    
+    'pyqt5': ('PyQt5', '0.11', 'pyqt5'),    
 }
 
 if platform.system()=='Windows':
