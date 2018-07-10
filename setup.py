@@ -80,7 +80,7 @@ setup(name='qtt',
       #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
       install_requires=[
           'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
-          'numpy>=1.10',
+          'numpy>=1.10', 'scikit-image', 
           'IPython>=0.1',
           'qcodes>=0.1.5',
           'Polygon3',
