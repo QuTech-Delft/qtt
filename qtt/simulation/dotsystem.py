@@ -83,7 +83,6 @@ def simulate_row(i, ds, npointsy, usediag):
     for j in range(npointsy):
         for name in paramnames:
             setattr(dsx, name, dsx.vals2D[name][i][j])
-        if 'P' in paramnames[0]: dsx.setdetfromgates()
         dsx.makeH()
         dsx.solveH(usediag=usediag)
         dsx.hcgs[i, j] = dsx.OCC
@@ -352,7 +351,7 @@ class DotSystem(BaseDotSystem):
         ''' Return all stored values for a particular parameter
         
         Args:
-            param (str): det, P, osC, isC or tun
+            param (str): det, osC, isC or tun
         
         Returns:
             vals (list): values corresponding to the parameter that was queried
@@ -367,7 +366,7 @@ class DotSystem(BaseDotSystem):
         ''' Sets all values for a particular parameter
         
         Args:
-            param (str): det, P, osC, isC or tun
+            param (str): det, osC, isC or tun
             vals (list): values corresponding to the parameter to be set
         '''
         numvars = 0
@@ -376,43 +375,7 @@ class DotSystem(BaseDotSystem):
         if len(vals) != numvars: raise(Exception('Need same amount of values as '+param))
         for i in range(numvars):
             setattr(self, param + str(i + 1), vals[i])
-        if hasattr(self,'P1'):
-            if 'P' in param:
-                self.setdetfromgates()
-            elif 'det' in param:
-                self.setgatesfromdet()
     
-    def setdetfromgates(self):
-        ''' After manually setting gates, run this function to set the correct det values that match that gate combination '''
-        pvals = np.array([getattr(self, 'P%d' % (i+1)) for i in range(self.ndots)])
-        dets = np.dot(self.la_mat,pvals)
-#        dets = []
-        for i in range(self.ndots):
-#            dets.append(np.sum(self.la_mat[i,:] * np.array(pvals)))
-            setattr(self, 'det%d' % (i+1), dets[i])
-        return dets
-    
-    def setgatesfromdet(self):
-        ''' After manually setting det variables, run this function to set the correct gate values '''
-        dvals = [getattr(self, 'det%d' % (i+1)) for i in range(self.ndots)]
-        gates = np.dot(np.linalg.inv(self.la_mat),dvals)
-        for i in range(self.ndots):
-#            gate = np.sum(vg_mat[i,:] * np.array(dvals))
-            setattr(self, 'P%d' % (i+1), gates[i])
-            
-    def increment(self, param, val):
-        ''' Increment the value of a parameter
-        
-        Args:
-            param (str): det, P, osC, isC or tun
-            val (float): increment value for the parameter
-        '''
-        setattr(self, param, getattr(self, param) + val)
-        if 'P' in param:
-            self.setdetfromgates()
-        elif 'det' in param:
-            self.setgatesfromdet()
-
     def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
         self.vals2D = {}
         for i in range(paramvalues2D.shape[0]):
@@ -444,11 +407,8 @@ class DotSystem(BaseDotSystem):
                     tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
 
                 for j in range(npointsy):
-                    isparamgate = False
                     for name in paramnames:
                         setattr(self, name, self.vals2D[name][i][j])
-                        if name.startswith('P'): isparamgate = True
-                    if isparamgate: self.setdetfromgates()
                     self.makeHsparse()
                     self.solveH(usediag=usediag)
                     self.hcgs[i, j] = self.OCC
