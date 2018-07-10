@@ -318,7 +318,9 @@ class DotSystem(BaseDotSystem):
         self.initSparse()
 
     def initSparse(self):
-        ''' Create sparse structures '''
+        """ Create sparse structures 
+        Constructing a matrix using sparse elements can be faster than construction of a full matrix, especially for larger systems.
+        """
         self.H = np.zeros((self.Nt, self.Nt), dtype=float)
         # self.sH = smtype(self.H)
 
