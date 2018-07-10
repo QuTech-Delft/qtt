@@ -90,7 +90,8 @@ def simulate_row(i, ds, npointsy, usediag):
 
 
 #%%
-# move into class?
+
+@qtt.tools.deprecated
 def defaultVmatrix(n):
     """ Helper function 
     >>> m=defaultVmatrix(2)
@@ -107,17 +108,17 @@ def defaultVmatrix(n):
     return VmatrixF
 
 class GateTransform:
-    ''' Class to describe virtual gate transformations '''
-    # FIXME: move into other submodule
 
     def __init__(self, Vmatrix, sourcenames, targetnames):
+        """ Class to describe a linear transformation between source and target gates """
         self.Vmatrix = np.array(Vmatrix).astype(np.float32)
         self.sourcenames = sourcenames
         self.targetnames = targetnames
 
     def transformGateScan(self, vals2D, nn=None):
-        '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
-        to generate dictionary self.vals2D[name] = matrix of values'''
+        """ Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
+        to generate dictionary self.vals2D[name] = matrix of values
+        """
         vals2Dout = {}
 
         zz = np.zeros(nn, dtype=float)
@@ -137,9 +138,36 @@ class GateTransform:
 #%%
 
 class BaseDotSystem():
+    """ Base class for the dot simulation classes
+    
+    Based on the arguments the system calculates the energies of the different
+    dot states. Using the energies the ground state, occupancies etc. can be calculated.
+    The spin-state of electrons in the dots is ignored.
 
+    The main functionality:
+            
+        * Build a Hamiltonian from the number of dots 
+        * Solve for the eigenvalues and eigenstates of the Hamiltonian
+        * Present the results.
+            
+    The model used is [reference xxx]        
+
+    Attributes:
+        
+        Nt (int): number of basis states
+        H (array): Hamiltonian of the system
+        
+        energies (array): calculated energy for each state (ordered)
+        states (array): eigenstates expressed in the basis states
+        stateprobs (array): ?
+        stateoccs (array): ?
+        nstates (array): for each state the number of electrons
+        
+    """
+    
     @abstractmethod
     def calculate_ground_state(self, gatevalues):
+        """ Calculate ground state for a set of gatevalues """
         pass
 
     # could be a static method
@@ -148,33 +176,23 @@ class BaseDotSystem():
         transitions = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
         delocalizations = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
 
-        if 1:
-            d1 = np.sum(np.absolute(occs - np.roll(occs, 1, axis=0)), axis=2)
-            d2 = np.sum(np.absolute(occs - np.roll(occs, -1, axis=0)), axis=2)
-            d3 = np.sum(np.absolute(occs - np.roll(occs, 1, axis=1)), axis=2)
-            d4 = np.sum(np.absolute(occs - np.roll(occs, -1, axis=1)), axis=2)
-            transitions = d1 + d2 + d3 + d4
-            # fix borders
-            transitions[0, :] = 0
-            transitions[-1, :] = 0
-            transitions[:, 0] = 0
-            transitions[:, -1] = 0
+        d1 = np.sum(np.absolute(occs - np.roll(occs, 1, axis=0)), axis=2)
+        d2 = np.sum(np.absolute(occs - np.roll(occs, -1, axis=0)), axis=2)
+        d3 = np.sum(np.absolute(occs - np.roll(occs, 1, axis=1)), axis=2)
+        d4 = np.sum(np.absolute(occs - np.roll(occs, -1, axis=1)), axis=2)
+        transitions = d1 + d2 + d3 + d4
+        # fix borders
+        transitions[0, :] = 0
+        transitions[-1, :] = 0
+        transitions[:, 0] = 0
+        transitions[:, -1] = 0
 
-            occs1 = occs % 1
+        occs1 = occs % 1
 
-            for mi in range(occs.shape[2]):
-                m1 = np.minimum(occs1[:, :, mi], np.abs(1 - occs1[:, :, mi]))
-                delocalizations[1:-1, 1:-1] += m1[1:-1, 1:-1]
+        for mi in range(occs.shape[2]):
+            m1 = np.minimum(occs1[:, :, mi], np.abs(1 - occs1[:, :, mi]))
+            delocalizations[1:-1, 1:-1] += m1[1:-1, 1:-1]
 
-        else:
-            for i in range(1, np.shape(occs)[0] - 1):
-                for j in range(1, np.shape(occs)[1] - 1):
-                    diff1 = np.sum(np.absolute(occs[i, j] - occs[i - 1, j - 1]))
-                    diff2 = np.sum(np.absolute(occs[i, j] - occs[i - 1, j + 1]))
-                    diff3 = np.sum(np.absolute(occs[i, j] - occs[i + 1, j - 1]))
-                    diff4 = np.sum(np.absolute(occs[i, j] - occs[i + 1, j + 1]))
-                    transitions[i, j] = diff1 + diff2 + diff3 + diff4
-                    delocalizations[i, j] = min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1)) + min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1)) + min(occs[i, j, 0] % 1, abs(1 - occs[i, j, 0] % 1))
         return transitions, delocalizations
 
     def orderstatesbyN(self):
@@ -204,7 +222,12 @@ class BaseDotSystem():
         print(' ')
 
     def makebasis(self, ndots, maxelectrons=2):
-        ''' Define a basis of occupancy states with a specified number of dots and max occupancy '''
+        """ Define a basis of occupancy states with a specified number of dots and max occupancy
+        
+        The basis consists of vectors of length (ndots) where each entry in the vector indicates the number of electrons in a dot.
+        The number of electrons in the total system is specified in `nbasis`
+        
+        """
         self.maxelectrons = maxelectrons
         self.ndots = ndots
 
@@ -221,9 +244,21 @@ class BaseDotSystem():
 
 
 class DotSystem(BaseDotSystem):
-    ''' Class to simulate a system of interacting quantum dots '''
-
+    
+    
     def __init__(self, name='dotsystem', ndots=3, **kwargs):
+        """ Class to simulate a system of interacting quantum dots
+             
+        Args:
+            name (str): name of the system
+            ndots (int): number of dots to simulate
+
+        Attributes:
+        
+            detX (float): for each dot the value of the chemical potential in the dot
+        
+        TODO: Make the Mxxx variables private
+        """
         self.name = name
         self.ndots = ndots
         self.temperature = 0
@@ -289,14 +324,6 @@ class DotSystem(BaseDotSystem):
 
         for name in self.varnames:
             A = getattr(self, 'M' + name)
-            if 0:
-                sA = smtype(A)
-                setattr(self, 'sM' + name, sA)
-                # ri = np.repeat(np.arange(sA.shape[0]),np.diff(sA.indptr))
-                setattr(self, 'srM' + name, ri)
-                setattr(self, 'scM' + name, sA.indices)
-                arr = np.array([ri, sA.indices])
-                ind = np.ravel_multi_index(arr, self.H.shape)
             ind = A.flatten().nonzero()[0]
             setattr(self, 'indM' + name, ind)
             setattr(self, 'sparseM' + name, A.flat[ind])
@@ -327,7 +354,7 @@ class DotSystem(BaseDotSystem):
         return self.H
 
     def solveH(self, usediag=False):
-        ''' Solve the system '''
+        """ Solve the system by calculating the eigenvalues and eigenstates of the Hamiltonian """
         if usediag:
             self.energies = self.H.diagonal()
             idx = np.argsort(self.energies)
@@ -444,6 +471,11 @@ class DotSystem(BaseDotSystem):
             print('simulatehoneycomb: %.1f [s]' % (time.time() - t0))
 
     def calculate_energies(self, gatevalues):
+        """ Calculate energies of the different states in the system
+        
+        Args:
+             gatevalues (list): values for the chemical potentials in the dots
+        """
         for i, val in enumerate(gatevalues):
             setattr(self, 'det%d' % (i + 1), val)
         self.makeHsparse()
@@ -451,7 +483,8 @@ class DotSystem(BaseDotSystem):
         return self.energies
 
     def calculate_ground_state(self, gatevalues):
-        """ Calculate the ground state of the dot system, given a set of gate values. Returns a state array. """
+        """ Calculate the ground state of the dot system, given a set of gate values.
+        Returns a state array. """
         energies = self.calculate_energies(gatevalues)
         return self.stateoccs[0]  # self.basis[np.argmin(energies)]
 
@@ -491,6 +524,7 @@ class DotSystem(BaseDotSystem):
             toprow = np.linspace(cornervals[i][1], cornervals[i][3], num=npointsx)
             self.vals2D[name] = np.array([np.linspace(i, j, num=npointsy) for i, j in zip(bottomrow, toprow)])
 
+    @qtt.tools.deprecated
     def makeparamvalues2Dx(self, paramnames, bottomtop, rangex, npointsx, npointsy):
         '''Get a list of parameter names and [bottom top] values
         to generate dictionary self.vals2D[name] = matrix of values
@@ -525,6 +559,7 @@ class DotSystem(BaseDotSystem):
             print(name + ' = ' + str(eval('self.' + name)))
         print(' ')
 
+    @qtt.tools.deprecated
     def getHn(self, numberofelectrons):
         inds = np.where(self.nbasis == numberofelectrons)[0]
         return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]
@@ -544,7 +579,7 @@ class DotSystem(BaseDotSystem):
         showGraph(dot, fig=fig)
 
 
-@qtt.tools.deprecated
+@qtt.tools.rdeprecated('Sep 1 2018')
 def setDotSystem(ds, gate_transform, gv):
     """ Set dot system values using gate transform """
     tv = gate_transform.transformGateScan(gv)
@@ -552,7 +587,7 @@ def setDotSystem(ds, gate_transform, gv):
         setattr(ds, k, val)
 
 
-@qtt.tools.deprecated
+@qtt.tools.rdeprecated('Sep 1 2018')
 def defaultDotValues(ds):
     for ii in range(ds.ndots):
         setattr(ds, 'osC%d' % (ii + 1), 55)
