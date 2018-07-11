@@ -20,45 +20,32 @@ Many editors support `autopep8 <https://pypi.python.org/pypi/autopep8>`_ that ca
 
 * Document your functions before making a Pull request into QTT. An example of a well documented function is shown below:
 
-.. code:: python
+  .. code:: python
 
 
 		def _cost_double_gaussian(signal_amp, counts, params):
-
 			""" Cost function for fitting of double Gaussian. 
 
-
-
 			Args:
-
 				signal_amp (array): x values of the data
-
 				counts (array): y values of the data
-
 				params (array): parameters of the two gaussians, [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-
 					amplitude of first (second) gaussian = A_dn (A_up) 
-
 					standard deviation of first (second) gaussian = sigma_dn (sigma_up)
-
 					average value of the first (second) gaussian = mean_dn (mean_up)
 
-
-
 			Returns:
-
 				cost (float): value which indicates the difference between the data and the fit
 
 			"""
-
 			model = double_gaussian(signal_amp, params)
-
 			cost = np.linalg.norm(counts - model)
 
 			return cost
 
 	
 * Since we are dealing with code in development:
+
    - For methods implementing an algorithm return a dictionary so that we can modify the output arguments without breaking backwards compatibility
    - Add arguments ``fig`` or ``verbose`` to function to provide flexible analysis and debugging
 
