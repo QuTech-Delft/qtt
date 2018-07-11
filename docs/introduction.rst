@@ -34,7 +34,11 @@ Installation
 
 QTT is compatible with Python 3.5+.
 
-Currently there are no pip packages for qtt. To install download the source code and install using the command:
+QTT can be installed as a pip package:
+```
+pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt```
+```
+For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 ```
 python setup.py develop
 ```
