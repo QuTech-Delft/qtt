@@ -6,9 +6,13 @@ Contact: Pieter Eendebak pieter.eendebak@tno.nl
 Code style
 ----------
 
-Because QTT is a framework used by many people, we need it to follow certain style guidelines. Because, as the PEP 8 documentation says: "One of Guido's key insights is that code is read much more often than it is written. The guidelines provided here are intended to improve the readability of code and make it consistent across the wide spectrum of Python code. As PEP 20 says, "Readability counts"."
+Because QTT is a framework used by many people, we need it to follow certain style guidelines. Because, as
+the PEP 8 documentation says: "One of Guido's key insights is that code is read much more often than it is written.
+The guidelines provided here are intended to improve the readability of code and make it consistent across the wide
+spectrum of Python code. As PEP 20 says, "Readability counts"."
 
-We try to follow the `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ style guide. Many editors support `autopep8 <https://pypi.python.org/pypi/autopep8>`_ that can help with coding style. Below we list some basic coding style guidelines, including examples. Please follow them when contributing to QTT.
+We try to follow the `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ style guide except that we allow lines to be up to 120 characters.
+Many editors support `autopep8 <https://pypi.python.org/pypi/autopep8>`_ that can help with coding style. Below we list some basic coding style guidelines, including examples. Please follow them when contributing to QTT.
 
 
 

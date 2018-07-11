@@ -1,4 +1,4 @@
-Copyright (c) 2015-18 Copyright TU Delft and TNO, partners of QuTech (QuTech is a quantum institute of TU Delft and TNO). This information carrier contains proprietary information, which shall not be used, reproduced or disclosed to third parties without the prior written authorisation by TU Delft and TNO, as applicable, and is subject to the conditions of the ‘Samenwerkingsovereenkomst QuTech’. 
+Copyright (c) 2015-18 Copyright TU Delft and TNO, partners of QuTech (QuTech is a quantum institute of TU Delft and TNO). This information carrier contains proprietary information, which shall not be used, reproduced or disclosed to third parties without the prior written authorisation by TU Delft and TNO, as applicable, and is subject to the conditions of the "Samenwerkingsovereenkomst QuTech". 
 
 QTT is currently a private development of QuTech, and IS NOT licensed for distribution outside the collaboration.
 
