@@ -14,7 +14,7 @@ class VirtualAwgError(Exception):
 class VirtualAwg(Instrument):
 
     __volt_to_millivolt = 1e-3
-    
+
     def __init__(self, awgs, gate_map, hardware, name='virtual_awg', logger=logging, **kwargs):
         super().__init__(name, **kwargs)
         self.__hardware = hardware
@@ -121,7 +121,8 @@ class VirtualAwg(Instrument):
                     scaling_ratio = 1e3 / awg_to_plunger / vpp_amplitude * 2.0
                     sample_data = Sequencer.get_data(sequence, sampling_rate)
                     sequence_data = sample_data * scaling_ratio
-                    print('min {0}, max {1}, scaling {2}, values {3}'.format(min(sample_data), max(sample_data), scaling_ratio, max(sample_data) * scaling_ratio))
+                    print('min {0}, max {1}, scaling {2}, values {3}'.format(min(sample_data),
+                          max(sample_data), scaling_ratio, max(sample_data) * scaling_ratio))
                     self.pre_data = sample_data
                     self.seq_data = sequence_data
                     data_count = len(sequence_data)

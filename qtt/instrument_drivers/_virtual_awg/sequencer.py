@@ -64,7 +64,7 @@ class Sequencer:
             sequence (dict): a waveform is a dictionary with "type" value
             given the used pulse library. The "wave" value should contain
             the actual wave-object.
-            sampling_rate: a sample rate of the awg in samples per sec.
+            sampling_rate (float): a sample rate of the awg in samples per sec.
 
         Returns:
             A numpy.ndarray with the corresponding sampled voltages.
@@ -76,30 +76,40 @@ class Sequencer:
         return to_array_function(sequence, sampling_rate)
 
     @staticmethod
-    def __raw_data_plot(sequence, sampling_rate):
+    def __raw_data_plot(sequence, sampling_rate, axes):
         """Plots a raw data sequence."""
+        if axes is None:
+            figure = plt.figure()
+            axes = figure.add_subplot(111)
         raw_data = Sequencer.__raw_data_to_array(sequence, sampling_rate)
         sample_count = len(raw_data)
         total_time = (sample_count - 1)/(sampling_rate * Sequencer.__sec_to_ns)
         times = np.linspace(0, total_time, num=sample_count, dtype=float)
-        plt.step(times, raw_data, where='post')
-        plt.show()
+        axes.step(times, raw_data, where='post')
+        axes.get_figure().show()
 
     @staticmethod
-    def __qc_toolkit_template_plot(sequence, sampling_rate):
+    def __qc_toolkit_template_plot(sequence, sampling_rate, axes):
         """Plots a QC toolkit sequence."""
         ns_sample_rate = sampling_rate / Sequencer.__sec_to_ns
-        plot(sequence['wave'], sample_rate=ns_sample_rate)
-        plt.show()
+        plot(sequence['wave'], sample_rate=ns_sample_rate, axes=axes, show=False)
 
     @staticmethod
-    def plot(sequence, sampling_rate):
-        """Creates a plot for viewing the sequence."""
+    def plot(sequence, sampling_rate, axes=None):
+        """Creates a plot for viewing the sequence.
+
+        Arguments:
+            sequence (dict): a waveform is a dictionary with "type" value
+            given the used pulse library. The "wave" value should contain
+            the actual wave-object.
+            sampling_rate (float): a sample rate of the awg in samples per sec.
+            axes: matplotlib Axes object the pulse will be drawn into if provided.
+        """
         data_type = sequence['type']
         switch = {DataTypes.RAW_DATA: Sequencer.__raw_data_plot,
                   DataTypes.QC_TOOLKIT: Sequencer.__qc_toolkit_template_plot}
         plot_function = switch[data_type]
-        plot_function(sequence, sampling_rate)
+        plot_function(sequence, sampling_rate, axes)
 
     @staticmethod
     def __raw_data_serialize(sequence):
@@ -140,9 +150,11 @@ class Sequencer:
         """
         if width <= 0 or width >= 1:
             raise ValueError('Invalid argument value (0 < width < 1)!')
-        input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0, 'width': width}
+        input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0,
+                           'width': width}
         sequence_data = (Templates.sawtooth(name), input_variables)
-        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)), 'type': DataTypes.QC_TOOLKIT}
+        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
+                'type': DataTypes.QC_TOOLKIT}
 
     @staticmethod
     def make_square_wave(amplitude, period, repetitions=1, name='pulse'):
@@ -159,7 +171,8 @@ class Sequencer:
         """
         input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0}
         sequence_data = (Templates.square(name), input_variables)
-        return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions), 'type': DataTypes.QC_TOOLKIT}
+        return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions),
+                'type': DataTypes.QC_TOOLKIT}
 
     @staticmethod
     def make_marker(period, uptime=0.2, offset=0.0, repetitions=1, name='marker'):
@@ -183,24 +196,39 @@ class Sequencer:
                            'uptime': uptime*Sequencer.__sec_to_ns,
                            'offset': offset*Sequencer.__sec_to_ns}
         sequence_data = (Templates.marker(name), input_variables)
-        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)), 'type': DataTypes.QC_TOOLKIT}
-
+        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
+                'type': DataTypes.QC_TOOLKIT}
 
 # UNITTESTS #
 
-def test_make_sawtooth_HasCorrectProperties():
+
+def test_qc_toolkit_sawtooth_HasCorrectProperties():
     epsilon = 1e-14
     period = 1e-3
     amplitude = 1.5
     sampling_rate = 1e9
-    sawtooth_sequence = Sequencer.make_sawtooth_wave(amplitude, period)
-    raw_data = Sequencer.get_data(sawtooth_sequence, sampling_rate)
-    assert(len(raw_data) == sampling_rate*period+1)
-    assert(np.abs(np.min(raw_data) + amplitude/2) <= epsilon)
-    assert(np.abs(np.max(raw_data) - amplitude/2) <= epsilon)
+    sequence = Sequencer.make_sawtooth_wave(amplitude, period)
+    raw_data = Sequencer.get_data(sequence, sampling_rate)
+    assert len(raw_data) == sampling_rate*period + 1
+    assert np.abs(np.min(raw_data) + amplitude/2) <= epsilon
+    assert np.abs(np.max(raw_data) - amplitude/2) <= epsilon
+
+
+def test_raw_wave_HasCorrectProperties():
+    epsilon = 1e-14
+    period = 1e-3
+    amplitude = 1.5
+    sampling_rate = 1e9
+    name = 'test_raw_data'
+    sequence = {'name': name, 'wave': [0]*int(period*sampling_rate+1),
+                'type': DataTypes.RAW_DATA}
+    raw_data = Sequencer.get_data(sequence, sampling_rate)
+    assert len(raw_data) == sampling_rate*period+1
+    assert np.min(raw_data) == 0
+
 
 def test_serializer():
-    period =1e-6
+    period = 1e-6
     amplitude = 1.5
     sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
     return Sequencer.serialize(sawtooth)
