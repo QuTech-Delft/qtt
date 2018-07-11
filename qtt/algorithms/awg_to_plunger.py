@@ -20,10 +20,10 @@ def get_dataset(ds):
     """ Get a dataset from a results dict, a string or a dataset
     
     Args:
-        ds: (qcodes dataset, dictionary or string) the data to be put in the dataset
+        ds (dict, str or qcodes.DataSet): the data to be put in the dataset
 
     Returns:
-        ds: (qcodes dataset) dataset made from the input data
+        ds (qcodes.DataSet) dataset made from the input data
         
     """
     if isinstance(ds, dict):
@@ -40,14 +40,14 @@ def measure_awg_to_plunger(station, gate, minstrument, sweeprange=100, method='h
     """ Perform measurement for awg to plunger using 2D fast scan check?
     
     Args:
-        station: (string?) name of station
-        gate: (integer) plunger gate number
+        station (str): name of station
+        gate (int): plunger gate number
         minstrument: 
-        sweeprange: (integer) sweeprange in mV?
+        sweeprange (int): sweeprange in mV?
         method: Not used
             
     Returns:
-        result: (qcodes dataset) 
+        result: (qcodes.DataSet) 
     
     """
     from qtt.measurements.scans import scanjob_t
@@ -69,9 +69,9 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
     """ Determine the awg_to_plunger ratio from a scan result
     
     Args:
-        result: (qcodes dataset) result of measure_awg_to_plunger
-        method: (string) image processing transform method, only hough supported
-        fig: (string, integer or None) figure number or name, if None no plot is made
+        result: (qcodes.DataSet) result of measure_awg_to_plunger
+        method: (str) image processing transform method, only hough supported
+        fig: (str, int or None) figure number or name, if None no plot is made
         
     Returns:
         result:
@@ -178,13 +178,12 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
 
 
 def plot_awg_to_plunger(result, fig=10):
-    """ Plot results of awg_to_plunger calibration check?
+    """ This function tests the analyse_awg_to_plunger function. Plotting is optional and for debugging purposes.
     
     Args:
         result:
-        fig: (int): index of matplotlib window
-        
-    Returns:
+        fig (int): index of matplotlib window
+
         
     """
 
@@ -213,7 +212,7 @@ def test_awg_to_plunger(fig=None):
     """ Plot results of awg_to_plunger calibration check?
     
     Args:
-        fig: (string, integer or None), default None. Name of figure to plot in, if None not plotted
+        fig (str, int or None): default None. Name of figure to plot in, if None not plotted
         
     Returns:
         Nothing

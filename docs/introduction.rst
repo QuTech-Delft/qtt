@@ -1,4 +1,4 @@
-Welcome
+Introduction
 ============
 
 Welcome to the QTT framework. This introduction will shortly introduce the framework, and it will guide you through the structure, installation process and how to contribute. We look forward to working with you!
@@ -6,18 +6,17 @@ Welcome to the QTT framework. This introduction will shortly introduce the frame
 QuTech Tuning
 -------
 
-QuTech Tuning (QTT) is a Python-based framework developed by QuTech for the tuning and calibration of
-quantum dots and spin qubits. QuTech is an advanced research center based in Delft, the Netherlands, for quantum computing and quantum internet.
-It is a collaboration founded by the University of Technology Delft (TU Delft) and the Netherlands Organisation for Applied Scientiﬁc Research (TNO).
+QuTech Tuning (QTT) is a Python-based framework developed by QuTech for the tuning and calibration of quantum dots and spin qubits. QuTech is an advanced research center based in Delft, the Netherlands, for quantum computing and quantum internet. It is a collaboration founded by the Delft University of Technology (TU Delft) and the Netherlands Organisation for Applied Scientiﬁc Research (TNO).
 
-The experiments done on spin-qubits in QuTech make use of the QTT framework to add automated funcionalities and algorithms to their measurement code. 
+The experiments done on spin-qubits at QuTech make use of the QTT framework to add automated funcionalities and algorithms to their measurement code. 
 This paves the way to a more time-efficient, user-friendly and robust code, making more complex research on larger systems possible.
 We invite you to use and contribute to QTT. Below we will guide you through the installation.
 
 Also see
-- [QuTech](https://www.qutech.nl/)
-- [TU Delft](https://www.tudelft.nl/en)
-- [TNO](https://www.tno.nl/en)
+
+* `QuTech <https://www.qutech.nl/>`_
+* `TU Delft <https://www.tudelft.nl/en>`_
+* `TNO <https://www.tno.nl/en>`_
 
 Structure
 -------
@@ -26,9 +25,9 @@ QTT is the framework on which you can base your measurement and analysis scripts
 In Delft we use a separate repository for the measurement setups (called 'stations'), where each station is programmed in a different way to fit the specific measurements done in that setup. 
 In some cases you can use a personal folder in the 'users' repository, but we recommend keeping this to a minimum and always use a common folder with clear descriptions in the code.
 
-* [Qcodes](https://github.com/qdev-dk/Qcodes): the basic framework
-* [qtt](https://github.com/VandersypenQutech/qtt): contains additional functionality and algorithms
-* [spin-projects](https://github.com/VandersypenQutech/spin-projects): Contains hardware descriptions for experimential setups and project data.
+* `Qcodes: the basic framework <https://github.com/qdev-dk/Qcodes>`_
+* `qtt: contains additional functionality and algorithms <https://github.com/VandersypenQutech/qtt>`_ 
+* `spin-projects : Contains hardware descriptions for experimential setups and project data. <https://github.com/VandersypenQutech/spin-projects>`_ 
   
 Installation
 -------
@@ -39,7 +38,7 @@ Currently there are no pip packages for qtt. To install download the source code
 ```
 python setup.py develop
 ```
-For for Vandersypen research group there are more detailed instructions, read the file [INSTALL-spinqubits.md](INSTALL-spinqubits.md).
+For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md<INSTALL-spinqubits.md>`_.
 
 Updating QTT
 -------
@@ -58,6 +57,19 @@ For a general introduction also see
 * If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following settings:
 - Use a `IPython` console and set the IPyhton backend graphics option to `QT`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
 - In Tools->Preferences->Console->Advanced settings uncheck the box `Enable UMR`
+
+An example:
+
+.. code:: python
+
+   import qtt
+   # load data
+   dataset = qtt.data.load_dataset('example')
+   # analyse
+   results = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=100)
+   
+
+More examples can be found in the example notebooks.
 
 Contributing
 -------

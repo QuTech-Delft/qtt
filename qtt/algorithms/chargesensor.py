@@ -52,8 +52,6 @@ class DataLinearizer:
 
         Args:
             fig(int): index of matplotlib window
-        Returns:
-            plot of self.xsr vs. self.forward_curve
 
         """
         plt.figure(fig)
@@ -64,7 +62,7 @@ class DataLinearizer:
         plt.legend(numpoints=1)
 
     def forward(self, x):
-        """ Linear fit to x
+        """ Apply fitted linear transformation to data
 
         Args:
             x (array): data to be fit
@@ -150,15 +148,6 @@ def correctChargeSensor(xscan, yscan, xs, ys, fig=None):
 
 
 def test_datalinearizer():
-    """ Test whether datalinearizer function returns errors
-
-    Args:
-        None
-
-    Returns:
-        None
-
-    """
     x = np.arange(0, 10, .1)
     y = x + .05 * x**2
     dl = DataLinearizer(x, y)
