@@ -27,7 +27,7 @@ except:
     pass
 
 import qtt.tools
-from qtt import pgeometry 
+from qtt import pgeometry
 
 #%% Helper functions
 
@@ -75,7 +75,6 @@ def isdiagonal(HH):
     return not(np.any(HH - np.diag(np.diagonal(HH))))
 
 
-
 def simulate_row(i, ds, npointsy, usediag):
     """ Helper function """
     dsx = copy.deepcopy(ds)
@@ -107,6 +106,7 @@ def defaultVmatrix(n):
     VmatrixF[0:n, 0:n] = Vmatrix
     return VmatrixF
 
+
 class GateTransform:
 
     def __init__(self, Vmatrix, sourcenames, targetnames):
@@ -137,34 +137,35 @@ class GateTransform:
         return vals2Dout
 #%%
 
+
 class BaseDotSystem():
     """ Base class for the dot simulation classes
-    
+
     Based on the arguments the system calculates the energies of the different
     dot states. Using the energies the ground state, occupancies etc. can be calculated.
     The spin-state of electrons in the dots is ignored.
 
     The main functionality:
-            
+
         * Build a Hamiltonian from the number of dots 
         * Solve for the eigenvalues and eigenstates of the Hamiltonian
         * Present the results.
-            
+
     The model used is [reference xxx]        
 
     Attributes:
-        
+
         Nt (int): number of basis states
         H (array): Hamiltonian of the system
-        
+
         energies (array): calculated energy for each state (ordered)
         states (array): eigenstates expressed in the basis states
         stateprobs (array): ?
         stateoccs (array): ?
         nstates (array): for each state the number of electrons
-        
+
     """
-    
+
     @abstractmethod
     def calculate_ground_state(self, gatevalues):
         """ Calculate ground state for a set of gatevalues """
@@ -173,8 +174,10 @@ class BaseDotSystem():
     # could be a static method
     def findtransitions(self, occs):
         """ Find transitions in occupancy image """
-        transitions = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
-        delocalizations = np.full([np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
+        transitions = np.full(
+            [np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
+        delocalizations = np.full(
+            [np.shape(occs)[0], np.shape(occs)[1]], 0, dtype=float)
 
         d1 = np.sum(np.absolute(occs - np.roll(occs, 1, axis=0)), axis=2)
         d2 = np.sum(np.absolute(occs - np.roll(occs, -1, axis=0)), axis=2)
@@ -218,15 +221,16 @@ class BaseDotSystem():
         print('\nEnergies/states list for %s:' % self.name)
         print('-----------------------------------')
         for i in range(n):
-            print(str(i) + '       - energy: ' + str(np.around(self.energies[i], decimals=2)) + ' ,      state: ' + str(np.around(self.stateoccs[i], decimals=2)) + ' ,      Ne = ' + str(self.nstates[i]))
+            print(str(i) + '       - energy: ' + str(np.around(self.energies[i], decimals=2)) + ' ,      state: ' + str(
+                np.around(self.stateoccs[i], decimals=2)) + ' ,      Ne = ' + str(self.nstates[i]))
         print(' ')
 
     def makebasis(self, ndots, maxelectrons=2):
         """ Define a basis of occupancy states with a specified number of dots and max occupancy
-        
-        The basis consists of vectors of length (ndots) where each entry in the vector indicates the number of electrons in a dot.
-        The number of electrons in the total system is specified in `nbasis`
-        
+
+        The basis consists of vectors of length (ndots) where each entry in the vector indicates
+        the number of electrons in a dot. The number of electrons in the total system is specified
+        in `nbasis`
         """
         self.maxelectrons = maxelectrons
         self.ndots = ndots
@@ -237,33 +241,30 @@ class BaseDotSystem():
         self.nbasis = np.sum(self.basis, axis=1)
         self.Nt = len(self.nbasis)
         self.H = np.zeros((self.Nt, self.Nt), dtype=float)
-        self.eigenstates = np.zeros((self.Nt, self.Nt), dtype=float)        
-        
-        
+        self.eigenstates = np.zeros((self.Nt, self.Nt), dtype=float)
+
+
 #%%
 
 
 class DotSystem(BaseDotSystem):
-    
-    
+
     def __init__(self, name='dotsystem', ndots=3, **kwargs):
         """ Class to simulate a system of interacting quantum dots
-             
+
         Args:
             name (str): name of the system
             ndots (int): number of dots to simulate
 
         Attributes:
-        
+
             detX (float): for each dot the value of the chemical potential in the dot
-        
+
         TODO: Make the Mxxx variables private
         """
         self.name = name
         self.ndots = ndots
         self.temperature = 0
-
-
 
     def makevars(self):
         for name in self.varnames:
@@ -273,7 +274,7 @@ class DotSystem(BaseDotSystem):
 
     def makevarMs(self, ring=False):
         ''' Create matrices for the interactions 
-        
+
         Args:
             ring (bool): is the dot array in a ring configuration? (e.g. 2x2)
         '''
@@ -290,36 +291,46 @@ class DotSystem(BaseDotSystem):
                 if i == j:
                     for dot in range(1, self.ndots + 1):
                         n = self.basis[i, dot - 1]
-                        getattr(self, 'Mdet%i' % dot)[i, i] = [0, -1, -2, -3][n] # chemical potential
-                        getattr(self, 'MosC%i' % dot)[i, i] = [0, 0, 1, 3][n] # on site charging energy
+                        getattr(self, 'Mdet%i' % dot)[i, i] = [
+                            0, -1, -2, -3][n]  # chemical potential
+                        getattr(self, 'MosC%i' % dot)[i, i] = [
+                            0, 0, 1, 3][n]  # on site charging energy
                         n2 = self.basis[i, dot % self.ndots]
-                        n3 = self.basis[i,(dot + 1) % self.ndots]
-                        getattr(self, 'MisC%i' % dot)[i, i] = n*n2 # nearest-neighbour charging energy
+                        n3 = self.basis[i, (dot + 1) % self.ndots]
+                        # nearest-neighbour charging energy
+                        getattr(self, 'MisC%i' % dot)[i, i] = n*n2
                         if hasattr(self, 'isC%i' % (self.ndots + 1)):
                             if i % 2:
-                                getattr(self, 'MisC%i' % (self.ndots + 2))[i, i] = n*n3 # next-nearest-neighbour charging energy
+                                # next-nearest-neighbour charging energy
+                                getattr(self, 'MisC%i' %
+                                        (self.ndots + 2))[i, i] = n*n3
                             else:
-                                getattr(self, 'MisC%i' % (self.ndots + 1))[i, i] = n*n3 # next-nearest-neighbour charging energy
-                        for orb in range(1, n + 1):                                                            
+                                # next-nearest-neighbour charging energy
+                                getattr(self, 'MisC%i' %
+                                        (self.ndots + 1))[i, i] = n*n3
+                        for orb in range(1, n + 1):
                             var = 'Meps%i%i' % (dot, orb)
                             if hasattr(self, var):
-                                getattr(self, var)[i, i] = 1 # orbital energy
+                                getattr(self, var)[i, i] = 1  # orbital energy
                 else:
                     statediff = self.basis[i, :] - self.basis[j, :]
 
-                    for p in range(self.ndots - 1):   
+                    for p in range(self.ndots - 1):
                         pn = p + 1
-                        if (statediff == mkb(p,pn)).all() or (statediff == mkb(pn,p)).all():
-                            getattr(self, 'Mtun%i' % pn)[i, j] = -1 # tunneling term
-                        elif ring and ((statediff == mkb(0,self.ndots-1)).all() or (statediff == mkb(self.ndots-1,0)).all()):
-                            getattr(self, 'Mtun%i' % self.ndots)[i, j] = -1 # tunneling term at boundary
+                        if (statediff == mkb(p, pn)).all() or (statediff == mkb(pn, p)).all():
+                            getattr(self, 'Mtun%i' % pn)[
+                                i, j] = -1  # tunneling term
+                        elif ring and ((statediff == mkb(0, self.ndots-1)).all() or (statediff == mkb(self.ndots-1, 0)).all()):
+                            getattr(self, 'Mtun%i' % self.ndots)[
+                                i, j] = -1  # tunneling term at boundary
                         pass
 
         self.initSparse()
 
     def initSparse(self):
         """ Create sparse structures 
-        Constructing a matrix using sparse elements can be faster than construction of a full matrix, especially for larger systems.
+        Constructing a matrix using sparse elements can be faster than construction of a full matrix,
+        especially for larger systems.
         """
         self.H = np.zeros((self.Nt, self.Nt), dtype=float)
         # self.sH = smtype(self.H)
@@ -361,7 +372,8 @@ class DotSystem(BaseDotSystem):
             self.energies = self.H.diagonal()
             idx = np.argsort(self.energies)
             self.energies = self.energies[idx]
-            self.eigenstates[:] = 0  # =np.zeros( (self.Nt, self.Nt), dtype=float)
+            # =np.zeros( (self.Nt, self.Nt), dtype=float)
+            self.eigenstates[:] = 0
             for i, j in enumerate(idx):
                 self.eigenstates[j, i] = 1
         else:
@@ -378,33 +390,36 @@ class DotSystem(BaseDotSystem):
     #%% Helper functions
     def getall(self, param):
         ''' Return all stored values for a particular parameter
-        
+
         Args:
             param (str): det, osC, isC or tun
-        
+
         Returns:
             vals (list): values corresponding to the parameter that was queried
         '''
         numvars = 0
         for var in self.varnames:
-            if var.startswith(param): numvars += 1
+            if var.startswith(param):
+                numvars += 1
         vals = [getattr(self, param + str(i + 1)) for i in range(numvars)]
         return vals
-    
+
     def setall(self, param, vals):
         ''' Sets all values for a particular parameter
-        
+
         Args:
             param (str): det, osC, isC or tun
             vals (list): values corresponding to the parameter to be set
         '''
         numvars = 0
         for var in self.varnames:
-            if var.startswith(param): numvars += 1
-        if len(vals) != numvars: raise(Exception('Need same amount of values as '+param))
+            if var.startswith(param):
+                numvars += 1
+        if len(vals) != numvars:
+            raise(Exception('Need same amount of values as '+param))
         for i in range(numvars):
             setattr(self, param + str(i + 1), vals[i])
-    
+
     def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
         self.vals2D = {}
         for i in range(paramvalues2D.shape[0]):
@@ -462,8 +477,9 @@ class DotSystem(BaseDotSystem):
                 tprint('simulatehoneycomb: %d/%d' % (i, npointsx))
             for j in range(npointsy):
                 for name in paramnames:
-                    exec('self.' + name + ' = self.vals2D[name][' + str(i) + '][' + str(j) + ']')
-				
+                    exec('self.' + name +
+                         ' = self.vals2D[name][' + str(i) + '][' + str(j) + ']')
+
                 self.makeH()
                 self.solveH(usediag=usediag)
                 self.hcgs[i, j] = self.OCC
@@ -474,7 +490,7 @@ class DotSystem(BaseDotSystem):
 
     def calculate_energies(self, gatevalues):
         """ Calculate energies of the different states in the system
-        
+
         Args:
              gatevalues (list): values for the chemical potentials in the dots
         """
@@ -496,7 +512,8 @@ class DotSystem(BaseDotSystem):
             if exact:
                 # almost exact...
                 idx = self.energies == self.energies[0]
-                self.OCC = np.around(np.mean(self.stateoccs[idx], axis=0), decimals=2)
+                self.OCC = np.around(
+                    np.mean(self.stateoccs[idx], axis=0), decimals=2)
             else:
                 # first order approximation
                 self.OCC = np.around(self.stateoccs[0], decimals=2)
@@ -510,7 +527,8 @@ class DotSystem(BaseDotSystem):
         self.vals1D = {}
         for i in range(len(paramnames)):
             name = paramnames[i]
-            self.vals1D[name] = np.linspace(startend[i][0], startend[i][1], num=npoints)
+            self.vals1D[name] = np.linspace(
+                startend[i][0], startend[i][1], num=npoints)
 
     def makeparamvalues2D(self, paramnames, cornervals, npointsx, npointsy):
         '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
@@ -520,11 +538,16 @@ class DotSystem(BaseDotSystem):
             name = paramnames[i]
             if len(cornervals[i]) == 2:
                 cornervals[i] = np.append(cornervals[i], cornervals[i])
-                bottomrow = np.linspace(cornervals[i][0], cornervals[i][1], num=npointsx)
-                toprow = np.linspace(cornervals[i][2], cornervals[i][3], num=npointsx)
-            bottomrow = np.linspace(cornervals[i][0], cornervals[i][2], num=npointsx)
-            toprow = np.linspace(cornervals[i][1], cornervals[i][3], num=npointsx)
-            self.vals2D[name] = np.array([np.linspace(i, j, num=npointsy) for i, j in zip(bottomrow, toprow)])
+                bottomrow = np.linspace(
+                    cornervals[i][0], cornervals[i][1], num=npointsx)
+                toprow = np.linspace(
+                    cornervals[i][2], cornervals[i][3], num=npointsx)
+            bottomrow = np.linspace(
+                cornervals[i][0], cornervals[i][2], num=npointsx)
+            toprow = np.linspace(
+                cornervals[i][1], cornervals[i][3], num=npointsx)
+            self.vals2D[name] = np.array(
+                [np.linspace(i, j, num=npointsy) for i, j in zip(bottomrow, toprow)])
 
     @qtt.tools.deprecated
     def makeparamvalues2Dx(self, paramnames, bottomtop, rangex, npointsx, npointsy):
@@ -534,11 +557,14 @@ class DotSystem(BaseDotSystem):
         self.vals2D = {}
         for i in range(len(paramnames)):
             name = paramnames[i]
-            self.vals2D[name] = np.transpose(np.array([np.linspace(bottomtop[i][0], bottomtop[i][1], num=npointsy) for j in range(npointsy)]))
+            self.vals2D[name] = np.transpose(np.array([np.linspace(
+                bottomtop[i][0], bottomtop[i][1], num=npointsy) for j in range(npointsy)]))
             if name == 'det1':
-                self.vals2D[name] = self.vals2D[name] + np.array([np.linspace(rangex / 2, -rangex / 2, num=npointsx) for i in range(npointsx)])
+                self.vals2D[name] = self.vals2D[name] + np.array(
+                    [np.linspace(rangex / 2, -rangex / 2, num=npointsx) for i in range(npointsx)])
             elif name == 'det3':
-                self.vals2D[name] = self.vals2D[name] + np.array([np.linspace(-rangex / 2, rangex / 2, num=npointsx) for i in range(npointsx)])
+                self.vals2D[name] = self.vals2D[name] + np.array(
+                    [np.linspace(-rangex / 2, rangex / 2, num=npointsx) for i in range(npointsx)])
             else:
                 pass
 
@@ -606,7 +632,8 @@ class OneDot(DotSystem):
         super().__init__(name=name, ndots=1)
         self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
         self.varnames = ['det1', 'osC1', 'isC1']
-        self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
+        self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1)
+                                             for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
         self.makevars()
         self.makevarMs()
         # initial run
@@ -619,7 +646,7 @@ class DoubleDot(DotSystem):
 
     def __init__(self, name='doubledot'):
         """ Simulation of double-dot system
-        
+
         See: DotSytem
         """
 
@@ -627,7 +654,8 @@ class DoubleDot(DotSystem):
         self.makebasis(ndots=self.ndots, maxelectrons=3)
         self.varnames = ['det1', 'det2',
                          'osC1', 'osC2', 'isC1', 'isC2', 'tun1', 'tun2']
-        self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
+        self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1)
+                                             for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
         self.makevars()
         self.makevarMs()
         # initial run
@@ -670,7 +698,8 @@ class FourDot(DotSystem):
         if self.use_tunneling:
             self.varnames += ['tun%d' % (i + 1) for i in range(self.ndots)]
         if self.use_orbits:
-            self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
+            self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1) for d in range(
+                self.ndots)] for orb in range(0, self.maxelectrons)])
         self.makevars()
         self.makevarMs()
         # initial run
@@ -678,14 +707,15 @@ class FourDot(DotSystem):
         self.solveH()
         self.findcurrentoccupancy()
 
-class TwoXTwo(DotSystem):    
+
+class TwoXTwo(DotSystem):
     def __init__(self, name='2x2'):
-        super().__init__(name=name, ndots=4)									
+        super().__init__(name=name, ndots=4)
         self.makebasis(ndots=self.ndots, maxelectrons=2)
-        self.varnames = ['det1','det2','det3','det4',
-                         'osC1','osC2','osC3','osC4',
-                         'isC1','isC2','isC3','isC4','isC5','isC6',
-                         'tun1','tun2','tun3','tun4']
+        self.varnames = ['det1', 'det2', 'det3', 'det4',
+                         'osC1', 'osC2', 'osC3', 'osC4',
+                         'isC1', 'isC2', 'isC3', 'isC4', 'isC5', 'isC6',
+                         'tun1', 'tun2', 'tun3', 'tun4']
         self.makevars()
         self.makevarMs(ring=True)
         # initial run
@@ -693,12 +723,14 @@ class TwoXTwo(DotSystem):
         self.solveH()
         self.findcurrentoccupancy()
 
+
 def test_twoxtwo():
-    m=TwoXTwo()
+    m = TwoXTwo()
     m.calculate_energies(np.random.rand(m.ndots))
     m.solveH()
-    if __name__=='__main__':
+    if __name__ == '__main__':
         m.showstates(81)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     test_twoxtwo()
