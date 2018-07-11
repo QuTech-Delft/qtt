@@ -79,7 +79,7 @@ check_version('0.1.7', qcodes) # version of qcodes required
 from qtt.live_plotting import start_measurement_control
 
 
-@qtt.tools.deprecated
+@qtt.tools.rdeprecated(expire='Aug 1 2018')
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()

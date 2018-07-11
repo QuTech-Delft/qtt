@@ -1,6 +1,9 @@
 """ 
 Contains functions to generate reports of scanned data
 """
+
+raise Exception('module was removed from qtt')
+
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
@@ -15,7 +18,6 @@ except:
 import qtt.utilities.markup as markup
 from qtt import pgeometry
 
-warnings.warn('please do not import this module, it will be removed in the future', DeprecationWarning)
 
 #%%
 
