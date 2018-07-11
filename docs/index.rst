@@ -17,7 +17,18 @@ QuTech Tuning (QTT) is a Python package for performing measurements and calibrat
 
 QuTech addresses scientific challenges as well as engineering issues in a joint center of know-how with industrial partners. One of these challenges is to automate the calibration and analysis of measurements pertaining spin qubits. For this purpose, QTT was developed. By sharing this framework with you we hope to work with you on improving it and together forward the development of quantum computers all over the world.
 
-A more elaborate starting guide can be found in the introduction.
+A more elaborate starting guide can be found in the introduction. We do include an example in here to show what QuTech Tuning is capable of:
+
+.. code:: python
+
+   import qtt
+   # load data
+   dataset = qtt.data.load_dataset('example')
+   # analyse
+   results = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=100)
+   
+
+More examples can be found in the example notebooks.
 
 
 Documentation

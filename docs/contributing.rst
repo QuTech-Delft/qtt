@@ -53,7 +53,7 @@ Uploading code
 --------------
 
 To upload code use git commit and git push. For the qtt repository always make a branch first. After
-uploading a branch one can make a [pull request](https://help.github.com/articles/about-pull-requests/) which will be reviewed for inclusion in QTT.
+uploading a branch one can make a `pull request <https://help.github.com/articles/about-pull-requests/>`_ which will be reviewed for inclusion in QTT.
 
 
 

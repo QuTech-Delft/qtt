@@ -60,23 +60,6 @@ For a general introduction also see:
   - Use a `IPython` console and set the IPyhton backend graphics option to `QT`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
   - In Tools->Preferences->Console->Advanced settings uncheck the box `Enable UMR`
 
-An example:
-
-.. code:: python
-
-   import qtt
-   # load data
-   dataset = qtt.data.load_dataset('example')
-   # analyse
-   results = qtt.algorithms.gatesweep.analyseGateSweep(dataset, fig=100)
-   
-
-More examples can be found in the example notebooks.
-
-Contributing
--------
-
-See [Contributing](CONTRIBUTING.md) for information about bug/issue reports, contributing code, style, and testing
 
 Testing
 -------
