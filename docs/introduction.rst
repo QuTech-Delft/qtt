@@ -36,34 +36,41 @@ QTT is compatible with Python 3.5+.
 
 QTT can be installed as a pip package:
 ```
-pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt```
+pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
 ```
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 ```
 python setup.py develop
 ```
-For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md<INSTALL-spinqubits.md>`_.
+
+For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md <INSTALL-spinqubits.md>`_.
 
 Updating QTT
 -------
 
-If you registered qtt with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`
+If you registered qtt with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`.
+
+If you installed qtt via the pip package you can run the pip install comment again:
+```
+pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+```
 
 Usage
 -------
 
-See the `docs`_ directory.
-
-For a general introduction also see:
+In QTT, we use GitHub for combined developing and python for scientific use. If you have some experience with scientific python you will be able to understand the code fairly easily. If not, we urge you to read through some lectures before using the QTT framework. For a general introduction see:
 
 * `Introduction to Github <https://guides.github.com/activities/hello-world/>`_
 * `Scientific python lectures <https://github.com/jrjohansson/scientific-python-lectures>`_
+
+We advise to use the following settings when using QTT:
 
 * If you use `Spyder <https://github.com/spyder-ide/spyder>`_ then use the following settings:
 
   - Use a `IPython` console and set the IPyhton backend graphics option to `QT`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
   - In Tools->Preferences->Console->Advanced settings uncheck the box `Enable UMR`
 
+For the usage of algorithms or calibrations we point you to the documentation of those subjects.
 
 Testing
 -------

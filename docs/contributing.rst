@@ -16,7 +16,7 @@ When contributing to QTT you will want to write a new piece of code. Please keep
 
 * If you run into a problem you cannot solve yourself, please take up contact with our main developers via `GitHub issues <https://github.com/VandersypenQutech/qtt/issues>`_. 
 
-* ...
+* Always include a test function in the file of your function
 	
 
 
