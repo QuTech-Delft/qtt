@@ -24,11 +24,11 @@ from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates
 from qtt import save_state, load_state
 
-if __name__ == '__main__':
-    datadir = os.path.join(tempfile.tempdir, 'qdata')
-    qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
-
 import qtt.simulation.virtual_dot_array
+
+datadir = tempfile.mkdtemp(prefix='qtt_example')
+qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+
 
 #%% Create a virtual model for testing
 #

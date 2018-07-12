@@ -20,7 +20,7 @@ from qcodes.utils.validators import Numbers
 from qtt.live_plotting import livePlot
 from qtt.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
-from qtpy import QtCore
+import qtpy.QtCore
 from qtt.measurements.scans import makeDataset_sweep, makeDataset_sweep_2D
 
 #%%
@@ -221,7 +221,7 @@ class VideoMode:
         self.mainwin.resize(800, 600)
         self.mainwin.show()
 
-        self.timer = QtCore.QTimer()
+        self.timer = qtpy.QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
 
         self.crosshair(show=crosshair)
