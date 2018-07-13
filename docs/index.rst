@@ -43,7 +43,7 @@ Documentation
    algorithms
    simulation
    contributing
-   qtt_cheatsheet
+   QTT_cheatsheet
    
 
     
