@@ -35,13 +35,16 @@ Installation
 QTT is compatible with Python 3.5+.
 
 QTT can be installed as a pip package:
-```
-pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
-```
+
+.. code-block:: console
+
+    pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
-```
-python setup.py develop
-```
+
+.. code-block:: console
+   
+   python setup.py develop
 
 For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md <INSTALL-spinqubits.md>`_.
 
@@ -51,9 +54,10 @@ Updating QTT
 If you registered qtt with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`.
 
 If you installed qtt via the pip package you can run the pip install comment again:
-```
-pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
-```
+
+.. code-block:: console
+
+    pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
 
 Usage
 -------
@@ -76,8 +80,8 @@ Testing
 -------
 
 Tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in the code. To run the tests you can run one of the commands below. Note that only `pytest` runs also the tests throughout the code while `python qtt/test.py` only runs the ones in the tests directory.
-```
-> python qtt/test.py
-> pytest # (Windows)
-> py.test # (Unix)
-```
+
+.. code-block:: console
+    > python qtt/test.py
+    > pytest # (Windows)
+    > py.test # (Unix)
