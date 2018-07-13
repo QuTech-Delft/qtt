@@ -127,7 +127,10 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
         afit (dict): fit data from fit_anticrossing
         ds (None or DataSet): dataset to show
         fig (int): index of matplotlib window
-        
+        linewidth: (integer) plot linewidth, default = 2
+
+    Returns:
+        -
     
     """
     fitpoints=afit['fitpoints']
@@ -155,6 +158,15 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
 
 
 def test_anticrossing():
+    """ Test deprecate?
+    
+    Args:
+        None
+
+    Returns:
+        None
+    
+    """
     nx=30
     ny=40
     dsx=qtt.data.makeDataSet2Dplain('x', .5*np.arange(nx), 'y', .5*np.arange(ny), 'z', np.random.rand(ny,nx, ) )   
