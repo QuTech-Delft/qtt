@@ -10,9 +10,9 @@ Quantum dots
 
 * :doc:`algorithms/fermidirac`
 * Fit anti-crossing
-* Fit polarization line
-* PAT measurements
 * Virtual gate matrix
+* Fit polarization line
+* ...
 
 Qubits
 ------
@@ -21,14 +21,22 @@ Qubits
 * T1
 * ...
 
+Example notebooks
+-----------------
 
 .. toctree::
-    :caption: Example notebooks
     :maxdepth: 3
     :titlesonly:
     :glob:
 
+    notebooks/example_simple.ipynb
+    notebooks/example_station.ipynb
+    notebooks/example_ohmic.ipynb
+    notebooks/example_sensingdottuning.ipynb
     notebooks/example_*
+
+.. caption command
+    :caption: Example notebooks
 
 .. Manual list of notebooks
 
