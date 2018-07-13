@@ -29,8 +29,10 @@ Example notebooks
     :titlesonly:
     :glob:
 
-    notebooks/example_sensingdottuning.ipynb
+    notebooks/example_simple.ipynb
+    notebooks/example_station.ipynb
     notebooks/example_ohmic.ipynb
+    notebooks/example_sensingdottuning.ipynb
     notebooks/example_*
 
 .. caption command
