@@ -31,53 +31,34 @@ Example notebooks
     :glob:
 
 Core examples
-
-* [Simple measurements](example_simple.ipynb) Simple measurement example
-* [Defining a station](example_station.ipynb) How to define a station (e.g. your hardware setup)
-* [Parameter widget](example_param_widget.py) Create a GUI to view parameters of an instrument
-* [example_anticrossing.ipynb](example_anticrossing.ipynb) Automatically fit an anti-crossing in a dataset
-* [Measurement control](example_measurement_control.py) Open a GUI to abort measurements
+* :doc:`[Simple measurement example] <example_simple.ipynb>`
+* :doc:`[How to define a station (e.g. your hardware setup)] <example_station.ipynb>`
+* :doc:`[Make a linear fit in a scan of an ohmic contact] <example_ohmic.ipynb>`
+* :doc:`[Create a GUI to view parameters of an instrument] <example_param_widget.py>`
+* :doc:`[Automatically fit an anti-crossing in a dataset] <example_anticrossing.ipynb>`
+* :doc:`[Open a GUI to abort measurements] <example_measurement_control.py>`
 
 More advanced topics
 
-* `[example_videomode.ipynb] <example_videomode.ipynb>` Videomode tuning
+* :doc:`[Videomode tuning] <notebooks/example_videomode>`
 * [Virtual gate space]() TODO
-* [example_coulomb_peak.ipynb](example_coulomb_peak.ipynb) Fitting a Coulomb peak
-* [example_fermi_fitting.ipynb](example_fermi_fitting.ipynb) Automatically fit a Fermi distribution
-* [example_polFitting.ipynb](example_polFitting.ipynb) Automatically fit a polarization line
-* [example_charge_sensor.ipynb](example_charge_sensor.ipynb) Make corrections for the non-linearity of a charge sensor 
-* [example_classical_dot_simulation.ipynb](example_classical_dot_simulation.ipynb) Simulate quantum dot systems	
-	
-    notebooks/example_simple.ipynb
-    notebooks/example_station.ipynb
-    notebooks/example_ohmic.ipynb
-    notebooks/example_sensingdottuning.ipynb
-#    notebooks/example_*
+* :doc:`[Fitting a Coulomb peak] <example_coulomb_peak.ipynb>`
+* :doc:`[Automatically fit a Fermi distribution] <example_fermi_fitting.ipynb>`
+* :doc:`[Automatically fit a polarization line] <example_polFitting.ipynb>`
+* :doc:`[Make corrections for the non-linearity of a charge sensor] <example_charge_sensor.ipynb>`
+* :doc:`[Simulate quantum dot systems] <example_classical_dot_simulation.ipynb>`
+
+Examples to fit somewhere:
+* :doc:`[Classical simulation of a triple dot] <classical_triple_dot.ipynb>`
+* :doc:`[Analyse Random Telegraph Singal using double gauss expedacy] <example_doublegauss_expedacy_rts.ipynb>`
+* :doc:`[Example PAT fitting] <example_PAT_fitting.ipynb>`
+* :doc:`[Example PAT simulations] <example_PAT_simulations.ipynb>`
+* :doc:`[Example sensing dot tuning] <example_sensingdottuning.ipynb>`
+* :doc:`[Example spinqubit measurement] <spinqubit_measurement.ipynb>`
+* :doc:`[Example square dot tuning] <square_dot_tuning.ipynb>`
+
+There are some examples in python code what to do with those?
 
 
 Back to the :doc:`main page <index>`.
 
-
-
-## Code snippets
-
-Viewer from instrument parameters:
-```
-> qtt.createParameterWidget([gates])
-```
-
-Start measurement control unit:
-```
-> qtt.live_plotting.start_measurement_control()
-```
-
-Start data viewer:
-```
-import qtt.gui.dataviewer
-dv=qtt.gui.dataviewer.DataViewer(datadir=r'P:\data')
-```
-
-Copy dataset to Powerpoint
-```
-qtt.tools.addPPT_dataset(data);
-```
