@@ -728,23 +728,21 @@ class scanjob_t(dict):
                 self[field]['paramname'] = '_'.join(
                         ['%s(%s)' % (key, fmt(value)) for (key, value) in param.items()])
 
-    def _start_end_to_range(self, station, scanfields=['stepdata', 'sweepdata', 'vec_type']):
+    def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata', 'vec_type']):
         """ Add range to stepdata and/or sweepdata in scanjob.
 
         Note: This function also converts the start and end fields.        
         """
         if isinstance(scanfields, str):
             scanfields = [scanfields]
-        gates = station.gates
         for scanfield in scanfields:
             if scanfield in self:
                 scaninfo = self[scanfield]
                 if 'range' not in scaninfo:
                     scaninfo['range'] = scaninfo['end'] - scaninfo['start']
-                if scaninfo['vec_type'] == 'dc':
+                if 'vec_type' in scaninfo and scaninfo['vec_type'] == 'dc':
                     warnings.warn(
-                        'Start and end are converted to a range starting at zero.')
-                    param_val = gates.get(scaninfo['param'])                        
+                        'Start and end are converted to a range starting at zero.')                       
                     scaninfo['start'] = 0
                     scaninfo['end'] = scaninfo['range']
                 else:
