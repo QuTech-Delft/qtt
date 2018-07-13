@@ -48,6 +48,12 @@ class DataLinearizer:
         self.tck_inv = tck_inv
 
     def show(self, fig=100):
+        """ Plots forward_curve vs. xsr
+
+        Args:
+            fig(int): index of matplotlib window
+
+        """
         plt.figure(fig)
         plt.clf()
         ysnew = self.forward_curve(self.xsr)
@@ -56,14 +62,38 @@ class DataLinearizer:
         plt.legend(numpoints=1)
 
     def forward(self, x):
+        """ Apply fitted linear transformation to data
+
+        Args:
+            x (array): data to be fit
+        Returns:
+            y (array): fitted data
+
+        """
         y = self.linfit(x)
         return y
 
     def forward_curve(self, x):
+        """ Evaluate a B-spline, see documentation scipy.interpolate.splev
+
+        Args:
+            x (array): to be fitted curve
+        Returns:
+            y (array): array representing the evaluated spline function
+
+        """
         y = scipy.interpolate.splev(x, self.tck, der=0)
         return y
 
     def backward_curve(self, y):
+        """ Evaluate a B-spline, see documentation scipy.interpolate.splev
+
+        Args:
+            x (array): to be fitted curve
+        Returns:
+            y (array): backward array representing the evaluated spline function
+
+        """
         x = scipy.interpolate.splev(y, self.tck_inv, der=0)
         return x
 
