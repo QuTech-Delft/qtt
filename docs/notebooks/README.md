@@ -1,6 +1,8 @@
 # QuTech Tuning examples
 
-Also see the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs/examples)
+Below we included some examples, from very basic measurements to more advanced simulations 
+and analysis examples. For examples of the underlying QCoDeS framework, see 
+the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs/examples).
 
 ## Core examples
 
