@@ -14,7 +14,7 @@ import logging
 import time
 import datetime
 import warnings
-import pyqtgraph as pg
+#import pyqtgraph as pg
 import skimage
 import skimage.filters
 import matplotlib.pyplot as plt
@@ -398,7 +398,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         if update_plot:
             if liveplotwindow:
                 myupdate()
-            pg.mkQApp().processEvents()  # needed for the parameterviewer
+            pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
 
         if qtt.abort_measurements():
             print('  aborting measurement loop')
@@ -532,7 +532,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
-        pg.mkQApp().processEvents()  # needed for the parameterviewer
+        pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
 
     dt = time.time() - t0
 
@@ -1127,7 +1127,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 
                 if update and liveplotwindow:
                     liveplotwindow.update_plot()
-                    pg.mkQApp().processEvents()
+                    pyqtgraph.mkQApp().processEvents()
             
         if qtt.abort_measurements():
             print('  aborting measurement loop')
@@ -1730,7 +1730,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if update:
             if liveplotwindow is not None:
                 liveplotwindow.update_plot()
-            pg.mkQApp().processEvents()
+            pyqtgraph.mkQApp().processEvents()
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
@@ -1741,7 +1741,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if liveplotwindow is not None:
         # final update
         liveplotwindow.update_plot()
-        pg.mkQApp().processEvents()
+        pyqtgraph.mkQApp().processEvents()
 
     if diff_dir is not None:
         for mname in measure_names:

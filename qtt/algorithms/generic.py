@@ -16,7 +16,7 @@ except:
 from qtt import pgeometry
 from qtt import pgeometry as pmatlab
 
-from qtt.data import *
+#from qtt.data import *
 
 #%%
 
@@ -63,7 +63,7 @@ def localMaxima(arr, radius=1, thr=None):
     return np.where(local_max)
 
 import numpy as np
-from skimage.feature import peak_local_max
+import skimage.feature #import peak_local_max
 
 
 def subpixelmax(A, mpos, verbose=0):
@@ -121,7 +121,7 @@ def test_subpixel(fig=None):
     A = np.random.rand(40,)**2+1e1;
     A=qtt.algorithms.generic.smoothImage(A)
 
-    mpos = peak_local_max(A, min_distance=3).flatten()
+    mpos = skimage.feature.peak_local_max(A, min_distance=3).flatten()
     subpos, subval=subpixelmax(A, mpos);
 
     if fig:    
