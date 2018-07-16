@@ -14,7 +14,7 @@ import logging
 import time
 import datetime
 import warnings
-#import pyqtgraph as pg
+import pyqtgraph
 import skimage
 import skimage.filters
 import matplotlib.pyplot as plt
