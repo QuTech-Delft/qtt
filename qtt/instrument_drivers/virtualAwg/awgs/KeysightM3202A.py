@@ -1,7 +1,7 @@
 import numpy as np
 
-from qtt.instrument_drivers._virtual_awg.setting import Setting
-from qtt.instrument_drivers._virtual_awg.awgs.common import AwgCommon, AwgCommonError
+from qtt.instrument_drivers.virtualAwg.setting import Setting
+from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
 
 
 class KeysightM3202A_AWG(AwgCommon):
