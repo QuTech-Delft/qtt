@@ -1,3 +1,5 @@
+To modify the autopep8 line lenght, create a file `.pep8` in your home directory with the following contents.
+
 .. code:: python
 	 ```
 	[pep8]
