@@ -122,7 +122,7 @@ class VideoMode:
         self.verbose = verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.virtual_awg = virtual_awg
+        self.virtual_awg = getattr(station, 'virtual_awg', virtual_awg)
 
         self.minstrumenthandle = minstrument[0]
         self.channels = minstrument[1]
@@ -365,20 +365,22 @@ class VideoMode:
                   (self.__class__.__name__,) + Fore.RESET)
 
         dim = self.scan_dimension()
-        awg = getattr(self.station, 'awg')
+        awg = getattr(self.station, 'awg', None)
+        virtualawg = getattr(self.station, 'virtual_awg', None) # new style virtual awg
         
         if dim == 1:
             # 1D scan
             if type(self.sweepparams) is str:
-                if self.virtual_awg:
-                    width = 0.5
-                    period = 1e-3
+                period = 1e-3
+                if virtualawg is not None:
+                    width = 0.95
                     waveform = {'period': period, 'width': width, 'sweeprange': self.sweepranges}
                     waveform = self.virtual_awg.sweep_gates([self.sweepparams], [self.sweepranges*2], period=1e-3)
                     self.virtual_awg.enable_outputs([self.sweepparams])
                     self.virtual_awg.run_awgs()
-                #waveform, _ = awg.sweep_gate(
-                #    self.sweepparams, self.sweepranges, period=1e-3)
+                else:
+                    waveform, _ = awg.sweep_gate(
+                            self.sweepparams, self.sweepranges, period=period)
             elif type(self.sweepparams) is dict:
                 waveform, _ = awg.sweep_gate_virt(
                     self.sweepparams, self.sweepranges, period=1e-3)
