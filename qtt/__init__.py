@@ -156,7 +156,6 @@ def set_location_name(name, verbose=1):
     qcodes.DataSet.location_provider.base_record['name'] = name
 #%%
 
-
 def _copy_to_str(x, memo):
     return str(x)
 
