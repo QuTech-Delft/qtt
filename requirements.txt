@@ -13,7 +13,7 @@ tables
 slacker
 attrs
 Polygon3
-pyqtgraph >= 0.11
+pyqtgraph 
 pyzmqrpc
 hickle 
 dulwich
