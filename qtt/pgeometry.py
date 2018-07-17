@@ -71,7 +71,7 @@ try:
         import qtpy.QtWidgets as QtWidgets
         from qtpy.QtCore import QObject
         from qtpy.QtCore import Slot
-        from qtpy.Signal import Signal
+        from qtpy.QtCore import Signal
     except ImportError:
         _haveqtpy = False
         warnings.warn('could not import qtpy, not all functionality available')
