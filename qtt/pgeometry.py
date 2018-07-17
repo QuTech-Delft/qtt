@@ -64,8 +64,17 @@ try:
         # by default use qtpy to import Qt
         import qtpy
         _haveqtpy = True
-    except:
+        
+        import qtpy.QtCore as QtCore
+        import qtpy.QtGui as QtGui
+        import qtpy.QtWidgets as QtWidgets
+        import qtpy.QtWidgets as QtWidgets
+        from qtpy.QtCore import QObject
+        from qtpy.QtCore import Slot
+        from qtpy.Signal import Signal
+    except ImportError:
         _haveqtpy = False
+        warning.warn('could not import qtpy, not all functionality available')
         pass
 
     _ll = sys.modules.keys()
@@ -73,57 +82,18 @@ try:
     _pyqt4 = len([_x for _x in _ll if _x.startswith('PyQt4.QtGui')]) > 0
     _pyqt5 = len([_x for _x in _ll if _x.startswith('PyQt5.QtGui')]) > 0
 
-    if _pyside:
-        import PySide.QtCore as QtCore
-        import PySide.QtGui as QtGui
-        import PySide.QtGui as QtWidgets
-        from PySide.QtCore import Slot as Slot
-        from PySide.QtCore import QObject
-        from PySide.QtCore import Signal
-    else:
-        if _pyqt4:
-            import PyQt4.QtCore as QtCore
-            import PyQt4.QtGui as QtGui
-            import PyQt4.QtGui as QtWidgets
-            from PyQt4.QtCore import pyqtSlot as Slot
-            from PyQt4.QtCore import QObject
-            from PyQt4.QtCore import pyqtSignal as Signal
-            # print('pmatlab: using PyQt4')
-        elif _pyqt5:
-            import PyQt5.QtCore as QtCore
-            import PyQt5.QtGui as QtGui
-            import PyQt5.QtWidgets as QtWidgets
-            from PyQt5.QtCore import pyqtSlot as Slot
-            from PyQt5.QtCore import QObject
-            from PyQt5.QtCore import pyqtSignal as Signal
-            logging.debug('pgeometry: using PyQt5')
-        else:
-            if 1:
-                import PyQt4.QtCore as QtCore
-                import PyQt4.QtGui as QtGui
-                import PyQt4.QtGui as QtWidgets
-                from PyQt4.QtCore import pyqtSlot as Slot
-                from PyQt4.QtCore import QObject
-                from PyQt4.QtCore import pyqtSignal as Signal
-            else:
-                import PySide.QtCore as QtCore
-                import PySide.QtGui as QtGui
-                import PySide.QtGui as QtWidgets
-                from PySide.QtCore import Slot as Slot
-                from PySide.QtCore import QObject
-                from PySide.QtCore import Signal
-
-    try:
-        # the normal creation of a Qt application instance can fail
-        # this is an additional mechanism
-        import pyqtgraph
-        _applocalqt = pyqtgraph.mkQApp()
-    except:
-        pass
-    _applocalqt = QtWidgets.QApplication.instance()
-    # print('pgeometry: _applocalqt %s' % _applocalqt )
-    if _applocalqt is None:
-        _applocalqt = QtWidgets.QApplication([])
+    if 0:
+        try:
+            # the normal creation of a Qt application instance can fail
+            # this is an additional mechanism
+            import pyqtgraph
+            _applocalqt = pyqtgraph.mkQApp()
+        except:
+            pass
+        _applocalqt = QtWidgets.QApplication.instance()
+        # print('pgeometry: _applocalqt %s' % _applocalqt )
+        if _applocalqt is None:
+            _applocalqt = QtWidgets.QApplication([])
 
     def slotTest(txt):
         """ Helper function for Qt slots """
