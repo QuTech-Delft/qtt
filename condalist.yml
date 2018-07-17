@@ -56,7 +56,7 @@ dependencies:
 - pylint
 - pyparsing
 - pyqt
-- pyqtgraph>=0.10
+- pyqtgraph>=0.11
 - pytables
 - pytest
 - pywin32
