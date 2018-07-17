@@ -74,7 +74,7 @@ try:
         from qtpy.Signal import Signal
     except ImportError:
         _haveqtpy = False
-        warning.warn('could not import qtpy, not all functionality available')
+        warnings.warn('could not import qtpy, not all functionality available')
         pass
 
     _ll = sys.modules.keys()
