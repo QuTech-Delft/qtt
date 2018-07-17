@@ -1,4 +1,4 @@
-numpy == 1.13.x
+numpy >= 1.13
 scipy >= 0.18
 matplotlib >= 2.0
 coverage
