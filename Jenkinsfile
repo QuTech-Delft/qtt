@@ -9,6 +9,7 @@ pipeline {
         stage('Install qcodes')
         {
             steps {
+                sh 'rm -fr Qcodes'
                 sh 'git clone https://github.com/VandersypenQutech/Qcodes.git'
                 sh 'cd Qcodes && ls -als'
                 sh 'cd Qcodes && pip3 install -r requirements.txt'
