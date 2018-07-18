@@ -1,6 +1,6 @@
 FROM ubuntu:bionic
 
-TZ=Europe/Amsterdam
+ENV TZ Europe/Amsterdam
 
 RUN apt-get update && \
     apt-get install -y git-core x11-xserver-utils python3 \
