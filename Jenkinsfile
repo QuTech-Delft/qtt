@@ -10,7 +10,7 @@ pipeline {
             steps {
                 sh 'ls -als'
                 sh 'git clone https://github.com/VandersypenQutech/Qcodes.git'
-                sh 'cd QCoDeS'
+                sh 'cd qcodes'
                 sh 'pip3 install -r requirements.txt'
                 sh 'python3 setup.py build'
                 sh 'python3 setup.py install --user'
