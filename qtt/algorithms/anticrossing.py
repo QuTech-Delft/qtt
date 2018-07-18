@@ -159,15 +159,16 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
 
 def test_anticrossing():
     """ Test deprecate?
-    
+
     Args:
         None
 
     Returns:
         None
-    
+
     """
-    nx=30
-    ny=40
-    dsx=qtt.data.makeDataSet2Dplain('x', .5*np.arange(nx), 'y', .5*np.arange(ny), 'z', np.random.rand(ny,nx, ) )   
+    nx = 30
+    ny = 40
+    dsx = qtt.data.makeDataSet2Dplain('x', .5*np.arange(nx), 'y', .5*np.arange(ny), 
+                                      'z', np.random.rand(ny, nx,))
     fitdata = fit_anticrossing(dsx, verbose=0)
