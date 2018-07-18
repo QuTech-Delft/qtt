@@ -26,12 +26,11 @@ pipeline {
                 sh 'pip3 install -r requirements.txt'
                 sh 'python3 setup.py build'
                 sh 'python3 setup.py develop --user'
-
-                sh 'pip install colorama'
-
                 sh 'python3 -c "import matplotlib.pyplot as plt"'
                 sh 'python3 -c "import scipy"'
                 sh 'python3 -c "import qtpy"'
+
+                sh 'pip3 install colorama'
                 sh 'python3 -c "import qtt"'
             }
         }
