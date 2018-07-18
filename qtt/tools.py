@@ -888,6 +888,7 @@ try:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
         import qtt.measurements.ttrace # should be moved to top when circular references are fixed
+        import qtt.measurements.videomode # import here, to prevent default imports of gui code
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
@@ -1053,11 +1054,11 @@ except:
     def addPPTslide(title=None, fig=None, subtitle=None, maintext=None,
                     notes=None, show=False, verbose=1, ppLayout=1):
         ''' Dummy implementation '''
-        pass
+        warnings.warn('addPPTslide is not available on your system')
 
     def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
         ''' Dummy implementation '''
-        pass
+        warnings.warn('addPPT_dataset is not available on your system')
 
 #%%
 from collections import OrderedDict
