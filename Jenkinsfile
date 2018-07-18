@@ -3,6 +3,8 @@ pipeline {
         dockerfile {
             filename 'Dockerfile.build'
         }
+    environment {
+    }
     }
     stages {
         stage('Install qcodes')
@@ -23,6 +25,9 @@ pipeline {
                 sh 'pip3 install -r requirements.txt'
                 sh 'python3 setup.py build'
                 sh 'python3 setup.py develop --user'
+                sh 'python3 -c "import matplotlib.pyplot as plt"'
+                sh 'python3 -c "import scipy"'
+                sh 'python3 -c "import qtt"'
             }
         }
     }
