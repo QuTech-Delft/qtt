@@ -11,12 +11,13 @@ The package contains software to simulation quantom dot systems and plot charge 
 3. Calculate the eigenvalues and eigenstatus of the the system
 4. Calculate derived properties such as the occupation numbers and charge stability diagrams.
 
-Example notesbooks: classicaldot_, twoxtwo_.
+Example Notebooks
+----------
 
-.. _twoxtwo: notebooks/square_dot_tuning.html
-.. _classicaldot: notebooks/example_classical_dot_simulation.html
-
-
+* :doc:`Simulate square dot tuning <notebooks/square_dot_tuning>`
+* :doc:`Simulate quantum dot systems <notebooks/example_classical_dot_simulation>`
+* :doc:`Classical simulation of a triple dot <notebooks/classical_triple_dot>`
+* :doc:`Example PAT simulations <notebooks/example_PAT_simulations>`
 
 
 The virtual dot

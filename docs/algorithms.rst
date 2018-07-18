@@ -4,56 +4,33 @@ Algorithms
 Algorithms have as input data (typically as a QCoDeS dataset) and parameters of the algorithm. 
 The output is a dictionary with the main results as keys of the dictionary.
 
-
-Quantum dots
-------------
-##Do we want to split the example notebooks for quantum dots?
-
-* :doc:`algorithms/fermidirac`
-* Fit anti-crossing
-* Virtual gate matrix
-* Fit polarization line
-* ...
-
-Qubits
-------
-##Why is this here? What do we want to say?
-
-* PSB
-* T1
-* ...
-
-Example notebooks
------------------
-
-Core examples
-
-* :doc:`Simple measurement example <notebooks/example_simple>`
-* :doc:`How to define a station (e.g. your hardware setup) <notebooks/example_station>`
-* :doc:`Make a linear fit in a scan of an ohmic contact <notebooks/example_ohmic>`
-* :doc:`Create a GUI to view parameters of an instrument <notebooks/example_param_widget.py>`
-* :doc:`Automatically fit an anti-crossing in a dataset <notebooks/example_anticrossing>`
-* :doc:`Open a GUI to abort measurements <notebooks/example_measurement_control.py>`
-
-More advanced topics
-
-* :doc:`Videomode tuning <notebooks/example_videomode>`
-* Virtual gate space() TODO
+General Algorithm Examples
+---------------
 * :doc:`Fitting a Coulomb peak <notebooks/example_coulomb_peak>`
 * :doc:`Automatically fit a Fermi distribution <notebooks/example_fermi_fitting>`
+* :doc:`Analyse Random Telegraph Singal using double gauss exp decay <notebooks/example_doublegauss_expdecay_rts>`
+
+Quantum Dot Examples
+------------
+
+* :doc:`algorithms/fermidirac`
+* :doc:`Automatically fit an anti-crossing in a dataset <notebooks/example_anticrossing>`
 * :doc:`Automatically fit a polarization line <notebooks/example_polFitting>`
 * :doc:`Make corrections for the non-linearity of a charge sensor <notebooks/example_charge_sensor>`
-* :doc:`Simulate quantum dot systems <notebooks/example_classical_dot_simulation>`
+* :doc:`Example PAT fitting <notebooks/example_PAT_fitting>`
+* :doc:`Example sensing dot tuning <notebooks/example_sensingdottuning>`
+* :doc:`Videomode tuning <notebooks/example_videomode>`
+
+* Virtual gate space() TODO
+
+
+Qubit Examples
+------
+
+
 
 Examples to fit somewhere:
 
-* :doc:`Classical simulation of a triple dot <notebooks/classical_triple_dot>`
-* :doc:`Analyse Random Telegraph Singal using double gauss expedacy <notebooks/example_doublegauss_expdecay_rts>`
-* :doc:`Example PAT fitting <notebooks/example_PAT_fitting>`
-* :doc:`Example PAT simulations <notebooks/example_PAT_simulations>`
-* :doc:`Example sensing dot tuning <notebooks/example_sensingdottuning>`
-* :doc:`Example spinqubit measurement <notebooks/spinqubit_measurement>`
-* :doc:`Example square dot tuning <notebooks/square_dot_tuning>`
 
 ##There are some examples in python code what to do with those?
 
