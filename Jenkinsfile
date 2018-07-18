@@ -4,6 +4,9 @@ pipeline {
             filename 'Dockerfile.build'
         }
     }
+    environment {
+        MPLBACKEND='AGG'
+    }
     stages {
         stage('Install qcodes')
         {
