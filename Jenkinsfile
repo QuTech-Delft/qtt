@@ -29,8 +29,13 @@ pipeline {
                 sh 'python3 -c "import matplotlib.pyplot as plt"'
                 sh 'python3 -c "import scipy"'
                 sh 'python3 -c "import qtpy"'
-
                 sh 'python3 -c "import qtt"'
+            }
+        }
+
+        stage('Test')
+        {
+            steps {
                 sh 'py.test-3 -k qtt --ignore qtt/legacy.py'
             }
         }
