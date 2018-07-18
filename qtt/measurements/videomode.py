@@ -12,7 +12,7 @@ import warnings
 import logging
 from scipy import ndimage
 from colorama import Fore
-import pyqtgraph as pg
+import pyqtgraph
 
 import qtt
 from qcodes.instrument.parameter import Parameter
@@ -20,11 +20,10 @@ from qcodes.utils.validators import Numbers
 from qtt.live_plotting import livePlot
 from qtt.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
-from qtpy import QtCore
-from qtt.measurements.scans import plotData, makeDataset_sweep, makeDataset_sweep_2D
+import qtpy.QtCore
+from qtt.measurements.scans import makeDataset_sweep, makeDataset_sweep_2D
 
 #%%
-
 
 class videomode_callback:
 
@@ -65,7 +64,8 @@ class videomode_callback:
             data (list or array): either a list with length the number of channels or a numpy array with all data
         """
 
-        minstrumenthandle = self.station.components[self.minstrument]
+        minstrumenthandle = qtt.measurements.scans.get_instrument(self.minstrument)
+
         data = qtt.measurements.scans.measuresegment(
             self.waveform, self.Naverage, minstrumenthandle, self.unique_channels)
 
@@ -114,7 +114,6 @@ class VideoMode:
         crosshair (bool): enable crosshair
     """
     # TODO: implement optional sweep directions, i.e. forward and backward
-    # TODO: implement virtual gates functionality
 
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
@@ -222,7 +221,7 @@ class VideoMode:
         self.mainwin.resize(800, 600)
         self.mainwin.show()
 
-        self.timer = QtCore.QTimer()
+        self.timer = qtpy.QtCore.QTimer()
         self.timer.timeout.connect(self.updatebg)
 
         self.crosshair(show=crosshair)
@@ -272,7 +271,7 @@ class VideoMode:
                 else:
                     for ii, d in enumerate(dd):
                         self.lp[ii].update(data=d, processevents=False)
-                    pg.mkQApp().processEvents()
+                    pyqtgraph.mkQApp().processEvents()
             except Exception as e:
                 logging.exception(e)
                 print('%s: Exception in updatebg, stopping readout' %
@@ -520,7 +519,7 @@ if __name__ == '__main__':
     vm.setGeometry(1310, 100, 800, 800)
 
 #%% Test MultiTracePlot
-    app = pg.mkQApp()
+    app = pyqtgraph.mkQApp()
     waveform, ix = station.awg.sweep_gate('P1', 50, 1e-3)
     nplots = 3
     ncurves = 2

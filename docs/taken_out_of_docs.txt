@@ -1,0 +1,9 @@
+To modify the autopep8 line lenght, create a file `.pep8` in your home directory with the following contents.
+
+.. code:: python
+	 ```
+	[pep8]
+	max-line-length = 120
+	```
+	
+For the `users` and `stations` repository you can upload directly to the master branch.

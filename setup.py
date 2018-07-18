@@ -5,7 +5,7 @@ import platform
 import re
 
 def readme():
-    with open('README.md') as f:
+    with open('README.md', encoding='utf-8') as f:
         return f.read()
 
 def get_version(verbose=1):
@@ -40,6 +40,8 @@ extras = {
     'colorama': ('colorama', '0.1', None),    
     'apscheduler': ('apscheduler', '3.4', None),    
     'Polygon3': ('Polygon', '0.1', None),    
+    'pyqtgraph': ('pyqtgraph', '0.11', None),    
+    'pyqt5': ('PyQt5', '0.11', 'pyqt5'),    
 }
 
 if platform.system()=='Windows':
@@ -79,8 +81,8 @@ setup(name='qtt',
       packages=find_packages(),
       #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
       install_requires=[
-          'matplotlib', 'pandas', 'attrs', 'dulwich', 'pyqt5', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
-          'numpy>=1.10',
+          'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
+          'numpy>=1.10', 'scikit-image', 
           'IPython>=0.1',
           'qcodes>=0.1.5',
           'Polygon3',

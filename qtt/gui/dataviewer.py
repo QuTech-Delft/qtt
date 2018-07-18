@@ -70,12 +70,16 @@ class DataViewer(QtWidgets.QWidget):
 
         self.reloadbutton = QtWidgets.QPushButton()
         self.reloadbutton.setText('Reload data')
+        
+        self.loadinfobutton = QtWidgets.QPushButton()
+        self.loadinfobutton.setText('Preload info')
 
         self.outCombo = QtWidgets.QComboBox()
 
         topLayout.addWidget(self.text)
         topLayout.addWidget(self.select_dir)
         topLayout.addWidget(self.reloadbutton)
+        topLayout.addWidget(self.loadinfobutton)
 
         treesLayout = QtWidgets.QHBoxLayout()
         treesLayout.addWidget(self.logtree)
@@ -114,6 +118,7 @@ class DataViewer(QtWidgets.QWidget):
         self.outCombo.currentIndexChanged.connect(self.comboCallback)
         self.select_dir.clicked.connect(self.selectDirectory)
         self.reloadbutton.clicked.connect(self.updateLogs)
+        self.loadinfobutton.clicked.connect(self.loadInfo)
         self.pptbutton.clicked.connect(self.pptCallback)
         self.clipboardbutton.clicked.connect(self.clipboardCallback)
         if self.verbose >= 2:
@@ -121,7 +126,10 @@ class DataViewer(QtWidgets.QWidget):
         # get logs from disk
         self.updateLogs()
         self.datatag = None
-
+        
+        self.logtree.setColumnHidden(2, True)
+        self.logtree.setColumnHidden(3, True)
+        
         self.show()
 
     def setDatadir(self, datadir):
@@ -139,7 +147,64 @@ class DataViewer(QtWidgets.QWidget):
 
     def clipboardCallback(self):
         self.qplot.copyToClipboard()
-
+    
+    def getArrayStr(self, metadata):
+        params = []
+        try:
+            if 'loop' in metadata.keys():
+                sv = metadata['loop']['sweep_values']
+                params.append('%s [%.2f to %.2f %s]' % (sv['parameter']['label'], 
+                             sv['values'][0]['first'], 
+                             sv['values'][0]['last'], 
+                             sv['parameter']['unit']))
+                
+                for act in metadata['loop']['actions']:
+                    if 'sweep_values' in act.keys():
+                        sv = act['sweep_values']
+                        params.append('%s [%.2f - %.2f %s]' % (sv['parameter']['label'], 
+                                     sv['values'][0]['first'], 
+                                     sv['values'][0]['last'], 
+                                     sv['parameter']['unit']))
+                infotxt = ' ,'.join(params)
+                infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if not v['is_setpoint']])
+                
+            elif 'scanjob' in metadata.keys():
+                sd = metadata['scanjob']['sweepdata']
+                params.append('%s [%.2f to %.2f]' % (sd['param'], sd['start'], sd['end']))
+                if 'stepdata' in metadata['scanjob']:
+                    sd = metadata['scanjob']['stepdata']
+                    params.append('%s [%.2f to %.2f]' % (sd['param'], sd['start'], sd['end']))
+                infotxt = ' ,'.join(params)
+                infotxt = infotxt + '  |  ' + ', '.join(metadata['scanjob']['minstrument'])
+            else:
+                infotxt = 'info about plot'
+                
+        except:
+            infotxt = 'info about plot'
+            
+        return infotxt
+    
+    
+    def loadInfo(self):
+        try:
+            for row in range(self._treemodel.rowCount()):
+                index = self._treemodel.index(row,0)
+                i = 0
+                while (index.child(i,0).data() is not None): 
+                    filename = index.child(i,3).data()
+                    loc = '\\'.join(filename.split('\\')[:-1])
+                    tempdata = qcodes.DataSet(loc)
+                    tempdata.read_metadata()
+                    infotxt = self.getArrayStr(tempdata.metadata)
+                    self._treemodel.setData(index.child(i,1), infotxt)
+                    if 'comment' in tempdata.metadata.keys():
+                        self._treemodel.setData(index.child(i,4), tempdata.metadata['comment'])
+                    i = i+1
+        except Exception as e:
+            print(e)
+                
+        
+        
     def selectDirectory(self):
         from qtpy.QtWidgets import QFileDialog
         d = QtWidgets.QFileDialog(caption='Select data directory')
@@ -165,7 +230,8 @@ class DataViewer(QtWidgets.QWidget):
                           for d in self.datafiles]
 
         model.clear()
-        model.setHorizontalHeaderLabels(['Log', 'Comments'])
+        model.setHorizontalHeaderLabels(['Log', 'Arrays', 'location', 'filename', 'Comments'])
+        
 
         logs = dict()
         for i, d in enumerate(dd):
@@ -196,8 +262,12 @@ class DataViewer(QtWidgets.QWidget):
                 parent1.appendRow([child1, child2, child3, child4])
             model.appendRow(parent1)
             # span container columns
-            self.logtree.setFirstColumnSpanned(
-                i, self.logtree.rootIndex(), True)
+#            self.logtree.setFirstColumnSpanned(
+#                i, self.logtree.rootIndex(), True)
+            self.logtree.setColumnWidth(0,240)
+            self.logtree.setColumnHidden(2, True)
+            self.logtree.setColumnHidden(3, True)
+            
         if self.verbose >= 2:
             print('DataViewer: updateLogs done')
 
@@ -273,9 +343,11 @@ class DataViewer(QtWidgets.QWidget):
             self.updateMetatree()
 
             data_keys = data.arrays.keys()
-            infotxt = 'arrays: ' + ', '.join(list(data_keys))
+            infotxt = self.getArrayStr(data.metadata)
             q = pp.child(row, 1).model()
             q.setData(pp.child(row, 1), infotxt)
+            if 'comment' in data.metadata.keys():
+                q.setData(pp.child(row, 2), data.metadata['comment'])
             self.resetComboItems(data, data_keys)
             param_name = self.getPlotParameter()
             self.updatePlot(param_name)
@@ -332,9 +404,8 @@ if __name__ == '__main__':
     dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
     dataviewer.verbose = 5
     dataviewer.setGeometry(1280, 60, 700, 900)
-    dataviewer.plotwindow.setMaximumHeight(400)
+    dataviewer.logtree.setColumnWidth(0,240)    
     dataviewer.show()
-    self = dataviewer
 
     # app.exec()
 

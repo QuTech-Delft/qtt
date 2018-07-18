@@ -1,3 +1,3 @@
 """ Contains various utilities """
 
-from . import markup
+#from . import markup

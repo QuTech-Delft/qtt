@@ -9,9 +9,7 @@ from imp import reload
 import sys
 import os
 import numpy as np
-import matplotlib
-import time
-import pyqtgraph as pg
+import matplotlib.pyplot as plt
 import tempfile
 from collections import OrderedDict
 
@@ -26,9 +24,10 @@ from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates
 from qtt import save_state, load_state
 
-if __name__ == '__main__':
-    datadir = os.path.join(tempfile.tempdir, 'qdata')
-    qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+import qtt.simulation.virtual_dot_array
+
+datadir = tempfile.mkdtemp(prefix='qtt_example')
+qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
 
 
 #%% Create a virtual model for testing
@@ -36,10 +35,8 @@ if __name__ == '__main__':
 # The model resembles the spin-qubit dot setup. The hardware consists of a virtual
 # keithley, IVVI racks and a virtual gates object
 
-import virtualDot
-
 nr_dots = 3
-station = virtualDot.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2)
+station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2)
 
 keithley1 = station.keithley1
 keithley3 = station.keithley3
@@ -116,7 +113,7 @@ virts.VP2.set(-60)
 cc1= virts.VP1()
 cc2=virts.VP2()
 r=80
-scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc1-100, 'end': cc1 + 100, 'step': 4.}), 'minstrument': ['keithley1'], 'wait_time': 0.})
+scanjob = scanjob_t({'sweepdata': dict({'param': virts.VP1, 'start': cc1-100, 'end': cc1 + 100, 'step': 4.}), 'minstrument': ['keithley1.amplitude'], 'wait_time': 0.})
 scanjob['stepdata'] = dict({'param': virts.VP2, 'start': cc2 - r, 'end': cc2 +r, 'step': 2.})
 data = qtt.measurements.scans.scan2D(station, scanjob)
 gates.resetgates(gv, gv, verbose=0)

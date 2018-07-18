@@ -3,3 +3,6 @@ class MissingOptionalPackageWarning(UserWarning, ValueError):
     pass
 
 #%%
+
+class PackageVersionWarning(UserWarning):
+    pass

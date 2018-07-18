@@ -1,4 +1,18 @@
-# set up the qtt namespace
+""" QuTech Tuning
+
+The QTT package contains functionality for the tuning and calibration of spin-qubits. The package is
+divided into subpacakges:
+
+    - Measurements: functionality to perform measurements on devices
+    - Algorithms: functionality to analyse measurements 
+    - Simulation: contains simulations of quantom dot systems
+    - Tools: misc tools
+    - Gui: Several gui element for visualization of data
+    - Instrument drivers: contains QCoDeS drivers for various instruments
+
+For more information see https://github.com/VandersypenQutech/qtt
+
+"""
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
 import copy
@@ -14,68 +28,58 @@ import qtt.tools
 import qtt.data
 import qtt.algorithms
 import qtt.measurements
-import qtt.utilities.markup as markup
-
+import qtt.exceptions
 
 from qtt.version import __version__
-
 from qtt.tools import cfigure, plot2Dline
-from qtt.data import *
-from qtt.algorithms.functions import logistic
 from qtt.measurements.storage import save_state, load_state
-from qtt.loggingGUI import installZMQlogger
 
 import qtt.live_plotting
 import qtt.gui.parameterviewer
 from qtt.gui.parameterviewer import createParameterWidget
 
 from qtt.gui.dataviewer import DataViewer
-import qtt.exceptions
 
 #%% Check packages
 
 
-def check_version(version, module=qcodes):
+def check_version(version, module=qcodes, optional = False):
+    """ Check whether a module has the corret version """
     if isinstance(module, str):
         try:
             m = importlib.import_module(module)
             module = m
         except ModuleNotFoundError:
-            raise Exception('could not load module %s' % module)
+            if optional:
+                warnings.warn('optional package %s is not available' % module, qtt.exceptions.MissingOptionalPackageWarning)
+                return
+            else:
+                raise Exception('could not load module %s' % module)
             
     mversion = getattr(module, '__version__', None)
     if mversion is None:
         raise Exception(' module %s has no __version__ attribute' % (module,))
 
+            
     if distutils.version.StrictVersion(mversion) < distutils.version.StrictVersion(version):
-        raise Exception(' from %s need version %s' % (module, version))
+        if optional:
+            warnings.warn('package %s has incorrect version' % module, qtt.exceptions.PackageVersionWarning)
+        else:
+            raise Exception(' from %s need version %s (version is %s)' % (module, version, mversion))
 
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'colorama')
-try:
-    check_version('0.1', 'redis')
-except:
-    warnings.warn('missing redis package', qtt.exceptions.MissingOptionalPackageWarning)
+check_version('0.1', 'redis', optional=True)
+check_version('0.1.7', qcodes) # version of qcodes required
 
-_qversion = '0.1.7'  # version of qcodes required
-check_version(_qversion, qcodes)
-
-if sys.version_info.minor<6:
-    warnings.warn('please upgrade to python 3.6, we will not support versions <= 3.5 in the near future')
-
-
-#%%
-
-if qcodes.config['user'].get('deprecation_warnings', True):
-    # enable deprecation warnings
-    warnings.simplefilter("default", DeprecationWarning)
 
 #%% Load often used constructions
 
 from qtt.live_plotting import start_measurement_control
 
 
+@qtt.tools.rdeprecated(expire='Aug 1 2018')
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()
@@ -106,7 +110,27 @@ def _abort_measurement():
     return int(v)
 
 
+def reset_abort(value = 0):
+    """ reset qtt_abort_running_measurement """
+    _redis_connection.set('qtt_abort_running_measurement', value)
+
+def _redisStrValue(var = 'qtt_live_value1'):
+    """ Return live control value retrieved from redis server 
+        and convert to string """
+    if _redis_connection is None:
+        return 0
+    v = _redis_connection.get(var)
+    return v.decode('utf-8')
+
+def _redisStrSet(value, var = 'qtt_live_value1'):
+    """ Set live control value on redis server """
+    _redis_connection.set(var, value)
+
+liveValue = _redisStrValue
+liveValueSet = _redisStrSet
+
 abort_measurements = _abort_measurement
+
 # patch the qcodes abort function
 qcodes.loops.abort_measurements = _abort_measurement
 
@@ -163,7 +187,7 @@ try:
     from qtpy import QtWidgets
     from qcodes.plots.pyqtgraph import QtPlot
 
-    def keyPressEvent(self, e):
+    def _qtt_keyPressEvent(self, e):
         ''' Patch to add a callback to the QtPlot figure window '''
         if e.key() == Qt.Key_P:
             print('key P pressed: copy figure window to powerpoint')
@@ -171,7 +195,7 @@ try:
         super(QtPlot, self).keyPressEvent(e)
 
     # update the keypress callback function
-    QtPlot.keyPressEvent = keyPressEvent
+    QtPlot.keyPressEvent = _qtt_keyPressEvent
 except:
     pass
 

@@ -16,8 +16,16 @@ import qtt.algorithms.images
 import qtt.utilities.imagetools
 
 #%% Helper functions
-def get_dataset(ds):
-    """ Get a dataset from a results dict, a string or a dataset """
+def get_dataset(ds):  
+    """ Get a dataset from a results dict, a string or a dataset
+    
+    Args:
+        ds (dict, str or qcodes.DataSet): the data to be put in the dataset
+
+    Returns:
+        ds (qcodes.DataSet) dataset made from the input data
+        
+    """
     if isinstance(ds, dict):
         ds = ds.get('dataset', None)
     if ds is None:
@@ -29,7 +37,17 @@ def get_dataset(ds):
 #%% Main functions
 
 def measure_awg_to_plunger(station, gate, minstrument, sweeprange=100, method='hough'):
-    """ Perform measurement for awg to plunger
+    """ Perform measurement for awg to plunger using 2D fast scan check?
+    
+    Args:
+        station (str): name of station
+        gate (int): plunger gate number
+        minstrument: 
+        sweeprange (int): sweeprange in mV?
+        method: Not used
+            
+    Returns:
+        result: (qcodes.DataSet) 
     
     """
     from qtt.measurements.scans import scanjob_t
@@ -48,10 +66,15 @@ def measure_awg_to_plunger(station, gate, minstrument, sweeprange=100, method='h
 
 
 def analyse_awg_to_plunger(result, method='hough', fig=None):
-    """ Determine the awg_to_plunger ration from a scan result
+    """ Determine the awg_to_plunger ratio from a scan result
     
     Args:
-        ....
+        result: (qcodes.DataSet) result of measure_awg_to_plunger
+        method: (str) image processing transform method, only hough supported
+        fig: (str, int or None) figure number or name, if None no plot is made
+        
+    Returns:
+        result:
     
     """
     assert(result.get('type')=='awg_to_plunger')
@@ -155,10 +178,12 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
 
 
 def plot_awg_to_plunger(result, fig=10):
-    """ Plot results of awg_to_plunger calibration 
+    """ This function tests the analyse_awg_to_plunger function. Plotting is optional and for debugging purposes.
     
     Args:
-        ...
+        result:
+        fig (int): index of matplotlib window
+
         
     """
 
@@ -181,26 +206,35 @@ def plot_awg_to_plunger(result, fig=10):
     plt.title('Detected line direction')
 
 
-
-
-#%% Test functions
+# %% Test functions
 
 def test_awg_to_plunger(fig=None):
+    """ Plot results of awg_to_plunger calibration check?
     
-    x=np.arange(0,80,1.).astype(np.float32)
-    y=np.arange(0,60).astype(np.float32)
-    z=np.meshgrid(x, y); z=.01*z[0].astype(np.uint8)
-    angle=-.7*(np.pi/4)
-    qtt.utilities.imagetools.semiLine(z, np.array([[0],[y.max()]]), angle, w=2.2,l=30, H=.52)
-    ds=qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z )
-    
-    result={'dataset': ds}
-    r=analyse_awg_to_plunger(result, method='hough', fig=fig)
-    if fig is not None:
+    Args:
+        fig (str, int or None): default None. Name of figure to plot in, if None not plotted
+        
+    Returns:
+        Nothing
+        
+    """
+    x = np.arange(0, 80, 1.0).astype(np.float32)
+    y = np.arange(0, 60).astype(np.float32)
+    z = np.meshgrid(x, y)
+    z = 0.01 * z[0].astype(np.uint8)
+    angle = -0.7 * (np.pi/4.0)
+    qtt.utilities.imagetools.semiLine(z, np.array([[0], [y.max()]]), angle, w=2.2, l=30, H=0.52)
+    ds = qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z)
+    result = {'dataset': ds, 'type': 'awg_to_plunger'}
+    r = analyse_awg_to_plunger(result, method='hough', fig=fig)
+    if fig:
         print(r)
-        print('ange input %.3f: fit %s' % (angle, str(r['angle'])) )
-if __name__=='__main__':
-   test_awg_to_plunger(fig=10)
+        print('ange input %.3f: fit %s' % (angle, str(r['angle'])))
+
+
+if __name__ == '__main__':
+    test_awg_to_plunger(fig=10)
+
 
 # TODO
 #

@@ -255,7 +255,7 @@ def test_RTS():
     data = np.random.rand( 10000, )
     try:
         r=tunnelrates_RTS(data, plungers=[])
-        raise Exception('data should for fit to RTS')
+        raise Exception('data should not fit to RTS')
     except FittingException as ex:
         # fitting exception is good, since data is random
         pass

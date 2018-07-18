@@ -1,9 +1,14 @@
 """ 
 Contains functions to generate reports of scanned data
 """
+
+raise Exception('module was removed from qtt')
+
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+
+import qtt.tools
 
 try:
     from urllib import pathname2url as pathname2url
@@ -13,11 +18,11 @@ except:
 import qtt.utilities.markup as markup
 from qtt import pgeometry
 
-warnings.warn('please do not import this module, it will be removed in the future', DeprecationWarning)
 
 #%%
 
 
+@qtt.tools.deprecated
 def reportTemplate(title):
     """ Create a markup object for a HTML page """
     page = markup.page()
