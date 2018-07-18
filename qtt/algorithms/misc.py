@@ -155,17 +155,14 @@ def polyval2d(x, y, m):
         z += a * x**i * y**j
     return z
 
+"""
 def test_polyfitting():
-    
-    x=np.arange(10, 20)
-    y=np.arange(20,30)
-    z=np.random.rand( 10, 10)
-    
-    p=polyfit2d(x,y,z)
-    zz=polyval2d(x,y, p)
+    x = np.arange(10, 20)
+    y = np.arange(20, 30)
+    z = np.random.rand(10, 10)
+    p = polyfit2d(x, y, z)
+    _ = polyval2d(x, y, p)
+"""
 
-    
 if __name__=='__main__':
     test_polyfitting()
-    
-        
