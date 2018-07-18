@@ -8,28 +8,6 @@ RUN apt-get -y install python3 git-core python3-pip
 RUN apt-get -y install python3-pyqt5
 RUN pip3 install setuptools
 
-RUN mkdir -p git
-WORKDIR "/git"
-RUN git clone git@github.com:VandersypenQutech/QCoDeS.git
-RUN git clone git@github.com:VandersypenQutech/qtt.git
-
-WORKDIR "/git/QCoDeS"
-#RUN pip3 install coverage pyqtgraph slacker matplotlib 
-RUN pip3 install -r requirements.txt
-RUN python3 setup.py build
-RUN python3 setup.py install --user
-
-WORKDIR "/git/qtt"
-RUN git checkout fix/misc5
-RUN git pull
-RUN pip3 install -r requirements.txt
-
-RUN pip3 install redis # install some optional packages
-RUN apt-get install -y python3-opencv # allows for more tests to run
-
-RUN python3 setup.py build
-RUN python3 setup.py develop --user
-
 ENV MPLBACKEND Agg
 RUN apt-get install -y python3-pytest
 RUN apt-get install -y x11-xserver-utils

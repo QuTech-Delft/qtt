@@ -5,19 +5,18 @@ pipeline {
         }
     }
     stages {
-        stage('Import')
+        stage('Install')
         {
             steps {
-                sh 'python3 -c "import matplotlib.pyplot as plt"'
-                sh 'python3 -c "import scipy"'
-                sh 'python3 -c "import qtt"'
-            }
-        }
-        stage('Test') {
-            steps {
-                sh 'python3 --version'
-                sh 'ls -lah'
-                sh 'py.test-3 -k qtt --ignore qtt/legacy.py'
+                sh 'mkdir -p git'
+                sh ' cd git'
+                sh 'git clone git@github.com:VandersypenQutech/QCoDeS.git'
+                sh 'git clone git@github.com:VandersypenQutech/qtt.git'
+
+                sh 'cd git/QCoDeS'
+                sh 'pip3 install -r requirements.txt'
+                sh 'python3 setup.py build'
+                sh 'python3 setup.py install --user'
             }
         }
     }
