@@ -5,7 +5,7 @@ pipeline {
         }
     }
     stages {
-        stage('Install')
+        stage('Install qcodes')
         {
             steps {
                 sh 'ls -als'
