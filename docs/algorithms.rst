@@ -26,7 +26,7 @@ Qubits
 Example notebooks
 -----------------
 
-Core examples
++Core examples
 * :doc:`Simple measurement example <notebooks/example_simple.ipynb>`
 * :doc:`How to define a station (e.g. your hardware setup) <notebooks/example_station.ipynb>`
 * :doc:`Make a linear fit in a scan of an ohmic contact <notebooks/example_ohmic.ipynb>`
@@ -34,7 +34,7 @@ Core examples
 * :doc:`Automatically fit an anti-crossing in a dataset <notebooks/example_anticrossing.ipynb>`
 * :doc:`Open a GUI to abort measurements <notebooks/example_measurement_control.py>`
 
-More advanced topics
++More advanced topics
 
 * :doc:`Videomode tuning <notebooks/example_videomode>`
 * Virtual gate space() TODO
@@ -44,7 +44,7 @@ More advanced topics
 * :doc:`Make corrections for the non-linearity of a charge sensor <notebooks/example_charge_sensor.ipynb>`
 * :doc:`Simulate quantum dot systems <notebooks/example_classical_dot_simulation.ipynb>`
 
-Examples to fit somewhere:
++Examples to fit somewhere:
 * :doc:`Classical simulation of a triple dot <notebooks/classical_triple_dot.ipynb>`
 * :doc:`Analyse Random Telegraph Singal using double gauss expedacy <notebooks/example_doublegauss_expedacy_rts.ipynb>`
 * :doc:`Example PAT fitting <notebooks/example_PAT_fitting.ipynb>`
