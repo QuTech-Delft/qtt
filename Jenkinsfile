@@ -21,7 +21,7 @@ pipeline {
         stage('Install QTT')
         {
             steps {
-                sh 'pip3 install redis'
+                sh 'pip3 install redis' 
                 sh 'pip3 install -r requirements.txt'
                 sh 'python3 setup.py build'
                 sh 'python3 setup.py develop --user'
