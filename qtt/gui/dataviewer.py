@@ -215,19 +215,27 @@ class DataViewer(QtWidgets.QWidget):
             print('update logs')
             self.updateLogs()
 
+    @staticmethod
+    def find_datafiles(datadir, extensions=['dat', 'hdf5']):
+        """ Find all datasets in a directory with a given extension """
+        dd = []
+        for e in extensions:
+            dd += qtt.pgeometry.findfilesR(datadir, '.*%s' %
+                                           e, show_progress=True)
+
+        datafiles = sorted(dd)
+        #datafiles = [os.path.join(datadir, d) for d in datafiles]
+        return datafiles
+        
     def updateLogs(self):
         ''' Update the list of measurements '''
         model = self._treemodel
-        dd = []
-        for e in self.extensions:
-            dd += qtt.pgeometry.findfilesR(self.datadir, '.*%s' %
-                                           e, show_progress=True)
+        
+        self.datafiles=self.find_datafiles(self.datadir, self.extensions)
+        dd=self.datafiles
+        
         if self.verbose:
             print('DataViewer: found %d files' % (len(dd)))
-
-        self.datafiles = sorted(dd)
-        self.datafiles = [os.path.join(self.datadir, d)
-                          for d in self.datafiles]
 
         model.clear()
         model.setHorizontalHeaderLabels(['Log', 'Arrays', 'location', 'filename', 'Comments'])
