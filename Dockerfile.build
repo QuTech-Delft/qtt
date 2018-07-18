@@ -12,4 +12,5 @@ ENV MPLBACKEND Agg
 RUN apt-get install -y python3-pytest
 RUN apt-get install -y x11-xserver-utils
 
+RUN remove -fr Qcodes
 RUN git clone https://github.com/VandersypenQutech/Qcodes.git
