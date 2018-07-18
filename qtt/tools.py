@@ -922,7 +922,7 @@ try:
                     # new Qt style
                     figtemp = fig.lp.plotwin.grab()
                     figtemp.save(fname)
-            elif isinstance(fig, QtGui.QWidget):
+            elif isinstance(fig, QtWidgets.QWidget):
                 # generic method
                 figtemp = fig.plotwin.grab()
                 figtemp.save(fname)
