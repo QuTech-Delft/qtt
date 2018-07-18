@@ -171,4 +171,4 @@ def test_anticrossing():
     ny = 40
     dsx = qtt.data.makeDataSet2Dplain('x', .5*np.arange(nx), 'y', .5*np.arange(ny), 
                                       'z', np.random.rand(ny, nx,))
-    # fitdata = fit_anticrossing(dsx, verbose=0)
+    fitdata = fit_anticrossing(dsx, verbose=0)

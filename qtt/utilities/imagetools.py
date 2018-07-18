@@ -144,13 +144,11 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
         ww = fixReversal(ww, verbose=verbose)
     return ww
 
-"""
 def test_fitBackground():
     im = np.random.rand( 200,100)
     bg = fitBackground(im, verbose=0)
     bg = fitBackground(im, verbose=0, removeoutliers=True)
     c = cleanSensingImage(im)
-"""
 
 if __name__=='__main__':
     test_fitBackground()

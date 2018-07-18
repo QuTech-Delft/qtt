@@ -132,7 +132,7 @@ def polyfit2d(x, y, z, order=3):
         G[:, k] = x**i * y**j
     rcond=None
     from distutils.version import StrictVersion
-    if StrictVersion(np.__version__) <= StrictVersion('1.13'):
+    if StrictVersion(np.__version__) < StrictVersion('1.14.0'):
         rcond=-1
     m, _, _, _ = np.linalg.lstsq(G, z, rcond=rcond)
     return m
@@ -155,14 +155,12 @@ def polyval2d(x, y, m):
         z += a * x**i * y**j
     return z
 
-"""
 def test_polyfitting():
-    x = np.arange(10, 20)
-    y = np.arange(20, 30)
+    x = np.arange(10., 20)
+    y = np.arange(20., 30)
     z = np.random.rand(10, 10)
     p = polyfit2d(x, y, z)
     _ = polyval2d(x, y, p)
-"""
 
 if __name__=='__main__':
     test_polyfitting()
