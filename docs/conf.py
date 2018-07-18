@@ -39,6 +39,13 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'nbsphinx']
 
+if 0:
+    extensions += ['autoapi.extension']
+    
+    # Document Python Code
+    autoapi_type = 'python'
+    autoapi_dirs = '../qtt'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

@@ -1,15 +1,18 @@
 Algorithms
 ============
 
+Algorithms have as input data (typically as a QCoDeS dataset) and parameters of the algorithm. 
+The output is a dictionary with the main results as keys of the dictionary.
+
 
 Quantum dots
 ------------
 
 * :doc:`algorithms/fermidirac`
 * Fit anti-crossing
-* Fit polarization line
-* PAT measurements
 * Virtual gate matrix
+* Fit polarization line
+* ...
 
 Qubits
 ------
@@ -18,14 +21,22 @@ Qubits
 * T1
 * ...
 
+Example notebooks
+-----------------
 
 .. toctree::
-    :caption: Example notebooks
     :maxdepth: 3
     :titlesonly:
     :glob:
 
+    notebooks/example_simple.ipynb
+    notebooks/example_station.ipynb
+    notebooks/example_ohmic.ipynb
+    notebooks/example_sensingdottuning.ipynb
     notebooks/example_*
+
+.. caption command
+    :caption: Example notebooks
 
 .. Manual list of notebooks
 

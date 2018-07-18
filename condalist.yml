@@ -101,6 +101,7 @@ dependencies:
   - apscheduler
   - pyserial
   - pyzmqrpc
+  - hickle
   - Polygon3
   - pyvisa
   - redis
@@ -108,8 +109,6 @@ dependencies:
   - spirack
   - slacker
   - wrapt
-  - "git+https://github.com/telegraphic/hickle.git@dev#egg=hickle-dev"
 #  - "dulwich --global-option='--pure'"
 
-#prefix: C:\Users\eendebakpt\AppData\Local\Continuum\Anaconda3\envs\qtt
 

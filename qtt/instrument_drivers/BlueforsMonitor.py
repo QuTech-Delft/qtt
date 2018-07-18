@@ -4,6 +4,7 @@ import glob
 import getopt
 
 from datetime import datetime
+from functools import partial
 from qtt.instrument_drivers.DistributedInstrument import InstrumentDataClient
 from qtt.instrument_drivers.DistributedInstrument import InstrumentDataServer
 
@@ -36,6 +37,17 @@ class FridgeDataReceiver(InstrumentDataClient):
                                      params={'item': 'cpawarn'})
         self.add_measurable_quantity('datetime', '', -1,
                                      'The server date and time (for testing)')
+        self.temperatures.get_latest.max_val_age = 1
+
+        if self.temperatures() == -1:
+            raise ConnectionError('Could not connect to the server!')
+
+        def get_temp(key):
+            return self.temperatures.get_latest()[key][0]
+
+        for key in self.temperatures().keys():
+            self.add_parameter('T'+key.lower(), unit='K',
+                               get_cmd=partial(get_temp, key))
 
 # -----------------------------------------------------------------------------
 

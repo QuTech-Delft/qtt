@@ -19,6 +19,7 @@ try:
     from dulwich import porcelain
 except ModuleNotFoundError:
     warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
+    NotGitRepository = Exception
 
 
 # explicit import
@@ -214,13 +215,6 @@ def get_jupyter_kernel(verbose=2):
     return None
 
 #%% Debugging
-
-
-def dumpstring(txt):
-    """ Dump a string to temporary file on disk """
-    with open(os.path.join(tempfile.tempdir, 'qtt-dump.txt'), 'a+t') as fid:
-        fid.write(txt + '\n')
-
 
 def deprecated(func):
     """ This is a decorator which can be used to mark functions
