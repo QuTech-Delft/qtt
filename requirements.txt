@@ -1,11 +1,19 @@
-numpy >= 1.12
+numpy >= 1.13
 scipy >= 0.18
 matplotlib >= 2.0
 coverage
 pandas
 apscheduler
 scikit-image
-pyqt
+PyQt5
 qtpy
 sympy
-
+colorama
+tables
+slacker
+attrs
+Polygon3
+pyqtgraph 
+pyzmqrpc
+hickle 
+dulwich
