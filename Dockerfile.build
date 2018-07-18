@@ -8,13 +8,6 @@ RUN apt-get -y install python3 git-core python3-pip
 RUN apt-get -y install python3-pyqt5
 RUN pip3 install setuptools
 
-RUN mkdir /root/.ssh/
-ADD id_rsa /root/.ssh/id_rsa
-RUN chmod 700 /root/.ssh/id_rsa
-RUN chown -R root:root /root/.ssh
-RUN touch /root/.ssh/known_hosts
-RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
-
 RUN mkdir -p git
 WORKDIR "/git"
 RUN git clone git@github.com:VandersypenQutech/QCoDeS.git
