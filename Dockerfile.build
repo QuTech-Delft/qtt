@@ -1,7 +1,7 @@
 FROM ubuntu:bionic
 
-ENV DEBIAN_FRONTEND noninteractive
 ENV MPLBACKEND Agg
+ENV DEBIAN_FRONTEND noninteractive
 ENV QT_QPA_PLATFORM offscreen
 
 RUN apt-get update && \
