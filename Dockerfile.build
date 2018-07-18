@@ -1,6 +1,8 @@
 FROM ubuntu:bionic
 
-ENV TZ Europe/Berlin
+ENV DEBIAN_FRONTEND noninteractive
+ENV MPLBACKEND Agg
+ENV QT_QPA_PLATFORM offscreen
 
 RUN apt-get update && \
     apt-get install -y git-core x11-xserver-utils python3 \
@@ -8,5 +10,3 @@ RUN apt-get update && \
 
 RUN pip3 install setuptools
 
-ENV MPLBACKEND Agg
-ENV QT_QPA_PLATFORM offscreen
