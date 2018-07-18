@@ -32,7 +32,15 @@ pipeline {
         {
             steps {
                 sh 'pip3 list'
-                sh 'py.test-3 -k qtt --ignore qtt/legacy.py'
+                sh 'coverage run --source="./qtt" -m pytest -k qtt --ignore qtt/legacy.py'
+                sh 'coverage report'
+                sh 'coverage xml'
+            }
+        }
+        
+        stage('Collect') {
+            steps {
+                step([$class: 'CoberturaPublisher', coberturaReportFile: 'coverage.xml'])
             }
         }
     }
