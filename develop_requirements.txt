@@ -1,31 +1,32 @@
 # List of packages that can be pip installed
-numpy >= 1.10
-scipy >= 0.18
-matplotlib >= 2.0
+attrs
+autopep8
+apscheduler
 coverage
-pandas
+certifi
+colorama
+hickle>= 3.1
 jupyter
-scikit-image
-scikit-learn
+numpy >= 1.10
+matplotlib >= 2.0
+pandas
 qtpy
 h5py
 pyvisa
-slacker
-simplejson
-autopep8
-apscheduler
-spyder
+pandoc
 urllib3
-certifi
-colorama
-attrs
 Polygon3
 pyzmqrpc
 redis
-pandoc
-hickle>= 3.1
+scipy >= 0.18
+scikit-image
+scikit-learn
+slacker
+simplejson
+spyder
 wrapt
 
 # for documentation building
+sphinx>=1.6
 sphinx_rtd_theme
 sphinxcontrib.bibtex
