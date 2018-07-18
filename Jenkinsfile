@@ -11,7 +11,6 @@ pipeline {
                 sh 'cd Qcodes && ls -als'
                 sh 'cd Qcodes && pip3 install -r requirements.txt'
                 sh 'cd Qcodes && python3 setup.py build'
-                sh 'cd Qcodes && python3 setup.py build'
                 sh 'cd Qcodes && python3 setup.py install --user'
                 sh 'python3 -c "import qcodes"'
             }
