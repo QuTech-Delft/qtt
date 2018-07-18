@@ -3,8 +3,6 @@ pipeline {
         dockerfile {
             filename 'Dockerfile.build'
         }
-    environment {
-    }
     }
     stages {
         stage('Install qcodes')
