@@ -26,32 +26,34 @@ Qubits
 Example notebooks
 -----------------
 
-+Core examples
-* :doc:`Simple measurement example <notebooks/example_simple.ipynb>`
-* :doc:`How to define a station (e.g. your hardware setup) <notebooks/example_station.ipynb>`
-* :doc:`Make a linear fit in a scan of an ohmic contact <notebooks/example_ohmic.ipynb>`
+Core examples
+
+* :doc:`Simple measurement example <notebooks/example_simple>`
+* :doc:`How to define a station (e.g. your hardware setup) <notebooks/example_station>`
+* :doc:`Make a linear fit in a scan of an ohmic contact <notebooks/example_ohmic>`
 * :doc:`Create a GUI to view parameters of an instrument <notebooks/example_param_widget.py>`
-* :doc:`Automatically fit an anti-crossing in a dataset <notebooks/example_anticrossing.ipynb>`
+* :doc:`Automatically fit an anti-crossing in a dataset <notebooks/example_anticrossing>`
 * :doc:`Open a GUI to abort measurements <notebooks/example_measurement_control.py>`
 
-+More advanced topics
+More advanced topics
 
 * :doc:`Videomode tuning <notebooks/example_videomode>`
 * Virtual gate space() TODO
-* :doc:`Fitting a Coulomb peak <notebooks/example_coulomb_peak.ipynb>`
-* :doc:`Automatically fit a Fermi distribution <notebooks/example_fermi_fitting.ipynb>`
-* :doc:`Automatically fit a polarization line <notebooks/example_polFitting.ipynb>`
-* :doc:`Make corrections for the non-linearity of a charge sensor <notebooks/example_charge_sensor.ipynb>`
-* :doc:`Simulate quantum dot systems <notebooks/example_classical_dot_simulation.ipynb>`
+* :doc:`Fitting a Coulomb peak <notebooks/example_coulomb_peak>`
+* :doc:`Automatically fit a Fermi distribution <notebooks/example_fermi_fitting>`
+* :doc:`Automatically fit a polarization line <notebooks/example_polFitting>`
+* :doc:`Make corrections for the non-linearity of a charge sensor <notebooks/example_charge_sensor>`
+* :doc:`Simulate quantum dot systems <notebooks/example_classical_dot_simulation>`
 
-+Examples to fit somewhere:
-* :doc:`Classical simulation of a triple dot <notebooks/classical_triple_dot.ipynb>`
-* :doc:`Analyse Random Telegraph Singal using double gauss expedacy <notebooks/example_doublegauss_expedacy_rts.ipynb>`
-* :doc:`Example PAT fitting <notebooks/example_PAT_fitting.ipynb>`
-* :doc:`Example PAT simulations <notebooks/example_PAT_simulations.ipynb>`
-* :doc:`Example sensing dot tuning <notebooks/example_sensingdottuning.ipynb>`
-* :doc:`Example spinqubit measurement <notebooks/spinqubit_measurement.ipynb>`
-* :doc:`Example square dot tuning <notebooks/square_dot_tuning.ipynb>`
+Examples to fit somewhere:
+
+* :doc:`Classical simulation of a triple dot <notebooks/classical_triple_dot>`
+* :doc:`Analyse Random Telegraph Singal using double gauss expedacy <notebooks/example_doublegauss_expdecay_rts>`
+* :doc:`Example PAT fitting <notebooks/example_PAT_fitting>`
+* :doc:`Example PAT simulations <notebooks/example_PAT_simulations>`
+* :doc:`Example sensing dot tuning <notebooks/example_sensingdottuning>`
+* :doc:`Example spinqubit measurement <notebooks/spinqubit_measurement>`
+* :doc:`Example square dot tuning <notebooks/square_dot_tuning>`
 
 ##There are some examples in python code what to do with those?
 
