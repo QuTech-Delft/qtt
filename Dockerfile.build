@@ -1,4 +1,42 @@
-FROM ubuntu:16.04
+FROM ubuntu:bionic
 
-RUN apt-get update && \
-    apt-get -y install gcc python3-dev python3-pip libgl1-mesa-glx libx11-xcb1
+RUN apt-get update
+RUN apt-get install -y tzdata
+
+RUN apt-get -y install gedit
+RUN apt-get -y install python3 git-core python3-pip
+RUN apt-get -y install python3-pyqt5
+RUN pip3 install setuptools
+
+RUN mkdir /root/.ssh/
+ADD id_rsa /root/.ssh/id_rsa
+RUN chmod 700 /root/.ssh/id_rsa
+RUN chown -R root:root /root/.ssh
+RUN touch /root/.ssh/known_hosts
+RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+RUN mkdir -p git
+WORKDIR "/git"
+RUN git clone git@github.com:VandersypenQutech/QCoDeS.git
+RUN git clone git@github.com:VandersypenQutech/qtt.git
+
+WORKDIR "/git/QCoDeS"
+#RUN pip3 install coverage pyqtgraph slacker matplotlib 
+RUN pip3 install -r requirements.txt
+RUN python3 setup.py build
+RUN python3 setup.py install --user
+
+WORKDIR "/git/qtt"
+RUN git checkout fix/misc5
+RUN git pull
+RUN pip3 install -r requirements.txt
+
+RUN pip3 install redis # install some optional packages
+RUN apt-get install -y python3-opencv # allows for more tests to run
+
+RUN python3 setup.py build
+RUN python3 setup.py develop --user
+
+ENV MPLBACKEND Agg
+RUN apt-get install -y python3-pytest
+RUN apt-get install -y x11-xserver-utils

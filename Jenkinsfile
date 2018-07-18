@@ -5,14 +5,19 @@ pipeline {
         }
     }
     stages {
+        stage('Import')
+        {
+            steps {
+                sh 'python3 -c "import matplotlib.pyplot as plt"'
+                sh 'python3 -c "import scipy"'
+                sh 'python3 -c "import qtt"'
+            }
+        }
         stage('Test') {
             steps {
                 sh 'python3 --version'
                 sh 'ls -lah'
-                sh 'pip3 install --cache-dir /var/pip_cache -r "requirements_linux.txt"'
-                sh 'pip3 install .'
-                sh 'python3 qtt/test.py'
-                sh 'py.test'
+                sh 'py.test-3 -k qtt --ignore qtt/legacy.py'
             }
         }
     }
