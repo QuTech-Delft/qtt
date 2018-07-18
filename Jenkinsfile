@@ -31,6 +31,7 @@ pipeline {
         stage('Test')
         {
             steps {
+                sh 'pip3 list'
                 sh 'py.test-3 -k qtt --ignore qtt/legacy.py'
             }
         }
