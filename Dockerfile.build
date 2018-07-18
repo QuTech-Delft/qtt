@@ -6,6 +6,7 @@ RUN apt-get install -y tzdata
 RUN apt-get -y install gedit
 RUN apt-get -y install python3 git-core python3-pip
 RUN apt-get -y install python3-pyqt5
+RUN apt-get install -y python3-opencv
 RUN pip3 install setuptools
 
 ENV MPLBACKEND Agg
