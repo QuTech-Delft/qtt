@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        stage('Install qcodes')
+        stage('Install QCoDeS')
         {
             steps {
                 sh 'rm -fr Qcodes'
@@ -30,8 +30,8 @@ pipeline {
                 sh 'python3 -c "import scipy"'
                 sh 'python3 -c "import qtpy"'
 
-                sh 'pip3 install colorama'
                 sh 'python3 -c "import qtt"'
+                sh 'py.test-3 -k qtt --ignore qtt/legacy.py'
             }
         }
     }
