@@ -188,7 +188,8 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, par_gues
 
 def gauss_ramsey(x_data, params):
     """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase of the second pulse 
-    is made dependent on the free evolution time.
+    is made dependent on the free evolution time. This results in a gaussian decay multiplied by a sinus. 
+    Function as used by T.F. Watson et all., example in qtt/docs/notebooks/example_fit_ramsey.ipynb
     
     $$ gauss_ramsey = A * exp(-(C*x_data)**2) * sin(2pi*ramseyfreq * x_data - angle) +B  $$
     
@@ -217,14 +218,18 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
         cost (float): value which indicates the difference between the data and the fit
     """
     model = gauss_ramsey(x_data, params)
-    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2*(np.array(x_data)[1:]-np.array(x_data)[:-1])**weight_power])
+    #cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2*(np.array(x_data)[1:]-np.array(x_data)[:-1])**weight_power])
+    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2*(np.diff(x_data))**weight_power])
     return cost
 
 def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, verbose=1, par_guess=None):
-    """ Fit a gauss_ramsey. 
+    """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey sequence while varying 
+    the free evolution time, the phase of the second pulse is made dependent on the free evolution time.
+    This results in a gaussian decay multiplied by a sinus. Function as used by T.F. Watson et all., 
+    see function 'gauss_ramsey' and example in qtt/docs/notebooks/example_fit_ramsey.ipynb
     
     Args:
-        x_data (array): the data for the input variable
+        x_data (array): the data for the independant variable
         y_data (array): the data for the measured variable
         weight_power (float)
         maxiter (int): maximum number of iterations to perform
@@ -233,8 +238,8 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
         par_guess (None or array): optional, initial guess for the fit parameters: [A,C,ramseyfreq,angle,B]
         
     Returns:
-        result_dict (dict): dictionary containing the par_fit and par_guess
         par_fit (array): array with the fit parameters: [A,C,ramseyfreq,angle,B]
+        result_dict (dict): dictionary containing a description, the par_fit and par_guess
     
     """
     func = lambda params: cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
@@ -248,11 +253,31 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
         
     par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     
-    result_dict = {'parameters fit': par_fit,'parameters initial guess': par_guess}
+    result_dict = {'description':'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = A * exp(-(C*x_data)**2) * sin(2pi*ramseyfreq * x_data - angle) +B','parameters fit': par_fit,'parameters initial guess': par_guess}
     
     return par_fit, result_dict
 
-
+def test_fit_gauss_ramsey():
+    """ Tests if the function fit_gauss_ramsey is working
+    
+    Args:
+        None
+        
+    Returns:
+        Nothing
+    """
+    y_data = np.array([0.6019, 0.5242, 0.3619, 0.1888, 0.1969, 0.3461, 0.5276, 0.5361,
+       0.4261, 0.28  , 0.2323, 0.2992, 0.4373, 0.4803, 0.4438, 0.3392,
+       0.3061, 0.3161, 0.3976, 0.4246, 0.398 , 0.3757, 0.3615, 0.3723,
+       0.3803, 0.3873, 0.3873, 0.3561, 0.37  , 0.3819, 0.3834, 0.3838,
+       0.37  , 0.383 , 0.3573, 0.3869, 0.3838, 0.3792, 0.3757, 0.3815])
+    x_data = np.array([i*1.6/40 for i in range(40)])
+    par_fit_test,_ = fit_gauss_ramsey(x_data*1e-6,y_data)
+    test_x = np.linspace(0,1.6e-6,200)
+    test_y = gauss_ramsey(test_x,par_fit_test)
+    
+if __name__ == '__main__':
+    test_fit_gauss_ramsey()    
 
 def linear_function(x, a, b):
     """ Linear function with offset"""
