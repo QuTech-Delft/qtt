@@ -203,7 +203,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         plt.figure(title)
         plt.clf()
         plt.plot(bincentres_dn, counts_dn, 'o', label='Counts down') 
-        plt.plot(bincentres_dn, exp_function(bincentres_dn,  B_dn_fit, A_dn_fit, gamma_dn_fit),'r', label='Fitted exponantial decay \n t_dn: %.1f kHz' % tunnelrate_dn)
+        plt.plot(bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),'r', label='Fitted exponantial decay \n t_dn: %.1f kHz' % tunnelrate_dn)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Counts per bin')
         plt.legend()
@@ -234,7 +234,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         title = 'Fitted exponantial decay, level up'
         plt.figure(title)
         plt.plot(bincentres_up, counts_up, 'o', label='Counts up') 
-        plt.plot(bincentres_up, exp_function(bincentres_up,  B_dn_fit, A_up_fit, gamma_up_fit),'r', label='Fitted exponantial decay \n t_up: %.1f kHz' % tunnelrate_up)
+        plt.plot(bincentres_up, exp_function(bincentres_up,  A_up_fit, B_up_fit, gamma_up_fit),'r', label='Fitted exponantial decay \n t_up: %.1f kHz' % tunnelrate_up)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Data points per bin')
         plt.legend()
@@ -251,7 +251,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
 
 
 #%%
-def test_RTS():
+def test_RTS(fig=None):
     data = np.random.rand( 10000, )
     try:
         r=tunnelrates_RTS(data, plungers=[])
@@ -269,7 +269,7 @@ def test_RTS():
     data=data+np.random.normal(size=data.size)/10 # add noise
     with warnings.catch_warnings(): # catch any warnings
         warnings.simplefilter("ignore")
-        r=tunnelrates_RTS(data, plungers=[], samplerate=10e6, fig=None)
+        r=tunnelrates_RTS(data, plungers=[], samplerate=10e6, fig=fig)
  
 if __name__ == '__main__':
-    test_RTS()
+    test_RTS(fig=100)
