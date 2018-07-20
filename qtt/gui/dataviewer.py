@@ -367,6 +367,8 @@ class DataViewer(QtWidgets.QWidget):
         try:
             logging.debug('DataViewer: load tag %s' % tag)
             data = self.loadData(filename, tag)
+            if not data:
+                raise ValueError('File invalid (%s) ...' % filename)
             self.dataset = data
             self.updateMetaTabs()
 
