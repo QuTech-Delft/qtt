@@ -4,6 +4,7 @@ import numpy as np
 import scipy
 import scipy.constants
 import qtt.pgeometry
+import matplotlib.pyplot as plt
 
 
 def gaussian(x, mean, s, amplitude=1, offset=0):
@@ -37,9 +38,7 @@ def double_gaussian(signal_amp, params):
     """
     [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up] = params
     gauss_dn = gaussian(signal_amp, params[4], params[2], params[0])
-    #gauss_dn = A_dn*np.exp(-(signal_amp-mean_dn)**2/(2*sigma_dn**2))
     gauss_up = gaussian(signal_amp, params[5], params[3], params[1])
-    #gauss_up = A_up*np.exp(-(signal_amp-mean_up)**2/(2*sigma_up**2))
     double_gauss = gauss_dn + gauss_up
     return double_gauss
 
@@ -257,7 +256,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     
     return par_fit, result_dict
 
-def test_fit_gauss_ramsey():
+def test_fit_gauss_ramsey(fig=None):
     """ Tests if the function fit_gauss_ramsey is working
     
     Args:
@@ -273,11 +272,18 @@ def test_fit_gauss_ramsey():
        0.37  , 0.383 , 0.3573, 0.3869, 0.3838, 0.3792, 0.3757, 0.3815])
     x_data = np.array([i*1.6/40 for i in range(40)])
     par_fit_test,_ = fit_gauss_ramsey(x_data*1e-6,y_data)
-    test_x = np.linspace(0,1.6e-6,200)
+    test_x = np.linspace(0,x_data.max(),200)
     test_y = gauss_ramsey(test_x,par_fit_test)
     
+    if fig is not None:
+        plt.figure(10);
+        plt.clf()
+        plt.plot(x_data, y_data, '.b', label='input data')
+        plt.plot(test_x, test_y, '-m', label='fitted curve')
+        plt.legend(numpoints=1)
+        
 if __name__ == '__main__':
-    test_fit_gauss_ramsey()    
+    test_fit_gauss_ramsey(fig=10)    
 
 def linear_function(x, a, b):
     """ Linear function with offset"""
