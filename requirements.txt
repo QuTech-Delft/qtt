@@ -3,7 +3,7 @@ attrs
 colorama
 coverage
 dulwich
-git+git@github.com:qutech/qc-toolkit.git
+-e git+git@github.com:qutech/qc-toolkit.git#egg=qctoolkit
 hickle 
 numpy >= 1.13
 matplotlib >= 2.0
