@@ -1,7 +1,7 @@
 import numpy as np
 
-from qtt.instrument_drivers.virtualAwg.setting import Setting
-from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
+from qtt.instrument_drivers.virtualawg.setting import Setting
+from qtt.instrument_drivers.virtualawg.awgs.common import AwgCommon, AwgCommonError
 
 
 class Tektronix5014C_AWG(AwgCommon):
