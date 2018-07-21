@@ -26,7 +26,7 @@ class VirtualAwg(Instrument):
         self.add_parameter('virtual_info', get_cmd=self._get_virtual_info)
         
         
-    def _virtual_info(self):
+    def _get_virtual_info(self):
         """ Return data needed for snapshot of instrument """
         return {'gate_map': self._gate_map, 'awgs': [str(a) for a in self.awgs]}
         
@@ -74,6 +74,12 @@ class VirtualAwg(Instrument):
         return True if gate_names in self._gate_map else False
 
     def sweep_gates(self, gate_names, amplitudes, period, width=0.95, marker_uptime=0.2, marker_offset=0.0):
+        """ Sweep a set of gates with a sawtooth waveform
+        
+        Example:
+            >>> virtualawg.sweep_gates(['P4', 'P7'], [1e-3,-1e-3], 1e-3)
+        
+        """
         if type(gate_names) == 'str':
             gate_names = [gate_names]
             amplitudes = [amplitudes]
