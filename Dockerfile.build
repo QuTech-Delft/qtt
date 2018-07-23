@@ -1,0 +1,11 @@
+FROM ubuntu:bionic
+
+ENV MPLBACKEND Agg
+ENV DEBIAN_FRONTEND noninteractive
+ENV QT_QPA_PLATFORM offscreen
+
+RUN apt-get update && \
+    apt-get install -y git-core x11-xserver-utils python3 \
+                       python3-pip python3-pyqt5 python3-opencv python3-pytest
+
+RUN pip3 install setuptools redis

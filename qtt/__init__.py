@@ -31,14 +31,20 @@ import qtt.measurements
 import qtt.exceptions
 
 from qtt.version import __version__
-from qtt.tools import cfigure, plot2Dline
+#from qtt.tools import cfigure, plot2Dline
 from qtt.measurements.storage import save_state, load_state
 
-import qtt.live_plotting
-import qtt.gui.parameterviewer
-from qtt.gui.parameterviewer import createParameterWidget
-
-from qtt.gui.dataviewer import DataViewer
+try:
+    import pyqtgraph
+    import qtt.live_plotting
+    import qtt.gui.parameterviewer
+    from qtt.gui.parameterviewer import createParameterWidget
+    
+    from qtt.gui.dataviewer import DataViewer
+except ImportError:
+    # no gui available
+    warnings.warn('pyqtgraph could not be imported, gui elements not available')
+    
 
 #%% Check packages
 
@@ -150,7 +156,6 @@ def set_location_name(name, verbose=1):
     qcodes.DataSet.location_provider.base_record['name'] = name
 #%%
 
-
 def _copy_to_str(x, memo):
     return str(x)
 
@@ -199,15 +204,19 @@ try:
 except:
     pass
 
-# %%
-import pyqtgraph as pg
+#%% Enhance the qcodes functionality
 
-
-def _copyToClipboard(self):
-    ''' Copy the current image to a the system clipboard '''
-    app = pg.mkQApp()
-    clipboard = app.clipboard()
-    clipboard.setPixmap(self.win.grab())
-
-
-QtPlot.copyToClipboard = _copyToClipboard
+try:
+    import pyqtgraph as pg
+    
+    
+    def _copyToClipboard(self):
+        ''' Copy the current image to a the system clipboard '''
+        app = pg.mkQApp()
+        clipboard = app.clipboard()
+        clipboard.setPixmap(self.win.grab())
+    
+    
+    QtPlot.copyToClipboard = _copyToClipboard
+except:
+    pass

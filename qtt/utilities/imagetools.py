@@ -148,9 +148,8 @@ def test_fitBackground():
     im = np.random.rand( 200,100)
     bg = fitBackground(im, verbose=0)
     bg = fitBackground(im, verbose=0, removeoutliers=True)
-    
-    c=cleanSensingImage(im)
-    
+    c = cleanSensingImage(im)
+
 if __name__=='__main__':
     test_fitBackground()
 

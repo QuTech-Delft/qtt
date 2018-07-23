@@ -144,11 +144,12 @@ class sensingdot_t:
         self._detune_axis = np.array([1, -1])
         self._detune_axis = self._detune_axis / np.linalg.norm(self._detune_axis)
         self._debug = {}  # store debug data
+        self.name = '-'.join([s for s in self.gg])
         self.goodpeaks = None
         self.station = station
         self.index = index
         self.minstrument = minstrument
-        self.instrument = 'keithley%d' % index
+        self.instrument = 'keithley%d.amplitude' % index
         self.virt_gates = virt_gates
 
         self.data = {}
@@ -438,6 +439,8 @@ class sensingdot_t:
         if self.minstrument is not None:
             instrument = self.minstrument[0]
             channel = self.minstrument[1]
+            if not isinstance(channel, list):
+                channel=[channel]
 
             scanjob = qtt.measurements.scans.scanjob_t(
                     {'Naverage': Naverage, })
@@ -453,7 +456,7 @@ class sensingdot_t:
                 scanjob['sweepdata'] = {'param':  gate, 'start': cc -
                                         sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
 
-            scanjob['minstrument'] = [channel]
+            scanjob['minstrument'] = channel
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
 
