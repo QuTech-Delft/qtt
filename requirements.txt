@@ -3,13 +3,12 @@ attrs
 colorama
 coverage
 dulwich
--e git+git@github.com:qutech/qc-toolkit.git#egg=qctoolkit
-hickle 
+hickle
 numpy >= 1.13
 matplotlib >= 2.0
 pandas
 Polygon3
-pyqtgraph 
+pyqtgraph
 pyzmqrpc
 PyQt5
 qtpy
@@ -18,4 +17,3 @@ slacker
 scikit-image
 scipy >= 0.18
 tables
-

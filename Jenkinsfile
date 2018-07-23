@@ -23,7 +23,6 @@ pipeline {
             steps {
                 sh 'rm -fr qc-toolkit'
                 sh 'git clone https://github.com/VandersypenQutech/qc-toolkit.git'
-                sh 'cd qc-toolkit && pip3 install -r requirements.txt'
                 sh 'cd qc-toolkit && python3 setup.py build'
                 sh 'cd qc-toolkit && python3 setup.py install --user'
                 sh 'python3 -c "import qctoolkit"'
