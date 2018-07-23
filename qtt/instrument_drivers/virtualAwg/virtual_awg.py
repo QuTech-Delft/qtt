@@ -1,11 +1,9 @@
 import logging
 import numpy as np
-import qtt.instrument_drivers.virtualawg.awgs
-import qtt.instrument_drivers.virtualawg.awgs.Tektronix5014C as Tektronix5014C
-import qtt.instrument_drivers.virtualawg.awgs.KeysightM3202A as KeysightM3202A
+import qtt.instrument_drivers.virtualAwg.awgs as awg_common
 
 from qcodes import Instrument
-from qtt.instrument_drivers.virtualawg.sequencer import Sequencer
+from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 
 
 class VirtualAwgError(Exception):
@@ -22,21 +20,21 @@ class VirtualAwg(Instrument):
         self._gate_map = gate_map
         self.__set_hardware(awgs)
         self.__logger = logger
-
         self.add_parameter('virtual_info', get_cmd=self._get_virtual_info)
-        
-        
+
     def _get_virtual_info(self):
         """ Return data needed for snapshot of instrument """
         return {'gate_map': self._gate_map, 'awgs': [str(a) for a in self.awgs]}
-        
+
     def __set_hardware(self, awgs):
         self.awgs = list()
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
-                self.awgs.append(Tektronix5014C.Tektronix5014C_AWG(awg))
+                self.awgs.append(awg_common.Tektronix5014C.Tektronix5014C_AWG(awg))
             elif type(awg).__name__ == 'Keysight_M3201A':
-                self.awgs.append(KeysightM3202A.KeysightM3202A_AWG(awg))
+                self.awgs.append(awg_common.KeysightM3202A.KeysightM3202A_AWG(awg))
+            elif type(awg).__name__ == 'Mock':
+                self.awgs.append(awg_common.simulated_awg.SimulatedAWG(awg))
             else:
                 raise VirtualAwgError('Unusable device added!')
         self.__awg_range = range(0, len(self.awgs))
@@ -75,10 +73,9 @@ class VirtualAwg(Instrument):
 
     def sweep_gates(self, gate_names, amplitudes, period, width=0.95, marker_uptime=0.2, marker_offset=0.0):
         """ Sweep a set of gates with a sawtooth waveform
-        
+
         Example:
             >>> virtualawg.sweep_gates(['P4', 'P7'], [1e-3,-1e-3], 1e-3)
-        
         """
         if type(gate_names) == 'str':
             gate_names = [gate_names]
@@ -168,12 +165,12 @@ class VirtualAwg(Instrument):
 # UNITTESTS #
 
 def test_init_HasNoErrors():
-    from qtt.instrument_drivers.virtual_awg.awgs.simulated_awg import SimulatedAWG
+    from qtt.instrument_drivers.virtualAwg.awgs.simulated_awg import SimulatedAWG
     from unittest.mock import Mock
-    awg_driver = Mock()
-    awgs = [SimulatedAWG(awg_driver)]
+    awg_driver = Mock(name='simulated_awg')
+    awgs = [awg_driver]
     gate_map = {'P1': (0, 1), 'P2': (0, 2), 'digitizer_marker': (0, 1, 1)}
-    _ = VirtualAwg(awgs, gate_map)
+    _ = VirtualAwg(awgs, gate_map, hardware=None)
     # virtual_awg = VirtualAwg(awgs, gate_map)
     # self.assertEqual(awgs, virtual_awg.awgs)
 
