@@ -219,12 +219,12 @@ class DataViewer(QtWidgets.QWidget):
             self.updateLogs()
 
     @staticmethod
-    def find_datafiles(datadir, extensions=['dat', 'hdf5']):
+    def find_datafiles(datadir, extensions=['dat', 'hdf5'], show_progress=True):
         """ Find all datasets in a directory with a given extension """
         dd = []
         for e in extensions:
             dd += qtt.pgeometry.findfilesR(datadir, '.*%s' %
-                                           e, show_progress=True)
+                                           e, show_progress=show_progress)
 
         datafiles = sorted(dd)
         #datafiles = [os.path.join(datadir, d) for d in datafiles]

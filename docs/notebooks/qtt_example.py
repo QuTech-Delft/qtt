@@ -23,6 +23,7 @@ from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates
 from qtt import save_state, load_state
+import qtt.measurements.videomode
 
 import qtt.simulation.virtual_dot_array
 

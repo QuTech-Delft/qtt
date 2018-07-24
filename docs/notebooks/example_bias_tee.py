@@ -23,9 +23,9 @@ T = 1e-3  # 1 ms pulse
 t = np.arange(0, T, 1. / samplerate)
 
 q = int(samplerate * 1e-4)
-pulse = t.copy()
-pulse[0:q] = 5
-pulse[q:2 * q] = -2
+pulse = 0*t.copy()
+pulse[0:q] = 50e-3 # typical pulse: about 50 mV
+pulse[q:2 * q] = -20e-3
 
 if 1:
     # mirror
@@ -42,23 +42,26 @@ if 1:
 # function that returns dy/dt
 
 
-def model(y, t, alpha=600.):
+def model(y, t, rc_time=1, verbose=1):
+    alpha=1./rc_time
     tt = int(samplerate * t)
     tt = max(tt, 0)
     tt = min(tt, pulse.size - 1)
     W = pulse[tt]
     dydt = -alpha * (y - W)
-    print('t %.1f [micros], W %.3f, dydy %.1f' % (1e6 * t, W, dydt))
+    if verbose:
+        print('t %.1f [micros], W %.3f, dydy %.3f' % (1e6 * t, W, dydt))
     return dydt
 
 
 # initial condition
 y0 = 0
-
+y0 = .1e-3
 # solve ODE
 y = odeint(model, y0, t)
 
-print('accumulation of charge at end of pulse: %.2f [V]' % (y[-1],))
+print('accumulation of charge at end of pulse: %.3f [mV]' % (1e3*y[-1],))
+print('  diff %.4f [mV]' % (1e3*(y[-1]-y0), ) )
 
 #%% Plot results
 plt.figure(100)
@@ -68,5 +71,15 @@ plt.plot(1e3 * t, y, '--g', label='Condensator charge')
 plt.plot(1e3 * t, pulse - y.flatten(), 'r', label='Voltage on sample')
 plt.xlabel('time [ms]')
 plt.ylabel('Voltages [V]')
+plt.axhline(0, alpha=.5, color='m', linestyle=':')
 plt.show()
 plt.legend()
+
+
+#%% Solve to steady state [work in progress]
+for ii in range(40):
+    y = odeint(lambda *x: model(*x, verbose=0), y0, t)
+    print('y0: %.3f [mV] -> %.3f [mV]' % (1e3*y0, 1e3*y[-1]))
+    y0=y[-1]
+
+
