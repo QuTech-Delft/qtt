@@ -179,7 +179,7 @@ def test_fitfermilinear(fig=None):
         print('fitted: %s' % p0)
         print('fitted: %s' % p)
         print('max diff: %.2f' % (np.abs(p-p0).max() ))
-    assert(np.all(np.abs(p-p0)<1e-1))
+    assert(np.all(np.abs(p-p0)<1e-2))
 
 if __name__=='__main__':
     test_fitfermilinear(fig=100)         
