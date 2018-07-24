@@ -166,3 +166,16 @@ def fit_addition_line(dataset, trimborder = True):
     m_addition_line = pfit[2]
     result_dict = {'fit parameters': pfit, 'parameters initial guess': pguess, 'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
     return  m_addition_line, result_dict
+
+def test_fitfermilinear(fig=None):
+    xdata=np.arange(-20, 10, .1)
+    p0 = [0.01000295,  0.51806569, -4.88800525,  0.12838861,  0.25382811]
+    
+    ydata = FermiLinear(xdata, *p0)
+    ydata += .01*np.random.rand(ydata.size)
+    
+    p, results=fitFermiLinear(xdata, ydata, verbose=1, fig=fig)
+    assert(np.all(np.abs(p-p0)<1e-2))
+
+if __name__=='__main__':
+    test_fitfermilinear(fig=100)         
