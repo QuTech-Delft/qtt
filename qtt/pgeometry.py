@@ -69,7 +69,6 @@ try:
         import qtpy.QtCore as QtCore
         import qtpy.QtGui as QtGui
         import qtpy.QtWidgets as QtWidgets
-        import qtpy.QtWidgets as QtWidgets
         from qtpy.QtCore import QObject
         from qtpy.QtCore import Slot
         from qtpy.QtCore import Signal
@@ -133,7 +132,6 @@ except Exception as ex:
 try:
     import pylab
     import pylab as p
-    # print('after pylab'); qtModules(1)
 
 except Exception as inst:
     print(inst)
