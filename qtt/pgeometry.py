@@ -2628,11 +2628,16 @@ def minAlg_5p4(A):
 def fitPlane(X):
     """ Determine plane going through a set of points
 
-    >>> X=np.array([[1,0,0 ], [0,1,0], [1,1,0], [2,2,0]])
-    >>> t=fitPlane(X)
+    Args:
+        X (array): aray of size Nxk. Points in affine coordinates
+    Returns:
+        array: fitted plane in homogeneous coordinates
+
+    Example:
+       >>> X=np.array([[1,0,0 ], [0,1,0], [1,1,0], [2,2,0]])
+       >>> t=fitPlane(X)
 
     """
-
     AA = np.vstack((X.T, np.ones(X.shape[0]))).T
     t = minAlg_5p4(AA)
     return t
