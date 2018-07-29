@@ -8,6 +8,13 @@ class AwgCommonError(Exception):
 class AwgCommon(ABC):
 
     def __init__(self, name, channel_numbers, marker_numbers):
+        """ Contains the common functionality for each AWG to be controlled by the virtual AWG.
+
+        Args:
+            name (str): The name of the AWG class e.g. Tektronix_AWG5014.
+            channel_numbers (str): The channel numbers of the AWG.
+            marker_numbers (str): The markers numbers of the AWG.
+        """
         self._awg_name = name
         self._channel_numbers = channel_numbers
         self._channel_count = len(channel_numbers)
@@ -16,7 +23,12 @@ class AwgCommon(ABC):
 
     @property
     @abstractmethod
-    def get(self):
+    def fetch_awg(self):
+        """ Gets the underlying AWG instance, e.g. the Tektronix_AWG5014 object.
+
+        Returns:
+            The AWG instance.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -40,47 +52,43 @@ class AwgCommon(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def change_setting(self, setting, value):
+    def change_setting(self, name, value):
         raise NotImplementedError
 
     @abstractmethod
-    def update_settings(self):
+    def retrieve_setting(self, name):
         raise NotImplementedError
 
     @abstractmethod
-    def set_mode(self, mode):
+    def update_running_mode(self, mode):
         raise NotImplementedError
 
     @abstractmethod
-    def get_mode(self):
+    def retrieve_running_mode(self):
         raise NotImplementedError
 
     @abstractmethod
-    def set_sampling_rate(self, sampling_rate):
+    def update_sampling_rate(self, sampling_rate):
         raise NotImplementedError
 
     @abstractmethod
-    def get_sampling_rate(self, sampling_rate):
+    def retrieve_sampling_rate(self, sampling_rate):
         raise NotImplementedError
 
     @abstractmethod
-    def set_gain(self, gain):
+    def update_gain(self, gain):
         raise NotImplementedError
 
     @abstractmethod
-    def get_gain(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def set_sequence(self, channel, sequence):
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_sequence(self, channel):
+    def retrieve_gain(self):
         raise NotImplementedError
 
     @abstractmethod
     def upload_waveforms(self, names, waveforms):
+        raise NotImplementedError
+
+    @abstractmethod
+    def retrieve_waveforms(self):
         raise NotImplementedError
 
     @abstractmethod

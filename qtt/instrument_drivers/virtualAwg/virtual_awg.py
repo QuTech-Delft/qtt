@@ -1,9 +1,13 @@
 import logging
 import numpy as np
-import qtt.instrument_drivers.virtualAwg.awgs as awg_common
 
 from qcodes import Instrument
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
+
+from qtt.instrument_drivers.virtualAwg.awgs.simulated_awg import Simulated_AWG
+from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
+from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
+from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstruments_HDAWG8
 
 
 class VirtualAwgError(Exception):
@@ -17,24 +21,25 @@ class VirtualAwg(Instrument):
     def __init__(self, awgs, gate_map, hardware, name='virtual_awg', logger=logging, **kwargs):
         super().__init__(name, **kwargs)
         self.__hardware = hardware
-        self._gate_map = gate_map
+        self.__gate_map = gate_map
         self.__set_hardware(awgs)
         self.__logger = logger
-        self.add_parameter('virtual_info', get_cmd=self._get_virtual_info)
 
     def _get_virtual_info(self):
         """ Return data needed for snapshot of instrument """
-        return {'gate_map': self._gate_map, 'awgs': [str(a) for a in self.awgs]}
+        return {'gate_map': self.__gate_map, 'awgs': [str(a) for a in self.awgs]}
 
     def __set_hardware(self, awgs):
         self.awgs = list()
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
-                self.awgs.append(awg_common.Tektronix5014C.Tektronix5014C_AWG(awg))
+                self.awgs.append(Tektronix5014C_AWG(awg))
             elif type(awg).__name__ == 'Keysight_M3201A':
-                self.awgs.append(awg_common.KeysightM3202A.KeysightM3202A_AWG(awg))
+                self.awgs.append(KeysightM3202A_AWG(awg))
+            elif type(awg).__name__ == 'ZI_HDAWG8':
+                self.awgs.append(ZurichInstruments_HDAWG8(awg))
             elif type(awg).__name__ == 'Mock':
-                self.awgs.append(awg_common.simulated_awg.SimulatedAWG(awg))
+                self.awgs.append(Simulated_AWG(awg))
             else:
                 raise VirtualAwgError('Unusable device added!')
         self.__awg_range = range(0, len(self.awgs))
@@ -51,12 +56,12 @@ class VirtualAwg(Instrument):
 
     def enable_outputs(self, gate_names):
         for name in gate_names:
-            (awg_nr, channel_nr) = self._gate_map[name]
+            (awg_nr, channel_nr) = self.__gate_map[name]
             self.awgs[awg_nr].enable_outputs([channel_nr])
 
     def disable_outputs(self, gate_names):
         for name in gate_names:
-            (awg_nr, channel_nr) = self._gate_map[name]
+            (awg_nr, channel_nr) = self.__gate_map[name]
             self.awgs[awg_nr].disable_outputs([channel_nr])
 
     def update_setting(self, awg_nr, setting, value):
@@ -69,7 +74,7 @@ class VirtualAwg(Instrument):
             return False
         if isinstance(gate_names, list):
             return np.all([self.are_awg_gates(g) for g in gate_names])
-        return True if gate_names in self._gate_map else False
+        return True if gate_names in self.__gate_map else False
 
     def sweep_gates(self, gate_names, amplitudes, period, width=0.95, marker_uptime=0.2, marker_offset=0.0):
         """ Sweep a set of gates with a sawtooth waveform
@@ -82,7 +87,7 @@ class VirtualAwg(Instrument):
             amplitudes = [amplitudes]
         sequences = list()
         for gate_name, amplitude in zip(gate_names, amplitudes):
-            (awg_nr, channel_nr, *marker_nr) = self._gate_map[gate_name]
+            (awg_nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
             if marker_nr:
                 marker = Sequencer.make_marker(period, marker_uptime, marker_offset)
                 sequences.append(marker)
@@ -98,7 +103,7 @@ class VirtualAwg(Instrument):
             amplitudes = [amplitudes]
         sequences = list()
         for gate_name, amplitude in zip(gate_names, amplitudes):
-            (awg_nr, channel_nr, *marker_nr) = self._gate_map[gate_name]
+            (awg_nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
             if marker_nr:
                 marker = Sequencer.make_marker(period, marker_uptime, marker_offset)
                 sequences.append(marker)
@@ -120,7 +125,7 @@ class VirtualAwg(Instrument):
             channel_data = dict()
             waveform_data = dict()
             for (gate_name, sequence) in zip(gate_names, sequences):
-                (nr, channel_nr, *marker_nr) = self._gate_map[gate_name]
+                (nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
                 if marker_nr:
                     continue
                 if nr == awg_nr:
@@ -141,7 +146,7 @@ class VirtualAwg(Instrument):
 
                     # ...
                     for (gate_name_t, sequence_t) in zip(gate_names, sequences):
-                        (awg_nr_t, channel_nr_t, *marker_nr_t) = self._gate_map[gate_name_t]
+                        (awg_nr_t, channel_nr_t, *marker_nr_t) = self.__gate_map[gate_name_t]
                         if awg_nr_t == awg_nr and channel_nr_t == channel_nr and marker_nr_t:
                             marker_data = Sequencer.get_data(sequence_t, sampling_rate)
                             if len(marker_data) != data_count:

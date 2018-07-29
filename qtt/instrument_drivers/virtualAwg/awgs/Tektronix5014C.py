@@ -1,7 +1,9 @@
 import numpy as np
 
-from qtt.instrument_drivers.virtualAwg.setting import Setting
-from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
+from qcodes import Parameter
+from qcodes.utils.validators import Numbers
+from qtt.instrument_drivers.virtualAwg.awgs.common import (AwgCommon,
+                                                           AwgCommonError)
 
 
 class Tektronix5014C_AWG(AwgCommon):
@@ -10,12 +12,18 @@ class Tektronix5014C_AWG(AwgCommon):
         super().__init__('Tektronix_AWG5014', channel_numbers=[1, 2, 3, 4], marker_numbers=[1, 2])
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
-        self.__settings = {'sampling_rate': Setting('GS/s', 1.0e9, 1.0e7, 1.2e9),
-                           'marker_delay': Setting('ns', 0.0, 0.0, 1.0),
-                           'marker_low': Setting('V', 0.0, -1.0, 2.6),
-                           'marker_high': Setting('V', 1.0, -0.9, 2.7),
-                           'amplitudes': Setting('V', 1.0, 0.02, 4.5),
-                           'offset': Setting('V', 0, -2.25, 2.25)}
+        self.__settings = [Parameter(name='sampling_rate', unit='GS/s', initial_value=1.0e9,
+                                     vals=Numbers(1.0e7, 1.2e9), set_cmd=None),
+                           Parameter(name='marker_delay', unit='ns', initial_value=0.0,
+                                     vals=Numbers(0.0, 1.0), set_cmd=None),
+                           Parameter(name='marker_low', unit='V', initial_value=0.0,
+                                     vals=Numbers(-1.0, 2.6), set_cmd=None),
+                           Parameter(name='marker_high', unit='V', initial_value=1.0,
+                                     vals=Numbers(-0.9, 2.7), set_cmd=None),
+                           Parameter(name='amplitudes', unit='V', initial_value=1.0,
+                                     vals=Numbers(0.02, 4.5), set_cmd=None),
+                           Parameter(name='offset', unit='V', initial_value=0,
+                                     vals=Numbers(-2.25, 2.25), set_cmd=None)]
         self.__awg = awg
         self.update_settings()
 

@@ -4,7 +4,7 @@ from qtt.instrument_drivers.virtualAwg.setting import Setting
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
 
 
-class SimulatedAWG(AwgCommon):
+class Simulated_AWG(AwgCommon):
 
     def __init__(self, awg):
         super().__init__('Simulated_AWG', channel_numbers=[1, 2, 3, 4], marker_numbers=[1, 2])
