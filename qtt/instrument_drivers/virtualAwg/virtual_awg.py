@@ -170,19 +170,9 @@ class VirtualAwg(Instrument):
 # UNITTESTS #
 
 def test_init_HasNoErrors():
-    from qtt.instrument_drivers.virtualAwg.awgs.simulated_awg import SimulatedAWG
     from unittest.mock import Mock
     awg_driver = Mock(name='simulated_awg')
     awgs = [awg_driver]
     gate_map = {'P1': (0, 1), 'P2': (0, 2), 'digitizer_marker': (0, 1, 1)}
-    _ = VirtualAwg(awgs, gate_map, hardware=None)
-    # virtual_awg = VirtualAwg(awgs, gate_map)
-    # self.assertEqual(awgs, virtual_awg.awgs)
-
-
-"""
-sweepparams = ['P1', 'P2']
-sweepranges = [100, 100]
-waveform, _ = self.station.awg.sweep_gate(sweepparams, sweepranges, period=1e-3)
-
-"""
+    virtual_awg = VirtualAwg(awgs, gate_map, hardware=None)
+    assert(awg_driver == virtual_awg.awgs[0].fetch_awg)

@@ -1,6 +1,5 @@
 import numpy as np
 
-from qtt.instrument_drivers.virtualAwg.setting import Setting
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
 
 
