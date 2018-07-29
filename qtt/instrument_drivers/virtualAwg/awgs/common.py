@@ -148,13 +148,14 @@ class AwgCommon(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def upload_waveforms(self, sequence_channels, sequence_names, sequences):
+    def upload_waveforms(self, sequence_channels, sequence_names, sequence_items, reload=True):
         """ Sends the sequences to the AWG.
 
             Args:
                 sequence_channels (int, list): A list with the channel for each sequence.
                 sequence_names (str, list): A list with the name of the sequence for each sequence.
-                sequences (Sequence, list): The Sequencer sequences.
+                sequence_items (Sequence, list): The Sequencer sequences.
+                reload (bool): Reload all the sequences if True else only change the sequence order.
         """
         raise NotImplementedError
 
