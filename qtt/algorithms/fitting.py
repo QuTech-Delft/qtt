@@ -175,7 +175,11 @@ def test_fitfermilinear(fig=None):
     ydata += .01*np.random.rand(ydata.size)
     
     p, results=fitFermiLinear(xdata, ydata, verbose=1, fig=fig)
-    assert(np.all(np.abs(p-p0)<1e-2))
+    if fig:
+        print('fitted: %s' % p0)
+        print('fitted: %s' % p)
+        print('max diff: %.2f' % (np.abs(p-p0).max() ))
+    assert(np.all(np.abs(p-p0)<1e-1))
 
 if __name__=='__main__':
     test_fitfermilinear(fig=100)         
