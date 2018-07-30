@@ -1016,6 +1016,9 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
 def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None, yunit=None, zunit=None, location=None, loc_record=None):
     ''' Make DataSet with one 2D array and two setpoint arrays
 
+    The y array will be the first setpoint array (1D), the x array the second setpoint (2D). 
+    The z should be a list of arrays of dimension ny x nx
+
     Arguments:
         xname, yname (string): the name of the setpoint array
         x, y (array): the setpoint data
@@ -1090,6 +1093,7 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
             measure_names += [p.full_name]
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     for idm, mname in enumerate(measure_names):
+        assert(zz.shape==y.shape)
         z = DataArray(name=mname, array_id=mname, label=mname,
                       preset_data=np.copy(zz), set_arrays=(x, y))
         dd.add_array(z)
@@ -1111,14 +1115,19 @@ def test_makeDataSet2D():
     p = ManualParameter('dummy')
     p2 = ManualParameter('dummy2')
     ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
-
     _ = diffDataset(ds)
 
+def test_makeDataSet2Dplain():
+    x = np.arange(0, 10)
+    y = np.arange(0, 5)
+    z = np.meshgrid(x, y)
+    _ = makeDataSet2Dplain('xname', x, 'yname', y, zname='measured', z=z)
 
 def test_makeDataSet1Dplain():
     x = np.arange(0, 10)
     y = np.vstack((x - 1, x + 10))
     ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
+
 
 #%%
 
@@ -1154,16 +1163,12 @@ def test_compare():
     ds = qcodes.tests.data_mocks.DataSet2D()
     compare_dataset_metadata(ds, ds, verbose=0)
 
-#%%
-
-
 def test_numpy_on_dataset():
     import qcodes.tests.data_mocks
     alldata = qcodes.tests.data_mocks.DataSet2D()
     X = alldata.z
     _ = np.array(X)
     s = np.linalg.svd(X)
-    # print(s)
 
 
 if __name__ == '__main__':
@@ -1172,5 +1177,6 @@ if __name__ == '__main__':
 
     test_numpy_on_dataset()
     test_makeDataSet2D()
+    test_makeDataSet2Dplain()
     test_makeDataSet1Dplain()
     test_compare()

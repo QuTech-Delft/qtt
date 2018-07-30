@@ -1477,7 +1477,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     return data
 
 
-def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None):
+def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None, verbose=1):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
     The saving to disk can take minutes or even longer.
@@ -1528,9 +1528,9 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
             if isinstance(dataraw, tuple):
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1)) 
-            segment_num = np.arange(nsegments)
-            segment_time = np.linspace(0, period, data.shape[2])
-            alldata = makeDataSet2Dplain('segment_number', segment_num, 'time', segment_time,
+            segment_time = np.linspace(0., period, data.shape[2])
+            segment_num = np.arange(nsegments).astype(segment_time.dtype)
+            alldata = makeDataSet2Dplain('time', segment_time,'segment_number', segment_num, 
                                              zname=measure_names, z=data, xunit='s', location=location, loc_record={'label': 'save_segments'})
         else:
             raise(Exception('Non-averaged acquisitions not supported for this measurement instrument'))
