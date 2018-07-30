@@ -57,6 +57,7 @@ def qtModules(verbose=0):
         print('qt modules: %s' % str(qq))
     return qq
 
+
 try:
     _applocalqt = None
 
@@ -64,10 +65,9 @@ try:
         # by default use qtpy to import Qt
         import qtpy
         _haveqtpy = True
-        
+
         import qtpy.QtCore as QtCore
         import qtpy.QtGui as QtGui
-        import qtpy.QtWidgets as QtWidgets
         import qtpy.QtWidgets as QtWidgets
         from qtpy.QtCore import QObject
         from qtpy.QtCore import Slot
@@ -132,7 +132,6 @@ except Exception as ex:
 try:
     import pylab
     import pylab as p
-    # print('after pylab'); qtModules(1)
 
 except Exception as inst:
     print(inst)
@@ -199,26 +198,28 @@ except:
 
 def memory():
     """ return the memory usage in MB """
-    import psutil, os
+    import psutil
+    import os
     process = psutil.Process(os.getpid())
-    mem =process.memory_info().rss / (1024.*1024.)
+    mem = process.memory_info().rss / (1024. * 1024.)
     return mem
-    
+
+
 def list_objects(objectype=None, objectclassname='__123', verbose=1):
     """ List all objects in memory of a specific type or with a specific class name
-    
+
     Args:
         objectype (None or class)
         objectclassname (str)
     Returns:
         ll (list): list of objects found
-        
-    
+
+
     """
     import gc
-    ll=[]
-    for ii,obj in enumerate(gc.get_objects()):
-        if ii>1000000:
+    ll = []
+    for ii, obj in enumerate(gc.get_objects()):
+        if ii > 1000000:
             break
         valid = False
         if hasattr(obj, '__class__'):
@@ -228,14 +229,16 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
                 valid = True
         if valid:
             if verbose:
-                    print('list_objects: object %s'  % (obj, ))
+                print('list_objects: object %s' % (obj, ))
             ll.append(obj)
     return ll
 
+
 from functools import wraps
 
-def package_versions(verbose=1):   
-    
+
+def package_versions(verbose=1):
+
     print('numpy.__version__ %s' % numpy.__version__)
     print('scipy.__version__ %s' % scipy.__version__)
     print('matplotlib.__version__ %s' % matplotlib.__version__)
@@ -247,17 +250,18 @@ def package_versions(verbose=1):
     try:
         import qtpy
         import qtpy.QtCore
-        print('qtpy.API_NAME %s'  % (qtpy.API_NAME) )
-        print('qtpy.QtCore %s'  % (qtpy.QtCore) )
-        print('qtpy.QtCore.__version__ %s'  % (qtpy.QtCore.__version__) )
+        print('qtpy.API_NAME %s' % (qtpy.API_NAME))
+        print('qtpy.QtCore %s' % (qtpy.QtCore))
+        print('qtpy.QtCore.__version__ %s' % (qtpy.QtCore.__version__))
     except:
         pass
     try:
         import sip
-        print('sip %s'  % sip.SIP_VERSION_STR)
+        print('sip %s' % sip.SIP_VERSION_STR)
     except:
         pass
-    
+
+
 def freezeclass(cls):
     """ Decorator to freeze a class """
     cls.__frozen = False
@@ -284,7 +288,7 @@ def freezeclass(cls):
 
 def static_var(varname, value):
     """ Helper function to create a static variable
-    
+
     Args:
         varname (str)
         value (anything)
@@ -298,7 +302,7 @@ def static_var(varname, value):
 @static_var("time", {'default': 0})
 def tprint(string, dt=1, output=False, tag='default'):
     """ Print progress of a loop every dt seconds 
-    
+
     Args:
         string (str): text to print
         dt (float): delta time in seconds
@@ -306,7 +310,7 @@ def tprint(string, dt=1, output=False, tag='default'):
         tag (str): optional tag for time
     Returns:
         output (bool)
-        
+
     """
     if (time.time() - tprint.time.get(tag, 0)) > dt:
         print(string)
@@ -502,15 +506,20 @@ def breakLoop(wk=None, dt=0.001, verbose=0):
     return False
 
 
-
 def hom(x):
-    """ Make points homogeneous """
+    """ Create affine to homogeneous coordinates
+
+    Args:
+        x (kxN array): affine coordinates
+    Returns:
+        h ( (k+1xN) array): homogeneous coordinates
+    """
     nx = x.shape[1]
     return np.vstack((x, np.ones(nx)))
 
 
 def dehom(x):
-    """ Convert homogeneous points to local coordinates """
+    """ Convert homogeneous points to affine coordinates """
     return x[0:-1, :] / x[-1, :]
 
 
@@ -519,6 +528,37 @@ def null(a, rtol=1e-5):
     u, s, v = np.linalg.svd(a)
     rank = (s > rtol * s[0]).sum()
     return rank, v[rank:].T.copy()
+
+
+def intersect2lines(l1, l2):
+    """ Caculate intersection between 2 lines
+
+    Args:
+        l1 (array): first line in homogeneous format
+        l2 (array): first line in homogeneous format
+    Returns:
+        array: intersection in homogeneous format. To convert to affine coordinates use `dehom`
+    """
+    r = null(np.vstack((l1, l2)))
+    return r[1]
+
+
+def test_intersect2lines():
+    p1 = np.array([[0, 0]])
+    p2 = np.array([[1, 0]])
+    p3 = np.array([[1, 1]])
+    p4 = np.array([[2, 2]])
+
+    line1 = fitPlane(np.vstack((p1, p2)))
+    line2 = fitPlane(np.vstack((p3, p4)))
+
+    a = intersect2lines(line1, line2)
+    pt = dehom(a)
+    np.testing.assert_almost_equal(pt, 0)
+
+
+if __name__ == '__main__':
+    test_intersect2lines()
 
 
 def runcmd(cmd, verbose=0):
@@ -588,7 +628,6 @@ def T2opencv(T):
     return rvec, tvec
 
 
-
 def euler2RBE(theta):
     """ Convert Euler angles to rotation matrix
 
@@ -656,7 +695,8 @@ def directionMean(vec):
 
     m = vec.mean(axis=0)
     a0 = np.arctan2(m[0], m[1])
-    ff = lambda a: dist(a, vec)
+
+    def ff(a): return dist(a, vec)
 
     r = scipy.optimize.minimize(
         ff, a0, callback=None, options=dict({'disp': False}))
@@ -713,16 +753,15 @@ def dir2R(d, a=None):
         a = R0.dot(a)
         bt = (a + b) / np.linalg.norm(a + b)
         R = np.eye(3) - 2 * a.dot(a.T) - 2 * \
-                   (bt.dot(bt.T)).dot(np.eye(3) - 2 * a.dot(a.T))
+            (bt.dot(bt.T)).dot(np.eye(3) - 2 * a.dot(a.T))
         R = R.dot(R0)
     else:
         bt = (a + b) / np.linalg.norm(a + b)
 
         R = np.eye(3) - 2 * a.dot(a.T) - 2 * \
-                   (bt.dot(bt.T)).dot(np.eye(3) - 2 * a.dot(a.T))
+            (bt.dot(bt.T)).dot(np.eye(3) - 2 * a.dot(a.T))
 
     return R
-
 
 
 def frame2T(f):
@@ -731,6 +770,7 @@ def frame2T(f):
     T[0:3, 0:3] = euler2RBE(f[3:7])
     T[0:3, 3] = f[0:3].reshape(3, 1)
     return T
+
 
 @static_var("b", np.array(np.zeros((2, 2))))
 def rot2D(phi):
@@ -759,6 +799,7 @@ def rot2D(phi):
     r.itemset(3, c)
     return r
 
+
 def pg_rotx(phi):
     """ Rotate around the x-axis with angle """
     c = math.cos(phi)
@@ -767,14 +808,15 @@ def pg_rotx(phi):
     R.flat = [1, 0, 0, 0, c, -s, 0, s, c]
     return R
 
+
 def pcolormesh_centre(x, y, im, *args, **kwargs):
     """ Wrapper for pcolormesh to plot pixel centres at data points """
-    dx=np.diff(x)
-    dy=np.diff(y)
-    dx=np.hstack( (dx[0], dx, dx[-1]))
-    dy=np.hstack( (dy[0], dy, dy[-1]))
-    xx=np.hstack( (x, x[-1]+dx[-1]))-dx/2
-    yy=np.hstack( (y, y[-1]+dy[-1]))-dy/2
+    dx = np.diff(x)
+    dy = np.diff(y)
+    dx = np.hstack((dx[0], dx, dx[-1]))
+    dy = np.hstack((dy[0], dy, dy[-1]))
+    xx = np.hstack((x, x[-1] + dx[-1])) - dx / 2
+    yy = np.hstack((y, y[-1] + dy[-1])) - dy / 2
     plt.pcolormesh(xx, yy, im, *args, **kwargs)
 
 
@@ -889,7 +931,6 @@ def setregion(im, subim, pos, mask=None, clip=False):
                     (1 - mask[:, :]) + (subim[:, :, np.newaxis] * mask[:, :])
 
     return im
-
 
 
 def region2poly(rr):
@@ -1249,6 +1290,7 @@ def finddirectories(p, patt):
     lst = [l for l in lst if os.path.isdir(os.path.join(p, l))]
     return lst
 
+
 def _walk_calc_progress(progress, root, dirs):
     """ Helper function """
     prog_start, prog_end, prog_slice = 0.0, 1.0, 1.0
@@ -1266,15 +1308,16 @@ def _walk_calc_progress(progress, root, dirs):
             del progress[parent_path]
 
     if dirs:
-        progress[root] = (current_progress, current_progress+prog_slice, dirs)
+        progress[root] = (current_progress, current_progress + prog_slice, dirs)
 
     return current_progress
+
 
 def findfilesR(p, patt, show_progress=False):
     """ Get a list of files (recursive)
 
     Args:
-        
+
         p (string): directory
         patt (string): pattern to match
         show_progress (bool)
@@ -1285,10 +1328,10 @@ def findfilesR(p, patt, show_progress=False):
     rr = re.compile(patt)
     progress = {}
     for root, dirs, files in os.walk(p, topdown=True):
-         frac=_walk_calc_progress(progress, root, dirs)
-         if show_progress:
-           tprint('findfilesR: %s: %.1f%%' % (p, 100*frac))
-         lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
+        frac = _walk_calc_progress(progress, root, dirs)
+        if show_progress:
+            tprint('findfilesR: %s: %.1f%%' % (p, 100 * frac))
+        lst += [os.path.join(root, f) for f in files if re.match(rr, f)]
     return lst
 
 
@@ -1353,19 +1396,20 @@ def findfiles(p, patt, recursive=False):
 
 
 def blur_measure(im, verbose=0):
-     """ Calculate bluriness for an image
+    """ Calculate bluriness for an image
 
-     Args:
-         im (array): input image
-     """
+    Args:
+        im (array): input image
+    """
 
-     gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-     # compute the variance of laplacian
-     fm = cv2.Laplacian(gray, cv2.CV_64F).var()
-     if verbose:
-         print('calculate_blur: %.3f' % fm)
-     return fm
- 
+    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    # compute the variance of laplacian
+    fm = cv2.Laplacian(gray, cv2.CV_64F).var()
+    if verbose:
+        print('calculate_blur: %.3f' % fm)
+    return fm
+
+
 def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
     """ Create a Gabor filter of specified size
 
@@ -1409,6 +1453,7 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
     return gb
 
 #%%
+
 
 import numpy as np
 import scipy.ndimage.filters as filters
@@ -1583,6 +1628,8 @@ def choose(n, k):
 def closefn():
     """ Destructor function for the module """
     return
+
+
     # global _applocalqt
 import atexit
 atexit.register(closefn)
@@ -1737,13 +1784,13 @@ try:
         """ Write text on image using PIL """
         if fonttype is None:
             try:
-                fonttype=r'c:\Windows\Fonts\Verdana.ttf'
+                fonttype = r'c:\Windows\Fonts\Verdana.ttf'
                 font = ImageFont.truetype(fonttype, fontsize)
             except:
-                fonttype='/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
+                fonttype = '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
                 font = ImageFont.truetype(fonttype, fontsize)
         else:
-                font = ImageFont.truetype(fonttype, fontsize)
+            font = ImageFont.truetype(fonttype, fontsize)
         im1 = Image.fromarray(im)
         # Drawing the text on the picture
         draw = ImageDraw.Draw(im1)
@@ -1865,7 +1912,7 @@ class plotCallback:
         self.verbose = verbose
         if scale is None:
             # automatically determine scale
-            scale=[1/(1e-8+np.ptp(xdata)), 1/(1e-8+ np.ptp(ydata) ) ] 
+            scale = [1 / (1e-8 + np.ptp(xdata)), 1 / (1e-8 + np.ptp(ydata))]
         self.scale = scale
 
     def __call__(self, event):
@@ -1904,7 +1951,7 @@ class plotCallback:
 
     def connect(self, fig):
         if isinstance(fig, int):
-            fig =plt.figure(fig)
+            fig = plt.figure(fig)
         cid = fig.canvas.mpl_connect('button_press_event', self)
 
 
@@ -1923,6 +1970,7 @@ def cfigure(*args, **kwargs):
     return fig
 
 #%%
+
 
 try:
     def monitorSizes(verbose=0):
@@ -2017,6 +2065,7 @@ def setWindowRectangle(x, y=None, w=None, h=None, mngr=None, be=None):
         mngr.canvas.manager.window.setGeometry(x, y, w, h)
         # mngr.window.setGeometry(x,y,w,h)
 
+
 try:
     # http://forums.xkcd.com/viewtopic.php?f=11&t=99890
     import msvcrt
@@ -2067,7 +2116,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
     be = matplotlib.get_backend()
     if monitorindex is None:
         monitorindex = tilefigs.monitorindex
-        
+
     if ww is None:
         ww = monitorSizes()[monitorindex]
 
@@ -2086,17 +2135,17 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
     for ii, f in enumerate(lst):
         if isinstance(f, matplotlib.figure.Figure):
             fignum = f.number
-        elif isinstance(f, (int, numpy.int32, numpy.int64) ):
+        elif isinstance(f, (int, numpy.int32, numpy.int64)):
             fignum = f
         else:
             # try
             try:
-                fignum=f.fig.number
+                fignum = f.fig.number
             except:
-                fignum=-1
+                fignum = -1
         if not plt.fignum_exists(fignum):
             if verbose >= 2:
-                print('tilefigs: f %s fignum: %s' % (f, str(fignum)) )
+                print('tilefigs: f %s fignum: %s' % (f, str(fignum)))
             continue
         fig = plt.figure(fignum)
         iim = ii % np.prod(geometry)
@@ -2118,7 +2167,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         if be == 'agg':
             fig.canvas.manager.window.SetPosition((x, y))
             fig.canvas.manager.window.resize(w, h)
-        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg' or be=='Qt5Agg':
+        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg' or be == 'Qt5Agg':
             # assume Qt canvas
             try:
                 fig.canvas.manager.window.move(x, y)
@@ -2156,16 +2205,16 @@ def robustCost(x, thr, method='L1'):
     if thr is None:
         return x
     if thr is 'auto':
-        ax=np.abs(x)
+        ax = np.abs(x)
         thr = np.percentile(ax, 95.)
         p50 = np.percentile(ax, 50)
-        if thr==p50:
+        if thr == p50:
             thr = np.percentile(ax, 99.)
-        if thr<=0:
+        if thr <= 0:
             warnings.warn('estimation of robust cost threshold failed (p50 %f, thr %f' % (p50, thr))
-            
-        if method=='L2' or method=='square':
-            thr=thr*thr
+
+        if method == 'L2' or method == 'square':
+            thr = thr * thr
 
     if method == 'L1':
         y = np.minimum(np.abs(x), thr)
@@ -2215,10 +2264,11 @@ def robustCost(x, thr, method='L1'):
 
 #%%
 
+
 def test_robustCost():
-    x=np.array([0,1,2,3,4,5])
-    _=robustCost(x, 2)
-    _=robustCost(x, 'auto')
+    x = np.array([0, 1, 2, 3, 4, 5])
+    _ = robustCost(x, 2)
+    _ = robustCost(x, 'auto')
 
 #%% Wrapper to read video files
 
@@ -2268,10 +2318,12 @@ class videoreader_t:
         if self.resize:
             im = cv2.resize(im, None, fx=.25, fy=.25)
         return r, im
+
     def close():
         pass
 
 #%%
+
 
 def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
     """ Search for specific type of object in Matplotlib figure """
@@ -2430,7 +2482,7 @@ def otsu(im, fig=None):
 
 def histogram(x, nbins=30, fig=1):
     """ Return histogram of data
-    
+
     >>> _=histogram(np.random.rand(1,100))
     """
     nn, bin_edges = np.histogram(x, bins=nbins)
@@ -2538,12 +2590,14 @@ def point_in_polygon(pt, pp):
     r = cv2.pointPolygonTest(pp, (pt[0], pt[1]), measureDist=False)
     return r
 
-def test_polygon_functions():
-    pp= np.array( [[0,0], [4,0], [0,4]])
-    assert(point_in_polygon( [1,1], pp )== 1 )
-    assert(point_in_polygon( [-1,1], pp ) == -1 )
 
-    assert(np.all( points_in_polygon( np.array( [[-1,1],[1,1], [.5,.5]]), pp ) == np.array([-1,1,1]) ) )
+def test_polygon_functions():
+    pp = np.array([[0, 0], [4, 0], [0, 4]])
+    assert(point_in_polygon([1, 1], pp) == 1)
+    assert(point_in_polygon([-1, 1], pp) == -1)
+
+    assert(np.all(points_in_polygon(np.array([[-1, 1], [1, 1], [.5, .5]]), pp) == np.array([-1, 1, 1])))
+
 
 def minAlg_5p4(A):
     """ Algebraic minimization function
@@ -2572,11 +2626,16 @@ def minAlg_5p4(A):
 def fitPlane(X):
     """ Determine plane going through a set of points
 
-    >>> X=np.array([[1,0,0 ], [0,1,0], [1,1,0], [2,2,0]])
-    >>> t=fitPlane(X)
+    Args:
+        X (array): aray of size Nxk. Points in affine coordinates
+    Returns:
+        array: fitted plane in homogeneous coordinates
+
+    Example:
+       >>> X=np.array([[1,0,0 ], [0,1,0], [1,1,0], [2,2,0]])
+       >>> t=fitPlane(X)
 
     """
-
     AA = np.vstack((X.T, np.ones(X.shape[0]))).T
     t = minAlg_5p4(AA)
     return t
@@ -2623,6 +2682,7 @@ class ThreadObject:
             pass
         self.mythread = threading.Thread(target=self.run)
         self.mythread.start()
+
     def run(self):
         ii = 0
         self.active = 1
@@ -2682,6 +2742,7 @@ def test_geometry(verbose=1, fig=None):
         plt.clf()
         plt.imshow(im, interpolation='nearest')
 
+
 def unittest(verbose=1):
     """ Unittest function for module """
     import doctest
@@ -2689,6 +2750,7 @@ def unittest(verbose=1):
         print('pgeometry: running unittest')
     _ = euler2RBE([0, 1, 2])
     doctest.testmod()
+
 
 #%% Run tests from documentation
 if __name__ == "__main__":
