@@ -27,7 +27,7 @@ class VirtualAwg(Instrument):
 
     def _get_virtual_info(self):
         """ Return data needed for snapshot of instrument """
-        return {'gate_map': self.__gate_map, 'awgs': [str(a) for a in self.awgs]}
+        return {'gate_map': self.__gate_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
 
     def __set_hardware(self, awgs):
         self.awgs = list()
@@ -193,4 +193,4 @@ def test_init_HasNoErrors():
     awgs = [awg_driver]
     gate_map = {'P1': (0, 1), 'P2': (0, 2), 'digitizer_marker': (0, 1, 1)}
     virtual_awg = VirtualAwg(awgs, gate_map, hardware=None)
-    assert(awg_driver == virtual_awg.awgs[0].fetch_awg)
+    assert awg_driver == virtual_awg.awgs[0].fetch_awg

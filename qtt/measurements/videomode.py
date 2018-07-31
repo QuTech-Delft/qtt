@@ -113,7 +113,7 @@ class VideoMode:
         sample_rate (float): sample rate for acquisition device
         crosshair (bool): enable crosshair
     """
-    # TODO: implement optional sweep directions, i.e. forward and backward
+    #  TODO: implement optional sweep directions, i.e. forward and backward
 
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
@@ -138,7 +138,7 @@ class VideoMode:
         self.datalock = threading.Lock()
         self.datafunction_result = None
         self.update_sleep = 1e-5
-        
+
         # parse instrument
         if 'fpga' in station.components:
             self.sampling_frequency = station.fpga.sampling_frequency
@@ -157,7 +157,9 @@ class VideoMode:
                 raise Exception('no fpga or digitizer found')
 
         # for addPPT and debugging
-        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument, 'resolution': self.resolution, 'sampling_frequency': self.sampling_frequency() }
+        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges,
+                           'minstrument': minstrument, 'resolution': self.resolution,
+                           'sampling_frequency': self.sampling_frequency()}
 
         self.idx = 0
         self.fps = qtt.pgeometry.fps_t(nn=6)
@@ -330,10 +332,10 @@ class VideoMode:
 
     def get_dataset(self, run=False):
         """ Return latest recorded dataset
-        
+
         Returns:
             alldata (dataset or list of datasets)
-            
+
         """
         with self.datalock:
             if run:
@@ -380,7 +382,7 @@ class VideoMode:
             self.startreadout()
 
     def __run_1d_scan(self, awg, virtual_awg, period=1e-3):
-        if virtual_awg is not None:
+        if virtual_awg:
             if not isinstance(self.sweepparams, (str, dict)):
                 raise Exception('arguments not supported')
             sweep_range = self.sweepranges * 2
@@ -398,8 +400,8 @@ class VideoMode:
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels))
 
-    def __run_2d_scan(self, virtual_awg):
-        if virtual_awg is not None:
+    def __run_2d_scan(self, awg, virtual_awg):
+        if virtual_awg:
             period = 1 / self.sampling_frequency.get()
             sweep_ranges = [i * 2 for i in self.sweepranges]
             if isinstance(self.sweepparams, dict):
