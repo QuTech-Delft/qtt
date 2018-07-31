@@ -17,14 +17,6 @@ from qcodes.plots.qcmatplotlib import MatPlot
 from qtt.data import diffDataset
 from qtt.instrument_drivers.parameter_scaler import ParameterScaler as vt
 
-# NB! This function already exists, but I cannot find it in pgeometry
-def intersect2lines(l1, l2):
-    """ Caculate intersection between 2 lines """
-    r = qtt.pgeometry.null(np.vstack( (l1, l2)) )
-    a = qtt.pgeometry.dehom(r[1])
-    return a
-
-
 
 def plotAnalysedLines(clicked_pts, linePoints1_2, linePt3_vert, linePt3_horz, linePt3_ints, intersect_point):
     """ Plots lines based on three points clicked
@@ -45,8 +37,8 @@ def plotAnalysedLines(clicked_pts, linePoints1_2, linePt3_vert, linePt3_horz, li
     
     qtt.pgeometry.plotPoints(intersect_point, '.b')
     qtt.pgeometry.plotPoints(clicked_pts[:,2:3], '.b')
-    linePt3_ints_short = np.column_stack((intersect_point, clicked_pts[:,2:3]))
     
+    linePt3_ints_short = np.column_stack((intersect_point, clicked_pts[:,2:3]))
     qtt.pgeometry.plotPoints(linePt3_ints_short, 'b')
     
      
@@ -70,6 +62,10 @@ def perpLineIntersect(ds, description, vertical = True):
     diffDataset(ds, diff_dir='xy')
     plt.figure(588); plt.clf()
     MatPlot(ds.diff_dir_xy, num = 588)
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+    ax.set_xlabel(ax.get_xlabel()[:2])
+    ax.set_ylabel(ax.get_ylabel()[:2])
     
 #    ax = plt.gca()
 #    ax.set_autoscale_on(False)
@@ -109,10 +105,12 @@ def perpLineIntersect(ds, description, vertical = True):
     line_horizontal = qtt.pgeometry.fitPlane( xx.T )
         
     if vertical == True:
-        intersectPoint = intersect2lines(linePoints1_2, line_vertical)
+        i = qtt.pgeometry.intersect2lines(linePoints1_2, line_vertical)
+        intersectPoint = qtt.pgeometry.dehom(i[1])
         line = intersectPoint[:,[0,0]]; line[0,-1]+=1
     else:
-        intersectPoint = intersect2lines(linePoints1_2, line_horizontal)
+        i = qtt.pgeometry.intersect2lines(linePoints1_2, line_horizontal)
+        intersectPoint = qtt.pgeometry.dehom(i[1])
         line = intersectPoint[:,[0,0]]; line[1,-1]+=1
     
     linePt3_ints = qtt.pgeometry.fitPlane(line.T)
@@ -123,7 +121,12 @@ def perpLineIntersect(ds, description, vertical = True):
     
     return {'intersection_point': intersectPoint, 'distance': line_length, 'clicked_points': clicked_pts}
 
-  
+#def intersect2lines(l1, l2):
+#    """ Caculate intersection between 2 lines """
+#    r = qtt.pgeometry.null(np.vstack( (l1, l2)) )
+#    a = qtt.pgeometry.dehom(r[1])
+#    return a 
+
 def lever_arm(bias, results, fig = None):
     """ Calculates the lever arm of a dot by using bias triangles in charge sensing. Uses currently active figure.
     
@@ -183,4 +186,22 @@ def E_charging(lev_arm, results, fig = None):
         ax.set_title(title)
     
     return E_c    
+
+   
+#%%
     
+dataset = r'D:\data\amjzwerver\Qubyte2_cooldown4\E_add\2018-07-28\14-33-26_qtt_scan2Dfast'
+ds = qcodes.load_data(dataset)
+
+diffDataset(ds, diff_dir='xy')
+
+plt.figure(3); plt.clf()
+MatPlot(ds.measured, num = 3)
+
+  
+#%%
+ll = perpLineIntersect(ds, vertical = True, description = 'lever_arm')
+#%%
+lev_arm = lever_arm(200, vertical = True)
+#%%
+E_c = E_charging(lev_arm, results = ll, fig = True)
