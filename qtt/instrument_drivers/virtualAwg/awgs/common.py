@@ -121,7 +121,7 @@ class AwgCommon(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_sampling_rate(self, sampling_rate):
+    def retrieve_sampling_rate(self):
         """ Gets the number of samples the AWG outputs per second.
 
         Returns:

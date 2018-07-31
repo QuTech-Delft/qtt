@@ -357,59 +357,70 @@ class VideoMode:
         else:
             return -1
 
-    def run(self, startreadout=True):
+    def run(self, start_readout=True):
         """ Programs the AWG, starts the read-out and the plotting. """
-
         if self.verbose:
-            print(Fore.BLUE + '%s: run ' %
-                  (self.__class__.__name__,) + Fore.RESET)
+            print(Fore.BLUE + '%s: run ' % (self.__class__.__name__,) + Fore.RESET)
 
-        dim = self.scan_dimension()
+        scan_dimentions = self.scan_dimension()
+        virtual_awg = getattr(self.station, 'virtual_awg', None)
         awg = getattr(self.station, 'awg', None)
-        virtualawg = getattr(self.station, 'virtual_awg', None) # new style virtual awg
-        
-        if dim == 1:
-            # 1D scan
-            if type(self.sweepparams) is str:
-                period = 1e-3
-                if virtualawg is not None:
-                    width = 0.95
-                    waveform = {'period': period, 'width': width, 'sweeprange': self.sweepranges}
-                    waveform = self.virtual_awg.sweep_gates([self.sweepparams], [self.sweepranges*2], period=1e-3)
-                    self.virtual_awg.enable_outputs([self.sweepparams])
-                    self.virtual_awg.run_awgs()
-                else:
-                    waveform, _ = awg.sweep_gate(
-                            self.sweepparams, self.sweepranges, period=period)
-            elif type(self.sweepparams) is dict:
-                waveform, _ = awg.sweep_gate_virt(
-                    self.sweepparams, self.sweepranges, period=1e-3)
-            else:
-                raise Exception('arguments not supported')
-            self.datafunction = videomode_callback(
-                self.station, waveform, self.Naverage.get(), minstrument=(self.minstrumenthandle, self.channels))
-        elif dim == 2:
-            # 2D scan
-            if isinstance(self.sweepparams, list):
-                waveform, _ = awg.sweep_2D(self.sampling_frequency.get(
-                ), self.sweepparams, self.sweepranges, self.resolution)
-            elif isinstance(self.sweepparams, dict):
-                waveform, _ = awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams[
-                                                             'gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
-            else:
-                raise Exception('arguments not supported')
-            self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), minstrument=(
-                self.minstrumenthandle, self.channels), resolution=self.resolution, diff_dir=self.diff_dir)
+
+        if scan_dimentions == 1:
+            self.__run_1d_scan(awg, virtual_awg)
+        elif scan_dimentions == 2:
+            self.__run_2d_scan(awg, virtual_awg)
         else:
             raise Exception('type of scan not supported')
 
-        self._waveform = waveform
-
-        if startreadout:
+        if start_readout:
             if self.verbose:
                 print(Fore.BLUE + '%s: run: startreadout' %
                       (self.__class__.__name__,) + Fore.RESET)
             self.startreadout()
+
+    def __run_1d_scan(self, awg, virtual_awg, period=1e-3):
+        if virtual_awg is not None:
+            if not isinstance(self.sweepparams, (str, dict)):
+                raise Exception('arguments not supported')
+            sweep_range = self.sweepranges * 2
+            gates = self.sweepparams if isinstance(self.sweepparams, dict) else {self.sweepparams: 1}
+            waveform = virtual_awg.sweep_gates(gates, sweep_range, period)
+            virtual_awg.enable_outputs(list(gates.keys()))
+            virtual_awg.run()
+        else:
+            if type(self.sweepparams) is str:
+                waveform, _ = awg.sweep_gate(self.sweepparams, self.sweepranges, period=period)
+            elif type(self.sweepparams) is dict:
+                waveform, _ = awg.sweep_gate_virt(self.sweepparams, self.sweepranges, period=period)
+            else:
+                raise Exception('arguments not supported')
+        self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
+                                               minstrument=(self.minstrumenthandle, self.channels))
+
+    def __run_2d_scan(self, virtual_awg):
+        if virtual_awg is not None:
+            period = 1 / self.sampling_frequency.get()
+            sweep_ranges = [i * 2 for i in self.sweepranges]
+            if isinstance(self.sweepparams, dict):
+                gates = [self.sweepparams['gates_horz'], self.sweepparams['gates_vert']]
+            elif isinstance(self.sweepparams, list):
+                gates = self.sweepparams
+            waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, period, self.resolution)
+            virtual_awg.enable_outputs(list(gates.keys()))
+            virtual_awg.run()
+        else:
+            if isinstance(self.sweepparams, list):
+                waveform, _ = awg.sweep_2D(self.sampling_frequency.get(), self.sweepparams,
+                                           self.sweepranges, self.resolution)
+            elif isinstance(self.sweepparams, dict):
+                waveform, _ = awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams['gates_horz'],
+                                                self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
+            else:
+                raise Exception('arguments not supported')
+        self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
+                                               minstrument=(self.minstrumenthandle, self.channels),
+                                               resolution=self.resolution, diff_dir=self.diff_dir)
 
     def stop(self):
         """ Stops the plotting, AWG(s) and if available RF. """
@@ -419,6 +430,8 @@ class VideoMode:
                 self.station.awg.stop()
             if hasattr(self.station, 'RF'):
                 self.station.RF.off()
+            if hasattr(self.station, 'virtual_awg'):
+                self.station.virtual_awg.stop()
 
     def single(self):
         """Do a single scan with a lot averaging.

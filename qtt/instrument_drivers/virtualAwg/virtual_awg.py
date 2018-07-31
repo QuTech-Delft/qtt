@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 
-from functools import partial
 from qcodes import Instrument
 from qcodes.utils.validators import Numbers
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
@@ -47,8 +46,10 @@ class VirtualAwg(Instrument):
         self.__awg_count = len(self.awgs)
 
     def __set_parameters(self):
-        self.add_parameter('marker_delay', initial_value=0, vals=Numbers(0, 1))
-        self.add_parameter('marker_uptime', initial_value=0.2, vals=Numbers(0, 1))
+        self.add_parameter('awg_marker_delay', initial_value=0, vals=Numbers(0, 1))
+        self.add_parameter('awg_marker_uptime', initial_value=0.2, vals=Numbers(0, 1))
+        self.add_parameter('digitizer_marker_delay', initial_value=0, vals=Numbers(0, 1))
+        self.add_parameter('digitizer_marker_uptime', initial_value=0.2, vals=Numbers(0, 1))
 
     def run(self):
         [awg.run() for awg in self.awgs]
@@ -61,18 +62,18 @@ class VirtualAwg(Instrument):
 
     def enable_outputs(self, gate_names):
         for name in gate_names:
-            (awg_nr, channel_nr) = self.__gate_map[name]
-            self.awgs[awg_nr].enable_outputs([channel_nr])
+            (awg_number, channel_number) = self.__gate_map[name]
+            self.awgs[awg_number].enable_outputs([channel_number])
 
     def disable_outputs(self, gate_names):
         for name in gate_names:
-            (awg_nr, channel_nr) = self.__gate_map[name]
-            self.awgs[awg_nr].disable_outputs([channel_nr])
+            (awg_number, channel_number) = self.__gate_map[name]
+            self.awgs[awg_number].disable_outputs([channel_number])
 
-    def update_setting(self, awg_nr, setting, value):
-        if awg_nr not in self.__awg_range:
-            raise VirtualAwgError('Invalid AWG nr {}!'.format(awg_nr))
-        self.awgs[awg_nr].update_setting(setting, value)
+    def update_setting(self, awg_number, setting, value):
+        if awg_number not in self.__awg_range:
+            raise VirtualAwgError('Invalid AWG number {}!'.format(awg_number))
+        self.awgs[awg_number].update_setting(setting, value)
 
     def are_awg_gates(self, gate_names):
         if gate_names is None:
@@ -81,100 +82,106 @@ class VirtualAwg(Instrument):
             return np.all([self.are_awg_gates(g) for g in gate_names])
         return True if gate_names in self.__gate_map else False
 
-    @staticmethod
-    def __update_sequence(sequences, gate_comb, sequence_function):
-        max_vpp = 0.0
-        for gate_name, amplitude in gate_comb:
-            volt_peak_to_peak = amplitude * VirtualAwg.__volt_to_millivolt
-            if abs(volt_peak_to_peak) > max_vpp:
-                max_vpp = abs(volt_peak_to_peak)
-            sequence_data = sequence_function(volt_peak_to_peak)
-            sequences[gate_name] = sequence_data
-        return max_vpp
+    def __make_markers(self, period):
+        digitizer_marker = Sequencer.make_marker(period, self.digitizer_marker_uptime, self.digitizer_marker_offset)
+        awg_marker = Sequencer.make_marker(period, self.awg_marker_uptime, self.awg_marker_offset)
+        return dict({'m4i_mk': digitizer_marker, 'awg_mk': awg_marker})
 
-    def __initialize_gates(self, gate_comb, period, sequence_function, do_upload=True):
-        digitizer_marker = Sequencer.make_marker(period, self.marker_uptime, self.marker_offset)
-        awg_marker = Sequencer.make_marker(period, self.marker_uptime, self.marker_offset)
-        sequences = {'m4i_mk': digitizer_marker, 'awg_mk': awg_marker}
-        function = partial(sequence_function, period=period)
-        max_vpp = VirtualAwg.__update_sequence(sequences, gate_comb, function)
+    def pulse_gates(self, gates, sweep_range, period, do_upload=True):
+        sequences = dict()
+        sequences.update(self.__make_markers(period))
+        for gate_name, rel_amplitude in gates.items():
+            amplitude = rel_amplitude * sweep_range
+            sequences[gate_name] = Sequencer.make_square_wave(amplitude, period)
         sweep_data = self.sequence_gates(sequences, do_upload)
-        return sweep_data.update({'sweeprange': max_vpp,
-                                  'period': period, 'markerdelay': self.marker_offset})
+        return sweep_data.update({'sweeprange': sweep_range, 'period': period,
+                                  'markerdelay': self.marker_offset})
 
-    def pulse_gates(self, gate_comb, period, do_upload=True):
-        sequence_function = partial(Sequencer.make_square_wave)
-        return self.__initialize_gates(gate_comb, period, sequence_function, do_upload)
-
-    def sweep_gates(self, gate_comb, period, width=0.95, do_upload=True):
+    def sweep_gates(self, gates, sweep_range, period, width=0.95, do_upload=True):
         """ Sweep a set of gates with a sawtooth waveform.
 
         Example:
-            >>> sweep_data = virtualawg.sweep_gates({'P4': 1e-3, 'P7':-1e-3}, 1e-3)
+            >>> sweep_data = virtualawg.sweep_gates({'P4': 1, 'P7': 0.1}, 100, 1e-3)
         """
-        sequence_function = partial(Sequencer.make_sawtooth_wave, width=width)
-        sweep_data = self.__initialize_gates(gate_comb, period, sequence_function, do_upload)
-        sweep_data.update({'width': width})
+        sequences = dict()
+        sequences.update(self.__make_markers(period))
+        for gate_name, rel_amplitude in gates.items():
+            amplitude = rel_amplitude * sweep_range
+            sequences[gate_name] = Sequencer.make_sawtooth_wave(amplitude, period, width)
+        sweep_data = self.sequence_gates(sequences, do_upload)
+        sweep_data.update({'sweeprange': sweep_range, 'period': period, 'width': width,
+                           'markerdelay': self.marker_offset})
         return sweep_data
 
-    def __initialize_gates_2D(self, gate_combs, period, resolution, sequence_function, do_upload=True):
-        digitizer_marker = Sequencer.make_marker(period, self.marker_uptime, self.marker_offset)
-        awg_marker = Sequencer.make_marker(period, self.marker_uptime, self.marker_offset)
-        sequences = {'m4i_mk': digitizer_marker, 'awg_mk': awg_marker}
+    def sweep_gates_2d(self, gates, sweep_ranges, period, resolution, width=0.95, do_upload=True):
+        sequences = dict()
+        sequences.update(self.__make_markers(period))
 
-        gate_comb_x = gate_combs[0]
         period_x = resolution[0] * period
-        function_x = partial(sequence_function, period=period_x)
-        max_vpp_x = VirtualAwg.__update_sequence(self, gate_comb_x, function_x)
+        for gate_name_x, rel_amplitude_x in gates[0].items():
+            amplitude_x = rel_amplitude_x * sweep_ranges[0]
+            sequences[gate_name_x] = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width)
 
-        gate_comb_y = gate_combs[1]
-        period_y = resolution[1] * resolution[1] * period
-        function_y = partial(sequence_function, period=period_y)
-        max_vpp_y = VirtualAwg.__update_sequence(self, gate_comb_y, function_y)
+        period_y = resolution[0] * resolution[1] * period
+        for gate_name_y, rel_amplitude_y in gates[1].items():
+            amplitude_y = rel_amplitude_y * sweep_ranges[1]
+            sequences[gate_name_y] = Sequencer.make_sawtooth_wave(amplitude_y, period_y, width)
 
         sweep_data = self.sequence_gates(sequences, do_upload)
-        return sweep_data.update({'sweeprange_horz': max_vpp_x, 'sweeprange_vert': max_vpp_y,
-                                  'resolution': resolution, 'period': period_x, 'period_vert': period_y,
+        return sweep_data.update({'sweeprange_horz': sweep_ranges[0],
+                                  'sweeprange_vert': sweep_ranges[1],
+                                  'resolution': resolution,
+                                  'period': period_x, 'period_vert': period_y,
                                   'samplerate': self.awgs[0].get_sampling_rate(),
                                   'markerdelay': self.marker_offset})
 
-    def sweep_gates_2D(self, gate_comb_x, gate_comb_y, period, resolution, width=0.95, do_upload=True):
-        gate_combs = (gate_comb_x, gate_comb_y)
-        function = partial(Sequencer.make_sawtooth_wave, width=width)
-        sweep_data = self.__initialize_gates_2D(gate_combs, period, resolution, function, do_upload)
-        sweep_data.update({'width_horz': width, 'width_vert': width})
-        return sweep_data
+    def pulse_gates_2d(self, gates, sweep_ranges, period, resolution, do_upload=True):
+        sequences = dict()
+        sequences.update(self.__make_markers(period))
 
-    def pulse_gates_2D(self, gate_comb_x, gate_comb_y, period, resolution, do_upload=True):
-        gate_combs = (gate_comb_x, gate_comb_y)
-        function = partial(Sequencer.make_square_wave)
-        return self.__initialize_gates_2D(gate_combs, period, resolution, function, do_upload)
+        period_x = resolution[0] * period
+        for gate_name_x, rel_amplitude_x in gates[0].items():
+            amplitude_x = rel_amplitude_x * sweep_ranges[0]
+            sequences[gate_name_x] = Sequencer.make_square_wave(amplitude_x, period_x)
+
+        period_y = resolution[0] * resolution[1] * period
+        for gate_name_y, rel_amplitude_y in gates[1].items():
+            amplitude_y = rel_amplitude_y * sweep_ranges[1]
+            sequences[gate_name_y] = Sequencer.make_square_wave(amplitude_y, period_y)
+
+        sweep_data = self.sequence_gates(sequences, do_upload)
+        return sweep_data.update({'sweeprange_horz': sweep_ranges[0],
+                                  'sweeprange_vert': sweep_ranges[1],
+                                  'resolution': resolution,
+                                  'period': period_x, 'period_vert': period_y,
+                                  'samplerate': self.awgs[0].get_sampling_rate(),
+                                  'markerdelay': self.marker_offset})
 
     def sequence_gates(self, gate_comb, do_upload=True):
         if do_upload:
             [awg.delete_waveforms() for awg in self.awgs]
-        for nr in self.__awg_range:
+        for number in self.__awg_range:
             sequence_channels = list()
             sequence_names = list()
             sequence_items = list()
-            vpp_amplitude = self.awgs[nr].retrieve_gain()
-            sampling_rate = self.awgs[nr].retrieve_sampling_rate()
+            vpp_amplitude = self.awgs[number].retrieve_gain()
+            sampling_rate = self.awgs[number].retrieve_sampling_rate()
             for gate_name, sequence in gate_comb.items():
-                (awg_nr, channel_nr, *marker_nr) = self.__gate_map[gate_name]
-                if awg_nr != nr:
+                (awg_number, channel_number, *marker_number) = self.__gate_map[gate_name]
+                if awg_number != number:
                     continue
                 awg_to_plunger = self.__hardware.parameters['awg_to_{}'.format(gate_name)].get()
-                scaling_ratio = 2.0 / VirtualAwg.__volt_to_millivolt / awg_to_plunger / vpp_amplitude
+                scaling_ratio = 2 / VirtualAwg.__volt_to_millivolt / awg_to_plunger / vpp_amplitude
 
                 sample_data = Sequencer.get_data(sequence, sampling_rate)
                 sequence_items.append(sequence)
-                sequence_data = sample_data if marker_nr else sample_data * scaling_ratio
+                sequence_data = sample_data if marker_number else sample_data * scaling_ratio
 
                 sequence_names.append('{}_{}'.format(gate_name, sequence['name']))
-                sequence_channels.append((channel_nr, *marker_nr))
+                sequence_channels.append((channel_number, *marker_number))
                 sequence_items.append(sequence_data)
-        if do_upload:
-            self.awgs[nr].upload_waveforms(sequence_names, sequence_channels, sequence_items)
+            if do_upload:
+                self.awgs[number].upload_waveforms(sequence_names, sequence_channels, sequence_items)
         return {'gate_comb': gate_comb}
 
 

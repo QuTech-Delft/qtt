@@ -24,11 +24,11 @@ class Tektronix5014C_AWG(AwgCommon):
                                      vals=Numbers(0.02, 4.5), set_cmd=None),
                            Parameter(name='offset', unit='V', initial_value=0,
                                      vals=Numbers(-2.25, 2.25), set_cmd=None)]
+        self.__waveform_data = None
         self.__awg = awg
-        self.update_settings()
 
     @property
-    def get(self):
+    def fetch_awg(self):
         return self.__awg
 
     def run(self):
@@ -54,48 +54,57 @@ class Tektronix5014C_AWG(AwgCommon):
             raise AwgCommonError("Invalid channel numbers {}".format(channels))
         [self.__awg.set('ch{}_state'.format(ch), 0) for ch in channels]
 
-    def update_settings(self):
-        self.set_sampling_rate(self.__settings['sampling_rate'].value)
-        for channel in self._channel_numbers:
-            self.set_gain(channel, self.__settings['amplitudes'].value)
+    def change_setting(self, name, value):
+        index = next(i for i, p in enumerate(self.__settings) if p.name == name)
+        self.__settings[index].set(value)
 
-    def change_setting(self, key, value):
-        if key not in self.__settings.keys():
-            raise AwgCommonError('Invalid setting {}'.format(key))
-        is_updated = self.__settings[key].update_value(value)
-        if not is_updated:
-            setting = self.__settings[key]
-            raise AwgCommonError('Invalid value {}={} range({}, {})'.format(key,
-                                 value, setting.minimum, setting.maximum))
-        self.update_settings()
+    def retrieve_setting(self, name):
+        index = next(i for i, p in enumerate(self.__settings) if p.name == name)
+        return self.__settings[index].get()
 
-    def get_setting(self, key):
-        if key not in self.__settings.keys():
-            raise AwgCommonError('Invalid setting {}'.format(key))
-        return self.__settings[key].value
-
-    def set_mode(self, mode):
+    def update_running_mode(self, mode):
         modes = ['CONT', 'SEQ']
         if mode not in modes:
             raise AwgCommonError('Invalid AWG mode ({})'.format(mode))
         self.__awg.set('run_mode', 'CONT')
 
-    def get_mode(self):
+    def retrieve_running_mode(self):
         self.__awg.get('run_mode')
 
-    def set_sampling_rate(self, sampling_rate):
+    def update_sampling_rate(self, sampling_rate):
         self.__awg.set('clock_freq', sampling_rate)
 
-    def get_sampling_rate(self):
+    def retrieve_sampling_rate(self):
         return self.__awg.get('clock_freq')
 
-    def set_gain(self, channel, gain):
-        self.__awg.set('ch{0}_amp'.format(channel), gain)
+    def update_gain(self, gain):
+        [self.__awg.set('ch{0}_amp'.format(ch), gain) for ch in self._channel_numbers]
 
-    def get_gain(self, channel):
-        return self.__awg.get('ch{0}_amp'.format(channel))
+    def retrieve_gain(self):
+        gains = [self.__awg.get('ch{0}_amp'.format(ch)) for ch in self._channel_numbers]
+        if not all(g == gains[0] for g in gains):
+            raise ValueError('Not all channel amplitudes are equal. Please reset!')
+        return gains[0]
 
-    def set_sequence(self, channels, sequence):
+    def upload_waveforms(self, sequence_channels, sequence_names, sequence_items, reload=True):
+        channel_data = dict()
+        waveform_data = dict()
+        self.__waveform_data = zip(sequence_channels, sequence_names, sequence_items)
+        for ((channel_nr, *marker_nr), name, data_array) in self.__waveform_data:
+            if name not in waveform_data:
+                data_count = len(data_array)
+                waveform_data[name] = [np.zeros(data_count), np.zeros(data_count), np.zeros(data_count)]
+                channel_data.setdefault(channel_nr, []).append(name)
+            index = marker_nr if marker_nr else 0
+            waveform_data[name][index] = data_array
+        if reload:
+            self._upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))
+        self._set_sequence(list(channel_data.keys()), list(channel_data.values()))
+
+    def retrieve_waveforms(self):
+        return self.__waveform_data if self.__waveform_data else None
+
+    def _set_sequence(self, channels, sequence):
         if not sequence or len(sequence) != len(channels):
             raise AwgCommonError('Invalid sequence and channel count!')
         if not all(len(idx) == len(sequence[0]) for idx in sequence):
@@ -114,13 +123,7 @@ class Tektronix5014C_AWG(AwgCommon):
                     self.__awg.set_sqel_waveform("", channel, row_index + 1)
         self.__awg.set_sqel_goto_state(request_rows, 1)
 
-    def get_sequence(self, channels):
-        raise NotImplemented
-
-    def delete_sequence(self, channel):
-            self.__set_sequence_length(0)
-
-    def upload_waveforms(self, names, waveforms):
+    def _upload_waveforms(self, names, waveforms, file_name='default.awg'):
         pack_count = len(names)
         packed_waveforms = dict()
         [wfs, m1s, m2s] = list(map(list, zip(*waveforms)))
@@ -128,30 +131,26 @@ class Tektronix5014C_AWG(AwgCommon):
             name = names[i]
             package = self.__awg.pack_waveform(wfs[i], m1s[i], m2s[i])
             packed_waveforms[name] = package
-        offset = self.__settings['offset'].value
-        amplitude = self.__settings['amplitudes'].value
-        marker_low = self.__settings['marker_low'].value
-        marker_high = self.__settings['marker_high'].value
+        offset = self.__settings[5].get()
+        amplitude = self.__settings[4].get()
+        marker_low = self.__settings[2].get()
+        marker_high = self.__settings[3].get()
         channel_cfg = {'ANALOG_METHOD_1': 1, 'CHANNEL_STATE_1': 1, 'ANALOG_AMPLITUDE_1': amplitude,
-                       'ANALOG_OFFSET_1': offset,
                        'MARKER1_METHOD_1': 2, 'MARKER1_LOW_1': marker_low, 'MARKER1_HIGH_1': marker_high,
                        'MARKER2_METHOD_1': 2, 'MARKER2_LOW_1': marker_low, 'MARKER2_HIGH_1': marker_high,
-
+                       'ANALOG_OFFSET_1': offset,
                        'ANALOG_METHOD_2': 1, 'CHANNEL_STATE_2': 1, 'ANALOG_AMPLITUDE_2': amplitude,
-                       'ANALOG_OFFSET_2': offset,
                        'MARKER1_METHOD_2': 2, 'MARKER1_LOW_2': marker_low, 'MARKER1_HIGH_2': marker_high,
                        'MARKER2_METHOD_2': 2, 'MARKER2_LOW_2': marker_low, 'MARKER2_HIGH_2': marker_high,
-
+                       'ANALOG_OFFSET_2': offset,
                        'ANALOG_METHOD_3': 1, 'CHANNEL_STATE_3': 1, 'ANALOG_AMPLITUDE_3': amplitude,
-                       'ANALOG_OFFSET_3': offset,
                        'MARKER1_METHOD_3': 2, 'MARKER1_LOW_3': marker_low, 'MARKER1_HIGH_3': marker_high,
                        'MARKER2_METHOD_3': 2, 'MARKER2_LOW_3': marker_low, 'MARKER2_HIGH_3': marker_high,
-
+                       'ANALOG_OFFSET_3': offset,
                        'ANALOG_METHOD_4': 1, 'CHANNEL_STATE_4': 1, 'ANALOG_AMPLITUDE_4': amplitude,
-                       'ANALOG_OFFSET_4': offset,
                        'MARKER1_METHOD_4': 2, 'MARKER1_LOW_4': marker_low, 'MARKER1_HIGH_4': marker_high,
-                       'MARKER2_METHOD_4': 2, 'MARKER2_LOW_4': marker_low, 'MARKER2_HIGH_4': marker_high}
-        file_name = 'costum_awg_file.awg'
+                       'MARKER2_METHOD_4': 2, 'MARKER2_LOW_4': marker_low, 'MARKER2_HIGH_4': marker_high,
+                       'ANALOG_OFFSET_4': offset}
         self.__awg.visa_handle.write('MMEMory:CDIRectory "C:\\Users\\OEM\\Documents"')
         awg_file = self.__awg.generate_awg_file(packed_waveforms, np.array([]), [], [], [], [], channel_cfg)
         self.__awg.send_awg_file(file_name, awg_file)
@@ -162,9 +161,13 @@ class Tektronix5014C_AWG(AwgCommon):
 
     def delete_waveforms(self):
         self.__awg.delete_all_waveforms_from_list()
+        self.__waveform_data = None
 
     def __set_sequence_length(self, count):
         self.__awg.write('SEQuence:LENGth {0}'.format(count))
+
+    def __delete_sequence(self):
+        self.__set_sequence_length(0)
 
     def __get_sequence_length(self):
         row_count = self.__awg.ask('SEQuence:LENGth?')
