@@ -508,7 +508,7 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
         peak['phalf0'] = ph0
         peak['phalfl'] = None
 
-        peak['indlocal'] = ind
+        #peak['indlocal'] = list(ind)
 
         phalfvalue = np.interp(ph, range(xl.size), yl)
         yhalfl = np.interp(ph, range(xl.size), yl)
