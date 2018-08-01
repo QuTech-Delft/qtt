@@ -117,7 +117,8 @@ class VideoMode:
 
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
-                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True):
+                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name='VideoMode'):
+        self.name = name
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
@@ -166,7 +167,7 @@ class VideoMode:
             nplots = len(self.channels)
         self.nplots = nplots
         self.window_title = "%s: nplots %d" % (
-            self.__class__.__name__, self.nplots)
+            self.name, self.nplots)
 
         win = QtWidgets.QWidget()
         win.setWindowTitle(self.window_title)
@@ -230,6 +231,10 @@ class VideoMode:
         if dorun:
             self.run()
 
+    def __repr__(self):
+        s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name, id(self))
+        return s
+
     def enable_averaging_slot(self, averaging=None, *args, **kwargs):
         """ Update the averaging mode of the widget """
         if averaging is None:
@@ -247,7 +252,7 @@ class VideoMode:
         if isrunning:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
-        qtt.tools.addPPTslide(fig=self, title='VideoMode',
+        qtt.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
                               notes=self.station, extranotes=str(self.scanparams))
         if isrunning:
             self.startreadout()

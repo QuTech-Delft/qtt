@@ -404,17 +404,16 @@ class virtual_gates(Instrument):
         plt.figure(fig); plt.clf();
         plt.imshow(m, interpolation='nearest')
         ax=plt.gca()
-        #plt.axis('off')
         plt.tick_params(
             axis='y',        
-            left='off',    )
+            left=False,    )
         plt.tick_params(
             axis='x',          # changes apply to the x-axis
             which='both',      # both major and minor ticks are affected
-            bottom='off',      # ticks along the bottom edge are off
-            top='off',         # ticks along the top edge are off
-            labelbottom='off') # labels along the bottom edge are off
-        ax.xaxis.set_tick_params(labeltop='on')
+            bottom=False,      # ticks along the bottom edge are off
+            top=False,         # ticks along the top edge are off
+            labelbottom=False) # labels along the bottom edge are off
+        ax.xaxis.set_tick_params(labeltop=True)
         plt.xticks(x, xlabels, rotation='vertical')
         plt.yticks(y, ylabels) # , rotation='vertical')
         

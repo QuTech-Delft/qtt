@@ -381,7 +381,7 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
 
-    def sweepandpulse_gate(self, sweepdata, pulsedata, wave_name=None, delete=True):
+    def sweepandpulse_gate(self, sweepdata, pulsedata, wave_name=None, delete=True, shift_zero=True):
         ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
         a gate, with a pulse sequence. A marker is sent to the measurement instrument 
         at the start of the waveform.
@@ -389,9 +389,9 @@ class virtual_awg(Instrument):
 
         Args:
             sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width). 
-            See sweep_gate for more info.
+                    See sweep_gate for more info.
             pulsedata (dict): inputs for the pulse sequence (gate_voltages, waittimes).
-            See pulse_gates for more info.
+                    See pulse_gates for more info.
 
         Returns:
             waveform (dict): The waveform being sent with the AWG.
@@ -404,8 +404,9 @@ class virtual_awg(Instrument):
         width = sweepdata.get('width',0.95)
         
         gate_voltages = pulsedata['gate_voltages'].copy()
-        for g in gate_voltages:
-            gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
+        if shift_zero:
+            for g in gate_voltages:
+                gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
         waittimes = pulsedata['waittimes']
         filtercutoff = pulsedata.get('filtercutoff',None)
         

@@ -444,7 +444,7 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
 
     if _initialized:
         if reinit:
-            close(verbose=1)
+            close(verbose=verbose)
         else:
             return station
     logger.info('virtualDot: make DotModel')
