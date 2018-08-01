@@ -255,14 +255,17 @@ def logistic(x, x0=0, alpha=1):
     f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
     return f
 
-def test_functions():
-    x=np.arange(-10,10, .1)
-    y = logistic(x, x0=0, alpha=1)
-    assert(logistic(0, x0=0, alpha=1)==0.5)
-    _ = linear_function(x, 1, 2)
-    assert(linear_function(0, 1, 2)==2)
-    assert(linear_function(3, 1, 2)==5)
 
-    
-if __name__=='__main__':
-    test_functions()         
+def test_logistic_and_linear_function():
+    x_data = np.arange(-10, 10, 0.1)
+
+    _ = logistic(x_data, x0=0, alpha=1)
+    assert logistic(0, x0=0, alpha=1) == 0.5
+
+    _ = linear_function(x_data, 1, 2)
+    assert linear_function(0, 1, 2) == 2
+    assert linear_function(3, 1, 2) == 5
+
+
+if __name__ == '__main__':
+    test_logistic_and_linear_function()
