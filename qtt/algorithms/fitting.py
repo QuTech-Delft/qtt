@@ -1,25 +1,26 @@
 """ Fitting of Fermi-Dirac distributions. """
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-import matplotlib.pyplot as plt
 
 import qtt.pgeometry
 from qcodes import DataArray
-from qtt.algorithms.functions import FermiLinear, linear_function, Fermi
+from qtt.algorithms.functions import Fermi, FermiLinear, linear_function
 
 
-def initFermiLinear(xdata, ydata, fig=None):
-    """ Initalization of fitting a FermiLinear function 
+def initFermiLinear(x_data, y_data, fig=None):
+    """ Initalization of fitting a FermiLinear function.
 
-    First the linear part is estimated, then the Fermi part of the function    
+    First the linear part is estimated, then the Fermi part of the function.
     """
-    xdata = np.array(xdata)
-    ydata = np.array(ydata)
+    xdata = np.array(x_data)
+    ydata = np.array(y_data)
     n = xdata.size
     nx = int(np.ceil(n / 5))
 
     if nx < 4:
-        p1, _ = scipy.optimize.curve_fit(linear_function, np.array(xdata[0:100]), np.array(ydata[0:100]))
+        p1, _ = scipy.optimize.curve_fit(linear_function, np.array(xdata[0:100]),
+                                         np.array(ydata[0:100]))
 
         a = p1[0]
         b = p1[1]
@@ -70,7 +71,7 @@ def initFermiLinear(xdata, ydata, fig=None):
         plt.clf()
         plt.plot(xdata, ydata, '.b', label='raw data')
         plt.plot(xx, yy, 'ok')
-        qtt.pgeometry.plot2Dline([-1,0,cc],':c', label='center')
+        qtt.pgeometry.plot2Dline([-1, 0, cc], ':c', label='center')
         plt.plot(xdata, ylin, '-m', label='fitted linear function')
         plt.plot(xdata, yf, '-m', label='fitted FermiLinear function')
 
@@ -83,20 +84,19 @@ def initFermiLinear(xdata, ydata, fig=None):
         f = Fermi(xdata, cc, A, T)
         plt.plot(xdata, f, '-m', label='estimated')
         plt.plot(xdata, f, '-m', label='estimated')
-        #plt.plot(xdata, yr, '.b', label='Fermi part')
+        # plt.plot(xdata, yr, '.b', label='Fermi part')
 
         plt.legend()
     return ab, ff
 
 
-#%%
+# %%
 
-
-def fitFermiLinear(xdata, ydata, verbose=1, fig=None, l=1.16):
-    """ Fit data to a Fermi-Linear function 
+def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16):
+    """ Fit data to a Fermi-Linear function
 
     Arguments:
-        xdata, ydata (array): independent and dependent variable data
+        x_data, y_data (array): independent and dependent variable data
 
     Returns:
         p (array): fitted function parameters
@@ -104,8 +104,8 @@ def fitFermiLinear(xdata, ydata, verbose=1, fig=None, l=1.16):
 
     .. seealso:: FermiLinear
     """
-    xdata = np.array(xdata)
-    ydata = np.array(ydata)
+    xdata = np.array(x_data)
+    ydata = np.array(y_data)
 
     # initial values
     ab, ff = initFermiLinear(xdata, ydata, fig=None)
@@ -113,10 +113,12 @@ def fitFermiLinear(xdata, ydata, verbose=1, fig=None, l=1.16):
     if 0:
         h = int(ydata.size / 2)
         amp = np.mean(ydata[h:]) - np.mean(ydata[:h])  # np.std(ydata)
-        p0 = [0, np.mean(ydata), np.mean(xdata), amp, -.1]
+        p0 = [0, np.mean(ydata), np.mean(xdata), amp, -0.1]
 
     # fit
-    func = lambda xdata, a, b, cc, A, T: FermiLinear(xdata, a, b, cc, A, T, l=l)
+    def func(xdata, a, b, cc, A, T):
+        return FermiLinear(xdata, a, b, cc, A, T, l=l)
+
     pp = scipy.optimize.curve_fit(func, xdata, ydata, p0=p0)
     p = pp[0]
 
@@ -129,40 +131,64 @@ def fitFermiLinear(xdata, ydata, verbose=1, fig=None, l=1.16):
         plt.legend(numpoints=1)
     return p, dict({'pp': pp, 'p0': p0})
 
-#%%
-def fit_addition_line(dataset, trimborder = True):
+
+# %%
+
+def fit_addition_line(dataset, trimborder=True):
     """Fits a FermiLinear function to the addition line and finds the middle of the step.
-    
+
     Args:
         dataset (qcodes dataset): 1d measured data of additionline
         trimborder (bool): determines if the edges of the data are taken into account for the fit
-    
+
     Returns:
         m_addition_line (float): x value of the middle of the addition line
         pfit (array): fit parameters of the Fermi Linear function
         pguess (array): parameters of initial guess
         dataset_fit (qcodes dataset): dataset with fitted Fermi Linear function
         dataset_guess (qcodes dataset):dataset with guessed Fermi Linear function
-        
+
     See also: FermiLinear and fitFermiLinear
     """
     y_array = dataset.default_parameter_array()
     setarray = y_array.set_arrays[0]
     xdata = np.array(setarray)
     ydata = np.array(y_array)
-    
+
     if trimborder:
-        ncut = max(min(int(xdata.size/40), 100),1)
-        xdata, ydata, setarray =xdata[ncut:-ncut], ydata[ncut:-ncut], setarray[ncut:-ncut]
-        
+        ncut = max(min(int(xdata.size/40), 100), 1)
+        xdata, ydata, setarray = xdata[ncut: -ncut], ydata[ncut:-ncut], setarray[ncut:-ncut]
+
     # fitting of the FermiLinear function
     pp = fitFermiLinear(xdata, ydata, verbose=1, fig=None)
-    pfit = pp[0] #fit parameters
-    pguess = pp[1]['p0'] #initial guess parameters
-    y0 = FermiLinear(xdata, *list(pguess) )
-    dataset_guess = DataArray(name='fit', label='fit', preset_data=y0,  set_arrays=(setarray,) )
-    y = FermiLinear(xdata, *list(pfit) )
-    dataset_fit = DataArray(name='fit', label='fit', preset_data=y,  set_arrays=(setarray,) )
+    pfit = pp[0]  # fit parameters
+    pguess = pp[1]['p0']  # initial guess parameters
+    y0 = FermiLinear(xdata, *list(pguess))
+    dataset_guess = DataArray(name='fit', label='fit', preset_data=y0, set_arrays=(setarray,))
+    y = FermiLinear(xdata, *list(pfit))
+    dataset_fit = DataArray(name='fit', label='fit', preset_data=y, set_arrays=(setarray,))
     m_addition_line = pfit[2]
-    result_dict = {'fit parameters': pfit, 'parameters initial guess': pguess, 'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
-    return  m_addition_line, result_dict
+    result_dict = {'fit parameters': pfit, 'parameters initial guess': pguess,
+                   'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
+    return m_addition_line, result_dict
+
+
+def test_fitfermilinear(fig=None):
+    expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
+    x_data = np.arange(-20, 10, 0.1)
+    y_data = FermiLinear(x_data, *expected_parameters)
+    y_data += 0.01 * np.random.rand(y_data.size)
+
+    actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig)
+    absolute_difference = np.abs(actual_parameters - expected_parameters)
+
+    if fig:
+        print('fitted: %s' % expected_parameters)
+        print('fitted: %s' % actual_parameters)
+        print('max diff: %.2f' % (absolute_difference.max()))
+
+    assert np.all(absolute_difference < 1e-1)
+
+
+if __name__ == '__main__':
+    test_fitfermilinear(fig=100)
