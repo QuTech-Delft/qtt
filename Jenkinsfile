@@ -2,7 +2,7 @@ pipeline {
     agent {
         dockerfile {
             filename 'Dockerfile.build'
-            args '-u 0'
+            args '-v pip_cache:/var/pip_cache'
         }
     }
 
@@ -12,30 +12,31 @@ pipeline {
             steps {
                 sh 'rm -fr Qcodes'
                 sh 'git clone https://github.com/VandersypenQutech/Qcodes.git'
-                sh 'cd Qcodes && pip3 install -r requirements.txt'
-                sh 'cd Qcodes && python3 setup.py build'
-                sh 'cd Qcodes && python3 setup.py install --user'
-                sh 'python3 -c "import qcodes"'
+                sh 'virtualenv venv'
+                sh '. ./venv/bin/activate && cd Qcodes && pip3 install -r requirements.txt'
+                sh '. ./venv/bin/activate && cd Qcodes && python3 setup.py build'
+                sh '. ./venv/bin/activate && cd Qcodes && python3 setup.py install --user'
+                sh '. ./venv/bin/activate && python3 -c "import qcodes"'
             }
         }
 
         stage('Install QTT')
         {
             steps {
-                sh 'pip3 install -r requirements.txt'
-                sh 'python3 setup.py build'
-                sh 'python3 setup.py develop --user'
-                sh 'python3 -c "import qtt"'
+                sh '. ./venv/bin/activate && pip3 install -r requirements.txt'
+                sh '. ./venv/bin/activate && python3 setup.py build'
+                sh '. ./venv/bin/activate && python3 setup.py develop --user'
+                sh '. ./venv/bin/activate && python3 -c "import qtt"'
             }
         }
 
         stage('Test')
         {
             steps {
-                sh 'pip3 list'
-                sh 'coverage run --source="./qtt" -m pytest -k qtt --ignore qtt/legacy.py'
-                sh 'coverage report'
-                sh 'coverage xml'
+                sh '. ./venv/bin/activate && pip3 list'
+                sh '. ./venv/bin/activate && coverage run --source="./qtt" -m pytest -k qtt --ignore qtt/legacy.py'
+                sh '. ./venv/bin/activate && coverage report'
+                sh '. ./venv/bin/activate && coverage xml'
             }
         }
         
