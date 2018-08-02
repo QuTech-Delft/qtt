@@ -2155,6 +2155,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
 
     scantype = loc_record['label']
     if 'vec' not in scantype and not isinstance(sweepgates, dict):
+        # simple gate type
         gate_horz = getattr(gates, sweepgates[0])
         gate_vert = getattr(gates, sweepgates[1])
 
@@ -2171,12 +2172,22 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
         sweep_vert = gate_vert[initval_vert - sweepranges[1] /
                                2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data_measured)]
     else:
+        # vector scan 
         gate_horz='gate_horz'
         gate_vert='gate_vert'
         p1=qcodes.Parameter('gate_horz', set_cmd=None)
         p2=qcodes.Parameter('gate_vert', set_cmd=None)
-        sweep_horz=p1[0:data.shape[0]:1]
-        sweep_vert=p2[0:data.shape[0]:1]
+        
+        sweepranges[0]
+        xvals = np.linspace(-sweepranges[0]/2, sweepranges[0]/2, data.shape[1])
+        yvals = np.linspace(-sweepranges[1]/2, sweepranges[1]/2, data.shape[0])
+        
+        sweep_horz=p1[xvals]
+        sweep_vert=p2[yvals]
+        #sweep_horz=p1[0:data.shape[0]:1]
+        #sweep_vert=p2[0:data.shape[0]:1]
+        assert(data.shape[0]==len(list(sweep_vert)))
+        assert(data.shape[1]==len(list(sweep_horz)))
         
     dataset = makeDataSet2D(sweep_vert, sweep_horz, measure_names=measure_names,
                             location=location, loc_record=loc_record, preset_data=data)
