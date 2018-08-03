@@ -149,8 +149,12 @@ def lever_arm(bias, results, fig = None):
     if fig and len(plt.get_fignums()) != 0:
         ax = plt.gca()
         ax.set_autoscale_on(False)
-        title = 'Lever arm %s:   %.2f $\mu$eV/mV'%(ax.get_xlabel()[:2], lev_arm)
-        plt.annotate('Length %s: %.2f mV'%(ax.get_xlabel()[:2], line_length), xy = (0.05, 0.1), xycoords='axes fraction', color = 'k')
+        if np.round(results['clicked_points'][0,2],2) == np.round(results['intersection_point'][0],2):
+            gate = ax.get_ylabel()[:2]
+        else:
+            gate = ax.get_xlabel()[:2]
+        title = 'Lever arm %s:   %.2f $\mu$eV/mV'%(gate, lev_arm)
+        plt.annotate('Length %s: %.2f mV'%(gate, line_length), xy = (0.05, 0.1), xycoords='axes fraction', color = 'k')
         plt.annotate(title, xy = (0.05, 0.05), xycoords='axes fraction', color = 'k')
         ax.set_title(title)
         
@@ -180,8 +184,12 @@ def E_charging(lev_arm, results, fig = None):
     if fig and len(plt.get_fignums()) != 0:
         ax = plt.gca()
         ax.set_autoscale_on(False)
-        title = 'E_charging %s: %.2f meV'%(ax.get_xlabel()[:2], E_c/1000)
-        plt.annotate('Length %s:  %.2f mV'%(ax.get_xlabel()[:2], line_length), xy = (0.05, 0.1), xycoords='axes fraction', color = 'k')
+        if np.round(results['clicked_points'][0,2],2) == np.round(results['intersection_point'][0],2):
+            gate = ax.get_ylabel()[:2]
+        else:
+            gate = ax.get_xlabel()[:2]
+        title = 'E_charging %s: %.2f meV'%(gate, E_c/1000)
+        plt.annotate('Length %s:  %.2f mV'%(gate, line_length), xy = (0.05, 0.1), xycoords='axes fraction', color = 'k')
         plt.annotate(title, xy = (0.05, 0.05), xycoords='axes fraction', color = 'k')
         ax.set_title(title)
     
