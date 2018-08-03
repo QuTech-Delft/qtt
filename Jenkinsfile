@@ -16,8 +16,8 @@ pipeline {
                 sh '''
                        . ./venv/bin/activate &&
                        cd Qcodes && pip3 install -r requirements.txt &&
-                       cd Qcodes && python3 setup.py build &&
-                       cd Qcodes && python3 setup.py install &&
+                       python3 setup.py build &&
+                       python3 setup.py install &&
                        python3 -c "import qcodes"
                    '''
 
