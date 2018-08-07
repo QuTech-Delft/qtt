@@ -130,11 +130,19 @@ class virtual_gates(Instrument):
              return {x: d[x] for x in d if x not in keys}
         d = without_keys(self.__dict__, 'parameters') 
         d['gates']=str(d['gates'])
+        d['crosscap_matrix']=self.get_crosscap_matrix()
         return d
     
-    @staticmethod
-    def from_dictionary(dict):
-        raise NotImplementedError('instrument  annot be reconstructed')
+    def from_dictionary(vgdict, gates, name=None):       
+        """ Convert dictionary to virtual gate matrix object """       
+        if name is None:
+            name = qtt.measurements.scans.instrumentName(vgdict['name'])
+        pgates=vgdict['_gates_list']
+        vgates=vgdict['_virts_list']
+        virt_map = create_virtual_matrix_dict(vgates, pgates, c=vgdict['crosscap_matrix'], verbose=0)
+
+        return virtual_gates(name, gates, virt_map)
+
            
     def _create_parameters(self):
         for g in self._virts_list:
