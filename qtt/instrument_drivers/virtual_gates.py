@@ -138,6 +138,7 @@ class virtual_gates(Instrument):
         d['crosscap_matrix'] = self.get_crosscap_matrix()
         return d
 
+    @staticmethod
     def from_dictionary(vgdict, gates, name=None):
         """ Convert dictionary to virtual gate matrix object """
         if name is None:
