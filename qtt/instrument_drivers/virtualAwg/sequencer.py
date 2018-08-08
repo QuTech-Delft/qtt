@@ -73,14 +73,14 @@ class Sequencer:
         """
         if uptime <= 0 or offset < 0:
             raise ValueError('Invalid argument value (uptime <= 0 or offset < 0)!')
-        if uptime + offset > period:
+        if uptime + offset > 1:
             raise ValueError('Invalid argument value (uptime + offset > period)!')
         input_variables = {'period': period*Sequencer.__sec_to_ns,
-                           'uptime': uptime*Sequencer.__sec_to_ns,
-                           'offset': offset*Sequencer.__sec_to_ns}
+                           'uptime': period*uptime*Sequencer.__sec_to_ns,
+                           'offset': period*offset*Sequencer.__sec_to_ns}
         sequence_data = (Templates.marker(name), input_variables)
         return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
-                'type': DataTypes.QC_TOOLKIT}
+                'type': DataTypes.QC_TOOLKIT, 'uptime': uptime, 'offset': offset}
 
     @staticmethod
     def __qc_toolkit_template_to_array(sequence, sampling_rate):
@@ -201,7 +201,7 @@ class Sequencer:
 
         Args:
             sequence (dict): A sequence created using the sequencer.
-        
+
         Returns:
             Str: A JSON string with the sequence data.
         """
@@ -213,7 +213,7 @@ class Sequencer:
 
         Args:
             sequence (dict): A sequence created using the sequencer.
-        
+
         Returns:
             Str: A JSON string with the sequence data.
         """
@@ -227,7 +227,7 @@ class Sequencer:
 
         Args:
             sequence (dict): A sequence created using the sequencer.
-        
+
         Returns:
             Str: A JSON string with the sequence data.
         """
