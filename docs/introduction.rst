@@ -76,6 +76,16 @@ We advise to use the following settings when using QTT:
 
 For the usage of algorithms or calibrations we point you to the documentation of those subjects.
 
+Core Examples
+------------
+
+* :doc:`Simple measurement example <notebooks/example_simple>`
+* :doc:`How to define a station (e.g. your hardware setup) <notebooks/example_station>`
+* :doc:`Make a linear fit in a scan of an ohmic contact <notebooks/example_ohmic>`
+* :doc:`Create a GUI to view parameters of an instrument <notebooks/example_param_widget.py>`
+* :doc:`Open a GUI to abort measurements <notebooks/example_measurement_control.py>`
+* :doc:`Example spinqubit measurement <notebooks/spinqubit_measurement>`
+
 Testing
 -------
 

@@ -4,50 +4,36 @@ Algorithms
 Algorithms have as input data (typically as a QCoDeS dataset) and parameters of the algorithm. 
 The output is a dictionary with the main results as keys of the dictionary.
 
+General Algorithm Examples
+---------------
+* :doc:`Fitting a Coulomb peak <notebooks/example_coulomb_peak>`
+* :doc:`Automatically fit a Fermi distribution <notebooks/example_fermi_fitting>`
+* :doc:`Analyse Random Telegraph Singal using double gauss exp decay <notebooks/example_doublegauss_expdecay_rts>`
 
-Quantum dots
+Quantum Dot Examples
 ------------
 
 * :doc:`algorithms/fermidirac`
-* Fit anti-crossing
-* Virtual gate matrix
-* Fit polarization line
-* ...
+* :doc:`Automatically fit an anti-crossing in a dataset <notebooks/example_anticrossing>`
+* :doc:`Automatically fit a polarization line <notebooks/example_polFitting>`
+* :doc:`Make corrections for the non-linearity of a charge sensor <notebooks/example_charge_sensor>`
+* :doc:`Example PAT fitting <notebooks/example_PAT_fitting>`
+* :doc:`Example sensing dot tuning <notebooks/example_sensingdottuning>`
+* :doc:`Videomode tuning <notebooks/example_videomode>`
 
-Qubits
+* Virtual gate space() TODO
+
+
+Qubit Examples
 ------
 
-* PSB
-* T1
-* ...
 
-Example notebooks
------------------
 
-.. toctree::
-    :maxdepth: 3
-    :titlesonly:
-    :glob:
+Examples to fit somewhere:
 
-    notebooks/example_simple.ipynb
-    notebooks/example_station.ipynb
-    notebooks/example_ohmic.ipynb
-    notebooks/example_sensingdottuning.ipynb
-    notebooks/example_*
 
-.. caption command
-    :caption: Example notebooks
-
-.. Manual list of notebooks
-
-    Example notebooks
-    -----------------
-    
-    * :doc:`notebooks/example_sensingdottuning`
-    * :doc:`notebooks/example_ohmic`
-    * :doc:`notebooks/example_polFitting`
-    * :doc:`notebooks/example_coulomb_peak`
-    * :doc:`notebooks/example_PAT_simulations`
+##There are some examples in python code what to do with those?
 
 
 Back to the :doc:`main page <index>`.
+

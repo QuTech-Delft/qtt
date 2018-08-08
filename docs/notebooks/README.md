@@ -1,6 +1,8 @@
 # QuTech Tuning examples
 
-Also see the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs/examples)
+Below we included some examples, from very basic measurements to more advanced simulations 
+and analysis examples. For examples of the underlying QCoDeS framework, see 
+the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs/examples).
 
 ## Core examples
 
@@ -19,6 +21,7 @@ Also see the [Qcodes examples](https://github.com/QCoDeS/Qcodes/tree/master/docs
 * [example_polFitting.ipynb](example_polFitting.ipynb) Automatically fit a polarization line
 * [example_charge_sensor.ipynb](example_charge_sensor.ipynb) Make corrections for the non-linearity of a charge sensor 
 * [example_classical_dot_simulation.ipynb](example_classical_dot_simulation.ipynb) Simulate quantum dot systems
+
 
 ## Code snippets
 
