@@ -42,7 +42,7 @@ def plotAnalysedLines(clicked_pts, linePoints1_2, linePt3_vert, linePt3_horz, li
     qtt.pgeometry.plotPoints(linePt3_ints_short, 'b')
     
      
-def perpLineIntersect(ds, description, vertical = True):
+def perpLineIntersect(ds, description, vertical = True, points=None):
     """ Takes three points in a graph and calculates the length of a linepiece 
         between a line through points 1,2 and a vertical/horizontal line
         through the third point. Uses the currently active figure.
@@ -91,7 +91,10 @@ def perpLineIntersect(ds, description, vertical = True):
         print('''Please make sure that the descirption argument of this function
               is either 'lever_arm' or 'E_charging' ''')
     
-    clicked_pts=qtt.pgeometry.ginput(3, '.c')
+    if points is not None:
+        clicked_pts = points
+    else:
+        clicked_pts=qtt.pgeometry.ginput(3, '.c')
     
     qtt.pgeometry.plotPoints(clicked_pts, ':c')
     qtt.pgeometry.plotLabels(clicked_pts)
