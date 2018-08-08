@@ -393,6 +393,9 @@ class VideoMode:
                                                              'gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
             else:
                 raise Exception('arguments not supported')
+            if self.verbose:
+                print(Fore.BLUE + '%s: 2d scan, define callback ' %
+                      (self.__class__.__name__,) + Fore.RESET)
             self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), minstrument=(
                 self.minstrumenthandle, self.channels), resolution=self.resolution, diff_dir=self.diff_dir)
         else:

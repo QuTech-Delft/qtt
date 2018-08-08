@@ -208,10 +208,11 @@ class virtual_awg(Instrument):
                 try:
                     self._awgs[sweep[0]].send_waveform_to_list(sweep_info[sweep]['waveform'], sweep_info[
                         sweep]['marker1'], sweep_info[sweep]['marker2'], sweep_info[sweep]['name'])
-                except:
-                    print(sweep_info[sweep]['waveform'].shape)
-                    print(sweep_info[sweep]['marker1'].shape)
-                    print(sweep_info[sweep]['marker2'].shape)
+                except Exception as ex:
+                    print(ex)
+                    print('sweep_info[sweep][waveform] %s' % (sweep_info[sweep]['waveform'].shape,))
+                    print('sweep_info[sweep][marker1] %s' % (sweep_info[sweep]['marker1'].shape,))
+                    print('sweep_info[sweep][marker2] %s' % (sweep_info[sweep]['marker2'].shape,))
 
         return sweep_info
 
@@ -562,6 +563,8 @@ class virtual_awg(Instrument):
         gates_horz and gates_vert which effectively do a 2D scan of two virtual
         gates.
 
+        The horizontal direction is the direction where the AWG signal is changing fastest. It is the first element in the resolution and sweepranges.
+        
         Arguments:
             samp_freq (float): sampling frequency of the measurement instrument in Hertz.
             gates_horz (dict): the gates for the horizontal direction and their coefficients
@@ -589,7 +592,7 @@ class virtual_awg(Instrument):
         for g in gates_horz:
             self.check_amplitude(g, sweepranges[0] * gates_horz[g])
         for g in gates_horz:
-            wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[0])
+            wave_raw = self.make_sawtooth(sweepranges[0], period_horz, repetitionnr=resolution[1])
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw * gates_horz[g] / awg_to_plunger
             waveform[g] = dict()
