@@ -532,6 +532,41 @@ def extend_virtual_gates(vgates, pgates, virts, name='vgates', verbose=0):
     virts = virtual_gates(qtt.measurements.scans.instrumentName(name), virts.gates, crosscap_map)
     return virts
 
+def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
+    """ Create a new virtual gates object using an update matrix
+    
+    Args:
+        virt_gates (virtual_gates): virtual gates object
+        update_cc (array): update to cc matrix
+        old_cc (array or None): if None, then get the old cc matrix from the virt_gates
+        verbose (int): verbosity level
+    Returns:
+        new_virt_gates (virtual gates):
+        new_cc (array):
+        results (dict): dictionary with additional results
+    """
+    physical_gates = virt_gates.pgates()
+    vgates = virt_gates.vgates()
+
+    if old_cc is None:
+        old_cc = virt_gates.get_crosscap_matrix()
+    new_cc = (update_cc).dot(old_cc)
+
+    if verbose:
+        print('old matrix')
+        print(old_cc)
+        print('update matrix')
+        print(update_cc)
+        print('new matrix')
+        print(new_cc)
+
+    virt_map = create_virtual_matrix_dict(vgates, physical_gates, new_cc, verbose)
+    new_virt_gates = virtual_gates(qtt.measurements.scans.instrumentName('virt_gates'), virt_gates.gates, virt_map)
+    if verbose >= 2:
+        new_virt_gates.print_map(virt_map)
+        print(virt_gates.get_crosscap_matrix_inv())
+
+    return new_virt_gates, new_cc, {'old_cc': old_cc}
 
 def test_virtual_gates(verbose=0):
     """ Test for virtual gates object """
@@ -579,6 +614,8 @@ def test_virtual_gates(verbose=0):
     virts2= extend_virtual_gates(vgates, pgates, virts, name='vgates')
     if verbose:        
         virts2.print_matrix()    
+        
+    vx = update_cc_matrix(virt_gates, update_cc=np.eye(7), verbose=0)
         
 if __name__=='__main__':
     test_virtual_gates()
