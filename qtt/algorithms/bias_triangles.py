@@ -48,7 +48,7 @@ def perpLineIntersect(ds, description, vertical = True, points=None):
         through the third point. Uses the currently active figure.
         
         Args:
-            ds (dataset): dataset
+            ds (dataset): dataset with charge stability diagram and gate voltage in mV
             vertical (bool): find intersection of point with line vertically (True) 
             or horizontally (False)
             description: 
@@ -134,7 +134,7 @@ def lever_arm(bias, results, fig = None):
     """ Calculates the lever arm of a dot by using bias triangles in charge sensing. Uses currently active figure.
     
     Args:
-        bias (int/float): bias between source and drain while taking the bias triangles
+        bias (float): bias in uV between source and drain while taking the bias triangles
         results (dict): dictionary returned from the function perpLineIntersect
                         containing three points, the intersection point
                         between a line through 1,2 and the third point and the
@@ -170,7 +170,7 @@ def E_charging(lev_arm, results, fig = None):
     Uses currently active figure.
     
     Args:
-        lev_arm (int/float): lever arm for the gate to the dot
+        lev_arm (float): lever arm for the gate to the dot
         results (dict): dictionary returned from the function perpLineIntersect
                         containing three points, the intersection point
                         between a line through 1,2 and the third point and the
