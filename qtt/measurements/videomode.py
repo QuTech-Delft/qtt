@@ -253,7 +253,7 @@ class VideoMode:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
         qtt.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
-                              notes=self.station, extranotes=str(self.scanparams))
+                              notes=self.station, extranotes='date: %s'  % (qtt.data.dateString(), ) + '\n' + 'scanjob: ' + str(self.scanparams))
         if isrunning:
             self.startreadout()
 
