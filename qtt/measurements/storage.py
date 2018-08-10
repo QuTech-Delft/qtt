@@ -96,6 +96,7 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
         station (qcodes station)
         tag (str or None)
         overwrite (bool): If True overwrite existing data, otherwise raise error
+        virtual_gates (None or virtual_gates): virtual gates object to store
         data (None or object): optional extra data
         verbose (int)
 
