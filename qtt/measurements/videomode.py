@@ -253,7 +253,7 @@ class VideoMode:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
         qtt.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
-                              notes=self.station, extranotes=str(self.scanparams))
+                              notes=self.station, extranotes='date: %s'  % (qtt.data.dateString(), ) + '\n' + 'scanjob: ' + str(self.scanparams))
         if isrunning:
             self.startreadout()
 
@@ -452,7 +452,7 @@ class VideoMode:
             import copy
             alldata=[None]*len(data)
             for jj in range(len(data)):
-                datax = data[0]
+                datax = data[jj]
                 alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
                                               'label': 'videomode_2d_single'})
                 alldatax.metadata=copy.copy(metadata)
