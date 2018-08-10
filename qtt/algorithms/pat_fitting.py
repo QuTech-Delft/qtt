@@ -24,9 +24,9 @@ def one_ele_pat_model(x_data, pp):
     Args:
         x_data (array): detuning (mV)
         pp (array): xoffset (mV), leverarm (ueV/mV) and t (ueV)
-        
+
     For more details see: https://arxiv.org/abs/1803.10352
-    
+
     """
     if len(pp) == 1:
         pp = pp[0]
@@ -35,6 +35,7 @@ def one_ele_pat_model(x_data, pp):
     t = pp[2]
     y = np.sqrt(np.power((x_data - xoffset) * leverarm, 2) + 4 * t**2) * ueV2Hz
     return y
+
 
 def two_ele_pat_model(x_data, pp):
     r""" Model for two electron pat
@@ -63,11 +64,11 @@ def two_ele_pat_model(x_data, pp):
 
 class pat_score():
 
-    def __init__(self, even_branches=[True, True, True], branch_reduction = None):
+    def __init__(self, even_branches=[True, True, True], branch_reduction=None):
         """ Class to calculate scores for PAT fitting """
         self.even_branches = even_branches
         self.branch_reduction = branch_reduction
-        
+
     def pat_one_ele_score(self, xd, yd, pp, weights=None, thr=2e9):
         """ Calculate score for pat one electron model 
 
@@ -100,22 +101,22 @@ class pat_score():
         """
         ymodel = two_ele_pat_model(xd, pp)
         denom = np.sqrt((pp[1] * (xd - pp[0]))**2 + 8 * pp[2]**2)
-        charge_changes = []        
+        charge_changes = []
         charge_changes.append(1 / 2 * (1 + pp[1] * (xd - pp[0]) / denom))
         charge_changes.append(np.abs(pp[1] * (xd - pp[0]) / denom))
         charge_changes.append(1 / 2 * (1 - pp[1] * (xd - pp[0]) / denom))
         linesize = ymodel[0].shape[0]
-        if self.branch_reduction is None or self.branch_reduction=='minimum':
+        if self.branch_reduction is None or self.branch_reduction == 'minimum':
             sc = np.inf * np.ones(linesize)
             for idval, val in enumerate(self.even_branches):
                 if val:
                     sc = np.minimum(sc, np.abs(ymodel[idval] - yd))
-        elif self.branch_reduction=='mean':
+        elif self.branch_reduction == 'mean':
             sc = []
             for idval, val in enumerate(self.even_branches):
                 if val:
-                    sc.append(np.abs(ymodel[idval] - yd) )
-            sc = np.mean( np.array(sc), axis=1)
+                    sc.append(np.abs(ymodel[idval] - yd))
+            sc = np.mean(np.array(sc), axis=1)
         else:
             raise NotImplementedError('branch_reduction %s not implemented' % self.branch_reduction)
         scalefac = thr
@@ -160,28 +161,29 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
     imx = imx / scale
 
     if fig is not None:
-        y_data=np.arange(imq.shape[0])
-        plt.figure(fig); plt.clf()
-        plt.subplot(2,2,1)
+        y_data = np.arange(imq.shape[0])
+        plt.figure(fig)
+        plt.clf()
+        plt.subplot(2, 2, 1)
         plt.pcolormesh(x_data, y_data, z_data)
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('Input data')
-        plt.subplot(2,2,2)
+        plt.subplot(2, 2, 2)
         plt.pcolormesh(x_data, y_data, imq)
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('imq')
-        plt.subplot(2,2,3)
+        plt.subplot(2, 2, 3)
         plt.pcolormesh(x_data, y_data, imx)
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('imx')
 
-            
     return imx, imq, backgr_sm
 
 #%%
+
 
 def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='one_ele'):
     """ Detect peaks in sensor signal, e.g. from a pat scan.
@@ -200,10 +202,11 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
     thr2 = .6
 
     # chop off part of the data, because T1 is relatively long
-    mvedge = .1 * (np.max(x_data) - np.min(x_data)) 
+    mvedge = .1 * (np.max(x_data) - np.min(x_data))
     if model == 'two_ele':
         mvthr = (np.max(x_data) - np.min(x_data)) * .25e-3 / period  # T1 \approx .1 ms [Ref]
-        horz_vals = x_data[(x_data > (np.min(x_data) + np.maximum(mvthr, mvedge))) & (x_data < (np.max(x_data) - mvedge))]
+        horz_vals = x_data[(x_data > (np.min(x_data) + np.maximum(mvthr, mvedge)))
+                           & (x_data < (np.max(x_data) - mvedge))]
         z_data = imx[:, (x_data > (np.min(x_data) + np.maximum(mvthr, mvedge))) & (x_data < (np.max(x_data) - mvedge))]
     elif model == 'one_ele':
         horz_vals = x_data[(x_data > (np.min(x_data) + mvedge)) & (x_data < (np.max(x_data) - mvedge))]
@@ -286,7 +289,6 @@ def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, Tru
     else:
         raise Exception('This model %s is not implemented.' % trans)
 
-
     if xoffset is None:
         def ff(x): return pat_model_score(xd, yd, [x, pp[1], ppx[2]], weights=weights)
         r = scipy.optimize.brute(ff, ranges=[(pp[0] - 2, pp[0] + 2)], Ns=20, disp=False)
@@ -298,20 +300,22 @@ def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, Tru
 
     if xoffset is None:
         def ff(x): return pat_model_score(xd, yd, x, weights=weights)
-        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': verbose>=1}))
+        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': verbose >= 1}))
         ppx = r['x']
     else:
         def ff(x): return pat_model_score(xd, yd, np.array([xoffset, x[0], x[1]]), weights=weights)
-        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]), method='Powell', options=dict({'disp': verbose>=1}))
+        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]),
+                                    method='Powell', options=dict({'disp': verbose >= 1}))
         ppx = np.insert(r['x'], 0, xoffset)
 
     if xoffset is None:
         def ff(x): return pat_model_score(xd, yd, x, weights=weights, thr=.5e9)
-        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': verbose>=1}))
+        r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': verbose >= 1}))
         ppx = r['x']
     else:
         def ff(x): return pat_model_score(xd, yd, np.array([xoffset, x[0], x[1]]), weights=weights)
-        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]), method='Powell', options=dict({'disp': verbose>=1}))
+        r = scipy.optimize.minimize(ff, np.array([ppx[1], ppx[2]]),
+                                    method='Powell', options=dict({'disp': verbose >= 1}))
         ppx = np.insert(r['x'], 0, xoffset)
 
     sc0 = pat_model_score(xd, yd, pp, weights=weights)
@@ -340,11 +344,7 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
 
     Returns:
         pp (array): fitted xoffset (mV), leverarm (ueV/mV) and t (ueV)
-        results (dict): contains keys
-            par_guess (array)
-            imq: re-scaled and re-centered sensor signal
-            imextent (array): co
-            xd, yd, ydf
+        results (dict): contains keys par_guess (array), imq (array) re-scaled and re-centered sensor signal, imextent (array), xd, yd, ydf
     """
     imx, imq, _ = pre_process_pat(x_data, y_data, background, z_data)
 
@@ -356,7 +356,8 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
         par_guess = np.array([np.nanmean(x_data), 65, 10])
 
     weights = None
-    pp = fit_pat_to_peaks(par_guess, xd, yd, trans=trans, even_branches=even_branches, weights=weights, xoffset=xoffset, verbose=0)
+    pp = fit_pat_to_peaks(par_guess, xd, yd, trans=trans, even_branches=even_branches,
+                          weights=weights, xoffset=xoffset, verbose=0)
     if trans == 'one_ele':
         model = one_ele_pat_model
     elif trans == 'two_ele':
@@ -434,31 +435,33 @@ def show_traces(x_data, z_data, fig=100, direction='h', title=None):
 
 
 def test_pat_fitting(fig=None):
-    pp0=[0, 50, 5]
-    x_data=np.arange(-3, 3, 0.025)
-    y_data=np.arange(.5e9, 10e9, .5e9)
-    z_data=1.2*np.random.rand( y_data.size, x_data.size)
-    background=np.zeros( x_data.size)
+    pp0 = [0, 50, 5]
+    x_data = np.arange(-3, 3, 0.025)
+    y_data = np.arange(.5e9, 10e9, .5e9)
+    z_data = 1.2 * np.random.rand(y_data.size, x_data.size)
+    background = np.zeros(x_data.size)
     for ii, x in enumerate(x_data):
-        y=one_ele_pat_model(x, pp0)
-        jj=np.argmin(np.abs(y_data-y))
-        z_data[jj, ii]+=2 # ((x>0)*2-1)
+        y = one_ele_pat_model(x, pp0)
+        jj = np.argmin(np.abs(y_data - y))
+        z_data[jj, ii] += 2  # ((x>0)*2-1)
     pp, pat_fit = fit_pat(x_data, y_data, z_data, background, verbose=0)
     imx, imq, _ = pre_process_pat(x_data, y_data, background, z_data, fig=None)
 
     if fig is not None:
-        pat_fit_fig = plt.figure(fig); plt.clf()
+        pat_fit_fig = plt.figure(fig)
+        plt.clf()
         plot_pat_fit(x_data, y_data, imq, pp, fig=pat_fit_fig.number, label='fitted model')
         plot_pat_fit(x_data, y_data, None, pp0, fig=pat_fit_fig.number, label='initial model')
 
-        trans='one_ele'
-        period=1e-3
+        trans = 'one_ele'
+        period = 1e-3
         xx, weights, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=200)
 
         from qtt.pgeometry import pcolormesh_centre
-        plt.figure(fig+3); plt.clf()
+        plt.figure(fig + 3)
+        plt.clf()
         pcolormesh_centre(x_data, y_data, imq)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     test_pat_fitting(fig=10)
-    

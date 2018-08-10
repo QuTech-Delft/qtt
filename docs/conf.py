@@ -209,7 +209,7 @@ if 1:
     
         ignore_paths = [
             'qtt/legacy.py', 'qtt/debug.py', 'qtt/reports.py', 'qtt.loggingGUI.py',
-            '../qtt/legacy.py', '../qtt/debug.py', '../qtt/reports.py', '../qtt.loggingGUI.py', '../qtt/scans.py',
+            '../qtt/legacy.py', '../qtt/debug.py', '../qtt/reports.py', '../qtt/loggingGUI.py', '../qtt/scans.py',
             '../qtt/deprecated/.*.py', '../qtt/deprecated/tunnelbarrier.py','../qtt/algorithms/untitled*.py',
             'untitled*.py', 'setup.py',
         ]
