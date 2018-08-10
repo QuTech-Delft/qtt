@@ -34,6 +34,9 @@ Example notebooks
     notebooks/example_ohmic.ipynb
     notebooks/example_sensingdottuning.ipynb
     notebooks/example_*
+    notebooks/spinqubit*
+    notebooks/square_*
+    notebooks/classical_triple_dot.ipynb
 
 .. caption command
     :caption: Example notebooks

@@ -121,7 +121,7 @@ class virtual_awg(Instrument):
             sweep_info (dict): the keys are tuples of the awgs and channels to activate
 
         Example:
-        -------
+        --------
         >> sweep_info = sweep_init(waveforms)
         '''
         sweepgates = [g for g in waveforms]
