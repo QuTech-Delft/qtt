@@ -6,7 +6,7 @@ the framework useable for everyone, we ask all contributors to keep to the guide
 contacting the main developers of QuTech Tuning can be done via `GitHub issues <https://github.com/VandersypenQutech/qtt/issues>`_. 
 
 Code development
----------
+----------------
 
 When contributing to QTT you will want to write a new piece of code. Please keep in mind the guidelines below to allow us to work together in an efficient way:
 

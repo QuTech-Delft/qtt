@@ -38,13 +38,13 @@ QTT can be installed as a pip package:
 
 .. code-block:: console
 
-    pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+    $ pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
 
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 
 .. code-block:: console
    
-   python setup.py develop
+   $ python setup.py develop
 
 For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md <INSTALL-spinqubits.md>`_.
 
@@ -57,7 +57,7 @@ If you installed qtt via the pip package you can run the pip install comment aga
 
 .. code-block:: console
 
-    pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+    $ pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
 
 Usage
 -----

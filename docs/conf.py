@@ -90,7 +90,8 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'untitled.*py', 'debug.py', 'notebooks/.ipynb_checkpoints', '../qtt/debug.py', '../qtt/legacy.py',  'qtt/scans.py', '../qtt/deprecated/*']
+exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'untitled.*py',
+                'notebooks/.ipynb_checkpoints', '../qtt/loggingGUI.py', '../qtt/debug.py', '../qtt/legacy.py',  'qtt/scans.py', '../qtt/deprecated/*']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -201,20 +202,22 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy', None)
 }
 
-if 0:
+if 1:
     def run_apidoc(_):
         import os
         print('run_apidoc: current dir is %s' % os.getcwd())
     
         ignore_paths = [
-            'qtt/legacy.py', 'qtt/debug.py', 
+            'qtt/legacy.py', 'qtt/debug.py', 'qtt/reports.py', 'qtt.loggingGUI.py',
+            '../qtt/legacy.py', '../qtt/debug.py', '../qtt/reports.py', '../qtt.loggingGUI.py', '../qtt/scans.py',
+            '../qtt/deprecated/.*.py', '../qtt/deprecated/tunnelbarrier.py','../qtt/algorithms/untitled*.py',
             'untitled*.py', 'setup.py',
         ]
     
         argv = [
             "-f",
             "-M",
-            "-o", "./api",
+            "-o", ".",
             "../qtt"
         ] + ignore_paths
     
@@ -225,5 +228,5 @@ if 0:
     
 
 
-#def setup(app):
-#    app.connect('builder-inited', run_apidoc)        
+    def setup(app):
+        app.connect('builder-inited', run_apidoc)        

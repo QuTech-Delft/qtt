@@ -37,7 +37,6 @@ Example notebooks
     notebooks/spinqubit*
     notebooks/square_*
     notebooks/classical_triple_dot.ipynb
-    notebooks/*ipynb
 
 .. caption command
     :caption: Example notebooks
