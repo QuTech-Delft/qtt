@@ -37,6 +37,7 @@ extensions = ['sphinx.ext.autodoc',
 #    'nbsphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinx.ext.autosummary',
     'nbsphinx']
 
 if 0:
@@ -89,7 +90,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'qtt/legacy.py',  'qtt/scans.py', 'qtt/deprecated/*']
+exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'untitled.*py', 'debug.py', 'notebooks/.ipynb_checkpoints', '../qtt/debug.py', '../qtt/legacy.py',  'qtt/scans.py', '../qtt/deprecated/*']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -199,3 +200,30 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3.6', None),
     'numpy': ('https://docs.scipy.org/doc/numpy', None)
 }
+
+if 0:
+    def run_apidoc(_):
+        import os
+        print('run_apidoc: current dir is %s' % os.getcwd())
+    
+        ignore_paths = [
+            'qtt/legacy.py', 'qtt/debug.py', 
+            'untitled*.py', 'setup.py',
+        ]
+    
+        argv = [
+            "-f",
+            "-M",
+            "-o", "./api",
+            "../qtt"
+        ] + ignore_paths
+    
+        # Sphinx 1.7+
+        from sphinx.ext import apidoc
+        apidoc.main(argv)
+        print('run_apidoc: done')
+    
+
+
+#def setup(app):
+#    app.connect('builder-inited', run_apidoc)        

@@ -39,6 +39,7 @@ Documentation
    :maxdepth: 2
 
    introduction   
+   measurements
    calibrations   
    algorithms
    simulation
