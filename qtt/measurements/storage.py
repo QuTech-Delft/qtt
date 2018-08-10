@@ -8,6 +8,8 @@ import warnings
 import pandas as pd
 import numpy as np
 
+import qtt.instrument_drivers.virtual_gates
+
 try:
     import hickle
 except:
@@ -46,23 +48,24 @@ def list_states(verbose=1):
 #%%
 
 
-def load_state(tag=None, station=None, verbose=1):
+def load_state(tag=None, station=None, verbose=1 ):
     """ Load state of the system from disk
 
     Args:
-        tag (str)
+        tag (str): identifier of state to load
         station (None or qcodes station): If defined apply the gatevalues loaded from disk
-        verbose (int)
+        verbose (int): verbosity level
 
     Returns:
         state (dict): Dictionary with state of the system
+        virtual_gates (None or object): reconstructed virtual gates
 
     """
     statefile = qcodes.config.get('statefile', None)
     if statefile is None:
         statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
     if verbose:
-        print('load_state: reading from file %s, tag %s' % (statefile, tag))
+        print('load_state %s: reading from file %s' % (tag, statefile))
     obj = {}
     with h5py.File(statefile, 'r') as h5group:
         if not tag in h5group:
@@ -73,14 +76,20 @@ def load_state(tag=None, station=None, verbose=1):
             gv = obj.get('gatevalues')
             if gv is not None:
                 if verbose >= 1:
-                    print('load_state: resetting gate values')
+                    print('load_state %s: resetting gate values' % tag)
                 station.gates.resetgates(gv, gv, verbose=verbose >= 2)
         except Exception as ex:
             logging.exception(ex)
-    return obj
+    virtual_gates = obj.get('virtual_gates', None)
+    if virtual_gates is not None and station is not None:
+        if verbose:
+            print('load_state %s: creating virtual gate matrix' % tag)
+
+        virtual_gates = qtt.instrument_drivers.virtual_gates.virtual_gates.from_dictionary(virtual_gates, station.gates)
+    return obj, virtual_gates
 
 
-def save_state(station, tag=None, overwrite=False, data=None, verbose=1):
+def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None, verbose=1):
     """ Save current state of the system to disk
 
     Args:
@@ -115,6 +124,9 @@ def save_state(station, tag=None, overwrite=False, data=None, verbose=1):
     obj = {'gatevalues': gv, 'snapshot': snapshot,
            'datestring': datestring, 'data': data}
 
+    if virtual_gates is not None:
+        obj['virtual_gates']=virtual_gates.to_dictionary()
+        
     if verbose:
         print('save_state: writing to file %s, tag %s' % (statefile, tag))
     with h5py.File(statefile, 'a') as h5group:
@@ -126,6 +138,7 @@ def save_state(station, tag=None, overwrite=False, data=None, verbose=1):
                     raise Exception(
                         'tag %s already exists in state file %s' % (tag, statefile))
             hickle.dump(obj, h5group, path=tag)
+    return tag
 
 #%% Logging and monitoring functions
 
@@ -192,3 +205,11 @@ def store_logdata(datadict, filename, tag='metadata'):
         gc.collect()
 
     return data
+
+
+def test_load_save_state():
+    import qtt.simulation.virtual_dot_array
+    station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=2, maxelectrons=2, verbose=0)
+
+    tag = save_state(station, virtual_gates = None)
+    r = load_state(station=station, tag=tag, verbose=1)
