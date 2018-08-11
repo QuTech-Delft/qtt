@@ -199,20 +199,3 @@ def E_charging(lev_arm, results, fig = None):
     return E_c    
 
    
-#%%
-    
-dataset = r'D:\data\amjzwerver\Qubyte2_cooldown4\E_add\2018-07-28\14-33-26_qtt_scan2Dfast'
-ds = qcodes.load_data(dataset)
-
-diffDataset(ds, diff_dir='xy')
-
-plt.figure(3); plt.clf()
-MatPlot(ds.measured, num = 3)
-
-  
-#%%
-ll = perpLineIntersect(ds, vertical = True, description = 'lever_arm')
-#%%
-lev_arm = lever_arm(200, vertical = True)
-#%%
-E_c = E_charging(lev_arm, results = ll, fig = True)
