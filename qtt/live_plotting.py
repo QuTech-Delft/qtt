@@ -462,20 +462,9 @@ class livePlot(QtCore.QObject):
 
     
         self.plotwin.scene().sigMouseClicked.connect(self._onClick)
-        #self.sigMouseClicked = Signal(qtpy.QtCore.QPointF)
 
     def _onClick(self, event):
-        e=event
-        #items = self.plotwin.scene().items(event.scenePos())
-        #print( "Plots:", [x for x in items if isinstance(x, pg.PlotItem)] )
-        #print([e.pos(), e.scenePos(), e.screenPos()])
-    
-        image_pt=self.plot.mapFromScene(e.scenePos())
-        #print(image_pt )
-        #print(lp.plot.mapToData( e.scenePos() ) )
-        
-        #print('plotwin.mapFromScene' + str(lp.plotwin.mapFromScene(e.scenePos()) ) )
-        #r=lp.plot.boundingRect()
+        image_pt=self.plot.mapFromScene(event.scenePos())
     
         tr=self.plot.transform()
         pt=tr.map(image_pt.x(),image_pt.y())
