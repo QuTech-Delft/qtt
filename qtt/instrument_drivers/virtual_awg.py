@@ -488,6 +488,8 @@ class virtual_awg(Instrument):
         ''' Send sawtooth signals to the sweepgates which effectively do a 2D
         scan.
 
+        The first sweepgate is the fast changing gate (on the horizontal axis).
+        
         Arguments:
             samp_freq (float): sampling frequency of the measurement instrument in Hertz.
             sweepgates (list): two strings with names of gates to sweep

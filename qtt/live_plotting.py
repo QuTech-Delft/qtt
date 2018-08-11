@@ -303,7 +303,7 @@ LivePlotControl = RdaControl
 # %% Liveplot object
 
 
-class livePlot:
+class livePlot(QtCore.QObject):
     """ Class to enable live plotting of data.
 
     Attributes:
@@ -317,6 +317,9 @@ class livePlot:
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
+    from qtpy.QtCore import Signal
+    sigMouseClicked = Signal(object)
+
     def __init__(
             self,
             datafunction=None,
@@ -328,8 +331,9 @@ class livePlot:
             show_controls=True,
             window_title='live view',
             plot_title=None,
-            is1dscan=None):
+            is1dscan=None, **kwargs):
         """Return a new livePlot object."""
+        super().__init__(**kwargs)
 
         self.window_title = window_title
         win = QtWidgets.QWidget()
@@ -439,6 +443,7 @@ class livePlot:
         self.timer.timeout.connect(self.updatebg)
         self.win.show()
 
+
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
             # @Slot()
@@ -455,6 +460,29 @@ class livePlot:
 
         self.datafunction_result = None
 
+    
+        self.plotwin.scene().sigMouseClicked.connect(self._onClick)
+        #self.sigMouseClicked = Signal(qtpy.QtCore.QPointF)
+
+    def _onClick(self, event):
+        e=event
+        #items = self.plotwin.scene().items(event.scenePos())
+        #print( "Plots:", [x for x in items if isinstance(x, pg.PlotItem)] )
+        #print([e.pos(), e.scenePos(), e.screenPos()])
+    
+        image_pt=self.plot.mapFromScene(e.scenePos())
+        #print(image_pt )
+        #print(lp.plot.mapToData( e.scenePos() ) )
+        
+        #print('plotwin.mapFromScene' + str(lp.plotwin.mapFromScene(e.scenePos()) ) )
+        #r=lp.plot.boundingRect()
+    
+        tr=self.plot.transform()
+        pt=tr.map(image_pt.x(),image_pt.y())
+        if self.verbose>=2:
+            print('pt %s' % (pt,))
+        self.sigMouseClicked.emit(pt)
+        
     def close(self):
         if self.verbose:
             print('LivePlot.close()')

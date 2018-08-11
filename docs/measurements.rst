@@ -59,6 +59,14 @@ The `virtual_IVVI` object can translate gate names into the proper channels of a
     qtt.instrument_drivers.gates.virtual_IVVI
 
 
+Measurement control
+-------------------
+
+A simple GUI to abort running measurements without interfering with the instrument communication.
+
+.. autosummary::
+    qtt.live_plotting.MeasurementControl
+
 
 Virtual gates
 -------------
