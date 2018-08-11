@@ -443,7 +443,6 @@ class livePlot(QtCore.QObject):
         self.timer.timeout.connect(self.updatebg)
         self.win.show()
 
-
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
             # @Slot()
@@ -460,18 +459,17 @@ class livePlot(QtCore.QObject):
 
         self.datafunction_result = None
 
-    
         self.plotwin.scene().sigMouseClicked.connect(self._onClick)
 
     def _onClick(self, event):
-        image_pt=self.plot.mapFromScene(event.scenePos())
-    
-        tr=self.plot.transform()
-        pt=tr.map(image_pt.x(),image_pt.y())
-        if self.verbose>=2:
+        image_pt = self.plot.mapFromScene(event.scenePos())
+
+        tr = self.plot.transform()
+        pt = tr.map(image_pt.x(), image_pt.y())
+        if self.verbose >= 2:
             print('pt %s' % (pt,))
         self.sigMouseClicked.emit(pt)
-        
+
     def close(self):
         if self.verbose:
             print('LivePlot.close()')
