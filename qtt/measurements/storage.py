@@ -215,6 +215,6 @@ def test_load_save_state():
     import tempfile
     station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=2, maxelectrons=2, verbose=0)
 
-    tempfile = tempfile.mktemp()
+    tmpfile = tempfile.mktemp()
     tag = save_state(station, virtual_gates = None, statefile=tmpfile)
     r = load_state(station=station, tag=tag, verbose=1, statefile=tmpfile)
