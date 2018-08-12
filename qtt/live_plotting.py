@@ -662,6 +662,7 @@ class MockCallback_2d(qcodes.Instrument):
 def test_mock2d():
     mock_callback = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d'))
     mock_callback()
+    mock_callback.close()
 
 
 # %% Example
