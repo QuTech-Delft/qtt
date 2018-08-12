@@ -636,6 +636,7 @@ def test_virtual_gates(verbose=0):
 
     virts.close()
     virts2.close()
+    gates.close()
     
 def test_virtual_gates_serialization(verbose=0):
     """ Test for virtual gates object """
