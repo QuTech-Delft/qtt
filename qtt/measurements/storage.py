@@ -47,8 +47,14 @@ def list_states(verbose=1):
 
 #%%
 
+def _get_statefile(statefile = None):
+    if statefile is None:
+        statefile = qcodes.config.get('statefile', None)
+    if statefile is None:
+        statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
+    return statefile
 
-def load_state(tag=None, station=None, verbose=1 ):
+def load_state(tag=None, station=None, verbose=1, statefile = None ):
     """ Load state of the system from disk
 
     Args:
@@ -61,9 +67,7 @@ def load_state(tag=None, station=None, verbose=1 ):
         virtual_gates (None or object): reconstructed virtual gates
 
     """
-    statefile = qcodes.config.get('statefile', None)
-    if statefile is None:
-        statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
+    statefile = _get_statefile(statefile)
     if verbose:
         print('load_state %s: reading from file %s' % (tag, statefile))
     obj = {}
@@ -89,7 +93,7 @@ def load_state(tag=None, station=None, verbose=1 ):
     return obj, virtual_gates
 
 
-def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None, verbose=1):
+def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None, verbose=1, statefile=None):
     """ Save current state of the system to disk
 
     Args:
@@ -108,9 +112,7 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
     
     To install hickle: pip install git+https://github.com/telegraphic/hickle.git@dev
     """
-    statefile = qcodes.config.get('statefile', None)
-    if statefile is None:
-        statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
+    statefile = _get_statefile(statefile)
 
     snapshot = station.snapshot()
     gv = station.gates.allvalues()
@@ -210,7 +212,9 @@ def store_logdata(datadict, filename, tag='metadata'):
 
 def test_load_save_state():
     import qtt.simulation.virtual_dot_array
+    import tempfile
     station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=2, maxelectrons=2, verbose=0)
 
-    tag = save_state(station, virtual_gates = None)
-    r = load_state(station=station, tag=tag, verbose=1)
+    tmpfile = tempfile.mktemp()
+    tag = save_state(station, virtual_gates = None, statefile=tmpfile)
+    r = load_state(station=station, tag=tag, verbose=1, statefile=tmpfile)
