@@ -33,6 +33,7 @@ class SimulationDigitizer(qcodes.Instrument):
 
         sd1, sd2 = self.myhoneycomb()
         time.sleep(.1)
+        return [sd1, sd2][0:len(channels)]
         return [sd1.T, sd2.T][0:len(channels)]
 
     def myhoneycomb(self, multiprocess=False, verbose=0):
@@ -75,12 +76,17 @@ class SimulationDigitizer(qcodes.Instrument):
         v = model.gate_transform.sourcenames
         Vmatrix = np.eye(len(v))
 
-        if wtype == 'sweep_2D_virt':
-            iih = [v.index(s) for s in sweepgates[0]]
-            iiv = [v.index(s) for s in sweepgates[1]]
+        if wtype == 'sweep_2D_virt' or wtype == 'sweep_2D':
+            if wtype == 'sweep_2D_virt':
+                sweepgatesx=sweepgates
+            else:
+                sweepgatesx=[ {sweepgates[0]:1}, {sweepgates[1]:1}]
 
-            vh = list(sweepgates[0].values())
-            vv = list(sweepgates[1].values())
+            iih = [v.index(s) for s in sweepgatesx[0]]
+            iiv = [v.index(s) for s in sweepgatesx[1]]
+
+            vh = list(sweepgatesx[0].values())
+            vv = list(sweepgatesx[1].values())
             Vmatrix[0, :] = 0
             Vmatrix[1, :] = 0
             for idx, j in enumerate(iih):
@@ -113,6 +119,8 @@ class SimulationDigitizer(qcodes.Instrument):
 
         for ii, p in enumerate(model.gate_transform.sourcenames):
             val = model.get_gate(p)
+            if verbose>=2:
+                print('p %s: centre %s' % (p, val))
             gate2Dparams[ii] = val
 
         for ii, p in enumerate(model.gate_transform.sourcenames):
@@ -140,6 +148,10 @@ class SimulationDigitizer(qcodes.Instrument):
         sd1 *= (1 / np.sum(model.sddist1))
         sd2 *= (1 / np.sum(model.sddist2))
 
+        if verbose>=2:
+            print('sd1.shape %s' % (sd1.shape,))
+            print('sd2.shape %s' % (sd2.shape,))
+            
         if model.sdnoise > 0:
             sd1 += model.sdnoise * \
                 (np.random.rand(*test_dot.honeycomb.shape) - .5)

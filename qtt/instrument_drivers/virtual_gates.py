@@ -634,7 +634,10 @@ def test_virtual_gates(verbose=0):
        
     vx = update_cc_matrix(virts, update_cc=np.eye(3), verbose=0)
 
-
+    virts.close()
+    virts2.close()
+    gates.close()
+    
 def test_virtual_gates_serialization(verbose=0):
     """ Test for virtual gates object """
     import qtt.instrument_drivers.virtual_instruments

@@ -213,8 +213,11 @@ def store_logdata(datadict, filename, tag='metadata'):
 def test_load_save_state():
     import qtt.simulation.virtual_dot_array
     import tempfile
+    from qtt.instrument_drivers.virtual_gates import virtual_gates
+    
     station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=2, maxelectrons=2, verbose=0)
+    virts=virtual_gates('vgtestx', station.gates, {'vP1': {'P1': 1, 'P2': .1}, 'vP2': {'P1': .2, 'P2': 1.}})
 
     tmpfile = tempfile.mktemp()
-    tag = save_state(station, virtual_gates = None, statefile=tmpfile)
+    tag = save_state(station, virtual_gates = virts, statefile=tmpfile)
     r = load_state(station=station, tag=tag, verbose=1, statefile=tmpfile)
