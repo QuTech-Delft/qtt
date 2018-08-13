@@ -400,6 +400,7 @@ def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = Non
 
 def test_onedot(fig=None):
     import qtt
+    import qtt.simulation.virtual_dot_array
     import qtt.algorithms.onedot
     
     nr_dots = 3
@@ -407,10 +408,10 @@ def test_onedot(fig=None):
     gates = station.gates
     
     gv={'B0': -300.000,'B1': 0.487,'B2': -0.126,'B3': 0.000,'D0': 0.111,'O1': -0.478,'O2': 0.283,'O3': 0.404,'O4': 0.070,'O5': 0.392,'P1': 0.436,'P2': 0.182,'P3': 39.570,'SD1a': -0.160,'SD1b': -0.022,'SD1c': 0.425,'bias_1': -0.312,'bias_2': 0.063}
-    gates.resetgates(gv,gv)
+    gates.resetgates(gv,gv, verbose=0)
     
     start = -250
-    scanjob = scanjob_t({'sweepdata': dict({'param': 'B0', 'start': start, 'end': start + 200, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley3.amplitude']})
+    scanjob = qtt.measurements.scans.scanjob_t({'sweepdata': dict({'param': 'B0', 'start': start, 'end': start + 200, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley3.amplitude']})
     scanjob['stepdata'] = dict({'param': 'B1', 'start': start, 'end': start + 200, 'step': 5.})
     data = qtt.measurements.scans.scan2D(station, scanjob)
     
