@@ -888,7 +888,7 @@ try:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
         import qtt.measurements.ttrace # should be moved to top when circular references are fixed
-        import qtt.measurements.videomode # import here, to prevent default imports of gui code
+        from qtt.measurements.videomode import VideoMode # import here, to prevent default imports of gui code
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
@@ -901,7 +901,8 @@ try:
                     fig.__class__.__name__ == 'MultiTracePlot':
                 figtemp = fig.plotwin.grab()
                 figtemp.save(fname)
-            elif isinstance(fig, qtt.measurements.videomode.VideoMode) or fig.__class__.__name__ == 'VideoMode':
+            elif isinstance(fig, VideoMode) or \
+                    fig.__class__.__name__ == 'VideoMode':
                 if isinstance(fig.lp, list):
                     # do NOT change this into a list comprehension
                     ff = []
@@ -951,7 +952,8 @@ try:
             if verbose >= 2:
                 print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
-                                    SaveWithDocument=True, Left=left, Top=120, Width=width, Height=height)
+                                    SaveWithDocument=True, Left=left, Top=120, 
+                                    Width=width, Height=height)
 
         if subtitle is not None:
             # add subtitle

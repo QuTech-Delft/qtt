@@ -106,10 +106,13 @@ except:
 
 
 
-def _abort_measurement():
+def _abort_measurement(value=None):
     """ Return True if the currently running measurement should be aborted """
     if _redis_connection is None:
         return 0
+    if value is not None:
+        _redis_connection.set('qtt_abort_running_measurement', value)
+        
     v = _redis_connection.get('qtt_abort_running_measurement')
     if v is None:
         v = 0

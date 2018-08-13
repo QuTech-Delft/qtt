@@ -303,7 +303,7 @@ LivePlotControl = RdaControl
 # %% Liveplot object
 
 
-class livePlot:
+class livePlot(QtCore.QObject):
     """ Class to enable live plotting of data.
 
     Attributes:
@@ -317,6 +317,9 @@ class livePlot:
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
+    from qtpy.QtCore import Signal
+    sigMouseClicked = Signal(object)
+
     def __init__(
             self,
             datafunction=None,
@@ -328,8 +331,9 @@ class livePlot:
             show_controls=True,
             window_title='live view',
             plot_title=None,
-            is1dscan=None):
+            is1dscan=None, **kwargs):
         """Return a new livePlot object."""
+        super().__init__(**kwargs)
 
         self.window_title = window_title
         win = QtWidgets.QWidget()
@@ -454,6 +458,17 @@ class livePlot:
                 connect_slot(self.enable_averaging_slot))
 
         self.datafunction_result = None
+
+        self.plotwin.scene().sigMouseClicked.connect(self._onClick)
+
+    def _onClick(self, event):
+        image_pt = self.plot.mapFromScene(event.scenePos())
+
+        tr = self.plot.transform()
+        pt = tr.map(image_pt.x(), image_pt.y())
+        if self.verbose >= 2:
+            print('pt %s' % (pt,))
+        self.sigMouseClicked.emit(pt)
 
     def close(self):
         if self.verbose:
@@ -647,6 +662,7 @@ class MockCallback_2d(qcodes.Instrument):
 def test_mock2d():
     mock_callback = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d'))
     mock_callback()
+    mock_callback.close()
 
 
 # %% Example

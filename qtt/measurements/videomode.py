@@ -25,6 +25,7 @@ from qtt.measurements.scans import makeDataset_sweep, makeDataset_sweep_2D
 
 #%%
 
+
 class videomode_callback:
 
     def __init__(self, station, waveform, Naverage, minstrument,
@@ -48,7 +49,7 @@ class videomode_callback:
             self.channels = [self.channels]
 
         self.unique_channels = list(np.unique(self.channels))
-        
+
         # for 2D scans
         self.resolution = resolution
         self.diffsigma = 1
@@ -75,7 +76,7 @@ class videomode_callback:
 
         dd = []
         for ii, channel in enumerate(self.channels):
-            uchannelidx= self.unique_channels.index(channel)
+            uchannelidx = self.unique_channels.index(channel)
             data_processed = np.array(data[uchannelidx])
 
             if self.diff_dir is not None:
@@ -117,7 +118,19 @@ class VideoMode:
 
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
-                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, virtual_awg=None):
+                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name='VideoMode',
+                 mouse_click_callback=None):
+        """ Tool for fast acquisition of charge stability diagram
+        
+        The class assumes that the station has a station.digitizer and a station.awg.
+        
+        Args:
+            station (QCoDeS station): reference for the instruments
+            sweepparams (list or dict or str): parameters to sweep
+            mouse_click_callback (None or function): if None then update scan position with callback
+            
+        """
+        self.name = name
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
@@ -157,10 +170,8 @@ class VideoMode:
                 raise Exception('no fpga or digitizer found')
 
         # for addPPT and debugging
-        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges,
-                           'minstrument': minstrument, 'resolution': self.resolution,
-                           'sampling_frequency': self.sampling_frequency()}
-
+        self.scanparams = {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument,
+                           'resolution': self.resolution, 'sampling_frequency': self.sampling_frequency()}
         self.idx = 0
         self.fps = qtt.pgeometry.fps_t(nn=6)
 
@@ -169,7 +180,7 @@ class VideoMode:
             nplots = len(self.channels)
         self.nplots = nplots
         self.window_title = "%s: nplots %d" % (
-            self.__class__.__name__, self.nplots)
+            self.name, self.nplots)
 
         win = QtWidgets.QWidget()
         win.setWindowTitle(self.window_title)
@@ -230,8 +241,63 @@ class VideoMode:
         self.crosshair(show=crosshair)
 
         self.enable_averaging_slot(averaging=averaging)
+
+        if mouse_click_callback is None:
+            mouse_click_callback = self._update_position
+        for p in self.lp:
+            p.sigMouseClicked.connect(mouse_click_callback)
+
         if dorun:
             self.run()
+
+    def __repr__(self):
+        s = '%s: %s at 0x%x' % (self.__class__.__name__, self.name, id(self))
+        return s
+
+    def _update_position(self, position, verbose=1):
+        """ Update position of gates with selected point
+
+        Args:
+            position (array): point with new coordinates
+            verbose (int): verbosity level
+        """
+        station = self.station
+
+        if verbose:
+            print('# %s: update position: %s' % (self.__class__.__name__, position,))
+
+        if self.scan_dimension() == 1:
+            delta = position[0]
+            if isinstance(self.scanparams['sweepparams'], str):
+                param = getattr(station.gates, self.scanparams['sweepparams'])
+                param.set(delta)
+                if verbose > 2:
+                    print('  set %s to %s' % (param, delta))
+                return
+        try:
+            for ii, p in enumerate(self.scanparams['sweepparams']):
+                delta = position[ii]
+                if verbose:
+                    print('param %s: delta %.3f' % (p, delta))
+
+                if isinstance(p, str):
+                    if p == 'gates_horz' or p == 'gates_vert':
+                        d = self.scanparams['sweepparams'][p]
+                        for g, f in d.items():
+                            if verbose >= 2:
+                                print('  %: increment %s with %s' % (p, g, f * delta))
+                            param = getattr(station.gates, g)
+                            param.increment(f * delta)
+                    else:
+                        g = p
+                        if verbose > 2:
+                            print('  set %s to %s' % (g, delta))
+                        param = getattr(station.gates, g)
+                        param.set(delta)
+                else:
+                    raise Exception('not supported')
+        except Exception as ex:
+            logging.exception(ex)
 
     def enable_averaging_slot(self, averaging=None, *args, **kwargs):
         """ Update the averaging mode of the widget """
@@ -250,8 +316,8 @@ class VideoMode:
         if isrunning:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
-        qtt.tools.addPPTslide(fig=self, title='VideoMode',
-                              notes=self.station, extranotes=str(self.scanparams))
+        qtt.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
+                              notes=self.station, extranotes='date: %s' % (qtt.data.dateString(), ) + '\n' + 'scanjob: ' + str(self.scanparams))
         if isrunning:
             self.startreadout()
 
@@ -355,7 +421,12 @@ class VideoMode:
         if isinstance(self.sweepranges, (float, int)):
             return 1
         elif isinstance(self.sweepranges, list):
-            return 2
+            if len(self.sweepranges) == 2:
+                return 2
+            elif len(self.sweepranges) == 1:
+                return 1
+            else:
+                raise Exception('scan dimension not supported')
         else:
             return -1
 
@@ -363,7 +434,6 @@ class VideoMode:
         """ Programs the AWG, starts the read-out and the plotting. """
         if self.verbose:
             print(Fore.BLUE + '%s: run ' % (self.__class__.__name__,) + Fore.RESET)
-
         scan_dimentions = self.scan_dimension()
         virtual_awg = getattr(self.station, 'virtual_awg', None)
         awg = getattr(self.station, 'awg', None)
@@ -416,13 +486,16 @@ class VideoMode:
                 waveform, _ = awg.sweep_2D(self.sampling_frequency.get(), self.sweepparams,
                                            self.sweepranges, self.resolution)
             elif isinstance(self.sweepparams, dict):
-                waveform, _ = awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams['gates_horz'],
-                                                self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
+                waveform, _ = awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams[
+                    'gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
             else:
                 raise Exception('arguments not supported')
-        self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
-                                               minstrument=(self.minstrumenthandle, self.channels),
-                                               resolution=self.resolution, diff_dir=self.diff_dir)
+            if self.verbose:
+                print(Fore.BLUE + '%s: 2d scan, define callback ' %
+                      (self.__class__.__name__,) + Fore.RESET)
+            self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), minstrument=(
+                self.minstrumenthandle, self.channels), resolution=self.resolution, diff_dir=self.diff_dir)
+
 
     def stop(self):
         """ Stops the plotting, AWG(s) and if available RF. """
@@ -461,19 +534,19 @@ class VideoMode:
             data = data[0]
             alldata, _ = makeDataset_sweep(data, self.sweepparams, self.sweepranges,
                                            gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
-            alldata.metadata=metadata
+            alldata.metadata = metadata
         elif data.ndim == 3:
             if (data.shape[0] > 1):
                 warnings.warn('getting dataset for multiple dimensions not yet tested')
-            
+
             import copy
-            alldata=[None]*len(data)
+            alldata = [None] * len(data)
             for jj in range(len(data)):
-                datax = data[0]
+                datax = data[jj]
                 alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
-                                              'label': 'videomode_2d_single'})
-                alldatax.metadata=copy.copy(metadata)
-                alldata[jj]=alldatax
+                    'label': 'videomode_2d_single'})
+                alldatax.metadata = copy.copy(metadata)
+                alldata[jj] = alldatax
         else:
             raise Exception('makeDataset: data.ndim %d' % data.ndim)
         return alldata
@@ -576,5 +649,5 @@ if __name__ == '__main__':
 
     mt.startreadout(callback=callback)
     mt.updatefunction()
-    
+
     mt.get_dataset()

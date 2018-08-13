@@ -16,6 +16,7 @@ import qtt
 
 # %% Main class
 
+
 class DataViewer(QtWidgets.QWidget):
 
     def __init__(self, datadir=None, window_title='Data browser',
@@ -48,12 +49,9 @@ class DataViewer(QtWidgets.QWidget):
         self._treemodel = QtGui.QStandardItemModel()
         self.logtree.setModel(self._treemodel)
 
-        # metatree
-        self.metatree = QtWidgets.QTreeView()
-        self._metamodel = QtGui.QStandardItemModel()
-        self.metatree.setModel(self._metamodel)
-        self.metatree.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers)
+        # metatabs
+        self.meta_tabs = QtWidgets.QTabWidget()
+        self.meta_tabs.addTab(QtWidgets.QWidget(), 'metadata')
 
         self.__debug = dict()
         if isinstance(QtPlot, QWidget):
@@ -64,13 +62,14 @@ class DataViewer(QtWidgets.QWidget):
             self.plotwindow = self.qplot
         else:
             self.plotwindow = self.qplot.win
+
         topLayout = QtWidgets.QHBoxLayout()
         self.select_dir = QtWidgets.QPushButton()
         self.select_dir.setText('Select directory')
 
         self.reloadbutton = QtWidgets.QPushButton()
         self.reloadbutton.setText('Reload data')
-        
+
         self.loadinfobutton = QtWidgets.QPushButton()
         self.loadinfobutton.setText('Preload info')
 
@@ -83,7 +82,7 @@ class DataViewer(QtWidgets.QWidget):
 
         treesLayout = QtWidgets.QHBoxLayout()
         treesLayout.addWidget(self.logtree)
-        treesLayout.addWidget(self.metatree)
+        treesLayout.addWidget(self.meta_tabs)
 
         vertLayout = QtWidgets.QVBoxLayout()
 
@@ -126,10 +125,10 @@ class DataViewer(QtWidgets.QWidget):
         # get logs from disk
         self.updateLogs()
         self.datatag = None
-        
+
         self.logtree.setColumnHidden(2, True)
         self.logtree.setColumnHidden(3, True)
-        
+
         self.show()
 
     def setDatadir(self, datadir):
@@ -147,64 +146,68 @@ class DataViewer(QtWidgets.QWidget):
 
     def clipboardCallback(self):
         self.qplot.copyToClipboard()
-    
+
     def getArrayStr(self, metadata):
         params = []
         try:
             if 'loop' in metadata.keys():
                 sv = metadata['loop']['sweep_values']
-                params.append('%s [%.2f to %.2f %s]' % (sv['parameter']['label'], 
-                             sv['values'][0]['first'], 
-                             sv['values'][0]['last'], 
-                             sv['parameter']['unit']))
-                
+                params.append('%s [%.2f to %.2f %s]' % (sv['parameter']['label'],
+                                                        sv['values'][0]['first'],
+                                                        sv['values'][0]['last'],
+                                                        sv['parameter']['unit']))
+
                 for act in metadata['loop']['actions']:
                     if 'sweep_values' in act.keys():
                         sv = act['sweep_values']
-                        params.append('%s [%.2f - %.2f %s]' % (sv['parameter']['label'], 
-                                     sv['values'][0]['first'], 
-                                     sv['values'][0]['last'], 
-                                     sv['parameter']['unit']))
+                        params.append('%s [%.2f - %.2f %s]' % (sv['parameter']['label'],
+                                                               sv['values'][0]['first'],
+                                                               sv['values'][0]['last'],
+                                                               sv['parameter']['unit']))
                 infotxt = ' ,'.join(params)
-                infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (k,v) in metadata['arrays'].items() if not v['is_setpoint']])
-                
+                infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (
+                    k, v) in metadata['arrays'].items() if not v['is_setpoint']])
+
             elif 'scanjob' in metadata.keys():
                 sd = metadata['scanjob']['sweepdata']
-                params.append('%s [%.2f to %.2f]' % (sd['param'], sd['start'], sd['end']))
+                params.append(
+                    '%s [%.2f to %.2f]' %
+                    (sd['param'], sd['start'], sd['end']))
                 if 'stepdata' in metadata['scanjob']:
                     sd = metadata['scanjob']['stepdata']
-                    params.append('%s [%.2f to %.2f]' % (sd['param'], sd['start'], sd['end']))
+                    params.append(
+                        '%s [%.2f to %.2f]' %
+                        (sd['param'], sd['start'], sd['end']))
                 infotxt = ' ,'.join(params)
-                infotxt = infotxt + '  |  ' + ', '.join(metadata['scanjob']['minstrument'])
+                infotxt = infotxt + '  |  ' + \
+                    ', '.join(metadata['scanjob']['minstrument'])
             else:
                 infotxt = 'info about plot'
-                
-        except:
+
+        except BaseException:
             infotxt = 'info about plot'
-            
+
         return infotxt
-    
-    
+
     def loadInfo(self):
         try:
             for row in range(self._treemodel.rowCount()):
-                index = self._treemodel.index(row,0)
+                index = self._treemodel.index(row, 0)
                 i = 0
-                while (index.child(i,0).data() is not None): 
-                    filename = index.child(i,3).data()
+                while (index.child(i, 0).data() is not None):
+                    filename = index.child(i, 3).data()
                     loc = '\\'.join(filename.split('\\')[:-1])
                     tempdata = qcodes.DataSet(loc)
                     tempdata.read_metadata()
                     infotxt = self.getArrayStr(tempdata.metadata)
-                    self._treemodel.setData(index.child(i,1), infotxt)
+                    self._treemodel.setData(index.child(i, 1), infotxt)
                     if 'comment' in tempdata.metadata.keys():
-                        self._treemodel.setData(index.child(i,4), tempdata.metadata['comment'])
-                    i = i+1
+                        self._treemodel.setData(index.child(
+                            i, 4), tempdata.metadata['comment'])
+                    i = i + 1
         except Exception as e:
             print(e)
-                
-        
-        
+
     def selectDirectory(self):
         from qtpy.QtWidgets import QFileDialog
         d = QtWidgets.QFileDialog(caption='Select data directory')
@@ -216,12 +219,12 @@ class DataViewer(QtWidgets.QWidget):
             self.updateLogs()
 
     @staticmethod
-    def find_datafiles(datadir, extensions=['dat', 'hdf5']):
+    def find_datafiles(datadir, extensions=['dat', 'hdf5'], show_progress=True):
         """ Find all datasets in a directory with a given extension """
         dd = []
         for e in extensions:
             dd += qtt.pgeometry.findfilesR(datadir, '.*%s' %
-                                           e, show_progress=True)
+                                           e, show_progress=show_progress)
 
         datafiles = sorted(dd)
         #datafiles = [os.path.join(datadir, d) for d in datafiles]
@@ -238,8 +241,8 @@ class DataViewer(QtWidgets.QWidget):
             print('DataViewer: found %d files' % (len(dd)))
 
         model.clear()
-        model.setHorizontalHeaderLabels(['Log', 'Arrays', 'location', 'filename', 'Comments'])
-        
+        model.setHorizontalHeaderLabels(
+            ['Log', 'Arrays', 'location', 'filename', 'Comments'])
 
         logs = dict()
         for i, d in enumerate(dd):
@@ -272,21 +275,46 @@ class DataViewer(QtWidgets.QWidget):
             # span container columns
 #            self.logtree.setFirstColumnSpanned(
 #                i, self.logtree.rootIndex(), True)
-            self.logtree.setColumnWidth(0,240)
+            self.logtree.setColumnWidth(0, 240)
             self.logtree.setColumnHidden(2, True)
             self.logtree.setColumnHidden(3, True)
-            
+
         if self.verbose >= 2:
             print('DataViewer: updateLogs done')
 
-    def updateMetatree(self):
-        ''' Update metadata tree '''
-        self._metamodel.clear()
-        self._metamodel.setHorizontalHeaderLabels(['metadata', 'value'])
+    def _create_meta_tree(self, meta_dict):
+        metatree = QtWidgets.QTreeView()
+        _metamodel = QtGui.QStandardItemModel()
+        metatree.setModel(_metamodel)
+        metatree.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        _metamodel.setHorizontalHeaderLabels(['metadata', 'value'])
+
         try:
-            self.fill_item(self._metamodel, self.dataset.metadata)
+            self.fill_item(_metamodel, meta_dict)
+            return metatree
+
         except Exception as ex:
             print(ex)
+
+    def updateMetaTabs(self):
+        ''' Update metadata tree '''
+        meta = self.dataset.metadata
+
+        self.meta_tabs.clear()
+        if 'gates' in meta.keys():
+            self.meta_tabs.addTab(self._create_meta_tree(meta['gates']),
+                                  'gates')
+        elif meta.get('station', dict()).get('instruments', dict()).get('gates', None) is not None:
+            self.meta_tabs.addTab(self._create_meta_tree(meta['station']['instruments']['gates']),
+                                  'gates')
+        if meta.get('station', dict()).get('instruments', None) is not None:
+            if 'instruments' in meta['station'].keys():
+                self.meta_tabs.addTab(self._create_meta_tree(meta['station']['instruments']),
+                                      'instruments')
+
+        self.meta_tabs.addTab(self._create_meta_tree(meta), 'metadata')
 
     def fill_item(self, item, value):
         ''' recursive population of tree structure with a dict '''
@@ -347,8 +375,10 @@ class DataViewer(QtWidgets.QWidget):
         try:
             logging.debug('DataViewer: load tag %s' % tag)
             data = self.loadData(filename, tag)
+            if not data:
+                raise ValueError('File invalid (%s) ...' % filename)
             self.dataset = data
-            self.updateMetatree()
+            self.updateMetaTabs()
 
             data_keys = data.arrays.keys()
             infotxt = self.getArrayStr(data.metadata)
@@ -393,6 +423,7 @@ class DataViewer(QtWidgets.QWidget):
 
 # %% Run the GUI as a standalone program
 
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
@@ -412,8 +443,7 @@ if __name__ == '__main__':
     dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
     dataviewer.verbose = 5
     dataviewer.setGeometry(1280, 60, 700, 900)
-    dataviewer.logtree.setColumnWidth(0,240)    
+    dataviewer.logtree.setColumnWidth(0, 240)
     dataviewer.show()
 
     # app.exec()
-

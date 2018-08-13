@@ -33,7 +33,7 @@ def gauss(x, p):
     return p[2] * 1.0 / (p[1] * np.sqrt(2 * np.pi)) * np.exp(-(x - p[0])**2 / (2 * p[1]**2))
 
 
-def analyseCoulombPeaks(alldata, fig=None):
+def analyseCoulombPeaks(alldata, fig=None, verbose=1):
     """ Find Coulomb peaks in a 1D dataset 
 
     Args:
@@ -49,7 +49,7 @@ def analyseCoulombPeaks(alldata, fig=None):
     x, y = peakdataOrientation(x, y)
 
     goodpeaks = coulombPeaks(
-        x, y, verbose=1, fig=fig, plothalf=True, istep=istep)
+        x, y, verbose=verbose, fig=fig, plothalf=True, istep=istep)
 
     return goodpeaks
 
@@ -85,9 +85,6 @@ def fitCoulombPeaks(x, y, lowvalue=None, verbose=1, fig=None, istep=1):
         p = pt[ii]
         peak = dict(
             {'p': p, 'x': pt[ii], 'x': x[p], 'y': y[p], 'gaussfit': f})
-        if verbose:
-            print('fitCoulombPeaks: peak %d: position %.2f max %.1f' %
-                  (ii, peak['x'], peak['y']))
 
         peak['halfvaluelow'] = (y[p] - lowvalue) / 2 + lowvalue
         peak['height'] = (y[p] - lowvalue)
@@ -98,6 +95,10 @@ def fitCoulombPeaks(x, y, lowvalue=None, verbose=1, fig=None, istep=1):
         peak['lowvalue'] = lowvalue
         peak['type'] = 'peak'
         peaks.append(peak)
+
+        if verbose:
+            print('fitCoulombPeaks: peak %d: position %.2f max %.2f valid %d' %
+                  (ii, peak['x'], peak['y'], peak['valid']))
     return peaks
 
 #%%
@@ -272,7 +273,7 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
                 peak['valid'] = 0
                 peak['validreason'] = 'peakFindBottom'
                 if verbose >= 2:
-                    print('peakFindBottom: invalid peak')
+                    print('peakFindBottom: invalid peak (%s)' % ('rising part ww.size == 0', ))
                     print(w)
                     print(ys)
  #                   print(w)
@@ -309,9 +310,6 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
     return peaks
 
-if __name__ == '__main__':
-    px = peakFindBottom(x, y, peaks, fig=300, verbose=3)
-    peak = px[0]
 
 #%%
 
@@ -446,7 +444,7 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
         data in mV
     peaks: list of detected peaks to be analysed
     typicalhalfwidth : float
-        typical width of peak (half side)
+        typical width of peak (half side) in mV (mV ??)
     """
 
     if not issorted(x):
@@ -454,13 +452,14 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
     if x[0] > x[-1]:
         print('analysePeaks: warning: x values are not sorted!!!!')
 
+    leftp=max(3, x.size/200) # ignore all data to the left of this point
+    
     for ii, peak in enumerate(peaks):
         p = peak['p']
-        # peak['valid']=1 # peak is valid by default
         if verbose:
             print('analysePeaks: peak %d: max %.1f' % (ii, peak['y']))
 
-        if p < 3:
+        if p < leftp:
             # discard all measurements to the left of the scan
             peak['valid'] = 0
             peak['xhalf'] = np.NaN
@@ -468,17 +467,14 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
             peak['phalf'] = np.NaN
             continue
 
-        # ind=np.argsort(x)
-        # y=np.arange(x.size)
-        # ff=scipy.interpolate.interp1d(x[ind], y[ind]  )
-        # zi=ff([ x[p]-3*typicalhalfwidth, x[p]] )
-
         # determine starting points for search of peak
         zi = np.interp(
-            [x[p] - 3. * typicalhalfwidth / 1, x[p], x[p] + 3. * typicalhalfwidth / 1], x, range(x.size))
+            [x[p] - 3. * typicalhalfwidth, x[p], x[p] + 3. * typicalhalfwidth], x, range(x.size))
         zi = np.round(zi).astype(int)
-        # print(zi)
-        # print(x[zi])
+        
+        zi[0]=max(zi[0],leftp) # discard points on the left of scan
+        zi[1]=max(zi[1],leftp)
+
         if doplot >= 2:
             plt.plot(x[zi[0]], y[zi[0]], '.g', markersize=11, label='mu-3*thw')
             plt.plot(
@@ -492,6 +488,8 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
             peak['xhalf'] = np.NaN
             peak['phalf'] = np.NaN
             continue
+        if verbose>=2:
+            print('  peak %d: range to search for half width %d to %d' % (ii, zi[0], zi[1]))
         xl, yl = x[ind], y[ind]
 
         if 0:
@@ -508,11 +506,10 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
         peak['phalf0'] = ph0
         peak['phalfl'] = None
 
-        peak['indlocal'] = ind
+        #peak['indlocal'] = list(ind)
 
         phalfvalue = np.interp(ph, range(xl.size), yl)
         yhalfl = np.interp(ph, range(xl.size), yl)
-        # peak['xhalf'] = xh  # legacy
         peak['xhalfl'] = xh
         peak['xfoot'] = xf
         peak['yhalfl'] = yhalfl
@@ -521,7 +518,7 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1)
             plt.plot(
                 peak['xhalfl'], yhalfl, '.', color=[1, 1, 0], markersize=11)
             pmatlab.plot2Dline(
-                [-1, 0, x[p] - 3 * typicalhalfwidth / istep], ':c', label='3*thw')
+                [-1, 0, x[p] - 3 * typicalhalfwidth ], ':c', label='3*thw')
             pmatlab.plot2Dline([-1, 0, peak['xfoot']], ':y', label='xfoot')
 
         pratio = np.abs(
@@ -567,8 +564,8 @@ def coulombPeaks(x, y, verbose=1, fig=None, plothalf=False, istep=None):
     x, y = peakdataOrientation(x, y)  # i=np.argsort(x); x=x[i]; y=y[i]
 
     peaks = fitCoulombPeaks(x, y, verbose=verbose, fig=None, istep=istep)
-    peaks = analysePeaks(x, y, peaks, verbose=0, doplot=0, istep=istep)
-    peaks = peakFindBottom(x, y, peaks, verbose=0)
+    peaks = analysePeaks(x, y, peaks, verbose=verbose>=2, doplot=0, istep=istep)
+    peaks = peakFindBottom(x, y, peaks, verbose=verbose>=2)
     goodpeaks = filterPeaks(x, y, peaks, verbose=verbose)
 
     peakScores(goodpeaks, x, y, verbose=verbose)
@@ -761,3 +758,24 @@ def filterOverlappingPeaks(goodpeaks, threshold=.6, verbose=0):
     pp = [pp[jj] for jj in gidx]
     pp = sorted(pp, key=lambda p: p['score'])
     return pp
+
+
+def test_analysepeaks(fig=None):
+    
+    x=np.arange(0,100)
+    y=np.random.rand(x.size)
+    y+=qtt.algorithms.functions.gaussian(x, 30, 6, 30)
+    y+=qtt.algorithms.functions.gaussian(x, 70, 8, 70)
+    
+    peaks=coulombPeaks(x,y, verbose=1, istep=1, fig=fig)
+    
+    assert(len(peaks)==2)
+    assert(np.abs(peaks[0]['x']-70)<2)
+    assert(np.abs(peaks[1]['x']-30)<2)
+    
+    
+if __name__=='__main__':
+    pass
+    test_analysepeaks(fig=100)
+    
+    

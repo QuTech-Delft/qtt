@@ -4,7 +4,7 @@ Introduction
 Welcome to the QTT framework. This introduction will shortly introduce the framework, and it will guide you through the structure, installation process and how to contribute. We look forward to working with you!
 
 QuTech Tuning
--------
+-------------
 
 QuTech Tuning (QTT) is a Python-based framework developed by QuTech for the tuning and calibration of quantum dots and spin qubits. QuTech is an advanced research center based in Delft, the Netherlands, for quantum computing and quantum internet. It is a collaboration founded by the Delft University of Technology (TU Delft) and the Netherlands Organisation for Applied Scientiﬁc Research (TNO).
 
@@ -19,7 +19,7 @@ Also see
 * `TNO <https://www.tno.nl/en>`_
 
 Structure
--------
+---------
 
 QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on Qcodes. 
 In Delft we use a separate repository for the measurement setups (called 'stations'), where each station is programmed in a different way to fit the specific measurements done in that setup. 
@@ -30,7 +30,7 @@ In some cases you can use a personal folder in the 'users' repository, but we re
 * `spin-projects : Contains hardware descriptions for experimential setups and project data. <https://github.com/VandersypenQutech/spin-projects>`_ 
   
 Installation
--------
+------------
 
 QTT is compatible with Python 3.5+.
 
@@ -38,18 +38,18 @@ QTT can be installed as a pip package:
 
 .. code-block:: console
 
-    pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+    $ pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
 
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 
 .. code-block:: console
    
-   python setup.py develop
+   $ python setup.py develop
 
 For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md <INSTALL-spinqubits.md>`_.
 
 Updating QTT
--------
+------------
 
 If you registered qtt with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`.
 
@@ -57,10 +57,10 @@ If you installed qtt via the pip package you can run the pip install comment aga
 
 .. code-block:: console
 
-    pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+    $ pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
 
 Usage
--------
+-----
 
 In QTT, we use GitHub for combined developing and python for scientific use. If you have some experience with scientific python you will be able to understand the code fairly easily. If not, we urge you to read through some lectures before using the QTT framework. For a general introduction see:
 
@@ -82,6 +82,7 @@ Testing
 Tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in the code. To run the tests you can run one of the commands below. Note that only `pytest` runs also the tests throughout the code while `python qtt/test.py` only runs the ones in the tests directory.
 
 .. code-block:: console
-    > python qtt/test.py
-    > pytest # (Windows)
-    > py.test # (Unix)
+
+    $ python qtt/test.py
+    $ pytest # (Windows)
+    $ py.test # (Unix)

@@ -23,6 +23,7 @@ from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates
 from qtt import save_state, load_state
+import qtt.measurements.videomode
 
 import qtt.simulation.virtual_dot_array
 
@@ -146,9 +147,20 @@ print('starting videomode in background...')
 gates.P3.increment(40)
 vm = qtt.measurements.videomode.VideoMode(station, ['P1', 'P2'], [160]*2,    
                     minstrument=(digitizer.name,[1,1]), resolution = [96,96],
-                    diff_dir=[None, 'g'] )
+                    diff_dir=[None, 'g'], name='physical gates' )
 vm.crosshair(True)
 vm.stopreadout()
 vm.updatebg()
 
-                                               
+
+#%%
+#gates.P3.increment(-40)
+
+s1=qtt.measurements.scans.create_vectorscan(virts.VP1, 160)
+s2=qtt.measurements.scans.create_vectorscan(virts.VP2, 160)
+vm = qtt.measurements.videomode.VideoMode(station, {'gates_horz': s1['param'],'gates_vert': s2['param']}, [200,180],    
+                    minstrument=(digitizer.name,[1,1]), resolution = [96,96],
+                    diff_dir=[None, 'g'], name='virtual gates' )
+vm.crosshair(True)
+vm.stopreadout()
+vm.updatebg()                                               
