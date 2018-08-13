@@ -8,13 +8,11 @@ import scipy.ndimage
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-import copy
 import logging
 
 import qcodes
-from qtt.data import dataset2Dmetadata, image_transform, dataset2image, show2D
+from qtt.data import dataset2Dmetadata, dataset2image, show2D
 import qtt.data
-from qtt import pgeometry as pmatlab
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import plot2Dline
 
@@ -31,7 +29,7 @@ except:
 #%%
 
 
-def onedotGetBlobs(fimg, fig=None):
+def _onedotGetBlobs(fimg, fig=None):
     """ Extract blobs for a 2D scan of a one-dot """
     # thr=otsu(fimg)
     thr = np.median(fimg)
@@ -56,21 +54,21 @@ def onedotGetBlobs(fimg, fig=None):
     if fig is not None:
         plt.figure(fig)
         plt.clf()
-        pmatlab.imshowz(fimg, interpolation='nearest')
+        pgeometry.imshowz(fimg, interpolation='nearest')
         plt.axis('image')
         plt.colorbar()
         # ax = plt.gca()
-        pmatlab.plotPoints(xx.T, '.g', markersize=16, label='blob centres')
+        pgeometry.plotPoints(xx.T, '.g', markersize=16, label='blob centres')
         plt.title('Reponse image with detected blobs')
 
         plt.figure(fig + 1)
         plt.clf()
-        pmatlab.imshowz(bim, interpolation='nearest')
+        pgeometry.imshowz(bim, interpolation='nearest')
         plt.axis('image')
         plt.colorbar()
         # ax = plt.gca()
-        pmatlab.plotPoints(xxw.T, '.g', markersize=16, label='blob centres')
-        pmatlab.plotPoints(xx.T, '.m', markersize=12, label='blob centres (alternative)')
+        pgeometry.plotPoints(xxw.T, '.g', markersize=16, label='blob centres')
+        pgeometry.plotPoints(xx.T, '.m', markersize=12, label='blob centres (alternative)')
         plt.title('Binary blobs')
 
         pgeometry.tilefigs([fig, fig + 1], [2, 2])
@@ -78,7 +76,7 @@ def onedotGetBlobs(fimg, fig=None):
     return xxw, (xx, contours)
 
 
-def onedotSelectBlob(im, xx, fimg=None, verbose=0):
+def _onedotSelectBlob(im, xx, fimg=None, verbose=0):
     """ Select the best blob from a list of blob positions """
     ims = qtt.algorithms.generic.smoothImage(im)
 
@@ -90,14 +88,14 @@ def onedotSelectBlob(im, xx, fimg=None, verbose=0):
     for jj, p in enumerate(xx):
         v = getValuePixel(ims, p)
         if verbose:
-            print('onedotSelectBlob %d: v %.2f/%.2f' % (jj, v, thrvalue))
+            print('_onedotSelectBlob %d: v %.2f/%.2f' % (jj, v, thrvalue))
         if v < thrvalue:
             goodidx[jj] = 0
     lowvalue = np.percentile(im, 5)
     highvalue = np.percentile(im, 95)
 
     if verbose:
-        print('onedotSelectBlob: good %s' % goodidx)
+        print('_onedotSelectBlob: good %s' % goodidx)
 
     if xx.size == 0:
         print('FIXME: better return value... ')
@@ -127,7 +125,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
 
         im = np.array(impixel)
 
-    theta0 = baseangle  # np.deg2rad(-45)
+    theta0 = baseangle  
     step = np.abs(np.nanmean(np.diff(vstep)))
 
     filters, angles, _ = qtt.algorithms.generic.makeCoulombFilter(theta0=theta0, step=step, fig=None)
@@ -135,15 +133,13 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
     lowvalue = np.percentile(im, 5)
     highvalue = np.percentile(im, 95)
 
-    # filters, angles = makeCoulombFilter(theta0=-np.pi/4, step=step, fig=fig)
-
     gfilter = filters[0]
     fimg = cv2.filter2D(im, -1, gfilter)
 
     bestvalue = highvalue * gfilter[gfilter > 0].sum() + lowvalue * gfilter[gfilter < 0].sum()
 
-    xxw, _ = onedotGetBlobs(fimg, fig=None)
-    vv = onedotSelectBlob(im, xxw, fimg=None)
+    xxw, _ = _onedotGetBlobs(fimg, fig=None)
+    vv = _onedotSelectBlob(im, xxw, fimg=None)
     ptpixel = np.array(vv).reshape((1, 2))
     pt = tr.pixel2scan(ptpixel.T)
     ptvalue = fimg[int(ptpixel[0, 1]), int(ptpixel[0, 0])]
@@ -152,12 +148,11 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
         print('onedotGetBalanceFine: point/best filter value: %.2f/%.2f' % (ptvalue, bestvalue))
 
     if fig is not None:
-        # od = dd.get('od', None) FIXME
         od = None
         xx = show2D(dd, impixel=im, fig=fig, verbose=1, title='input image for gabor', units=units)
         if od is not None:
             pt0 = od['balancepoint'].reshape((2, 1))
-            pmatlab.plotPoints(pt0, '.m', markersize=12)
+            pgeometry.plotPoints(pt0, '.m', markersize=12)
         plt.plot(pt[0], pt[1], '.', color=(0, .8, 0), markersize=16)
         plt.axis('image')
 
@@ -171,11 +166,6 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
         acc = 0
         logging.debug('accuracy: %d: %.2f' % (acc, (np.abs(ptvalue) / bestvalue)))
     return pt, fimg, dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel, 'accuracy': acc, 'gfilter': gfilter})
-
-# Testing
-if __name__ == '__main__':
-    fig = 100
-    ptv, fimg, tmp = onedotGetBalanceFine(im, alldatahi, verbose=1, fig=fig)
 
 
 #%%
@@ -198,7 +188,6 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     pts = pts.reshape((5, 1, 2)).astype(int)
     imx = 0 * ww.copy().astype(np.uint8)
     cv2.fillConvexPoly(imx, pts, color=[1])
-    # tmp=fillPoly(imx, pts)
 
     area=np.abs(pgeometry.polyarea(pts.reshape( (-1,2))))
     
@@ -256,7 +245,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     lvstd = np.std(x[x < lv])
     lv = lv + lvstd / 2  # works for very smooth images
 
-    lv = (.45 * pmatlab.otsu(ims) + .55 * lv)  # more robust
+    lv = (.45 * pgeometry.otsu(ims) + .55 * lv)  # more robust
     if verbose >= 2:
         print('onedotGetBalance: threshold for low value %.1f' % lv)
 
@@ -307,8 +296,11 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     fitresults['setpoint'] = fitresults['balancepoint'] + 8
     fitresults['x0'] = x0
     fitresults['gatevalues']=dd.metadata['allgatevalues']
-    fitresults['gatevalues'][od['gates'][2]] = float(fitresults['balancepoint'][0])
-    fitresults['gatevalues'][od['gates'][0]] = float(fitresults['balancepoint'][1])
+    
+    if od is not None:
+        
+        fitresults['gatevalues'][od['gates'][2]] = float(fitresults['balancepoint'][0])
+        fitresults['gatevalues'][od['gates'][0]] = float(fitresults['balancepoint'][1])
 
 
     ptv = fitresults['balancepoint']
@@ -345,10 +337,10 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         qtt.tools.showImage(im, extentImageMatlab, fig=fig)
 
         if verbose >= 2 or drawpoly:
-            pmatlab.plotPoints(fitresults['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
+            pgeometry.plotPoints(fitresults['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
         if verbose >= 2:
-            pmatlab.plotPoints(fitresults['balancepoint0'], '.r', markersize=13, label='balancepoint0')
-        pmatlab.plotPoints(fitresults['balancepoint'], '.m', markersize=17, label='balancepoint')
+            pgeometry.plotPoints(fitresults['balancepoint0'], '.r', markersize=13, label='balancepoint0')
+        pgeometry.plotPoints(fitresults['balancepoint'], '.m', markersize=17, label='balancepoint')
         plt.axis('image')
 
 
@@ -369,29 +361,29 @@ def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = Non
         plot_dataset(ds, fig)
         
         if verbose >= 2:
-            pmatlab.plotPoints(results['balancefit'], '--', color=linecolor, linewidth=2, label='balancefit')
+            pgeometry.plotPoints(results['balancefit'], '--', color=linecolor, linewidth=2, label='balancefit')
         if verbose >= 2:
-            pmatlab.plotPoints(results['balancepoint0'], '.r', markersize=13, label='balancepoint0')
-        pmatlab.plotPoints(results['balancepoint'], '.m', markersize=17, label='balancepoint')
+            pgeometry.plotPoints(results['balancepoint0'], '.r', markersize=13, label='balancepoint0')
+        pgeometry.plotPoints(results['balancepoint'], '.m', markersize=17, label='balancepoint')
         
         if ims is not None:
             qtt.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
             plt.axis('image')
             plt.title('Smoothed image')
-            pmatlab.plotPoints(results['balancepoint'], '.m', markersize=16, label='balancepoint')
+            pgeometry.plotPoints(results['balancepoint'], '.m', markersize=16, label='balancepoint')
             #plt.xlabel('%s (mV)' % g2)
             #plt.ylabel('%s (mV)' % g0)
     
             qtt.tools.showImage(ims > lv, None, fig=fig + 2)
             # plt.imshow(ims > lv, extent=None, interpolation='nearest')
-            #pmatlab.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
-            pmatlab.plotPoints(results['balancefitpixel'], '--c', markersize=16, label='balancefit')
-            pmatlab.plotLabels(results['balancefitpixel'])
+            #pgeometry.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
+            pgeometry.plotPoints(results['balancefitpixel'], '--c', markersize=16, label='balancefit')
+            pgeometry.plotLabels(results['balancefitpixel'])
             plt.axis('image')
             plt.title('thresholded area')
             #plt.xlabel('%s' % g2)
             #plt.ylabel('%s' % g0)
-            pmatlab.tilefigs([fig, fig + 1, fig + 2], [2, 2])
+            pgeometry.tilefigs([fig, fig + 1, fig + 2], [2, 2])
     
             if verbose >= 2:
                 qq = ims.flatten()
@@ -405,12 +397,31 @@ def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = Non
                 plt.legend(numpoints=1)
                 plt.title('Histogram of image intensities')
                 plt.xlabel('Image (smoothed) values')
+
+def test_onedot(fig=None):
+    import qtt
+    import qtt.algorithms.onedot
+    
+    nr_dots = 3
+    station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2, verbose=0)
+    gates = station.gates
+    
+    gv={'B0': -300.000,'B1': 0.487,'B2': -0.126,'B3': 0.000,'D0': 0.111,'O1': -0.478,'O2': 0.283,'O3': 0.404,'O4': 0.070,'O5': 0.392,'P1': 0.436,'P2': 0.182,'P3': 39.570,'SD1a': -0.160,'SD1b': -0.022,'SD1c': 0.425,'bias_1': -0.312,'bias_2': 0.063}
+    gates.resetgates(gv,gv)
+    
+    start = -250
+    scanjob = scanjob_t({'sweepdata': dict({'param': 'B0', 'start': start, 'end': start + 200, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley3.amplitude']})
+    scanjob['stepdata'] = dict({'param': 'B1', 'start': start, 'end': start + 200, 'step': 5.})
+    data = qtt.measurements.scans.scan2D(station, scanjob)
+    
+    
+  
+    x= qtt.algorithms.onedot.onedotGetBalance(od=None, dd=data, verbose=1, fig=None)
+    results=x[0]   
+    rfine=qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=None)
+    qtt.algorithms.onedot.plot_onedot(results, ds = data, fig=fig, verbose=1)
+
     
 if __name__ == '__main__':
-    from imp import reload
-    reload(qtt.data)
-    #from qtt.algorithms.onedot import *
-    alldata=qtt.data.get_dataset(result)
-    fitresultsx, odx, ptv, pt, ims, lv, wwarea = onedotGetBalance(od, alldata, verbose=1, fig=110)
 
-    plot_onedot(result, ds = None, verbose=2, fig=100, linecolor='c')
+    test_onedot(fig=1000)
