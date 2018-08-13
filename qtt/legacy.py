@@ -302,9 +302,6 @@ def showIm(ims, fig=1, title='', showz=False):
 #%%
 
 
-#%%
-
-
 from qtt.algorithms.misc import point_in_poly, points_in_poly, fillPoly
 
 def getPinchvalues(od, xdir, verbose=1):
@@ -373,7 +370,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
                 if verbose >= 2:
                     print('  at onedotGetBalanceFine')
                 if (alldatahi is not None) and True:
-                    ptv, fimg, _ = onedotGetBalanceFine(dd=alldatahi, verbose=1, fig=None)
+                    ptv, _ = onedotGetBalanceFine(dd=alldatahi, verbose=1, fig=None)
                     od['balancepointfine'] = ptv
                     od['setpoint'] = ptv + 10
 

@@ -108,7 +108,7 @@ def _onedotSelectBlob(im, xx, fimg=None, verbose=0):
     return pt
 
 
-def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-np.pi / 4, units=None):
+def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-np.pi / 4, units=None, full_output=False):
     """ Determine central position of Coulomb peak in 2D scan
 
     The position is determined by scanning with Gabor filters and then performing blob detection
@@ -165,7 +165,12 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
     if (np.abs(ptvalue) / bestvalue < 0.05):
         acc = 0
         logging.debug('accuracy: %d: %.2f' % (acc, (np.abs(ptvalue) / bestvalue)))
-    return pt, fimg, dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel, 'accuracy': acc, 'gfilter': gfilter})
+        
+    results = dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel, 'accuracy': acc, 'gfilter': gfilter})
+    if full_output:
+        results['fimg']=fimg
+        
+    return pt, fimg, results
 
 
 #%%
@@ -419,7 +424,7 @@ def test_onedot(fig=None):
   
     x= qtt.algorithms.onedot.onedotGetBalance(od=None, dd=data, verbose=1, fig=None)
     results=x[0]   
-    rfine=qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=None)
+    ptfine, resultsfine=qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=None)
     qtt.algorithms.onedot.plot_onedot(results, ds = data, fig=fig, verbose=1)
 
     
