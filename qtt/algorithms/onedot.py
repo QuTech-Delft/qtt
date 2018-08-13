@@ -216,8 +216,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 #%%
 
 
-def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2,
-                     linecolor='c', full_output=False):
+def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth=2,
+                     linecolor='c', full_output=False, od=None):
     """ Determine tuning point from a 2D scan of a 1-dot
     
     This function performs a simple fitting of the open (conducting region).
@@ -234,9 +234,9 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     if od is not None:
         warnings.warn('od argument will be removed in the future', DeprecationWarning)
         
-    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
+    extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dataset, arrayname=None)
 
-    im, tr = qtt.data.dataset2image(dd)
+    im, tr = qtt.data.dataset2image(dataset)
 
     extentImageMatlab = tr.matplotlib_image_extent()
     
@@ -303,7 +303,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
     fitresults['balancefit1'] = tr.pixel2scan(balancefitpixel0)
     fitresults['setpoint'] = fitresults['balancepoint'] + 8
     fitresults['x0'] = x0
-    fitresults['gatevalues']=dd.metadata['allgatevalues']
+    fitresults['gatevalues']=dataset.metadata.get('allgatevalues', None)
     
     if od is not None:
         
@@ -340,7 +340,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         
         #%
     if fig is not None:
-        plot_onedot(fitresults, ds = dd, verbose=2, fig=100, linecolor='c', ims=ims, extentImageMatlab=extentImageMatlab, lv=lv)
+        plot_onedot(fitresults, ds = dataset, verbose=2, fig=100, linecolor='c', ims=ims, extentImageMatlab=extentImageMatlab, lv=lv)
         
         qtt.tools.showImage(im, extentImageMatlab, fig=fig)
 
@@ -356,7 +356,7 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         fitresults['lv']=lv
         fitresults['wwarea']=wwarea
 
-    return fitresults, od, ptv, pt, ims, lv, wwarea
+    return fitresults, ptv # , pt, ims, lv, wwarea
 
 def plot_dataset(dataset, fig):
     plt.figure(fig); plt.clf()
