@@ -73,6 +73,7 @@ class virtual_awg(Instrument):
         a.set('run_mode', 'SEQ')
         a.sequence_length.set(1)
         a.set_sqel_trigger_wait(1, 0)
+        a.set_sqel_goto_state(1,0)
         
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
