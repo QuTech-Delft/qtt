@@ -16,8 +16,8 @@ import qtt.data
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import plot2Dline
 
-from qtt.algorithms.generic import getValuePixel
-from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
+import qtt.algorithms.generic
+detect_blobs_binary, weightedCentroid
 
 try:
     import cv2
@@ -86,7 +86,7 @@ def _onedotSelectBlob(im, xx, fimg=None, verbose=0):
 
     goodidx = np.ones(len(xx))
     for jj, p in enumerate(xx):
-        v = getValuePixel(ims, p)
+        v = qtt.algorithms.generic.getValuePixel(ims, p)
         if verbose:
             print('_onedotSelectBlob %d: v %.2f/%.2f' % (jj, v, thrvalue))
         if v < thrvalue:

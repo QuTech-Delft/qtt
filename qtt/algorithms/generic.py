@@ -16,8 +16,6 @@ except:
 from qtt import pgeometry
 from qtt import pgeometry as pmatlab
 
-#from qtt.data import *
-
 #%%
 
 import warnings
@@ -62,7 +60,6 @@ def localMaxima(arr, radius=1, thr=None):
         local_max[arr < thr] = 0
     return np.where(local_max)
 
-import numpy as np
 import skimage.feature #import peak_local_max
 
 
@@ -367,14 +364,11 @@ def showCoulombDirection(ptx, ww, im=None, dd=None, fig=100):
                 plt.imshow(im, interpolation='nearest')
             else:
                 show2Dimage(im, dd, fig=fig)
-        # plt.plot(pts[:,0], pts[:,1], '.m')
     if fig is not None:
         plt.figure(fig)
         hh = pylab.arrow(pp[0, 0], pp[0, 1], ww[0], ww[
                          1], linewidth=4, fc="k", ec="k", head_width=sigma / 2, head_length=sigma / 2)
         hh.set_alpha(0.8)
-        # hh=pylab.arrow( ptx[0,0], ptx[0,1],-7,7, fc="g", ec="g", head_width=1.05, head_length=1 )
-        # hh.set_alpha(0.4)
 
         plt.axis('image')
 
@@ -428,6 +422,7 @@ def extent2fullextent(extent0, im):
     return extent
 
 
+@qtt.tools.deprecated
 def show2Dimage(im, dd, **kwargs):
     """ Show image in window
 
@@ -470,9 +465,6 @@ def show2Dimage(im, dd, **kwargs):
             plt.ylabel('%s' % dd['stepdata']['gates'][0])
     if not title is None:
         plt.title(title)
-    # plt.axis('image')
-    # ax=plt.gca()
-    # ax.invert_yaxis()
     if colorbar:
         plt.colorbar()
     if verbose >= 2:
