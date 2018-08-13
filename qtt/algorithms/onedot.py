@@ -16,8 +16,7 @@ import qtt.data
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import plot2Dline
 
-import qtt.algorithms.generic
-detect_blobs_binary, weightedCentroid
+from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
 
 try:
     import cv2
@@ -217,7 +216,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
 #%%
 
 
-def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2, linecolor='c'):
+def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=2,
+                     linecolor='c', full_output=False):
     """ Determine tuning point from a 2D scan of a 1-dot
     
     This function performs a simple fitting of the open (conducting region).
@@ -227,14 +227,17 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         dd (2D dataset): data containing charge stability diagram
         
     Returns:
+        fitresults (dict): dictionary with fitting results
         od (obj): modified one-dot object
     
     """
+    if od is not None:
+        warnings.warn('od argument will be removed in the future', DeprecationWarning)
+        
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dd, arrayname=None)
 
     im, tr = qtt.data.dataset2image(dd)
 
-    #extentImage = copy.deepcopy(tr.scan_image_extent() ) 
     extentImageMatlab = tr.matplotlib_image_extent()
     
     ims = im.copy()
@@ -348,6 +351,10 @@ def onedotGetBalance(od, dd, verbose=1, fig=None, drawpoly=False, polylinewidth=
         pgeometry.plotPoints(fitresults['balancepoint'], '.m', markersize=17, label='balancepoint')
         plt.axis('image')
 
+    if full_output:
+        fitresults['ims']=ims
+        fitresults['lv']=lv
+        fitresults['wwarea']=wwarea
 
     return fitresults, od, ptv, pt, ims, lv, wwarea
 
@@ -376,18 +383,12 @@ def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = Non
             plt.axis('image')
             plt.title('Smoothed image')
             pgeometry.plotPoints(results['balancepoint'], '.m', markersize=16, label='balancepoint')
-            #plt.xlabel('%s (mV)' % g2)
-            #plt.ylabel('%s (mV)' % g0)
     
             qtt.tools.showImage(ims > lv, None, fig=fig + 2)
-            # plt.imshow(ims > lv, extent=None, interpolation='nearest')
-            #pgeometry.plotPoints(balancefitpixel0, ':y', markersize=16, label='balancefit0')
             pgeometry.plotPoints(results['balancefitpixel'], '--c', markersize=16, label='balancefit')
             pgeometry.plotLabels(results['balancefitpixel'])
             plt.axis('image')
             plt.title('thresholded area')
-            #plt.xlabel('%s' % g2)
-            #plt.ylabel('%s' % g0)
             pgeometry.tilefigs([fig, fig + 1, fig + 2], [2, 2])
     
             if verbose >= 2:
