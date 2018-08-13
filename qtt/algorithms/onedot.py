@@ -169,7 +169,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
     if full_output:
         results['fimg']=fimg
         
-    return pt, fimg, results
+    return pt, results
 
 
 #%%
@@ -423,7 +423,7 @@ def test_onedot(fig=None):
     
     
   
-    x= qtt.algorithms.onedot.onedotGetBalance(od=None, dd=data, verbose=1, fig=None)
+    x= qtt.algorithms.onedot.onedotGetBalance(dataset=data, verbose=1, fig=None)
     results=x[0]   
     ptfine, resultsfine=qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=None)
     qtt.algorithms.onedot.plot_onedot(results, ds = data, fig=fig, verbose=1)

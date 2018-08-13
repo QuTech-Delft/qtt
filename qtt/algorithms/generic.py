@@ -12,7 +12,8 @@ try:
 except:
     import qtt.exceptions
     warnings.warn('could not find opencv, not all functionality available', qtt.exceptions.MissingOptionalPackageWarning)
-    
+
+import qtt.tools    
 from qtt import pgeometry
 from qtt import pgeometry as pmatlab
 
