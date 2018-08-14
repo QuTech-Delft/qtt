@@ -1482,14 +1482,12 @@ def get_uhfli_scope_records(device, daq, scopeModule, num_records=1):
     progress = 0
     # Wait until the Scope Module has received and processed the desired number of records.
     while (records < num_records) or (progress < 1.0):
-        time.sleep(0.05)
         records = scopeModule.getInt("scopeModule/records")
         progress = scopeModule.progress()[0]
         if (time.time() - start) > timeout:
             # Break out of the loop if for some reason we're no longer receiving scope data from the device.
-            print("\nScope Module did not return {} records after {} s - forcing stop.".format(num_records, timeout))
+            logging.warning("\nScope Module did not return {} records after {} s - forcing stop.".format(num_records, timeout))
             break
-    print("")
     daq.setInt('/%s/scopes/0/enable' % device, 0)
 
     # Read out the scope data from the module.
