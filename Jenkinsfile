@@ -57,7 +57,7 @@ pipeline {
                        . ./venv/bin/activate &&
                        pip3 install jupyter
                    '''
-                sh 'jupyter nbconvert --to notebook --execute docs/notebooks/example_ohmic.ipynb'
+                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_ohmic.ipynb'
             }
         }
                 
