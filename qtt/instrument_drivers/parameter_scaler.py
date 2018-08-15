@@ -2,6 +2,7 @@ from typing import Union
 import enum
 
 from qcodes import Parameter, ManualParameter
+import warnings
 
 
 class Role(enum.Enum):
@@ -53,6 +54,7 @@ class ParameterScaler(Parameter):
                  label: str=None,
                  unit: str=None) -> None:
         self._wrapper_param = output
+        warnings.warn('qtt.instrument_drivers.parameter_scaler.ParameterScaler is deprecated, use qcodes.ScaledParameter instead')
 
         # Set the role, either as divider or amplifier
         # Raise an error if nothing is specified
