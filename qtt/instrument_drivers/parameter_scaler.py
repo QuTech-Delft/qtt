@@ -46,7 +46,7 @@ class ParameterScaler(Parameter):
         unit: resulting unit. Use the one of 'output' by default
     """
 
-    @rdeprecated(txt='Use qcodes.ScaledParameter instead', expire='2018-10-16')
+    @rdeprecated(txt='Use qcodes.ScaledParameter instead', expire='2018-12-16')
     def __init__(self,
                  output: Parameter,
                  division: Union[int, float, Parameter] = None,
