@@ -1006,7 +1006,7 @@ lin_comb_type = dict
 
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, write_period=None,
-           update_period=5, verbose=1, extra_metadata):
+           update_period=5, verbose=1, extra_metadata=None):
     """Make a 2D scan and create dictionary to store on disk.
 
     For 2D vector scans see also the documentation of the _convert_scanjob_vec
@@ -2408,7 +2408,9 @@ def test_scan2D(verbose=0):
     scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
     scanjob['stepvalues'] = np.array([[2 * i, 3 * i] for i in range(10)])
     try:
-        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
     except Exception as ex:
         from colorama import Fore
         print(ex)
@@ -2440,8 +2442,8 @@ def test_scan2D(verbose=0):
 
     scanjob = scanjob_t({'sweepdata': dict(
         {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
-    data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
+    data = scan1D(station, scanjob, liveplotwindow=False, verbose=0, extra_metadata={'hi': 'world'})
+    assert('hi' in data.metadata)
     gates.close()
 
 
