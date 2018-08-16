@@ -233,7 +233,7 @@ def deprecated(func):
             lineno = -1
         warnings.warn_explicit(
             "Call to deprecated function {}.".format(func.__name__),
-            category=DeprecationWarning,
+            category=UserWarning,
             filename=filename,
             lineno=lineno,
         )
@@ -286,14 +286,14 @@ def rdeprecated(txt=None, expire=None):
                     warnings.warn_explicit(
                         "Call to deprecated function {} (will expire on {}).{}".format(
                             func.__name__, expiredate, etxt),
-                        category=DeprecationWarning,
+                        category=UserWarning,
                         filename=filename,
                         lineno=lineno,
                     )
             else:
                 warnings.warn_explicit(
                     "Call to deprecated function {}.{}".format(func.__name__, etxt),
-                    category=DeprecationWarning,
+                    category=UserWarning,
                     filename=filename,
                     lineno=lineno,
                 )
