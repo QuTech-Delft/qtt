@@ -49,7 +49,19 @@ pipeline {
                    '''
             }
         }
-        
+
+        stage('Test notebooks')
+        {
+            steps {
+                sh '''
+                       . ./venv/bin/activate &&
+                       pip3 install jupyter
+                   '''
+                sh '. ./venv/bin/activate && jupyter --version'
+                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_ohmic.ipynb'
+            }
+        }
+                
         stage('Collect') {
             steps {
                 step([$class: 'CoberturaPublisher', coberturaReportFile: 'coverage.xml'])
