@@ -322,12 +322,13 @@ def getDefaultParameter(data):
 # %%
 
 
-def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1):
+def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
 
     Args:
         station (object): contains all data on the measurement station
         scanjob (scanjob_t): data for scan
+        extra_metadata (None or dict): additional metadata to be included in the dataset
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -428,6 +429,9 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
+    if extra_metadata is not None:
+        update_dictionary(alldata.metadata, **extra_metadata)
+
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
@@ -442,12 +446,15 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 
 # %%
-def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1):
-    """Fast 1D scan. 
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, extra_metadata = None):
+    """ Fast 1D scan. 
+    
+    The scan is performed by putting a sawtooth signal on the AWG and measuring with a fast acquisition device.
 
     Args:
         station (object): contains all data on the measurement station
         scanjob (scanjob_t): data for scan
+        extra_metadata (None or dict): additional metadata to be included in the dataset
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -550,6 +557,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
+
+    if extra_metadata is not None:
+        update_dictionary(alldata.metadata, **extra_metadata)
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
@@ -996,7 +1006,7 @@ lin_comb_type = dict
 
 
 def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, write_period=None,
-           update_period=5, verbose=1):
+           update_period=5, verbose=1, extra_metadata):
     """Make a 2D scan and create dictionary to store on disk.
 
     For 2D vector scans see also the documentation of the _convert_scanjob_vec
@@ -1007,6 +1017,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         scanjob (scanjob_t): data for scan
         write_period (float): save-to-disk interval in lines, None for no writing before finished
         update_period (float): liveplot update interval in lines, None for no updates
+        extra_metadata (None or dict): additional metadata to be included in the dataset
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -1175,6 +1186,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
+
+    if extra_metadata is not None:
+        update_dictionary(alldata.metadata, **extra_metadata)
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
@@ -1689,12 +1703,14 @@ def single_shot_readout(minstparams, length, shots, threshold=None):
 
 # %%
 
-def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', diff_dir=None, verbose=1):
+def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='measured',
+               diff_dir=None, verbose=1, extra_metadata = None):
     """Make a 2D scan and create qcodes dataset to store on disk.
 
     Args:
         station (object): contains all the instruments
         scanjob (scanjob_t): data for scan
+        extra_metadata (None or dict): additional metadata to be included in the dataset
 
     Returns:
         alldata (DataSet): contains the measurement data and metadata
@@ -1864,6 +1880,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
+
+    if extra_metadata is not None:
+        update_dictionary(alldata.metadata, **extra_metadata)
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
