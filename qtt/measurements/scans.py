@@ -1165,9 +1165,12 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             parameter = gates.parameters[param]
             # if type(stepvalues) is np.ndarray:
             #    stepvalues = stepvalues_tmp
-            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit,
-                            preset_data=scanjob['phys_gates_vals'][param], set_arrays=(
-                    alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
+            if parameter.name in alldata.arrays.keys():
+                warnings.warn('parameter %s already in dataset, skipping!' % parameter.name)
+                continue
+
+            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(
+                alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
             alldata.add_array(arr)
 
     if not hasattr(alldata, 'metadata'):
