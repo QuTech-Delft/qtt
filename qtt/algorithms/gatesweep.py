@@ -249,11 +249,16 @@ def plot_pinchoff(result, ds=None, fig=10):
         plt.plot(midpoint, midvalue, '.m', label='midpoint')
         plot2Dline([-1, 0, pinchvalue], '--g', linewidth=1, alpha=0.5, label='pinchvalue')
 
+def test_analyseGateSweep(fig=None):
+    x=np.arange(-800, 0, 1) # mV
+    y=qtt.algorithms.functions.logistic(x, x0=-400, alpha=.05)
+    dataset=qtt.data.makeDataSet1Dplain('plunger', x, 'current', y)
+    result = analyseGateSweep(dataset)
+    if fig:
+        plot_pinchoff(result, ds=dataset, fig=fig)
+    
 if __name__ == '__main__':
-    adata = analyseGateSweep(alldata, fig=10, minthr=None, maxthr=None, verbose=0)
+    # test
+    test_analyseGateSweep(fig=100)
 
-if __name__ == '__main__':
-            
-    plot_pinchoff(adata, ds=ds, fig=20)
-    plt.legend(numpoints=1)
             
