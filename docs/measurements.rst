@@ -67,7 +67,21 @@ A simple GUI to abort running measurements without interfering with the instrume
 .. autosummary::
     qtt.live_plotting.MeasurementControl
 
+.. ::
+    .. image:: images/measurement_control.png
+        :width: 200px
+        :align: center
+        :alt: measurement_control widget
+    
 
+.. figure:: images/measurement_control.png
+    :width: 320px
+    :align: center
+    :alt: Measurement control widget
+    :figclass: align-center
+
+    Measurement control widget
+    
 Virtual gates
 -------------
 
