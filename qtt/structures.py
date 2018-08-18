@@ -376,11 +376,14 @@ class sensingdot_t:
                 'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
         return sd.sdval[1], alldata
 
-    def _process_scan(self, alldata, useslopes=True, fig=None, verbose=0):
+    def _process_scan(self, alldata, useslopes=True, fig=None, invert=False, verbose=0):
         """ Determine peaks in 1D scan """
         istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = qtt.data.dataset1Ddata(alldata)
         x, y = peakdataOrientation(x, y)
+        
+        if invert:
+            y = -y
 
         if useslopes:
             goodpeaks = findSensingDotPosition(
@@ -422,7 +425,7 @@ class sensingdot_t:
                 gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
 
     def fastTune(self, Naverage=90, sweeprange=79, period=.5e-3, location=None,
-                 fig=201, sleeptime=2, delete=True, add_slopes=False, verbose=1):
+                 fig=201, sleeptime=2, delete=True, add_slopes=False, invert=False, verbose=1):
         """Fast tuning of the sensing dot plunger.
 
         If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used for the sweep.
@@ -496,7 +499,7 @@ class sensingdot_t:
 
         alldata.write(write_metadata=True)
 
-        goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig)
+        goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig, invert=invert)
 
         if len(goodpeaks) > 0:
             self.sdval[1] = goodpeaks[0]['xhalfl']
