@@ -62,13 +62,17 @@ class VirtualAwg(Instrument):
         [awg.reset() for awg in self.awgs]
 
     def enable_outputs(self, gate_names):
+        gate_names.extend(['m4i_mk', 'awg_mk'])
+        print(gate_names)
         for name in gate_names:
-            (awg_number, channel_number) = self.__gate_map[name]
+            print(name)
+            (awg_number, channel_number, *_) = self.__gate_map[name]
             self.awgs[awg_number].enable_outputs([channel_number])
 
     def disable_outputs(self, gate_names):
+        gate_names.extend(['m4i_mk', 'awg_mk'])
         for name in gate_names:
-            (awg_number, channel_number) = self.__gate_map[name]
+            (awg_number, channel_number, *_) = self.__gate_map[name]
             self.awgs[awg_number].disable_outputs([channel_number])
 
     def update_setting(self, awg_number, setting, value):
@@ -172,7 +176,7 @@ class VirtualAwg(Instrument):
                 if awg_number != number:
                     continue
                 awg_to_plunger = self.__hardware.parameters['awg_to_{}'.format(gate_name)].get()
-                scaling_ratio = 2 / VirtualAwg.__volt_to_millivolt / awg_to_plunger / vpp_amplitude
+                scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt / awg_to_plunger / vpp_amplitude
 
                 sample_data = Sequencer.get_data(sequence, sampling_rate)
                 sequence_data = sample_data if marker_number else sample_data * scaling_ratio
