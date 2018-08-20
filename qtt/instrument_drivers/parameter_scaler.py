@@ -2,6 +2,7 @@ from typing import Union
 import enum
 
 from qcodes import Parameter, ManualParameter
+from qtt.tools import rdeprecated
 
 
 class Role(enum.Enum):
@@ -45,6 +46,7 @@ class ParameterScaler(Parameter):
         unit: resulting unit. Use the one of 'output' by default
     """
 
+    @rdeprecated(txt='Use qcodes.ScaledParameter instead', expire='2018-12-16')
     def __init__(self,
                  output: Parameter,
                  division: Union[int, float, Parameter] = None,

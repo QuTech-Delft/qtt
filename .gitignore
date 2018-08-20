@@ -52,6 +52,8 @@ coverage.xml
 *.mo
 *.pot
 
+# IDEs
+.idea
 
 # Django stuff:
 *.log
@@ -71,7 +73,11 @@ experiments.db
 untitled*py
 Untitled*py
 
+# Testdata saved from experiments
+qtt/testdata
+
 # Misc
+tmp
 tools/*.asv
 dot-dummy.*
 examples/dummy.*

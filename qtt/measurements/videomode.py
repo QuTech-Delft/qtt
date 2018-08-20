@@ -3,7 +3,7 @@
 Contains code to do live plotting 
 
 """
-#%%
+# %%
 import time
 import datetime
 import threading
@@ -23,7 +23,8 @@ import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore
 from qtt.measurements.scans import makeDataset_sweep, makeDataset_sweep_2D
 
-#%%
+
+# %%
 
 
 class videomode_callback:
@@ -97,7 +98,8 @@ class videomode_callback:
             dd.append(data_processed)
         return dd
 
-#%%
+
+# %%
 
 
 class VideoMode:
@@ -114,8 +116,8 @@ class VideoMode:
         sample_rate (float): sample rate for acquisition device
         crosshair (bool): enable crosshair
     """
-    #  TODO: implement optional sweep directions, i.e. forward and backward
 
+    # TODO: implement optional sweep directions, i.e. forward and backward
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
                  dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name='VideoMode',
@@ -161,6 +163,8 @@ class VideoMode:
             else:
                 station.digitizer.sample_rate(sample_rate)
                 self.sampling_frequency = station.digitizer.sample_rate
+        elif 'ZIUHFLI' in station.components:
+            self.sampling_frequency = station.ZIUHFLI.scope_samplingrate
         else:
             try:
                 minstrumenthandle = qtt.measurements.scans.get_instrument(
@@ -215,7 +219,6 @@ class VideoMode:
 
         self.lp = []
         for ii in range(nplots):
-
             lp = livePlot(None, self.station.gates,
                           self.sweepparams, self.sweepranges, show_controls=False,
                           plot_title=str(self.minstrumenthandle) + ' ' + str(self.channels[ii]))
@@ -317,7 +320,9 @@ class VideoMode:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
         qtt.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
-                              notes=self.station, extranotes='date: %s' % (qtt.data.dateString(), ) + '\n' + 'scanjob: ' + str(self.scanparams))
+                              notes=self.station,
+                              extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
+                                  self.scanparams))
         if isrunning:
             self.startreadout()
 
@@ -543,8 +548,9 @@ class VideoMode:
             alldata = [None] * len(data)
             for jj in range(len(data)):
                 datax = data[jj]
-                alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges, loc_record={
-                    'label': 'videomode_2d_single'})
+                alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges,
+                                                   loc_record={
+                                                       'label': 'videomode_2d_single'})
                 alldatax.metadata = copy.copy(metadata)
                 alldata[jj] = alldatax
         else:
@@ -573,7 +579,7 @@ class VideoMode:
             v.stopreadout()
 
 
-#%% Testing
+# %% Testing
 
 
 if __name__ == '__main__':
@@ -582,6 +588,7 @@ if __name__ == '__main__':
     import pdb
     from imp import reload
     import matplotlib.pyplot as plt
+
     reload(qtt.live_plotting)
     from qtt.live_plotting import *
 
@@ -616,11 +623,12 @@ if __name__ == '__main__':
     self = vm
     vm.setGeometry(1310, 100, 800, 800)
 
-#%% Test MultiTracePlot
+    # %% Test MultiTracePlot
     app = pyqtgraph.mkQApp()
     waveform, ix = station.awg.sweep_gate('P1', 50, 1e-3)
     nplots = 3
     ncurves = 2
+
 
     def read_trace_dummy():
         data = qtt.measurements.scans.measuresegment(
@@ -631,10 +639,12 @@ if __name__ == '__main__':
         xdata = [xd] * nplots
         return xdata, dd
 
+
     xd, yd = read_trace_dummy()
 
-    #%%
+    # %%
     import qtt.measurements.ttrace
+
     reload(qtt.measurements.ttrace)
     from qtt.measurements.ttrace import MultiTracePlot
 
@@ -642,10 +652,12 @@ if __name__ == '__main__':
     mt.win.setGeometry(1400, 40, 500, 500)
     mt.add_verticals()
 
+
     def callback():
         xdata, ydata = read_trace_dummy()
         mt.plot_curves(xdata, ydata)
         app.processEvents()
+
 
     mt.startreadout(callback=callback)
     mt.updatefunction()

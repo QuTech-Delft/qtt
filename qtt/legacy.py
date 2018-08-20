@@ -273,16 +273,10 @@ def cmap_discretize(cmap, N, m=1024):
 
 from qtt.algorithms.misc import polyval2d, polyfit2d
 
-from qtt.utilities.imagetools import fitBackground as fitBackgroundGood
+from qtt.utilities.imagetools import fitBackground as fitBackgroundTmp
 from qtt.utilities.imagetools import cleanSensingImage
 
-fitBackground= qtt.tools.deprecated(fitBackgroundGood)
-
-
-
-
-
-
+fitBackground= qtt.tools.deprecated(fitBackgroundTmp)
 
 @qtt.tools.deprecated
 def showIm(ims, fig=1, title='', showz=False):
@@ -297,9 +291,6 @@ def showIm(ims, fig=1, title='', showz=False):
     plt.title(title)
 
 
-
-
-#%%
 
 
 #%%
@@ -325,109 +316,9 @@ def getPinchvalues(od, xdir, verbose=1):
     return od
 
 
-@qtt.tools.deprecated
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
-    xdir = os.path.join(resultsdir, 'one_dot')
-
-    jobs = []
-    for jj, td in enumerate(two_dots):
-        if verbose:
-            print('\n#### analysing two-dot: %s' % str(td['gates']))
-
-        try:
-            od1 = 'dot-' + '-'.join(td['gates'][0:3])
-            od1 = [x for x in one_dots if x['name'] == od1][0]
-            od2 = 'dot-' + '-'.join(td['gates'][3:6])
-            od2 = [x for x in one_dots if x['name'] == od2][0]
-        except Exception as ex:
-            print('createDoubleDotJobs: no one-dot data available for %s' %
-                  td['name'])
-            print(ex)
-            continue
-            pass
-
-        if verbose >= 2:
-            print('get balance point data')
-        ods = []
-        try:
-            for ii, od in enumerate([od1, od2]):
-
-                dstr = '%s-sweep-2d' % (od['name'])
-                dd2d = loadExperimentData(resultsdir, tag='one_dot', dstr=dstr)
-
-                od = getPinchvalues(od, xdir, verbose=verbose >= 2)
-
-                if fig:
-                    fign = 1000 + 100 * jj + 10 * ii
-                    figm = fig + 10 * ii
-                else:
-                    fign = None
-                    figm = None
-
-                xx, od, ptv, pt0, ims, lv, wwarea = qtt.algorithms.onedot.onedotGetBalance(od, dd2d, verbose=verbose >= 2, fig=fign)
-
-                dstrhi = '%s-sweep-2d-hires' % (od['name'])
-                tmphi = loadExperimentData(resultsdir, tag='one_dot', dstr=dstrhi)
-                alldatahi = tmphi['dataset']
-                if verbose >= 2:
-                    print('  at onedotGetBalanceFine')
-                if (alldatahi is not None) and True:
-                    ptv, fimg, _ = onedotGetBalanceFine(dd=alldatahi, verbose=1, fig=None)
-                    od['balancepointfine'] = ptv
-                    od['setpoint'] = ptv + 10
-
-                if verbose >= 2:
-                    print('createDoubleDotJobs: at fillPoly')
-                imx = 0 * wwarea.copy().astype(np.uint8)
-                tmp = fillPoly(imx, od['balancefit'])
-
-                showODresults(od, dd2d, fig=figm, imx=imx, ww=wwarea)
-                ods.append(od)
-
-            if fig:
-                tilefigs([fig + 1, fig + 11], [2, 2])
-
-            # Define base values
-
-            tmp = copy.copy(basevalues)
-            # print('createDoubleDotJobs: call getTwoDotValues: ')
-            basevaluesTD, tddata = getTwoDotValues(td, ods, basevaluestd=tmp, verbose=1)
-            # print('### createDoubleDotJobs: debug here: ')
-            td['basevalues'] = basevaluesTD
-            td['tddata'] = tddata
-
-            # Create scan job
-            scanjob = qtt.measurements.scans.scanjob_t({'mode': '2d'})
-            p1 = ods[0]['gates'][1]
-            p2 = ods[1]['gates'][1]
-
-            sweeprange = 240
-            if p2 == 'P3':
-                sweeprange = qtt.algorithms.generic.signedmin(sweeprange, 160)  # FIXME
-
-            e1 = ods[0]['pinchvalues'][1]
-            e2 = ods[1]['pinchvalues'][1]
-            e1 = float(np.maximum(basevaluesTD[p1] - sweeprange / 2, e1))
-            e2 = float(np.maximum(basevaluesTD[p2] - sweeprange / 2, e2))
-            s1 = basevaluesTD[p1] + sweeprange / 2
-            s2 = basevaluesTD[p2] + sweeprange / 2
-            scanjob['stepdata'] = dict({'param': p1, 'start': s1, 'end': e1, 'step': -2})
-            scanjob['sweepdata'] = dict({'param': p2, 'start': s2, 'end': e2, 'step': -4})
-
-            scanjob['minstrument'] = sdinstruments
-            scanjob['basename'] = 'doubledot-2d'
-            scanjob['basevalues'] = basevaluesTD
-            scanjob['td'] = td
-            jobs.append(scanjob)
-
-            print('createDoubleDotJobs: succesfully created job: %s' % str(basevaluesTD))
-        except Exception as e:
-            print('createDoubleDotJobs: failed to create job file %s' % td['name'])
-            raise e
-
-    return jobs
-
+    raise Exception('function was removed from qtt')
 
 
 #%%

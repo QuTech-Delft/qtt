@@ -44,7 +44,7 @@ The data browser can be used to inspect recorded data.
 Live plotting
 -------------
 
-Live plotting is done using a `qcodes.QtPlot` window. The window can be setup with
+Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be setup with
 
 .. autosummary::
     qtt.tools.setupMeasurementWindows
@@ -53,7 +53,7 @@ Live plotting is done using a `qcodes.QtPlot` window. The window can be setup wi
 Named gates
 -----------
 
-The `virtual_IVVI` object can translate gate names into the proper channels of a DAC (or multiple DACs).
+The :code:`virtual_IVVI` object can translate gate names into the proper channels of a DAC (or multiple DACs).
 
 .. autosummary::
     qtt.instrument_drivers.gates.virtual_IVVI
@@ -67,7 +67,21 @@ A simple GUI to abort running measurements without interfering with the instrume
 .. autosummary::
     qtt.live_plotting.MeasurementControl
 
+.. ::
+    .. image:: images/measurement_control.png
+        :width: 200px
+        :align: center
+        :alt: measurement_control widget
+    
 
+.. figure:: images/measurement_control.png
+    :width: 320px
+    :align: center
+    :alt: Measurement control widget
+    :figclass: align-center
+
+    Measurement control widget
+    
 Virtual gates
 -------------
 
@@ -98,5 +112,16 @@ For example:
     r = load_state(station=station, tag=tag, verbose=1)
 
 
+Copying data to Powerpoint
+--------------------------
+
+To copy a dataset or a figure window to Powerpoint, including the scan metadata one can use:
+ 
+.. code-block:: python
+
+ 	qtt.tools.addPPT_dataset(dataset)
+ 	qtt.tools.addPPTslide(figure)
+
+ 	
 
 

@@ -23,19 +23,14 @@ When contributing to QTT you will want to write a new piece of code. Please keep
 Code style
 ----------
 
-Because QTT is a framework used by many people, we need it to follow certain style guidelines. Because, as
-the PEP 8 documentation says: "One of Guido's key insights is that code is read much more often than it is written.
-The guidelines provided here are intended to improve the readability of code and make it consistent across the wide
-spectrum of Python code. As PEP 20 says, "Readability counts"."
-
-We try to follow the `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ style guide except that we allow lines to be up to 120 characters.
+Because QTT is a framework used by many people, we need it to follow certain style guidelines. We try to follow the `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ style guide, except that we allow lines to be up to 120 characters.
 Many editors support `autopep8 <https://pypi.python.org/pypi/autopep8>`_ that can help with coding style. Below we list some basic coding style guidelines, including examples. Please follow them when contributing to QTT.
-
+We also try to follow `PEP 20 <https://www.python.org/dev/peps/pep-0020/>`_.
 
 
 * Docstrings are required for classes, attributes, methods, and functions (if public i.e no leading underscore).
 
-* Document your functions before making a Pull request into the QuTech Tuning main branch. An example of a well documented function is shown below:
+* Document your functions before making a pull request into the QuTech Tuning main branch. An example of a well documented function is shown below:
 
   .. code:: python
 
@@ -60,9 +55,7 @@ Many editors support `autopep8 <https://pypi.python.org/pypi/autopep8>`_ that ca
 
 			return cost
 
-			
-* ...
-			
+					
 * Since we are dealing with code in development:
 
    - For methods implementing an algorithm return a dictionary so that we can modify the output arguments without breaking backwards compatibility
@@ -74,7 +67,7 @@ Uploading code
 
 To upload code use git commit and git push. For the qtt repository always make a branch first. After
 uploading a branch one can make a `pull request <https://help.github.com/articles/about-pull-requests/>`_ which will be reviewed for inclusion in QTT 
-by our main developers. If the code is up to standard we will include it in the QTT repository, and add you to the (prestigious) list of contributors on the frontpage of the documentation!
+by our main developers. If the code is up to standards we will include it in the QTT repository.
 
 
 

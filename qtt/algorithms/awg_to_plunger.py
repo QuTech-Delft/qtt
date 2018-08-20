@@ -202,7 +202,7 @@ def plot_awg_to_plunger(result, fig=10):
             if offset is 0:
                 label = 'detected angle'
             qtt.pgeometry.plot2Dline(
-                [np.cos(angle), np.sin(angle), offset], 'm', label=label)
+                [np.cos(angle), -np.sin(angle), offset], 'm', label=label)
     plt.title('Detected line direction')
 
 
@@ -236,14 +236,5 @@ if __name__ == '__main__':
     test_awg_to_plunger(fig=10)
 
 
-# TODO
-#
-# 0. Test on V1/XLD to see the conventions are ok
-# 1. Clean up code
-# 2. Add documentation
-# 3. Add more unit tests
-# 4. Add example
-# 5. Add method 'click' to manually determine the awg_to_plunger
-# 6. Use code on V1
 
         
