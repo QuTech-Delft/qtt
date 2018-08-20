@@ -31,7 +31,7 @@ pipeline {
                 sh 'git clone https://github.com/VandersypenQutech/qc-toolkit.git'
                 sh '''
                        . ./venv/bin/activate &&
-                       cd qc-toolkit && pip3 install . &&
+                       cd qc-toolkit &&
                        python3 setup.py build &&
                        python3 setup.py install &&
                        python3 -c "import qctoolkit"
