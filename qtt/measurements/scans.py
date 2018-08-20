@@ -453,8 +453,8 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     scanjob.parse_stepdata('sweepdata')
     scanjob.parse_param('sweepdata', station, paramtype='fast')
-    minstrhandle = get_instrument(scanjob.get('minstrumenthandle', 'fpga'), station=station)
-    virtual_awg = getattr(self.station, 'virtual_awg', None)
+    minstrhandle = get_instrument(scanjob.get('minstrumenthandle', 'digitizer'), station=station)
+    virtual_awg = getattr(station, 'virtual_awg', None)
 
     read_ch = scanjob['minstrument']
     if isinstance(read_ch, tuple):
@@ -489,9 +489,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                                                                   scanjob['pulsedata'])
         else:
             if virtual_awg:
-                gates = {sweepdata['param']: 1}
-                waveform = virtual_awg.sweep_gates(gates, sweeprange, period, do_upload=delete)
-                virtual_awg.enable_outputs(list(gates.keys()))
+                measure_gates = {sweepdata['param']: 1}
+                waveform = virtual_awg.sweep_gates(measure_gates, sweeprange, period, do_upload=delete)
+                virtual_awg.enable_outputs(list(measure_gates.keys()))
                 virtual_awg.run()
             else:
                 waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
@@ -1476,7 +1476,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     return data
 
 
-def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None, verbose=1):
+def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
     The saving to disk can take minutes or even longer.
@@ -1527,9 +1527,9 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
             if isinstance(dataraw, tuple):
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1)) 
-            segment_time = np.linspace(0., period, data.shape[2])
-            segment_num = np.arange(nsegments).astype(segment_time.dtype)
-            alldata = makeDataSet2Dplain('time', segment_time,'segment_number', segment_num, 
+            segment_num = np.arange(nsegments)
+            segment_time = np.linspace(0, period, data.shape[2])
+            alldata = makeDataSet2Dplain('segment_number', segment_num, 'time', segment_time,
                                              zname=measure_names, z=data, xunit='s', location=location, loc_record={'label': 'save_segments'})
         else:
             raise(Exception('Non-averaged acquisitions not supported for this measurement instrument'))
@@ -1613,7 +1613,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     #minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
     minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'fpga') )
     read_ch = get_minstrument_channels(scanjob['minstrument'])
-    virtual_awg = getattr(self.station, 'virtual_awg', None)
+    virtual_awg = getattr(station, 'virtual_awg', None)
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan2Dfastvec'
