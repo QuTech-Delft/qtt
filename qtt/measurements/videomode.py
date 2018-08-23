@@ -475,14 +475,13 @@ class VideoMode:
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels))
 
-    def __run_2d_scan(self, awg, virtual_awg, period=1e-3):
+    def __run_2d_scan(self, awg, virtual_awg, period=1e-4):
         if virtual_awg:
             sweep_ranges = [i * 2 for i in self.sweepranges]
             if isinstance(self.sweepparams, dict):
                 gates = self.sweepparams
             elif isinstance(self.sweepparams, list):
                 gates = self.sweepparams
-            print(gates, sweep_ranges, period, self.resolution)
 
             waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, period, self.resolution)
             keys = [list(item.keys())[0] for item in gates]
@@ -500,7 +499,6 @@ class VideoMode:
             if self.verbose:
                 print(Fore.BLUE + '%s: 2d scan, define callback ' %
                       (self.__class__.__name__,) + Fore.RESET)
-        print(waveform)
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels),
                                                resolution=self.resolution, diff_dir=self.diff_dir)

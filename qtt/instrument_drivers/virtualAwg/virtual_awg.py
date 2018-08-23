@@ -98,7 +98,7 @@ class VirtualAwg(Instrument):
             sequences[gate_name] = Sequencer.make_square_wave(amplitude, period)
         sweep_data = self.sequence_gates(sequences, do_upload)
         return sweep_data.update({'sweeprange': sweep_range, 'period': period,
-                                  'markerdelay': self.marker_offset})
+                                  'markerdelay': self.digitizer_marker_delay()})
 
     def sweep_gates(self, gates, sweep_range, period, width=0.95, do_upload=True):
         """ Sweep a set of gates with a sawtooth waveform.
