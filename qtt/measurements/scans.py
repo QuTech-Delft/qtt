@@ -1282,6 +1282,7 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         r2 = int(npoints2)
         r3 = int(npoints3)
         processed_data = []
+        print(data)
         for j in range(data[0].shape[0]):
             processed_data.append([data[x:x + res_horz, j]
                                    for x in range(0, npoints, res_horz)])

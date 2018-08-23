@@ -72,7 +72,7 @@ class videomode_callback:
             self.waveform, self.Naverage, minstrumenthandle, self.unique_channels)
 
         if np.all(data == 0):
-            self.stopreadout()
+            #self.stopreadout()
             raise Exception('data returned contained only zeros, aborting')
 
         dd = []
@@ -137,7 +137,7 @@ class VideoMode:
         self.verbose = verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.virtual_awg = getattr(station, 'virtual_awg', virtual_awg)
+        self.virtual_awg = station.virtual_awg
 
         self.minstrumenthandle = minstrument[0]
         self.channels = minstrument[1]
@@ -475,16 +475,18 @@ class VideoMode:
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels))
 
-    def __run_2d_scan(self, awg, virtual_awg):
+    def __run_2d_scan(self, awg, virtual_awg, period=1e-3):
         if virtual_awg:
-            period = 1 / self.sampling_frequency.get()
             sweep_ranges = [i * 2 for i in self.sweepranges]
             if isinstance(self.sweepparams, dict):
-                gates = [self.sweepparams['gates_horz'], self.sweepparams['gates_vert']]
+                gates = self.sweepparams
             elif isinstance(self.sweepparams, list):
                 gates = self.sweepparams
+            print(gates, sweep_ranges, period, self.resolution)
+
             waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, period, self.resolution)
-            virtual_awg.enable_outputs(list(gates.keys()))
+            keys = [list(item.keys())[0] for item in gates]
+            virtual_awg.enable_outputs(keys)
             virtual_awg.run()
         else:
             if isinstance(self.sweepparams, list):
@@ -498,9 +500,10 @@ class VideoMode:
             if self.verbose:
                 print(Fore.BLUE + '%s: 2d scan, define callback ' %
                       (self.__class__.__name__,) + Fore.RESET)
-            self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(), minstrument=(
-                self.minstrumenthandle, self.channels), resolution=self.resolution, diff_dir=self.diff_dir)
-
+        print(waveform)
+        self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
+                                               minstrument=(self.minstrumenthandle, self.channels),
+                                               resolution=self.resolution, diff_dir=self.diff_dir)
 
     def stop(self):
         """ Stops the plotting, AWG(s) and if available RF. """
