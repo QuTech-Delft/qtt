@@ -602,6 +602,9 @@ class VideoMode:
 
 
 def test_videomode():
+    
+    assert(VideoMode.get_instance(-1) is None)
+    
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
     gates=station.gates
@@ -615,13 +618,15 @@ def test_videomode():
     station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
     station.components[station.awg.name] = station.awg
 
-    all = VideoMode.all_instances()
     
     sweepparams = {'gates_horz': {'P1':1}, 'gates_vert': {'P2':1} }
 
     vm = VideoMode(station, sweepparams, sweepranges=[120]*2, minstrument=minstrument, resolution=[12]*2, Naverage=2)
     vm.stop()
     vm.close()
+
+    all = VideoMode.all_instances(verbose=0)
+    assert(vm in all)
     
 # %% Testing
 
