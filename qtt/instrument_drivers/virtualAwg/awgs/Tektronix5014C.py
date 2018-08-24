@@ -24,7 +24,7 @@ class Tektronix5014C_AWG(AwgCommon):
                                      vals=Numbers(0.02, 4.5), set_cmd=None),
                            Parameter(name='offset', unit='V', initial_value=0,
                                      vals=Numbers(-2.25, 2.25), set_cmd=None)]
-        self.__waveform_data = None
+        self._waveform_data = None
         self.__awg = awg
 
     @property
@@ -89,8 +89,8 @@ class Tektronix5014C_AWG(AwgCommon):
     def upload_waveforms(self, sequence_channels, sequence_names, sequence_items, reload=True):
         channel_data = dict()
         waveform_data = dict()
-        self.__waveform_data = zip(sequence_channels, sequence_names, sequence_items)
-        for ((channel_nr, *marker_nr), name, data_array) in self.__waveform_data:
+        self._waveform_data = zip(sequence_channels, sequence_names, sequence_items)
+        for ((channel_nr, *marker_nr), name, data_array) in self._waveform_data:
             if name not in waveform_data:
                 data_count = len(data_array)
                 waveform_data[name] = [np.zeros(data_count), np.zeros(data_count), np.zeros(data_count)]
@@ -102,7 +102,7 @@ class Tektronix5014C_AWG(AwgCommon):
         self._set_sequence(list(channel_data.keys()), list(channel_data.values()))
 
     def retrieve_waveforms(self):
-        return self.__waveform_data if self.__waveform_data else None
+        return self._waveform_data if self._waveform_data else None
 
     def _set_sequence(self, channels, sequence):
         if not sequence or len(sequence) != len(channels):
@@ -161,7 +161,7 @@ class Tektronix5014C_AWG(AwgCommon):
 
     def delete_waveforms(self):
         self.__awg.delete_all_waveforms_from_list()
-        self.__waveform_data = None
+        self._waveform_data = None
 
     def __set_sequence_length(self, count):
         self.__awg.write('SEQuence:LENGth {0}'.format(count))
