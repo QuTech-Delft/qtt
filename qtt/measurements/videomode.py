@@ -601,7 +601,7 @@ class VideoMode:
             v.stopreadout()
 
 
-def test_videomode():
+def guitest_videomode():
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
     
@@ -633,6 +633,8 @@ def test_videomode():
 
 
 if __name__ == '__main__':
+    guitest_videomode()
+    
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
     gates=station.gates
