@@ -2,7 +2,7 @@ import numpy as np
 
 from qcodes import Parameter
 from qcodes.utils.validators import Numbers
-from qtt.instrument_drivers.virtualAwg.awgs.common import (AwgCommon,
+from qtt.instrument_drivers.virtualawg.awgs.common import (AwgCommon,
                                                            AwgCommonError)
 
 

@@ -5,8 +5,8 @@ from qctoolkit.pulses import SequencePT
 from qctoolkit.pulses.plotting import (PlottingNotPossibleException, plot, render)
 from qctoolkit.pulses.sequencing import Sequencer as Sequencing
 from qctoolkit.serialization import Serializer, DictBackend
-from qtt.instrument_drivers.virtualAwg.templates import DataTypes, Templates
-# from qtt.instrument_drivers.virtualAwg.serializer import StringBackend
+from qtt.instrument_drivers.virtualawg.templates import DataTypes, Templates
+# from qtt.instrument_drivers.virtualawg.serializer import StringBackend
 
 
 class Sequencer:
