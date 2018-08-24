@@ -39,10 +39,11 @@ Documentation
    :maxdepth: 2
 
    introduction   
+   examplenotebook
    measurements
-   calibrations   
    algorithms
    simulation
+   calibrations   
    contributing
    
 

@@ -73,11 +73,11 @@ pipeline {
                        pip3 install jupyter
                    '''
                 sh '. ./venv/bin/activate && jupyter --version'
-                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_PAT_fitting.ipynb'               
-                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_ohmic.ipynb'
-                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_anticrossing.ipynb'
-                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_charge_sensor.ipynb'               
-                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_classical_dot_simulation.ipynb'               
+                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_PAT_fitting.ipynb'               
+                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_ohmic.ipynb'
+                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb'
+                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/measurements/example_charge_sensor.ipynb'               
+                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/simulation/example_classical_dot_simulation.ipynb'               
                 sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_virtual_dot_array.ipynb'                               
             }
         }
