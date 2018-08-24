@@ -3,15 +3,15 @@ import numpy as np
 
 from qcodes import Instrument
 from qcodes.utils.validators import Numbers
-from qtt.instrument_drivers.virtualawg.sequencer import Sequencer
-from qtt.instrument_drivers.virtualawg.awgs.simulated_awg import Simulated_AWG
-from qtt.instrument_drivers.virtualawg.awgs.Tektronix5014C import Tektronix5014C_AWG
+from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
+from qtt.instrument_drivers.virtualAwg.awgs.simulated_awg import Simulated_AWG
+from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
 try:
-    from qtt.instrument_drivers.virtualawg.awgs.KeysightM3202A import KeysightM3202A_AWG
+    from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
 except:
     logging.debug('could not load KeysightM3202A driver')
     KeysightM3202A_AWG=None
-from qtt.instrument_drivers.virtualawg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstruments_HDAWG8
+from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstruments_HDAWG8
 
 
 class VirtualAwgError(Exception):

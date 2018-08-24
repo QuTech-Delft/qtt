@@ -4,7 +4,7 @@ import logging
 
 from qcodes import Parameter
 from qcodes.utils.validators import Numbers
-from qtt.instrument_drivers.virtualawg.awgs.common import AwgCommon, AwgCommonError
+from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
  
 try:
     sys.path.append("C:\\Program Files (x86)\\Keysight\\SD1\\Libraries\\Python")

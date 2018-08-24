@@ -1,6 +1,6 @@
 import numpy as np
 
-from qtt.instrument_drivers.virtualawg.awgs.common import AwgCommon, AwgCommonError
+from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
 
 
 class Simulated_AWG(AwgCommon):
