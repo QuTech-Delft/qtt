@@ -118,9 +118,12 @@ class VideoMode:
     """
 
     # TODO: implement optional sweep directions, i.e. forward and backward
+
+    videomode_class_index = 0
+    
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
-                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name='VideoMode',
+                 dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name=None,
                  mouse_click_callback=None):
         """ Tool for fast acquisition of charge stability diagram
         
@@ -132,12 +135,15 @@ class VideoMode:
             mouse_click_callback (None or function): if None then update scan position with callback
             
         """
-        self.name = name
+        VideoMode.videomode_class_index = VideoMode.videomode_class_index+1 # increment index of VideoMode objects
+        self.videomode_index = VideoMode.videomode_class_index
+
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
         self.virtual_awg = station.virtual_awg
+
 
         self.minstrumenthandle = minstrument[0]
         self.channels = minstrument[1]
@@ -153,6 +159,12 @@ class VideoMode:
         self.datalock = threading.Lock()
         self.datafunction_result = None
         self.update_sleep = 1e-5
+
+        if name is None:
+            name = 'VideoMode %d' % self.videomode_index
+            if isinstance(self.sweepparams, (str, list)):
+                name +=': %s' % str(self.sweepparams)
+        self.name = name
 
         # parse instrument
         if 'fpga' in station.components:
@@ -584,6 +596,10 @@ class VideoMode:
 
 
 if __name__ == '__main__':
+    import qtt.simulation.virtual_dot_array
+    station = qtt.simulation.virtual_dot_array.initialize()
+    gates=station.gates
+    
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
     import pdb
@@ -607,7 +623,7 @@ if __name__ == '__main__':
     station.components[station.awg.name] = station.awg
 
     if 1:
-        sweepparams = ['B0', 'B3']
+        sweepparams = ['P1', 'P2']
         sweepranges = [160, 80]
         resolution = [80, 48]
         minstrument = (digitizer.name, [0, 1])
@@ -620,6 +636,12 @@ if __name__ == '__main__':
     vm = VideoMode(station, sweepparams, sweepranges, minstrument, Naverage=25,
                    resolution=resolution, sample_rate='default', diff_dir=None,
                    verbose=1, nplots=None, dorun=True)
+
+    if 0:
+        sweepparams = {'gates_horz': {'P1':1}, 'gates_vert': {'P2':1} }
+
+        vm = VideoMode(station, sweepparams, sweepranges=[120]*2, minstrument=minstrument, resolution=[12]*2, Naverage=2)
+        vm.stop()
 
     self = vm
     vm.setGeometry(1310, 100, 800, 800)
