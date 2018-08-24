@@ -257,6 +257,12 @@ def test_RTS(fig=None):
     data = np.random.rand( 10000, )
     try:
         r=tunnelrates_RTS(data, plungers=[])
+        raise Exception('no samplerate available')
+    except Exception as ex:
+        # exception is good, since no samplerate was provided
+        assert('samplerate is None' in str(ex))
+    try:
+        r=tunnelrates_RTS(data, samplerate=10e6, plungers=[])
         raise Exception('data should not fit to RTS')
     except FittingException as ex:
         # fitting exception is good, since data is random
