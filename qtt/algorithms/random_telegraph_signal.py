@@ -101,7 +101,9 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         data = np.array(data.measured)
     else:
         plungervalue = []   
-        
+        if samplerate is None:
+            raise Exception('samplerate is None')
+            
     # plotting a 2d histogram of the RTS
     if fig:     
         xdata = np.array(range(0,len(data)))/samplerate*1000

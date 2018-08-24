@@ -602,14 +602,14 @@ class VideoMode:
 
 
 def test_videomode():
+    from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
+    from qtt.instrument_drivers.simulation_instruments import SimulationAWG
     
     assert(VideoMode.get_instance(-1) is None)
     
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
     gates=station.gates
-    verbose = 0
-    multiprocess = False
 
     digitizer = SimulationDigitizer(
         qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
@@ -620,6 +620,7 @@ def test_videomode():
 
     
     sweepparams = {'gates_horz': {'P1':1}, 'gates_vert': {'P2':1} }
+    minstrument = (digitizer.name, [0])
 
     vm = VideoMode(station, sweepparams, sweepranges=[120]*2, minstrument=minstrument, resolution=[12]*2, Naverage=2)
     vm.stop()
