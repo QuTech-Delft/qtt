@@ -579,10 +579,19 @@ class VideoMode:
         self.box.setValue(value)
 
     @staticmethod
-    def all_instances():
+    def all_instances(verbose=1):
         """ Return all VideoMode instances """
-        lst = qtt.pgeometry.list_objects(VideoMode)
+        lst = qtt.pgeometry.list_objects(VideoMode, verbose=verbose)
         return lst
+
+    @staticmethod
+    def get_instance(idx):
+        """ Return instance by index """
+        lst = VideoMode.all_instances(verbose=0)
+        for l in lst:
+            if l.videomode_index==idx:
+                return l
+        return None
 
     @staticmethod
     def stop_all_instances():
@@ -592,6 +601,28 @@ class VideoMode:
             v.stopreadout()
 
 
+def test_videomode():
+    import qtt.simulation.virtual_dot_array
+    station = qtt.simulation.virtual_dot_array.initialize()
+    gates=station.gates
+    verbose = 0
+    multiprocess = False
+
+    digitizer = SimulationDigitizer(
+        qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
+    station.components[digitizer.name] = digitizer
+
+    station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
+    station.components[station.awg.name] = station.awg
+
+    all = VideoMode.all_instances()
+    
+    sweepparams = {'gates_horz': {'P1':1}, 'gates_vert': {'P2':1} }
+
+    vm = VideoMode(station, sweepparams, sweepranges=[120]*2, minstrument=minstrument, resolution=[12]*2, Naverage=2)
+    vm.stop()
+    vm.close()
+    
 # %% Testing
 
 
