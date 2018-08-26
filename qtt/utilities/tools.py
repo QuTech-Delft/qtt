@@ -13,6 +13,13 @@ import tempfile
 from itertools import chain
 import scipy.ndimage as ndimage
 from functools import wraps
+import datetime
+import subprocess
+import glob
+import time
+from colorama import Fore
+import importlib
+import platform
 
 try:
     from dulwich.repo import Repo, NotGitRepository
@@ -30,7 +37,7 @@ except:
     pass
 from qcodes import DataArray
 
-from qtt import pgeometry as pmatlab
+from qtt import pgeometry 
 from qtt.pgeometry import mpl2clipboard
   
 # do NOT load any other qtt submodules here
@@ -42,13 +49,7 @@ try:
 except:
     pass
 
-import datetime
-import subprocess
-import glob
-import time
-from colorama import Fore
-import importlib
-import platform
+
 
 
 # %%
@@ -657,7 +658,7 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
             print('  setting gate %s to %.1f [mV]' % (g, val))
         gates.set(g, val)
 
-#%% Tools from pmatlab
+#%% Tools from pgeometry
 
 
 @deprecated
@@ -1144,51 +1145,9 @@ def test_reshape_metadata():
 
 
 #%%
-try:
-    import qtt.gui.parameterviewer
-    import qtt.gui
-
-    def setupMeasurementWindows(station = None, create_parameter_widget = True, 
-                                ilist = None):
-        """ 
-        create liveplot window and parameter widget (optional)
-        
-        Args:
-            station (QCoDeS station): station with instruments
-            create_parameter_widget (bool): if True create ParameterWidget
-            ilist (None or list): list of instruments to add to ParameterWidget
-        Returns:
-            dict: created gui objects
-        """
-        windows = {}
-        
-        ms = monitorSizes()
-        vv = ms[-1]
-        
-        if create_parameter_widget and any([station, ilist]):
-            if ilist is None:
-                ilist = [station.gates]
-            w = qtt.createParameterWidget(ilist)
-            w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
-            windows['parameterviewer'] = w
-
-        plotQ = QtPlot(window_title='Live plot', interval=.5)
-        plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
-        plotQ.update()
-
-        qtt.gui.live_plotting.liveplotwindow = plotQ
-        
-        windows['plotwindow'] = plotQ
-
-        app = QtWidgets.QApplication.instance()
-        app.processEvents()
-
-        return windows
     
-except Exception as ex:
-    logging.exception(ex)
-    print('fail!')
-    pass
+def setupMeasurementWindows(*args, **kwargs):
+    raise Exception('use qtt.gui.live_plotting.setupMeasurementWindows instead')
 
 
 def updatePlotTitle(qplot, basetxt='Live plot'):
@@ -1336,7 +1295,7 @@ def slopeClick(drawmode='r--', **kwargs):
     '''
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    coords = pmatlab.ginput(2, drawmode, **kwargs)
+    coords = pgeometry.ginput(2, drawmode, **kwargs)
     plt.pause(1e-6)
     signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
 
@@ -1360,7 +1319,7 @@ def clickGatevals(plot, drawmode='ro'):
 
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    coords = pmatlab.ginput(drawmode=drawmode)
+    coords = pgeometry.ginput(drawmode=drawmode)
     data_array = plot.traces[0]['config']['z']
     dataset = data_array.data_set
 

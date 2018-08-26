@@ -4,7 +4,6 @@ This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
 This is part of qtt. 
 """
 
-import time
 import numpy as np
 import scipy
 import os
@@ -20,7 +19,7 @@ import skimage.filters
 import matplotlib.pyplot as plt
 
 import qcodes
-import qcodes as qc
+#import qcodes as qc
 from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter
 from qcodes import DataArray
@@ -33,7 +32,7 @@ import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
+from qtt.data import diffDataset, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 
 from qtt.utilities.tools import update_dictionary

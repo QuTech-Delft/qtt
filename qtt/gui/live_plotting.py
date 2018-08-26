@@ -226,7 +226,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
             self.getVal(tv)
 
 
-if __name__ == '__main__' and 0:
+def guitest_measurementcontrol():
     app = pg.mkQApp()
     mc = MeasurementControl()
     mc.verbose = 1
@@ -249,6 +249,54 @@ def start_measurement_control(doexec=False):
     app = pyqtgraph.mkQApp()
     if doexec:
         app.exec()
+
+try:
+    import qtt.gui.parameterviewer
+    import qtt.gui
+    from qtt.utilities.tools import monitorSizes
+    from qcodes import QtPlot
+
+    def setupMeasurementWindows(station = None, create_parameter_widget = True, 
+                                ilist = None):
+        """ 
+        Create liveplot window and parameter widget (optional)
+        
+        Args:
+            station (QCoDeS station): station with instruments
+            create_parameter_widget (bool): if True create ParameterWidget
+            ilist (None or list): list of instruments to add to ParameterWidget
+        Returns:
+            dict: created gui objects
+        """
+        windows = {}
+        
+        ms = monitorSizes()
+        vv = ms[-1]
+        
+        if create_parameter_widget and any([station, ilist]):
+            if ilist is None:
+                ilist = [station.gates]
+            w = qtt.createParameterWidget(ilist)
+            w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
+            windows['parameterviewer'] = w
+
+        plotQ = QtPlot(window_title='Live plot', interval=.5)
+        plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
+        plotQ.update()
+
+        qtt.gui.live_plotting.liveplotwindow = plotQ
+        
+        windows['plotwindow'] = plotQ
+
+        app = QtWidgets.QApplication.instance()
+        app.processEvents()
+
+        return windows
+    
+except Exception as ex:
+    logging.exception(ex)
+    print('failed to add setupMeasurementWindows!')
+    pass
 
 
 # %%

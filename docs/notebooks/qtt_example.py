@@ -49,7 +49,7 @@ model = station.model
 #%% Setup measurement windows
 
 
-mwindows = qtt.utilities.tools.setupMeasurementWindows(station, create_parameter_widget=False)
+mwindows = qtt.gui.live_plotting.setupMeasurementWindows(station, create_parameter_widget=False)
 pv = createParameterWidget([gates, ])
 
 logviewer = qtt.gui.dataviewer.DataViewer()

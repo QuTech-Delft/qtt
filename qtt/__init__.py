@@ -80,7 +80,7 @@ check_version('0.1.7', qcodes) # version of qcodes required
 
 #%% Load often used constructions
 
-from qtt.live_plotting import start_measurement_control
+from qtt.gui.live_plotting import start_measurement_control
 
 
 @qtt.utilities.tools.rdeprecated(expire='Aug 1 2018')

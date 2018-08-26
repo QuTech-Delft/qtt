@@ -15,7 +15,6 @@ except:
 
 import qtt.utilities.tools    
 from qtt import pgeometry
-
 #%%
 
 import warnings
@@ -603,7 +602,6 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
     The contours are in OpenCV format
     """
     mask = np.zeros((im.shape[0], im.shape[1]), dtype=np.uint8)
-    # cv2.FILLED = cv2.cv.CV_FILLED = -1
     cv2.drawContours(
         mask, contours, contourIdx=contourIdx, color=1, thickness=-1)
 
@@ -611,7 +609,6 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
     xyw = np.array(
         [(im * mask * yy).sum(), (im * mask * xx).sum()]) / (mask * im).sum()
     if fig is not None:
-        # pgeometry.imshowz(mask, interpolation='nearest')
         yx = np.array([(mask * xx).sum(), (mask * yy).sum()]) / mask.sum()
         plt.figure(11)
         plt.clf()
