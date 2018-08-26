@@ -27,7 +27,7 @@ from qcodes import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes import Instrument
 
-import qtt.tools
+import qtt.utilities.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.live
@@ -36,7 +36,7 @@ from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataS
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 
-from qtt.tools import update_dictionary
+from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
 
 
@@ -120,7 +120,7 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
 
 # %%
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def parse_stepdata(stepdata):
     """ Helper function for legacy code """
     if not isinstance(stepdata, dict):
@@ -436,7 +436,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
 
@@ -566,6 +566,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
     
     alldata = qtt.tools.stripDataset(alldata)
+
     alldata.write(write_metadata=True)
     return alldata
 
@@ -1188,7 +1189,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     alldata.write(write_metadata=True)
 
@@ -1654,7 +1655,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
         datetime.datetime.now()), allgatevalues=gatevals, nsegments=str(nsegments))
 
     if save_to_disk:
-        alldata = qtt.tools.stripDataset(alldata)
+        alldata = qtt.utilities.tools.stripDataset(alldata)
         alldata.write(write_metadata=True)
 
     return alldata
@@ -1892,7 +1893,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     alldata.write(write_metadata=True)
 
@@ -1939,7 +1940,7 @@ def plotData(alldata, diff_dir=None, fig=1):
     figure = plt.figure(fig)
     plt.clf()
     if diff_dir is not None:
-        imx = qtt.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        imx = qtt.utilities.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
         data_arr = qcodes.DataArray(name=name, label=name, array_id=name,
@@ -2096,7 +2097,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     alldata.write(write_metadata=True)
 
@@ -2106,7 +2107,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 # %%
 
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 
@@ -2234,7 +2235,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
     adata = analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None)
     alldata.metadata['adata'] = adata
 
-    alldata = qtt.tools.stripDataset(alldata)
+    alldata = qtt.utilities.tools.stripDataset(alldata)
     writeDataset(outputfile, alldata)
     return alldata
 

@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 
 from qcodes import DataArray, new_data
 from qtt import pgeometry
-import qtt.tools
 import qtt.algorithms.generic
 from qcodes.plots.qcmatplotlib import MatPlot
 

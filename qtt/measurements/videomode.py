@@ -18,7 +18,7 @@ import qtt
 from qcodes.instrument.parameter import Parameter
 from qcodes.utils.validators import Numbers
 from qtt.live_plotting import livePlot
-from qtt.tools import connect_slot
+from qtt.utilities.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore
 from qtt.measurements.scans import makeDataset_sweep, makeDataset_sweep_2D
@@ -85,7 +85,7 @@ class videomode_callback:
                     diff_dir = self.diff_dir[ii]
                 else:
                     diff_dir = self.diff_dir
-                data_processed = qtt.tools.diffImageSmooth(
+                data_processed = qtt.utilities.tools.diffImageSmooth(
                     data_processed, dy=diff_dir, sigma=self.diffsigma)
 
             if self.smoothing:
@@ -116,8 +116,6 @@ class VideoMode:
         sample_rate (float): sample rate for acquisition device
         crosshair (bool): enable crosshair
     """
-
-    # TODO: implement optional sweep directions, i.e. forward and backward
 
     videomode_class_index = 0
     
@@ -331,7 +329,7 @@ class VideoMode:
         if isrunning:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
-        qtt.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
+        qtt.utilities.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
                               notes=self.station,
                               extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
                                   self.scanparams))

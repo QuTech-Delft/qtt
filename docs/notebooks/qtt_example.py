@@ -49,7 +49,7 @@ model = station.model
 #%% Setup measurement windows
 
 
-mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
+mwindows = qtt.utilities.tools.setupMeasurementWindows(station, create_parameter_widget=False)
 pv = createParameterWidget([gates, ])
 
 logviewer = qtt.gui.dataviewer.DataViewer()
@@ -130,9 +130,9 @@ virts2= qtt.instrument_drivers.virtual_gates.extend_virtual_gates(vgates, pgates
     
 #%% Send data to powerpoint
 print('add copy data to Powerpoint use the following:')
-print('   qtt.tools.addPPT_dataset(data);')
+print('   qtt.utilities.tools.addPPT_dataset(data);')
 if 0:
-    qtt.tools.addPPT_dataset(data)
+    qtt.utilities.tools.addPPT_dataset(data)
 
 #%% Test objects
 

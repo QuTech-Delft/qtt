@@ -9,7 +9,7 @@ Created on Wed Feb 28 10:20:46 2018
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
-from qtt.tools import addPPTslide
+from qtt.utilities.tools import addPPTslide
 import warnings
 
 from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay

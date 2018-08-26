@@ -33,7 +33,6 @@ import tempfile
 import math
 import numpy as np
 import time
-import platform
 import warnings
 import pickle
 import re
@@ -43,10 +42,9 @@ import scipy.io
 import numpy
 import subprocess
 
-__version__ = '0.6'
+__version__ = '0.7.0'
 
-#%% Load pyqside or pyqt4
-# We want to do this before loading matplotlib
+#%% Load qt functionality
 
 
 def qtModules(verbose=0):
