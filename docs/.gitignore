@@ -2,3 +2,5 @@
 qtt*.rst
 notebooks/*
 _build
+
+sandbox/
