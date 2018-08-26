@@ -30,7 +30,7 @@ from qcodes import Instrument
 import qtt.utilities.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
-import qtt.live
+import qtt.gui.live_plotting
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
@@ -373,7 +373,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                                                         return_names=True)
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow:
         liveplotwindow.clear()
         liveplotwindow.add(
@@ -548,7 +548,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         station.awg.stop()
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
@@ -1080,7 +1080,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     t0 = time.time()
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow:
         liveplotwindow.clear()
         if plotparam is 'all':
@@ -1821,7 +1821,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
 
     # TODO: Allow liveplotting for multiple read-out channels
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(
@@ -2085,7 +2085,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     dt = time.time() - t0
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())

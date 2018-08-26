@@ -17,7 +17,7 @@ import pyqtgraph
 import qtt
 from qcodes.instrument.parameter import Parameter
 from qcodes.utils.validators import Numbers
-from qtt.live_plotting import livePlot
+from qtt.gui.live_plotting import livePlot
 from qtt.utilities.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore
@@ -643,8 +643,8 @@ if __name__ == '__main__':
     from imp import reload
     import matplotlib.pyplot as plt
 
-    reload(qtt.live_plotting)
-    from qtt.live_plotting import *
+    reload(qtt.gui.live_plotting)
+    from qtt.gui.live_plotting import *
 
     pv = qtt.createParameterWidget([gates])
 

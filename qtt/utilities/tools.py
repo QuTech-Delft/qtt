@@ -1152,7 +1152,13 @@ try:
                                 ilist = None):
         """ 
         create liveplot window and parameter widget (optional)
-        returns: dict with created objects
+        
+        Args:
+            station (QCoDeS station): station with instruments
+            create_parameter_widget (bool): if True create ParameterWidget
+            ilist (None or list): list of instruments to add to ParameterWidget
+        Returns:
+            dict: created gui objects
         """
         windows = {}
         
@@ -1170,7 +1176,7 @@ try:
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
 
-        qtt.live.liveplotwindow = plotQ
+        qtt.gui.live_plotting.liveplotwindow = plotQ
         
         windows['plotwindow'] = plotQ
 

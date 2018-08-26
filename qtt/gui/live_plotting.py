@@ -243,7 +243,7 @@ def start_measurement_control(doexec=False):
     # from pyqtgraph.multiprocess.remoteproxy import RemoteExceptionWarning
     # warnings.simplefilter('ignore', RemoteExceptionWarning)
     proc = mp.QtProcess()
-    lp = proc._import('qtt.live_plotting')
+    lp = proc._import('qtt.gui.live_plotting')
     mc = lp.MeasurementControl()
     qtt._dummy_mc = mc
     app = pyqtgraph.mkQApp()
