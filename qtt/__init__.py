@@ -18,25 +18,22 @@ For more information see https://github.com/VandersypenQutech/qtt
 import copy
 import warnings
 import importlib
-import sys
 import distutils
 import distutils.version
 
 import qcodes
-import qtt.live
-import qtt.tools
+import qtt.utilities.tools
 import qtt.data
 import qtt.algorithms
 import qtt.measurements
 import qtt.exceptions
 
 from qtt.version import __version__
-#from qtt.tools import cfigure, plot2Dline
 from qtt.measurements.storage import save_state, load_state
 
 try:
     import pyqtgraph
-    import qtt.live_plotting
+    import qtt.gui.live_plotting
     import qtt.gui.parameterviewer
     from qtt.gui.parameterviewer import createParameterWidget
     
@@ -73,6 +70,7 @@ def check_version(version, module=qcodes, optional = False):
         else:
             raise Exception(' from %s need version %s (version is %s)' % (module, version, mversion))
 
+# we make an explicit check on versions, since people often upgrade their installation without upgrading the required packages
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'colorama')
@@ -85,7 +83,7 @@ check_version('0.1.7', qcodes) # version of qcodes required
 from qtt.live_plotting import start_measurement_control
 
 
-@qtt.tools.rdeprecated(expire='Aug 1 2018')
+@qtt.utilities.tools.rdeprecated(expire='Aug 1 2018')
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()
@@ -199,7 +197,7 @@ try:
         ''' Patch to add a callback to the QtPlot figure window '''
         if e.key() == Qt.Key_P:
             print('key P pressed: copy figure window to powerpoint')
-            qtt.tools.addPPTslide(fig=self)
+            qtt.utilities.tools.addPPTslide(fig=self)
         super(QtPlot, self).keyPressEvent(e)
 
     # update the keypress callback function

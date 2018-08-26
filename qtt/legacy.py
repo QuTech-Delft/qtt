@@ -35,7 +35,7 @@ from qtt.data import dataset2Dmetadata, dataset2image
 from qtt.algorithms.onedot import onedotGetBalanceFine
 from qtt.measurements.scans import pinchoffFilename, fixReversal
 from qtt.data import load_data, show2D
-from qtt.tools import diffImage, diffImageSmooth
+from qtt.utilities.tools import diffImage, diffImageSmooth, rdeprecated
 from qtt.algorithms.generic import smoothImage
 from qtt.measurements.scans import scanPinchValue
 
@@ -53,7 +53,7 @@ except:
     pass
 import matplotlib.pyplot as plt
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def showDotGraph(dot, fig=10):
     dot.format = 'png'
     outfile = dot.render('dot-dummy', view=False)
@@ -71,7 +71,7 @@ def showDotGraph(dot, fig=10):
 #%%
 
 
-@qtt.tools.rdeprecated(expire='7-1-2018')
+@rdeprecated(expire='7-1-2018')
 def positionScanjob(scanjob, pt):
     """ Helper function
 
@@ -95,7 +95,7 @@ def positionScanjob(scanjob, pt):
 #%%
 
 
-@qtt.tools.rdeprecated(expire='1-7-2018')
+@rdeprecated(expire='1-7-2018')
 def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """ Save matplotlib figure to disk
 
@@ -110,7 +110,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """
     imfile0 = '%s.%s' % (name, ext)
     imfile = os.path.join(resultsdir, 'pictures', imfile0)
-    qtt.tools.mkdirc(os.path.join(resultsdir, 'pictures'))
+    qtt.utilities.tools.mkdirc(os.path.join(resultsdir, 'pictures'))
     imfilerel = os.path.join('pictures', imfile0)
 
     if fig is not None:
@@ -122,7 +122,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     return imfilerel, imfile
 
 
-@qtt.tools.rdeprecated(expire='1-7-2019')
+@rdeprecated(expire='1-7-2019')
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     """ Plot a circle in a matplotlib figure
 
@@ -136,7 +136,7 @@ def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     plt.gca().add_artist(c2)
     return c2
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def scaleCmap(imx, setclim=True, verbose=0):
     """ Scale colormap of sensing dot image """
     p99 = np.percentile(imx, 99.9)
@@ -158,7 +158,7 @@ def scaleCmap(imx, setclim=True, verbose=0):
     return cl
 
 
-@qtt.tools.rdeprecated(expire='1-1-2019')
+@rdeprecated(expire='1-1-2019')
 def writeBatchData(outputdir, tag, timestart, timecomplete):
     tt = datetime.datetime.now().strftime('%d%m%Y-%H%m%S')
     with open(os.path.join(outputdir, '%s-%s.txt' % (tag, tt)), 'wt') as fid:
@@ -171,7 +171,7 @@ def writeBatchData(outputdir, tag, timestart, timecomplete):
 #%%
 
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def filterBG(imx, ksize, sigma=None):
     """ Filter away background using Gaussian filter """
     # imq = cv2.bilateralFilter(imx.astype(np.float32),9,75,75)
@@ -188,7 +188,7 @@ def filterBG(imx, ksize, sigma=None):
     return imq
 
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1, cut=None, verbose=0, fig=None):
     """
     Filter image with Gabor
@@ -235,7 +235,7 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 
 
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def cmap_map(function, cmap):
     """ Applies function (which should operate on vectors of shape 3:
     [r, g, b], on colormap cmap. This routine will break any discontinuous     points in a colormap.
@@ -266,7 +266,7 @@ def cmap_map(function, cmap):
     return matplotlib.colors.LinearSegmentedColormap('colormap', cdict, 1024)
 
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def cmap_discretize(cmap, N, m=1024):
     """Return a discrete colormap from the continuous colormap cmap.
 
@@ -298,7 +298,7 @@ from qtt.algorithms.misc import polyval2d, polyfit2d
 from qtt.utilities.imagetools import fitBackground as fitBackgroundTmp
 from qtt.utilities.imagetools import cleanSensingImage
 
-fitBackground= qtt.tools.deprecated(fitBackgroundTmp)
+fitBackground= qtt.utilities.tools.deprecated(fitBackgroundTmp)
 
 @qtt.tools.deprecated
 def showIm(ims, fig=1, title='', showz=False):
@@ -320,7 +320,7 @@ def showIm(ims, fig=1, title='', showz=False):
 
 from qtt.algorithms.misc import point_in_poly, points_in_poly, fillPoly
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def getPinchvalues(od, xdir, verbose=1):
     """ Get pinch values from recorded data """
     gg = od['gates']
@@ -339,7 +339,7 @@ def getPinchvalues(od, xdir, verbose=1):
     return od
 
 
-@qtt.tools.rdeprecated(expire='1 Sep 2018')
+@rdeprecated(expire='1 Sep 2018')
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
     raise Exception('function was removed from qtt')
@@ -347,13 +347,13 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
 #%%
 
-@qtt.tools.rdeprecated(expire='1-1-2019')
+@rdeprecated(expire='1-1-2019')
 def printGateValues(gv, verbose=1):
     s = ', '.join(['%s: %.1f' % (x, gv[x]) for x in sorted(gv.keys())])
     return s
 
 
-@qtt.tools.rdeprecated(expire='1-1-2019')
+@rdeprecated(expire='1-1-2019')
 def getODbalancepoint(od):
     bp = od['balancepoint']
     if 'balancepointfine' in od:
@@ -362,7 +362,7 @@ def getODbalancepoint(od):
 
 
 
-@qtt.tools.rdeprecated(expire='1-6-2018')
+@rdeprecated(expire='1-6-2018')
 def loadpickle(pkl_file):
     """ Load objects from file """
     try:

@@ -12,7 +12,7 @@ import qcodes
 import qtt
 import qtt.measurements.scans
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks, findSensingDotPosition
-from qtt.tools import freezeclass
+from qtt.utilities.tools import freezeclass
 
 #%%
 

@@ -346,7 +346,7 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
     if fig is not None:
         plot_onedot(fitresults, ds = dataset, verbose=2, fig=100, linecolor='c', ims=ims, extentImageMatlab=extentImageMatlab, lv=lv)
         
-        qtt.tools.showImage(im, extentImageMatlab, fig=fig)
+        qtt.utilities.tools.showImage(im, extentImageMatlab, fig=fig)
 
         if verbose >= 2 or drawpoly:
             pgeometry.plotPoints(fitresults['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
@@ -383,12 +383,12 @@ def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = Non
         pgeometry.plotPoints(results['balancepoint'], '.m', markersize=17, label='balancepoint')
         
         if ims is not None:
-            qtt.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
+            qtt.utilities.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
             plt.axis('image')
             plt.title('Smoothed image')
             pgeometry.plotPoints(results['balancepoint'], '.m', markersize=16, label='balancepoint')
     
-            qtt.tools.showImage(ims > lv, None, fig=fig + 2)
+            qtt.utilities.tools.showImage(ims > lv, None, fig=fig + 2)
             pgeometry.plotPoints(results['balancefitpixel'], '--c', markersize=16, label='balancefit')
             pgeometry.plotLabels(results['balancefitpixel'])
             plt.axis('image')

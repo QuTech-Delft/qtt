@@ -14,7 +14,7 @@ import qtt.pgeometry as pgeometry
 import qtt.pgeometry as pmatlab
 
 from qtt.measurements.scans import fixReversal
-from qtt.tools import diffImage, diffImageSmooth
+from qtt.utilities.tools import diffImage, diffImageSmooth
 
 from qtt.algorithms.generic import smoothImage
 from qtt.algorithms.misc import polyfit2d, polyval2d

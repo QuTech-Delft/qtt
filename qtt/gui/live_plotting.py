@@ -14,6 +14,22 @@ import qtt
 from qtt import pgeometry
 import qtt.algorithms.generic
 
+# %% Static variables
+
+liveplotwindow = None  # global handle for live plotting
+
+
+def getLivePlotWindow():
+    """ Return handle to live plotting window
+    
+    Returns:
+        None or object: handle to live plotting window
+    """
+    global liveplotwindow
+    if liveplotwindow is not None:
+        return liveplotwindow
+    return None
+
 # %% Communication
 
 try:

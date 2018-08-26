@@ -18,7 +18,7 @@ from qcodes import QtPlot
 from qcodes import MatPlot
 
 import qtt
-from qtt import createParameterWidget
+from qtt.gui.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates

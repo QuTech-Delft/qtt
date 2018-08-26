@@ -5,4 +5,5 @@ class MissingOptionalPackageWarning(UserWarning, ValueError):
 #%%
 
 class PackageVersionWarning(UserWarning):
+    """ An package has the incorrect version """
     pass

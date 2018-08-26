@@ -1,11 +1,8 @@
 # %% Static variables
 
-liveplotwindow = None  # global handle for live plotting
+import warnings
 
+warnings.warn('use qtt.gui.live_plotting.getLivePlotWindow instead of qtt.live.livePlot')
 
-def livePlot():
-    """ Return handle to live plotting window """
-    global liveplotwindow
-    if liveplotwindow is not None:
-        return liveplotwindow
-    return None
+from qtt.gui.live_plotting import getLivePlotWindow as livePlot
+

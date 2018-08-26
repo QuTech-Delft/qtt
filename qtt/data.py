@@ -116,7 +116,7 @@ def test_load_dataset(verbose=0):
 #%% Monkey patch qcodes to store latest dataset
 from functools import wraps
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def store_latest_decorator(function, obj):    
     """ Decorator to store latest result of a function in an object """
     if not hasattr(obj, '_latest'):
@@ -353,7 +353,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
     """
     meas_arr_name = alldata.default_parameter_name(meas_arr_name)
     meas_array = alldata.arrays[meas_arr_name]
-    imx = qtt.tools.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
+    imx = qtt.utilities.tools.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
     data_arr = qcodes.DataArray(
@@ -432,7 +432,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     ny = vstep.size
     nx = vsweep.size
 
-    im = qtt.tools.diffImageSmooth(impixel, dy=dy, sigma=sigma)
+    im = qtt.utilities.tools.diffImageSmooth(impixel, dy=dy, sigma=sigma)
     if verbose:
         print('show2D: nx %d, ny %d' % (nx, ny,))
 
@@ -817,13 +817,13 @@ def write_data(mfile: str, data):
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
     if isinstance(data, qcodes.DataSet):
-        data = qtt.tools.stripDataset(data)
+        data = qtt.utilities.tools.stripDataset(data)
 
     with open(mfile, 'wb') as fid:
         pickle.dump(data, fid)
 
 
-@qtt.tools.rdeprecated(expire='1-1-2019')
+@qtt.utilities.tools.rdeprecated(expire='1-1-2019')
 def loadDataset(path):
     ''' Wrapper function
 
@@ -837,14 +837,14 @@ def loadDataset(path):
     return dataset, metadata
 
 
-@qtt.tools.rdeprecated(expire='1-1-2019')
+@qtt.utilities.tools.rdeprecated(expire='1-1-2019')
 def writeDataset(path, dataset, metadata=None):
     ''' Wrapper function
 
     :param path: filename without extension
     '''
 
-    dataset = qtt.tools.stripDataset(dataset)
+    dataset = qtt.utilities.tools.stripDataset(dataset)
 
     print('write_copy to %s' % path)
     dataset.write_copy(path=path)
@@ -907,7 +907,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
     if bname is not None:
         basename = '%s-' % bname + basename
     if not outputdir is None:
-        qtt.tools.mkdirc(os.path.join(outputdir, tag))
+        qtt.utilities.tools.mkdirc(os.path.join(outputdir, tag))
     pfile = os.path.join(outputdir, tag, basename + '.' + ext)
     return pfile
 
