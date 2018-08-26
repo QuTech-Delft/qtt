@@ -765,28 +765,6 @@ def pythonVersion():
     print('python %s, ipython %s, notebook %s' %
           (pversion, ipversion, in_ipynb()))
 
-#%%
-
-
-try:
-    import graphviz
-except:
-    pass
-import matplotlib.pyplot as plt
-
-
-def showDotGraph(dot, fig=10):
-    dot.format = 'png'
-    outfile = dot.render('dot-dummy', view=False)
-    print(outfile)
-
-    im = plt.imread(outfile)
-    plt.figure(fig)
-    plt.clf()
-    plt.imshow(im)
-    plt.tight_layout()
-    plt.axis('off')
-
 
 #%%
 try:
@@ -1213,7 +1191,7 @@ def updatePlotTitle(qplot, basetxt='Live plot'):
     qplot.win.setWindowTitle(txt)
 
 
-@deprecated
+@rdeprecated(expire='1 Sep 2018')
 def timeProgress(data):
     ''' Simpe progress meter, should be integrated with either loop or data object '''
     data.sync()
@@ -1281,7 +1259,6 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
     x = np.dstack(rr)
     x = x - (np.array(fs) / 2 - .5)
     x = np.linalg.norm(x, axis=2)
-    # showIm(x);
 
     F = cutoffFilter(x, thr, omega)
 
@@ -1290,7 +1267,7 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
         plt.clf()
         plt.imshow(F, interpolation='nearest')
 
-    return F  # , rr
+    return F
 
 
 F = smoothFourierFilter([36, 36])
@@ -1308,12 +1285,9 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
         plt.figure(fig)
         plt.clf()
         plt.imshow(np.log(np.abs(f) + 1), interpolation='nearest')
-        # plt.imshow(f.real, interpolation='nearest')
         plt.title('Fourier spectrum (real part)')
         plt.figure(fig + 1)
         plt.clf()
-        # plt.imshow(fx.real, interpolation='nearest')
-        # plt.imshow(np.sign(np.real(fx))*np.log(np.abs(fx)+1), interpolation='nearest')
         plt.imshow(np.log(np.abs(fx) + 1), interpolation='nearest')
         plt.title('Fourier spectrum (real part)')
 
@@ -1380,7 +1354,6 @@ def clickGatevals(plot, drawmode='ro'):
 
     ax = plt.gca()
     ax.set_autoscale_on(False)
-#    plot.fig.show()
     coords = pmatlab.ginput(drawmode=drawmode)
     data_array = plot.traces[0]['config']['z']
     dataset = data_array.data_set

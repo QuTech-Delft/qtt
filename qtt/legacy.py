@@ -47,6 +47,29 @@ warnings.warn('please do not this import this module')
 
 #%%
 
+try:
+    import graphviz
+except:
+    pass
+import matplotlib.pyplot as plt
+
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
+def showDotGraph(dot, fig=10):
+    dot.format = 'png'
+    outfile = dot.render('dot-dummy', view=False)
+    print(outfile)
+
+    im = plt.imread(outfile)
+    plt.figure(fig)
+    plt.clf()
+    plt.imshow(im)
+    plt.tight_layout()
+    plt.axis('off')
+
+
+
+#%%
+
 
 @qtt.tools.rdeprecated(expire='7-1-2018')
 def positionScanjob(scanjob, pt):
@@ -113,7 +136,7 @@ def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     plt.gca().add_artist(c2)
     return c2
 
-
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
 def scaleCmap(imx, setclim=True, verbose=0):
     """ Scale colormap of sensing dot image """
     p99 = np.percentile(imx, 99.9)
@@ -148,6 +171,7 @@ def writeBatchData(outputdir, tag, timestart, timecomplete):
 #%%
 
 
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
 def filterBG(imx, ksize, sigma=None):
     """ Filter away background using Gaussian filter """
     # imq = cv2.bilateralFilter(imx.astype(np.float32),9,75,75)
@@ -164,6 +188,7 @@ def filterBG(imx, ksize, sigma=None):
     return imq
 
 
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
 def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1, cut=None, verbose=0, fig=None):
     """
     Filter image with Gabor
@@ -210,11 +235,7 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 
 
 
-#%%
-
-#import matplotlib
-
-
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
 def cmap_map(function, cmap):
     """ Applies function (which should operate on vectors of shape 3:
     [r, g, b], on colormap cmap. This routine will break any discontinuous     points in a colormap.
@@ -245,6 +266,7 @@ def cmap_map(function, cmap):
     return matplotlib.colors.LinearSegmentedColormap('colormap', cdict, 1024)
 
 
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
 def cmap_discretize(cmap, N, m=1024):
     """Return a discrete colormap from the continuous colormap cmap.
 
@@ -298,6 +320,7 @@ def showIm(ims, fig=1, title='', showz=False):
 
 from qtt.algorithms.misc import point_in_poly, points_in_poly, fillPoly
 
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
 def getPinchvalues(od, xdir, verbose=1):
     """ Get pinch values from recorded data """
     gg = od['gates']
@@ -316,6 +339,7 @@ def getPinchvalues(od, xdir, verbose=1):
     return od
 
 
+@qtt.tools.rdeprecated(expire='1 Sep 2018')
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
     raise Exception('function was removed from qtt')
