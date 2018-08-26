@@ -610,8 +610,7 @@ def plot1D(dataset, fig=1):
 
 #%%
 
-
-def showImage(im, extent=None, fig=None):
+def showImage(im, extent=None, fig=None, title=None):
     """ Show image in figure window
 
     Args:
@@ -619,6 +618,7 @@ def showImage(im, extent=None, fig=None):
         extend (list): matplotlib style image extent
         fig (None or int): figure window to show image        
     """
+    import matplotlib.pyplot as plt
     if fig is not None:
         plt.figure(fig)
         plt.clf()
@@ -626,6 +626,8 @@ def showImage(im, extent=None, fig=None):
         if extent is not None:
             if extent[0] > extent[1]:
                 plt.gca().invert_xaxis()
+        if title is not None:
+            plt.title(title)
 
 
 #%% Measurement tools
