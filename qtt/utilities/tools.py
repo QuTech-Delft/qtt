@@ -1126,7 +1126,6 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, verbose=0):
                 ss += '%s: %s (%s)' % (pp['name'],
                                        pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'
-            # ss+=str(s)
 
     if header is not None:
         ss = header + '\n\n' + ss
@@ -1134,6 +1133,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, verbose=0):
 
 
 def test_reshape_metadata():
+    import qtt.measurements.scans
     param = qcodes.ManualParameter('dummy')
     try:
         dataset = qcodes.Loop(param[0:1:10]).each(param).run()
@@ -1142,8 +1142,10 @@ def test_reshape_metadata():
         pass
     if dataset is not None:
         _ = reshape_metadata(dataset, printformat='dict')
-    st = qcodes.Station(qcodes.Instrument('_dummy123'))
+    instr=qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123') )
+    st = qcodes.Station(instr)
     _ = reshape_metadata(st, printformat='dict')
+    instr.close()
 
 
 #%%
