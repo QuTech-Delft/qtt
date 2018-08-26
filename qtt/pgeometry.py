@@ -20,12 +20,6 @@ Original code:
 @author: eendebakpt
 """
 
-
-# make python2/3 compatible
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-
 #%% Load necessary packages
 import os
 import sys
@@ -41,6 +35,8 @@ import pkgutil
 import scipy.io
 import numpy
 import subprocess
+
+from functools import wraps
 
 __version__ = '0.7.0'
 
@@ -145,7 +141,6 @@ try:
     except:
         pass
 except Exception as inst:
-    # print(inst)
     warnings.warn(
         'could not import matplotlib, not all functionality available...')
     plt = None
@@ -167,12 +162,17 @@ except:
     warnings.warn('could not find OpenCV, not all functionality is available')
     pass
 
+#%% Utils
 
-#%%
 try:
     import resource
 
     def memUsage():
+        """ Prints the memory usage in MB
+        
+        Uses the resource module
+        
+        """
         # http://chase-seibert.github.io/blog/2013/08/03/diagnosing-memory-leaks-python.html
         print('Memory usage: %s (mb)' %
               ((resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024., ))
@@ -180,22 +180,12 @@ except:
     def memUsage():
         print('Memory usage: ? (mb)')
 
-#%% Try numba support
-try:
-    from numba import jit as autojit
-except:
-    def autojit(original_function):
-        """ dummy autojit decorator """
-        def dummy_function(*args, **kwargs):
-            return original_function(*args, **kwargs)
-        return dummy_function
-    pass
-
-
-#%% Utils
-
 def memory():
-    """ return the memory usage in MB """
+    """ Return the memory usage in MB
+    
+    Returns:
+            float: memory usage in mb
+    """
     import psutil
     import os
     process = psutil.Process(os.getpid())
@@ -211,8 +201,6 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
         objectclassname (str)
     Returns:
         ll (list): list of objects found
-
-
     """
     import gc
     ll = []
@@ -232,7 +220,6 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
     return ll
 
 
-from functools import wraps
 
 
 def package_versions(verbose=1):
@@ -261,7 +248,10 @@ def package_versions(verbose=1):
 
 
 def freezeclass(cls):
-    """ Decorator to freeze a class """
+    """ Decorator to freeze a class
+    
+    This means that no attributes can be added to the class after instantiation.
+    """
     cls.__frozen = False
 
     def frozensetattr(self, key, value):
@@ -332,7 +322,7 @@ def partiala(method, **kwargs):
 
 
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
-    """ Update font sizes for a plot """
+    """ Update font sizes for a matplotlib plot """
     if ax is None:
         ax = plt.gca()
     for tick in ax.xaxis.get_major_ticks():
@@ -344,7 +334,6 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
         x.set_fontsize(labelsize)
 
     plt.tick_params(axis='both', which='major', labelsize=fsize)
-    # plt.tick_params(axis='both', which='minor', labelsize=8)
 
     if titlesize is not None:
         ax.title.set_fontsize(titlesize)
@@ -412,7 +401,6 @@ class fps_t:
         """ Add a timestamp to the object """
         self.ii = self.ii + 1
         iim = self.ii % self.n
-        # iimn=(self.ii+1)%self.n
         self.tt[iim] = t
         self.x[iim] = x
 
@@ -474,7 +462,6 @@ def projectiveTransformation(H, x):
         xx = xx.astype(np.float32)
     if xx.size > 0:
         ww = cv2.perspectiveTransform(xx, H)
-        # ww=cv2.transform(xx, H)
         ww = ww.reshape((-1, kout)).transpose()
         return ww
     else:
@@ -539,24 +526,6 @@ def intersect2lines(l1, l2):
     """
     r = null(np.vstack((l1, l2)))
     return r[1]
-
-
-def test_intersect2lines():
-    p1 = np.array([[0, 0]])
-    p2 = np.array([[1, 0]])
-    p3 = np.array([[1, 1]])
-    p4 = np.array([[2, 2]])
-
-    line1 = fitPlane(np.vstack((p1, p2)))
-    line2 = fitPlane(np.vstack((p3, p4)))
-
-    a = intersect2lines(line1, line2)
-    pt = dehom(a)
-    np.testing.assert_almost_equal(pt, 0)
-
-
-if __name__ == '__main__':
-    test_intersect2lines()
 
 
 def runcmd(cmd, verbose=0):
@@ -939,9 +908,6 @@ def region2poly(rr):
         poly = np.array([rr[:, 0:1], np.array([[rr[0, 1]], [rr[1, 0]]]), rr[
                         :, 1:2], np.array([[rr[0, 0]], [rr[1, 1]]]), rr[:, 0:1]]).reshape((5, 2)).T
         return poly
-        # todo: eliminate transpose
-    # poly=np.array( (2, 5), dtype=rr.dtype)
-    # poly.flat =rr.flat[ [0,1,1,0, 0, 2,2,3,3,2] ]
     poly = rr.flat[[0, 1, 1, 0, 0, 2, 2, 3, 3, 2]].reshape((2, 5))
 
     return poly
@@ -969,15 +935,12 @@ def plotLabels(xx, *args, **kwargs):
             lbl = [str(lbl)]
         elif type(lbl) == str:
             lbl = [str(lbl)]
-    # plt.text(xx[0:], xx[1,:], lbl, **kwargs)
     nn = xx.shape[1]
     ax = plt.gca()
     th = [None] * nn
     for ii in range(nn):
-        # print('-- %d' % ii)
-        ww = str(lbl[ii])
-        # print(ww)
-        th[ii] = ax.annotate(str(lbl[ii]), xx[:, ii], **kwargs)
+        lbltxt = str(lbl[ii])
+        th[ii] = ax.annotate(lbltxt, xx[:, ii], **kwargs)
     return th
 
 
@@ -998,8 +961,6 @@ def plot2Dline(line, *args, **kwargs):
         xx = (-line[2] - line[1] * yy) / line[0]
         plt.plot(xx, yy, *args, **kwargs)
 
-
-# plotLabels( np.zeros( (2,3)))
 
 #%%
 
@@ -1123,23 +1084,13 @@ def plotPoints3D(xx, *args, **kwargs):
     if verbose:
         print('plotPoints3D: using fig %s' % fig)
         print('plotPoints3D: using args %s' % args)
-    # pdb.set_trace()
     if fig is None:
         ax = p.gca()
     else:
         fig = p.figure(fig)
-    # ax = p3.Axes3D(fig)
         ax = fig.gca(projection='3d')
-        # ax = fig.gca(projection='rectilinear')
-        # ax = p3.Axes3D(fig)
-    # ax=p.gca()
-    # r=ax.plot3D(np.ravel(xx[0,:]),np.ravel(xx[1,:]),np.ravel(xx[2,:]),
-    # *args, **kwargs)
     r = ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]),
                 np.ravel(xx[2, :]), *args, **kwargs)
-    # ax.set_xlabel('X'); ax.set_ylabel('Y'); ax.set_zlabel('Z')
-    #   fig.add_axes(ax)
-    # p.show()
     p.draw()
     return ax
 
@@ -1185,55 +1136,35 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-try:
-    import Polygon as polygon3
+import Polygon as polygon3
 
-    def polyintersect(x1, x2):
-        """ Intersection of two polygons
+def polyintersect(x1, x2):
+    """ Intersection of two polygons
+    
+    >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
+    >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+    >>> x=polyintersect(x1, x2)
+    >>> _=plt.figure(10); plt.clf()
+    >>> plotPoints(x1.T, '.-r' )
+    >>> plotPoints(x2.T, '.-b' )
+    >>> plotPoints(x.T, '.-g' , linewidth=2)
+    
+    """
+    
+    p1 = polygon3.Polygon(x1)
+    p2 = polygon3.Polygon(x2)
+    p = p1 & p2
+    x = np.array(p)
+    x = x.reshape((-1, 2))
+    return x
 
-        >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
-        >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        >>> x=polyintersect(x1, x2)
-        >>> _=plt.figure(10); plt.clf()
-        >>> plotPoints(x1.T, '.-r' )
-        >>> plotPoints(x2.T, '.-b' )
-        >>> plotPoints(x.T, '.-g' , linewidth=2)
-
-        """
-
-        p1 = polygon3.Polygon(x1)
-        p2 = polygon3.Polygon(x2)
-        p = p1 & p2
-        x = np.array(p)
-        x = x.reshape((-1, 2))
-        return x
-except:
-    try:
-        import shapely
-        import shapely.geometry
-    except Exception as inst:
-        pass
-
-    def polyintersect(x1, x2):
-        """ Intersection of two polygons
-
-        >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
-        >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        >>> x=polyintersect(x1, x2)
-        >>> _=plt.figure(10); plt.clf()
-        >>> plotPoints(x1.T, '.-r' )
-        >>> plotPoints(x2.T, '.-b' )
-
-        """
-
-        p1 = shapely.geometry.Polygon(x1)
-        p2 = shapely.geometry.Polygon(x2)
-        p = p1.intersection(p2)
-        if p.is_empty:  # len(p)==0:
-            return np.zeros((0, 2))
-        x = np.array(list(p.exterior.coords))
-        return x
-
+def test_polyintersect():
+    x1=np.array([(0, 0), (1, 1), (1, 0)] )
+    x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+    x=polyintersect(x1, x2)
+    assert(len(x)==3)
+    assert(np.abs(polyarea(x))==0.25)
+    
 #%%
 
 
@@ -1254,9 +1185,8 @@ def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0),
         out = bgr
     fscale = .5 + .5 * (radius * 0.2)
     fthickness = int(fscale + 1)
-    for i, pnt in enumerate(imgpts):  # enumerate(imgpts):
+    for i, pnt in enumerate(imgpts):
         tpnt = tuple(pnt.ravel())
-        # print('radius: %f, th %f' % (radius, thickness))
         cv2.circle(out, tpnt, radius, color, thickness)
         if(drawlabel):
             cv2.putText(
@@ -2749,7 +2679,23 @@ def unittest(verbose=1):
     _ = euler2RBE([0, 1, 2])
     doctest.testmod()
 
+def test_intersect2lines():
+    p1 = np.array([[0, 0]])
+    p2 = np.array([[1, 0]])
+    p3 = np.array([[1, 1]])
+    p4 = np.array([[2, 2]])
 
+    line1 = fitPlane(np.vstack((p1, p2)))
+    line2 = fitPlane(np.vstack((p3, p4)))
+
+    a = intersect2lines(line1, line2)
+    pt = dehom(a)
+    np.testing.assert_almost_equal(pt, 0)
+
+
+if __name__ == '__main__':
+    test_intersect2lines()
+    
 #%% Run tests from documentation
 if __name__ == "__main__":
     """ Dummy main for doctest
@@ -2759,4 +2705,3 @@ if __name__ == "__main__":
     doctest.testmod()
 
 
-#%% Testing zone
