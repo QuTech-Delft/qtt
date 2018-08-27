@@ -1170,29 +1170,37 @@ try:
     import qtt.gui.parameterviewer
     import qtt.gui
 
-    def setupMeasurementWindows(station, create_parameter_widget=True, ilist=None):
+    def setupMeasurementWindows(station = None, create_parameter_widget = True, 
+                                ilist = None):
+        """ 
+        create liveplot window and parameter widget (optional)
+        returns: dict with created objects
+        """
+        windows = {}
+        
         ms = monitorSizes()
         vv = ms[-1]
-        # create custom viewer which gathers data from a station object
-        if ilist is None:
-            ilist = [station.gates]
-        w = None
-        if create_parameter_widget:
+        
+        if create_parameter_widget and any([station, ilist]):
+            if ilist is None:
+                ilist = [station.gates]
             w = qtt.createParameterWidget(ilist)
-            #w = qtt.parameterviewer.ParameterViewer(ilist)
             w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
-            # w.updatecallback()
+            windows['parameterviewer'] = w
 
         plotQ = QtPlot(window_title='Live plot', interval=.5)
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
 
         qtt.live.liveplotwindow = plotQ
+        
+        windows['plotwindow'] = plotQ
 
         app = QtWidgets.QApplication.instance()
         app.processEvents()
 
-        return dict({'parameterviewer': w, 'plotwindow': plotQ, 'dataviewer': None})
+        return windows
+    
 except Exception as ex:
     logging.exception(ex)
     print('fail!')

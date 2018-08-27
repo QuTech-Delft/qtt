@@ -107,8 +107,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         leftval = ww[mp:]
         rightval = ww[0:mp]
     st = ww.std()
-    if verbose:
-        print('analyseGateSweep: leftval %.1f, rightval %.1f' %
+    if verbose>=2:
+        print('analyseGateSweep: leftval %.2f, rightval %.2f' %
               (leftval.mean(), rightval.mean()))
     if goodgate and (rightval.mean() - leftval.mean() < .3 * st):
         if verbose:
@@ -208,6 +208,9 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     adata['midvalue'] = midvalue
     adata['dataset']=dd.location
     adata['type']='gatesweep'
+
+    if verbose>=1:
+        print('analyseGateSweep: pinch-off point %.3f, value %.3f' % (adata['midpoint'], adata['midvalue']) )
 
     if verbose >= 2:
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %

@@ -6,7 +6,11 @@ from qcodes.utils.validators import Numbers
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 from qtt.instrument_drivers.virtualAwg.awgs.simulated_awg import Simulated_AWG
 from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
-from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
+try:
+    from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
+except:
+    logging.debug('could not load KeysightM3202A driver')
+    KeysightM3202A_AWG=None
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstruments_HDAWG8
 
 
@@ -20,15 +24,15 @@ class VirtualAwg(Instrument):
 
     def __init__(self, awgs, gate_map, hardware, name='virtual_awg', logger=logging, **kwargs):
         super().__init__(name, **kwargs)
-        self.__gate_map = gate_map
+        self._gate_map = gate_map
         self.__hardware = hardware
         self.__set_hardware(awgs)
         self.__set_parameters()
-        self.__logger = logger
+        self._logger = logger
 
     def _get_virtual_info(self):
         """ Return data needed for snapshot of instrument """
-        return {'gate_map': self.__gate_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
+        return {'gate_map': self._gate_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
 
     def __set_hardware(self, awgs):
         self.awgs = list()
@@ -64,13 +68,13 @@ class VirtualAwg(Instrument):
     def enable_outputs(self, gate_names):
         gate_names.extend(['m4i_mk', 'awg_mk'])
         for name in gate_names:
-            (awg_number, channel_number, *_) = self.__gate_map[name]
+            (awg_number, channel_number, *_) = self._gate_map[name]
             self.awgs[awg_number].enable_outputs([channel_number])
 
     def disable_outputs(self, gate_names):
         gate_names.extend(['m4i_mk', 'awg_mk'])
         for name in gate_names:
-            (awg_number, channel_number, *_) = self.__gate_map[name]
+            (awg_number, channel_number, *_) = self._gate_map[name]
             self.awgs[awg_number].disable_outputs([channel_number])
 
     def update_setting(self, awg_number, setting, value):
@@ -83,7 +87,7 @@ class VirtualAwg(Instrument):
             return False
         if isinstance(gate_names, list):
             return np.all([self.are_awg_gates(g) for g in gate_names])
-        return True if gate_names in self.__gate_map else False
+        return True if gate_names in self._gate_map else False
 
     def __make_markers(self, period):
         digitizer_marker = Sequencer.make_marker(period, self.digitizer_marker_uptime(), self.digitizer_marker_delay())
@@ -173,7 +177,7 @@ class VirtualAwg(Instrument):
             vpp_amplitude = self.awgs[number].retrieve_gain()
             sampling_rate = self.awgs[number].retrieve_sampling_rate()
             for gate_name, sequence in gate_comb.items():
-                (awg_number, channel_number, *marker_number) = self.__gate_map[gate_name]
+                (awg_number, channel_number, *marker_number) = self._gate_map[gate_name]
                 if awg_number != number:
                     continue
                 awg_to_plunger = self.__hardware.parameters['awg_to_{}'.format(gate_name)].get()
