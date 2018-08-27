@@ -33,7 +33,7 @@ from qtt.measurements.scans import sample_data_t, enforce_boundaries
 from qtt.data import dataset2Dmetadata, dataset2image
 
 from qtt.algorithms.onedot import onedotGetBalanceFine
-from qtt.measurements.scans import pinchoffFilename, fixReversal
+from qtt.measurements.scans import fixReversal
 from qtt.data import load_data, show2D
 from qtt.utilities.tools import diffImage, diffImageSmooth, rdeprecated
 from qtt.algorithms.generic import smoothImage
