@@ -78,8 +78,10 @@ print(data1d.default_parameter_name())
 
 #%% Make a 2D scan
 start = -500
-scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': start, 'end': start + 400, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley1.amplitude']})
-scanjob['stepdata'] = dict({'param': param_left, 'start': start, 'end': start + 400, 'step': 5.})
+scanjob = scanjob_t()
+scanjob.add_sweep(param_right, start=start, end=start+400, step=4., wait_time=0.)
+scanjob.add_sweep(param_left, start=start, end=start+400, step=5)
+scanjob.add_minstrument(['keithley1.amplitude'])
 data = qtt.measurements.scans.scan2D(station, scanjob)
 
 gates.set(param_right, -300); gates.set(param_left, -300)

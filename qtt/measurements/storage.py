@@ -1,13 +1,12 @@
 #%%
 from datetime import datetime
-import qcodes
 import os
 import h5py
 import logging
 import warnings
-import pandas as pd
-import numpy as np
+#import numpy as np
 
+import qcodes
 import qtt.instrument_drivers.virtual_gates
 
 try:
@@ -142,72 +141,6 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
                         'tag %s already exists in state file %s' % (tag, statefile))
             hickle.dump(obj, h5group, path=tag)
     return tag
-
-#%% Logging and monitoring functions
-
-
-def retrieve_logdata(filename, tag='metadata'):
-    """ Retrieve logged data from a HDFStore
-
-    Args:
-        filename (str or HDFStore)
-        tag (str): key of table append to
-
-    Returns:
-        df (pandas dataframe)
-
-    """
-    if isinstance(filename, str):
-        store = pd.HDFStore(filename)
-    else:
-        store = filename
-    d = store.select(tag)
-    d.reset_index(inplace=True, drop=True)
-    return d
-
-
-def store_logdata(datadict, filename, tag='metadata'):
-    """ Log data to a HDFStore
-
-    Args:
-        datadict (dict): dictionary with names and values or functions
-        filename (str or HDFStore)
-        tag (str): key of table append to
-
-    """
-
-    if isinstance(filename, str):
-        store = pd.HDFStore(filename)
-        closestore = True
-    else:
-        store = filename
-        closestore = False
-    names = sorted(datadict.keys())
-
-    if tag in store:
-        for n in names:
-            if not n in store[tag]:
-                warnings.warn('column %s does not exist in store' % n)
-                names.remove(n)
-
-    def ev(p):
-        if callable(p):
-            return p()
-        else:
-            return p
-
-    data = [ev(datadict[n]) for n in names]
-    df = pd.DataFrame([data], columns=names)
-
-    store.append(tag, df)
-    
-    if closestore:
-        # to prevent memory leaks in loops
-        store.close()
-        import gc
-        gc.collect()
-
-    return data
 
 
 def test_load_save_state():

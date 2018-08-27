@@ -21,22 +21,23 @@ bibliography: paper.bib
 
 # Summary
 
-The QuTech Tuning package (qtt) is a software package containing measurement routines and analysis functions 
+The Quantum Technology Toolbox (qtt) is a software package containing measurement routines and analysis functions 
 for the tuning and calibration of spin-qubits. An introduction to spin-qubits can be found~[@LievenSpins].
 
 The package is organized in the following subpackages:
 
 * Measurements
 * Algorithms
-* Utilities
-* Gui
+* Simulation
 * Instrument Drivers
+* Gui
+* Utilities
 
-bla bla bla
+The measurements are performed using scanning functions are return a QCoDeS dataset. The input
+for analysis functions is the raw data (in the form of a QCoDeS dataset) and a set of parameters
+for the algorithm. The result structure from an analysis routine is a dictionary with the key results.
 
-Conventions: qcodes Dataset, return arguments are dicts, etc.
-
-The methods from this paper have been used in the following papers: [@Baart2016], [@Diepen2018].
+The methods from this paper have been used in the following papers: [@Baart2016], [@Diepen2018], [@Mukhopadhyay2018].
 
 # Acknowledgements
 

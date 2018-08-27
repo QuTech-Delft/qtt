@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Code for creating and parsting t-traces
+""" Code for creating and parsing t-traces
 
 @author: eendebakpt (houckm)
 """
