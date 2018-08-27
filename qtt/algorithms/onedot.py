@@ -360,7 +360,7 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
         fitresults['lv']=lv
         fitresults['wwarea']=wwarea
 
-    return fitresults, ptv # , pt, ims, lv, wwarea
+    return fitresults, ptv 
 
 def _plot_dataset(dataset, fig):
     plt.figure(fig); plt.clf()
