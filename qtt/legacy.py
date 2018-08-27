@@ -37,7 +37,7 @@ from qtt.measurements.scans import pinchoffFilename, fixReversal
 from qtt.data import load_data, show2D
 from qtt.utilities.tools import diffImage, diffImageSmooth, rdeprecated
 from qtt.algorithms.generic import smoothImage
-from qtt.measurements.scans import scanPinchValue
+#from qtt.measurements.scans import scanPinchValue
 
 
 from qtt import pgeometry as pmatlab
