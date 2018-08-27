@@ -11,7 +11,11 @@ import datetime
 
 def dumpstring(txt, tag='dump', showfile=False):
     """ Dump a text string to temperary file on disk """
-    tfile = os.path.join(tempfile.tempdir, 'qtt-%s.txt' % tag)
+    _ = tempfile.mkdtemp() # init
+    tdir=tempfile.tempdir
+    if tdir is None:
+        tdir = tempfile.mkdtemp()
+    tfile = os.path.join(tdir, 'qtt-%s.txt' % tag)
     dumpstring.tfile = tfile  # store temporary file in object
     with open(tfile, 'a+t') as fid:
         fid.write(txt + '\n')

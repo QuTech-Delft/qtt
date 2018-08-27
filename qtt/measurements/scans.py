@@ -447,9 +447,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 # %%
 def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, extra_metadata=None):
-    """ Fast 1D scan. 
-
-    The scan is performed by putting a sawtooth signal on the AWG and measuring with a fast acquisition device.
+    """ Fast 1D scan. The scan is performed by putting a sawtooth signal on the AWG and measuring with a fast acquisition device.
 
     Args:
         station (object): contains all data on the measurement station
@@ -457,7 +455,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         extra_metadata (None or dict): additional metadata to be included in the dataset
 
     Returns:
-        alldata (DataSet): contains the measurement data and metadata
+        DataSet: contains the measurement data and metadata
     """
     gates = station.gates
     gatevals = gates.allvalues()
@@ -470,11 +468,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         scanjob = scanjob_t(scanjob)
 
     scanjob.parse_stepdata('sweepdata')
-
     scanjob.parse_param('sweepdata', station, paramtype='fast')
-
-    minstrhandle = get_instrument(scanjob.get(
-        'minstrumenthandle', 'fpga'), station=station)
+    minstrhandle = get_instrument(scanjob.get('minstrumenthandle', 'digitizer'), station=station)
+    virtual_awg = getattr(station, 'virtual_awg', None)
 
     read_ch = scanjob['minstrument']
     if isinstance(read_ch, tuple):
@@ -491,13 +487,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         scanjob['scantype'] = 'scan1Dfast'
 
     sweepdata = scanjob['sweepdata']
-
     Naverage = scanjob.get('Naverage', 20)
-
     period = scanjob['sweepdata'].get('period', 1e-3)
-
     t0 = time.time()
-
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
     if scanjob['scantype'] == 'scan1Dfast':
@@ -508,12 +500,17 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
             gates.set(sweepdata['param'], float(sweepgate_value))
         if 'pulsedata' in scanjob:
-            waveform, sweep_info = station.awg.sweepandpulse_gate(
-                {'gate': sweepdata['param'].name,
-                 'sweeprange': sweeprange, 'period': period},
-                scanjob['pulsedata'])
+            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate': sweepdata['param'].name,
+                                                                   'sweeprange': sweeprange, 'period': period},
+                                                                  scanjob['pulsedata'])
         else:
-            waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
+            if virtual_awg:
+                measure_gates = {sweepdata['param']: 1}
+                waveform = virtual_awg.sweep_gates(measure_gates, sweeprange, period, do_upload=delete)
+                virtual_awg.enable_outputs(list(measure_gates.keys()))
+                virtual_awg.run()
+            else:
+                waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
     else:
         sweeprange = sweepdata['range']
         if 'pulsedata' in scanjob:
@@ -522,18 +519,20 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                 if v != 0:
                     sg.append(g)
             if len(sg) > 1:
-                raise (Exception('AWG pulses does not yet support virtual gates'))
-            waveform, sweep_info = station.awg.sweepandpulse_gate(
-                {'gate': sg[0], 'sweeprange': sweeprange, 'period': period},
-                scanjob['pulsedata'])
+                raise Exception('AWG pulses does not yet support virtual gates')
+            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate': sg[0], 'sweeprange': sweeprange,
+                                                                   'period': period}, scanjob['pulsedata'])
         else:
-            waveform, sweep_info = station.awg.sweep_gate_virt(
-                fast_sweep_gates, sweeprange, period, delete=delete)
+            if virtual_awg:
+                sweep_range = sweeprange * 2
+                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
+                virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
+                virtual_awg.run()
+            else:
+                waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweeprange, period, delete=delete)
 
     time.sleep(wait_time_startscan)
-
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
-
     sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data[0].shape[0])
 
     if len(read_ch) == 1:
@@ -541,10 +540,12 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     else:
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
-    alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data, location=location,
-                                 loc_record={'label': scanjob['scantype']})
-
-    station.awg.stop()
+    alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data,
+                                 location=location, loc_record={'label': scanjob['scantype']})
+    if virtual_awg:
+        virtual_awg.stop()
+    else:
+        station.awg.stop()
 
     if liveplotwindow is None:
         liveplotwindow = qtt.live.livePlot()
@@ -554,23 +555,18 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
 
     dt = time.time() - t0
-
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
-                      dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
+    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
     update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
-
+    
     alldata = qtt.tools.stripDataset(alldata)
-
     alldata.write(write_metadata=True)
-
     return alldata
 
 
@@ -1296,6 +1292,7 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         r2 = int(npoints2)
         r3 = int(npoints3)
         processed_data = []
+
         for j in range(data[0].shape[0]):
             processed_data.append([data[x:x + res_horz, j]
                                    for x in range(0, npoints, res_horz)])
@@ -1592,7 +1589,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     return data
 
 
-def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None, verbose=1):
+def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
     The saving to disk can take minutes or even longer.
@@ -1736,6 +1733,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'fpga'))
 
     read_ch = get_minstrument_channels(scanjob['minstrument'])
+    virtual_awg = getattr(station, 'virtual_awg', None)
 
     if isinstance(scanjob['stepdata']['param'], lin_comb_type) or isinstance(scanjob['sweepdata']['param'],
                                                                              lin_comb_type):
@@ -1749,11 +1747,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         scanjob['scantype'] = 'scan2Dfast'
 
     Naverage = scanjob.get('Naverage', 20)
-
     stepdata = scanjob['stepdata']
     sweepdata = scanjob['sweepdata']
     period = scanjob['sweepdata'].get('period', 1e-3)
-
     wait_time = stepdata.get('wait_time', 0)
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
@@ -1765,13 +1761,17 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                 if v != 0:
                     sg.append(g)
             if len(sg) > 1:
-                raise (Exception('AWG pulses does not yet support virtual gates'))
-            waveform, sweep_info = station.awg.sweepandpulse_gate(
-                {'gate': sg[0], 'sweeprange': sweepdata['range'], 'period': period},
-                scanjob['pulsedata'])
+                raise(Exception('AWG pulses does not yet support virtual gates'))
+            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate':sg[0], 'sweeprange':sweepdata['range'],
+                                                                   'period':period}, scanjob['pulsedata'])
         else:
-            waveform, sweep_info = station.awg.sweep_gate_virt(
-                fast_sweep_gates, sweepdata['range'], period)
+            if virtual_awg:
+                sweep_range = sweeprange * 2
+                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
+                virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
+                virtual_awg.run()
+            else:
+                waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweepdata['range'], period)
     else:
         if 'range' in sweepdata:
             sweeprange = sweepdata['range']
@@ -1780,13 +1780,16 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
             gates.set(sweepdata['paramname'], float(sweepgate_value))
         if 'pulsedata' in scanjob:
-            waveform, sweep_info = station.awg.sweepandpulse_gate(
-                {'gate': sweepdata['param'].name,
-                 'sweeprange': sweeprange, 'period': period},
-                scanjob['pulsedata'])
+            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate': sweepdata['param'].name, 'sweeprange': sweeprange,
+                                                                   'period': period}, scanjob['pulsedata'])
         else:
-            waveform, sweep_info = station.awg.sweep_gate(
-                sweepdata['param'].name, sweeprange, period)
+            if virtual_awg:
+                gates = {sweepdata['param'].name: 1}
+                waveform = virtual_awg.sweep_gates(gates, sweeprange, period)
+                virtual_awg.enable_outputs(list(gates.keys()))
+                virtual_awg.run()
+            else:
+                waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'].name, sweeprange, period)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
     if len(read_ch) == 1:
@@ -1796,14 +1799,12 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if plotparam == 'measured':
             plotparam = measure_names[0]
 
-    scanvalues = scanjob._convert_scanjob_vec(
-        station, data[0].shape[0], stepvalues=scanjob.get('stepvalues', None))
+    scanvalues = scanjob._convert_scanjob_vec(station, data[0].shape[0], stepvalues=scanjob.get('stepvalues', None))
     stepvalues = scanvalues[0]
     sweepvalues = scanvalues[1]
 
     logging.info('scan2D: %d %d' % (len(stepvalues), len(sweepvalues)))
     logging.info('scan2D: wait_time %f' % wait_time)
-
     t0 = time.time()
 
     if type(stepvalues) is np.ndarray:
@@ -1856,7 +1857,11 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if qtt.abort_measurements():
             print('  aborting measurement loop')
             break
-    station.awg.stop()
+
+    if virtual_awg:
+        virtual_awg.stop()
+    else:
+        station.awg.stop()
 
     dt = time.time() - t0
 

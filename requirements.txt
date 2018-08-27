@@ -1,19 +1,19 @@
-numpy >= 1.13
-scipy >= 0.18
-matplotlib >= 2.0
-coverage
-pandas
 apscheduler
-scikit-image
+attrs
+colorama
+coverage
+dulwich
+hickle
+numpy >= 1.13
+matplotlib >= 2.0
+pandas
+Polygon3
+pyqtgraph
+pyzmqrpc
 PyQt5
 qtpy
 sympy
-colorama
-tables
 slacker
-attrs
-Polygon3
-pyqtgraph 
-pyzmqrpc
-hickle 
-dulwich
+scikit-image
+scipy >= 0.18
+tables
