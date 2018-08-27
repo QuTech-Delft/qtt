@@ -20,6 +20,7 @@ import time
 from colorama import Fore
 import importlib
 import platform
+import matplotlib.pyplot as plt
 
 try:
     from dulwich.repo import Repo, NotGitRepository
