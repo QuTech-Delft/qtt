@@ -4,11 +4,10 @@ This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
 This is part of qtt. 
 """
 
-import time
 import numpy as np
-import scipy
+#import scipy
 import os
-import sys
+#import sys
 import copy
 import logging
 import time
@@ -20,23 +19,23 @@ import skimage.filters
 import matplotlib.pyplot as plt
 
 import qcodes
-import qcodes as qc
+#import qcodes as qc
 from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter
 from qcodes import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes import Instrument
 
-import qtt.tools
+import qtt.utilities.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
-import qtt.live
+import qtt.gui.live_plotting
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset, experimentFile, loadDataset, writeDataset
+from qtt.data import diffDataset, loadDataset, writeDataset
 from qtt.data import uniqueArrayName
 
-from qtt.tools import update_dictionary
+from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
 
 
@@ -48,13 +47,17 @@ def checkReversal(im0, verbose=0):
 
     We assume that the current is either zero or positive 
     Needed when the keithley (or some other measurement device) has been reversed
+    
+    Args:
+        im0 (array): measured data
+    Returns
+        bool
     """
     thr = skimage.filters.threshold_otsu(im0)
     mval = np.mean(im0)
 
     # meanopen = np.mean(im0[:,:])
     fr = thr < mval
-    # fr = thr < 0
     if verbose:
         print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
     if fr:
@@ -120,8 +123,8 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
 
 # %%
 
-@qtt.tools.deprecated
-def parse_stepdata(stepdata):
+@qtt.utilities.tools.deprecated
+def _parse_stepdata(stepdata):
     """ Helper function for legacy code """
     if not isinstance(stepdata, dict):
         raise Exception('stepdata should be dict structure')
@@ -168,15 +171,13 @@ def get_param_name(gates, sweepgate):
         return sweepgate.name
 
 
-from qtt.algorithms.generic import findCoulombDirection
-from qtt.data import dataset2Dmetadata, dataset2image
-
 
 # %%
 
 
+@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def plot1D(data, fig=100, mstyle='-b'):
-    """ Show result of a 1D gate scan """
+    """ Show result of a 1D scan """
 
     val = data.default_parameter_name()
 
@@ -343,7 +344,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('sweepdata')
+    scanjob._parse_stepdata('sweepdata')
 
     scanjob.parse_param('sweepdata', station, paramtype='slow')
 
@@ -361,11 +362,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     wait_time_startscan = scanjob.get('wait_time_startscan', 2 * wait_time)
     t0 = time.time()
 
-    # LEGACY
-    instrument = scanjob.get('instrument', None)
-    if instrument is not None:
-        raise Exception('legacy argument instrument: use minstrument instead!')
-
     logging.debug('wait_time: %s' % str(wait_time))
 
     alldata, (set_names, measure_names) = makeDataSet1D(sweepvalues, yname=mparams,
@@ -373,7 +369,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                                                         return_names=True)
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow:
         liveplotwindow.clear()
         liveplotwindow.add(
@@ -436,7 +432,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
 
@@ -467,7 +463,8 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('sweepdata')
+    scanjob._parse_stepdata('sweepdata')
+
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     minstrhandle = get_instrument(scanjob.get('minstrumenthandle', 'digitizer'), station=station)
     virtual_awg = getattr(station, 'virtual_awg', None)
@@ -548,7 +545,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         station.awg.stop()
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
@@ -566,6 +563,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
     
     alldata = qtt.tools.stripDataset(alldata)
+
     alldata.write(write_metadata=True)
     return alldata
 
@@ -648,7 +646,21 @@ class scanjob_t(dict):
 
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
+    
+    def add_sweep(self, param, start, end, step, **kwargs):
+        """ Add sweep to scan job """
+        sweep = {'param': param, 'start': start, 'end': end, 'step': step, **kwargs}
+        if not 'sweepdata' in self:
+            self['sweepdata']=sweep
+        elif 'stepdata' not in self:
+            self['stepdata']=sweep
+        else:
+            raise Exception('3d scans not implemented')
 
+    def add_minstrument(self, minstrument):
+        """ Add measurement instrument to scan job """
+        self['minstrument']=minstrument
+        
     def check_format(self):
         """ Check the format of the scanjob for consistency and legacy style arguments """
         if 'stepvalues' in self:
@@ -676,7 +688,7 @@ class scanjob_t(dict):
                 self[f]['wait_time'] = max(t, min_time)
         self['wait_time_startscan'] = .5 + 2 * t
 
-    def parse_stepdata(self, field, gates=None):
+    def _parse_stepdata(self, field, gates=None):
         """ Helper function for legacy code """
         stepdata = self[field]
         if not isinstance(stepdata, dict):
@@ -1027,8 +1039,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata', gates)
-    scanjob.parse_stepdata('sweepdata', gates)
+    scanjob._parse_stepdata('stepdata', gates)
+    scanjob._parse_stepdata('sweepdata', gates)
 
     scanjob.parse_param('sweepdata', station, paramtype='slow')
     scanjob.parse_param('stepdata', station, paramtype='slow')
@@ -1079,7 +1091,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     t0 = time.time()
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow:
         liveplotwindow.clear()
         if plotparam is 'all':
@@ -1188,7 +1200,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     alldata.write(write_metadata=True)
 
@@ -1197,7 +1209,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 # %%
 
-
+@qtt.utilities.tools.rdeprecated(expire='1 Nov 2018')
 def process_fpga_trace(data, width, resolution=None, Naverage=1, direction='forwards', start_offset=1):
     """ Process the data returned by reading out based on the shape of
         the sawtooth send with the AWG.
@@ -1375,6 +1387,7 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
     return memsize
 
 
+@qtt.utilities.tools.rdeprecated(expire='1 Nov 2018')
 def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
     """ Measure and process data with fpga for different scan types
 
@@ -1654,7 +1667,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
         datetime.datetime.now()), allgatevalues=gatevals, nsegments=str(nsegments))
 
     if save_to_disk:
-        alldata = qtt.tools.stripDataset(alldata)
+        alldata = qtt.utilities.tools.stripDataset(alldata)
         alldata.write(write_metadata=True)
 
     return alldata
@@ -1723,14 +1736,13 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata', gates=gates)
-    scanjob.parse_stepdata('sweepdata', gates=gates)
+    scanjob._parse_stepdata('stepdata', gates=gates)
+    scanjob._parse_stepdata('sweepdata', gates=gates)
 
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     scanjob.parse_param('stepdata', station, paramtype='slow')
 
-    # minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
-    minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'fpga'))
+    minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'digitizer'))
 
     read_ch = get_minstrument_channels(scanjob['minstrument'])
     virtual_awg = getattr(station, 'virtual_awg', None)
@@ -1818,9 +1830,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
                                 location=location, loc_record={'label': scanjob['scantype']})
 
-    # TODO: Allow liveplotting for multiple read-out channels
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(
@@ -1875,13 +1886,6 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             alldata = diffDataset(alldata, diff_dir=diff_dir,
                                   fig=None, meas_arr_name=mname)
 
-    # JP: we do not need this for now
-    #    if scanjob['scantype'] is 'scan2Dfastvec':
-    #        for param in scanjob['phys_gates_vals']:
-    #            parameter = gates.parameters[param]
-    #            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
-    #            alldata.add_array(arr)
-
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
@@ -1892,7 +1896,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     alldata.write(write_metadata=True)
 
@@ -1939,7 +1943,7 @@ def plotData(alldata, diff_dir=None, fig=1):
     figure = plt.figure(fig)
     plt.clf()
     if diff_dir is not None:
-        imx = qtt.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
+        imx = qtt.utilities.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
         data_arr = qcodes.DataArray(name=name, label=name, array_id=name,
@@ -1988,8 +1992,8 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
 
-    scanjob.parse_stepdata('stepdata', gates=gates)
-    scanjob.parse_stepdata('sweepdata', gates=gates)
+    scanjob._parse_stepdata('stepdata', gates=gates)
+    scanjob._parse_stepdata('sweepdata', gates=gates)
 
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     scanjob.parse_param('stepdata', station, paramtype='fast')
@@ -2084,7 +2088,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     dt = time.time() - t0
 
     if liveplotwindow is None:
-        liveplotwindow = qtt.live.livePlot()
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow is not None:
         liveplotwindow.clear()
         liveplotwindow.add(alldata.default_parameter_array())
@@ -2096,7 +2100,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
+    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
 
     alldata.write(write_metadata=True)
 
@@ -2106,7 +2110,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
 # %%
 
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
     ''' Do a scan (AWG sweep) over the line connecting two points.
 
@@ -2176,6 +2180,7 @@ def waitTime(gate, station=None, gate_settle=None, default=1e-3):
     return default
 
 
+@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def pinchoffFilename(g, od=None):
     ''' Return default filename of pinch-off scan '''
     if od is None:
@@ -2186,6 +2191,7 @@ def pinchoffFilename(g, od=None):
     return basename
 
 
+@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None,
                    cache=False, verbose=1, fig=10, full=0, background=False):
     """ Scan pinch-off value for a gate """
@@ -2234,7 +2240,7 @@ def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], s
     adata = analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None)
     alldata.metadata['adata'] = adata
 
-    alldata = qtt.tools.stripDataset(alldata)
+    alldata = qtt.utilities.tools.stripDataset(alldata)
     writeDataset(outputfile, alldata)
     return alldata
 
@@ -2340,6 +2346,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
 # %%
 
 
+@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def loadOneDotPinchvalues(od, outputdir, verbose=1):
     """ Load the pinch-off values for a one-dot
 

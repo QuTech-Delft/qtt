@@ -26,7 +26,7 @@ except:
     _have_mp = False
     pass
 
-import qtt.tools
+import qtt.utilities.tools
 from qtt import pgeometry
 
 #%% Helper functions
@@ -90,7 +90,7 @@ def simulate_row(i, ds, npointsy, usediag):
 
 #%%
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def defaultVmatrix(n):
     """ Helper function 
     >>> m=defaultVmatrix(2)
@@ -549,7 +549,7 @@ class DotSystem(BaseDotSystem):
             self.vals2D[name] = np.array(
                 [np.linspace(i, j, num=npointsy) for i, j in zip(bottomrow, toprow)])
 
-    @qtt.tools.deprecated
+    @qtt.utilities.tools.deprecated
     def makeparamvalues2Dx(self, paramnames, bottomtop, rangex, npointsx, npointsy):
         '''Get a list of parameter names and [bottom top] values
         to generate dictionary self.vals2D[name] = matrix of values
@@ -587,7 +587,7 @@ class DotSystem(BaseDotSystem):
             print(name + ' = ' + str(eval('self.' + name)))
         print(' ')
 
-    @qtt.tools.deprecated
+    @qtt.utilities.tools.deprecated
     def getHn(self, numberofelectrons):
         inds = np.where(self.nbasis == numberofelectrons)[0]
         return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]
@@ -607,7 +607,7 @@ class DotSystem(BaseDotSystem):
         showGraph(dot, fig=fig)
 
 
-@qtt.tools.rdeprecated('Sep 1 2018')
+@qtt.utilities.tools.rdeprecated('Sep 1 2018')
 def setDotSystem(ds, gate_transform, gv):
     """ Set dot system values using gate transform """
     tv = gate_transform.transformGateScan(gv)
@@ -615,7 +615,7 @@ def setDotSystem(ds, gate_transform, gv):
         setattr(ds, k, val)
 
 
-@qtt.tools.rdeprecated('Sep 1 2018')
+@qtt.utilities.tools.rdeprecated('Sep 1 2018')
 def defaultDotValues(ds):
     for ii in range(ds.ndots):
         setattr(ds, 'osC%d' % (ii + 1), 55)

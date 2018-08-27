@@ -13,10 +13,8 @@ except:
     import qtt.exceptions
     warnings.warn('could not find opencv, not all functionality available', qtt.exceptions.MissingOptionalPackageWarning)
 
-import qtt.tools    
+import qtt.utilities.tools    
 from qtt import pgeometry
-from qtt import pgeometry as pmatlab
-
 #%%
 
 import warnings
@@ -390,14 +388,14 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
         print('findCoulombDirection: initial: %s' % str(val))
 
     # improve estimate by taking a local average
-    valr = pmatlab.rot2D(np.pi / 2) .dot(val.reshape((2, 1)))
+    valr = pgeometry.rot2D(np.pi / 2) .dot(val.reshape((2, 1)))
     sidesteps = np.arange(-6, 6.01, 3).reshape((-1, 1)) * \
         np.matrix(valr.reshape((1, 2)))
     pts = ptx + .5 * np.array(sidesteps)
     ptsf = ptxf + resizefactor * sidesteps
     valx = np.array([getValuePixel(flow, p) for p in ptsf])
 
-    a = pmatlab.directionMean(valx)
+    a = pgeometry.directionMean(valx)
     val = np.array([np.sin(a), np.cos(a)]).flatten()
     val *= np.sign(val[1] - val[0])
 
@@ -423,7 +421,7 @@ def extent2fullextent(extent0, im):
     return extent
 
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def show2Dimage(im, dd, **kwargs):
     """ Show image in window
 
@@ -449,7 +447,7 @@ def show2Dimage(im, dd, **kwargs):
                        vstep[0]]  # matplotlib extent style
         mdata = dd.metadata
 
-    pmatlab.cfigure(fig, facecolor=facecolor)
+    pgeometry.cfigure(fig, facecolor=facecolor)
     plt.clf()
     if verbose >= 2:
         print('show2D: show image')
@@ -604,7 +602,6 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
     The contours are in OpenCV format
     """
     mask = np.zeros((im.shape[0], im.shape[1]), dtype=np.uint8)
-    # cv2.FILLED = cv2.cv.CV_FILLED = -1
     cv2.drawContours(
         mask, contours, contourIdx=contourIdx, color=1, thickness=-1)
 
@@ -612,7 +609,6 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
     xyw = np.array(
         [(im * mask * yy).sum(), (im * mask * xx).sum()]) / (mask * im).sum()
     if fig is not None:
-        # pmatlab.imshowz(mask, interpolation='nearest')
         yx = np.array([(mask * xx).sum(), (mask * yy).sum()]) / mask.sum()
         plt.figure(11)
         plt.clf()

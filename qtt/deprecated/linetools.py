@@ -76,7 +76,7 @@ def dummy():
     return
 
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def getBlobPosition(ims, label_im, idx):
     """ Get starting position from blob """
     cms = scipy.ndimage.measurements.center_of_mass(
@@ -94,7 +94,7 @@ def getBlobPosition(ims, label_im, idx):
 
 
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def getpatch(ims, pp, samplesize, fig=None):
     """ Return image patch from parameters 
     """
@@ -247,7 +247,7 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
 from qtt.utilities.imagetools import evaluateCross
 
-@qtt.tools.rdeprecated('use qtt.utilities.imagetools.fitModel instead', expire='1-6-2018')
+@qtt.utilities.tools.rdeprecated('use qtt.utilities.imagetools.fitModel instead', expire='1-6-2018')
 def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None, 
              istepmodel=.5, cb=None, use_abs=False, w=2.5):
     """ Fit model of an anti-crossing 
@@ -295,7 +295,7 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
 
 
 
-@qtt.tools.rdeprecated(expire='1-1-2018')
+@qtt.utilities.tools.rdeprecated(expire='1-1-2018')
 def calcSlope(pp):
     q = -np.diff(pp, axis=1)
     psi = math.atan2(q[1], q[0])

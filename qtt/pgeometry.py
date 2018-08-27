@@ -20,12 +20,6 @@ Original code:
 @author: eendebakpt
 """
 
-
-# make python2/3 compatible
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import print_function
-
 #%% Load necessary packages
 import os
 import sys
@@ -33,7 +27,6 @@ import tempfile
 import math
 import numpy as np
 import time
-import platform
 import warnings
 import pickle
 import re
@@ -43,10 +36,11 @@ import scipy.io
 import numpy
 import subprocess
 
-__version__ = '0.6'
+from functools import wraps
 
-#%% Load pyqside or pyqt4
-# We want to do this before loading matplotlib
+__version__ = '0.7.0'
+
+#%% Load qt functionality
 
 
 def qtModules(verbose=0):
@@ -147,7 +141,6 @@ try:
     except:
         pass
 except Exception as inst:
-    # print(inst)
     warnings.warn(
         'could not import matplotlib, not all functionality available...')
     plt = None
@@ -169,12 +162,17 @@ except:
     warnings.warn('could not find OpenCV, not all functionality is available')
     pass
 
+#%% Utils
 
-#%%
 try:
     import resource
 
     def memUsage():
+        """ Prints the memory usage in MB
+        
+        Uses the resource module
+        
+        """
         # http://chase-seibert.github.io/blog/2013/08/03/diagnosing-memory-leaks-python.html
         print('Memory usage: %s (mb)' %
               ((resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024., ))
@@ -182,22 +180,12 @@ except:
     def memUsage():
         print('Memory usage: ? (mb)')
 
-#%% Try numba support
-try:
-    from numba import jit as autojit
-except:
-    def autojit(original_function):
-        """ dummy autojit decorator """
-        def dummy_function(*args, **kwargs):
-            return original_function(*args, **kwargs)
-        return dummy_function
-    pass
-
-
-#%% Utils
-
 def memory():
-    """ return the memory usage in MB """
+    """ Return the memory usage in MB
+    
+    Returns:
+            float: memory usage in mb
+    """
     import psutil
     import os
     process = psutil.Process(os.getpid())
@@ -213,8 +201,6 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
         objectclassname (str)
     Returns:
         ll (list): list of objects found
-
-
     """
     import gc
     ll = []
@@ -234,7 +220,6 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
     return ll
 
 
-from functools import wraps
 
 
 def package_versions(verbose=1):
@@ -263,7 +248,10 @@ def package_versions(verbose=1):
 
 
 def freezeclass(cls):
-    """ Decorator to freeze a class """
+    """ Decorator to freeze a class
+    
+    This means that no attributes can be added to the class after instantiation.
+    """
     cls.__frozen = False
 
     def frozensetattr(self, key, value):
@@ -334,7 +322,7 @@ def partiala(method, **kwargs):
 
 
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
-    """ Update font sizes for a plot """
+    """ Update font sizes for a matplotlib plot """
     if ax is None:
         ax = plt.gca()
     for tick in ax.xaxis.get_major_ticks():
@@ -346,7 +334,6 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
         x.set_fontsize(labelsize)
 
     plt.tick_params(axis='both', which='major', labelsize=fsize)
-    # plt.tick_params(axis='both', which='minor', labelsize=8)
 
     if titlesize is not None:
         ax.title.set_fontsize(titlesize)
@@ -414,7 +401,6 @@ class fps_t:
         """ Add a timestamp to the object """
         self.ii = self.ii + 1
         iim = self.ii % self.n
-        # iimn=(self.ii+1)%self.n
         self.tt[iim] = t
         self.x[iim] = x
 
@@ -476,7 +462,6 @@ def projectiveTransformation(H, x):
         xx = xx.astype(np.float32)
     if xx.size > 0:
         ww = cv2.perspectiveTransform(xx, H)
-        # ww=cv2.transform(xx, H)
         ww = ww.reshape((-1, kout)).transpose()
         return ww
     else:
@@ -541,24 +526,6 @@ def intersect2lines(l1, l2):
     """
     r = null(np.vstack((l1, l2)))
     return r[1]
-
-
-def test_intersect2lines():
-    p1 = np.array([[0, 0]])
-    p2 = np.array([[1, 0]])
-    p3 = np.array([[1, 1]])
-    p4 = np.array([[2, 2]])
-
-    line1 = fitPlane(np.vstack((p1, p2)))
-    line2 = fitPlane(np.vstack((p3, p4)))
-
-    a = intersect2lines(line1, line2)
-    pt = dehom(a)
-    np.testing.assert_almost_equal(pt, 0)
-
-
-if __name__ == '__main__':
-    test_intersect2lines()
 
 
 def runcmd(cmd, verbose=0):
@@ -941,9 +908,6 @@ def region2poly(rr):
         poly = np.array([rr[:, 0:1], np.array([[rr[0, 1]], [rr[1, 0]]]), rr[
                         :, 1:2], np.array([[rr[0, 0]], [rr[1, 1]]]), rr[:, 0:1]]).reshape((5, 2)).T
         return poly
-        # todo: eliminate transpose
-    # poly=np.array( (2, 5), dtype=rr.dtype)
-    # poly.flat =rr.flat[ [0,1,1,0, 0, 2,2,3,3,2] ]
     poly = rr.flat[[0, 1, 1, 0, 0, 2, 2, 3, 3, 2]].reshape((2, 5))
 
     return poly
@@ -971,15 +935,12 @@ def plotLabels(xx, *args, **kwargs):
             lbl = [str(lbl)]
         elif type(lbl) == str:
             lbl = [str(lbl)]
-    # plt.text(xx[0:], xx[1,:], lbl, **kwargs)
     nn = xx.shape[1]
     ax = plt.gca()
     th = [None] * nn
     for ii in range(nn):
-        # print('-- %d' % ii)
-        ww = str(lbl[ii])
-        # print(ww)
-        th[ii] = ax.annotate(str(lbl[ii]), xx[:, ii], **kwargs)
+        lbltxt = str(lbl[ii])
+        th[ii] = ax.annotate(lbltxt, xx[:, ii], **kwargs)
     return th
 
 
@@ -1000,8 +961,6 @@ def plot2Dline(line, *args, **kwargs):
         xx = (-line[2] - line[1] * yy) / line[0]
         plt.plot(xx, yy, *args, **kwargs)
 
-
-# plotLabels( np.zeros( (2,3)))
 
 #%%
 
@@ -1125,23 +1084,13 @@ def plotPoints3D(xx, *args, **kwargs):
     if verbose:
         print('plotPoints3D: using fig %s' % fig)
         print('plotPoints3D: using args %s' % args)
-    # pdb.set_trace()
     if fig is None:
         ax = p.gca()
     else:
         fig = p.figure(fig)
-    # ax = p3.Axes3D(fig)
         ax = fig.gca(projection='3d')
-        # ax = fig.gca(projection='rectilinear')
-        # ax = p3.Axes3D(fig)
-    # ax=p.gca()
-    # r=ax.plot3D(np.ravel(xx[0,:]),np.ravel(xx[1,:]),np.ravel(xx[2,:]),
-    # *args, **kwargs)
     r = ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]),
                 np.ravel(xx[2, :]), *args, **kwargs)
-    # ax.set_xlabel('X'); ax.set_ylabel('Y'); ax.set_zlabel('Z')
-    #   fig.add_axes(ax)
-    # p.show()
     p.draw()
     return ax
 
@@ -1187,55 +1136,35 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-try:
-    import Polygon as polygon3
+import Polygon as polygon3
 
-    def polyintersect(x1, x2):
-        """ Intersection of two polygons
+def polyintersect(x1, x2):
+    """ Intersection of two polygons
+    
+    >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
+    >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+    >>> x=polyintersect(x1, x2)
+    >>> _=plt.figure(10); plt.clf()
+    >>> plotPoints(x1.T, '.-r' )
+    >>> plotPoints(x2.T, '.-b' )
+    >>> plotPoints(x.T, '.-g' , linewidth=2)
+    
+    """
+    
+    p1 = polygon3.Polygon(x1)
+    p2 = polygon3.Polygon(x2)
+    p = p1 & p2
+    x = np.array(p)
+    x = x.reshape((-1, 2))
+    return x
 
-        >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
-        >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        >>> x=polyintersect(x1, x2)
-        >>> _=plt.figure(10); plt.clf()
-        >>> plotPoints(x1.T, '.-r' )
-        >>> plotPoints(x2.T, '.-b' )
-        >>> plotPoints(x.T, '.-g' , linewidth=2)
-
-        """
-
-        p1 = polygon3.Polygon(x1)
-        p2 = polygon3.Polygon(x2)
-        p = p1 & p2
-        x = np.array(p)
-        x = x.reshape((-1, 2))
-        return x
-except:
-    try:
-        import shapely
-        import shapely.geometry
-    except Exception as inst:
-        pass
-
-    def polyintersect(x1, x2):
-        """ Intersection of two polygons
-
-        >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
-        >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        >>> x=polyintersect(x1, x2)
-        >>> _=plt.figure(10); plt.clf()
-        >>> plotPoints(x1.T, '.-r' )
-        >>> plotPoints(x2.T, '.-b' )
-
-        """
-
-        p1 = shapely.geometry.Polygon(x1)
-        p2 = shapely.geometry.Polygon(x2)
-        p = p1.intersection(p2)
-        if p.is_empty:  # len(p)==0:
-            return np.zeros((0, 2))
-        x = np.array(list(p.exterior.coords))
-        return x
-
+def test_polyintersect():
+    x1=np.array([(0, 0), (1, 1), (1, 0)] )
+    x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+    x=polyintersect(x1, x2)
+    assert(len(x)==3)
+    assert(np.abs(polyarea(x))==0.25)
+    
 #%%
 
 
@@ -1256,9 +1185,8 @@ def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0),
         out = bgr
     fscale = .5 + .5 * (radius * 0.2)
     fthickness = int(fscale + 1)
-    for i, pnt in enumerate(imgpts):  # enumerate(imgpts):
+    for i, pnt in enumerate(imgpts):
         tpnt = tuple(pnt.ravel())
-        # print('radius: %f, th %f' % (radius, thickness))
         cv2.circle(out, tpnt, radius, color, thickness)
         if(drawlabel):
             cv2.putText(
@@ -1503,31 +1431,6 @@ def detect_local_minima(arr, thr=None):
 
 #%% Matlab compatibility functions
 
-__t00 = 0
-
-
-def tic():
-    """ Start timer """
-    global __t00
-    __t00 = time.time()
-    return __t00
-
-
-def toc(t0=None):
-    """ Stop timer
-
-    Returns:
-        dt (float): time elapsed (in seconds) since the start of the timer
-
-    See also: :func:`tic`
-    """
-    if t0:
-        dt = time.time() - t0
-    else:
-        dt = time.time() - __t00
-    return dt
-
-
 def fullpath(*args):
     """ Return full path from a list """
     p = os.path.join(*args)
@@ -1625,16 +1528,14 @@ def choose(n, k):
     return ntok
 
 
-def closefn():
-    """ Destructor function for the module """
-    return
+#def closefn():
+#    """ Destructor function for the module """
+#    return
+#
+#
+#import atexit
+#atexit.register(closefn)
 
-
-    # global _applocalqt
-import atexit
-atexit.register(closefn)
-
-# print('hi there')
 
 #%%
 import warnings
@@ -1644,132 +1545,6 @@ def deprecation(message):
     """ Issue a deprecation warning message """
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
-
-def anisodiff(img, niter=1, kappa=50, gamma=0.1, step=(1., 1.), option=1, ploton=False):
-    """
-    Anisotropic diffusion.
-
-    Usage:
-    imgout = anisodiff(im, niter, kappa, gamma, option)
-
-    Arguments:
-            img    - input image
-            niter  - number of iterations
-            kappa  - conduction coefficient 20-100 ?
-            gamma  - max value of .25 for stability
-            step   - tuple, the distance between adjacent pixels in (y,x)
-            option - 1 Perona Malik diffusion equation No 1
-                     2 Perona Malik diffusion equation No 2
-            ploton - if True, the image will be plotted on every iteration
-
-    Returns:
-            imgout   - diffused image.
-
-    kappa controls conduction as a function of gradient.  If kappa is low
-    small intensity gradients are able to block conduction and hence diffusion
-    across step edges.  A large value reduces the influence of intensity
-    gradients on conduction.
-
-    gamma controls speed of diffusion (you usually want it at a maximum of
-    0.25)
-
-    step is used to scale the gradients in case the spacing between adjacent
-    pixels differs in the x and y axes
-
-    Diffusion equation 1 favours high contrast edges over low contrast ones.
-    Diffusion equation 2 favours wide regions over smaller ones.
-
-    Reference:
-    P. Perona and J. Malik.
-    Scale-space and edge detection using ansotropic diffusion.
-    IEEE Transactions on Pattern Analysis and Machine Intelligence,
-    12(7):629-639, July 1990.
-
-    Original MATLAB code by Peter Kovesi
-    School of Computer Science & Software Engineering
-    The University of Western Australia
-    pk @ csse uwa edu au
-    <http://www.csse.uwa.edu.au>
-
-    Translated to Python and optimised by Alistair Muldal
-    Department of Pharmacology
-    University of Oxford
-    <alistair.muldal@pharm.ox.ac.uk>
-
-    June 2000  original version.
-    March 2002 corrected diffusion eqn No 2.
-    July 2012 translated to Python
-    """
-
-    # ...you could always diffuse each color channel independently if you
-    # really want
-    if img.ndim == 3:
-        warnings.warn("Only grayscale images allowed, converting to 2D matrix")
-        img = img.mean(2)
-
-    # initialize output array
-    img = img.astype('float32')
-    imgout = img.copy()
-
-    # initialize some internal variables
-    deltaS = np.zeros_like(imgout)
-    deltaE = deltaS.copy()
-    NS = deltaS.copy()
-    EW = deltaS.copy()
-    gS = np.ones_like(imgout)
-    gE = gS.copy()
-
-    # create the plot figure, if requested
-    if ploton:
-        import pylab as pl
-        from time import sleep
-
-        fig = pl.figure(figsize=(20, 5.5), num="Anisotropic diffusion")
-        ax1, ax2 = fig.add_subplot(1, 2, 1), fig.add_subplot(1, 2, 2)
-
-        ax1.imshow(img, interpolation='nearest')
-        ih = ax2.imshow(imgout, interpolation='nearest', animated=True)
-        ax1.set_title("Original image")
-        ax2.set_title("Iteration 0")
-
-        fig.canvas.draw()
-
-    for ii in xrange(niter):
-
-        # calculate the diffs
-        deltaS[:-1, :] = np.diff(imgout, axis=0)
-        deltaE[:, :-1] = np.diff(imgout, axis=1)
-
-        # conduction gradients (only need to compute one per dim!)
-        if option == 1:
-            gS = np.exp(-(deltaS / kappa)**2.) / step[0]
-            gE = np.exp(-(deltaE / kappa)**2.) / step[1]
-        elif option == 2:
-            gS = 1. / (1. + (deltaS / kappa)**2.) / step[0]
-            gE = 1. / (1. + (deltaE / kappa)**2.) / step[1]
-
-        # update matrices
-        E = gE * deltaE
-        S = gS * deltaS
-
-        # subtract a copy that has been shifted 'North/West' by one
-        # pixel. don't as questions. just do it. trust me.
-        NS[:] = S
-        EW[:] = E
-        NS[1:, :] -= S[:-1, :]
-        EW[:, 1:] -= E[:, :-1]
-
-        # update the image
-        imgout += gamma * (NS + EW)
-
-        if ploton:
-            iterstring = "Iteration %i" % (ii + 1)
-            ih.set_data(imgout)
-            ax2.set_title(iterstring)
-            fig.canvas.draw()
-            # sleep(0.01)
-
-    return imgout
 
 
 #%%
@@ -1819,9 +1594,7 @@ try:
         pass
 
     import cv2
-    # cb=QtGui.QClipboard
 
-    #%
     def mpl2clipboard(event=None, verbose=1, fig=None):
         """ Copy current Matplotlib figure to clipboard """
         if verbose:
@@ -2087,12 +1860,6 @@ def raiseWindow(fig):
     w.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
     w.show()
 
-#%%
-
-
-def ca():
-    """ Close all open windows """
-    plt.close('all')
 
 #%%
 
@@ -2260,8 +2027,6 @@ def robustCost(x, thr, method='L1'):
         raise Exception('no such method')
     return y
 
-# robustCost(np.arange(-5,5,.1), 2, 'show')
-
 #%%
 
 
@@ -2269,58 +2034,6 @@ def test_robustCost():
     x = np.array([0, 1, 2, 3, 4, 5])
     _ = robustCost(x, 2)
     _ = robustCost(x, 'auto')
-
-#%% Wrapper to read video files
-
-
-class videoreader_t:
-
-    def __init__(self, vidfile):
-        try:
-            import avireader
-            self._haveavireader = True
-        except:
-            self._haveavireader = False
-        if self._haveavireader:
-            self.cap = avireader.videoreader(vidfile)
-        else:
-            self.cap = cv2.VideoCapture(vidfile)
-        self.resize = False
-
-    def isOpened(self):
-        if self._haveavireader:
-            return True
-        else:
-            return self.cap.isOpened()
-
-    def get_vid_properties(self):
-        if self._haveavireader:
-            nframes = self.cap.nframes()
-            fheight = self.cap.height()
-            fwidth = self.cap.width()
-            fps = self.cap.framerate()
-            return nframes, fps, fheight, fwidth
-        else:
-            return get_vid_properties(self.cap)
-
-    def read(self, index=None):
-        if self._haveavireader:
-            if index is None:
-                im = self.cap.read()
-                r = None
-            else:
-                return None, self.cap.read(idx=index)
-        else:
-            if index is not None:
-                self.cap.set(cv2.CAP_PROP_POS_FRAMES, index)
-            r, im = self.cap.read()
-
-        if self.resize:
-            im = cv2.resize(im, None, fx=.25, fy=.25)
-        return r, im
-
-    def close():
-        pass
 
 #%%
 
@@ -2338,7 +2051,6 @@ def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
             return p
         if verbose >= 2:
             print(type(c))
-        # return p
     return None
 
 
@@ -2721,6 +2433,13 @@ def modulepath(m):
 
 
 def checkmodule(mname, verbose=1):
+    """ Return location of module based on module name
+    
+    Args:
+        mname (str): name of module to inspect
+    Returns
+        obj: module specification
+    """
     import imp
     q = imp.find_module(mname)
     import importlib
@@ -2751,7 +2470,23 @@ def unittest(verbose=1):
     _ = euler2RBE([0, 1, 2])
     doctest.testmod()
 
+def test_intersect2lines():
+    p1 = np.array([[0, 0]])
+    p2 = np.array([[1, 0]])
+    p3 = np.array([[1, 1]])
+    p4 = np.array([[2, 2]])
 
+    line1 = fitPlane(np.vstack((p1, p2)))
+    line2 = fitPlane(np.vstack((p3, p4)))
+
+    a = intersect2lines(line1, line2)
+    pt = dehom(a)
+    np.testing.assert_almost_equal(pt, 0)
+
+
+if __name__ == '__main__':
+    test_intersect2lines()
+    
 #%% Run tests from documentation
 if __name__ == "__main__":
     """ Dummy main for doctest
@@ -2761,4 +2496,3 @@ if __name__ == "__main__":
     doctest.testmod()
 
 
-#%% Testing zone

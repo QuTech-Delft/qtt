@@ -18,7 +18,7 @@ from qcodes import QtPlot
 from qcodes import MatPlot
 
 import qtt
-from qtt import createParameterWidget
+from qtt.gui.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates
@@ -49,7 +49,7 @@ model = station.model
 #%% Setup measurement windows
 
 
-mwindows = qtt.tools.setupMeasurementWindows(station, create_parameter_widget=False)
+mwindows = qtt.gui.live_plotting.setupMeasurementWindows(station, create_parameter_widget=False)
 pv = createParameterWidget([gates, ])
 
 logviewer = qtt.gui.dataviewer.DataViewer()
@@ -78,8 +78,10 @@ print(data1d.default_parameter_name())
 
 #%% Make a 2D scan
 start = -500
-scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': start, 'end': start + 400, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley1.amplitude']})
-scanjob['stepdata'] = dict({'param': param_left, 'start': start, 'end': start + 400, 'step': 5.})
+scanjob = scanjob_t()
+scanjob.add_sweep(param_right, start=start, end=start+400, step=4., wait_time=0.)
+scanjob.add_sweep(param_left, start=start, end=start+400, step=5)
+scanjob.add_minstrument(['keithley1.amplitude'])
 data = qtt.measurements.scans.scan2D(station, scanjob)
 
 gates.set(param_right, -300); gates.set(param_left, -300)
@@ -130,9 +132,9 @@ virts2= qtt.instrument_drivers.virtual_gates.extend_virtual_gates(vgates, pgates
     
 #%% Send data to powerpoint
 print('add copy data to Powerpoint use the following:')
-print('   qtt.tools.addPPT_dataset(data);')
+print('   qtt.utilities.tools.addPPT_dataset(data);')
 if 0:
-    qtt.tools.addPPT_dataset(data)
+    qtt.utilities.tools.addPPT_dataset(data)
 
 #%% Test objects
 

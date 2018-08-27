@@ -2,7 +2,7 @@ from typing import Union
 import enum
 
 from qcodes import Parameter, ManualParameter
-from qtt.tools import rdeprecated
+from qtt.utilities.tools import rdeprecated
 
 
 class Role(enum.Enum):

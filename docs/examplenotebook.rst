@@ -9,10 +9,10 @@ Measurements
     :titlesonly:
     :glob:
 
-    notebooks/measurementexample_simple.ipynb
-    notebooks/measurement/example_station.ipynb
-    notebooks/measurement/example_ohmic.ipynb
-    notebooks/measurement/*
+    notebooks/measurements/example_simple.ipynb
+    notebooks/measurements/example_station.ipynb
+    notebooks/measurements/example_ohmic.ipynb
+    notebooks/measurements/*
     notebooks/example_*
 
 Analysis

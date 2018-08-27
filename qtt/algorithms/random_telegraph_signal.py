@@ -9,7 +9,7 @@ Created on Wed Feb 28 10:20:46 2018
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
-from qtt.tools import addPPTslide
+from qtt.utilities.tools import addPPTslide
 import warnings
 
 from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay
@@ -101,7 +101,9 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         data = np.array(data.measured)
     else:
         plungervalue = []   
-        
+        if samplerate is None:
+            raise Exception('samplerate is None')
+            
     # plotting a 2d histogram of the RTS
     if fig:     
         xdata = np.array(range(0,len(data)))/samplerate*1000
@@ -255,6 +257,12 @@ def test_RTS(fig=None):
     data = np.random.rand( 10000, )
     try:
         r=tunnelrates_RTS(data, plungers=[])
+        raise Exception('no samplerate available')
+    except Exception as ex:
+        # exception is good, since no samplerate was provided
+        assert('samplerate is None' in str(ex))
+    try:
+        r=tunnelrates_RTS(data, samplerate=10e6, plungers=[])
         raise Exception('data should not fit to RTS')
     except FittingException as ex:
         # fitting exception is good, since data is random

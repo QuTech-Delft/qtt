@@ -7,13 +7,13 @@ import logging
 from functools import partial
 import numpy as np
 
-import qtt.tools
+import qtt.utilities.tools
 
 from qcodes import Instrument
 from qcodes.utils.validators import Numbers as NumbersValidator
 
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 class KeithleyVirtual(Instrument):
     '''
     This is the qcodes driver for the Keithley_2700 Multimeter

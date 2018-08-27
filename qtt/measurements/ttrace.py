@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Code for creating and parsting t-traces
+""" Code for creating and parsing t-traces
 
 @author: eendebakpt (houckm)
 """
@@ -713,7 +713,7 @@ class MultiTracePlot:
         
         if notes is None:
             notes = getattr(self, 'station', None)
-        qtt.tools.addPPTslide(fig=self, title='T-traces', notes=notes)
+        qtt.utilities.tools.addPPTslide(fig=self, title='T-traces', notes=notes)
         
     def add_verticals(self):
         vpen=pg.QtGui.QPen(pg.QtGui.QColor(130, 130, 175,60), 0, pg.QtCore.Qt.SolidLine)

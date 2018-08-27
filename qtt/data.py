@@ -1,21 +1,19 @@
 """ Utilities to work with data and datasets """
+
 import numpy as np
 import scipy
 import os
 import sys
 import time
 import qcodes
-import qcodes as qc
 import datetime
 import warnings
 import pickle
 import logging
-import numpy.linalg
 import matplotlib.pyplot as plt
 
 from qcodes import DataArray, new_data
 from qtt import pgeometry
-import qtt.tools
 import qtt.algorithms.generic
 from qcodes.plots.qcmatplotlib import MatPlot
 
@@ -25,7 +23,7 @@ def get_dataset(ds):
     """ Get a dataset from a results dictionary, a string or a dataset
     
     Args:
-        ds (str, dict or DataSet):
+        ds (str, dict or DataSet): either location of dataset, the dataset itself or a calibration structure
             
     Returns:
         ds (DataSet)
@@ -114,26 +112,22 @@ def test_load_dataset(verbose=0):
         if verbose:
             print(r)
 
-#%%
-
 #%% Monkey patch qcodes to store latest dataset
 from functools import wraps
 
-@qtt.tools.deprecated
+@qtt.utilities.tools.deprecated
 def store_latest_decorator(function, obj):    
     """ Decorator to store latest result of a function in an object """
     if not hasattr(obj, '_latest'):
         obj._latest = None
     @wraps(function)
     def wrapper(*args, **kwargs):
-        #print('func %s: arguments: %s %s' % (function, args, kwargs) )
         ds = function(*args, **kwargs)
         obj._latest = ds # store the latest result
         return ds 
     wrapper._special = 'yes'
     return wrapper
 
-#qcodes.data.data_set.new_data = store_latest_decorator(qcodes.new_data, qcodes.DataSet)
 
 def get_latest_dataset():
     """ Return latest dataset that was created """
@@ -358,7 +352,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
     """
     meas_arr_name = alldata.default_parameter_name(meas_arr_name)
     meas_array = alldata.arrays[meas_arr_name]
-    imx = qtt.tools.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
+    imx = qtt.utilities.tools.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
     data_arr = qcodes.DataArray(
@@ -437,7 +431,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     ny = vstep.size
     nx = vsweep.size
 
-    im = qtt.tools.diffImageSmooth(impixel, dy=dy, sigma=sigma)
+    im = qtt.utilities.tools.diffImageSmooth(impixel, dy=dy, sigma=sigma)
     if verbose:
         print('show2D: nx %d, ny %d' % (nx, ny,))
 
@@ -718,16 +712,14 @@ class image_transform:
 
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
             self.dataset, arrayname=self.arrayname, verbose=0)
-        nx = vsweep.size  # zdata.shape[0]
-        ny = vstep.size  # zdata.shape[1]
+        nx = vsweep.size  
+        ny = vstep.size  
 
         xx = extent
         x = ptx
         nn = pt.shape[1]
         ptx = np.zeros((2, nn))
-        # ptx[1, :] = np.interp(x[1, :], [0, ny - 1], [xx[2], xx[3]])    # step
-        # ptx[0, :] = np.interp(x[0, :], [0, nx - 1], [xx[0], xx[1]])    #
-        # sweep
+
 
         f = scipy.interpolate.interp1d(
             [0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
@@ -750,7 +742,6 @@ class image_transform:
         """
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
             self.dataset, arrayname=self.arrayname, verbose=0)
-        # xx, _, _, zdata = get2Ddata(dd2d, verbose=0, fig=None)
         nx = vsweep.size
         ny = vstep.size
 
@@ -764,8 +755,6 @@ class image_transform:
         f = scipy.interpolate.interp1d(
             [xx[0], xx[1]], [0, nx - 1], assume_sorted=False)
         ptpixel[0, :] = f(x[0, :])  # sweep to pixel x
-        # ptpixel[1, :] = np.interp(x[1, :], [xx[2], xx[3]], [0, ny - 1])
-        # ptpixel[0, :] = np.interp(x[0, :], [xx[0], xx[1]], [0, nx - 1])
 
         ptpixel = pgeometry.projectiveTransformation(
             self.H, np.array(ptpixel).astype(float))
@@ -819,9 +808,6 @@ def load_data(mfile: str):
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
     return pickleload(mfile)
-    # with open(mfile, 'rb') as fid:
-    #    return pickle.load(fid)
-
 
 def write_data(mfile: str, data):
     ''' Write data to specified file '''
@@ -830,15 +816,13 @@ def write_data(mfile: str, data):
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
     if isinstance(data, qcodes.DataSet):
-        data = qtt.tools.stripDataset(data)
+        data = qtt.utilities.tools.stripDataset(data)
 
     with open(mfile, 'wb') as fid:
         pickle.dump(data, fid)
-    # hickle.dump(metadata, mfile)
-    #_=deepdish.io.save(mfile, data)
 
 
-@qtt.tools.rdeprecated(expire='1-1-2019')
+@qtt.utilities.tools.rdeprecated(expire='1-1-2019')
 def loadDataset(path):
     ''' Wrapper function
 
@@ -852,14 +836,14 @@ def loadDataset(path):
     return dataset, metadata
 
 
-@qtt.tools.rdeprecated(expire='1-1-2019')
+@qtt.utilities.tools.rdeprecated(expire='1-1-2019')
 def writeDataset(path, dataset, metadata=None):
     ''' Wrapper function
 
     :param path: filename without extension
     '''
 
-    dataset = qtt.tools.stripDataset(dataset)
+    dataset = qtt.utilities.tools.stripDataset(dataset)
 
     print('write_copy to %s' % path)
     dataset.write_copy(path=path)
@@ -922,7 +906,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
     if bname is not None:
         basename = '%s-' % bname + basename
     if not outputdir is None:
-        qtt.tools.mkdirc(os.path.join(outputdir, tag))
+        qtt.utilities.tools.mkdirc(os.path.join(outputdir, tag))
     pfile = os.path.join(outputdir, tag, basename + '.' + ext)
     return pfile
 
@@ -1016,9 +1000,6 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
 def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None, yunit=None, zunit=None, location=None, loc_record=None):
     ''' Make DataSet with one 2D array and two setpoint arrays
 
-    The y array will be the first setpoint array (1D), the x array the second setpoint (2D). 
-    The z should be a list of arrays of dimension ny x nx
-
     Arguments:
         xname, yname (string): the name of the setpoint array
         x, y (array): the setpoint data
@@ -1093,7 +1074,6 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
             measure_names += [p.full_name]
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     for idm, mname in enumerate(measure_names):
-        assert(zz.shape==y.shape)
         z = DataArray(name=mname, array_id=mname, label=mname,
                       preset_data=np.copy(zz), set_arrays=(x, y))
         dd.add_array(z)
@@ -1115,19 +1095,14 @@ def test_makeDataSet2D():
     p = ManualParameter('dummy')
     p2 = ManualParameter('dummy2')
     ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
+
     _ = diffDataset(ds)
 
-def test_makeDataSet2Dplain():
-    x = np.arange(0, 10)
-    y = np.arange(0, 5)
-    z = np.meshgrid(x, y)
-    _ = makeDataSet2Dplain('xname', x, 'yname', y, zname='measured', z=z)
 
 def test_makeDataSet1Dplain():
     x = np.arange(0, 10)
     y = np.vstack((x - 1, x + 10))
     ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
-
 
 #%%
 
@@ -1163,12 +1138,16 @@ def test_compare():
     ds = qcodes.tests.data_mocks.DataSet2D()
     compare_dataset_metadata(ds, ds, verbose=0)
 
+#%%
+
+
 def test_numpy_on_dataset():
     import qcodes.tests.data_mocks
     alldata = qcodes.tests.data_mocks.DataSet2D()
     X = alldata.z
     _ = np.array(X)
     s = np.linalg.svd(X)
+    # print(s)
 
 
 if __name__ == '__main__':
@@ -1177,6 +1156,5 @@ if __name__ == '__main__':
 
     test_numpy_on_dataset()
     test_makeDataSet2D()
-    test_makeDataSet2Dplain()
     test_makeDataSet1Dplain()
     test_compare()

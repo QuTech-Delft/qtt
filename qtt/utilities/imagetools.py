@@ -3,6 +3,7 @@ import numpy as np
 import warnings
 import scipy
 import matplotlib
+import matplotlib.pyplot as plt
 
 try:
     import cv2
@@ -11,10 +12,9 @@ except:
     warnings.warn('could not find opencv, not all functionality available', qtt.exceptions.MissingOptionalPackageWarning)
 
 import qtt.pgeometry as pgeometry
-import qtt.pgeometry as pmatlab
 
 from qtt.measurements.scans import fixReversal
-from qtt.tools import diffImage, diffImageSmooth
+from qtt.utilities.tools import diffImage, diffImageSmooth
 
 from qtt.algorithms.generic import smoothImage
 from qtt.algorithms.misc import polyfit2d, polyval2d
@@ -162,7 +162,7 @@ def _showIm(ims, fig=1, title=''):
     matplotlib.pyplot.imshow(ims, interpolation='nearest')
     matplotlib.pyplot.axis('image')
 
-@pmatlab.static_var("scaling0", np.diag([1., 1, 1]))
+@pgeometry.static_var("scaling0", np.diag([1., 1, 1]))
 def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2,
                   usemask=False, use_abs=False, w=2.5):
     """ Calculate cross matching score
@@ -211,17 +211,16 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
         dd = dd * mask
 
-    # dd=(dd*cf)
     cost = np.linalg.norm(dd)
 
     # area of intersection
     rr = np.array([[0., im.shape[1]], [0, im.shape[0]]])
-    ppx = pmatlab.region2poly(np.array([[0, samplesize[0]], [0., samplesize[1]]]))
-    ppimage = pmatlab.region2poly(rr)
-    pppatch = pmatlab.projectiveTransformation(H, ppimage)
-    ppi = pmatlab.polyintersect(ppx.T, pppatch.T).T
-    A = pmatlab.polyarea(ppi.T)
-    A0 = pmatlab.polyarea(ppx.T)
+    ppx = pgeometry.region2poly(np.array([[0, samplesize[0]], [0., samplesize[1]]]))
+    ppimage = pgeometry.region2poly(rr)
+    pppatch = pgeometry.projectiveTransformation(H, ppimage)
+    ppi = pgeometry.polyintersect(ppx.T, pppatch.T).T
+    A = pgeometry.polyarea(ppi.T)
+    A0 = pgeometry.polyarea(ppx.T)
 
     # special rules
     if np.abs(A / A0) < .85:
@@ -250,18 +249,18 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         if verbose:
             print('  add cost for image cc: %.1f' % dcost)
         cost += dcost
-    if pmatlab.angleDiff(aa[0], aa[1]) < np.deg2rad(30):
+    if pgeometry.angleDiff(aa[0], aa[1]) < np.deg2rad(30):
         if verbose:
             print('  add cost for angle diff')
         cost += 1000
-    if pmatlab.angleDiff(aa[2], aa[3]) < np.deg2rad(30):
+    if pgeometry.angleDiff(aa[2], aa[3]) < np.deg2rad(30):
         if verbose:
             print('  add cost for angle diff')
         cost += 1000
 
-    if pmatlab.angleDiffOri(aa[0], aa[2]) > np.deg2rad(10):
+    if pgeometry.angleDiffOri(aa[0], aa[2]) > np.deg2rad(10):
         cost += 10000
-    if pmatlab.angleDiffOri(aa[1], aa[3]) > np.deg2rad(10):
+    if pgeometry.angleDiffOri(aa[1], aa[3]) > np.deg2rad(10):
         cost += 10000
     if param[2] < 0:
         if verbose:
@@ -274,20 +273,16 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         cost += 10000
 
     if np.abs(param[2] - 10) > 8:
-        #print('x deviation!')
         cost += 10000
 
     if len(param) > 7:
-        if np.abs(pmatlab.angleDiff(param[7], np.pi / 4)) > np.deg2rad(30):
-            #print('psi deviation!')
+        if np.abs(pgeometry.angleDiff(param[7], np.pi / 4)) > np.deg2rad(30):
             cost += 10000
 
     if not fig is None:
-
-            # lsegment=cdata[7]
         _showIm(patch, fig=fig)
         plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
-        pmatlab.addfigurecopy(fig=fig)
+        pgeometry.addfigurecopy(fig=fig)
         plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m', linewidth=linewidth, markersize=10, label='transition line')
         plt.plot(cc[0], cc[1], '.m', markersize=12)
         for ii in range(4):
@@ -296,7 +291,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
             else:
                 lbl = None
             plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-', linewidth=linewidth, color=[0, .7, 0], label=lbl)
-            pmatlab.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
+            pgeometry.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
         if verbose >= 1:
             _showIm(modelpatch, fig=fig + 1)
             plt.title('Model patch: cost %.1f' % cost)
@@ -355,8 +350,8 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
             cc = np.array(param[0:2] / istep).reshape((2, 1))
 
     # lp and hp are the triple points
-    lp = cc + pmatlab.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
-    hp = cc - pmatlab.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
+    lp = cc + pgeometry.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
+    hp = cc - pgeometry.rot2D(psi + np.pi / 2).dot(np.array([[param[2] / istep], [0]]))
 
     op = np.zeros((5, 2))
     opr = np.zeros((4, 2))
@@ -367,7 +362,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
             ip[ii].flat = lp
         else:
             ip[ii].flat = hp
-        opr[ii] = ip[ii] + ((lsegment / istep) * pmatlab.rot2D(a).dot(np.array([[1], [0]]))).flat
+        opr[ii] = ip[ii] + ((lsegment / istep) * pgeometry.rot2D(a).dot(np.array([[1], [0]]))).flat
 
     if samplesize is not None:
         modelpatch = np.zeros([samplesize.flat[1], samplesize.flat[0]])
@@ -375,7 +370,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
         for ii in lines:
             if linesegment:
                 x0 = ip[ii]
-                x1x = np.array(x0 + lsegment / istep * (pmatlab.rot2D(aa[ii]).dot(np.array([[1], [0]]))).T).flatten()
+                x1x = np.array(x0 + lsegment / istep * (pgeometry.rot2D(aa[ii]).dot(np.array([[1], [0]]))).T).flatten()
 
                 lineSegment(modelpatch, x0=x0, x1=x1x, w=w / istep, l=None, H=H)
             else:
@@ -500,7 +495,6 @@ def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
     im += data
     return im
 
-import matplotlib.pyplot as plt
 
 def __calcSlope(pp):
     q = -np.diff(pp, axis=1)
@@ -521,15 +515,15 @@ def Vtrace(cdata, param, fig=None):
     psi = param[-1]
 
     q = np.array([10, 0]).reshape((2, 1))
-    p1 = cc + pmatlab.rot2D(psi).dot(q)
-    p2 = cc + pmatlab.rot2D(np.pi + psi).dot(q)
+    p1 = cc + pgeometry.rot2D(psi).dot(q)
+    p2 = cc + pgeometry.rot2D(np.pi + psi).dot(q)
     pp = np.array(np.hstack((p1, cc, p2)))
     pp = np.array(np.hstack((p1, p2)))
     if fig is not None:
         plt.figure(fig)
 
-        pmatlab.plotPoints(pp, '--k', markersize=20, linewidth=3, label='scan line')
-        pmatlab.plotPoints(pp, '.y', markersize=20)
+        pgeometry.plotPoints(pp, '--k', markersize=20, linewidth=3, label='scan line')
+        pgeometry.plotPoints(pp, '.y', markersize=20)
         plt.legend(numpoints=1, fontsize=14, loc=0)
     psi, slope = __calcSlope(pp)
     return pp, cc, slope

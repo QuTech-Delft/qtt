@@ -30,3 +30,5 @@ wrapt
 sphinx>=1.6
 sphinx_rtd_theme
 sphinxcontrib.bibtex
+nbsphinx
+pandoc
