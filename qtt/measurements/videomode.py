@@ -475,7 +475,7 @@ class VideoMode:
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels))
 
-    def __run_2d_scan(self, awg, virtual_awg, period=1e-4):
+    def __run_2d_scan(self, awg, virtual_awg, period=1e-6):
         if virtual_awg:
             sweep_ranges = [i * 2 for i in self.sweepranges]
             if isinstance(self.sweepparams, dict):

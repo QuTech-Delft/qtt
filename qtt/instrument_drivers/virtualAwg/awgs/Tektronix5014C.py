@@ -86,7 +86,7 @@ class Tektronix5014C_AWG(AwgCommon):
             raise ValueError('Not all channel amplitudes are equal. Please reset!')
         return gains[0]
 
-    def upload_waveforms(self, sequence_channels, sequence_names, sequence_items, reload=True):
+    def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
         channel_data = dict()
         waveform_data = dict()
         self.__waveform_data = zip(sequence_channels, sequence_names, sequence_items)
@@ -95,7 +95,7 @@ class Tektronix5014C_AWG(AwgCommon):
                 data_count = len(data_array)
                 waveform_data[name] = [np.zeros(data_count), np.zeros(data_count), np.zeros(data_count)]
                 channel_data.setdefault(channel_nr, []).append(name)
-            index = marker_nr if marker_nr else 0
+            index = marker_nr[-1] if len(marker_nr) > 1 else 0
             waveform_data[name][index] = data_array
         if reload:
             self._upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))
