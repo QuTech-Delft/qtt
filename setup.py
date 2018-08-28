@@ -8,18 +8,13 @@ def readme():
     with open('README.md', encoding='utf-8') as f:
         return f.read()
 
-def get_version(verbose=1):
+def get_version(verbose=1, filename='qtt/version.py'):
     """ Extract version information from source code """
 
-    try:
-        with open('qtt/version.py', 'r') as f:
-            ln = f.readline()
-            # print(ln)
-            m = re.search('.* ''(.*)''', ln)
-            version = (m.group(1)).strip('\'')
-    except Exception as E:
-        print(E)
-        version = 'none'
+    with open(filename, 'r') as f:
+        ln = f.readline()
+        m = re.search('.* ''(.*)''', ln)
+        version = (m.group(1)).strip('\'')
     if verbose:
         print('get_version: %s' % version)
     return version
