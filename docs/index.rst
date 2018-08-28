@@ -13,10 +13,11 @@ Quantum Technology Toolbox
 
 Hello, and welcome to the documentation of Quantum Technology Toolbox!
    
-Quantum Technology Toolbox (QTT) is a Python package for performing measurements and calibration of spin-qubits. It was developed initially at [QuTech](http://qutech.nl),
-an advanced research center for quantum computing and quantum internet. QuTech is a collaboration founded by the Delft University of Technology (`TU Delft <https://www.tudelft.nl/en>`_) and Netherlands Organisation for Applied Scientiﬁc Research (`TNO <https://www.tno.nl/en>`_).
+Quantum Technology Toolbox (QTT) is a Python package for performing measurements and calibration of spin-qubits. It was developed initially at `QuTech <http://qutech.nl>`_,
+an advanced research center for quantum computing and quantum internet. QuTech is a collaboration founded by the Delft University of Technology (`TU Delft <https://www.tudelft.nl/en>`_) and Netherlands Organisation for Applied Scientific Research (`TNO <https://www.tno.nl/en>`_).
 
-QuTech addresses scientific challenges as well as engineering issues in a joint center of know-how with industrial partners. One of these challenges is to automate the calibration and analysis of measurements pertaining spin qubits. For this purpose, QTT was developed. By sharing this framework with you we hope to work with you on improving it and together forward the development of quantum computers all over the world.
+QuTech addresses scientific challenges as well as engineering issues in a joint center of know-how with industrial partners. One of these challenges is to automate the calibration and analysis of measurements pertaining spin qubits.
+For this purpose, QTT was developed. By sharing this framework with you we hope to work with you on improving it and together forward the development of quantum computers all over the world.
 
 A more elaborate starting guide can be found in the introduction. We do include an example in here to show what QuTech Tuning is capable of:
 
