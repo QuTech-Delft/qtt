@@ -1,4 +1,4 @@
-# QuTech Tuning examples
+# QTT examples
 
 Below we included some examples, from very basic measurements to more advanced simulations 
 and analysis examples. For examples of the underlying QCoDeS framework, see 

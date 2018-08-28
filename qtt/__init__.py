@@ -1,4 +1,4 @@
-""" QuTech Tuning
+""" Quantum Technology Toolbox
 
 The QTT package contains functionality for the tuning and calibration of spin-qubits. The package is
 divided into subpacakges:
@@ -10,7 +10,7 @@ divided into subpacakges:
     - Gui: Several gui element for visualization of data
     - Instrument drivers: contains QCoDeS drivers for various instruments
 
-For more information see https://github.com/VandersypenQutech/qtt
+For more information see https://github.com/qutech-delft/qtt
 
 """
 # flake8: noqa (we don't need the "<...> imported but unused" error)
@@ -75,7 +75,7 @@ check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'colorama')
 check_version('0.1', 'redis', optional=True)
-check_version('0.1.7', qcodes) # version of qcodes required
+check_version('0.1.10', qcodes) # version of qcodes required
 
 
 #%% Load often used constructions
@@ -165,8 +165,6 @@ def _copy_to_str(x, memo):
 from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, Station
 for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str
-
-#qcodes.DataArray.omit_delegate_attrs += ['__deepcopy__']
 
 # make a qcodes instrument pickable
 qcodes.Instrument.__getstate__ = lambda self: str(self)

@@ -1,5 +1,5 @@
 ---
-title: 'qtt ( QuTech Tuning): a package for tuning and calibration of spin-qubits'
+title: 'QTT (Quantum Technology Toolbox): a package for tuning and calibration of spin-qubits'
 tags:
    - quantum dots
    - spin qubits
@@ -21,7 +21,7 @@ bibliography: paper.bib
 
 # Summary
 
-The Quantum Technology Toolbox (qtt) is a software package containing measurement routines and analysis functions 
+The Quantum Technology Toolbox (QTT) is a software package containing measurement routines and analysis functions 
 for the tuning and calibration of spin-qubits. An introduction to spin-qubits can be found~[@LievenSpins].
 
 The package is organized in the following subpackages:
