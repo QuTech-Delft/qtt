@@ -74,9 +74,26 @@ author = 'Pieter Eendebak'
 # built documents.
 #
 
-import qtt
+import re
+def get_version(verbose=1, filename='qtt/version.py'):
+    """ Extract version information from source code """
+
+    with open(filename, 'r') as f:
+        ln = f.readline()
+        m = re.search('.* ''(.*)''', ln)
+        version = (m.group(1)).strip('\'')
+    if verbose:
+        print('get_version: %s' % version)
+    return version
+
+
 # The short X.Y version.
-version = '{}'.format(qtt.__version__)
+if 0:    
+    import qtt
+    version = '{}'.format(qtt.__version__)
+else:
+    version = get_version(verbose=1, filename='../qtt/version.py')
+    
 # The full version, including alpha/beta/rc tags.
 release = version
 
