@@ -8,7 +8,6 @@ branches:
     
 # command to install dependencies
 install:
-#    - pip install --upgrade pip
 #    - pip install ipython
     - pip install -r develop_requirements.txt
     - python setup.py install
