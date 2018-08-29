@@ -17,13 +17,13 @@ pandoc
 urllib3
 Polygon3
 pyzmqrpc
+qcodes
 redis
 scipy >= 0.18
 scikit-image
 scikit-learn
 slacker
 simplejson
-spyder
 wrapt
 
 # for documentation building
