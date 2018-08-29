@@ -7,8 +7,8 @@ certifi
 colorama
 hickle>= 3.1
 jupyter
-numpy >= 1.10
-matplotlib >= 2.0
+numpy >= 1.13
+matplotlib >= 2.1
 pandas
 qtpy
 h5py
@@ -17,7 +17,10 @@ pandoc
 urllib3
 Polygon3
 pyzmqrpc
+pyqtgraph
+PyQt5
 qcodes
+-e git+https://github.com/qutech/qc-toolkit.git@master#egg=qctoolkit
 redis
 scipy >= 0.18
 scikit-image

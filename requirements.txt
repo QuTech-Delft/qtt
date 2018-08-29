@@ -5,13 +5,14 @@ coverage
 dulwich
 hickle
 numpy >= 1.13
-matplotlib >= 2.0
+matplotlib >= 2.1
 pandas
 Polygon3
 pyqtgraph
 pyzmqrpc
 PyQt5
 qtpy
+-e git+https://github.com/qutech/qc-toolkit.git@master#egg=qctoolkit
 sympy
 slacker
 scikit-image
