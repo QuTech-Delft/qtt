@@ -59,14 +59,14 @@ def fitOhmic(ds, verbose=1, fig=None, gainy=1e-7, gainx=1e-6):
     return {'fitparam': fitparam, 'resistance': r, 'biascurrent': biascurrent, 'description': 'ohmic'}
 
 
-def test_fitohmic():
+def test_fitohmic(fig=None):
     import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet1D()
     x=np.arange(-200, 200)
     y=1e-10*(x+50+20*np.random.rand(x.size) )
     ds = qtt.data.makeDataSet1Dplain('gate', x, xunit='mV', yname='current', y=y )
     
-    r = fitOhmic(ds, fig=300, gainx=1e-6, gainy=1)
+    r = fitOhmic(ds, fig=fig, gainx=1e-6, gainy=1)
 
 if __name__ == '__main__':
-    test_fitohmic()
+    test_fitohmic(fig=300)
