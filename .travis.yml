@@ -12,6 +12,7 @@ install:
 #    - pip install ipython
     - pip install -r develop_requirements.txt
     #- sudo apt-get install -y python-opencv
+    - pip install opencv-python
     - pip install --upgrade pytest
     #- python setup.py install
 # command to run tests
