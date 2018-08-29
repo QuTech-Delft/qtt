@@ -17,6 +17,7 @@ pandoc
 urllib3
 Polygon3
 pyzmqrpc
+pyqtgraph
 qcodes
 redis
 scipy >= 0.18
