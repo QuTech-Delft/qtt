@@ -20,7 +20,7 @@ pyzmqrpc
 pyqtgraph
 PyQt5
 qcodes
-qctoolkit
+-e git@github.com:qutech/qc-toolkit.git
 redis
 scipy >= 0.18
 scikit-image
