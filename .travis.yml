@@ -13,4 +13,6 @@ install:
     - python setup.py install
 # command to run tests
 script: 
-    - pytest
+    - ls
+    - pytest --version
+    - pytest -v

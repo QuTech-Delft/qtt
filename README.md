@@ -28,14 +28,14 @@ QTT is compatible with Python 3.5+.
 
 QTT can be installed as a pip package:
 ```
-$ pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+$ pip install qtt
 ```
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 ```
 $ python setup.py develop
 ```
 
-For for Vandersypen research group there are more detailed instructions, read the file [INSTALL-spinqubits.md](INSTALL-spinqubits.md).
+For the Vandersypen research group there are more detailed instructions, read the file INSTALL.md in the spin-projects repository.
 
 ### Updating QTT
 
