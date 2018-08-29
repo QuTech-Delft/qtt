@@ -1,10 +1,10 @@
 language: python
 python:
     - "3.6"
-branches:
-  only:
-    - master
-    - dev
+#branches:
+#  only:
+#    - master
+#    - dev
     
 # command to install dependencies
 install:
