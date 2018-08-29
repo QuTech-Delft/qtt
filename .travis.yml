@@ -1,18 +1,20 @@
 language: python
 python:
-    - "3.5"
+    - "3.6"
 branches:
   only:
     - master
-
+    - dev
+    
 # command to install dependencies
 install:
-    - pip install --upgrade pip
-    - pip install ipython
+#    - pip install --upgrade pip
+#    - pip install ipython
     - pip install -r develop_requirements.txt
-    - python setup.py develop
+    - python setup.py install
 # command to run tests
 script: 
-    - python  qtt/test.py --skip-coverage
+    - pytest
 
 
+  - pytest
