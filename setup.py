@@ -60,6 +60,7 @@ setup(name='qtt',
       maintainer_email='pieter.eendebak@tno.nl',
       description='Python-based framework for analysis and tuning of quantum dots',
       long_description=readme(),
+      long_description_content_type='text/markdown',
       url='http://qutech.nl',
       classifiers=[
           'Development Status :: 3 - Alpha',
