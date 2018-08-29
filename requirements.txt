@@ -12,6 +12,7 @@ pyqtgraph
 pyzmqrpc
 PyQt5
 qtpy
+qctoolkit
 sympy
 slacker
 scikit-image

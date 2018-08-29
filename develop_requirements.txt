@@ -20,6 +20,7 @@ pyzmqrpc
 pyqtgraph
 PyQt5
 qcodes
+qctoolkit
 redis
 scipy >= 0.18
 scikit-image
