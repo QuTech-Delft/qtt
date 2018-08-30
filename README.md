@@ -16,7 +16,8 @@ Also see
 
 ## Structure
 
-QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on Qcodes. In Delft we use a separate repository for the measurement setups (called 'stations'), where each station is programmed in a different way to fit the measurement needs. In some cases you can use a personal folder in the 'users' repository, but we recommend keeping this to a minimum and always use a common folder with clear descriptions in the code.
+QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on Qcodes.
+In Delft we use a separate repository for the measurement setups (called 'stations'), where each station is programmed in a different way to fit the measurement needs. In some cases you can use a personal folder in the 'users' repository, but we recommend keeping this to a minimum and always use a common folder with clear descriptions in the code.
 
 * [Qcodes](https://github.com/qdev-dk/Qcodes): the basic framework
 * [qtt](https://github.com/VandersypenQutech/qtt): contains additional functionality and algorithms
