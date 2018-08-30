@@ -6,6 +6,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import warnings
+import copy
 
 import qcodes
 
@@ -21,8 +22,14 @@ from qtt.utilities.tools import freezeclass
 class twodot_t(dict):
 
     def __init(self, gates, name=None):
-        """ Class to represent a double quantum dot """
+        """ Class to represent a double quantum dot
+        
+        Args:
+            gates (list of str): gate names of barrier left, plunger left, barrier middle, plunger right and barrier right
+            name (str): name for the object
+        """
         self['gates'] = gates
+        self['name'] = name
 
     def name(self):
         return self['name']
@@ -34,9 +41,7 @@ class twodot_t(dict):
     def __getstate__(self):
         """ Helper function to allow pickling of object """
         d = {}
-        import copy
         for k, v in self.__dict__.items():
-            #print('deepcopy %s' % k)
             if k not in ['station']:
                 d[k] = copy.deepcopy(v)
         return d
@@ -50,8 +55,8 @@ class onedot_t(dict):
         """ Class to represent a single quantum dot
 
         Args:
-            gates (list): names of gates to use for left barrier, plunger and right barrier
-            name (str): for for the object
+            gates (list of str): names of gates to use for left barrier, plunger and right barrier
+            name (str): name for the object
             transport_instrument (str or Instrument): instrument to use for transport measurements
             data (dict or None): data for internal storage
             station (obj): object with references to instruments
@@ -81,7 +86,6 @@ class onedot_t(dict):
         d = {}
         import copy
         for k, v in self.__dict__.items():
-            #print('deepcopy %s' % k)
             if k not in ['station']:
                 d[k] = copy.deepcopy(v)
         return d
@@ -90,7 +94,6 @@ class onedot_t(dict):
 def test_spin_structures(verbose=0):
     import pickle
     import json
-    # station=qcodes.Station()
     o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)
     if verbose:
         print('test_spin_structures: %s' % (o,))
@@ -426,7 +429,7 @@ class sensingdot_t:
 
     def fastTune(self, Naverage=90, sweeprange=79, period=.5e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, invert=False, verbose=1):
-        """Fast tuning of the sensing dot plunger.
+        """ Fast tuning of the sensing dot plunger.
 
         If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used for the sweep.
 
@@ -491,8 +494,6 @@ class sensingdot_t:
 
             alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={
                                              'label': 'sensingdot_t.fastTune'})
-
-        #alldata= qtt.scans.scan1Dfast(self.station, scanjob, location=location)
 
         alldata.add_metadata({'scanjob': scanjob, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
@@ -577,10 +578,6 @@ class MultiParameter(qcodes.instrument.parameter.Parameter):
             self.unit = unit
         self.vals = None
 
-        # for backwards compatibility
-        self.has_get = True
-        self.has_set = True
-
     def get_raw(self):
         values = []
         for p in self.params:
@@ -609,10 +606,6 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
             self.label = self.name
         else:
             self.label = label
-
-        # for backwards compatibility
-        self.has_get = True
-        self.has_set = True
 
     def get_raw(self):
         values = []
