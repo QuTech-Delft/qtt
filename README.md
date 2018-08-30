@@ -7,7 +7,8 @@ Welcome to the QTT framework. This README will shortly introduce the framework, 
 Quantum Technology Toolbox (QTT) is a Python-based framework developed by QuTech for the tuning and calibration of
 quantum dots and spin qubits. QuTech is an advanced research center based in Delft, the Netherlands, for quantum computing and quantum internet, a collaboration founded by the University of Technology Delft (TU Delft) and the Netherlands Organisation for Applied Scientiﬁc Research (TNO).
 The experiments done on spin-qubits in QuTech make use of the QTT framework to add automated funcionalities and algorithms to their measurement code. This paves the way to a more time-efficient, user-friendly and robust code, making more complex research on larger systems possible.
-We invite you to use and contribute to QTT. Below we will guide you through the installation.
+We invite you to use and contribute to QTT. For usage of QTT see the detailed [documentation](https://qtt.readthedocs.io/en/latest/) on readthedocs.io.
+
 
 
 QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on Qcodes.
