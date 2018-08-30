@@ -1,9 +1,9 @@
-# Top level structure
+# Top level structure for QTT
 
-The packages contains the following modules:
+The package contains the following modules:
 
 * measurements
-* analysis/ algorithms
+* algorithms
 * gui
 * simulation
 * utilities

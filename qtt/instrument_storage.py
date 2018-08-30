@@ -3,9 +3,11 @@ import numpy as np
 import json
 import numbers
 import configparser
+import qtt.utilities.tools
 
-
+@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def save_instrument_json(instr, ifile, verbose=1):
+    """ Save instrument configuration to json """
     jdict = dict()
     for pname, p in instr.parameters.items():
         if not hasattr(p, 'set'):
@@ -19,7 +21,9 @@ def save_instrument_json(instr, ifile, verbose=1):
     json.dump(jdict, open(ifile, 'w'), sort_keys=True, indent=4)
 
 
+@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def load_instrument_json(instr, ifile, verbose=1):
+    """ Load instrument configuration from json """
     with open(ifile, 'r') as fid:
         jdict = json.load(fid)
     for pname, p in instr.parameters.items():
@@ -33,6 +37,12 @@ def load_instrument_json(instr, ifile, verbose=1):
     return jdict
 
 def save_instrument_configparser(instr, ifile, verbose=1):
+    """ Save instrument configuration to configparser structure
+    
+    Args:
+        instr (Instrument): instrument to apply settings to
+        ifile (str): configuration file    
+    """
     jdict = configparser.ConfigParser()
     jdict.read(ifile)
     if not instr.name in jdict:
@@ -51,6 +61,12 @@ def save_instrument_configparser(instr, ifile, verbose=1):
 
 
 def load_instrument_configparser(instr, ifile, verbose=1):
+    """ Load instrument configuration from configparser structure
+    
+    Args:
+        instr (Instrument): instrument to apply settings to
+        ifile (str): configuration file    
+    """
     jdict = configparser.ConfigParser()
     jdict.read(ifile)
     for pname, p in instr.parameters.items():
@@ -87,5 +103,4 @@ if __name__ == '__main__':
     save_instrument(v2hardware, ifile)
     load_instrument(v2hardware, ifile)
 
-    import configparser
-    cc = configparser.ConfigParser()
+

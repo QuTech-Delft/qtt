@@ -223,7 +223,7 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
 
 
 def package_versions(verbose=1):
-
+    """ Report package versions installed """
     print('numpy.__version__ %s' % numpy.__version__)
     print('scipy.__version__ %s' % scipy.__version__)
     print('matplotlib.__version__ %s' % matplotlib.__version__)
@@ -315,7 +315,7 @@ def tprint(string, dt=1, output=False, tag='default'):
 
 
 def partiala(method, **kwargs):
-    ''' Function to perform functools.partial on named arguments '''
+    """ Function to perform functools.partial on named arguments """
     def t(x):
         return method(x, **kwargs)
     return t
@@ -376,17 +376,19 @@ def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
 
 class fps_t:
 
-    """ Class for framerate measurements
-    Example usage:
-
-    >>> fps = fps_t(nn=8)
-    >>> for kk in range(12):
-    ...       fps.addtime( .2*kk )
-    >>> fps.show()
-    framerate: 5.000
-    """
-
     def __init__(self, nn=40):
+        """ Class for framerate measurements
+        
+        Args:
+            nn (int): number of time measurements to store
+        Example usage:
+    
+        >>> fps = fps_t(nn=8)
+        >>> for kk in range(12):
+        ...       fps.addtime(.2*kk )
+        >>> fps.show()
+        framerate: 5.000
+        """
         self.n = nn
         self.tt = np.zeros(self.n)
         self.x = np.zeros(self.n)
@@ -405,10 +407,11 @@ class fps_t:
         self.x[iim] = x
 
     def value(self):
-        """ Return mean current values """
+        """ Return mean of current values """
         return self.x.mean()
 
     def iim(self):
+        """ Return index modulo number of elements """
         return self.ii % self.n
 
     def framerate(self):
@@ -422,6 +425,7 @@ class fps_t:
         return fps
 
     def loop(self, s=''):
+        """ Helper function """
         self.addtime(time.time())
         self.showloop(s='')
 
@@ -435,7 +439,7 @@ class fps_t:
                 '%s: loop %d: framerate: %.1f [fps]' % (s, self.ii, fps), dt=dt)
 
     def show(self):
-        ''' Print the current framerate '''
+        """ Print the current framerate """
         fps = self.framerate()
         print('framerate: %.3f' % fps)
 
@@ -878,7 +882,6 @@ def setregion(im, subim, pos, mask=None, clip=False):
         y2 = min(y2, im.shape[0])
         w = max(0, x2 - x1)
         h = max(0, y2 - y1)
-    # print('x1 %d, x2 %d, w %d' % (x1, x2, w))
     if mask is None:
         if len(im.shape) == len(subim.shape):
             im[y1:y2, x1:x2, ...] = subim[0:h, 0:w]
@@ -916,6 +919,9 @@ def region2poly(rr):
 def plotLabels(xx, *args, **kwargs):
     """ Plot labels next to points
 
+    Args:
+        xx (2xN array): points to plot
+        *kwargs: arguments past to plotting function
     Example:
     >>> xx=np.random.rand(2, 10)
     >>> fig=plt.figure(10); plt.clf()
@@ -943,11 +949,32 @@ def plotLabels(xx, *args, **kwargs):
         th[ii] = ax.annotate(lbltxt, xx[:, ii], **kwargs)
     return th
 
+def plotPoints(xx, *args, **kwargs):
+    """ Plot 2D or 3D points
+
+    Args:
+        xx (array): array of points to plot
+        *args: arguments passed to the plot function of matplotlib
+        **kwargs:  arguments passed to the plot function of matplotlib
+    Example:
+    >>> plotPoints(np.random.rand(2,10), '.-b')
+
+    """
+    if xx.shape[0] == 2:
+        h = plt.plot(xx[0, :], xx[1, :], *args, **kwargs)
+    elif xx.shape[0] == 3:
+        h = plt.plot(xx[0, :], xx[1, :], xx[2, :], *args, **kwargs)
+    if xx.shape[0] == 1:
+        h = plt.plot(xx[0, :], *args, **kwargs)
+    else:
+        h = None
+    return h
 
 def plot2Dline(line, *args, **kwargs):
     """ Plot a 2D line in a matplotlib figure
 
-    line: 3x1 array
+    Args:
+        line (3x1 array): line to plot
 
     >>> plot2Dline([-1,1,0], 'b')
     """
@@ -976,10 +1003,9 @@ def scaleImage(image, display_min=None, display_max=None):
 
     Example:
         >>> im=scaleImage(255*np.random.rand( 30,40), 40, 100)
+        
+    Code modified from: https://stackoverflow.com/questions/14464449/using-numpy-to-efficiently-convert-16-bit-image-data-to-8-bit-for-display-with?noredirect=1&lq=1        
     """
-    # Here I set copy=True in order to ensure the original image is not
-    # modified. If you don't mind modifying the original image, you can
-    # set copy=False or skip this step.
     image = np.array(image, copy=True)
 
     if display_min is None:
@@ -1003,8 +1029,6 @@ def scaleImage(image, display_min=None, display_max=None):
 def auto_canny(image, sigma=0.33):
     """ Canny edge detection with automatic parameter detection
 
-    Code from http://www.pyimagesearch.com/2015/04/06/zero-parameter-automatic-canny-edge-detection-with-python-and-opencv/
-
     >>> imc=auto_canny(np.zeros( (200,300)).astype(np.uint8))
 
     Arguments
@@ -1016,6 +1040,7 @@ def auto_canny(image, sigma=0.33):
         edged : array
             detected edges
 
+    Code from: http://www.pyimagesearch.com/2015/04/06/zero-parameter-automatic-canny-edge-detection-with-python-and-opencv/
     """
     # compute the median of the single channel pixel intensities
     v = np.median(image)
@@ -1026,29 +1051,6 @@ def auto_canny(image, sigma=0.33):
     return edged
 
 #%% Plotting functions
-
-
-def plotPoints(xx, *args, **kwargs):
-    """ Plot 2D or 3D points
-
-    Args:
-        xx (array): array of points to plot
-        args: arguments passed to the plot function of matplotlib
-        kwargs:  arguments passed to the plot function of matplotlib
-    Example:
-    >>> plotPoints(np.random.rand(2,10), '.-b')
-
-    """
-    if xx.shape[0] == 2:
-        h = plt.plot(xx[0, :], xx[1, :], *args, **kwargs)
-    elif xx.shape[0] == 3:
-        h = plt.plot(xx[0, :], xx[1, :], xx[2, :], *args, **kwargs)
-    if xx.shape[0] == 1:
-        h = plt.plot(xx[0, :], *args, **kwargs)
-    else:
-        h = None
-    return h
-
 
 def orthogonal_proj(zfront, zback):
     """ see http://stackoverflow.com/questions/23840756/how-to-disable-perspective-in-mplot3d """
@@ -1169,7 +1171,7 @@ def test_polyintersect():
 
 
 def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0), thickness=-1, copyimage=True):
-    """ Draw points on image
+    """ Draw points on image with opencv
 
     Arguments
     ---------
@@ -1302,6 +1304,9 @@ def smoothstep(x, x0=0, alpha=1):
 
 def logistic(x, x0=0, alpha=1):
     """ Simple logistic function
+    
+    Args:
+        x (float or array)
 
     >>> t=np.arange(0,600,1.)
     >>> _ = plt.plot(t, logistic(t, 300, alpha=1./100),'.b')
@@ -1792,7 +1797,7 @@ except:
 
 
 def getWindowRectangle():
-    """ Return current window rectangle """
+    """ Return current matplotlib window rectangle """
     x, y, w, h = None, None, None, None
     mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
@@ -1957,9 +1962,10 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
 def robustCost(x, thr, method='L1'):
     """ Robust cost function
 
-    x (array): data to be transformed
-    thr (float or 'auto' or None): threshold. If None then the input x is returned unmodified. If 'auto' then use automatic detection (at 95th percentile)
-    method (str): method to be used. use 'show' to show the options
+    Args:
+       x (array): data to be transformed
+       thr (float or 'auto' or None): threshold. If None then the input x is returned unmodified. If 'auto' then use automatic detection (at 95th percentile)
+       method (str): method to be used. use 'show' to show the options
 
     Example
     -------
@@ -2054,105 +2060,6 @@ def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
     return None
 
 
-#%% Make nice plots
-#
-
-def niceplot(ax, fig=None, despine=True, verbose=0, figurebg=True, tightlayout=True, legend=None, almost_black='#222222', tickdirection='out', debug=0, figpad=1.0):
-    """ Create a good looking plot
-
-    The code
-        - removes spines
-        - makes legend and spines lighter
-        - makes legend lighter
-
-    See also: http://blog.olgabotvinnik.com/prettyplotlib/
-
-    Arguments
-    ---------
-        ax : axis handle
-            Handle for axis to process
-        fig : integer
-            Figure handle to use
-
-
-    """
-
-    if debug > 16:
-        plt.pause(0.001)
-        plt.draw()
-        plt.show()
-        return
-
-    if isinstance(fig, int):
-        fig = plt.figure(fig)
-
-    # Remove top and right axes lines ("spines")
-    if verbose >= 2:
-        print('niceplot: ax %s, fig %s' % (str(ax), str(fig)))
-    if verbose:
-        print('niceplot: remove spines')
-
-    spines_to_keep = ['bottom', 'left']
-    if despine:
-        spines_to_remove = ['top', 'right']
-        for spine in spines_to_remove:
-            ax.spines[spine].set_visible(False)
-    else:
-        spines_to_keep += ['top', 'right']
-    if debug > 10:
-        plt.pause(0.001)
-        plt.draw()
-        plt.show()
-        return
-
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-
-    if verbose:
-        print('niceplot: reduce spine intensity')
-
-    for spine in spines_to_keep:
-        ax.spines[spine].set_linewidth(0.5)
-        ax.spines[spine].set_color(almost_black)
-
-    ax.tick_params(axis='both', direction=tickdirection)
-
-    if debug > 6:
-        return
-
-    if legend is not None:
-        if verbose:
-            print('niceplot: adjust legend')
-
-        # Remove the line around the legend box, and instead fill it with a light grey
-        # Also only use one point for the scatterplot legend because the user will
-        # get the idea after just one, they don't need three.
-        light_grey = np.array([float(241) / float(255)] * 3)
-        rect = legend.get_frame()
-        rect.set_facecolor(light_grey)
-        middle_grey = np.array([float(151) / float(255)] * 3)
-        rect.set_edgecolor(middle_grey)
-        # rect.set_linewidth(0.0)
-
-        # Change the legend label colors to almost black, too
-        texts = legend.texts
-        for t in texts:
-            t.set_color(almost_black)
-
-        # ttx=legend.get_texts()
-        #[v.set_color(almost_black) for v in ttx]
-
-    # fig.tight_layout(pad=0.1)
-    if fig is not None and tightlayout:
-        fig.tight_layout(pad=figpad)
-
-    if figurebg and (fig is not None):
-        fig.set_facecolor('w')
-
-    plt.draw()
-    plt.show()
-
-
 def otsu(im, fig=None):
     """ Calculate threshold on data using Otsu's method
 
@@ -2214,18 +2121,18 @@ def decomposeProjectiveTransformation(H, verbose=0):
     """ Decompose projective transformation
     H is decomposed as H = Hs*Ha*Hp with
 
- Hs = [sR t]
-      [0  1]
-
- Ha = [K 0]
-      [0 1]
-
- Hp = [I 0]
-      [v' eta]
-
- If H is 3-dimensional, then R = [ cos(phi) -sin(phi); sin(phi) cos(phi)];
-
- For more information see "Multiple View Geometry", paragraph 1.4.6.
+     Hs = [sR t]
+          [0  1]
+    
+     Ha = [K 0]
+          [0 1]
+    
+     Hp = [I 0]
+          [v' eta]
+    
+    If H is 3-dimensional, then R = [ cos(phi) -sin(phi); sin(phi) cos(phi)];
+    
+    For more information see "Multiple View Geometry", paragraph 1.4.6.
 
     >>> Ha, Hs, Hp, rest = decomposeProjectiveTransformation( np.eye(3) )
     """
@@ -2352,80 +2259,14 @@ def fitPlane(X):
     t = minAlg_5p4(AA)
     return t
 
-
-#%% Debugging
-
-import threading
-
-
-class ThreadObject:
-
-    def __init__(self, name, worker=None, wait_time=.1, **kwargs):
-        ''' Class to run code in the background with a specified time delay '''
-        self.name = name
-        self.worker = worker
-        self.wait_time = wait_time
-        self.active = 1
-        self.mythread = threading.Thread(target=self.worker)
-        self.pverbose = 0
-
-        self.fps = fps_t(10)
-        self.loopidx = 0
-
-    def switch(self):
-        if self.active:
-            self.active = 0
-        else:
-            self.run()
-
-    def abort(self):
-        self.active = 0
-
-    def stop(self):
-        self.abort()
-
-    def start(self, worker=None):
-        if worker is None:
-            worker = self.worker
-        try:
-            self.mythead.terminate()
-            self.active = 1
-        except:
-            pass
-        self.mythread = threading.Thread(target=self.run)
-        self.mythread.start()
-
-    def run(self):
-        ii = 0
-        self.active = 1
-        if self.pverbose:
-            print('%s: run start' % self.name)
-        while True:
-            if self.pverbose:
-                print('%s: run %d ' % (self.name, ii))
-            logging.info('pid %d: %s: loop %d' % (os.getpid(), self.name, ii), tag=self.name, dt=5)
-            self.fps.addtime(time.time())
-            ii = ii + 1
-
-            if self.worker is not None:
-                if self.pverbose:
-                    print('%s: run %d: call worker ' % (self.name, ii))
-                self.worker()
-            time.sleep(self.wait_time)
-
-            if not self.active:
-                logging.info('%s: aborting loop' % self.name)
-                break
-
-        if 1:
-            if self.pverbose:
-                print('%s: run done' % self.name)
-
-    def __repr__(self):
-        return ('%s: active %d' % (self.__class__, self.active))
-
-
 def modulepath(m):
+    """ Return path for module
+    
+    Args:
+        m (str or module): module to return path
+    Returns:
+        str: path of module
+    """
     package = pkgutil.get_loader(m)
     if package is None:
         return None
@@ -2462,14 +2303,6 @@ def test_geometry(verbose=1, fig=None):
         plt.imshow(im, interpolation='nearest')
 
 
-def unittest(verbose=1):
-    """ Unittest function for module """
-    import doctest
-    if verbose >= 2:
-        print('pgeometry: running unittest')
-    _ = euler2RBE([0, 1, 2])
-    doctest.testmod()
-
 def test_intersect2lines():
     p1 = np.array([[0, 0]])
     p2 = np.array([[1, 0]])
@@ -2485,14 +2318,16 @@ def test_intersect2lines():
 
 
 if __name__ == '__main__':
+    test_geometry()
     test_intersect2lines()
-    
+
 #%% Run tests from documentation
 if __name__ == "__main__":
-    """ Dummy main for doctest
-    Run python pgeometry.py -v to test the module
-    """
-    import doctest
-    doctest.testmod()
+    """ Dummy main for testing
+    """   
+    
+    import unittest      
+    #testcase = unittest.FunctionTestCase(test_intersect2lines)
+    unittest.main()
 
 
