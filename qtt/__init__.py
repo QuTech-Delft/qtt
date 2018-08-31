@@ -46,7 +46,7 @@ except ImportError:
 #%% Check packages
 
 
-def check_version(version, module=qcodes, optional = False):
+def check_version(version, module=qcodes, optional = False, install_message=None):
     """ Check whether a module has the corret version """
     if isinstance(module, str):
         try:
@@ -57,6 +57,8 @@ def check_version(version, module=qcodes, optional = False):
                 warnings.warn('optional package %s is not available' % module, qtt.exceptions.MissingOptionalPackageWarning)
                 return
             else:
+                if install_message is not None:
+                    print(install_message)
                 raise Exception('could not load module %s' % module)
             
     mversion = getattr(module, '__version__', None)
@@ -77,6 +79,7 @@ check_version('0.1', 'colorama')
 check_version('0.1', 'redis', optional=True)
 check_version('0.1.10', qcodes) # version of qcodes required
 
+check_version('3.0', 'Polygon', install_message= "use command 'pip install Polygon3' to install the package")
 
 #%% Load often used constructions
 
