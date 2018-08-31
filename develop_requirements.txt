@@ -30,8 +30,10 @@ simplejson
 wrapt
 
 # for documentation building
-sphinx>=1.6
+sphinx>=1.7
 sphinx_rtd_theme
 sphinxcontrib.bibtex
+sphinxcontrib.apidoc
 nbsphinx
-pandoc
+pypandoc>=1.3
+jupyter_contrib_nbextensions
