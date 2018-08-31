@@ -161,7 +161,7 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
     imx = imx / scale
 
     if fig is not None:
-        y_data = np.arange(imq.shape[0])
+#        y_data = np.arange(imq.shape[0])
         plt.figure(fig)
         plt.clf()
         plt.subplot(2, 2, 1)
@@ -179,6 +179,7 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('imx')
+        plt.tight_layout()
 
     return imx, imq, backgr_sm
 
@@ -258,10 +259,10 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
         plt.figure(fig)
         plt.clf()
         plt.pcolormesh(x_data, y_data, imx)
-        plt.title('sensor signal')
-        plt.colorbar()
         plt.plot(horz_vals[mm1[idx1]], y_data[idx1], '.b', markersize=14, label='idx1')
         plt.plot(horz_vals[mm2[idx2]], y_data[idx2], '.r', markersize=14, label='idx2')
+        plt.xlabel('Detuning (mV)')
+        plt.ylabel('Frequency (Hz)')
 
     return xx, weight, {}
 
@@ -432,6 +433,8 @@ def show_traces(x_data, z_data, fig=100, direction='h', title=None):
         if title is None:
             title = 'Blue: top lines, red: bottom lines'
         plt.title(title)
+    plt.xlabel('Detuning (mV)')
+    plt.ylabel('Signal (a.u.)')
 
 
 def test_pat_fitting(fig=None):
