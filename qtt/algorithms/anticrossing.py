@@ -37,8 +37,8 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
 
         * centre (2x1 array): position of the fitted anti-crossing
         * fit_params (array): fitting parameters of the model. See :func:`fitModel`
-        * fitpoints (dict): a dictionary with fitted points. centre is the centre point; lp and hp are the corners of the anti-crossing. the four lines outwards are define by ip and op
-
+        * fitpoints (dict): a dictionary with fitted points. centre is the centre point; left_point and right_point are the corners
+                    of the anti-crossing. the four lines outwards are define by inner_points and outer_points
 
     """
     abs_val = True
@@ -139,7 +139,7 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
         afit (dict): fit data from fit_anticrossing
         ds (None or DataSet): dataset to show
         fig (int): index of matplotlib window
-        linewidth: (integer) plot linewidth, default = 2
+        linewidth (integer): plot linewidth, default = 2
 
     Returns:
         -
