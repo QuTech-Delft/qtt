@@ -5,9 +5,7 @@ This is part of qtt.
 """
 
 import numpy as np
-#import scipy
 import os
-#import sys
 import copy
 import logging
 import time
@@ -1998,9 +1996,9 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     scanjob.parse_param('sweepdata', station, paramtype='fast')
     scanjob.parse_param('stepdata', station, paramtype='fast')
 
-    minstrhandle = getattr(station, scanjob.get('minstrumenthandle', 'fpga'))
+    minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'digitizer'))
+    read_ch = get_minstrument_channels(scanjob['minstrument'])
 
-    read_ch = scanjob['minstrument']
     if isinstance(read_ch, int):
         read_ch = [read_ch]
 
