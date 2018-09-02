@@ -18,27 +18,39 @@ import matplotlib.pyplot as plt
 from qcodes import MatPlot
 
 #%%
+
+
 def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2.5,
-                 diff_dir='dx', plot=False, verbose=1, param={}):
+                     diff_dir='dx', plot=False, verbose=1, param={}):
     """ Fits an anti-crossing model to a 2D scan
-    
+
+    The model fitted is without tunnel coupling.
+
     Args:
         dataset: (qcodes dataset) the 2D scan measurement dataset
-        
+
     Returns:
         anticross_fit: (dict) the parameters describing the fitted anti-cross
                        optionally the cost for fitting and the figure number
+
+    The main fields in the result structure are:
+
+        * centre (2x1 array): position of the fitted anti-crossing
+        * fit_params (array): fitting parameters of the model. See :func:`fitModel`
+        * fitpoints (dict): a dictionary with fitted points. centre is the centre point; lp and hp are the corners of the anti-crossing. the four lines outwards are define by ip and op
+
+
     """
     abs_val = True
-    
-    a=dataset.default_parameter_array().set_arrays
+
+    a = dataset.default_parameter_array().set_arrays
     labels = [x.name for x in a]
-    
+
     im, tr = qtt.data.dataset2image(dataset)
     imextent = tr.scan_image_extent()
 
     # get parameters of the algorithm
-    istep = param.get('istep', 0.25)  # resolution to convert the data into 
+    istep = param.get('istep', 0.25)  # resolution to convert the data into
     istepmodel = param.get('istepmodel', 0.5)  # resolution in which to perform model fitting
     ksizemv = param.get('ksizemv', 31)  # kernel size in mV
 
@@ -51,11 +63,11 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
         (100. / np.percentile(imx, 99))  # scale image
 
     # initialization of anti-crossing model
-    param0 = [(imx.shape[0] / 2 + .5) * istep, (imx.shape[0] / 2 + .5) * istep, \
-          3.5, 1.17809725, 3.5, 4.3196899, 0.39269908]
+    param0 = [(imx.shape[0] / 2 + .5) * istep, (imx.shape[0] / 2 + .5) * istep,
+              3.5, 1.17809725, 3.5, 4.3196899, 0.39269908]
     if width_guess is not None:
         param0[2] = width_guess
-    
+
     if angles_guess is not None:
         param0[3:] = angles_guess
 
@@ -74,30 +86,30 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
     fitparam = res.x
 
     cost, patch, cdata, _ = evaluateCross(
-            fitparam, imx, verbose=0, fig=None, istep=istep, istepmodel=istepmodel, w=w)
-    ccpixel_straight =cdata[0]    
-    ccpixel=qtt.pgeometry.projectiveTransformation(np.linalg.inv(Hstraight), (istepmodel/istep)*ccpixel_straight)
-    
+        fitparam, imx, verbose=0, fig=None, istep=istep, istepmodel=istepmodel, w=w)
+    ccpixel_straight = cdata[0]
+    ccpixel = qtt.pgeometry.projectiveTransformation(np.linalg.inv(Hstraight), (istepmodel / istep) * ccpixel_straight)
+
     if verbose:
         print('fit_anticrossing: patch size %s' % (patch.shape, ))
-        
+
     def convert_coordinates(xpix):
-        ccpixel=qtt.pgeometry.projectiveTransformation(np.linalg.inv(Hstraight), (istepmodel/istep)*xpix)
+        ccpixel = qtt.pgeometry.projectiveTransformation(np.linalg.inv(Hstraight), (istepmodel / istep) * xpix)
         return tr.pixel2scan(ccpixel)
-        
-    (cc, lp, hp, ip, op, _, _, _)=cdata
-     
-    centre=convert_coordinates(np.array(cc))
-    lp=convert_coordinates(np.array(lp))
-    hp=convert_coordinates(np.array(hp))
-    ip=convert_coordinates(np.array(ip).T)
-    op=convert_coordinates(np.array(op).T)
+
+    (cc, lp, hp, ip, op, _, _, _) = cdata
+
+    centre = convert_coordinates(np.array(cc))
+    lp = convert_coordinates(np.array(lp))
+    hp = convert_coordinates(np.array(hp))
+    ip = convert_coordinates(np.array(ip).T)
+    op = convert_coordinates(np.array(op).T)
 
     anticross_fit = {'labels': labels}
-    anticross_fit['centre']=tr.pixel2scan(ccpixel)
-    anticross_fit['fitpoints']={'centre': centre, 'lp':lp,'hp': hp, 'ip': ip, 'op': op}
+    anticross_fit['centre'] = tr.pixel2scan(ccpixel)
+    anticross_fit['fitpoints'] = {'centre': centre, 'left_point': lp,
+                                  'right_point': hp, 'inner_points': ip, 'outer_points': op}
 
-    
     if len(param) == 7:
         param = np.append(fitparam, psi)
     anticross_fit['fit_params'] = fitparam
@@ -105,9 +117,9 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
 
     if plot:
         if isinstance(plot, int):
-            fig=plot
+            fig = plot
         else:
-            fig=None
+            fig = None
         fig_anticross = plt.figure(fig)
         cost, patch, cdata, _ = evaluateCross(
             fitparam, imx, verbose=verbose, fig=fig_anticross.number, istep=istep, istepmodel=istepmodel, w=w)
@@ -117,12 +129,12 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
         anticross_fit['fig_num'] = fig_anticross.number
         anticross_fit['imx'] = imx
 
-
     return anticross_fit
+
 
 def plot_anticrossing(ds, afit, fig=100, linewidth=2):
     """ Plot fitted anti-crossing on dataset
-    
+
     Args:
         afit (dict): fit data from fit_anticrossing
         ds (None or DataSet): dataset to show
@@ -131,44 +143,41 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
 
     Returns:
         -
-    
+
     """
-    fitpoints=afit['fitpoints']
+    fitpoints = afit['fitpoints']
     plt.figure(fig)
     plt.clf()
-    
+
     if ds is not None:
         MatPlot(ds.default_parameter_array('diff_dir_g'), num=fig)
-    cc=fitpoints['centre']
+    cc = fitpoints['centre']
     plt.plot(cc[0], cc[1], '.m', markersize=12, label='fit centre')
-    
-    lp=fitpoints['lp']
-    hp=fitpoints['hp']
-    op=fitpoints['op'].T
-    ip=fitpoints['ip'].T
-    plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m', linewidth=linewidth, markersize=10, label='transition line')
-                
+
+    lp = fitpoints['left_point']
+    hp = fitpoints['right_point']
+    op = fitpoints['outer_points'].T
+    ip = fitpoints['inner_points'].T
+    plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m',
+             linewidth=linewidth, markersize=10, label='transition line')
+
     for ii in range(4):
         if ii == 0:
             lbl = 'electron line'
         else:
             lbl = None
-        plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-', linewidth=linewidth, color=[0, .7, 0], label=lbl)
+        plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-',
+                 linewidth=linewidth, color=[0, .7, 0], label=lbl)
         qtt.pgeometry.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
 
 
 def test_anticrossing():
-    """ Test deprecate?
-
-    Args:
-        None
-
-    Returns:
-        None
-
-    """
     nx = 30
     ny = 40
-    dsx = qtt.data.makeDataSet2Dplain('x', .5*np.arange(nx), 'y', .5*np.arange(ny), 
+    dsx = qtt.data.makeDataSet2Dplain('x', .5 * np.arange(nx), 'y', .5 * np.arange(ny),
                                       'z', np.random.rand(ny, nx,))
     fitdata = fit_anticrossing(dsx, verbose=0)
+
+
+if __name__ == '__main__':
+    test_anticrossing()
