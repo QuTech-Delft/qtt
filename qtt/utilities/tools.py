@@ -38,9 +38,9 @@ except:
     pass
 from qcodes import DataArray
 
-from qtt import pgeometry 
+from qtt import pgeometry
 from qtt.pgeometry import mpl2clipboard
-  
+
 # do NOT load any other qtt submodules here
 
 try:
@@ -49,8 +49,6 @@ try:
     import qtpy.QtWidgets as QtWidgets
 except:
     pass
-
-
 
 
 # %%
@@ -217,6 +215,7 @@ def get_jupyter_kernel(verbose=2):
     return None
 
 #%% Debugging
+
 
 def deprecated(func):
     """ This is a decorator which can be used to mark functions
@@ -869,8 +868,8 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        import qtt.measurements.ttrace # should be moved to top when circular references are fixed
-        from qtt.measurements.videomode import VideoMode # import here, to prevent default imports of gui code
+        import qtt.measurements.ttrace  # should be moved to top when circular references are fixed
+        from qtt.measurements.videomode import VideoMode  # import here, to prevent default imports of gui code
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
@@ -917,25 +916,49 @@ try:
                     figtemp = fig.grab()
                 figtemp.save(fname)
             elif isinstance(fig, qcodes.plots.pyqtgraph.QtPlot):
-                #figtemp = QtGui.QPixmap.grabWidget(fig.win)
                 fig.save(fname)
             else:
                 if verbose:
                     raise Exception(
                         'figure is of an unknown type %s' % (type(fig), ))
+            top = 120
             if figsize is not None:
                 left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
                 width = figsize[0]
                 height = figsize[1]
             else:
-                left = 100
-                width = 560
-                height = 350
+                slidewh = [ppt.PageSetup.SlideWidth, ppt.PageSetup.SlideHeight]
+                width = 16 * ((slidewh[0] * .75) // 16)
+                height = 16 * (((slidewh[1] - 120) * .9) // 16)
+                height = min(height, 350)
+                left = (slidewh[0] - width) / 2
+
+                try:
+                    import cv2
+                    imwh = cv2.imread(fname).shape[1],  cv2.imread(fname).shape[0]
+                except:
+                    imwh = None
+                if imwh is not None:
+                    imratio = imwh[0] / imwh[1]
+                    slideratio = slidewh[0] / slidewh[1]
+                    if verbose >= 1:
+                        print(' image aspect ratio %.2f, slide aspect ratio %.2f' % (imratio, slideratio))
+                    if slideratio > imratio:
+                        # wide slide, so make the image width smaller
+                        print('adjust width %d->%d' % (width, height * imratio))
+                        width = height * imratio
+                    else:
+                        # wide image, so make the image height smaller
+                        print('adjust height %d->%d' % (height, width / imratio))
+                        height = int(width / imratio)
+
+                if verbose:
+                    print('slide width height: %s' % (slidewh,))
+                    print('image width height: %d, %d' % (width, height))
             if verbose >= 2:
                 print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
-                                    SaveWithDocument=True, Left=left, Top=120, 
-                                    Width=width, Height=height)
+                                    SaveWithDocument=True, Left=left, Top=top, Width=width, Height=height)
 
         if subtitle is not None:
             # add subtitle
@@ -1143,14 +1166,14 @@ def test_reshape_metadata():
         pass
     if dataset is not None:
         _ = reshape_metadata(dataset, printformat='dict')
-    instr=qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123') )
+    instr = qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123'))
     st = qcodes.Station(instr)
     _ = reshape_metadata(st, printformat='dict')
     instr.close()
 
 
 #%%
-    
+
 def setupMeasurementWindows(*args, **kwargs):
     raise Exception('use qtt.gui.live_plotting.setupMeasurementWindows instead')
 
