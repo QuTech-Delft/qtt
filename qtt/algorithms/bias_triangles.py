@@ -109,11 +109,11 @@ def perpLineIntersect(ds, description, vertical = True, points=None):
         
     if vertical == True:
         i = qtt.pgeometry.intersect2lines(linePoints1_2, line_vertical)
-        intersectPoint = qtt.pgeometry.dehom(i[1])
+        intersectPoint = qtt.pgeometry.dehom(i)
         line = intersectPoint[:,[0,0]]; line[0,-1]+=1
     else:
         i = qtt.pgeometry.intersect2lines(linePoints1_2, line_horizontal)
-        intersectPoint = qtt.pgeometry.dehom(i[1])
+        intersectPoint = qtt.pgeometry.dehom(i)
         line = intersectPoint[:,[0,0]]; line[1,-1]+=1
     
     linePt3_ints = qtt.pgeometry.fitPlane(line.T)
@@ -198,4 +198,9 @@ def E_charging(lev_arm, results, fig = None):
     
     return E_c    
 
-   
+def test_lever_arm():
+    lever_arm_fit = {'clicked_points': np.array([[ 24.,  38.,  40.], [135., 128., 111.]]), 'distance': 15., 'intersection_point': np.array([[ 40.4],[127.]])}
+
+    r=lever_arm(-800, lever_arm_fit)
+    assert(np.abs(r-53.3)<1e-1)
+    
