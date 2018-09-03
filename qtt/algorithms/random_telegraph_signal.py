@@ -59,7 +59,7 @@ def transitions_durations(data, split):
 class FittingException(Exception):
     pass    
     
-def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_duration = 5, plungers = [], fig = None, ppt = None, verbose = 0):
+def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_duration = 5, num_bins = None, plungers = [], fig = None, ppt = None, verbose = 0):
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels, 
     determines the durations in these two levels, fits a decaying exponantial on two arrays of durations, 
@@ -121,7 +121,8 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
             addPPTslide(title=title, fig=plt.figure(title))
         
     # binning the data and determining the bincentres
-    num_bins = int(np.sqrt(len(data)))
+    if num_bins is None:
+        num_bins = int(np.sqrt(len(data)))
     counts, bins = np.histogram(data, bins=num_bins)
     bincentres = np.array([(bins[i] + bins[i+1])/2 for i in range(0, len(bins)-1)])
     
@@ -205,7 +206,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         plt.figure(title)
         plt.clf()
         plt.plot(bincentres_dn, counts_dn, 'o', label='Counts down') 
-        plt.plot(bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),'r', label='Fitted exponantial decay \n t_dn: %.1f kHz' % tunnelrate_dn)
+        plt.plot(bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),'r', label='Fitted exponantial decay \n $\Gamma_{dn}$: %.1f kHz' % tunnelrate_dn)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Counts per bin')
         plt.legend()
@@ -217,7 +218,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
     numbins_up = int(np.sqrt(len(durations_up_srt)))
     counts_up, bins_up = np.histogram(durations_up_srt, bins=numbins_up)
     
-    if counts_up[0] < 400:
+    if counts_up[0] < 50:
         warnings.warn('Number of datapoints might not be enough to make an acurate fit of the exponantial decay for level up.')
         
     if counts_dn[0] < 50:
@@ -236,7 +237,7 @@ def tunnelrates_RTS(data, samplerate = None, min_sep = 2.0, max_sep = 7.0, min_d
         title = 'Fitted exponantial decay, level up'
         plt.figure(title)
         plt.plot(bincentres_up, counts_up, 'o', label='Counts up') 
-        plt.plot(bincentres_up, exp_function(bincentres_up,  A_up_fit, B_up_fit, gamma_up_fit),'r', label='Fitted exponantial decay \n t_up: %.1f kHz' % tunnelrate_up)
+        plt.plot(bincentres_up, exp_function(bincentres_up,  A_up_fit, B_up_fit, gamma_up_fit),'r', label='Fitted exponantial decay \n $\Gamma_{up}$: %.1f kHz' % tunnelrate_up)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Data points per bin')
         plt.legend()
