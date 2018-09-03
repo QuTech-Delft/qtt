@@ -125,6 +125,9 @@ def analyse_awg_to_plunger(result, method='hough', fig=None, verbose=1):
     result['angle'] = angle
     
     if verbose:
+        if angle is None:
+            print('analyse_awg_to_plunger: calculated angle: ? [deg]' )
+        else:
             print('analyse_awg_to_plunger: calculated angle: %.3f [deg]' % np.rad2deg(angle))
 
     if angle is None:
@@ -233,15 +236,19 @@ def test_awg_to_plunger(fig=None):
     y = np.arange(0, 60).astype(np.float32)
     z = np.meshgrid(x, y)
     z = 0.01 * z[0].astype(np.uint8)
-    angle = -0.7 * (np.pi/4.0)
-    qtt.utilities.imagetools.semiLine(z, np.array([[0], [y.max()]]), angle, w=2.2, l=30, H=0.52)
+    input_angle=np.deg2rad(-35)
+    qtt.utilities.imagetools.semiLine(z, np.array([[0], [y.max()]]), input_angle, w=2.2, l=30, H=0.52)
     ds = qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z)
     result = {'dataset': ds, 'type': 'awg_to_plunger'}
     r = analyse_awg_to_plunger(result, method='hough', fig=fig)
+    output_angle = r['angle']
+    
     if fig:
         print(r)
-        print('ange input %.3f: fit %s' % (angle, str(r['angle'])))
+        print('angle input %.3f: output angle %s' % (input_angle, str(output_angle)))
 
+    d=qtt.pgeometry.angleDiff(input_angle, (-np.pi/2-output_angle)) 
+    assert(np.abs(d)<np.deg2rad(5) )
 
 if __name__ == '__main__':
     test_awg_to_plunger(fig=10)
