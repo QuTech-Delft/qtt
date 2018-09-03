@@ -65,7 +65,7 @@ def measure_awg_to_plunger(station, gate, minstrument, sweeprange=100, method='h
     return result
 
 
-def analyse_awg_to_plunger(result, method='hough', fig=None):
+def analyse_awg_to_plunger(result, method='hough', fig=None, verbose=1):
     """ Determine the awg_to_plunger ratio from a scan result
     
     Args:
@@ -123,12 +123,17 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
     result = copy.copy(result)
     result['_angle_pixel'] = angle_pixel
     result['angle'] = angle
+    
+    if verbose:
+            print('analyse_awg_to_plunger: calculated angle: %.3f [deg]' % np.rad2deg(angle))
+
     if angle is None:
         result['awg_to_plunger_correction'] = None
     else:
         scanratio = tr.istep_step()/tr.istep_sweep()
-        print('scanratio: %.3f' % scanratio)
-        result['awg_to_plunger_correction'] = scanratio*np.tan(angle)
+        if verbose>=2:
+            print('analyse_awg_to_plunger: scanratio: %.3f' % scanratio)
+        result['awg_to_plunger_correction'] = np.tan(angle)
 
     if fig is not None:
         plt.figure(fig)
@@ -193,17 +198,23 @@ def plot_awg_to_plunger(result, fig=10):
     angle = result['angle']
 
     ds = get_dataset(result)
+    im, tr = qtt.data.dataset2image(ds)
+    xscan = tr.pixel2scan(np.array([[0],[0]]))
+
     plt.figure(fig)
     plt.clf()
     MatPlot(ds.default_parameter_array(), num=fig)
     if angle is not None:
+        rho = -(xscan[0]*np.cos(angle)-np.sin(angle)*xscan[1])
+        
         for offset in [-20, 0, 20]:
             label = None
             if offset is 0:
                 label = 'detected angle'
             qtt.pgeometry.plot2Dline(
-                [np.cos(angle), -np.sin(angle), offset], 'm', label=label)
+                [np.cos(angle), -np.sin(angle), rho+offset], '--m', alpha=.6, label=label)
     plt.title('Detected line direction')
+
 
 
 # %% Test functions
