@@ -140,7 +140,7 @@ class VideoMode:
         self.verbose = verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.virtual_awg = station.virtual_awg
+        self.virtual_awg = getattr(station, ' virtual_awg' , None)
 
 
         self.minstrumenthandle = minstrument[0]
