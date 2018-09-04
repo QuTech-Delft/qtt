@@ -9,9 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import qtt.data
-from qtt.data import dataset2Dmetadata, image_transform, dataset2image, dataset2image2
 import scipy
-from qtt import pgeometry as pmatlab
 
 #%%
 
