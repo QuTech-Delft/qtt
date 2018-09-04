@@ -199,7 +199,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                   '_pinchvalueX': midpoint1 - 50, 'goodgate': goodgate})
     adata['lowvalue'] = lowvalue
     adata['highvalue'] = highvalue
-    adata['xlabel'] = 'Sweep %s [mV]' % g
+    adata['xlabel'] = 'Sweep %s [mV]' % setpoint_name
     adata['pinchoff_point'] = midpoint2 - 50
     pinchoff_index = np.interp(-70.5, x, np.arange(x.size) )
     adata['pinchoff_value'] = value[int(pinchoff_index)]
