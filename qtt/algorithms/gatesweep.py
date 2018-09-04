@@ -33,16 +33,15 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     XX = None
 
     # should be made generic
-    g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
-    value = data.default_parameter_name()  # e.g. 'amplitude'
+    setpoint_name = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
+    value_parameter_name = data.default_parameter_name()  # e.g. 'amplitude'
 
-    x = data.arrays[g]
-    value = np.array(data.arrays[value])
+    x = data.arrays[setpoint_name]
+    value = np.array(data.arrays[value_parameter_name])
 
     # detect direction of scan
     scandirection = np.sign(x[-1] - x[0])
-    if scandirection < 0 and 1:
-        pass
+    if scandirection < 0:
         scandirection = 1
         x = x[::-1]
         value = value[::-1]
@@ -55,7 +54,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     # sometimes a channel is almost completely closed, then the percentile
     # approach does not function well
     ww = value[value >= (lowvalue + highvalue) / 2]
-    #[np.percentile(ww, 1), np.percentile(ww, 50), np.percentile(ww, 91) ]
     highvalue = np.nanpercentile(ww, 90)
 
     if verbose >= 2:
@@ -173,13 +171,12 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             print(
                 'analyseGateSweep: gate not good: gate is not closed (or fully closed) (left region check)')
         pass
-    # gate not closed
 
     if fig is not None:
         cfigure(fig)
         plt.clf()
         plt.plot(x, value, '.-b', linewidth=2)
-        plt.xlabel('Sweep %s [mV]' % g, fontsize=14)
+        plt.xlabel('Sweep %s [mV]' % setpoint_name, fontsize=14)
         plt.ylabel('keithley [pA]', fontsize=14)
 
         if drawsmoothed:
@@ -203,7 +200,9 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     adata['lowvalue'] = lowvalue
     adata['highvalue'] = highvalue
     adata['xlabel'] = 'Sweep %s [mV]' % g
-    adata['_mp'] = mp
+    adata['pinchoff_point'] = midpoint2 - 50
+    pinchoff_index = np.interp(-70.5, x, np.arange(x.size) )
+    adata['pinchoff_value'] = value[int(pinchoff_index)]
     adata['midpoint'] = float(midpoint2)
     adata['midvalue'] = midvalue
     adata['dataset']=dd.location
@@ -220,6 +219,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         adata['X'] = value
         adata['x'] = x
         adata['ww'] = ww
+        adata['_mp'] = mp
 
     return adata
 
