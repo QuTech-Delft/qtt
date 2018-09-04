@@ -27,16 +27,15 @@ def fitOhmic(ds, verbose=1, fig=None, gainy=1e-7, gainx=1e-6):
     xdata = gainx * np.array(ds.default_parameter_array().set_arrays[0]) # [V]
     ydata = gainy * np.array(ds.default_parameter_array()) # [A]
 
-    ydata = ydata
     # initial values: offset and slope
     slope = (ydata[-1] - ydata[0]) / (xdata[-1] - xdata[0])
     offset = np.mean(ydata) - slope * np.mean(xdata)
     p0 = [slope, offset]
 
     # fit
-    offset = 2    # remove first data points
+    cutoff = 2    # remove first data points
     func = lambda xdata, a, b: qtt.algorithms.functions.linear_function(xdata, a, b)
-    pp = scipy.optimize.curve_fit(func, xdata[offset:], ydata[offset:], p0=p0)
+    pp = scipy.optimize.curve_fit(func, xdata[cutoff:], ydata[cutoff:], p0=p0)
     fitparam = pp[0]
     r = 1 / fitparam[0]
     biascurrent = qtt.algorithms.functions.linear_function(0, *list(fitparam))
