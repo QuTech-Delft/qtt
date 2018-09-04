@@ -2370,8 +2370,8 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
             alldata, fig=None, minthr=None, maxthr=None, verbose=1)
         if verbose:
             print('loadOneDotPinchvalues: pinchvalue for gate %s: %.1f' %
-                  (g, adata['pinchvalue']))
-        pv[ii] = adata['pinchvalue']
+                  (g, adata['pinchoff_point']))
+        pv[ii] = adata['pinchoff_point']
     od['pinchvalues'] = pv
     return od
 

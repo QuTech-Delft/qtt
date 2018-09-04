@@ -213,7 +213,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     if verbose >= 2:
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %
-              (goodgate, adata['pinchvalue']))
+              (goodgate, adata['pinchoff_point']))
         adata['Xsmooth'] = ww
         adata['XX'] = XX
         adata['X'] = value
@@ -241,7 +241,7 @@ def plot_pinchoff(result, ds=None, fig=10):
         
         lowvalue=result['lowvalue']
         highvalue=result['highvalue']
-        pinchvalue=result['pinchvalue']
+        pinchoff_point=result['pinchoff_point']
         midpoint=result['midpoint']
         midvalue=result['midvalue']
 
@@ -250,7 +250,7 @@ def plot_pinchoff(result, ds=None, fig=10):
 
         plot2Dline([-1, 0, midpoint], ':m', linewidth=2, alpha=0.5, label='midpoint')
         plt.plot(midpoint, midvalue, '.m', label='midpoint')
-        plot2Dline([-1, 0, pinchvalue], '--g', linewidth=1, alpha=0.5, label='pinchvalue')
+        plot2Dline([-1, 0, pinchoff_point], '--g', linewidth=1, alpha=0.5, label='pinchoff_point')
 
 def test_analyseGateSweep(fig=None):
     x=np.arange(-800, 0, 1) # mV
