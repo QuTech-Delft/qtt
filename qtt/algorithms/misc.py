@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """ Misc algorithms
+
 Created on Wed Aug 31 16:19:30 2016
 
 @author: eendebakpt

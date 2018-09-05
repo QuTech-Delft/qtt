@@ -1,5 +1,6 @@
-#%% Helper functions
+""" Functionality to fit scans of ohmic contacts
 
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt

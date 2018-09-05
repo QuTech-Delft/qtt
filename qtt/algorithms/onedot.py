@@ -1,5 +1,6 @@
-""" Functionality for analysis of single dots
+""" Functionality for analysis of single quantum dots
 
+For more details see https://arxiv.org/abs/1603.02274
 """
 #%%
 

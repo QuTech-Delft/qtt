@@ -55,7 +55,7 @@ Live plotting
 Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be setup with
 
 .. autosummary::
-    qtt.tools.setupMeasurementWindows
+    qtt.utilties.tools.setupMeasurementWindows
 
 
 Named gates
@@ -127,8 +127,8 @@ To copy a dataset or a figure window to Powerpoint, including the scan metadata 
  
 .. code-block:: python
 
- 	qtt.tools.addPPT_dataset(dataset)
- 	qtt.tools.addPPTslide(figure)
+ 	qtt.utilties.tools.addPPT_dataset(dataset)
+ 	qtt.utilties.tools.addPPTslide(figure)
 
  	
 

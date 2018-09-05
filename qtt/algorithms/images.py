@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Aug 31 16:19:30 2016
+""" Functionality to analyse and pre-process images
 
 @author: eendebakpt
 """

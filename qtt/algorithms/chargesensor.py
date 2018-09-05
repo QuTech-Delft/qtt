@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """ Analyse effect of sensing dot on fitting of tunnel barrier
 
 @author: eendebakpt

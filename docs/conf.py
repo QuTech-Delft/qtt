@@ -40,6 +40,8 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'nbsphinx']
 
+extensions += ['sphinx_automodapi.automodapi']
+
 if 0:
     extensions += ['autoapi.extension']
     

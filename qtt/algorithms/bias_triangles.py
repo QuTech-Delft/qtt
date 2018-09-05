@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jul 30 17:33:36 2018
+""" Functionality to analyse bias triangles
 
 @author: amjzwerver
 """
@@ -15,7 +13,6 @@ import matplotlib.pyplot as plt
 
 from qcodes.plots.qcmatplotlib import MatPlot
 from qtt.data import diffDataset
-from qtt.instrument_drivers.parameter_scaler import ParameterScaler as vt
 
 
 def plotAnalysedLines(clicked_pts, linePoints1_2, linePt3_vert, linePt3_horz, linePt3_ints, intersect_point):

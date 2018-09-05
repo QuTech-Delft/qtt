@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 14 22:54:23 2017
+""" Functionality to fit PAT models
+
+For more details see: https://arxiv.org/abs/1803.10352
 
 @author: diepencjv / eendebakpt
 """

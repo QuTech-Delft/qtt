@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
+""" Functionality to analyse random telegraph signals
+
 Created on Wed Feb 28 10:20:46 2018
 
 @author: riggelenfv

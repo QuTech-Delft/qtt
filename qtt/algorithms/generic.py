@@ -1,7 +1,5 @@
 """ Various functions """
 
-# flake8: noqa (we don't need the "<...> imported but unused" error)
-
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
