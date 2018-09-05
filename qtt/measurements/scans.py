@@ -320,6 +320,12 @@ def getDefaultParameter(data):
 
 # %%
 
+def _add_dataset_metadata(dataset):
+    """ Add different kinds of metadata to a dataset """
+    update_dictionary(dataset.metadata, scantime=str(datetime.datetime.now()))
+    update_dictionary(dataset.metadata, code_version=qtt.utilities.tools.code_version())
+    update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.DataSet_to_dictionary(dataset, include_data=False, include_metadata=False) )
+
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -428,13 +434,13 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
 
     alldata.write(write_metadata=True)
+
 
     return alldata
 
@@ -557,9 +563,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         update_dictionary(alldata.metadata, **extra_metadata)
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
-    
+    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
+
     alldata = qtt.tools.stripDataset(alldata)
 
     alldata.write(write_metadata=True)
@@ -1196,9 +1202,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
 
     alldata.write(write_metadata=True)
 
@@ -1890,11 +1895,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=scanjob, allgatevalues=gatevals,
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+    _add_dataset_metadata(alldata)
 
     alldata.write(write_metadata=True)
 
@@ -2095,10 +2098,8 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         alldata.metadata = dict()
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
-                      dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+                      dt=dt, station=station.snapshot(), allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
 
     alldata.write(write_metadata=True)
 
@@ -2124,16 +2125,11 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose
     Returns:
         dataset (qcodes Dataset): measurement data and metadata
     '''
-    # TODO: put a different parameter and values on the horizontal axis?
-    # TODO: extend functionality to any number of gates (virtual gates?)
-    # FIXME: single gate variation???
     x0 = [coords[0, 0], coords[0, 1]]  # first parameters
     x1 = [coords[1, 0], coords[1, 1]]
     sweeprange = np.sqrt((x1[1] - x1[0]) ** 2 + (x0[1] - x0[0]) ** 2)
     gate_comb = dict()
 
-    # for g in scangates:
-    #    gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
     gate_comb = {scangates[1]: (
         x1[1] - x1[0]) / sweeprange, scangates[0]: (x0[1] - x0[0]) / sweeprange}
 
@@ -2156,7 +2152,7 @@ def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose
     dataread = [DataRead_ch1, DataRead_ch2][fpga_ch - 1]
     data = station.awg.sweep_process(dataread, waveform, Naverage)
     dataset, _ = makeDataset_sweep(
-        data, gate, sweeprange, gates=station.gates)  # see TODO
+        data, gate, sweeprange, gates=station.gates) 
 
     dataset.write()
 

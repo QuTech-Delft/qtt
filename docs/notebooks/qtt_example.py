@@ -6,15 +6,12 @@
 
 #%% Load packages
 from imp import reload
-import sys
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 import tempfile
 from collections import OrderedDict
 
 import qcodes
-from qcodes import QtPlot
 from qcodes import MatPlot
 
 import qtt

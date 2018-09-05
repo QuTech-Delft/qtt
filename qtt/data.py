@@ -17,6 +17,56 @@ from qtt import pgeometry
 import qtt.algorithms.generic
 from qcodes.plots.qcmatplotlib import MatPlot
 
+#%% Serialization tools
+
+def DataArray_to_dictionary(da, include_data = True):
+    """ Convert DataArray to dictionary
+    
+    Args:
+        da (DataArray): data to convert
+        include_data (bool): If True then include the .ndarray field
+    Returns:
+        dict: dictionary containing the serialized data
+            
+    """
+    fields = ['label', 'name', 'unit', 'is_setpoint', 'full_name', 'array_id', 'shape', 'set_arrays']
+    if include_data:
+        fields+=['ndarray']
+    dct = dict([ (f,getattr(da, f)) for f in fields ])    
+    dct['set_arrays']=tuple([x.array_id for x in dct['set_arrays'] ])
+    return dct
+
+def DataSet_to_dictionary(data_set, include_data = True, include_metadata = True):
+    """ Convert DataSet to dictionary
+    
+    Args:
+        data_set (DataSet): data to convert
+        include_data (bool): If True then include the .ndarray field
+        include_metadata (bool): If True then include the metadata
+    Returns:
+        dict: dictionary containing the serialized data
+    """
+    d={'extra': {}, 'metadata': None, 'arrays': {}}
+    for array_id in data_set.arrays.keys():
+        da = data_set.arrays[array_id]
+            
+        d['arrays'][array_id]=DataArray_to_dictionary(da, include_data)
+
+    if include_metadata:
+        d['metadata']=data_set.metadata
+    
+    d['extra']['location']=data_set.location
+    return d
+
+
+
+def test_dataset_to_dictionary():
+    ds=qcodes.tests.data_mocks.DataSet2D()
+    dct=DataSet_to_dictionary(ds, include_data=False, include_metadata=False)
+    assert(dct['metadata'] is None)
+    dct=DataSet_to_dictionary(ds, include_data=True, include_metadata=True)
+    assert('metadata' in dct)
+    
 #%%
 
 def get_dataset(ds):
@@ -43,7 +93,7 @@ def load_dataset(location, io=None, verbose=0):
 
     Args:
         location (str): either the relative or full location
-        io (None or 
+        io (None or qcodes.DiskIO): 
     Returns:
         dataset (DataSet or None)
     """
@@ -84,6 +134,9 @@ def load_dataset(location, io=None, verbose=0):
                 if verbose:
                     print('succes with formatter %s' % hformatter)
                 break
+    if verbose:
+        if data is None:
+            print('could not load data from %s, returning None' % location)
     return data
 
 
