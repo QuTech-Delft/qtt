@@ -161,7 +161,7 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
     imx = imx / scale
 
     if fig is not None:
-        y_data = np.arange(imq.shape[0])
+#        y_data = np.arange(imq.shape[0])
         plt.figure(fig)
         plt.clf()
         plt.subplot(2, 2, 1)
@@ -179,6 +179,7 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('imx')
+        plt.tight_layout()
 
     return imx, imq, backgr_sm
 
@@ -194,8 +195,7 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
         imx (array): sensor signal of PAT scan, background is usually already subtracted
 
     Returns:
-        xx (array): coordinates of detected peaks
-        weight (array): confidence-based weights
+        detected_peaks (array): coordinates of detected peaks
         results (dict): additional fitting data
     """
     thr = .4
@@ -238,7 +238,7 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
     xx2 = np.vstack((horz_vals[mm2[idx2]], y_data[idx2]))
 
     # join the two sets
-    xx = np.hstack((xx1, xx2))
+    detected_peaks = np.hstack((xx1, xx2))
 
     # determine weights for the points
     qq = np.intersect1d(idx1, idx2)
@@ -251,19 +251,19 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
 
     wfac = .1
     w1[np.abs(val[idx1]) < thr2] = wfac
-    w1[np.abs(val[idx1]) < thr2] = wfac
-    weight = np.hstack((w1, w2))
+    w2[np.abs(val[idx2]) < thr2] = wfac
+    weights = np.hstack((w1, w2))
 
     if fig is not None:
         plt.figure(fig)
         plt.clf()
         plt.pcolormesh(x_data, y_data, imx)
-        plt.title('sensor signal')
-        plt.colorbar()
         plt.plot(horz_vals[mm1[idx1]], y_data[idx1], '.b', markersize=14, label='idx1')
         plt.plot(horz_vals[mm2[idx2]], y_data[idx2], '.r', markersize=14, label='idx2')
+        plt.xlabel('Detuning (mV)')
+        plt.ylabel('Frequency (Hz)')
 
-    return xx, weight, {}
+    return detected_peaks, {'weights': weights, 'detected_peaks': detected_peaks }
 
 #%%
 
@@ -348,16 +348,15 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
     """
     imx, imq, _ = pre_process_pat(x_data, y_data, background, z_data)
 
-    xx, weights, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=None)
+    xx, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=None)
     xd = xx[0, :]
     yd = xx[1, :]
 
     if par_guess is None:
         par_guess = np.array([np.nanmean(x_data), 65, 10])
 
-    weights = None
     pp = fit_pat_to_peaks(par_guess, xd, yd, trans=trans, even_branches=even_branches,
-                          weights=weights, xoffset=xoffset, verbose=0)
+                          xoffset=xoffset, verbose=0)
     if trans == 'one_ele':
         model = one_ele_pat_model
     elif trans == 'two_ele':
@@ -432,6 +431,8 @@ def show_traces(x_data, z_data, fig=100, direction='h', title=None):
         if title is None:
             title = 'Blue: top lines, red: bottom lines'
         plt.title(title)
+    plt.xlabel('Detuning (mV)')
+    plt.ylabel('Signal (a.u.)')
 
 
 def test_pat_fitting(fig=None):
@@ -455,7 +456,7 @@ def test_pat_fitting(fig=None):
 
         trans = 'one_ele'
         period = 1e-3
-        xx, weights, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=200)
+        xx, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=200)
 
         from qtt.pgeometry import pcolormesh_centre
         plt.figure(fig + 3)

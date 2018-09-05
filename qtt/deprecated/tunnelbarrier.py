@@ -192,68 +192,8 @@ def preprocessPAT(imextent, im0, im, fig=None):
 @qtt.utilities.tools.rdeprecated('replaced by pat_functions.detect_peaks')
 def detectVshape(imextent, xdata, ydata, imx, sigmamv=.25, fig=400, returndict=None):
     """ Helper function """
-    scalefac = (imextent[1] - imextent[0]) / (imx.shape[1] - 1)  # mV/pixel
-
-    # smooth input image
-    kern = scipy.signal.gaussian(71, std=sigmamv / scalefac)
-    kern = kern / kern.sum()
-    imx2 = scipy.ndimage.filters.convolve(imx, kern.reshape((1, -1)), mode='nearest')
-
-    mvthr = .2
-
-    # get maximum value for each row
-    mm1 = np.argmax(imx2, axis=1)
-    val = imx2[np.arange(0, imx2.shape[0]), mm1]
-
-    idx1 = np.where(np.abs(val) > .5)[0]    # only select indices above scaled threshold .5
-    idx1 = idx1[xdata[mm1[idx1]] - xdata[0] > mvthr]  # discard points near border
-    idx1 = idx1[xdata[mm1[idx1]] - xdata[-1] < -mvthr]  # discard points near border
-
-    xx1 = np.vstack((xdata[mm1[idx1]], ydata[idx1]))  # position of selected points
-
-    # get minimum value for each row
-    mm2 = np.argmin(imx2, axis=1)
-    val = imx2[np.arange(0, imx2.shape[0]), mm2]
-    # remove points below threshold
-    idx2 = np.where(np.abs(val) > .5)[0]
-
-    idx2 = idx2[xdata[mm2[idx2]] - xdata[0] > mvthr]  # discard points near border
-    idx2 = idx2[xdata[mm2[idx2]] - xdata[-1] < -mvthr]  # discard points near border
-    xx2 = np.vstack((xdata[mm2[idx2]], ydata[idx2]))
-
-    # join the two sets
-    xx = np.hstack((xx1, xx2))
-    vals = np.hstack((val[idx1], val[idx2]))
-
-    # determine weights for the points
-    qq = np.intersect1d(idx1, idx2)
-    q1 = np.searchsorted(idx1, qq)
-    q2 = np.searchsorted(idx2, qq)
-    w1 = .5 * np.ones(len(idx1))
-    w1[q1] = 1
-    w2 = .5 * np.ones(len(idx2))
-    w2[q2] = 1
-
-    wfac = .1
-    w1[np.abs(val[idx1]) < .6] = wfac
-    w1[np.abs(val[idx1]) < .6] = wfac
-    weight = np.hstack((w1, w2))
-
-    if fig is not None:
-        plt.figure(fig)
-        plt.clf()
-        pmatlab.imshowz(imx2, extent=extent2fullextent(imextent, imx2), interpolation='nearest')
-        plt.axis('tight')
-        plt.title('response')
-        plt.colorbar()
-        plt.plot(xdata[mm1[idx1]], ydata[idx1], '.b', markersize=14)
-        plt.plot(xdata[mm2[idx2]], ydata[idx2], '.r', markersize=14)
-
-    if returndict is not None:
-        returndict['xx1'] = xx1
-        returndict['imx2'] = imx2
-        returndict['vals'] = vals
-    return xx, weight, (xx1, xx2, idx1, idx2, vals)
+    pass
+    
 
 #%%
 
