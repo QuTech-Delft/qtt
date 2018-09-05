@@ -9,9 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import qtt.data
-from qtt.data import dataset2Dmetadata, image_transform, dataset2image, dataset2image2
 import scipy
-from qtt import pgeometry as pmatlab
 
 #%%
 
@@ -33,16 +31,15 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     XX = None
 
     # should be made generic
-    g = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
-    value = data.default_parameter_name()  # e.g. 'amplitude'
+    setpoint_name = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
+    value_parameter_name = data.default_parameter_name()  # e.g. 'amplitude'
 
-    x = data.arrays[g]
-    value = np.array(data.arrays[value])
+    x = data.arrays[setpoint_name]
+    value = np.array(data.arrays[value_parameter_name])
 
     # detect direction of scan
     scandirection = np.sign(x[-1] - x[0])
-    if scandirection < 0 and 1:
-        pass
+    if scandirection < 0:
         scandirection = 1
         x = x[::-1]
         value = value[::-1]
@@ -55,7 +52,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     # sometimes a channel is almost completely closed, then the percentile
     # approach does not function well
     ww = value[value >= (lowvalue + highvalue) / 2]
-    #[np.percentile(ww, 1), np.percentile(ww, 50), np.percentile(ww, 91) ]
     highvalue = np.nanpercentile(ww, 90)
 
     if verbose >= 2:
@@ -173,13 +169,12 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             print(
                 'analyseGateSweep: gate not good: gate is not closed (or fully closed) (left region check)')
         pass
-    # gate not closed
 
     if fig is not None:
         cfigure(fig)
         plt.clf()
         plt.plot(x, value, '.-b', linewidth=2)
-        plt.xlabel('Sweep %s [mV]' % g, fontsize=14)
+        plt.xlabel('Sweep %s [mV]' % setpoint_name, fontsize=14)
         plt.ylabel('keithley [pA]', fontsize=14)
 
         if drawsmoothed:
@@ -198,12 +193,14 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             plt.plot(x[leftidx], leftval, '--m', markersize=15, linewidth=1, label='leftval')
 
 
-    adata = dict({'description': 'pinchoff analysis', 'pinchvalue': float(midpoint2 - 50),
+    adata = dict({'description': 'pinchoff analysis', 'pinchvalue': 'use pinchoff_point instead',
                   '_pinchvalueX': midpoint1 - 50, 'goodgate': goodgate})
     adata['lowvalue'] = lowvalue
     adata['highvalue'] = highvalue
-    adata['xlabel'] = 'Sweep %s [mV]' % g
-    adata['_mp'] = mp
+    adata['xlabel'] = 'Sweep %s [mV]' % setpoint_name
+    adata['pinchoff_point'] = midpoint2 - 50
+    pinchoff_index = np.interp(-70.5, x, np.arange(x.size) )
+    adata['pinchoff_value'] = value[int(pinchoff_index)]
     adata['midpoint'] = float(midpoint2)
     adata['midvalue'] = midvalue
     adata['dataset']=dd.location
@@ -214,12 +211,13 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     if verbose >= 2:
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %
-              (goodgate, adata['pinchvalue']))
+              (goodgate, adata['pinchoff_point']))
         adata['Xsmooth'] = ww
         adata['XX'] = XX
         adata['X'] = value
         adata['x'] = x
         adata['ww'] = ww
+        adata['_mp'] = mp
 
     return adata
 
@@ -241,7 +239,7 @@ def plot_pinchoff(result, ds=None, fig=10):
         
         lowvalue=result['lowvalue']
         highvalue=result['highvalue']
-        pinchvalue=result['pinchvalue']
+        pinchoff_point=result['pinchoff_point']
         midpoint=result['midpoint']
         midvalue=result['midvalue']
 
@@ -250,7 +248,7 @@ def plot_pinchoff(result, ds=None, fig=10):
 
         plot2Dline([-1, 0, midpoint], ':m', linewidth=2, alpha=0.5, label='midpoint')
         plt.plot(midpoint, midvalue, '.m', label='midpoint')
-        plot2Dline([-1, 0, pinchvalue], '--g', linewidth=1, alpha=0.5, label='pinchvalue')
+        plot2Dline([-1, 0, pinchoff_point], '--g', linewidth=1, alpha=0.5, label='pinchoff_point')
 
 def test_analyseGateSweep(fig=None):
     x=np.arange(-800, 0, 1) # mV

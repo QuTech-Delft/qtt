@@ -334,8 +334,8 @@ def getPinchvalues(od, xdir, verbose=1):
 
         adata = qtt.algorithms.gatesweep.analyseGateSweep(dd, fig=0, minthr=100, maxthr=800, verbose=0)
         if verbose:
-            print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchvalue']))
-        od['pinchvalues'][jj] = adata['pinchvalue']
+            print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchoff_point']))
+        od['pinchvalues'][jj] = adata['pinchoff_point']
     return od
 
 
