@@ -252,7 +252,7 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
 
     wfac = .1
     w1[np.abs(val[idx1]) < thr2] = wfac
-    w1[np.abs(val[idx1]) < thr2] = wfac
+    w2[np.abs(val[idx2]) < thr2] = wfac
     weight = np.hstack((w1, w2))
 
     if fig is not None:
