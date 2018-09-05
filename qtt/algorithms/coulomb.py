@@ -1,9 +1,9 @@
 """ Functions to fit and analyse Coulomb peaks """
 
 import numpy as np
-import scipy.ndimage.filters as filters
-import scipy.ndimage.morphology as morphology
-import skimage
+#import scipy.ndimage.filters as filters
+#import scipy.ndimage.morphology as morphology
+#import skimage
 import warnings
 import copy
 
@@ -16,7 +16,7 @@ import qtt.pgeometry as pmatlab
 import matplotlib.pyplot as plt
 from qtt.algorithms.generic import issorted
 from qtt.algorithms.functions import logistic
-from qtt.algorithms.generic import localMaxima, nonmaxsuppts
+from qtt.algorithms.generic import nonmaxsuppts
 
 
 #%% Functions related to detection of Coulumb peaks

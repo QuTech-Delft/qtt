@@ -1,10 +1,11 @@
 """ Fitting of Fermi-Dirac distributions. """
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 
-import qtt.pgeometry
 from qcodes import DataArray
+import qtt.pgeometry
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Functions to analyse anti-crossings in charge stability diagrams
 
 Created on Wed Jul 12 08:08:57 2017

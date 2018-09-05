@@ -6,29 +6,17 @@ Welcome to the QTT framework. This introduction will shortly introduce the frame
 Quantum Technology Toolbox
 --------------------------
 
-Quantum Technology Toolbox (QTT) is a Python-based framework developed by QuTech for the tuning and calibration of quantum dots and spin qubits. QuTech is an advanced research center based in Delft, the Netherlands, for quantum computing and quantum internet. It is a collaboration founded by the Delft University of Technology (TU Delft) and the Netherlands Organisation for Applied Scientiﬁc Research (TNO).
+Quantum Technology Toolbox (QTT) is a Python-based framework developed initialy by `QuTech <https://www.qutech.nl/>`_ for the tuning and calibration of quantum dots and spin qubits.
+QuTech is an advanced research center based in Delft, the Netherlands, for quantum computing and quantum internet.
+It is a collaboration founded by the Delft University of Technology (`TU Delft <https://www.tudelft.nl/en>`_) and the Netherlands Organisation for Applied Scientific Research (`TNO <https://www.tno.nl/en>`_).
 
 The experiments done on spin-qubits at QuTech make use of the QTT framework to add automated funcionalities and algorithms to their measurement code. 
 This paves the way to a more time-efficient, user-friendly and robust code, making more complex research on larger systems possible.
 We invite you to use and contribute to QTT. Below we will guide you through the installation.
 
-Also see
+QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on `Qcodes <https://github.com/qdev-dk/Qcodes>`_. 
 
-* `QuTech <https://www.qutech.nl/>`_
-* `TU Delft <https://www.tudelft.nl/en>`_
-* `TNO <https://www.tno.nl/en>`_
-
-Structure
----------
-
-QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on Qcodes. 
-In Delft we use a separate repository for the measurement setups (called 'stations'), where each station is programmed in a different way to fit the specific measurements done in that setup. 
-In some cases you can use a personal folder in the 'users' repository, but we recommend keeping this to a minimum and always use a common folder with clear descriptions in the code.
-
-* `Qcodes: the basic framework <https://github.com/qdev-dk/Qcodes>`_
-* `qtt: contains additional functionality and algorithms <https://github.com/VandersypenQutech/qtt>`_ 
-* `spin-projects : Contains hardware descriptions for experimential setups and project data. <https://github.com/VandersypenQutech/spin-projects>`_ 
-  
+ 
 Installation
 ------------
 

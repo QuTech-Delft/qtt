@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Functionality for analysing inter-dot tunnel frequencies
 
 @author: diepencjv

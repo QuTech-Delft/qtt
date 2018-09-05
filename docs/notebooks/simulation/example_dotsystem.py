@@ -249,9 +249,9 @@ if 0:
     removeoutliers = True
     # removeoutliers=False
     if sigma is None:
-        imx = qtt.tools.diffImage(im, dy=dy, size='same')
+        imx = qtt.utilties.tools.diffImage(im, dy=dy, size='same')
     else:
-        imx = qtt.tools.diffImageSmooth(im, dy=dy, sigma=sigma)
+        imx = qtt.utilties.tools.diffImageSmooth(im, dy=dy, sigma=sigma)
     order = 3
     vv = qtt.legacy.fitBackground(imx, smooth=True, verbose=verbose, fig=400, order=int(order), removeoutliers=removeoutliers)
 
