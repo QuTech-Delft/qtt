@@ -349,16 +349,15 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
     """
     imx, imq, _ = pre_process_pat(x_data, y_data, background, z_data)
 
-    xx, weights, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=None)
+    xx, _, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=None)
     xd = xx[0, :]
     yd = xx[1, :]
 
     if par_guess is None:
         par_guess = np.array([np.nanmean(x_data), 65, 10])
 
-    weights = None
     pp = fit_pat_to_peaks(par_guess, xd, yd, trans=trans, even_branches=even_branches,
-                          weights=weights, xoffset=xoffset, verbose=0)
+                          xoffset=xoffset, verbose=0)
     if trans == 'one_ele':
         model = one_ele_pat_model
     elif trans == 'two_ele':
