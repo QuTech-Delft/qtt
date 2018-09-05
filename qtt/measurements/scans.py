@@ -2106,58 +2106,6 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     return alldata, waveform, sweep_info
 
 
-# %%
-
-
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
-def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
-    ''' Do a scan (AWG sweep) over the line connecting two points.
-
-    TODO: Add functionality for virtual gates, which should contain functionality to automatically determine
-    whether to use the AWG or the IVVI's to scan. 
-
-    Arguments:
-        station (qcodes station): contains all of the instruments
-        scangates (list of length k): the gates to scan
-        coords (k x 2 array): coordinates of the points to scan between              
-        sd (object): corresponds to the sensing dot used for read-out
-
-    Returns:
-        dataset (qcodes Dataset): measurement data and metadata
-    '''
-    x0 = [coords[0, 0], coords[0, 1]]  # first parameters
-    x1 = [coords[1, 0], coords[1, 1]]
-    sweeprange = np.sqrt((x1[1] - x1[0]) ** 2 + (x0[1] - x0[0]) ** 2)
-    gate_comb = dict()
-
-    gate_comb = {scangates[1]: (
-        x1[1] - x1[0]) / sweeprange, scangates[0]: (x0[1] - x0[0]) / sweeprange}
-
-    gate = scangates[0]  # see TODO: proper name
-
-    waveform, sweep_info = station.awg.sweep_gate_virt(
-        gate_comb, sweeprange, period)
-    if verbose:
-        print('scanLine: sweeprange %.1f ' % sweeprange)
-        print(sweep_info)
-
-    fpga_ch = sd.fpga_ch
-    waittime = Naverage * period
-    ReadDevice = ['FPGA_ch%d' % fpga_ch]
-    _, DataRead_ch1, DataRead_ch2 = station.fpga.readFPGA(
-        Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
-
-    station.awg.stop()
-
-    dataread = [DataRead_ch1, DataRead_ch2][fpga_ch - 1]
-    data = station.awg.sweep_process(dataread, waveform, Naverage)
-    dataset, _ = makeDataset_sweep(
-        data, gate, sweeprange, gates=station.gates) 
-
-    dataset.write()
-
-    return dataset
-
 
 # %% Measurement tools
 
