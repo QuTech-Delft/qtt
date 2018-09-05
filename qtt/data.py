@@ -17,14 +17,66 @@ from qtt import pgeometry
 import qtt.algorithms.generic
 from qcodes.plots.qcmatplotlib import MatPlot
 
+#%% Serialization tools
+
+
+def DataArray_to_dictionary(da, include_data=True):
+    """ Convert DataArray to dictionary
+
+    Args:
+        da (DataArray): data to convert
+        include_data (bool): If True then include the .ndarray field
+    Returns:
+        dict: dictionary containing the serialized data
+
+    """
+    fields = ['label', 'name', 'unit', 'is_setpoint', 'full_name', 'array_id', 'shape', 'set_arrays']
+    if include_data:
+        fields += ['ndarray']
+    dct = dict([(f, getattr(da, f)) for f in fields])
+    dct['set_arrays'] = tuple([x.array_id for x in dct['set_arrays']])
+    return dct
+
+
+def DataSet_to_dictionary(data_set, include_data=True, include_metadata=True):
+    """ Convert DataSet to dictionary
+
+    Args:
+        data_set (DataSet): data to convert
+        include_data (bool): If True then include the .ndarray field
+        include_metadata (bool): If True then include the metadata
+    Returns:
+        dict: dictionary containing the serialized data
+    """
+    d = {'extra': {}, 'metadata': None, 'arrays': {}}
+    for array_id in data_set.arrays.keys():
+        da = data_set.arrays[array_id]
+
+        d['arrays'][array_id] = DataArray_to_dictionary(da, include_data)
+
+    if include_metadata:
+        d['metadata'] = data_set.metadata
+
+    d['extra']['location'] = data_set.location
+    return d
+
+
+def test_dataset_to_dictionary():
+    ds = qcodes.tests.data_mocks.DataSet2D()
+    dct = DataSet_to_dictionary(ds, include_data=False, include_metadata=False)
+    assert(dct['metadata'] is None)
+    dct = DataSet_to_dictionary(ds, include_data=True, include_metadata=True)
+    assert('metadata' in dct)
+
 #%%
+
 
 def get_dataset(ds):
     """ Get a dataset from a results dictionary, a string or a dataset
-    
+
     Args:
         ds (str, dict or DataSet): either location of dataset, the dataset itself or a calibration structure
-            
+
     Returns:
         ds (DataSet)
     """
@@ -36,6 +88,7 @@ def get_dataset(ds):
         ds = qtt.data.load_dataset(ds)
     return ds
 
+
 def load_dataset(location, io=None, verbose=0):
     """ Load a dataset from storage
 
@@ -43,7 +96,7 @@ def load_dataset(location, io=None, verbose=0):
 
     Args:
         location (str): either the relative or full location
-        io (None or 
+        io (None or qcodes.DiskIO): 
     Returns:
         dataset (DataSet or None)
     """
@@ -68,9 +121,9 @@ def load_dataset(location, io=None, verbose=0):
     for ii, hformatter in enumerate(formatters):
         try:
             if verbose:
-                print('%d: %s' % (ii, hformatter) )
+                print('%d: %s' % (ii, hformatter))
             data = qcodes.load_data(location, formatter=hformatter, io=io)
-            if len(data.arrays)==0:
+            if len(data.arrays) == 0:
                 data = None
                 raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
             logging.debug('load_data: loaded %s with %s' % (location, hformatter))
@@ -81,9 +134,23 @@ def load_dataset(location, io=None, verbose=0):
             pass
         finally:
             if data is not None:
+                if isinstance(hformatter, GNUPlotFormat):
+                    # workaround for bug in GNUPlotFormat not saving the units
+                    if '__dataset_metadata' in data.metadata:
+                        dataset_meta = data.metadata['__dataset_metadata']
+                        for key, array_metadata in dataset_meta['arrays'].items():
+                            print(key)
+                            if key in data.arrays:
+                                if data.arrays[key].unit is None:
+                                    # update unit
+                                    data.arrays[key].unit = array_metadata['unit']
+
                 if verbose:
                     print('succes with formatter %s' % hformatter)
                 break
+    if verbose:
+        if data is None:
+            print('could not load data from %s, returning None' % location)
     return data
 
 
@@ -112,19 +179,22 @@ def test_load_dataset(verbose=0):
         if verbose:
             print(r)
 
+
 #%% Monkey patch qcodes to store latest dataset
 from functools import wraps
 
+
 @qtt.utilities.tools.deprecated
-def store_latest_decorator(function, obj):    
+def store_latest_decorator(function, obj):
     """ Decorator to store latest result of a function in an object """
     if not hasattr(obj, '_latest'):
         obj._latest = None
+
     @wraps(function)
     def wrapper(*args, **kwargs):
         ds = function(*args, **kwargs)
-        obj._latest = ds # store the latest result
-        return ds 
+        obj._latest = ds  # store the latest result
+        return ds
     wrapper._special = 'yes'
     return wrapper
 
@@ -133,13 +203,14 @@ def get_latest_dataset():
     """ Return latest dataset that was created """
     return getattr(qcodes.DataSet._latest, None)
 
-def add_comment(txt, dataset = None, verbose = 0):
+
+def add_comment(txt, dataset=None, verbose=0):
     """ Add a comment to a DataSet
-    
+
     Args:
         comment (str): comment to be added to the DataSet metadata
         dataset (None or DataSet): DataSet to add the comments to
-    
+
     """
     if dataset is None:
         if hasattr(qcodes.DataSet, '_latest_datasets'):
@@ -152,32 +223,33 @@ def add_comment(txt, dataset = None, verbose = 0):
             dataset = qcodes.DataSet._latest
     if dataset is None:
         raise Exception('no DataSet to add comments to')
-        
+
     dataset.add_metadata({'comment': txt})
     if verbose:
         print('added comments to DataSet %s' % dataset.location)
-    
-    
+
+
 def test_add_comment():
     import qcodes.tests.data_mocks
 
-    ds0=qcodes.tests.data_mocks.DataSet2D()
-    ds=qcodes.tests.data_mocks.DataSet2D()
+    ds0 = qcodes.tests.data_mocks.DataSet2D()
+    ds = qcodes.tests.data_mocks.DataSet2D()
     try:
         add_comment('hello world')
     except NotImplementedError as ex:
-        ds.metadata['comment']='hello world'
+        ds.metadata['comment'] = 'hello world'
         pass
     add_comment('hello world 0', ds0)
-    assert(ds.metadata['comment']=='hello world')
-    assert(ds0.metadata['comment']=='hello world 0')
-    
-if __name__=='__main__':    
-    test_add_comment() 
+    assert(ds.metadata['comment'] == 'hello world')
+    assert(ds0.metadata['comment'] == 'hello world 0')
 
-    #ds=qcodes.tests.data_mocks.DataSet2D()
+
+if __name__ == '__main__':
+    test_add_comment()
+
+    # ds=qcodes.tests.data_mocks.DataSet2D()
     #print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
-        
+
 #%%
 
 
@@ -203,13 +275,15 @@ def datasetCentre(ds, ndim=None):
         cc = [mx, my]
     return cc
 
+
 def test_dataset():
     import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet2D()
     cc = datasetCentre(ds)
     assert(cc[0] == 1.5)
-    zz=dataset_labels(ds)
-    
+    zz = dataset_labels(ds)
+
+
 def drawCrosshair(ds, ax=None, ndim=None):
     """ Draw a crosshair on the centre of the dataset
 
@@ -299,7 +373,7 @@ def dataset_get_istep(alldata, mode=None):
 
 def dataset1Ddata(alldata):
     ''' Parse a dataset into the x and y scan values
-    
+
     Returns:
         x (array)
         y (array)
@@ -311,7 +385,7 @@ def dataset1Ddata(alldata):
 
 def dataset_labels(alldata, tag=None):
     """ Return label for axis of dataset
-    
+
     Args:
         ds (DataSet): dataset
         tag (str): can be 'x', 'y' or 'z'
@@ -322,7 +396,7 @@ def dataset_labels(alldata, tag=None):
     if tag == 'y':
         d = alldata.default_parameter_array()
         return d.set_arrays[1].label
-    if tag is None or tag=='z':
+    if tag is None or tag == 'z':
         d = alldata.default_parameter_array()
         return d.label
     return '?'
@@ -401,7 +475,7 @@ def stepgate(scanjob):
 
 def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
     """ Show result of a 2D scan 
-    
+
     Args:
         dd (DataSet)
         impixel (array or None)
@@ -623,10 +697,10 @@ class image_transform:
 
     def istep_sweep(self):
         return np.mean(np.diff(self.vsweep))
-    
+
     def istep_step(self):
         return np.mean(np.diff(self.vstep))
-            
+
     def istep(self):
         return self._istep
 
@@ -712,14 +786,13 @@ class image_transform:
 
         extent, g0, g1, vstep, vsweep, arrayname = dataset2Dmetadata(
             self.dataset, arrayname=self.arrayname, verbose=0)
-        nx = vsweep.size  
-        ny = vstep.size  
+        nx = vsweep.size
+        ny = vstep.size
 
         xx = extent
         x = ptx
         nn = pt.shape[1]
         ptx = np.zeros((2, nn))
-
 
         f = scipy.interpolate.interp1d(
             [0, ny - 1], [xx[2], xx[3]], assume_sorted=False, fill_value='extrapolate')
@@ -780,6 +853,7 @@ if __name__ == '__main__':
 
 #%%
 
+
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
     try:
@@ -808,6 +882,7 @@ def load_data(mfile: str):
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
     return pickleload(mfile)
+
 
 def write_data(mfile: str, data):
     ''' Write data to specified file '''

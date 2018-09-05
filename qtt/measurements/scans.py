@@ -320,6 +320,12 @@ def getDefaultParameter(data):
 
 # %%
 
+def _add_dataset_metadata(dataset):
+    """ Add different kinds of metadata to a dataset """
+    update_dictionary(dataset.metadata, scantime=str(datetime.datetime.now()))
+    update_dictionary(dataset.metadata, code_version=qtt.utilities.tools.code_version())
+    update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.DataSet_to_dictionary(dataset, include_data=False, include_metadata=False) )
+
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -428,13 +434,13 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
 
     alldata.write(write_metadata=True)
+
 
     return alldata
 
@@ -557,9 +563,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         update_dictionary(alldata.metadata, **extra_metadata)
 
     update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.tools.code_version())
-    
+    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
+
     alldata = qtt.tools.stripDataset(alldata)
 
     alldata.write(write_metadata=True)
@@ -1196,9 +1202,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
 
     alldata.write(write_metadata=True)
 
@@ -1890,11 +1895,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=scanjob, allgatevalues=gatevals,
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+    _add_dataset_metadata(alldata)
 
     alldata.write(write_metadata=True)
 
@@ -2095,72 +2098,13 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
         alldata.metadata = dict()
 
     update_dictionary(alldata.metadata, scanjob=scanjob,
-                      dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals)
-    update_dictionary(alldata.metadata, code_version=qtt.utilities.tools.code_version())
+                      dt=dt, station=station.snapshot(), allgatevalues=gatevals)
+    _add_dataset_metadata(alldata)
 
     alldata.write(write_metadata=True)
 
     return alldata, waveform, sweep_info
 
-
-# %%
-
-
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
-def scanLine(station, scangates, coords, sd, period=1e-3, Naverage=1000, verbose=1):
-    ''' Do a scan (AWG sweep) over the line connecting two points.
-
-    TODO: Add functionality for virtual gates, which should contain functionality to automatically determine
-    whether to use the AWG or the IVVI's to scan. 
-
-    Arguments:
-        station (qcodes station): contains all of the instruments
-        scangates (list of length k): the gates to scan
-        coords (k x 2 array): coordinates of the points to scan between              
-        sd (object): corresponds to the sensing dot used for read-out
-
-    Returns:
-        dataset (qcodes Dataset): measurement data and metadata
-    '''
-    # TODO: put a different parameter and values on the horizontal axis?
-    # TODO: extend functionality to any number of gates (virtual gates?)
-    # FIXME: single gate variation???
-    x0 = [coords[0, 0], coords[0, 1]]  # first parameters
-    x1 = [coords[1, 0], coords[1, 1]]
-    sweeprange = np.sqrt((x1[1] - x1[0]) ** 2 + (x0[1] - x0[0]) ** 2)
-    gate_comb = dict()
-
-    # for g in scangates:
-    #    gate_comb[g] = {scangates[1]: (x0[1] - x1[1]) / sweeprange, scangates[0]: (x0[0] - x1[0]) / sweeprange}
-    gate_comb = {scangates[1]: (
-        x1[1] - x1[0]) / sweeprange, scangates[0]: (x0[1] - x0[0]) / sweeprange}
-
-    gate = scangates[0]  # see TODO: proper name
-
-    waveform, sweep_info = station.awg.sweep_gate_virt(
-        gate_comb, sweeprange, period)
-    if verbose:
-        print('scanLine: sweeprange %.1f ' % sweeprange)
-        print(sweep_info)
-
-    fpga_ch = sd.fpga_ch
-    waittime = Naverage * period
-    ReadDevice = ['FPGA_ch%d' % fpga_ch]
-    _, DataRead_ch1, DataRead_ch2 = station.fpga.readFPGA(
-        Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
-
-    station.awg.stop()
-
-    dataread = [DataRead_ch1, DataRead_ch2][fpga_ch - 1]
-    data = station.awg.sweep_process(dataread, waveform, Naverage)
-    dataset, _ = makeDataset_sweep(
-        data, gate, sweeprange, gates=station.gates)  # see TODO
-
-    dataset.write()
-
-    return dataset
 
 
 # %% Measurement tools
