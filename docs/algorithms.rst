@@ -4,7 +4,16 @@ Algorithms
 Algorithms have as input data (typically as a QCoDeS dataset or a numpy array) and parameters of the algorithm. 
 The output is a dictionary with the main results as keys of the dictionary.
 
-Many algorithms are described in the `Example notebooks`_ section. In the future we will add a more detailed explanation.
+Example notebooks
+-----------------
+
+Most of the algorithms are documented in the `Example notebooks`_ section.
+
+
+Source code
+-----------
+
+The source code for the algoritms can be found below:
 
 .. doccommand:
    See  https://stackoverflow.com/questions/20569011/python-sphinx-autosummary-automated-listing-of-member-functions
@@ -28,9 +37,5 @@ Many algorithms are described in the `Example notebooks`_ section. In the future
    qtt.algorithms.random_telegraph_signal
    qtt.algorithms.tunneling
    
-Example notebooks
------------------
-
-Most of the algorithms are documented in the `Example notebooks`_ section.
 
 Back to the :doc:`main page <index>`.
