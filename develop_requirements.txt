@@ -6,6 +6,7 @@ coverage
 certifi
 colorama
 hickle>= 3.1
+lmfit
 jupyter
 numpy >= 1.13
 matplotlib >= 2.1
