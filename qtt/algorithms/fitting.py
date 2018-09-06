@@ -98,7 +98,8 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
     Arguments:
         x_data, y_data (array): independent and dependent variable data
         l (float): leverarm passed to FermiLinear function
-
+        use_lmfit (bool): If True use lmfit for optimization, otherwise use scipy
+        
     Returns:
         p (array): fitted function parameters
         results (dict): extra fitting data
