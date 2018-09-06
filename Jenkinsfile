@@ -80,7 +80,6 @@ pipeline {
                 sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_ohmic.ipynb'
                 sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb'                                
                 sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_charge_sensor.ipynb'       
-                sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_lever_arm_charging_energy.ipynb'       
 
                 sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/simulation/example_classical_dot_simulation.ipynb'               
                 sh '. ./venv/bin/activate && jupyter nbconvert --to notebook --execute docs/notebooks/example_virtual_dot_array.ipynb'                               
