@@ -199,9 +199,15 @@ def test_fitfermilinear(fig=None):
 
     assert np.all(absolute_difference < 1e-1)
 
-    actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=True)
-    absolute_difference = np.abs(actual_parameters - expected_parameters)
-    assert np.all(absolute_difference < 1e-1)
+    try:
+        import lmfit
+        have_lmfit=1
+    except ImportError:
+        have_lmfit=0
+    if have_lmfit:
+        actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=True)
+        absolute_difference = np.abs(actual_parameters - expected_parameters)
+        assert np.all(absolute_difference < 1e-1)
 
 
 if __name__ == '__main__':

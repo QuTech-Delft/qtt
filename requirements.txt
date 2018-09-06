@@ -4,7 +4,6 @@ colorama
 coverage
 dulwich
 hickle
-lmfit
 numpy >= 1.13
 matplotlib >= 2.1
 pandas
