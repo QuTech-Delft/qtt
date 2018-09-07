@@ -34,7 +34,7 @@ The videmode tool can create fast charge stability diagrams using a 2D sawtooth 
 
 .. raw:: html
 
-    <video width="8000" height="600" controls>
+    <video width="800" height="600" controls>
       <source src="_static/videomode-example.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
