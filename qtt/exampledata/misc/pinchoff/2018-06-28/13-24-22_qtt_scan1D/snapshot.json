@@ -6612,7 +6612,7 @@
                         "label": "cpatempwo",
                         "post_delay": 0,
                         "name": "cpatempwo",
-                        "unit": "°C"
+                        "unit": "Â°C"
                     },
                     "cpatempwi": {
                         "value": null,
@@ -6626,7 +6626,7 @@
                         "label": "cpatempwi",
                         "post_delay": 0,
                         "name": "cpatempwi",
-                        "unit": "°C"
+                        "unit": "Â°C"
                     },
                     "cpawarn": {
                         "value": null,
@@ -6716,6 +6716,40 @@
         "timestamp": "2018-06-28T13:24:47.929422",
         "system": {
             "node": "TUD278090"
+        }
+    },
+    "__dataset_metadata": {
+        "extra": {
+            "location": "C:\\svn\\qtt\\qtt\\exampledata\\misc\\pinchoff\\2018-06-28\\13-24-22_qtt_scan1D"
+        },
+        "metadata": null,
+        "arrays": {
+            "B8": {
+                "label": "B8",
+                "name": null,
+                "unit": "mV",
+                "is_setpoint": true,
+                "full_name": null,
+                "array_id": "B8",
+                "shape": [
+                    200
+                ],
+                "set_arrays": []
+            },
+            "keithley2_amplitude": {
+                "label": "keithley2_amplitude",
+                "name": null,
+                "unit": "a.u.",
+                "is_setpoint": false,
+                "full_name": null,
+                "array_id": "keithley2_amplitude",
+                "shape": [
+                    200
+                ],
+                "set_arrays": [
+                    "B8"
+                ]
+            }
         }
     }
 }
