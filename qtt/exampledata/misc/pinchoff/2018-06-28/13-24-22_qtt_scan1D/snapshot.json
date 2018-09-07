@@ -6720,7 +6720,7 @@
     },
     "__dataset_metadata": {
         "extra": {
-            "location": "C:\\svn\\qtt\\qtt\\exampledata\\misc\\pinchoff\\2018-06-28\\13-24-22_qtt_scan1D"
+            "location": "c:\\svn\\qtt\\qtt\\exampledata\\misc\\pinchoff\\2018-06-28\\13-24-22_qtt_scan1D"
         },
         "metadata": null,
         "arrays": {
