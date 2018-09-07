@@ -6720,11 +6720,7 @@
     },
     "__dataset_metadata": {
         "extra": {
-<<<<<<< HEAD
-            "location": "C:\\svn\\qtt\\qtt\\exampledata\\misc\\pinchoff\\2018-06-28\\13-24-22_qtt_scan1D"
-=======
             "location": "c:\\svn\\qtt\\qtt\\exampledata\\misc\\pinchoff\\2018-06-28\\13-24-22_qtt_scan1D"
->>>>>>> fix dataset units for pinchoff notebook
         },
         "metadata": null,
         "arrays": {
@@ -6743,11 +6739,7 @@
             "keithley2_amplitude": {
                 "label": "keithley2_amplitude",
                 "name": null,
-<<<<<<< HEAD
                 "unit": "a.u.",
-=======
-                "unit": "a.u",
->>>>>>> fix dataset units for pinchoff notebook
                 "is_setpoint": false,
                 "full_name": null,
                 "array_id": "keithley2_amplitude",
