@@ -1,3 +1,14 @@
+# to install qtt
+qcodes
+matplotlib
+attrs
+nose
+hickle
+numpy
+scikit-image
+scipy
+Polygon3
+# for documentation building
 numpy
 sphinxcontrib.bibtex
 nbsphinx
