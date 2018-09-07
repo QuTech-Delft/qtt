@@ -93,15 +93,17 @@ def initFermiLinear(x_data, y_data, fig=None):
 
 # %%
 
-def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16):
+def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
     """ Fit data to a Fermi-Linear function
 
     Arguments:
         x_data, y_data (array): independent and dependent variable data
-
+        l (float): leverarm passed to FermiLinear function
+        use_lmfit (bool): If True use lmfit for optimization, otherwise use scipy
+        
     Returns:
         p (array): fitted function parameters
-        pp (dict): extra fitting data
+        results (dict): extra fitting data
 
     .. seealso:: FermiLinear
     """
@@ -110,18 +112,26 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16):
 
     # initial values
     ab, ff = initFermiLinear(xdata, ydata, fig=None)
-    p0 = ab + ff
-    if 0:
-        h = int(ydata.size / 2)
-        amp = np.mean(ydata[h:]) - np.mean(ydata[:h])  # np.std(ydata)
-        p0 = [0, np.mean(ydata), np.mean(xdata), amp, -0.1]
+    initial_parameters = ab + ff
 
     # fit
-    def func(xdata, a, b, cc, A, T):
+    def fermi_linear_fitting_function(xdata, a, b, cc, A, T):
         return FermiLinear(xdata, a, b, cc, A, T, l=l)
 
-    pp = scipy.optimize.curve_fit(func, xdata, ydata, p0=p0)
-    p = pp[0]
+    if use_lmfit:
+        import lmfit
+
+        gmodel = lmfit.Model(fermi_linear_fitting_function)
+        param_init = dict(zip(gmodel.param_names, initial_parameters))
+        gmodel.set_param_hint('T', min=0)
+
+        params = gmodel.make_params(**param_init)
+        lmfit_results = gmodel.fit(y_data, params, xdata=x_data)
+        fitting_results = lmfit_results.fit_report()
+        p = np.array([lmfit_results.best_values[p] for p in gmodel.param_names])
+    else:
+        fitting_results = scipy.optimize.curve_fit(fermi_linear_fitting_function, xdata, ydata, p0=initial_parameters)
+        p = fitting_results[0]
 
     if fig is not None:
         y = FermiLinear(xdata, *list(p))
@@ -130,7 +140,7 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16):
         plt.plot(xdata, ydata, '.b', label='data')
         plt.plot(xdata, y, 'm-', label='fitted FermiLinear')
         plt.legend(numpoints=1)
-    return p, dict({'pp': pp, 'p0': p0})
+    return p, dict({'pp': fitting_results, 'p0': initial_parameters, 'initial_parameters': initial_parameters, 'fitting_results': fitting_results})
 
 
 # %%
@@ -157,7 +167,7 @@ def fit_addition_line(dataset, trimborder=True):
     ydata = np.array(y_array)
 
     if trimborder:
-        ncut = max(min(int(xdata.size/40), 100), 1)
+        ncut = max(min(int(xdata.size / 40), 100), 1)
         xdata, ydata, setarray = xdata[ncut: -ncut], ydata[ncut:-ncut], setarray[ncut:-ncut]
 
     # fitting of the FermiLinear function
@@ -178,17 +188,27 @@ def test_fitfermilinear(fig=None):
     expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
     x_data = np.arange(-20, 10, 0.1)
     y_data = FermiLinear(x_data, *expected_parameters)
-    y_data += 0.01 * np.random.rand(y_data.size)
+    y_data += 0.005 * np.random.rand(y_data.size)
 
-    actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig)
+    actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=False)
     absolute_difference = np.abs(actual_parameters - expected_parameters)
 
     if fig:
-        print('fitted: %s' % expected_parameters)
-        print('fitted: %s' % actual_parameters)
+        print('expected: %s' % expected_parameters)
+        print('fitted:   %s' % actual_parameters)
         print('max diff: %.2f' % (absolute_difference.max()))
 
     assert np.all(absolute_difference < 1e-1)
+
+    try:
+        import lmfit
+        have_lmfit=1
+    except ImportError:
+        have_lmfit=0
+    if have_lmfit:
+        actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=True)
+        absolute_difference = np.abs(actual_parameters - expected_parameters)
+        assert np.all(absolute_difference < 1e-1)
 
 
 if __name__ == '__main__':
