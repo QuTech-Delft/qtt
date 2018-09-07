@@ -191,17 +191,17 @@ def gauss_ramsey(x_data, params):
     is made dependent on the free evolution time. This results in a gaussian decay multiplied by a sinus. 
     Function as used by T.F. Watson et all., example in qtt/docs/notebooks/example_fit_ramsey.ipynb
     
-    $$ gauss_ramsey = A * exp(-(C*x_data)**2) * sin(2pi*ramseyfreq * x_data - angle) +B  $$
+    $$ gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B  $$
     
     Args:
         x_data (array): the data for the input variable
-        params (array): parameters of the gauss_ramsey function, [A,C,ramseyfreq,angle,B]
+        params (array): parameters of the gauss_ramsey function, [A,t2s,ramseyfreq,angle,B]
         
     Result:
         gauss_ramsey (array): model for the gauss_ramsey
     """
-    [A,C,ramseyfreq,angle,B] = params    
-    gauss_ramsey = A * np.exp(-(C*x_data)**2) * np.sin(2*np.pi*ramseyfreq * x_data - angle) +B 
+    [A,t2s,ramseyfreq,angle,B] = params    
+    gauss_ramsey = A * np.exp(-(x_data/t2s)**2) * np.sin(2*np.pi*ramseyfreq * x_data - angle) +B 
     return gauss_ramsey
 
 
@@ -238,22 +238,22 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
         par_guess (None or array): optional, initial guess for the fit parameters: [A,C,ramseyfreq,angle,B]
         
     Returns:
-        par_fit (array): array with the fit parameters: [A,C,ramseyfreq,angle,B]
+        par_fit (array): array with the fit parameters: [A,t2s,ramseyfreq,angle,B]
         result_dict (dict): dictionary containing a description, the par_fit and par_guess
     
     """
     func = lambda params: cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
     if par_guess is None:
         A = (np.max(y_data) - np.min(y_data))/2
-        C = 1/(1e-6)
+        t2s = 1e-6
         ramseyfreq = 1/(1e-6)
         angle = 0
         B = (np.min(y_data) + (np.max(y_data) - np.min(y_data))/2)
-        par_guess = np.array([A,C,ramseyfreq,angle,B])
+        par_guess = np.array([A,t2s,ramseyfreq,angle,B])
         
     par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     
-    result_dict = {'description':'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = A * exp(-(C*x_data)**2) * sin(2pi*ramseyfreq * x_data - angle) +B','parameters fit': par_fit,'parameters initial guess': par_guess}
+    result_dict = {'description':'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B','parameters fit': par_fit,'parameters initial guess': par_guess}
     
     return par_fit, result_dict
 
