@@ -139,10 +139,10 @@ def load_dataset(location, io=None, verbose=0):
                     if '__dataset_metadata' in data.metadata:
                         dataset_meta = data.metadata['__dataset_metadata']
                         for key, array_metadata in dataset_meta['arrays'].items():
-                            print(key)
                             if key in data.arrays:
                                 if data.arrays[key].unit is None:
-                                    # update unit
+                                    if verbose:
+                                        print('load_dataset: updating unit for %s' % key)
                                     data.arrays[key].unit = array_metadata['unit']
 
                 if verbose:
