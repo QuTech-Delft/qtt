@@ -9,7 +9,6 @@ scikit-image
 scipy
 Polygon3
 # for documentation building
-numpy
 sphinxcontrib.bibtex
 nbsphinx
 sphinxcontrib.napoleon
