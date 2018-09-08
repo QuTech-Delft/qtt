@@ -777,7 +777,7 @@ try:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
                     activate_slide=True, ppLayout=None, extranotes=None):
-        ''' Add slide to current active Powerpoint presentation
+        """ Add slide to current active Powerpoint presentation
 
         Arguments:
             title (str): title added to slide
@@ -802,7 +802,7 @@ try:
             >>> txt = 'Some comments on the figure'
             >>> notes = 'some additional information' 
             >>> addPPTslide(title,fig, subtitle = txt,notes = notes)
-        '''
+        """
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
         if verbose >= 2:
@@ -1003,7 +1003,7 @@ try:
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
                        printformat='fancy', customfig=None, extranotes=None, **kwargs):
-        ''' Add slide based on dataset to current active Powerpoint presentation
+        """ Add slide based on dataset to current active Powerpoint presentation
 
         Arguments:
             dataset (DataSet): data and metadata from DataSet added to slide
@@ -1023,7 +1023,7 @@ try:
         -------
         >>> notes = 'some additional information'
         >>> addPPT_dataset(dataset,notes)
-        '''
+        """
         if len(dataset.arrays) < 2:
             raise IndexError('The dataset contains less than two data arrays')
 
