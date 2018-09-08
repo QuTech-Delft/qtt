@@ -55,8 +55,9 @@ The videmode tool can create fast charge stability diagrams using a 2D sawtooth 
       <source src="_static/videomode-example.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
+    <br/>
 
-    
+ 
 
 Data browser
 ------------
@@ -66,10 +67,18 @@ The data browser can be used to inspect recorded data.
 .. autosummary::
     qtt.gui.dataviewer.DataViewer
     
+.. figure:: images/databrowser.png
+    :width: 500px
+    :align: center
+    :alt: DataViewer widget
+    :figclass: align-center
+
+    DataViewer widget
+        
 Live plotting
 -------------
 
-Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be setup with
+Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be setup with:
 
 .. autosummary::
     qtt.utilties.tools.setupMeasurementWindows
@@ -91,13 +100,7 @@ A simple GUI to abort running measurements without interfering with the instrume
 
 .. autosummary::
     qtt.live_plotting.MeasurementControl
-
-.. ::
-    .. image:: images/measurement_control.png
-        :width: 200px
-        :align: center
-        :alt: measurement_control widget
-    
+   
 
 .. figure:: images/measurement_control.png
     :width: 320px
@@ -142,8 +145,7 @@ Copying data to Powerpoint
 
 To copy a dataset or a figure window to Powerpoint, including the scan metadata one can use:
  
-.. code-block:: python
-
+.. autosummary::
  	qtt.utilties.tools.addPPT_dataset(dataset)
  	qtt.utilties.tools.addPPTslide(figure)
 
