@@ -57,7 +57,7 @@ nbsphinx_execute = 'never'
 
 import os
 rtd = os.environ.get('READTHEDOCS', False)
-
+print('READTHEDOCS env %s' % (rtd, ))
 
 if rtd:
     # since tkinter seems to be unavailable on rtd
