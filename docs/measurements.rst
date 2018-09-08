@@ -120,7 +120,7 @@ Virtual gates
 Storing the system state
 ------------------------
 
-To store the system state one can store the `station.snapshot()`. In order to restore the state,
+To store the system state one can store the ``station.snapshot()``. In order to restore the state,
 it is often sufficient for spin-qubits to restore the DAC values.
 
 .. autosummary::

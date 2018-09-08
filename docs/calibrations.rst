@@ -49,6 +49,6 @@ An example of a calibration result
 Storage
 -------
 
-The DataSet objects are stored with the qcodes `qcodes.data.gnuplot_format.GNUPlotFormat` or
-the `qcodes.data.hdf5_format.HDF5FormatMetadata`. For storage of other objects
+The DataSet objects are stored with the qcodes :code:`qcodes.data.gnuplot_format.GNUPlotFormat` or
+the :code:`qcodes.data.hdf5_format.HDF5FormatMetadata`. For storage of other objects
 we recommend to use HDF5.
