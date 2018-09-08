@@ -228,6 +228,11 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy', None)
 }
 
+if rtd:
+    import matplotlib
+    matplotlib.use('agg')
+
+
 if 1:
     def run_apidoc(_):
         import os

@@ -44,14 +44,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
 
     def __init__(self, instruments, instrumentnames=None,
-                 name='QuTech Parameter Viewer', **kwargs):
+                 name='QuTech Parameter Viewer',  start_timer=False, **kwargs):
         """ Simple class to show qcodes parameters
 
         Args:
             instruments (list): list of Qcodes Instruments to show
             instrumentnames (None or list): optional list of names to show
             name (str, optional): string used in the window title
-
+            start_timer (bool): If True, then start the updating
         """
         super().__init__(**kwargs)
         self.name = name
@@ -84,6 +84,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         self.update_field.connect(self._set_field)
 
+        self.updatecallback()
+        
     def init(self):
         """ Initialize parameter viewer
 
@@ -98,7 +100,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 instr.parameters[p], 'get')]
             gatesroot = QtWidgets.QTreeWidgetItem(self, [iname])
             for parameter_name in ppnames:
-                # ww=['gates', parameter_name]
                 # hack to make this semi thread-safe
                 si = min(sys.getswitchinterval(), 0.1)
                 # hack to make this semi thread-safe
@@ -120,12 +121,20 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                     self.setItemWidget(qq, 1, box)
                     self._itemsdict[iname][parameter_name] = box
 
-                box.valueChanged.connect(partial(self.valueChanged, iname, parameter_name))
+                box._valueChanged.connect(partial(self._valueChanged, iname, parameter_name))
 
         self.setSortingEnabled(True)
         self.expandAll()
 
 
+    def is_running(self):
+        if self._timer is None:
+            return False
+        if self._timer.isAlive():
+            return True
+        else:
+            return False
+        
     def setParamSingleStep(self, instr, param, value):
         """ Set the default step size for a parameter in the viewer
         
@@ -161,13 +170,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 except:
                     pass
 
-    def valueChanged(self, iname, param, value, *args, **kwargs):
+    def _valueChanged(self, iname, param, value, *args, **kwargs):
         """ Callback used to update values in an instrument """
         instr = self._instruments[self._instrumentnames.index(iname)]
         logging.info('set %s.%s to %s' % (iname, param, value))
         instr.set(param, value)
 
     def updatecallback(self, start=True, dt=3):
+        """ Update the data and start the restarts timer """
         if self._timer is not None:
             del self._timer
 
@@ -182,6 +192,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     update_field = Signal(str, str, object, bool)
 
     def stop(self):
+        """ Stop readout of the parameters in the widget """
         self.setWindowTitle(self.name + ': stopped')
         self._timer.stop()
 

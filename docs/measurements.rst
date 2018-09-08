@@ -27,7 +27,7 @@ ParameterViewer pass the instruments to be monitored as the first argument.
 
 .. code-block:: python
 
-    parameter_viewer = qtt.gui.parameterviewer.ParameterViewer([gates, keithley1])
+    parameter_viewer = qtt.gui.parameterviewer.ParameterViewer([gates, keithley1], start_timer=True)
     parameter_viewer.setGeometry(100,100, 400, 800)
 
 .. autosummary::
