@@ -235,11 +235,14 @@ if rtd:
     # check packages
     import importlib
     
-    modules=['skimage', 'matplotlib', 'cv2', 'PyQt5', 'pyqtgraph', 'qtpy', 'qcodes']
+    modules=['skimage', 'matplotlib', 'cv2', 'PyQt5', 'pyqtgraph', 'qtpy', 'qcodes', 'qtt']
     for module_name in modules:
         print('loading module %s' % module_name)
-        importlib.import_module(module_name)
-                
+        m=importlib.import_module(module_name)
+        try:
+            print('  __version__: %s' % m.__version__)                
+        except:
+            pass
 
 if 1:
     def run_apidoc(_):
