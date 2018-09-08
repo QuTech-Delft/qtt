@@ -9,12 +9,12 @@ import sys
 
 import multiprocessing as mp
 
-from qtpy.QtCore import Qt
+#from qtpy.QtCore import Qt
 from qtpy import QtWidgets
 from qtpy import QtGui
 from qtpy.QtCore import Signal, Slot
 import pyqtgraph
-from qtt import pgeometry as pmatlab
+from qtt import pgeometry
 from functools import partial
 
 #%%
@@ -97,8 +97,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             ppnames = [p for p in ppnames if hasattr(
                 instr.parameters[p], 'get')]
             gatesroot = QtWidgets.QTreeWidgetItem(self, [iname])
-            for g in ppnames:
-                # ww=['gates', g]
+            for parameter_name in ppnames:
+                # ww=['gates', parameter_name]
                 # hack to make this semi thread-safe
                 si = min(sys.getswitchinterval(), 0.1)
                 # hack to make this semi thread-safe
@@ -112,15 +112,15 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box.setSingleStep(5)
 
                 v = ''
-                A = QtWidgets.QTreeWidgetItem(gatesroot, [g, v])
-                self._itemsdict[iname][g] = A
+                A = QtWidgets.QTreeWidgetItem(gatesroot, [parameter_name, v])
+                self._itemsdict[iname][parameter_name] = A
 
-                if hasattr(pp[g], 'set'):
+                if hasattr(pp[parameter_name], 'set'):
                     qq = A
                     self.setItemWidget(qq, 1, box)
-                    self._itemsdict[iname][g] = box
+                    self._itemsdict[iname][parameter_name] = box
 
-                box.valueChanged.connect(partial(self.valueChanged, iname, g))
+                box.valueChanged.connect(partial(self.valueChanged, iname, parameter_name))
 
         self.setSortingEnabled(True)
         self.expandAll()
@@ -186,14 +186,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self._timer.stop()
 
     @Slot(str, str, object, bool)
-    def _set_field(self, iname, g, value, force_update):
+    def _set_field(self, iname, parameter_name, value, force_update):
         """ Helper function
 
         Update field of parameter viewer with a string value
         """
         if self.verbose >= 2:
-            print('_set_field: %s %s: %s' % (iname, g, str(value)))
-        sb = self._itemsdict[iname][g]
+            print('_set_field: %s %s: %s' % (iname, parameter_name, str(value)))
+        sb = self._itemsdict[iname][parameter_name]
 
         if isinstance(sb, QtWidgets.QTreeWidgetItem):
             sb.setText(1, str(value))
@@ -206,7 +206,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 update_value = True
             if update_value or force_update:
                 if not sb.hasFocus():  # do not update when editing
-                    logging.debug('update %s to %s' % (g, value))
+                    logging.debug('update %s to %s' % (parameter_name, value))
                     try:
                         oldstate = sb.blockSignals(True)
                         sb.setValue(value)
@@ -231,13 +231,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
             si = sys.getswitchinterval()
 
-            for g in ppnames:
+            for parameter_name in ppnames:
                 # hack to make this semi thread-safe
                 sys.setswitchinterval(100)
-                value = pp[g].get_latest()
+                value = pp[parameter_name].get_latest()
                 sys.setswitchinterval(si)
 
-                self.update_field.emit(iname, g, value, force_update)
+                self.update_field.emit(iname, parameter_name, value, force_update)
 
         for f in self.callbacklist:
             try:
@@ -275,7 +275,7 @@ def createParameterWidget(instruments, doexec=False, remote=False):
     instrumentnames = [i.name for i in instruments]
     app = pyqtgraph.mkQApp()
 
-    ms = pmatlab.monitorSizes()[-1]
+    ms = pgeometry.monitorSizes()[-1]
     p = ParameterViewer(instruments=instruments,
                         instrumentnames=instrumentnames)
     p.setGeometry(ms[0] + ms[2] - 320, 30, 300, 600)
