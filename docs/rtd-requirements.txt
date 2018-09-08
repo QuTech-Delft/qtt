@@ -27,5 +27,4 @@ sphinxcontrib.bibtex
 nbsphinx
 sphinxcontrib.napoleon
 sphinx-automodapi
-matplotlib
 jupyter

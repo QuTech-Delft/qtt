@@ -2365,9 +2365,8 @@ def test_scan2D(verbose=0):
             warnings.simplefilter('ignore')
             data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
     except Exception as ex:
-        from colorama import Fore
         print(ex)
-        print(Fore.RED + 'MultiParameter test failed!' + Fore.RESET)
+        warnings.warn('MultiParameter test failed!')
     # not supported:
     try:
         scanjob = scanjob_t({'sweepdata': dict({'param': {
