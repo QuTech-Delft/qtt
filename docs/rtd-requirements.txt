@@ -1,7 +1,31 @@
-numpy
+# to install qtt
+apscheduler
+attrs
+colorama
+coverage
+dulwich
+hickle
+numpy == 1.13
+matplotlib >= 2.1
+pandas
+Polygon3
+pyqtgraph
+pyzmqrpc
+PyQt5
+qcodes
+qtpy
+-e git+https://github.com/qutech/qc-toolkit.git@12af2dff0506c42e721b65696126849f23d7a4ce#egg=qupulse
+sympy
+slacker
+scikit-image
+scipy >= 0.18
+tables
+opencv-python
+
+# for documentation building
+numpydoc
 sphinxcontrib.bibtex
 nbsphinx
 sphinxcontrib.napoleon
 sphinx-automodapi
-matplotlib
 jupyter

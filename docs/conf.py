@@ -55,6 +55,13 @@ templates_path = ['_templates']
 
 nbsphinx_execute = 'never'
 
+import os
+rtd = os.environ.get('READTHEDOCS', False)
+
+
+if rtd:
+    # since tkinter seems to be unavailable on rtd
+    autodoc_mock_imports = ['_tkinter']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -209,7 +216,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'qtt', 'qtt Documentation',
-     author, 'qtt', 'One line description of project.',
+     author, 'qtt', 'Toolbox for quantum dot measurements and analysis.',
      'Miscellaneous'),
 ]
 
@@ -221,10 +228,24 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy', None)
 }
 
+if rtd:
+    import matplotlib
+    matplotlib.use('agg')
+
+    # check packages
+    import importlib
+    
+    modules=['skimage', 'matplotlib', 'cv2', 'PyQt5', 'pyqtgraph', 'qtpy', 'qcodes']
+    for module_name in modules:
+        print('loading module %s' % module_name)
+        importlib.import_module(module_name)
+                
+
 if 1:
     def run_apidoc(_):
         import os
         print('run_apidoc: current dir is %s' % os.getcwd())
+        import numpy; print('numpy.__version__ %s' % (numpy.__version__) )
     
         ignore_paths = [
             'qtt/legacy.py', 'qtt/debug.py', 'qtt/reports.py', 'qtt.loggingGUI.py',

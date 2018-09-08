@@ -15,15 +15,32 @@ For basic scanning the following functions are available:
     qtt.measurements.scans.scan2Dfast
     qtt.measurements.scans.scan2Dturbo
 
-For more advances measurements, write your own data acquisition loop.
+For more advanced measurements, write your own data acquisition loop.
 
 
 Parameter viewer
 ----------------
 
+The ParameterViewer widget allow to view and set numeric parameters of instruments. To start the
+ParameterViewer pass the instruments to be monitored as the first argument.
+
+
+.. code-block:: python
+
+    parameter_viewer = qtt.gui.parameterviewer.ParameterViewer([gates, keithley1], start_timer=True)
+    parameter_viewer.setGeometry(100,100, 400, 800)
+
 .. autosummary::
     qtt.gui.parameterviewer.ParameterViewer
 
+.. figure:: images/parameter_viewer.png
+    :width: 343px
+    :align: center
+    :alt: ParameterViewer widget
+    :figclass: align-center
+
+    ParameterViewer widget
+    
 VideoMode
 ---------
 
@@ -34,12 +51,13 @@ The videmode tool can create fast charge stability diagrams using a 2D sawtooth 
 
 .. raw:: html
 
-    <video width="8000" height="600" controls>
+    <video width="800" height="600" style="width:90%; max-width:800px;" controls>
       <source src="_static/videomode-example.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
+    <br/>
 
-    
+ 
 
 Data browser
 ------------
@@ -49,10 +67,18 @@ The data browser can be used to inspect recorded data.
 .. autosummary::
     qtt.gui.dataviewer.DataViewer
     
+.. figure:: images/databrowser.png
+    :width: 500px
+    :align: center
+    :alt: DataViewer widget
+    :figclass: align-center
+
+    DataViewer widget
+        
 Live plotting
 -------------
 
-Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be setup with
+Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be setup with:
 
 .. autosummary::
     qtt.utilties.tools.setupMeasurementWindows
@@ -74,13 +100,7 @@ A simple GUI to abort running measurements without interfering with the instrume
 
 .. autosummary::
     qtt.live_plotting.MeasurementControl
-
-.. ::
-    .. image:: images/measurement_control.png
-        :width: 200px
-        :align: center
-        :alt: measurement_control widget
-    
+   
 
 .. figure:: images/measurement_control.png
     :width: 320px
@@ -100,7 +120,7 @@ Virtual gates
 Storing the system state
 ------------------------
 
-To store the system state one can store the `station.snapshot()`. In order to restore the state,
+To store the system state one can store the ``station.snapshot()``. In order to restore the state,
 it is often sufficient for spin-qubits to restore the DAC values.
 
 .. autosummary::
@@ -125,8 +145,7 @@ Copying data to Powerpoint
 
 To copy a dataset or a figure window to Powerpoint, including the scan metadata one can use:
  
-.. code-block:: python
-
+.. autosummary::
  	qtt.utilties.tools.addPPT_dataset(dataset)
  	qtt.utilties.tools.addPPTslide(figure)
 

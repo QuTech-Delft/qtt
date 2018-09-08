@@ -64,4 +64,4 @@ License
 .. include:: ../LICENSE.txt
 
 
-.. include:: ../Contributors.md
+.. include:: ../CONTRIBUTORS.md
