@@ -18,6 +18,7 @@ import qtt
 
 
 class DataViewer(QtWidgets.QWidget):
+    """ Simple data browser for Qcodes datasets """
 
     def __init__(self, datadir=None, window_title='Data browser',
                  default_parameter='amplitude', extensions=['dat', 'hdf5'],
@@ -30,7 +31,7 @@ class DataViewer(QtWidgets.QWidget):
             default_parameter (string): name of default parameter to plot
         """
         super(DataViewer, self).__init__()
-        self.verbose = verbose  # for debugging
+        self.verbose = verbose 
         self.default_parameter = default_parameter
         if datadir is None:
             datadir = qcodes.DataSet.default_io.base_location
@@ -38,12 +39,11 @@ class DataViewer(QtWidgets.QWidget):
         self.extensions = extensions
 
         # setup GUI
-
         self.dataset = None
         self.text = QtWidgets.QLabel()
 
         # logtree
-        self.logtree = QtWidgets.QTreeView()  # QTreeWidget
+        self.logtree = QtWidgets.QTreeView()  
         self.logtree.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
         self._treemodel = QtGui.QStandardItemModel()

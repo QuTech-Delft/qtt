@@ -62,6 +62,21 @@ print('READTHEDOCS env %s' % (rtd, ))
 if rtd:
     # since tkinter seems to be unavailable on rtd
     autodoc_mock_imports = ['_tkinter']
+    autodoc_mock_imports += ['Polygon3', 'Polygon']
+
+    import sys
+    from unittest.mock import MagicMock
+
+    class Mock(MagicMock):
+
+        @classmethod
+        def __getattr__(cls, name):
+            if name == '__version__':
+                return '3.0.8'
+            return MagicMock()
+
+    MOCK_MODULES = ['Polygon']
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
