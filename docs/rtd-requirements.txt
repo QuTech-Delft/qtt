@@ -8,7 +8,9 @@ numpy==1.13
 scikit-image
 scipy
 Polygon3
+
 # for documentation building
+numpydoc
 sphinxcontrib.bibtex
 nbsphinx
 sphinxcontrib.napoleon
