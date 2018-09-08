@@ -20,6 +20,7 @@ slacker
 scikit-image
 scipy >= 0.18
 tables
+opencv-python
 
 # for documentation building
 numpydoc

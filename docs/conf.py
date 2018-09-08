@@ -237,6 +237,7 @@ if 1:
     def run_apidoc(_):
         import os
         print('run_apidoc: current dir is %s' % os.getcwd())
+        import numpy; print('numpy.__version__ %s' % (numpy.__version__) )
     
         ignore_paths = [
             'qtt/legacy.py', 'qtt/debug.py', 'qtt/reports.py', 'qtt.loggingGUI.py',

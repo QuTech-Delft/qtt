@@ -21,7 +21,6 @@ def get_version(verbose=1, filename='qtt/version.py'):
 
 extras = {
     # name: (module_name, minversion, pip_name)
-    'Numpy': ('numpy', '1.9', None),
     'MatPlot': ('matplotlib', '1.5', None),
     'SciPi': ('scipy', '0.19', None),
     'qcodes': ('qcodes', '0.1.5', None),
@@ -78,7 +77,7 @@ setup(name='qtt',
       #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
       install_requires=[
           'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
-          'numpy>=1.10', 'scikit-image',
+          'numpy>=1.11', 'scikit-image',
           'IPython>=0.1',
           'qcodes>=0.1.5',
           'Polygon3',
