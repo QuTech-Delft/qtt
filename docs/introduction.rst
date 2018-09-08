@@ -59,17 +59,18 @@ We advise to use the following settings when using QTT:
 
 * If you use `Spyder <https://github.com/spyder-ide/spyder>`_ then use the following settings:
 
-  - Use a `IPython` console and set the IPyhton backend graphics option to `QT`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
-  - In Tools->Preferences->Console->Advanced settings uncheck the box `Enable UMR`
+  - Use a ``IPython`` console and set the IPyhton backend graphics option to ``QT``. This ensures correctly displaying the ``ParameterViewer`` and ``DataBrowser``
+  - In ``Tools->Preferences->Console->Advanced settings`` uncheck the box ``Enable UMR``
 
 For the usage of algorithms or calibrations we point you to the documentation of those subjects.
 
 Testing
 -------
 
-Tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in the code. To run the tests you can run one of the commands below.
+Tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in
+the code. To run the tests you can run one of the commands below.
 
 .. code-block:: console
 
-    $ pytest # (Windows)
-    $ py.test # (Unix)
+    $ pytest
+
