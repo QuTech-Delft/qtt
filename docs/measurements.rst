@@ -81,7 +81,7 @@ Live plotting
 Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be setup with:
 
 .. autosummary::
-    qtt.utilties.tools.setupMeasurementWindows
+    qtt.gui.live_plotting.setupMeasurementWindows
 
 
 Named gates
