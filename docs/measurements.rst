@@ -15,15 +15,32 @@ For basic scanning the following functions are available:
     qtt.measurements.scans.scan2Dfast
     qtt.measurements.scans.scan2Dturbo
 
-For more advances measurements, write your own data acquisition loop.
+For more advanced measurements, write your own data acquisition loop.
 
 
 Parameter viewer
 ----------------
 
+The ParameterViewer widget allow to view and set numeric parameters of instruments. To start the
+ParameterViewer pass the instruments to be monitored as the first argument.
+
+
+.. code-block:: python
+
+    parameter_viewer = qtt.gui.parameterviewer.ParameterViewer([gates, keithley1])
+    parameter_viewer.setGeometry(100,100, 400, 800)
+
 .. autosummary::
     qtt.gui.parameterviewer.ParameterViewer
 
+.. figure:: images/parameter_viewer.png
+    :width: 343px
+    :align: center
+    :alt: ParameterViewer widget
+    :figclass: align-center
+
+    ParameterViewer widget
+    
 VideoMode
 ---------
 
@@ -34,7 +51,7 @@ The videmode tool can create fast charge stability diagrams using a 2D sawtooth 
 
 .. raw:: html
 
-    <video width="800" height="600" controls>
+    <video width="800" height="600" style="width:90%; max-width:800px;" controls>
       <source src="_static/videomode-example.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>

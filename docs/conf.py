@@ -55,6 +55,13 @@ templates_path = ['_templates']
 
 nbsphinx_execute = 'never'
 
+import os
+rtd = os.environ.get('READTHEDOCS', False)
+
+
+if rtd:
+    # since tkinter seems to be unavailable on rtd
+    autodoc_mock_imports = ['_tkinter']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
