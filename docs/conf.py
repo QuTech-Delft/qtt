@@ -209,7 +209,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'qtt', 'qtt Documentation',
-     author, 'qtt', 'One line description of project.',
+     author, 'qtt', 'Toolbox for quantum dot measurements and analysis.',
      'Miscellaneous'),
 ]
 
