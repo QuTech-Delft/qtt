@@ -235,7 +235,7 @@ if rtd:
     # check packages
     import importlib
     
-    modules=['skimage', 'matplotlib', 'cv2', 'PyQt5', 'pyqtgraph', 'qtpy']
+    modules=['skimage', 'matplotlib', 'cv2', 'PyQt5', 'pyqtgraph', 'qtpy', 'qcodes']
     for module_name in modules:
         print('loading module %s' % module_name)
         importlib.import_module(module_name)
