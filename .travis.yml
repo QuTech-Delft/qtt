@@ -14,7 +14,7 @@ install:
     #- sudo apt-get install -y python-opencv
     - pip install opencv-python
     - pip install --upgrade pytest
-    #- python setup.py install
+    - python setup.py install
 # command to run tests
 script: 
     - ls
