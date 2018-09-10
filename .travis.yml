@@ -19,6 +19,7 @@ install:
 # command to run tests
 script: 
     - ls
-    - 
+    - jupyter --version
+    - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_fit_ramsey.ipynb
     - pytest --version
     - pytest -v
