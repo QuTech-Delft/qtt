@@ -16,7 +16,7 @@ install:
     - pip install --upgrade pytest
     - pip install jupyter
 #    - python setup.py install # gives issues with pytest
-    - python setup.py develop --user
+    - python setup.py develop
 # command to run tests
 script: 
     - ls
