@@ -7,6 +7,8 @@ python:
 #    - master
 #    - dev
     
+cache: pip
+    
 # command to install dependencies
 install:
 #    - pip install ipython
