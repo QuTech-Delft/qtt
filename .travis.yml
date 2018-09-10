@@ -30,7 +30,7 @@ before_script:
 script: 
     - ls
     - pytest --version
-    - pytest -v
+    - xvfb-run pytest -v -s
     - jupyter --version
     # run notebooks
     - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
