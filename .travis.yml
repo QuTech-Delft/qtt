@@ -1,4 +1,6 @@
 language: python
+cache: pip
+
 #dist: xenial
 python:
     - "3.6"
@@ -6,9 +8,7 @@ python:
 #  only:
 #    - master
 #    - dev
-    
-cache: pip
-    
+
 # command to install dependencies
 install:
 #    - pip install ipython
