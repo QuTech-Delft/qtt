@@ -14,9 +14,11 @@ install:
     #- sudo apt-get install -y python-opencv
     - pip install opencv-python
     - pip install --upgrade pytest
+    - pip install jupyter
     - python setup.py install
 # command to run tests
 script: 
     - ls
+    - 
     - pytest --version
     - pytest -v

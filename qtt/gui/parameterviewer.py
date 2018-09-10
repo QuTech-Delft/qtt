@@ -299,6 +299,17 @@ def createParameterWidget(instruments, doexec=False, remote=False):
         app.exec()
     return p
 
+#%%
+    
+def test_parameterviewer():
+    import qtt.measurements.scans
+    from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+
+    ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
+    p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi']);
+    p.show()
+    p.close()
+    
 #%% Debugging code
 
 if __name__ == '__main__':
