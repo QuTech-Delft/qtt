@@ -121,7 +121,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                     self.setItemWidget(qq, 1, box)
                     self._itemsdict[iname][parameter_name] = box
 
-                box._valueChanged.connect(partial(self._valueChanged, iname, parameter_name))
+                box.valueChanged.connect(partial(self._valueChanged, iname, parameter_name))
 
         self.setSortingEnabled(True)
         self.expandAll()
@@ -305,10 +305,11 @@ if __name__ == '__main__':
     import qcodes
     import time
     import pdb
+    import qtt.measurements.scans
     from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 
-    ivvi = VirtualIVVI(name='dummyivvi', model=None)
-    p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi'])
+    ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
+    p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi']); self=p
     p.show()
     self = p
     p.updatecallback()
