@@ -228,6 +228,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
 
 
 def guitest_measurementcontrol():
+    import pyqtgraph
     app = pg.mkQApp()
     mc = MeasurementControl()
     mc.verbose = 1

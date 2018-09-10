@@ -30,7 +30,7 @@ install:
 script: 
     - ls
     - pytest --version
-    - xvfb-run -a pytest -v -s
+    - xvfb-run -a pytest -v 
     - jupyter --version
     # run notebooks
     - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
