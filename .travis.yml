@@ -15,7 +15,8 @@ install:
     - pip install opencv-python
     - pip install --upgrade pytest
     - pip install jupyter
-    - python setup.py install
+#    - python setup.py install # gives issues with pytest
+    - python setup.py develop --user
 # command to run tests
 script: 
     - ls
