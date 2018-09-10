@@ -302,6 +302,8 @@ def createParameterWidget(instruments, doexec=False, remote=False):
 #%%
     
 def test_parameterviewer():
+    import pyqtgraph
+    _ = pyqtgraph.mkQApp()
     import qtt.measurements.scans
     from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 
