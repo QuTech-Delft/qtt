@@ -125,6 +125,8 @@ if 0:
     print(gates)
     print(bottomgates)
 
+
+
 #%%
 class DotModel(Instrument):
     """ Simulation model for linear dot array
@@ -498,6 +500,58 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
     if verbose:
         print('initialized virtual dot system (%d dots)' % nr_dots)
     return station
+  
+#%%
+
+from qtt.structures import onedot_t
+
+def _getModel():
+    return model
+
+def bottomGates():
+    return _getModel().bottomgates
+
+
+def bottomBarrierGates():
+    return _getModel().bottomgates[0::2]
+
+
+def get_two_dots(full=1):
+    """ return all posible simple two-dots """
+    bg= bottomGates()
+    two_dots = [dict({'gates':bg[0:3]+bg[2:5]})] # two dot case
+
+    for td in two_dots:
+        td['name'] = '-'.join(td['gates'])
+    return two_dots
+
+
+def get_one_dots(full=1, sdidx=[]):
+    """ return all posible simple one-dots
+
+    Each dot objects holds the gates, the name of the channel and the
+    instrument measuring over the channel.
+
+    """
+    one_dots = []
+    ki = 'keithley3.amplitude'
+    
+    bg= bottomGates()
+
+    for ii in range(int((len(bg)-1)/2)) :    
+        one_dots.append( onedot_t(gates= bg[2*ii:2*ii+3], transport_instrument= ki) )
+
+
+    for x in sdidx:
+        assert(x in [1,2,3])
+        ki = 'keithley%d.amplitude' % x
+        od = onedot_t(gates=['SD%d%s' % (x, l) for l in ['a', 'b', 'c']],transport_instrument=ki )
+        one_dots.append(od)
+
+            
+    for od in one_dots:
+        od['name'] = 'dot-%s' % ('-'.join(od['gates']))
+    return one_dots
 
 #%%
 def test_virtualdot():
