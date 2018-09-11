@@ -6,12 +6,10 @@ matrix:
   include:
   - name: "Minimal install"
     python: "3.6"
-    env: DO_NOTEBOOKS=0
-    env: FULL_INSTALL=0
+    env: DO_NOTEBOOKS=0 FULL_INSTALL=0
   - name: "Full install"
     python: "3.6"
-    env: DO_NOTEBOOKS=1
-    env: FULL_INSTALL=1
+    env: DO_NOTEBOOKS=1 FULL_INSTALL=1
 #  - name: "Full install python 3.7"
 #    python: "3.7"
 #    env: MINIMAL_INSTALL=0
@@ -29,7 +27,10 @@ install:
 #    - pip install ipython
     - pip install -r requirements.txt
     - echo "FULL_INSTALL $FULL_INSTALL"
-    - $FULL_INSTALL && "pip install -r develop_requirements.txt"
+    - echo $DO_NOTEBOOKS
+    - export MYVAR=2
+    - echo "myvar $MYVAR"
+    - env $FULL_INSTALL && "pip install -r develop_requirements.txt"
     - $FULL_INSTALL && pip install opencv-python
     #- pip install nbsphinx
 #    - python setup.py install # gives issues with pytest
