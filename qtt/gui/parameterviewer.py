@@ -86,6 +86,10 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         self.updatecallback()
         
+    def close(self):
+        self.stop()
+        super(ParameterViewer, self).close()
+
     def init(self):
         """ Initialize parameter viewer
 
@@ -310,28 +314,34 @@ def test_parameterviewer():
     ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
     p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi']);
     p.show()
+    p.stop()
+    print('stop')
     p.close()
+    print('close done: is_running %s' % (p.is_running(), ))
     
 #%% Debugging code
 
 if __name__ == '__main__':
-    import qcodes
-    import time
-    import pdb
-    import qtt.measurements.scans
-    from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+    test_parameterviewer()
 
-    ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
-    p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi']); self=p
-    p.show()
-    self = p
-    p.updatecallback()
-
-    p.setGeometry(1540, 60, 360, 600)
-
-    time.sleep(.1)
-    ivvi.dac1.set(101)
-    ivvi.dac2.set(102)
+    if 0:
+        import qcodes
+        import time
+        import pdb
+        import qtt.measurements.scans
+        from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+    
+        ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
+        p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi']); self=p
+        p.show()
+        self = p
+        p.updatecallback()
+    
+        p.setGeometry(1540, 60, 360, 600)
+    
+        time.sleep(.1)
+        ivvi.dac1.set(101)
+        ivvi.dac2.set(102)
 
 #%%
 if __name__ == '__main__' and 0:
