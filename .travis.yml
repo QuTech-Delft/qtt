@@ -25,6 +25,9 @@ matrix:
 # command to install dependencies
 install:
     - echo "FULL_INSTALL $FULL_INSTALL"
+    - if [ "$FULL_INSTALL" == "1" ]; then
+      echo "Full installation!";
+      fi
     - echo $DO_NOTEBOOKS
     - export MYVAR=2
     - echo "myvar $MYVAR"
