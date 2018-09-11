@@ -1,9 +1,22 @@
 language: python
 cache: pip
 
-#dist: xenial
-python:
-    - "3.6"
+
+matrix:
+  include:
+  - name: "Minimal install"
+    python: "3.6"
+    env: DO_NOTEBOOKS=0
+  - name: "Full install"
+    python: "3.6"
+    env: DO_NOTEBOOKS=1
+#  - name: "Full install python 3.7"
+#    python: "3.7"
+#    env: MINIMAL_INSTALL=0
+    
+#python:
+#    - "3.6"
+
 #branches:
 #  only:
 #    - master
@@ -34,8 +47,8 @@ script:
     - xvfb-run -a pytest -v 
     - jupyter --version
     # run notebooks
-    - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
-    - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_awg_to_plunger.ipynb
+    - env $DO_NOTEBOOKS jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
+    - $DO_NOTEBOOKS && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_awg_to_plunger.ipynb
     - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_charge_sensor.ipynb
     - xvfb-run jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_coulomb_peak.ipynb
     - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_doublegauss_expdecay_rts.ipynb
