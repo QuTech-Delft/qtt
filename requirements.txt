@@ -3,7 +3,7 @@ attrs
 colorama
 coverage
 dulwich
-hickle
+hickle >= 3.1
 numpy == 1.13
 matplotlib >= 2.1
 pandas
