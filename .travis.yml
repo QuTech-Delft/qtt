@@ -7,9 +7,11 @@ matrix:
   - name: "Minimal install"
     python: "3.6"
     env: DO_NOTEBOOKS=0
+    env: FULL_INSTALL=0
   - name: "Full install"
     python: "3.6"
     env: DO_NOTEBOOKS=1
+    env: FULL_INSTALL=1
 #  - name: "Full install python 3.7"
 #    python: "3.7"
 #    env: MINIMAL_INSTALL=0
@@ -26,11 +28,9 @@ matrix:
 install:
 #    - pip install ipython
     - pip install -r requirements.txt
-    #- sudo apt-get install -y python-opencv
-    - pip install opencv-python
-    - pip install --upgrade pytest
-    - pip install jupyter
-    - pip install nbsphinx
+    - $FULL_INSTALL && pip install -r develop_requirements.txt
+    - $FULL_INSTALL && pip install opencv-python
+    #- pip install nbsphinx
 #    - python setup.py install # gives issues with pytest
     - python setup.py develop
 # command to run tests

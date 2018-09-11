@@ -11,6 +11,7 @@ Polygon3
 pyqtgraph
 pyzmqrpc
 PyQt5
+qcodes
 qtpy
 git+https://github.com/qutech/qupulse#egg=qupulse
 sympy
