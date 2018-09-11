@@ -24,12 +24,11 @@ matrix:
 
 # command to install dependencies
 install:
-#    - pip install ipython
-    - pip install -r requirements.txt
     - echo "FULL_INSTALL $FULL_INSTALL"
     - echo $DO_NOTEBOOKS
     - export MYVAR=2
     - echo "myvar $MYVAR"
+    - pip install -r requirements.txt
     - env $FULL_INSTALL && "pip install -r develop_requirements.txt"
     - $FULL_INSTALL && pip install opencv-python
     #- pip install nbsphinx
@@ -49,6 +48,7 @@ script:
     - xvfb-run -a pytest -v 
     - jupyter --version
     # run notebooks
+    - docs/notebooks/run_notebooks.sh
     - env $DO_NOTEBOOKS jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
     - $DO_NOTEBOOKS && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_awg_to_plunger.ipynb
     - jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_charge_sensor.ipynb
