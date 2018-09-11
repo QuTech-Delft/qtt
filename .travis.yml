@@ -29,8 +29,8 @@ install:
     - export MYVAR=2
     - echo "myvar $MYVAR"
     - pip install -r requirements.txt
-    - env $FULL_INSTALL && "pip install -r develop_requirements.txt"
-    - $FULL_INSTALL && pip install opencv-python
+    - "$FULL_INSTALL"=="1" && "pip install -r develop_requirements.txt"
+    - "$FULL_INSTALL"=="1" && pip install opencv-python
     #- pip install nbsphinx
 #    - python setup.py install # gives issues with pytest
     - python setup.py develop
