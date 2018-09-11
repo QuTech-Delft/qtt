@@ -28,7 +28,8 @@ matrix:
 install:
 #    - pip install ipython
     - pip install -r requirements.txt
-    - $FULL_INSTALL && pip install -r develop_requirements.txt
+    - echo "FULL_INSTALL $FULL_INSTALL"
+    - $FULL_INSTALL && "pip install -r develop_requirements.txt"
     - $FULL_INSTALL && pip install opencv-python
     #- pip install nbsphinx
 #    - python setup.py install # gives issues with pytest
