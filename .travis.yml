@@ -1,7 +1,6 @@
 language: python
 cache: pip
 
-
 matrix:
   include:
   - name: "Minimal install"
@@ -10,19 +9,7 @@ matrix:
   - name: "Full install"
     python: "3.6"
     env: DO_NOTEBOOKS=1 FULL_INSTALL=1
-#  - name: "Full install python 3.7"
-#    python: "3.7"
-#    env: MINIMAL_INSTALL=0
-    
-#python:
-#    - "3.6"
 
-#branches:
-#  only:
-#    - master
-#    - dev
-
-# command to install dependencies
 install:
     - if [ "$FULL_INSTALL" == "1" ]; then
       echo "Full installation! DO_NOTEBOOKS=$DO_NOTEBOOKS";
@@ -32,7 +19,7 @@ install:
       pip install -r develop_requirements.txt;
       pip install opencv-python;
       fi
-#    - python setup.py install # gives issues with pytest
+    # doing a normal python setup.py install gives issues with pytest
     - python setup.py develop
 
 # for xvfb details see https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui
@@ -46,17 +33,4 @@ script:
       jupyter --version;
       source docs/notebooks/run_notebooks.sh;
       fi
-    #- env $DO_NOTEBOOKS jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
-    #- $DO_NOTEBOOKS && jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_awg_to_plunger.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_charge_sensor.ipynb
-    #- xvfb-run jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_coulomb_peak.ipynb
-    ##- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_doublegauss_expdecay_rts.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_fermi_fitting.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_fit_ramsey.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_gate_pinchoff.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_lever_arm_charging_energy.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_ohmic.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_onedot_scan.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_PAT_fitting.ipynb
-    #- jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_polFitting.ipynb
     
