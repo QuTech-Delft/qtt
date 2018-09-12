@@ -1,4 +1,4 @@
-# minimal change to trigger build
+// minimal change to trigger build
 
 pipeline {
     agent {
