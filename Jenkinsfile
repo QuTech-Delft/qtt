@@ -1,3 +1,5 @@
+# minimal change to trigger build
+
 pipeline {
     agent {
         dockerfile {
