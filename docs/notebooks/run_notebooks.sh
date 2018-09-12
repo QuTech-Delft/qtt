@@ -5,7 +5,7 @@ set -ev
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_awg_to_plunger.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_charge_sensor.ipynb
-xvfb-run jupyter nbconvert --to notebook --execute docs/notebooks/analysis\example_coulomb_peak.ipynb
+xvfb-run jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_coulomb_peak.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_doublegauss_expdecay_rts.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_fermi_fitting.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_fit_ramsey.ipynb
