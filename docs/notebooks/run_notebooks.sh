@@ -10,7 +10,6 @@ jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_double
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_fermi_fitting.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_fit_ramsey.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_gate_pinchoff.ipynb
-jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_lever_arm_charging_energy.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_ohmic.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_onedot_scan.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_PAT_fitting.ipynb
