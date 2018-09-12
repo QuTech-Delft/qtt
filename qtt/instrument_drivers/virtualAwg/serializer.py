@@ -1,4 +1,4 @@
-from qctoolkit.serialization import StorageBackend
+from qupulse.serialization import StorageBackend
 
 
 class StringBackend(StorageBackend):

@@ -1,10 +1,12 @@
+import warnings
 import numpy as np
 from matplotlib import pyplot as plt
 
-from qctoolkit.pulses import SequencePT
-from qctoolkit.pulses.plotting import (PlottingNotPossibleException, plot, render)
-from qctoolkit.pulses.sequencing import Sequencer as Sequencing
-from qctoolkit.serialization import Serializer, DictBackend
+from qupulse.pulses import SequencePT
+from qupulse.pulses.plotting import (PlottingNotPossibleException, plot, render)
+from qupulse.pulses.sequencing import Sequencer as Sequencing
+from qupulse.serialization import Serializer, DictBackend
+
 from qtt.instrument_drivers.virtualAwg.templates import DataTypes, Templates
 # from qtt.instrument_drivers.virtualAwg.serializer import StringBackend
 
@@ -16,7 +18,7 @@ class Sequencer:
 
     @staticmethod
     def make_sawtooth_wave(amplitude, period, width=0.95, repetitions=1, name='sawtooth'):
-        """ Creates a sawtooth waveform of the type QC toolkit template.
+        """ Creates a sawtooth waveform of the type qupulse template.
 
         Args:
             amplitude (float): The peak-to-peak voltage of the waveform.
@@ -27,7 +29,7 @@ class Sequencer:
 
         Returns:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
-                  sequence data type and the actual QC-Toolkit sequencePT respectively.
+                  sequence data type and the actual qupulse sequencePT respectively.
         """
         if width <= 0 or width >= 1:
             raise ValueError('Invalid argument value (0 < width < 1)!')
@@ -35,11 +37,11 @@ class Sequencer:
                            'width': width}
         sequence_data = (Templates.sawtooth(name), input_variables)
         return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
-                'type': DataTypes.QC_TOOLKIT}
+                'type': DataTypes.QU_PULSE}
 
     @staticmethod
     def make_square_wave(amplitude, period, repetitions=1, name='pulse'):
-        """ Creates a block waveforms of the type QC toolkit template.
+        """ Creates a block waveforms of the type qupulse template.
 
         Args:
             amplitude (float): The peak-to-peak voltage of the waveform.
@@ -49,16 +51,16 @@ class Sequencer:
 
         Returns:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
-                  sequence data type and the actual QC-Toolkit sequencePT respectively.
+                  sequence data type and the actual qupulse sequencePT respectively.
         """
         input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0}
         sequence_data = (Templates.square(name), input_variables)
         return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions),
-                'type': DataTypes.QC_TOOLKIT}
+                'type': DataTypes.QU_PULSE}
 
     @staticmethod
     def make_marker(period, uptime=0.2, offset=0.0, repetitions=1, name='marker'):
-        """ Creates a marker block waveforms of the type QC toolkit template.
+        """ Creates a marker block waveforms of the type qupulse template.
 
         Args:
             period (float): The period of the waveform in seconds.
@@ -69,7 +71,7 @@ class Sequencer:
 
         Returns:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
-                  sequence data type and the actual QC-Toolkit sequencePT respectively.
+                  sequence data type and the actual qupulse sequencePT respectively.
         """
         if uptime <= 0 or offset < 0:
             raise ValueError('Invalid argument value (uptime <= 0 or offset < 0)!')
@@ -80,11 +82,11 @@ class Sequencer:
                            'offset': period*offset*Sequencer.__sec_to_ns}
         sequence_data = (Templates.marker(name), input_variables)
         return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
-                'type': DataTypes.QC_TOOLKIT, 'uptime': uptime, 'offset': offset}
+                'type': DataTypes.QU_PULSE, 'uptime': uptime, 'offset': offset}
 
     @staticmethod
-    def __qc_toolkit_template_to_array(sequence, sampling_rate):
-        """ Renders a QC toolkit sequence as array with voltages.
+    def __qupulse_template_to_array(sequence, sampling_rate):
+        """ Renders a qupulse sequence as array with voltages.
 
         Args:
             sequence (dict): a waveform is a dictionary with "type" value
@@ -125,7 +127,7 @@ class Sequencer:
     def get_data(sequence, sampling_rate):
         """ This function returns the raw array data given a sequence.
             A sequence can hold different types of data dependend on the
-            used pulse library. Currently only raw array data and QC-toolkit
+            used pulse library. Currently only raw array data and qupulse
             can be used.
 
         Args:
@@ -139,7 +141,7 @@ class Sequencer:
         """
         data_type = sequence['type']
         switch = {DataTypes.RAW_DATA: Sequencer.__raw_data_to_array,
-                  DataTypes.QC_TOOLKIT: Sequencer.__qc_toolkit_template_to_array}
+                  DataTypes.QU_PULSE: Sequencer.__qupulse_template_to_array}
         to_array_function = switch[data_type]
         return to_array_function(sequence, sampling_rate)
 
@@ -165,8 +167,8 @@ class Sequencer:
         axes.get_figure().show()
 
     @staticmethod
-    def __qc_toolkit_template_plot(sequence, sampling_rate, axes):
-        """ Plots a QC toolkit sequence.
+    def __qupulse_template_plot(sequence, sampling_rate, axes):
+        """ Plots a qupulse sequence.
 
         Args:
             sequence (dict): a waveform dictionary with "type" value
@@ -191,7 +193,7 @@ class Sequencer:
         """
         data_type = sequence['type']
         switch = {DataTypes.RAW_DATA: Sequencer.__raw_data_plot,
-                  DataTypes.QC_TOOLKIT: Sequencer.__qc_toolkit_template_plot}
+                  DataTypes.QU_PULSE: Sequencer.__qupulse_template_plot}
         plot_function = switch[data_type]
         plot_function(sequence, sampling_rate, axes)
 
@@ -208,8 +210,8 @@ class Sequencer:
         pass
 
     @staticmethod
-    def __qc_toolkit_serialize(sequence):
-        """ Converts a QC toolkit sequence into a JSON string.
+    def __qupulse_serialize(sequence):
+        """ Converts a qupulse sequence into a JSON string.
 
         Args:
             sequence (dict): A sequence created using the sequencer.
@@ -233,7 +235,7 @@ class Sequencer:
         """
         data_type = sequence['type']
         switch = {DataTypes.RAW_DATA: Sequencer.__raw_data_serialize,
-                  DataTypes.QC_TOOLKIT: Sequencer.__qc_toolkit_serialize}
+                  DataTypes.QU_PULSE: Sequencer.__qupulse_serialize}
         serialize_function = switch[data_type]
         return serialize_function(sequence['wave'])
 
@@ -246,7 +248,7 @@ class Sequencer:
 
         Returns:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
-                  sequence data type and the actual QC-Toolkit sequencePT respectively.
+                  sequence data type and the actual qupulse sequencePT respectively.
         """
         backend = DictBackend()
         serializer = Serializer(backend)
@@ -256,31 +258,37 @@ class Sequencer:
 # UNITTESTS #
 
 
-def test_qc_toolkit_sawtooth_HasCorrectProperties():
-    epsilon = 1e-14
-    period = 1e-3
-    amplitude = 1.5
-    sampling_rate = 1e9
-    sequence = Sequencer.make_sawtooth_wave(amplitude, period)
-    raw_data = Sequencer.get_data(sequence, sampling_rate)
-    assert len(raw_data) == sampling_rate*period + 1
-    assert np.abs(np.min(raw_data) + amplitude/2) <= epsilon
-    assert np.abs(np.max(raw_data) - amplitude/2) <= epsilon
+def test_qupulse_sawtooth_HasCorrectProperties():
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
+        epsilon = 1e-14
+        period = 1e-3
+        amplitude = 1.5
+        sampling_rate = 1e9
+        sequence = Sequencer.make_sawtooth_wave(amplitude, period)
+        raw_data = Sequencer.get_data(sequence, sampling_rate)
+        assert len(raw_data) == sampling_rate*period + 1
+        assert np.abs(np.min(raw_data) + amplitude/2) <= epsilon
+        assert np.abs(np.max(raw_data) - amplitude/2) <= epsilon
 
 
 def test_raw_wave_HasCorrectProperties():
-    period = 1e-3
-    sampling_rate = 1e9
-    name = 'test_raw_data'
-    sequence = {'name': name, 'wave': [0]*int(period*sampling_rate+1),
-                'type': DataTypes.RAW_DATA}
-    raw_data = Sequencer.get_data(sequence, sampling_rate)
-    assert len(raw_data) == sampling_rate*period+1
-    assert np.min(raw_data) == 0
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
+        period = 1e-3
+        sampling_rate = 1e9
+        name = 'test_raw_data'
+        sequence = {'name': name, 'wave': [0]*int(period*sampling_rate+1),
+                    'type': DataTypes.RAW_DATA}
+        raw_data = Sequencer.get_data(sequence, sampling_rate)
+        assert len(raw_data) == sampling_rate*period+1
+        assert np.min(raw_data) == 0
 
 
 def test_serializer():
-    period = 1e-6
-    amplitude = 1.5
-    sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
-    return Sequencer.serialize(sawtooth)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
+        period = 1e-6
+        amplitude = 1.5
+        sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
+        Sequencer.serialize(sawtooth)

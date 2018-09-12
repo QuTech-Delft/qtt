@@ -1,17 +1,17 @@
-from qctoolkit.pulses import TablePT
+from qupulse.pulses import TablePT
 
 
 class DataTypes:
     """ The possible data types for the pulse creation."""
     RAW_DATA = 'rawdata'
-    QC_TOOLKIT = 'qctoolkit'
+    QU_PULSE = 'qupulse'
 
 
 class Templates:
 
     @staticmethod
     def square(name):
-        """ Creates a block wave QC toolkit template for sequencing.
+        """ Creates a block wave qupulse template for sequencing.
 
         Args:
             name (str): The user defined name of the sequence.
@@ -24,7 +24,7 @@ class Templates:
 
     @staticmethod
     def sawtooth(name):
-        """ Creates a sawtooth QC toolkit template for sequencing.
+        """ Creates a sawtooth qupulse template for sequencing.
 
         Args:
             name (str): The user defined name of the sequence.
@@ -38,7 +38,7 @@ class Templates:
 
     @staticmethod
     def hold(name):
-        """Creates a DC offset QC toolkit template for sequencing.
+        """Creates a DC offset qupulse template for sequencing.
 
         Args:
             name (str): The user defined name of the sequence.
@@ -50,7 +50,7 @@ class Templates:
 
     @staticmethod
     def marker(name):
-        """Creates a TTL pulse QC toolkit template for sequencing.
+        """Creates a TTL pulse qupulse template for sequencing.
 
         Args:
             name (str): The user defined name of the sequence.
