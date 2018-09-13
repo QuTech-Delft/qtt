@@ -120,7 +120,7 @@ def get_python_version(verbose=0):
 
 
 def code_version(repository_names=None, package_names=None, get_dirty_status=False, verbose=0):
-    """ Returns the python version, module version for; numpy, scipy, qctoolkit
+    """ Returns the python version, module version for; numpy, scipy, qupulse
         and the git guid and dirty status for; qcodes, qtt, spin-projects and pycqed,
         if present on the machine. NOTE: currently the dirty status is not working
         correctly due to a bug in dulwich...
@@ -135,7 +135,7 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
         status (dict): python, modules and git repos status.
     """
     _default_git_versions = ['qcodes', 'qtt', 'projects', 'pycqed']
-    _default_module_versions = ['numpy', 'scipy', 'qctoolkit', 'h5py', 'skimage']
+    _default_module_versions = ['numpy', 'scipy', 'qupulse', 'h5py', 'skimage']
     if not repository_names:
         repository_names = _default_git_versions
     if not package_names:
@@ -154,13 +154,15 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
 
 
 def test_python_code_modules_and_versions():
-    _ = get_python_version()
-    _ = get_module_versions(['numpy'])
-    _ = get_git_versions(['qtt'])
-    c = code_version()
-    assert('python' in c)
-    assert('timestamp' in c)
-    assert('system' in c)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
+        _ = get_python_version()
+        _ = get_module_versions(['numpy'])
+        _ = get_git_versions(['qtt'])
+        c = code_version()
+        assert('python' in c)
+        assert('timestamp' in c)
+        assert('system' in c)
 
 # %% Jupyter kernel tools
 

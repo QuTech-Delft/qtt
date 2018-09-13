@@ -12,7 +12,7 @@ pyqtgraph
 pyzmqrpc
 PyQt5
 qtpy
--e git+https://github.com/qutech/qc-toolkit.git@12af2dff0506c42e721b65696126849f23d7a4ce#egg=qupulse
+git+https://github.com/qutech/qupulse#egg=qupulse
 sympy
 slacker
 scikit-image
