@@ -326,7 +326,7 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
         a, b (float): coefficients of linear part
         cc (float): center of Fermi distribution
         A (float): amplitude of Fermi distribution
-        T (float): temperature Fermi distribution in mili Kelvin
+        T (float): temperature Fermi distribution in Kelvin
         l (float): leverarm divided by kb
 
     The default value of the leverarm is
