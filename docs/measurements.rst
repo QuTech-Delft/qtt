@@ -101,7 +101,7 @@ Measurement control
 A simple GUI to abort running measurements without interfering with the instrument communication.
 
 .. autosummary::
-    qtt.live_plotting.MeasurementControl
+    qtt.gui.live_plotting.MeasurementControl
    
 
 .. figure:: images/measurement_control.png
