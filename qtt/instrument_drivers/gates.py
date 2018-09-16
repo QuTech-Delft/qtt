@@ -6,14 +6,15 @@ Created on Wed Feb  8 13:36:01 2017
 """
 
 # %%
-from qcodes import Instrument
+import warnings
+import time
 import logging
 from functools import partial
 import numpy as np
+
+from qcodes import Instrument
 from qcodes.utils.validators import Numbers
 from qcodes.data.data_set import load_data
-import warnings
-import time
 
 try:
     import graphviz
@@ -46,7 +47,7 @@ class VirtualDAC(Instrument):
             rc_times (None or dict): dictionary with rc times for the gates
         
         The format of the `gate_map` to map the gate 'P1' to dac4 of the first instrument and
-        'B0' to dac3 of the second instrument is {'P1': (0, 4), 'B0': (0, 3)}`.
+        'B0' to dac3 of the second instrument is: `{'P1': (0, 4), 'B0': (0, 3)}`.
  
         If the DAC gates are connected to the sample with a bias-T then there is a typical RC time
         for a voltage change to arrive at the sample. These RC times can be provides to the instument 
