@@ -22,23 +22,37 @@ except:
 
 # %%
 
-
-class virtual_IVVI(Instrument):
+class VirtualDAC(Instrument):
     """ This class maps the dacs of IVVI('s) to named gates.
 
     The main functionality is the renaming of numbered dacs of one or multiple
-    IVVI instruments to gates, which in general have names describing their
-    main purpose or position on the sample.
+    DAC instruments (for example an IVVI or SPI D5a module) to gates, which in 
+    general have names describing their main purpose or position on the sample.
 
     Attributes:
-        name (str): The name given to the virtual_IVVI object
-        instruments (list):  the qcodes IVVI instruments
+        name (str): The name given to the VirtualDAC object
+        instruments (list): a list of qcodes instruments
         gate_map (dict): the map between IVVI dac and gate
         rc_times (dict): dictionary with rc times for the gates
     """
 
     def __init__(self, name, instruments, gate_map, rc_times=None, **kwargs):
-        """ Inits gates with gate_map. """
+        """ Virtual instrument providing a translation to physical instruments
+        
+        Args:
+            name (str): The name given to the VirtualDAC object
+            instruments (list): a list of qcodes instruments
+            gate_map (dict): the map between the names gates and the physical instrument channels
+            rc_times (None or dict): dictionary with rc times for the gates
+        
+        The format of the `gate_map` to map the gate 'P1' to dac4 of the first instrument and
+        'B0' to dac3 of the second instrument is {'P1': (0, 4), 'B0': (0, 3)}`.
+ 
+        If the DAC gates are connected to the sample with a bias-T then there is a typical RC time
+        for a voltage change to arrive at the sample. These RC times can be provides to the instument 
+        with the `rc_times` argument.
+        
+        """
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
         self._gate_map = gate_map
@@ -156,7 +170,6 @@ class virtual_IVVI(Instrument):
     def allvalues(self):
         """ Return all gate values in a simple dict. """
         if self._fast_readout:
-            # or: do a get on each first gate of an instrument and get_latest on all subsequent ones
             vals = [(gate, self.parameters[gate].get_latest())
                     for gate in sorted(self._gate_map)]
         else:
@@ -264,7 +277,6 @@ class virtual_IVVI(Instrument):
             c0.body.append('color=grey80')
 
             c0.node_attr.update(style='filled', color='white')
-            # c0.attr('node', style='filled', color='lightblue')
             iclusters.append(c0)
 
         for g in gates._gate_map:
@@ -289,3 +301,5 @@ class virtual_IVVI(Instrument):
             dot.edge(str(g), str(ix))
 
         return dot
+
+virtual_IVVI = VirtualDAC
