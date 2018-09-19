@@ -16,12 +16,13 @@ max-line-length = 120
 ```
 * Document your functions
 * For more guidelines see the Qcodes documentation
+
 ### Uploading code
 
 To upload code use `git commit` and `git push`. For the `Qcodes` and `qtt` repositories always make a branch first.
-After uploading a branch one can make a [pull request](https://help.github.com/articles/about-pull-requests/) which will be reviewed for inclusion in QTT.
+After uploading a branch one can make a [pull request](https://help.github.com/articles/about-pull-requests/) to the `dev` branch 
+which will be reviewed for inclusion in QTT.
 
-For the `users` and `stations` repository you can upload directly to the master branch.
 
 ### Bugs reports and feature requests
 
