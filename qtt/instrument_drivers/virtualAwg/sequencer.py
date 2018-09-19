@@ -105,7 +105,8 @@ class Sequencer:
         instructions = sequencer.build()
         if not sequencer.has_finished():
             raise PlottingNotPossibleException(template)
-        (_, voltages) = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
+        rendered_data = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
+        voltages = rendered_data[1]
         return voltages[next(iter(voltages))]
 
     @staticmethod
