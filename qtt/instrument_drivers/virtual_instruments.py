@@ -8,10 +8,10 @@
 import logging
 from functools import partial
 
-import qcodes as qc
 from qcodes import Instrument
-from qcodes.instrument.parameter import ManualParameter
 from qcodes.utils.validators import Numbers
+
+import qtt.utilities.tools
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ class VirtualMeter(Instrument):
     def get_gate(self, gate):
         return self.model.get(self.name + '_' + gate)
 
+    @qtt.utilities.tools.deprecated
     def set_gate(self, gate, value):
         self.model.set(self.name + '_' + gate, value)
         return
@@ -58,7 +59,7 @@ class VirtualMeter(Instrument):
 class VirtualIVVI(Instrument):
 
     def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
-        """ Virtual instrument representing an IVVI 
+        """ Virtual instrument representing a DAC
 
         Args:
             name (str)
@@ -106,7 +107,6 @@ class VirtualIVVI(Instrument):
         Overwrites the get_idn function using constants as the virtual device
         does not have a proper `*IDN` function.
         """
-        # not all IVVI racks support the version command, so return a dummy
         return {'firmware': None, 'model': None, 'serial': None, 'vendor': None}
 
     def get_gate(self, gate):
@@ -125,6 +125,11 @@ class VirtualIVVI(Instrument):
         return
 
     def allvalues(self):
+        """ Return all DAC values 
+        
+        Returns:
+            dict: dictionary with all DAC values
+        """
         return dict([(g, self.get(g) ) for g in self.parameters])
     
     def get_all(self):

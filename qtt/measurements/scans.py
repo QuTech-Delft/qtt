@@ -2323,7 +2323,6 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
 # %% Testing
 from qcodes import Parameter
 from qcodes.instrument_drivers.devices import VoltageDivider
-from qtt.instrument_drivers.gates import virtual_IVVI
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.structures import MultiParameter
 
