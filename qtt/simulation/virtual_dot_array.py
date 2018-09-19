@@ -28,7 +28,7 @@ import qcodes
 import numpy as np
 
 from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
-from qtt.instrument_drivers.gates import virtual_IVVI as virtual_gates
+from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
 from qtt.utilities.debug import dumpstring
 
 from qcodes import Instrument

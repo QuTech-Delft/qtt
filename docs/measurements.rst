@@ -87,10 +87,12 @@ Live plotting is done using a :code:`qcodes.QtPlot` window. The window can be se
 Named gates
 -----------
 
-The :code:`virtual_IVVI` object can translate gate names into the proper channels of a DAC (or multiple DACs).
+The :code:`VirtualDAC` object can translate gate names into the proper channels of a DAC (or multiple DACs).
+This is convenient because gate names are easier to work with than a number. Also when a device is controlled with multiple DACs.
+
 
 .. autosummary::
-    qtt.instrument_drivers.gates.virtual_IVVI
+    qtt.instrument_drivers.gates.VirtualDAC
 
 
 Measurement control
@@ -99,7 +101,7 @@ Measurement control
 A simple GUI to abort running measurements without interfering with the instrument communication.
 
 .. autosummary::
-    qtt.live_plotting.MeasurementControl
+    qtt.gui.live_plotting.MeasurementControl
    
 
 .. figure:: images/measurement_control.png

@@ -105,8 +105,7 @@ class Sequencer:
         instructions = sequencer.build()
         if not sequencer.has_finished():
             raise PlottingNotPossibleException(template)
-        rendered_data = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
-        voltages = rendered_data[1]
+        (_, voltages, measurements) = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
         return voltages[next(iter(voltages))]
 
     @staticmethod
@@ -293,3 +292,5 @@ def test_serializer():
         amplitude = 1.5
         sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
         Sequencer.serialize(sawtooth)
+
+    
