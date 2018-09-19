@@ -6,7 +6,7 @@ import qcodes.tests.data_mocks
 import qtt.data
 import qtt.measurements.scans
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-from qtt.instrument_drivers.gates import virtual_IVVI as virtual_gates
+from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
 from qtt.simulation.dotsystem import TripleDot
 
 
