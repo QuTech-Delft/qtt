@@ -600,6 +600,8 @@ class VideoMode:
 
 
 def guitest_videomode():
+    import pyqtgraph
+    _ = pyqtgraph.mkQApp()
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
     

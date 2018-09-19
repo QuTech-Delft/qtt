@@ -9,7 +9,7 @@ Created on Wed Jul 12 08:08:57 2017
 import copy
 import numpy as np
 import qtt
-from qtt.algorithms.images import straightenImage
+import qtt.algorithms.images
 from qtt.utilities.imagetools import cleanSensingImage
 from qtt.utilities.imagetools import evaluateCross, fitModel
 import matplotlib.pyplot as plt
@@ -55,7 +55,7 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
 
     diffvals = {'dx': 0, 'dy': 1, 'dxy': 2, 'xmy': 'xmy', 'g': 'g'}
     imc = cleanSensingImage(im, sigma=0.93, dy=diffvals[diff_dir])
-    imx, (fw, fh, mvx, mvy, Hstraight) = straightenImage(
+    imx, (fw, fh, mvx, mvy, Hstraight) = qtt.algorithms.images.straightenImage(
         imc, imextent, mvx=istep, verbose=verbose)
 
     imx = imx.astype(np.float64) * \

@@ -104,6 +104,7 @@ class rda_t:
 
 
 class MeasurementControl(QtWidgets.QMainWindow):
+    """ Simple control for running measurements """
 
     def __init__(self, name='Measurement Control',
                  rda_variable='qtt_abort_running_measurement', text_vars=[],
@@ -227,6 +228,7 @@ class MeasurementControl(QtWidgets.QMainWindow):
 
 
 def guitest_measurementcontrol():
+    import pyqtgraph
     app = pg.mkQApp()
     mc = MeasurementControl()
     mc.verbose = 1

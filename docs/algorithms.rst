@@ -4,8 +4,8 @@ Algorithms
 Algorithms have as input data (typically as a QCoDeS dataset or a numpy array) and parameters of the algorithm. 
 The output is a dictionary with the main results as keys of the dictionary.
 
-Example notebooks
------------------
+Example algorithms in notebooks
+-------------------------------
 
 Most of the algorithms are documented in the `Example notebooks`_ section.
 
