@@ -4,12 +4,17 @@
 @author: eendebakpt
 """
 
-#%%
+# %%
 import qtt.pgeometry as pgeometry
 import numpy as np
-import cv2
+try:
+    import cv2
+    cv2_interpolation = cv2.INTER_AREA
+except:
+    cv2=None
+    cv2_interpolation = 3
 
-def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.INTER_AREA):
+def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2_interpolation):
     """ Scale image to make square pixels
 
     Arguments
@@ -29,6 +34,9 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2.
          H is the homogeneous transform from original to straightened image
 
     """
+    if cv2 is None:
+        raise Exception('opencv is not installed, method straightenImage is not available')
+        
     dxmv = imextent[1] - imextent[0]
     dymv = imextent[3] - imextent[2]
 

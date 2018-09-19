@@ -3,7 +3,7 @@ attrs
 colorama
 coverage
 dulwich
-hickle
+hickle >= 3.1
 numpy == 1.13
 matplotlib >= 2.1
 pandas
@@ -11,6 +11,7 @@ Polygon3
 pyqtgraph
 pyzmqrpc
 PyQt5
+qcodes
 qtpy
 git+https://github.com/qutech/qupulse#egg=qupulse
 sympy

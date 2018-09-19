@@ -39,6 +39,8 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.autosummary',
     'nbsphinx']
+extensions += ['sphinx.ext.intersphinx']
+extensions += ['sphinx.ext.autosectionlabel']
 
 extensions += ['sphinx_automodapi.automodapi']
 
