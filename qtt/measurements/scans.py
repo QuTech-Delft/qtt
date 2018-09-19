@@ -636,7 +636,7 @@ class scanjob_t(dict):
     A typical scanjob contains the following (optional) fields:
 
     Fields:
-        sweepdata (dict):
+        sweepdata (dict): vec_type('ac' or 'dc', default 'ac')
         stepdata (dict)
         minstrument (str, Parameter or tuple)
         wait_time_startscan (float):
@@ -767,26 +767,29 @@ class scanjob_t(dict):
                 self[field]['paramname'] = '_'.join(
                     ['%s(%s)' % (key, fmt(value)) for (key, value) in param.items()])
 
-    def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata']):
+    def _start_end_to_range(self, scanfields=['stepdata', 'sweepdata', 'vec_type']):
         """ Add range to stepdata and/or sweepdata in scanjob.
 
         Note: This function also converts the start and end fields.        
         """
         if isinstance(scanfields, str):
             scanfields = [scanfields]
-
         for scanfield in scanfields:
             if scanfield in self:
                 scaninfo = self[scanfield]
                 if 'range' not in scaninfo:
                     scaninfo['range'] = scaninfo['end'] - scaninfo['start']
+                if 'vec_type' in scaninfo and scaninfo['vec_type'] == 'dc':
+                    warnings.warn(
+                        'Start and end are converted to a range starting at zero.')                       
+                    scaninfo['start'] = 0
+                    scaninfo['end'] = scaninfo['range']
+                else:
                     warnings.warn(
                         'Start and end are converted to a range to scan around the current dc values.')
                     scaninfo['start'] = -scaninfo['range'] / 2
                     scaninfo['end'] = scaninfo['range'] / 2
-                else:
-                    scaninfo['start'] = -scaninfo['range'] / 2
-                    scaninfo['end'] = scaninfo['range'] / 2
+
 
     def _parse_2Dvec(self):
         """ Adjust the parameter field in the step- and sweepdata for 2D vector scans.
@@ -820,9 +823,9 @@ class scanjob_t(dict):
         """ Adjust the scanjob for vector scans. 
 
         Note: For vector scans the range field in stepdata and sweepdata is 
-        used by default. If only start and end are given a range will be 
-        calculated from those, but only the difference between them is used for
-        vector scans.
+        used by default, unless vec_type is specified as dc. If only start 
+        and end are given a range will be calculated from those, but only 
+        the difference between them is used for vector scans.
 
         Args:
             station (object): contains all the instruments
@@ -836,13 +839,23 @@ class scanjob_t(dict):
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
-                if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
-                    sweepdata['start'] = -sweepdata['range'] / 2
-                    sweepdata['end'] = sweepdata['range'] / 2
+                if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:                 
+                    if 'vec_type' in sweepdata and sweepdata['vec_type'] == 'dc':
+                        param_val = gates.get(sweepdata['param'])
+                        sweepdata['start'] = 0
+                        sweepdata['end'] = sweepdata['range']                               
+                    else:
+                        sweepdata['start'] = -sweepdata['range'] / 2
+                        sweepdata['end'] = sweepdata['range'] / 2
                 else:
-                    param_val = gates.get(sweepdata['param'])
-                    sweepdata['start'] = param_val - sweepdata['range'] / 2
-                    sweepdata['end'] = param_val + sweepdata['range'] / 2
+                    if 'vec_type' in sweepdata and sweepdata['vec_type'] == 'dc':
+                        param_val = gates.get(sweepdata['param'])
+                        sweepdata['start'] = param_val
+                        sweepdata['end'] = param_val + sweepdata['range']                           
+                    else:
+                        param_val = gates.get(sweepdata['param'])
+                        sweepdata['start'] = param_val - sweepdata['range'] / 2
+                        sweepdata['end'] = param_val + sweepdata['range'] / 2                        
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 if 'paramname' in self['sweepdata']:
                     sweepname = self['sweepdata']['paramname']
@@ -865,8 +878,12 @@ class scanjob_t(dict):
                               for param in sweepdata['param']}
                 self['phys_gates_vals'] = {param: np.zeros(
                     len(scanvalues)) for param in sweepdata['param']}
-                sweep_array = np.linspace(-sweepdata['range'] / 2,
-                                          sweepdata['range'] / 2, len(scanvalues))
+                if 'vec_type' in sweepdata and sweepdata['vec_type'] == 'dc':
+                    sweep_array = np.linspace(0,
+                                              sweepdata['range'], len(scanvalues))                    
+                else:
+                    sweep_array = np.linspace(-sweepdata['range'] / 2,
+                                              sweepdata['range'] / 2, len(scanvalues))
                 for param in sweepdata['param']:
                     self['phys_gates_vals'][param] = param_init[param] + \
                         sweep_array * sweepdata['param'][param]
@@ -878,21 +895,39 @@ class scanjob_t(dict):
             stepdata = self['stepdata']
             if 'range' in stepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
-                    stepdata['start'] = -stepdata['range'] / 2
-                    stepdata['end'] = stepdata['range'] / 2
+                    if 'vec_type' in stepdata and stepdata['vec_type'] == 'dc':
+                        stepdata['start'] = 0
+                        stepdata['end'] = stepdata['range']                     
+                    else:
+                        stepdata['start'] = -stepdata['range'] / 2
+                        stepdata['end'] = stepdata['range'] / 2
                 else:
-                    param_val = stepdata['param'].get()
-                    stepdata['start'] = param_val - stepdata['range'] / 2
-                    stepdata['end'] = param_val + stepdata['range'] / 2
+                    if 'vec_type' in sweepdata and sweepdata['vec_type'] == 'dc':
+                        param_val = stepdata['param'].get()
+                        stepdata['start'] = param_val
+                        stepdata['end'] = param_val + stepdata['range']
+                    else:
+                        param_val = stepdata['param'].get()
+                        stepdata['start'] = param_val - stepdata['range'] / 2
+                        stepdata['end'] = param_val + stepdata['range'] / 2
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
-                    sweepdata['start'] = -sweepdata['range'] / 2
-                    sweepdata['end'] = sweepdata['range'] / 2
+                    if 'vec_type' in sweepdata and sweepdata['vec_type'] == 'dc':
+                        sweepdata['start'] = 0
+                        sweepdata['end'] = sweepdata['range']                     
+                    else:                    
+                        sweepdata['start'] = -sweepdata['range'] / 2
+                        sweepdata['end'] = sweepdata['range'] / 2
                 else:
-                    param_val = sweepdata['param'].get()
-                    sweepdata['start'] = param_val - sweepdata['range'] / 2
-                    sweepdata['end'] = param_val + sweepdata['range'] / 2
+                    if 'vec_type' in sweepdata and sweepdata['vec_type'] == 'dc':
+                        param_val = sweepdata['param'].get()
+                        sweepdata['start'] = param_val
+                        sweepdata['end'] = param_val + sweepdata['range']                     
+                    else:                                        
+                        param_val = sweepdata['param'].get()
+                        sweepdata['start'] = param_val - sweepdata['range'] / 2
+                        sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                 if 'paramname' in self['stepdata']:
                     stepname = self['stepdata']['paramname']
