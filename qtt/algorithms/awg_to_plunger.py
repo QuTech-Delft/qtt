@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from qcodes import MatPlot
 import qtt.algorithms.images
 import qtt.utilities.imagetools
-from qtt.measurements.scans import scan2Dfast, scanjob_t,
+from qtt.measurements.scans import scan2Dfast, scanjob_t
 from qtt.utilities.imagetools import cleanSensingImage
 from qtt.algorithms.images import straightenImage
 
