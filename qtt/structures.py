@@ -152,7 +152,8 @@ class sensingdot_t:
         self.station = station
         self.index = index
         self.minstrument = minstrument
-        self.instrument = 'keithley%d.amplitude' % index
+        if index is not None:
+            self.instrument = 'keithley%d.amplitude' % index
         self.virt_gates = virt_gates
 
         self.data = {}
@@ -226,7 +227,10 @@ class sensingdot_t:
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
         """Make 1D-scan of the sensing dot."""
         print('### sensing dot scan')
-        keithleyidx = [sd.index]
+        minstrument = sd.minstrument
+        if sd.index is not None:
+            # legacy code
+            minstrument = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
         gates = sd.station.gates
@@ -250,7 +254,7 @@ class sensingdot_t:
         scanjob1['sweepdata'] = dict(
             {'param': gg[1], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
         scanjob1['wait_time_startscan'] = .2 + 3 * wait_time
-        scanjob1['minstrument'] = keithleyidx
+        scanjob1['minstrument'] = minstrument
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
