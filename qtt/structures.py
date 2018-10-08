@@ -518,7 +518,13 @@ class sensingdot_t:
 
         return self.sdval[1], alldata
 
-
+def test_sensingdot_t():
+    import qcodes
+    import qtt.simulation.virtual_dot_array
+    station=qtt.simulation.virtual_dot_array.initialize()
+    sensing_dot = qtt.structures.sensingdot_t(['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')
+    _=sensing_dot.autoTune(step=-8)
+    
 #%%
 class VectorParameter(qcodes.instrument.parameter.Parameter):
     """Create parameter which controls linear combinations.
@@ -637,3 +643,4 @@ def test_multi_parameter():
 if __name__ == '__main__':
     import qcodes
     test_multi_parameter()
+    test_sensingdot_t()
