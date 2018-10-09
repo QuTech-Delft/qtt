@@ -644,13 +644,17 @@ def test_virtual_gates(verbose=0):
     update_matrix=.1*np.random.rand(3,3)
     np.fill_diagonal(update_matrix, 1)
     
+    # test normalization of virtual gate matrix
     virts2, _, _= update_cc_matrix(virts, update_cc=update_matrix, verbose=0)
     np.testing.assert_almost_equal(virts2.get_crosscap_matrix(), update_matrix.dot(virts.get_crosscap_matrix() ) )
+
+    # test normalization of virtual gate matrix
+    crosscap_matrix0 = virts2.get_crosscap_matrix()
     virts2.normalize_matrix()
-
     crosscap_matrix = virts2.get_crosscap_matrix()
+    for row in range(crosscap_matrix0.shape[0]):
+    	    np.testing.assert_almost_equal( crosscap_matrix0[row]/crosscap_matrix0[0][0], crosscap_matrix[0])
     assert(np.all(crosscap_matrix.diagonal()==1) )
-
 
     virts.close()
     virts2.close()
