@@ -389,6 +389,12 @@ class virtual_gates(Instrument):
     def print_inverse_matrix(self):
         self.print_map(self.get_crosscap_map_inv())
 
+    def normalize_matrix(self):
+        """ Normalize the rows of the matrix by dividing each row by the diagonal coefficient """
+        crosscap_matrix = self.get_crosscap_matrix()
+        crosscap_matrix = (crosscap_matrix)*(1./crosscap_matrix.diagonal()).reshape(-1,1)
+        self.set_crosscap_matrix(crosscap_matrix)
+        
     @staticmethod
     def print_map(base_map):
         """Show map as table.
@@ -586,6 +592,8 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
 def test_virtual_gates(verbose=0):
     """ Test for virtual gates object """
     import qtt.instrument_drivers.virtual_instruments
+    import pickle
+
     gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
         name=qtt.measurements.scans.instrumentName('testivvi'), model=None, gates=['P1', 'P2', 'P3', 'P4'])
 
@@ -621,7 +629,6 @@ def test_virtual_gates(verbose=0):
 
     d = virts.to_dictionary()
 
-    import pickle
     s = pickle.dumps(virts)
         
     virts2 = pickle.loads(s)
@@ -633,6 +640,17 @@ def test_virtual_gates(verbose=0):
         virts2.print_matrix()
        
     vx = update_cc_matrix(virts, update_cc=np.eye(3), verbose=0)
+
+    update_matrix=.1*np.random.rand(3,3)
+    np.fill_diagonal(update_matrix, 1)
+    
+    virts2, _, _= update_cc_matrix(virts, update_cc=update_matrix, verbose=0)
+    np.testing.assert_almost_equal(virts2.get_crosscap_matrix(), update_matrix.dot(virts.get_crosscap_matrix() ) )
+    virts2.normalize_matrix()
+
+    crosscap_matrix = virts2.get_crosscap_matrix()
+    assert(np.all(crosscap_matrix.diagonal()==1) )
+
 
     virts.close()
     virts2.close()
@@ -659,5 +677,6 @@ def test_virtual_gates_serialization(verbose=0):
 
 
 if __name__ == '__main__':
-    test_virtual_gates()
-    test_virtual_gates_serialization(verbose=1)
+    verbose=1
+    test_virtual_gates(verbose=verbose)
+    test_virtual_gates_serialization(verbose=verbose)
