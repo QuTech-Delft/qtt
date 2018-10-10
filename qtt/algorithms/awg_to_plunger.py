@@ -39,7 +39,7 @@ def get_dataset(ds):
 
 
 def click_line(fig=None):
-    """Defines a line throught two points. The points are choosen by clicking on a position in a plot, two times.
+    """Define a line through two points. The points are choosen by clicking on a position in a plot, two times.
     
     Args:
         fig (int or None): number of figure to plot the points in, when None it will plot a figure
@@ -122,22 +122,18 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
         ims, r = qtt.algorithms.images.straightenImage(
             im, imextent, mvx=istep, mvy=None)
         H = r[4]
-        
-        #added code from here
-        diffvals = {'dx': 0, 'dy': 1, 'dxy': 2, 'xmy': 'xmy', 'g': 'g'}
-        imc = cleanSensingImage(im, sigma=0.93, dy=diffvals['dx'])
+
+        imc = cleanSensingImage(im, sigma=0.93, dy=0)
 
         imx, (fw, fh, mvx, mvy, Hstraight) = straightenImage(imc, imextent, mvx=istep, verbose=0)
 
         imx = imx.astype(np.float64) * \
         (100. / np.percentile(imx, 99))  # scale image
-        #to here
         
         gray = qtt.pgeometry.scaleImage(imx)
 
         edges = cv2.Canny(gray, 50, 150, apertureSize=3)
 
-        #lines = cv2.HoughLines(edges, 1, np.pi/180, int(gray.shape[0]*.8))
         lines = cv2.HoughLines(edges, 1, np.pi/180, int(gray.shape[0]*.5))
         if lines is None:
             angle_pixel=None
@@ -188,13 +184,12 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
     
     #the method click relies on the user clicking two points to indicate the addition line
     elif method == 'click':
-        if fig is None:
-            fig = 100
-        plt.figure(fig)
-        plt.clf()
-        MatPlot(ds.default_parameter_array(), num=fig)
+        if fig is not None:
+           plt.figure(fig)
+           plt.clf()
+           MatPlot(ds.default_parameter_array(), num=fig)
         
-        print("Please click two points on the addition line")     
+        print("Please click two different points on the addition line")     
         offset, slope = click_line(fig=fig)
         
         
