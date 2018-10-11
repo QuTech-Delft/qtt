@@ -1391,12 +1391,13 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
 
     Args:
         parameters (dict): dictionary containing the following compulsory parameters:
-          -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
-          -read_ch (list of int): channel numbers to record.
-          -period (float): time in seconds to record for each segment.
-          -nsegments (int): number of segments to record.
-          -average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; if False, dataset will contain nsegments single time trace acquisitions.
-          -verbose (bool): print to the console
+            minstrhandle (instrument handle): measurement instrument handle (m4i digitizer, qtt fpga supported).
+            read_ch (list of int): channel numbers to record.
+            period (float): time in seconds to record for each segment.
+            nsegments (int): number of segments to record.
+            average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; 
+                            if False, dataset will contain nsegments single time trace acquisitions.
+            verbose (bool): print to the console.
 
     Returns:
         alldata (dataset): time trace(s) of the segments acquired.
