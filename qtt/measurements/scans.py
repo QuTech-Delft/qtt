@@ -1605,18 +1605,21 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     return data
 
 
-def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_disk=True, location=None):
+def acquire_segments(station, parameters, average=True, mV_range=2000,
+                     save_to_disk=True, location=None, verbose=True):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
     The saving to disk can take minutes or even longer.
 
     Args:
         parameters (dict): dictionary containing the following compulsory parameters:
-          -minstrhandle (instrument handle): measurement instrument handle. Supported instruments: m4i digitizer, qtt fpga.
-          -read_ch (list of int): channel numbers to record.
-          -period (float): time in seconds to record for each segment.
-          -nsegments (int): number of segments to record.
-          -average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; if False, dataset will contain nsegments single time trace acquisitions.
+            minstrhandle (instrument handle): measurement instrument handle (m4i digitizer, qtt fpga supported).
+            read_ch (list of int): channel numbers to record.
+            period (float): time in seconds to record for each segment.
+            nsegments (int): number of segments to record.
+            average (bool): if True, dataset will contain a single time trace with the average of all acquired segments; 
+                            if False, dataset will contain nsegments single time trace acquisitions.
+            verbose (bool): print to the console.
 
     Returns:
         alldata (dataset): time trace(s) of the segments acquired.
@@ -1648,7 +1651,9 @@ def acquire_segments(station, parameters, average=True, mV_range=2000, save_to_d
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
-            memsize = select_digitizer_memsize(minstrhandle, period, nsegments=nsegments)
+            memsize = select_digitizer_memsize(minstrhandle, period,
+                                               nsegments=nsegments,
+                                               verbose=verbose)
             post_trigger = minstrhandle.posttrigger_memory_size()
             minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
             dataraw = minstrhandle.multiple_trigger_acquisition(
