@@ -33,7 +33,7 @@ class SimulationDigitizer(qcodes.Instrument):
         """
         import time
         if self.verbose:
-            print('%s: measuresegment: channels %s' % (self.name, channels))
+            print('{}: measuresegment: channels {}'.format(self.name, channels))
             print(waveform)
         self._waveform = waveform
         waveform_type = waveform.get('type', None)
@@ -45,8 +45,8 @@ class SimulationDigitizer(qcodes.Instrument):
         # Empty waveform, return random array with periodic signal.
         sample_rate = waveform.get('sample_rate', 1e6)
         period = waveform.get('period', 1e-3)
-        number_samples = period*sample_rate
-        data = np.array([self.model.keithley1_amplitude() for ii in range(int(number_samples))])
+        number_samples = int(period * sample_rate)
+        data = np.array([self.model.keithley1_amplitude() for ii in range(number_samples)])
     
         noise_frequencies = [16e3, 100e3] # Hz
         for noise_frequency in noise_frequencies:

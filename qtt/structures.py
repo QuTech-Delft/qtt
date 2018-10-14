@@ -153,7 +153,7 @@ class sensingdot_t:
         self.index = index
         self.minstrument = minstrument
         if index is not None:
-            self.instrument = 'keithley%d.amplitude' % index
+            self.instrument = 'keithley{}.amplitude'.format(index)
         self.virt_gates = virt_gates
 
         self.data = {}
