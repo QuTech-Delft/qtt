@@ -316,7 +316,6 @@ class DotModel(Instrument):
 
         sd1 = (1 / np.sum(self.sddist1)) * (ret * self.sddist1).sum()
         sd2 = (1 / np.sum(self.sddist2)) * (ret * self.sddist2).sum()
-        # sd2=(1/np.sum(self.sddist1))*(ret*self.sddist2).sum()
 
         sd1 += self.sdnoise * (np.random.rand() - .5)
         sd2 += self.sdnoise * (np.random.rand() - .5)
@@ -335,8 +334,8 @@ class DotModel(Instrument):
 
         try:
             logging.debug('DummyModel: compute values')
-            # current through keithley1, 2 and 3
-
+            
+            # current through 3
             val = self._calculate_pinchoff(self.bottomgates, offset=self.gate_pinchoff, random=.01)
             logging.debug('compute: value %f' % val)
 
@@ -373,6 +372,7 @@ class DotModel(Instrument):
         with self.lock:
             logging.debug('keithley3_get: %s' % param)
             val = self.compute()
+
             self._data['keithley3_amplitude'] = val
         return val
 

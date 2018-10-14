@@ -152,7 +152,8 @@ class sensingdot_t:
         self.station = station
         self.index = index
         self.minstrument = minstrument
-        self.instrument = 'keithley%d.amplitude' % index
+        if index is not None:
+            self.instrument = 'keithley{}.amplitude'.format(index)
         self.virt_gates = virt_gates
 
         self.data = {}
@@ -226,7 +227,10 @@ class sensingdot_t:
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
         """Make 1D-scan of the sensing dot."""
         print('### sensing dot scan')
-        keithleyidx = [sd.index]
+        minstrument = sd.minstrument
+        if sd.index is not None:
+            # legacy code
+            minstrument = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
         gates = sd.station.gates
@@ -250,7 +254,7 @@ class sensingdot_t:
         scanjob1['sweepdata'] = dict(
             {'param': gg[1], 'start': startval, 'end': endval, 'step': step, 'wait_time': wait_time})
         scanjob1['wait_time_startscan'] = .2 + 3 * wait_time
-        scanjob1['minstrument'] = keithleyidx
+        scanjob1['minstrument'] = minstrument
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
@@ -514,6 +518,12 @@ class sensingdot_t:
 
         return self.sdval[1], alldata
 
+def test_sensingdot_t():
+    import qcodes
+    import qtt.simulation.virtual_dot_array
+    station = qtt.simulation.virtual_dot_array.initialize()
+    sensing_dot = qtt.structures.sensingdot_t(['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')
+    _ = sensing_dot.autoTune(step=-8)
 
 #%%
 class VectorParameter(qcodes.instrument.parameter.Parameter):
@@ -633,3 +643,4 @@ def test_multi_parameter():
 if __name__ == '__main__':
     import qcodes
     test_multi_parameter()
+    test_sensingdot_t()
