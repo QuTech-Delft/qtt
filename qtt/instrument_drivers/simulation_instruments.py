@@ -25,16 +25,34 @@ class SimulationDigitizer(qcodes.Instrument):
         self.verbose = 0
 
     def measuresegment(self, waveform, channels=[0]):
+        """ Measure a segment of data
+        
+        Args:
+            waveform (object): waveform currently on AWG
+            channels (list): channels to measure
+        """
         import time
         if self.verbose:
-            print('%s: measuresegment: channels %s' % (self.name, channels))
+            print('{}: measuresegment: channels {}'.format(self.name, channels))
             print(waveform)
         self._waveform = waveform
+        waveform_type = waveform.get('type', None)
+        if waveform_type != 'raw':
+            sd1, sd2 = self.myhoneycomb()
+            time.sleep(0.05)
+            return [sd1, sd2][0:len(channels)]
 
-        sd1, sd2 = self.myhoneycomb()
-        time.sleep(.1)
-        return [sd1, sd2][0:len(channels)]
-        return [sd1.T, sd2.T][0:len(channels)]
+        # Empty waveform, return random array with periodic signal.
+        sample_rate = waveform.get('sample_rate', 1e6)
+        period = waveform.get('period', 1e-3)
+        number_samples = int(period * sample_rate)
+        data = np.array([self.model.keithley1_amplitude() for ii in range(number_samples)])
+    
+        noise_frequencies = [16e3, 100e3] # Hz
+        for noise_frequency in noise_frequencies:
+            noise = 0.01 * np.sin(noise_frequency * np.arange(data.size) / sample_rate) 
+            data += noise
+        return ([data] * 2.0)[0:len(channels)]
 
     def myhoneycomb(self, multiprocess=False, verbose=0):
         """
