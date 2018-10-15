@@ -40,7 +40,7 @@ dependencies:
 - networkx
 - nose
 - notebook
-- numpy==1.13
+- numpy
 - numpydoc
 - olefile
 - openssl
