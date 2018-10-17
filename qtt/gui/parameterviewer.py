@@ -9,9 +9,7 @@ import sys
 
 import multiprocessing as mp
 
-#from qtpy.QtCore import Qt
 from qtpy import QtWidgets
-from qtpy import QtGui
 from qtpy.QtCore import Signal, Slot
 import pyqtgraph
 from qtt import pgeometry
@@ -22,19 +20,19 @@ from functools import partial
 
 class QCodesTimer(threading.Thread):
 
-    def __init__(self, fn, dt=2, **kwargs):
+    def __init__(self, callback_function, dt=2, **kwargs):
+        """ Simple timer to perform periodic execution of function """
         super().__init__(**kwargs)
-        self.fn = fn
+        self.callback_function = callback_function
         self.dt = dt
-        self._run = True
 
     def run(self):
+        self._run = True
         while self._run:
             logging.debug('QCodesTimer: start sleep')
             time.sleep(self.dt)
-            # do something
-            logging.debug('QCodesTimer: run!')
-            self.fn()
+            logging.debug('QCodesTimer: execute callback function')
+            self.callback_function()
 
     def stop(self):
         self._run = False
@@ -188,7 +186,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.updatedata()
 
         if start:
-            self._timer = QCodesTimer(fn=self.updatedata, dt=dt)
+            self._timer = QCodesTimer(callback_function=self.updatedata, dt=dt)
             self._timer.start()
         else:
             self._timer = None
