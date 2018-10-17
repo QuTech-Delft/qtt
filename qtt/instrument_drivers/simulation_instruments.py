@@ -6,9 +6,7 @@ Contains code to do live plotting
 #%%
 import numpy as np
 import logging
-from colorama import Fore
 import qcodes
-import qtt
 
 #%%
 
@@ -52,7 +50,7 @@ class SimulationDigitizer(qcodes.Instrument):
         for noise_frequency in noise_frequencies:
             noise = 0.01 * np.sin(noise_frequency * np.arange(data.size) / sample_rate) 
             data += noise
-        return ([data] * 2.0)[0:len(channels)]
+        return ([data] * 2)[0:len(channels)]
 
     def myhoneycomb(self, multiprocess=False, verbose=0):
         """
@@ -237,3 +235,11 @@ class SimulationAWG(qcodes.Instrument):
         pass
 
 
+def test_SimulationDigitizer():
+    import qtt
+    digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('test_digitizer'))
+    digitizer.close()
+    
+if __name__=='__main__':
+    test_SimulationDigitizer()
+    
