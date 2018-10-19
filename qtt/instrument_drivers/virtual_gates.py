@@ -622,6 +622,7 @@ def test_virtual_gates(verbose=0):
 
     vgates.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
     all_values = vgates.allvalues()
+    assert isinstance(all_values, dict)
 
     crosscap_matrix = vgates.get_crosscap_matrix()
     assert(crosscap_matrix[0][0] == 1.0)
@@ -654,7 +655,8 @@ def test_virtual_gates(verbose=0):
     crosscap_matrix = extended_vgates.get_crosscap_matrix()
     for row in range(serialized_matrix.shape[0]):
     	    np.testing.assert_almost_equal(serialized_matrix[row]/serialized_matrix[row][row], crosscap_matrix[row])
-    assert(np.all(crosscap_matrix.diagonal() == 1.0))
+    cc_matrix_diagonal = crosscap_matrix.diagonal()    
+    np.testing.assert_almost_equal(cc_matrix_diagonal, 1.)
 
     vgates.close()
     extended_vgates.close()
