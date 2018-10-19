@@ -113,7 +113,6 @@ class VirtualIVVI(Instrument):
         if self.model is None:
             return 0
         value = self.model.get(self.name + '_' + gate)
-        logger.debug('%s: get_gate %s' % (self.name, gate))
         return value
 
     def set_gate(self, gate, value):
@@ -121,7 +120,6 @@ class VirtualIVVI(Instrument):
             return
         value = float(value)
         self.model.set(self.name + '_' + gate, value)
-        logger.debug('set_gate %s: %s' % (gate, value))
         return
 
     def allvalues(self):
@@ -133,11 +131,11 @@ class VirtualIVVI(Instrument):
         return dict([(g, self.get(g) ) for g in self.parameters])
     
     def get_all(self):
-        ''' Get all parameters in instrument '''
+        """ Get all parameters in instrument """
         for g in self._gates:
             logger.debug('get_all %s: %s' % (self.name, g))
             self.get(g)
 
     def __repr__(self):
-        ''' Return string description instance '''
+        """ Return string description instance """
         return 'VirtualIVVI: %s' % self.name
