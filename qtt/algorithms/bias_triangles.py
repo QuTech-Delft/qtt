@@ -48,7 +48,7 @@ def perpLineIntersect(ds, description, vertical = True, points=None):
             ds (dataset): dataset with charge stability diagram and gate voltage in mV
             vertical (bool): find intersection of point with line vertically (True) 
             or horizontally (False)
-            description: 
+            description: 'lever_arm', 'E_charging', or 'interdot'
         
         Returns:
             (dict): 'intersection_point' = intersetcion point
@@ -83,6 +83,9 @@ def perpLineIntersect(ds, description, vertical = True, points=None):
             Point 1: on the (0, 1) - (0,2) addition line
             Point 2: further on the (0, 1) - (0,2) addition line
             Point 3: on the (0, 0) - (0, 1) addition line ''')
+    elif description == 'interdot':
+        print('''Please click on the two triple points and the third point somewhere random in the plot. 
+              The argument 'vertical' can be either True or False''')
     else:
         # Do something here such that no three points need to be clicked
         print('''Please make sure that the descirption argument of this function
@@ -175,7 +178,7 @@ def E_charging(lev_arm, results, fig = None):
        fig (bool): adds charging energy to title of already existing figure with points
         
     Returns:
-        E_charging (float): the charging energy for the dot
+        E_charging (float): the charging energy for the dot in ueV
     """
 
     line_length = results['distance']
@@ -193,7 +196,42 @@ def E_charging(lev_arm, results, fig = None):
         plt.annotate(title, xy = (0.05, 0.05), xycoords='axes fraction', color = 'k')
         ax.set_title(title)
     
-    return E_c    
+    return E_c
+
+
+def interdot_energy(lev_arm_x, lev_arm_y, results):
+  """
+  Calculates the interdot energy of two dots by using charge stability diagrams.
+  Uses currently active figure.
+  
+  Args:
+    lev_arm_x (float): lever arm for the gate on the x-axis tot he dot onthe x-axis
+    lev_arm_y (float): lever arm for the gate on the y-axis tot he dot onthe y-axis
+    
+    results (dict): dictionary returned from the function perpLineIntersect
+                    containing three points, the intersection point
+                    between a line through 1,2 and the third point and the
+                    length from points 3 to the intersection (horz/vert)
+    fig (bool): adds charging energy to title of already existing figure with points
+        
+    Returns:
+        E_charging (float): the charging energy for the dot in ueV
+  """
+  
+  T1_coords = results['clicked_points'].T[0]
+  T2_coords = results['clicked_points'].T[1]
+  
+  x_distance = abs(T1_coords[0] - T2_coords[0])
+  y_distance = abs(T1_coords[1] - T2_coords[1])
+  
+  '''
+  NB! This is not correct! Should be a linear combinations of lever arms!!!
+  '''
+  interdot_energy = lev_arm_x*x_distance + lev_arm_y*y_distance
+  
+  return interdot_energy
+  
+  
 
 def test_lever_arm():
     lever_arm_fit = {'clicked_points': np.array([[ 24.,  38.,  40.], [135., 128., 111.]]), 'distance': 15., 'intersection_point': np.array([[ 40.4],[127.]])}
@@ -201,3 +239,5 @@ def test_lever_arm():
     r=lever_arm(-800, lever_arm_fit)
     assert(np.abs(r-53.3)<1e-1)
     
+
+#%%
