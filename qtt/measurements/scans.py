@@ -1966,10 +1966,9 @@ def plotData(alldata, diff_dir=None, fig=1):
         # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
         try:
-            # TODO: make this cleaner code
             plot.fig.axes[1].autoscale(tight=True)
-        except:
-            pass
+        except Exception as ex:
+            logging.debug('autoscaling failed')
 
 
 # %%

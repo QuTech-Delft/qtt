@@ -469,8 +469,7 @@ def projectiveTransformation(H, x):
         ww = ww.reshape((-1, kout)).transpose()
         return ww
     else:
-        # fixme
-        return x
+        return copy.copy(x)
 
 
 def rottra2mat(rot, tra):
@@ -520,7 +519,7 @@ def null(a, rtol=1e-5):
 
 
 def intersect2lines(l1, l2):
-    """ Caculate intersection between 2 lines
+    """ Calculate intersection between 2 lines
 
     Args:
         l1 (array): first line in homogeneous format
@@ -538,9 +537,6 @@ def runcmd(cmd, verbose=0):
     return output
 
 #%% Geometry functions
-
-#%% Conversion between different representations of angles and frames
-
 
 def angleDiff(x, y):
     """ Return difference between two angles in radians modulo 2* pi

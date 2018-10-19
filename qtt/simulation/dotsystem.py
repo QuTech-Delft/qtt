@@ -29,8 +29,6 @@ except:
 import qtt.utilities.tools
 from qtt import pgeometry
 
-#%% Helper functions
-
 
 def showGraph(dot, fig=10):
     """ Show graphviz object in matplotlib window """
@@ -71,7 +69,7 @@ def tprint(string, dt=1, output=False):
 
 
 def isdiagonal(HH):
-    """ Helper function """
+    """ Return True if matrix is diagonal """
     return not(np.any(HH - np.diag(np.diagonal(HH))))
 
 
@@ -260,23 +258,34 @@ class DotSystem(BaseDotSystem):
 
             detX (float): for each dot the value of the chemical potential in the dot
 
-        TODO: Make the Mxxx variables private
         """
         self.name = name
         self.ndots = ndots
         self.temperature = 0
 
+    def chemical_potential_name(self, dot):
+        return 'det%d' % dot
+    def chemical_potential_matrix(self, dot):
+        return 'Mdet%d' % dot
+
+    def on_site_charging_name(self, dot):
+        return 'osC%d' % dot
+    def on_site_charging_matrix(self, dot):
+        return 'MosC%d' % dot
+    
     def makevars(self):
+        """ Create value and matrix for a single variable """
         for name in self.varnames:
             setattr(self, name, 0)
             # also define that these are float32 numbers!
             setattr(self, 'M' + name, np.full((self.Nt, self.Nt), 0, dtype=int))
 
+
     def makevarMs(self, ring=False):
         ''' Create matrices for the interactions 
 
         Args:
-            ring (bool): is the dot array in a ring configuration? (e.g. 2x2)
+            ring (bool): set to True if the dot array in a ring configuration (e.g. 2x2)
         '''
         m = np.zeros((self.ndots), dtype=int)
 
@@ -291,10 +300,8 @@ class DotSystem(BaseDotSystem):
                 if i == j:
                     for dot in range(1, self.ndots + 1):
                         n = self.basis[i, dot - 1]
-                        getattr(self, 'Mdet%i' % dot)[i, i] = [
-                            0, -1, -2, -3][n]  # chemical potential
-                        getattr(self, 'MosC%i' % dot)[i, i] = [
-                            0, 0, 1, 3][n]  # on site charging energy
+                        getattr(self, self.chemical_potential_matrix(dot))[i, i] = [0, -1, -2, -3][n]  
+                        getattr(self, self.on_site_charging_matrix(dot))[i, i] = [0, 0, 1, 3][n] 
                         n2 = self.basis[i, dot % self.ndots]
                         n3 = self.basis[i, (dot + 1) % self.ndots]
                         # nearest-neighbour charging energy
@@ -734,3 +741,6 @@ def test_twoxtwo():
 
 if __name__ == '__main__':
     test_twoxtwo()
+
+    double_dot =DoubleDot()
+    
