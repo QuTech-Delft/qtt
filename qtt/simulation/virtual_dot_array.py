@@ -245,12 +245,6 @@ class DotModel(Instrument):
         else:
             pass
 
-        # coulomb model for sd1
-        # self.sd1ds=qtt.simulation.dotsystem.OneDot()
-        # defaultDotValues(self.sd1ds)
-        # Vmatrix=np.matrix([[.23, 1, .23, 300.],[0,0,0,1]])
-        # self.gate_transform_sd1 = GateTransform(Vmatrix, ['SD1a','SD1b','SD1c'], ['det1'])
-
     def get_idn(self):
         ''' Overrule because the default get_idn yields a warning '''
         IDN = {'vendor': 'QuTech', 'model': self.name,
@@ -361,12 +355,6 @@ class DotModel(Instrument):
             k = 4e-3*self.get_gate('O1')
             self._data['keithley4_amplitude'] = k
         return k
-
-    def my_get(self):
-        with self.lock:
-            sd1 = self.computeSD()
-            val = self.compute()
-        return (sd1, val)
 
     def keithley3_get(self, param):
         with self.lock:

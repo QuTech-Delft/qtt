@@ -628,9 +628,8 @@ def findBestSlope(x, y, minder=None, fig=None, verbose=1):
                      pbottom], 'x': x[p], 'y': y[p], 'p': p, 'lowvalue': lowvalue})
 
         slope['halfvalue'] = (slope['y'] + slope['ybottoml']) / 2
-        # slope['halfvalue']=(slope['y']-slope['ybottom'])/2
         halfvalue = slope['halfvalue']
-        phalfl = int( np.round((p + pbottom) / 2) ) # FIXME
+        phalfl = int( np.round((p + pbottom) / 2) )
         # print(phalfl)
         slope['phalfl'] = phalfl
         slope['phalf0'] = phalfl
@@ -641,7 +640,6 @@ def findBestSlope(x, y, minder=None, fig=None, verbose=1):
         xl, yl = x[ind], y[ind]     # local coordinates
 
         xhalfl = np.interp(slope['halfvalue'], yl, xl)
-        # xhalfl=np.interp(xhlocal, yl,xl)
         phlocal = np.interp(slope['halfvalue'], yl, range(xl.size))
         phl = np.interp(phlocal, range(ind.size), ind)
 
