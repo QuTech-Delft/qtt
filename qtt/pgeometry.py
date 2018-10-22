@@ -2269,18 +2269,18 @@ def modulepath(m):
     return package.get_filename()
 
 
-def checkmodule(mname, verbose=1):
+def checkmodule(module_name, verbose=1):
     """ Return location of module based on module name
     
     Args:
-        mname (str): name of module to inspect
+        module_name (str): name of module to inspect
     Returns
         obj: module specification
     """
-    import imp
-    q = imp.find_module(mname)
+    #import importlib
+    #q = importlib.find_module(mname)
     import importlib
-    q = importlib.util.find_spec(mname)
+    q = importlib.util.find_spec(module_name)
     if verbose:
         print(q)
     return q
