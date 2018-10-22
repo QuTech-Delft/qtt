@@ -19,3 +19,4 @@ slacker
 scikit-image
 scipy >= 0.18
 tables
+urllib3 == 1.23
