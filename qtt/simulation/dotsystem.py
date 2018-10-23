@@ -11,6 +11,7 @@ import copy
 from abc import abstractmethod
 from functools import partial
 import sys
+import logging
 
 try:
     import graphviz
@@ -342,7 +343,10 @@ class DotSystem(BaseDotSystem):
                         n2 = self.basis[i, dot % self.ndots]
                         n3 = self.basis[i, (dot + 1) % self.ndots]
                         # nearest-neighbour charging energy
+                        logging.info('set inter_site_charging for dot %d' % dot)
                         getattr(self, self._matrix_prefix + self.inter_site_charging_name(dot))[i, i] = n * n2
+                        
+                        # specific for 2x2 example!!
                         if hasattr(self, self.inter_site_charging_name(self.ndots + 1)):
                             if i % 2:
                                 # next-nearest-neighbour charging energy
@@ -725,7 +729,7 @@ class TwoXTwo(DotSystem):
         self.makebasis(ndots=self.ndots, maxelectrons=2)
         self.varnames = [self.chemical_potential_name(i + 1) for i in range(self.ndots)] \
              +[self.on_site_charging_name(i + 1) for i in range(self.ndots)] \
-                +['isC1', 'isC2', 'isC3', 'isC4', 'isC5', 'isC6'] + [self.tunneling_name(dot + 1) for dot in range(self.ndots)]
+                + ['isC1', 'isC2', 'isC3', 'isC4', 'isC5', 'isC6'] + [self.tunneling_name(dot + 1) for dot in range(self.ndots)]
         self.make_variables()
         self._make_variable_matrices(ring=True)
         # initial run
@@ -751,6 +755,6 @@ if __name__ == '__main__':
     self=triple_dot
     self=double_dot
     print(self.basis)
-    print(list(self._MisC1))
-    print(list(self._MisC2))
+    (list(self._MisC1))
+    (list(self._MisC2))
     
