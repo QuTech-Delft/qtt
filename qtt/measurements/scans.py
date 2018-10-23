@@ -566,7 +566,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
 
-    alldata = qtt.tools.stripDataset(alldata)
+    alldata = qtt.utilities.tools.stripDataset(alldata)
 
     alldata.write(write_metadata=True)
     return alldata

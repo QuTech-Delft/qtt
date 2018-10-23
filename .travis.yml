@@ -24,7 +24,7 @@ install:
     - python setup.py develop
 
 # for xvfb details see https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui
-  
+
 script: 
     - ls
     - pytest --version
@@ -34,4 +34,3 @@ script:
       jupyter --version;
       source docs/notebooks/run_notebooks.sh;
       fi
-    
