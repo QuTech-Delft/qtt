@@ -19,13 +19,12 @@ except:
     pass
 
 try:
-    import multiprocessing as mp
-    from multiprocessing import Pool
+    from pathos import multiprocessing as mp
+    from pathos.multiprocessing import Pool
 
     _have_mp = True
-except:
+except ImportError:
     _have_mp = False
-    pass
 
 import qtt.utilities.tools
 from qtt import pgeometry
@@ -351,28 +350,31 @@ class DotSystem(BaseDotSystem):
         for i in range(self.number_of_basis_states):
             for j in range(self.number_of_basis_states):
                 if i == j:
-                    for dot in range(1, self.ndots ):
+                    for dot in range(1, self.ndots+1 ):
                         dot_index = dot - 1
+                        next_dot_idx = (dot_index + 1) % self.ndots
+                        next_dot = next_dot_idx+1
+
                         n = self.basis[i, dot_index]
                         getattr(self, self.chemical_potential_matrix(dot))[i, i] = potential[n]
                         getattr(self, self.on_site_charging_matrix(dot))[i, i] = on_site_potential[n]
-                        n2 = self.basis[i, dot % self.ndots]
                         
-                        next_dot_idx = (dot_index + 1) % self.ndots
-                        next_dot = next_dot_idx+1
-                        n3 = self.basis[i, next_dot_idx]
-                        # nearest-neighbour charging energy
-                        logging.info('set inter_site_charging for dot %d-%d' % (dot, next_dot) )
-                        getattr(self, self._matrix_prefix + self.inter_site_charging_name(dot, next_dot))[i, i] = n * n2
+                        if next_dot_idx>dot_index or ring:
+                            n2 = self.basis[i, next_dot_idx]
+                            # nearest-neighbour charging energy
+                            logging.info('set inter_site_charging for dot %d-%d' % (dot, next_dot) )
+                            getattr(self, self._matrix_prefix + self.inter_site_charging_name(dot, next_dot))[i, i] = n * n2
                         
-                    # specific for 2x2 example!!
-                    if getattr(self, 'is2x2', False):
-                        if i % 2:
-                            # next-nearest-neighbour charging energy
-                            getattr(self, self.inter_site_charging_matrix(2, 4))[i, i] = n * n3
-                        else:
-                            # next-nearest-neighbour charging energy
-                            getattr(self, self.inter_site_charging_matrix(1,3))[i, i] = n * n3
+                        second_next_dot_idx = (dot_index + 2) % self.ndots
+                        n3 = self.basis[i, second_next_dot_idx]
+                        # specific for 2x2 example!!
+                        if getattr(self, 'is2x2', False):
+                            if i % 2:
+                                # next-nearest-neighbour charging energy
+                                getattr(self, self.inter_site_charging_matrix(2, 4))[i, i] = n * n3
+                            else:
+                                # next-nearest-neighbour charging energy
+                                getattr(self, self.inter_site_charging_matrix(1,3))[i, i] = n * n3
                 else:
                     statediff = self.basis[i, :] - self.basis[j, :]
 
@@ -488,7 +490,7 @@ class DotSystem(BaseDotSystem):
             self.vals2D[nm] = paramvalues2D[i, :, :]
         return self.simulatehoneycomb(verbose=verbose, usediag=usediag, multiprocess=multiprocess)
 
-    def simulatehoneycomb(self, verbose=1, usediag=False, multiprocess=True):
+    def simulatehoneycomb(self, verbose=1, usediag=False, multiprocess=False):
         """ Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
         for each point, search for transitions and save in self.honeycomb"""
         t0 = time.time()
@@ -521,7 +523,7 @@ class DotSystem(BaseDotSystem):
         self.setall('det', initparamvalues)
 
         if verbose:
-            print('simulatehoneycomb: %.2f [s]' % (time.time() - t0))
+            print('simulatehoneycomb: %.2f [s] (multiprocess %s)' % (time.time() - t0, multiprocess))
 
         sys.stdout.flush()
 
@@ -772,13 +774,5 @@ def test_twoxtwo():
 
 if __name__ == '__main__':
     test_twoxtwo()
-
-    double_dot = DoubleDot(maxelectrons=2)
-    triple_dot = TripleDot(maxelectrons=1)
-
-    self=triple_dot
-    self=double_dot
-    print(self.basis)
-    (list(self._MisC12))
-    #(list(self._MisC2))
+    
     
