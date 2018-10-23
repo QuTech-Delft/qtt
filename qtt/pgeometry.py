@@ -2277,13 +2277,11 @@ def checkmodule(module_name, verbose=1):
     Returns
         obj: module specification
     """
-    #import importlib
-    #q = importlib.find_module(mname)
     import importlib
-    q = importlib.util.find_spec(module_name)
+    module_spec = importlib.util.find_spec(module_name)
     if verbose:
-        print(q)
-    return q
+        print(module_spec)
+    return module_spec
 
 
 def test_geometry(verbose=1, fig=None):
