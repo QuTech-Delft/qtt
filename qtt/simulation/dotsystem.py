@@ -297,7 +297,7 @@ class DotSystem(BaseDotSystem):
         """
         if dot2 is None:
             dot2 = (dot1 + 1)
-        return "isC%d%d" % (dot1, dot2)
+        return "intersiteC%d%d" % (dot1, dot2)
 
     @staticmethod
     def inter_site_charging_matrix(dot1, dot2=None):
