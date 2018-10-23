@@ -1,19 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Classical Quantum Dot Simulator
 
-This class aims to be a generic classical simulator for calculating energy levels and occupancy of quantum dots.
-Note: interaction between the dots is treated completely classically (no tunnel coupling) resulting in faster simulations.
-
-User defines:
-    - number of dots: ndots
-    - number of gates: ngates
-    - maximum occupancy per dot: maxelectrons
-    - capacitances and cross-capacitances between dots and gates: alphas
-    - chemical potential (at zero gate voltage): mu0
-    - addition energy: Eadd
-    - coulomb repulsion: W
-
-@author: lgnjanssen
+@author: lgnjanssen / eendebakpt / hensgens
 """
 
 import itertools
@@ -28,7 +16,7 @@ try:
     import multiprocessing as mp
     from multiprocessing import Pool
     _have_mp = True
-except:
+except ImportError:
     _have_mp = False
     pass
 
@@ -40,17 +28,34 @@ def ncr(n, r):
     r = min(r, n - r)
     if r == 0:
         return 1
-    numer = functools.reduce(op.mul, range(n, n - r, -1))
-    denom = functools.reduce(op.mul, range(1, r + 1))
-    return numer // denom
+    numerator = functools.reduce(op.mul, range(n, n - r, -1))
+    denominator = functools.reduce(op.mul, range(1, r + 1))
+    return numerator // denominator
 
 
 class ClassicalDotSystem(BaseDotSystem):
 
     def __init__(self, name='dotsystem', ndots=3, ngates=3, maxelectrons=3, **kwargs):
+        """ Classical Quantum Dot Simulator
+
+        This class aims to be a generic classical simulator for calculating energy levels and occupancy of quantum dots.
+        Note: interaction between the dots is treated completely classically (no tunnel coupling) resulting in faster simulations.
+
+        Args:
+            ndots (int): number of dots
+            ngates (int): number of voltage gates
+            maxelectrons (int): maximum occupancy per dot:
+
+        The user should set variables on the object :
+            - capacitances and cross-capacitances between dots and gates: alphas
+            - chemical potential (at zero gate voltage): mu0
+            - addition energy: Eadd
+            - coulomb repulsion: W
+
+        """
         self.name = name
         
-        logging.info('ClassicalDotSystem: maxelectrons %d' % maxelectrons)
+        logging.info('ClassicalDotSystem: max number of electrons %d' % maxelectrons)
         self.makebasis(ndots=ndots, maxelectrons=maxelectrons)
         self.ngates = ngates
         
@@ -64,7 +69,10 @@ class ClassicalDotSystem(BaseDotSystem):
         self._makebasis_extra()
 
     def _makebasis_extra(self):
-        """ Define a basis of occupancy states """
+        """ Define a basis of occupancy states
+        
+        These addition structures are used for efficient construction of the Hamiltonian
+        """
         # make addition energy basis
         self._add_basis = self.basis.copy()
         self._coulomb_energy = np.zeros((self.basis.shape[0], self.W.size))
@@ -146,6 +154,11 @@ class ClassicalDotSystem(BaseDotSystem):
         self.findcurrentoccupancy()
         
     def findcurrentoccupancy(self, exact=True):
+        """ Find electron occupancy
+        
+        Args:
+            exact (bool): If True then average over all ground states
+        """
         if exact:
             # almost exact...
             idx = self.energies == self.energies[0]
