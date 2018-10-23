@@ -182,7 +182,7 @@ class VirtualAwg(Instrument):
                 if awg_number != number:
                     continue
                 awg_to_plunger = self.__hardware.parameters['awg_to_{}'.format(gate_name)].get()
-                scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt / awg_to_plunger / vpp_amplitude
+                scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt * awg_to_plunger / vpp_amplitude
 
                 sample_data = Sequencer.get_data(sequence, sampling_rate)
                 sequence_data = sample_data if marker_number else sample_data * scaling_ratio
