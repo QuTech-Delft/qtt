@@ -1048,18 +1048,21 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
         measure_names = yname
     mnamesx = measure_names
     measure_names = []
+    measure_units = []
     for p in mnamesx:
         if isinstance(p, str):
             measure_names += [p]
+            measure_units += [None]
         else:
             # assume p is a Parameter
             measure_names += [p.full_name]
+            measure_units += [p.unit]
 
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
 
     for idm, mname in enumerate(measure_names):
         ytmp = DataArray(name=mname, array_id=mname, label=mname,
-                         preset_data=np.copy(yy), set_arrays=(x,))
+                         preset_data=np.copy(yy), set_arrays=(x,), unit=measure_units[idm])
         dd.add_array(ytmp)
         if y is not None:
             getattr(dd, mname).ndarray = np.array(preset_data[idm])
