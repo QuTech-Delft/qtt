@@ -29,7 +29,7 @@ class TestDotSystem(unittest.TestCase):
     def test_triple_dot_basics(self):
         dotsystem = TripleDot(maxelectrons=2)
 
-        paramvalues2D=np.zeros( (3, 6, 7) )
+        paramvalues2D=np.zeros( (3, 4, 5) )
         r=dotsystem.simulate_honeycomb(paramvalues2D, multiprocess=False)
         self.assertEqual(dotsystem.honeycomb.shape, paramvalues2D.shape[1:])
         
