@@ -10,7 +10,7 @@ try:
     from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
 except:
     logging.debug('could not load KeysightM3202A driver')
-    KeysightM3202A_AWG=None
+    KeysightM3202A_AWG = None
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstruments_HDAWG8
 
 
@@ -80,7 +80,7 @@ class VirtualAwg(Instrument):
     def update_setting(self, awg_number, setting, value):
         if awg_number not in self.__awg_range:
             raise VirtualAwgError('Invalid AWG number {}!'.format(awg_number))
-        self.awgs[awg_number].update_setting(setting, value)
+        self.awgs[awg_number].change_setting(setting, value)
 
     def are_awg_gates(self, gate_names):
         if gate_names is None:
