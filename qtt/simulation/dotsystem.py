@@ -272,7 +272,7 @@ class DotSystem(BaseDotSystem):
 
     @staticmethod
     def chemical_potential_matrix(dot):
-        return self._matrix_prefix + self.chemical_potential_name(dot)
+        return DotSystem._matrix_prefix + DotSystem.chemical_potential_name(dot)
 
     @staticmethod
     def on_site_charging_name(dot):
@@ -280,7 +280,7 @@ class DotSystem(BaseDotSystem):
 
     @staticmethod
     def on_site_charging_matrix(dot):
-        return self._matrix_prefix + on_site_charging_name(dot)
+        return DotSystem._matrix_prefix + DotSystem.on_site_charging_name(dot)
 
     @staticmethod
     def inter_site_charging_name(dot):
@@ -290,7 +290,7 @@ class DotSystem(BaseDotSystem):
 
     @staticmethod
     def inter_site_charging_matrix(dot):
-        return self._matrix_prefix + inter_site_charging_name(dot)
+        return DotSystem._matrix_prefix + DotSystem.inter_site_charging_name(dot)
 
     @staticmethod
     def tunneling_name(dot_left):
