@@ -3,7 +3,7 @@ import numpy as np
 
 import qtt.data
 import qtt.measurements.scans
-from qtt.simulation.dotsystem import TripleDot, FourDot, TwoXTwos
+from qtt.simulation.dotsystem import TripleDot, FourDot, TwoXTwo
 
 class TestDotSystem(unittest.TestCase):
 
