@@ -68,13 +68,13 @@ class ClassicalDotSystem(BaseDotSystem):
         # make addition energy basis
         self._add_basis = self.basis.copy()
         self._coulomb_energy = np.zeros((self.basis.shape[0], self.W.size))
-        for i in range(self.Nt):
+        for i in range(self.number_of_basis_states):
             self._add_basis[i] = (1 / 2 * np.multiply(self.basis[i], self.basis[i] + 1))
             self._coulomb_energy[i] = [np.dot(*v) for v in itertools.combinations(self.basis[i], 2)]
 
     def calculate_energies(self, gatevalues):
         """ Calculate the energies of all dot states, given a set of gate values. Returns array of energies. """
-        energies = np.zeros((self.Nt,))
+        energies = np.zeros((self.number_of_basis_states,))
         tmp1 = -(self.mu0 + np.dot(self.alpha, gatevalues))
         energies += self.basis.dot(tmp1) # chemical potential times number of electrons
         energies += self._coulomb_energy.dot(self.W) # coulomb repulsion
