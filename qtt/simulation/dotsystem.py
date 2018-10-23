@@ -275,6 +275,18 @@ class DotSystem(BaseDotSystem):
         self.makevars = qtt.utilities.tools.deprecated(self.make_variables)
         self.makevarsM = qtt.utilities.tools.deprecated(self._make_variable_matrices)
 
+    def get_chemical_potential(self, dot):
+        return getattr(self, self.chemical_potential_name(dot) )
+
+    def set_chemical_potential(self, dot, value):
+        return setattr(self, self.chemical_potential_name(dot), value )
+
+    def get_on_site_charging(self, dot):
+        return getattr(self, self.on_site_charging_name(dot) )
+
+    def set_on_site_charging(self, dot, value):
+        return setattr(self, self.on_site_charging_name(dot), value )
+    
     @staticmethod
     def chemical_potential_name(dot) -> str:
         return 'det%d' % dot
