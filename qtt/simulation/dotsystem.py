@@ -263,9 +263,10 @@ class DotSystem(BaseDotSystem):
             ndots (int): number of dots to simulate
 
         Attributes:
-
-            detX (float): for each dot the value of the chemical potential in the dot
-
+            
+        For the chemical potential, on site charging energy and inter site charging energy there are
+        variables in the object. The names are given by the functions chemical_potential_name, etc.
+        
         """
         self.name = name
         self.ndots = ndots
@@ -284,21 +285,23 @@ class DotSystem(BaseDotSystem):
 
     @staticmethod
     def on_site_charging_name(dot):
-        return 'osC%d' % dot
+        return 'onsiteC%d' % dot
 
     @staticmethod
     def on_site_charging_matrix(dot):
         return DotSystem._matrix_prefix + DotSystem.on_site_charging_name(dot)
 
     @staticmethod
-    def inter_site_charging_name(dot):
+    def inter_site_charging_name(dot1, dot2=None):
         """ Return name for nearest - neighbour charging energy
         """
-        return "isC%d" % dot
+        if dot2 is None:
+            dot2 = (dot1 + 1)
+        return "isC%d%d" % (dot1, dot2)
 
     @staticmethod
-    def inter_site_charging_matrix(dot):
-        return DotSystem._matrix_prefix + DotSystem.inter_site_charging_name(dot)
+    def inter_site_charging_matrix(dot1, dot2=None):
+        return DotSystem._matrix_prefix + DotSystem.inter_site_charging_name(dot1, dot2)
 
     @staticmethod
     def tunneling_name(dot_left):
@@ -336,24 +339,28 @@ class DotSystem(BaseDotSystem):
         for i in range(self.number_of_basis_states):
             for j in range(self.number_of_basis_states):
                 if i == j:
-                    for dot in range(1, self.ndots + 1):
-                        n = self.basis[i, dot - 1]
+                    for dot in range(1, self.ndots ):
+                        dot_index = dot - 1
+                        n = self.basis[i, dot_index]
                         getattr(self, self.chemical_potential_matrix(dot))[i, i] = potential[n]
                         getattr(self, self.on_site_charging_matrix(dot))[i, i] = on_site_potential[n]
                         n2 = self.basis[i, dot % self.ndots]
-                        n3 = self.basis[i, (dot + 1) % self.ndots]
-                        # nearest-neighbour charging energy
-                        logging.info('set inter_site_charging for dot %d' % dot)
-                        getattr(self, self._matrix_prefix + self.inter_site_charging_name(dot))[i, i] = n * n2
                         
-                        # specific for 2x2 example!!
-                        if hasattr(self, self.inter_site_charging_name(self.ndots + 1)):
-                            if i % 2:
-                                # next-nearest-neighbour charging energy
-                                getattr(self, self.inter_site_charging_matrix(self.ndots + 2))[i, i] = n * n3
-                            else:
-                                # next-nearest-neighbour charging energy
-                                getattr(self, self.inter_site_charging_matrix(self.ndots + 1))[i, i] = n * n3
+                        next_dot_idx = (dot_index + 1) % self.ndots
+                        next_dot = next_dot_idx+1
+                        n3 = self.basis[i, next_dot_idx]
+                        # nearest-neighbour charging energy
+                        logging.info('set inter_site_charging for dot %d-%d' % (dot, next_dot) )
+                        getattr(self, self._matrix_prefix + self.inter_site_charging_name(dot, next_dot))[i, i] = n * n2
+                        
+                    # specific for 2x2 example!!
+                    if getattr(self, 'is2x2', False):
+                        if i % 2:
+                            # next-nearest-neighbour charging energy
+                            getattr(self, self.inter_site_charging_matrix(2, 4))[i, i] = n * n3
+                        else:
+                            # next-nearest-neighbour charging energy
+                            getattr(self, self.inter_site_charging_matrix(1,3))[i, i] = n * n3
                 else:
                     statediff = self.basis[i, :] - self.basis[j, :]
 
@@ -545,8 +552,8 @@ class DotSystem(BaseDotSystem):
     def calculate_ground_state(self, gatevalues):
         """ Calculate the ground state of the dot system, given a set of gate values.
         Returns a state array. """
-        energies = self.calculate_energies(gatevalues)
-        return self.stateoccs[0]  # self.basis[np.argmin(energies)]
+        _ = self.calculate_energies(gatevalues)
+        return self.stateoccs[0] 
 
     def findcurrentoccupancy(self, exact=True):
         if self.solved == True:
@@ -656,7 +663,8 @@ class OneDot(DotSystem):
         """ Simulation of a single quantum dot """
         super().__init__(name=name, ndots=1)
         self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
-        self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)] + ['osC1', 'isC1']
+        self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)] \
+         + [self.on_site_charging_name(i + 1) for i in range(self.ndots)]
         self.make_variables()
         self._make_variable_matrices()
         # initial run
@@ -675,7 +683,9 @@ class DoubleDot(DotSystem):
 
         super().__init__(name=name, ndots=2)
         self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
-        self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)]+['osC1', 'osC2', 'isC1', 'isC2'] + [self.tunneling_name(dot) for dot in range(1, 2)]
+        self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)] \
+          +  [self.on_site_charging_name(i + 1) for i in range(self.ndots)] \
+              + [self.inter_site_charging_name(i + 1, i+2) for i in range(self.ndots-1)] + [self.tunneling_name(dot) for dot in range(1, 2)]
         self.make_variables()
         self._make_variable_matrices()
         # initial run
@@ -692,7 +702,7 @@ class TripleDot(DotSystem):
         self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
         self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)] \
                         + [self.on_site_charging_name(i + 1) for i in range(self.ndots)] \
-                        + [self.inter_site_charging_name(i + 1) for i in range(self.ndots)] \
+                        + [self.inter_site_charging_name(i + 1, i+2) for i in range(self.ndots-1)] \
                           + [self.tunneling_name(dot) for dot in range(1, 3)]
         self.make_variables()
         self._make_variable_matrices()
@@ -725,11 +735,13 @@ class FourDot(DotSystem):
 
 class TwoXTwo(DotSystem):
     def __init__(self, name='2x2'):
+        self.is2x2 = True
         super().__init__(name=name, ndots=4)
         self.makebasis(ndots=self.ndots, maxelectrons=2)
         self.varnames = [self.chemical_potential_name(i + 1) for i in range(self.ndots)] \
              +[self.on_site_charging_name(i + 1) for i in range(self.ndots)] \
-                + ['isC1', 'isC2', 'isC3', 'isC4', 'isC5', 'isC6'] + [self.tunneling_name(dot + 1) for dot in range(self.ndots)]
+             +[self.inter_site_charging_name(dot1, dot2) for dot1,dot2 in [(1,2),(2,3),(3,4),(4,1), (1,3), (2,4)]] \
+                + [self.tunneling_name(dot + 1) for dot in range(self.ndots)]
         self.make_variables()
         self._make_variable_matrices(ring=True)
         # initial run
@@ -755,6 +767,6 @@ if __name__ == '__main__':
     self=triple_dot
     self=double_dot
     print(self.basis)
-    (list(self._MisC1))
-    (list(self._MisC2))
+    (list(self._MisC12))
+    #(list(self._MisC2))
     
