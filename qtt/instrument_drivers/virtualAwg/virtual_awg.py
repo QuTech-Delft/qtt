@@ -4,8 +4,10 @@ import numpy as np
 from qcodes import Instrument
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
+
 from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
-from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstruments_HDAWG8
+from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
+
 
 
 class VirtualAwgError(Exception):
@@ -61,7 +63,7 @@ class VirtualAwg(Instrument):
             elif type(awg).__name__ == 'Keysight_M3201A':
                 self.awgs.append(KeysightM3202A_AWG(awg))
             elif type(awg).__name__ == 'ZI_HDAWG8':
-                self.awgs.append(ZurichInstruments_HDAWG8(awg))
+                self.awgs.append(ZurichInstrumentsHDAWG8(awg))
             else:
                 raise VirtualAwgError('Unusable device added!')
         self.__awg_range = range(0, len(self.awgs))
