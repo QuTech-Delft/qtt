@@ -75,11 +75,11 @@ class Sequencer:
         """
         if uptime <= 0 or offset < 0:
             raise ValueError('Invalid argument value (uptime <= 0 or offset < 0)!')
-        if uptime + offset > 1:
+        if uptime + offset > period:
             raise ValueError('Invalid argument value (uptime + offset > period)!')
-        input_variables = {'period': period*Sequencer.__sec_to_ns,
-                           'uptime': period*uptime*Sequencer.__sec_to_ns,
-                           'offset': period*offset*Sequencer.__sec_to_ns}
+        input_variables = {'period': period * Sequencer.__sec_to_ns,
+                           'uptime': uptime * Sequencer.__sec_to_ns,
+                           'offset': offset * Sequencer.__sec_to_ns}
         sequence_data = (Templates.marker(name), input_variables)
         return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
                 'type': DataTypes.QU_PULSE, 'uptime': uptime, 'offset': offset}
@@ -292,5 +292,3 @@ def test_serializer():
         amplitude = 1.5
         sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
         Sequencer.serialize(sawtooth)
-
-    

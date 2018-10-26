@@ -10,7 +10,7 @@ try:
     from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
 except:
     logging.debug('could not load KeysightM3202A driver')
-    KeysightM3202A_AWG=None
+    KeysightM3202A_AWG = None
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstruments_HDAWG8
 
 
@@ -80,7 +80,7 @@ class VirtualAwg(Instrument):
     def update_setting(self, awg_number, setting, value):
         if awg_number not in self.__awg_range:
             raise VirtualAwgError('Invalid AWG number {}!'.format(awg_number))
-        self.awgs[awg_number].update_setting(setting, value)
+        self.awgs[awg_number].change_setting(setting, value)
 
     def are_awg_gates(self, gate_names):
         if gate_names is None:
@@ -101,8 +101,9 @@ class VirtualAwg(Instrument):
             amplitude = rel_amplitude * sweep_range
             sequences[gate_name] = Sequencer.make_square_wave(amplitude, period)
         sweep_data = self.sequence_gates(sequences, do_upload)
-        return sweep_data.update({'sweeprange': sweep_range, 'period': period,
-                                  'markerdelay': self.digitizer_marker_delay()})
+        sweep_data.update({'sweeprange': sweep_range, 'period': period,
+                           'markerdelay': self.digitizer_marker_delay()})
+        return sweep_data
 
     def sweep_gates(self, gates, sweep_range, period, width=0.95, do_upload=True):
         """ Sweep a set of gates with a sawtooth waveform.
@@ -181,7 +182,7 @@ class VirtualAwg(Instrument):
                 if awg_number != number:
                     continue
                 awg_to_plunger = self.__hardware.parameters['awg_to_{}'.format(gate_name)].get()
-                scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt / awg_to_plunger / vpp_amplitude
+                scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt * awg_to_plunger / vpp_amplitude
 
                 sample_data = Sequencer.get_data(sequence, sampling_rate)
                 sequence_data = sample_data if marker_number else sample_data * scaling_ratio
