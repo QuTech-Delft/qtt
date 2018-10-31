@@ -11,8 +11,8 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             awg_number (int): The number of the AWG that is to be controlled. The ZI HDAWG8 has 4 AWGs and the default
                               one is the first one(index 0).
         """
-        super().__init__('ZIHDAWG8', channel_numbers=list(range(1, 9)),
-                         marker_numbers=list(range(1, 9)))
+        super().__init__('ZIHDAWG8', channel_numbers=list(range(0, 8)),
+                         marker_numbers=list(range(0, 8)))
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
         self.__awg = awg
