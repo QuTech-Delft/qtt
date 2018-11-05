@@ -1,3 +1,4 @@
+from qcodes import Parameter
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
 
 
@@ -19,6 +20,9 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         self.__awg_number = awg_number
         self.__sampling_rate_map = {0: 2.4e9, 1: 1.2e9, 2: 600e6, 3: 300e6, 4: 150e6, 5: 72e6, 6: 37.50e6, 7: 18.75e6,
                                     8: 9.4e6, 9: 4.5e6, 10: 2.34e6, 11: 1.2e3, 12: 586e3, 13: 293e3}
+        self.__settings = {'sampling_rate': Parameter(name='sampling_rate', unit='GS/s', initial_value=2.4e9,
+                                                      set_cmd=self.update_sampling_rate,
+                                                      get_cmd=self.retrieve_sampling_rate)}
 
     @property
     def fetch_awg(self):
@@ -48,10 +52,14 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         [self.__awg.disable_channel(ch) for ch in channels]
 
     def change_setting(self, name, value):
-        raise NotImplementedError
+        if name not in self.__settings:
+            raise ValueError('No such settings: {}'.format(name))
+        self.__settings[name].set(value)
 
     def retrieve_setting(self, name):
-        raise NotImplementedError
+        if name not in self.__settings:
+            raise ValueError('No such settings: {}'.format(name))
+        return self.__settings[name].get()
 
     def update_running_mode(self, mode):
         raise NotImplementedError
