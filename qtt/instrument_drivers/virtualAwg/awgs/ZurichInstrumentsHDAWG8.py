@@ -7,6 +7,12 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         """ Implements the common functionality of the AwgCommon for the Zurich Instruments HDAWG8 to be controlled by
         the virtual AWG.
 
+        Note:
+            Channels are zero based so channel '0' is output '1' on the physical device.
+
+        Note:
+            This backend is setup to work with grouping 1x8 where one awg controls 8 outputs.
+
         Args:
             awg (ZIHDAWG8): Instance of the QCoDeS ZIHDAWG8 driver.
             awg_number (int): The number of the AWG that is to be controlled. The ZI HDAWG8 has 4 AWGs and the default
@@ -80,7 +86,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         return self.__sampling_rate_map[sample_rate]
 
     def update_gain(self, gain):
-        raise NotImplementedError
+        [self.__awg.set('sigouts_{}_range'.format(ch), gain) for ch in self._channel_numbers]
 
     def retrieve_gain(self):
         gains = [self.__awg.get('sigouts_{}_range'.format(ch)) for ch in self._channel_numbers]
@@ -90,8 +96,10 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
 
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
         for name, sequence in zip(sequence_names, sequence_items):
+            if 'marker' in name:
+                sequence = sequence.astype(int)
             self.__awg.waveform_to_csv(name, sequence)
-        channels = [ch[0] for ch in sequence_channels]
+        channels = [ch[0] + 1 for ch in sequence_channels]
         sequence_program = self.__awg.generate_csv_sequence_program(sequence_names, channels)
         self.__awg.upload_sequence_program(self.__awg_number, sequence_program)
 
