@@ -1,20 +1,22 @@
-import sys
-import numpy as np
 import logging
+import sys
+
+import numpy as np
 
 from qcodes import Parameter
 from qcodes.utils.validators import Numbers
-from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
- 
+from qtt.instrument_drivers.virtualAwg.awgs.common import (AwgCommon,
+                                                           AwgCommonError)
+
 try:
     sys.path.append("C:\\Program Files (x86)\\Keysight\\SD1\\Libraries\\Python")
     import qcodes.instrument_drivers.Keysight.M3201A as AWG
-except ModuleNotFoundError:
+except ImportError:
     logging.error("Keysight module not found!")
 
 
 class KeysightM3202A_AWG(AwgCommon):
- 
+
     def __init__(self, awg):
         super().__init__('Keysight_M3201A', channel_numbers=[1, 2, 3, 4], marker_numbers=[1])
         if type(awg).__name__ is not self._awg_name:
@@ -38,22 +40,22 @@ class KeysightM3202A_AWG(AwgCommon):
                            Parameter(name='prescaler', initial_value=2,
                                      set_cmd=None)]
         self.__awg = awg
- 
+
     @property
     def fetch_awg(self):
         return self.__awg
- 
+
     def run(self):
         bit_mask = self.retrieve_setting('enabled_outputs')
         self.__awg.awg_start_multiple(bit_mask)
- 
+
     def stop(self):
         bit_mask = 0b1111
         self.__awg.awg_stop_multiple(bit_mask)
- 
+
     def reset(self):
         self.__awg.awg.resetAWG()
- 
+
     def enable_outputs(self, channels=None):
         if not channels:
             channels = self._channel_numbers
@@ -63,7 +65,7 @@ class KeysightM3202A_AWG(AwgCommon):
         for channel in channels:
             bit_mask = bit_mask | 0b1 << (channel - 1)
         self.change_setting('enabled_outputs', bit_mask)
- 
+
     def disable_outputs(self, channels=None):
         if not channels:
             channels = self._channel_numbers
@@ -73,33 +75,33 @@ class KeysightM3202A_AWG(AwgCommon):
         for channel in channels:
             bit_mask = bit_mask ^ 0b1 << (channel - 1)
         self.change_setting('enabled_outputs', bit_mask)
- 
+
     def change_setting(self, name, value):
         index = next(i for i, p in enumerate(self.__settings) if p.name == name)
         self.__settings[index].set(value)
- 
+
     def retrieve_setting(self, name):
         index = next(i for i, p in enumerate(self.__settings) if p.name == name)
         return self.__settings[index].get()
- 
+
     def update_running_mode(self, mode):
         raise NotImplementedError
- 
+
     def retrieve_running_mode(self):
         raise NotImplementedError
- 
+
     def update_sampling_rate(self, sampling_rate):
         self.change_setting('sampling_rate', sampling_rate)
- 
+
     def retrieve_sampling_rate(self):
         return self.retrieve_setting('sampling_rate')
- 
+
     def update_gain(self, gain):
         self.change_setting('amplitude', gain)
 
     def retrieve_gain(self):
         return self.retrieve_setting('amplitude')
- 
+
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
         channel_numbers = [ch[0] for ch in sequence_channels]
         if not all([ch in self._channel_numbers for ch in channel_numbers]):
@@ -116,16 +118,16 @@ class KeysightM3202A_AWG(AwgCommon):
         for (channel_number, sequence) in zip(channel_numbers, sequence_items):
             wave_object = AWG.Keysight_M3201A.new_waveform_from_double(0, np.array(sequence))
             self.__awg.load_waveform(wave_object, wave_number)
-            self.__awg.set('frequency_channel_%d'  % channel_number, frequency)
-            self.__awg.set('wave_shape_channel_%d'  % channel_number, wave_shape)
-            self.__awg.set('amplitude_channel_%d'  % channel_number, amplitude)
-            self.__awg.set('offset_channel_%d'  % channel_number, offset)
+            self.__awg.set('frequency_channel_%d' % channel_number, frequency)
+            self.__awg.set('wave_shape_channel_%d' % channel_number, wave_shape)
+            self.__awg.set('amplitude_channel_%d' % channel_number, amplitude)
+            self.__awg.set('offset_channel_%d' % channel_number, offset)
             self.__awg.awg_queue_waveform(channel_number, wave_number, auto_trigger, delay, cycles, prescaler)
             wave_number += 1
- 
+
     def retrieve_waveforms(self):
         raise NotImplementedError
- 
+
     def delete_waveforms(self):
         for channel_nr in self._channel_numbers:
             self.__awg.awg_flush(channel_nr)
