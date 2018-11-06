@@ -90,6 +90,8 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
 
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
         for name, sequence in zip(sequence_names, sequence_items):
+            if 'marker' in name:
+                sequence = sequence.astype(int)
             self.__awg.waveform_to_csv(name, sequence)
         channels = [ch[0] for ch in sequence_channels]
         sequence_program = self.__awg.generate_csv_sequence_program(sequence_names, channels)
