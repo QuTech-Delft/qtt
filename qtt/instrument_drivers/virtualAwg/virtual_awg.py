@@ -62,7 +62,7 @@ class VirtualAwg(Instrument):
                 self.awgs.append(Tektronix5014C_AWG(awg))
             elif type(awg).__name__ == 'Keysight_M3201A':
                 self.awgs.append(KeysightM3202A_AWG(awg))
-            elif type(awg).__name__ == 'ZI_HDAWG8':
+            elif type(awg).__name__ == 'ZIHDAWG8':
                 self.awgs.append(ZurichInstrumentsHDAWG8(awg))
             else:
                 raise VirtualAwgError('Unusable device added!')
