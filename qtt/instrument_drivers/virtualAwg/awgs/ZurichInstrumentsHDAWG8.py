@@ -16,7 +16,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         Args:
             awg (ZIHDAWG8): Instance of the QCoDeS ZIHDAWG8 driver.
             awg_number (int): The number of the AWG that is to be controlled. The ZI HDAWG8 has 4 AWGs and the default
-                              one is the first one(index 0).
+                              one is the first one (index 0).
         """
         super().__init__('ZIHDAWG8', channel_numbers=list(range(0, 8)),
                          marker_numbers=list(range(0, 8)))
@@ -59,12 +59,12 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
 
     def change_setting(self, name, value):
         if name not in self.__settings:
-            raise ValueError('No such settings: {}'.format(name))
+            raise ValueError('No such setting: {}'.format(name))
         self.__settings[name].set(value)
 
     def retrieve_setting(self, name):
         if name not in self.__settings:
-            raise ValueError('No such settings: {}'.format(name))
+            raise ValueError('No such setting: {}'.format(name))
         return self.__settings[name].get()
 
     def update_running_mode(self, mode):
@@ -74,16 +74,16 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         raise NotImplementedError
 
     def update_sampling_rate(self, sampling_rate):
-        for key, value in self.__sampling_rate_map.items():
-            if sampling_rate == value:
-                self.__awg.set('awgs_{}_time'.format(self.__awg_number), key)
+        for sampling_rate_key, sampling_rate_value in self.__sampling_rate_map.items():
+            if sampling_rate == sampling_rate_value:
+                self.__awg.set('awgs_{}_time'.format(self.__awg_number), sampling_rate_key)
                 return
         raise ValueError('Sampling rate {} not in available a list of available values: {}'.format(
             sampling_rate, self.__sampling_rate_map))
 
     def retrieve_sampling_rate(self):
-        sample_rate = self.__awg.get('awgs_{}_time'.format(self.__awg_number))
-        return self.__sampling_rate_map[sample_rate]
+        sampling_rate_key = self.__awg.get('awgs_{}_time'.format(self.__awg_number))
+        return self.__sampling_rate_map[sampling_rate_key]
 
     def update_gain(self, gain):
         [self.__awg.set('sigouts_{}_range'.format(ch), gain) for ch in self._channel_numbers]
@@ -91,7 +91,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
     def retrieve_gain(self):
         gains = [self.__awg.get('sigouts_{}_range'.format(ch)) for ch in self._channel_numbers]
         if not all(g == gains[0] for g in gains):
-            raise ValueError('Not all channel amplitudes are equal. Please reset!')
+            raise ValueError('Not all channel gains are equal. Please reset!')
         return gains[0]
 
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
