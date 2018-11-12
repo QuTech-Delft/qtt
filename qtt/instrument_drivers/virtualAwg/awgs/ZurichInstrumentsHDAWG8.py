@@ -3,6 +3,9 @@ from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonEr
 
 
 class ZurichInstrumentsHDAWG8(AwgCommon):
+    __sampling_rate_map = {0: 2.4e9, 1: 1.2e9, 2: 600e6, 3: 300e6, 4: 150e6, 5: 72e6, 6: 37.50e6, 7: 18.75e6,
+                           8: 9.4e6, 9: 4.5e6, 10: 2.34e6, 11: 1.2e3, 12: 586e3, 13: 293e3}
+
     def __init__(self, awg, awg_number=0):
         """ Implements the common functionality of the AwgCommon for the Zurich Instruments HDAWG8 to be controlled by
         the virtual AWG.
@@ -24,8 +27,6 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
         self.__awg = awg
         self.__awg_number = awg_number
-        self.__sampling_rate_map = {0: 2.4e9, 1: 1.2e9, 2: 600e6, 3: 300e6, 4: 150e6, 5: 72e6, 6: 37.50e6, 7: 18.75e6,
-                                    8: 9.4e6, 9: 4.5e6, 10: 2.34e6, 11: 1.2e3, 12: 586e3, 13: 293e3}
         self.__settings = {'sampling_rate': Parameter(name='sampling_rate', unit='GS/s', initial_value=2.4e9,
                                                       set_cmd=self.update_sampling_rate,
                                                       get_cmd=self.retrieve_sampling_rate)}
@@ -74,16 +75,16 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         raise NotImplementedError
 
     def update_sampling_rate(self, sampling_rate):
-        for sampling_rate_key, sampling_rate_value in self.__sampling_rate_map.items():
+        for sampling_rate_key, sampling_rate_value in ZurichInstrumentsHDAWG8.__sampling_rate_map.items():
             if sampling_rate == sampling_rate_value:
                 self.__awg.set('awgs_{}_time'.format(self.__awg_number), sampling_rate_key)
                 return
         raise ValueError('Sampling rate {} not in available a list of available values: {}'.format(
-            sampling_rate, self.__sampling_rate_map))
+            sampling_rate, ZurichInstrumentsHDAWG8.__sampling_rate_map))
 
     def retrieve_sampling_rate(self):
         sampling_rate_key = self.__awg.get('awgs_{}_time'.format(self.__awg_number))
-        return self.__sampling_rate_map[sampling_rate_key]
+        return ZurichInstrumentsHDAWG8.__sampling_rate_map[sampling_rate_key]
 
     def update_gain(self, gain):
         [self.__awg.set('sigouts_{}_range'.format(ch), gain) for ch in self._channel_numbers]

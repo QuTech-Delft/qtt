@@ -22,7 +22,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             self.zi_hdawg8.enable_outputs([0, 1, 2, 3, 8])
 
         self.zi_hdawg8.enable_outputs([6, 7])
-        calls + [call.enable_channel(ch) for ch in range(6, 7)]
+        calls = [call.enable_channel(ch) for ch in range(6, 7)]
         self.awg.assert_has_calls(calls)
 
     def test_disable_outputs(self):
@@ -34,7 +34,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             self.zi_hdawg8.disable_outputs([0, 1, 2, 3, 8])
 
         self.zi_hdawg8.disable_outputs([6, 7])
-        calls + [call.disable_channel(ch) for ch in range(6, 7)]
+        calls = [call.disable_channel(ch) for ch in range(6, 7)]
         self.awg.assert_has_calls(calls)
 
     def test_change_setting(self):
@@ -58,7 +58,8 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             self.zi_hdawg8.update_sampling_rate(99)
 
     def test_retrieve_sampling_rate(self):
-        self.awg.get.return_value = 5
+        sampling_rate_index = 5
+        self.awg.get.return_value = sampling_rate_index
         self.assertEqual(72e6, self.zi_hdawg8.retrieve_sampling_rate())
 
     def test_update_gain(self):
