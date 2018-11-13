@@ -27,7 +27,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
         self.__awg = awg
         self.__awg_number = awg_number
-        self.__settings = {'sampling_rate': Parameter(name='sampling_rate', unit='GS/s', initial_value=2.4e9,
+        self.__settings = {'sampling_rate': Parameter(name='sampling_rate', unit='GS/s', 
                                                       set_cmd=self.update_sampling_rate,
                                                       get_cmd=self.retrieve_sampling_rate)}
 
