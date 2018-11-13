@@ -165,7 +165,7 @@ sec_to_ns = 1.0e9
 mV_amplitude = 25
 sec_period = 1.0e-3
 
-sine_period = 2 * np.pi * 5e-2 * sec_period
+sine_period = 2 * np.pi * 1e-2 * sec_period
 sine_decay = 5e5
 
 pulse_function = FunctionPT('alpha*exp(-t/tau)*sin(phi*t)', 'duration')
@@ -177,15 +177,12 @@ sequences = {'X2': sequence}
 sequences.update(virtual_awg._VirtualAwg__make_markers(sec_period))
 
 sweep_data = virtual_awg.sequence_gates(sequences)
-
 sweep_data.update({
     'width': 1.0,
     'period': sec_period,
     'samplerate': virtual_awg.awgs[0].retrieve_setting('sampling_rate'),
-    'markerdelay': virtual_awg.digitizer_marker_delay()
-})
+    'markerdelay': virtual_awg.digitizer_marker_delay()})
 
-#%%
 virtual_awg.enable_outputs(['X2'])
 virtual_awg.run()
 
@@ -197,6 +194,7 @@ virtual_awg.disable_outputs(['X2'])
 virtual_awg.stop()
 
 plot_data(data)
+
 
 #%% Close all devices
 
