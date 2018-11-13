@@ -66,7 +66,7 @@ class Tektronix5014C_AWG(AwgCommon):
         modes = ['CONT', 'SEQ']
         if mode not in modes:
             raise AwgCommonError('Invalid AWG mode ({})'.format(mode))
-        self.__awg.set('run_mode', 'CONT')
+        self.__awg.set('run_mode', mode)
 
     def retrieve_running_mode(self):
         self.__awg.get('run_mode')
@@ -99,6 +99,7 @@ class Tektronix5014C_AWG(AwgCommon):
             waveform_data[name][index] = data_array
         if reload:
             self._upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))
+        self._channel_data = channel_data
         self._set_sequence(list(channel_data.keys()), list(channel_data.values()))
 
     def retrieve_waveforms(self):
@@ -107,8 +108,8 @@ class Tektronix5014C_AWG(AwgCommon):
     def _set_sequence(self, channels, sequence):
         if not sequence or len(sequence) != len(channels):
             raise AwgCommonError('Invalid sequence and channel count!')
-        if not all(len(idx) == len(sequence[0]) for idx in sequence):
-            raise AwgCommonError('Invalid sequence list lengthts!')
+        #if not all(len(idx) == len(sequence[0]) for idx in sequence):
+        #    raise AwgCommonError('Invalid sequence list lengthts!')
         request_rows = len(sequence[0])
         current_rows = self.__get_sequence_length()
         if request_rows != current_rows:
@@ -124,6 +125,7 @@ class Tektronix5014C_AWG(AwgCommon):
         self.__awg.set_sqel_goto_state(request_rows, 1)
 
     def _upload_waveforms(self, names, waveforms, file_name='default.awg'):
+        print('waveforms {0}'.format(waveforms))
         pack_count = len(names)
         packed_waveforms = dict()
         [wfs, m1s, m2s] = list(map(list, zip(*waveforms)))
