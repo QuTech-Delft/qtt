@@ -154,7 +154,7 @@ class VirtualAwg(Instrument):
             return False
         return True if gate_names in self._settings.awg_map else False
 
-    def __make_markers(self, period):
+    def __make_markers(self, period, repetitions=1):
         """ Constructs the markers for triggering the digitizer readout and the slave AWG
             start sequence.
 
@@ -164,11 +164,11 @@ class VirtualAwg(Instrument):
         marker_properies = dict()
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             digitizer_marker = Sequencer.make_marker(period, self.digitizer_marker_uptime(),
-                                                     self.digitizer_marker_delay())
+                                                     self.digitizer_marker_delay(), repetitions)
             marker_properies[VirtualAwg.__digitizer_name] = digitizer_marker
         if VirtualAwg.__awg_slave_name in self._settings.awg_map:
             awg_marker = Sequencer.make_marker(period, self.awg_marker_uptime(),
-                                               self.awg_marker_delay())
+                                               self.awg_marker_delay(), repetitions)
             marker_properies[VirtualAwg.__awg_slave_name] = awg_marker
         return marker_properies
 
@@ -265,12 +265,12 @@ class VirtualAwg(Instrument):
             >>> sweep_data = virtualawg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
-        sequences.update(self.__make_markers(period))
 
         period_x = resolution[0] * period
+        sequences.update(self.__make_markers(period_x, repetitions=resolution[1]))
         for gate_name_x, rel_amplitude_x in gates[0].items():
             amplitude_x = rel_amplitude_x * sweep_ranges[0]
-            sequences[gate_name_x] = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width)
+            sequences[gate_name_x] = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width, repetitions=resolution[1])
 
         period_y = resolution[0] * resolution[1] * period
         for gate_name_y, rel_amplitude_y in gates[1].items():

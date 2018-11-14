@@ -22,6 +22,13 @@ def plot_data(digitizer_data):
     plt.show()
 
 
+def plot_data_2d(digitizer_data):
+    plt.figure(); 
+    plt.clf(); 
+    plt.imshow(digitizer_data[0])
+    plt.show()        
+
+
 class QuantumDeviceSettings(Instrument):
 
     def __init__(self, name='settings'):
@@ -85,7 +92,7 @@ settings = QuantumDeviceSettings()
 virtual_awg = VirtualAwg([awg1, awg2], settings)
 
 virtual_awg.digitizer_marker_delay.set(3.5e-5)
-virtual_awg.digitizer_marker_uptime(1.0e-4)
+virtual_awg.digitizer_marker_uptime(1.0e-5)
 
 #virtual_awg.awg_marker_delay.set(0.0)
 #virtual_awg.awg_marker_uptime(5.0e-7)
@@ -140,9 +147,9 @@ virtual_awg.stop()
 plot_data(data)
 
 #%% Example sweep_gates_2D with readout.
-sec_period = 1.0e-3
+sec_period = 5.0e-5
 mV_sweep_ranges = [100, 100]
-resolution = [100, 100]
+resolution = [32, 32]
 gates = [{'X2': 1}, {'P7': 1}]
 sweep_data = virtual_awg.sweep_gates_2d(gates, mV_sweep_ranges, sec_period, resolution)
 
@@ -156,7 +163,7 @@ data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channe
 virtual_awg.disable_outputs(['X2', 'P7'])
 virtual_awg.stop()
 
-plot_data(data)
+plot_data_2d(data)
 
 #%% Example sequence_gates with readout.
 
