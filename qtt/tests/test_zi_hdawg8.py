@@ -1,5 +1,8 @@
 import unittest
+from unittest import mock
 from unittest.mock import MagicMock, call
+
+import numpy as np
 
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommonError
@@ -76,14 +79,15 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             self.zi_hdawg8.retrieve_gain()
 
     def test_upload_waveforms(self):
-        sequence_names = ['seq1', 'seq2', 'seq3']
+        sequence_names = ['seq1', 'mark', 'seq2']
         sequence_channels = [(1, 1), (1, 0, 1), (2, 0)]
-        sequence_items = [range(10), range(1, 11), range(2, 12)]
+        sequence_items = [np.array(range(10)), np.array(range(1, 11)).astype(float), np.array(range(2, 12))]
         self.awg.generate_csv_sequence_program.return_value = 'program'
         self.zi_hdawg8.upload_waveforms(sequence_names, sequence_channels, sequence_items)
-        calls = [call.waveform_to_csv('seq1', range(10)),
-                 call.waveform_to_csv('seq2', range(1, 11)),
-                 call.waveform_to_csv('seq3', range(2, 12)),
-                 call.generate_csv_sequence_program(sequence_names, [2, 2, 3]),
+        calls = [call.waveform_to_csv('seq1', mock.ANY),
+                 call.waveform_to_csv('mark', mock.ANY),
+                 call.waveform_to_csv('seq2', mock.ANY),
+                 call.generate_csv_sequence_program([(2, 'seq1', 'mark'), (3, 'seq2')]),
                  call.upload_sequence_program(0, 'program')]
         self.awg.assert_has_calls(calls)
+        self.assertListEqual(list(range(2,12)), list(self.awg.waveform_to_csv.call_args[0][1]))
