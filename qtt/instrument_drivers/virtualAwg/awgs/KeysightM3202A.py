@@ -1,6 +1,4 @@
-import logging
 import sys
-
 import numpy as np
 
 from qcodes import Parameter
@@ -12,7 +10,7 @@ try:
     sys.path.append("C:\\Program Files (x86)\\Keysight\\SD1\\Libraries\\Python")
     import qcodes.instrument_drivers.Keysight.M3201A as AWG
 except ImportError:
-    logging.error("Keysight module not found!")
+    AWG = None
 
 
 class KeysightM3202A_AWG(AwgCommon):
