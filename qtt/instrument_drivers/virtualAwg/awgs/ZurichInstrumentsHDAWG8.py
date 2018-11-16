@@ -98,7 +98,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
         channel_map = {}
         for name, channel, sequence in zip(sequence_names, sequence_channels, sequence_items):
-            if len(channel) == 3:
+            if len(channel) == 2:
                 sequence = sequence.astype(int)
             channel = channel[0] + 1
             self.__awg.waveform_to_csv(name, sequence)
