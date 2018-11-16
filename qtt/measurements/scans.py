@@ -1410,7 +1410,7 @@ def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
         data_raw = [devicedata[ii] for ii in read_ch]
         data = np.vstack([process_fpga_trace(d, width, Naverage)
                           for d in data_raw])
-    else:
+    elif 'width_horz' in waveform and 'width_vert' in waveform:
         width = [waveform['width_horz'], waveform['width_vert']]
         resolution = waveform['resolution']
         waittime = waveform['period'] * Naverage
@@ -1420,6 +1420,9 @@ def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
         data_raw = [devicedata[ii] for ii in read_ch]
         data = np.array(
             [process_fpga_trace(d, width, resolution=resolution) for d in data_raw])
+    else:
+        raise ValueError('The waveform argument requires to have width or width_horz and width_vert')
+
     return data
 
 
@@ -1454,10 +1457,6 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     paddingpix = 16
     padding = paddingpix / drate
     pretrigger_period = 16 / drate  # waveform['markerdelay'],  16 / samp_freq
-    if 'width' in waveform:
-        width = [waveform['width']]
-    else:
-        width = [waveform['width_horz'], waveform['width_vert']]
     if period is None:
         raise Exception('please set period for block measurements')
     memsize = select_digitizer_memsize(
@@ -1477,10 +1476,16 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     data = data[:, padding_offset +
                 paddingpix:(padding_offset + paddingpix + int(period * drate))]
 
-    if verbose:
-        print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
-            width, data.shape, digitizer.data_memory_size()))
     if process:
+        if 'width' in waveform:
+            width = [waveform['width']]
+        else:
+            width = [waveform['width_horz'], waveform['width_vert']]
+
+        if verbose:
+            print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
+                width, data.shape, digitizer.data_memory_size()))
+
         samplerate = digitizer.sample_rate()
         pre_trigger = digitizer.pretrigger_memory_size()
 

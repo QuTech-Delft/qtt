@@ -334,8 +334,6 @@ class VirtualAwg(Instrument):
         sweep_data.update({'sweeprange_horz': sweep_ranges[0],
                            'sweeprange_vert': sweep_ranges[1],
                            'resolution': resolution,
-                           'width_horz': 1.0,
-                           'width_vert': 1.0,
                            'period': period_x, 'period_vert': period_y,
                            'samplerate': self.awgs[0].retrieve_setting('channel_sampling_rate'),
                            'markerdelay': self.awg_marker_delay()})
