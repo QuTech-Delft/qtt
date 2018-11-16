@@ -87,7 +87,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
         calls = [call.waveform_to_csv('seq1', mock.ANY),
                  call.waveform_to_csv('mark', mock.ANY),
                  call.waveform_to_csv('seq2', mock.ANY),
-                 call.generate_csv_sequence_program([(2, 'seq1', 'mark'), (3, 'seq2')]),
+                 call.generate_csv_sequence_program([(2, 'seq1', 'mark'), (3, 'seq2', None)]),
                  call.upload_sequence_program(0, 'program')]
         self.awg.assert_has_calls(calls)
         self.assertListEqual(list(range(2,12)), list(self.awg.waveform_to_csv.call_args[0][1]))

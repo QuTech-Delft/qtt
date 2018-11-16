@@ -108,6 +108,8 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
                 channel_map[channel] = [name]
         wave_infos = []
         for channel, waves in channel_map.items():
+            if len(waves) < 2:
+                waves.append(None)
             wave_infos.append((channel, *waves))
         sequence_program = self.__awg.generate_csv_sequence_program(wave_infos)
         self.__awg.upload_sequence_program(self.__awg_number, sequence_program)
