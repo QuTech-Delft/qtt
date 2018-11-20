@@ -320,16 +320,5 @@ class VirtualDAC(Instrument):
 virtual_IVVI = VirtualDAC
 
 
-def test_VirtualDAC():
-    from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-    ivvi= VirtualIVVI(qtt.measurements.scans.instrumentName('ivvi'), model=None)
-    gate_map={ 'P1' : (0,1), 'P2': (0,2), 'P3': (ivvi.name, 3)}
-    
-    gates=VirtualDAC('virtualdac_testing', [ivvi], gate_map=gate_map)
-    assert(gates.P1.get()==0)
-    gates.P3.set(10)
-    assert(gates.P3()==10.0)
-    
-    gates.close()
-    ivvi.close()
+
     

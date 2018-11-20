@@ -542,16 +542,6 @@ def get_one_dots(full=1, sdidx=[]):
     return one_dots
 
 #%%
-def test_virtualdot():
-    nr_ivvi, gate_map, gates, bottomgates = generate_configuration(6)
-    
-    station = initialize(reinit=True, verbose=0)
-    _=station.keithley1.amplitude()
-    _=station.keithley4.amplitude()
-    close(verbose=0)
-
-    assert('P5' in gates)
-    assert('SD1a' in gates)
 
 
 if __name__ == '__main__' and 1:
@@ -563,8 +553,6 @@ if __name__ == '__main__' and 1:
     except:
         pass
             
-    test_virtualdot()
-
     station = initialize(reinit=True, verbose=2)
     self=station.model
     model = station.model
