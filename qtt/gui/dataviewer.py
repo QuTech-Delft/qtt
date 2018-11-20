@@ -17,8 +17,7 @@ import qtt
 # %% Main class
 
 
-class DataViewer(QtWidgets.QWidget):
-    """ Simple data browser for Qcodes datasets """
+class DataViewer(QtWidgets.QMainWindow):
 
     def __init__(self, datadir=None, window_title='Data browser',
                  default_parameter='amplitude', extensions=['dat', 'hdf5'],
@@ -31,19 +30,21 @@ class DataViewer(QtWidgets.QWidget):
             default_parameter (string): name of default parameter to plot
         """
         super(DataViewer, self).__init__()
-        self.verbose = verbose 
+        self.verbose = verbose  # for debugging
         self.default_parameter = default_parameter
+        self.datadirlist = [None, None]
         if datadir is None:
             datadir = qcodes.DataSet.default_io.base_location
 
         self.extensions = extensions
 
         # setup GUI
+
         self.dataset = None
         self.text = QtWidgets.QLabel()
 
         # logtree
-        self.logtree = QtWidgets.QTreeView()  
+        self.logtree = QtWidgets.QTreeView()  # QTreeWidget
         self.logtree.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
         self._treemodel = QtGui.QStandardItemModel()
@@ -64,21 +65,16 @@ class DataViewer(QtWidgets.QWidget):
             self.plotwindow = self.qplot.win
 
         topLayout = QtWidgets.QHBoxLayout()
-        self.select_dir = QtWidgets.QPushButton()
-        self.select_dir.setText('Select directory')
 
-        self.reloadbutton = QtWidgets.QPushButton()
-        self.reloadbutton.setText('Reload data')
-
-        self.loadinfobutton = QtWidgets.QPushButton()
-        self.loadinfobutton.setText('Preload info')
+        self.filterbutton = QtWidgets.QPushButton()
+        self.filterbutton.setText('Filter data')
+        self.filtertext = QtWidgets.QLineEdit()
 
         self.outCombo = QtWidgets.QComboBox()
 
         topLayout.addWidget(self.text)
-        topLayout.addWidget(self.select_dir)
-        topLayout.addWidget(self.reloadbutton)
-        topLayout.addWidget(self.loadinfobutton)
+        topLayout.addWidget(self.filterbutton)
+        topLayout.addWidget(self.filtertext)
 
         treesLayout = QtWidgets.QHBoxLayout()
         treesLayout.addWidget(self.logtree)
@@ -102,7 +98,10 @@ class DataViewer(QtWidgets.QWidget):
 
         vertLayout.addItem(bLayout)
 
-        self.setLayout(vertLayout)
+#        self.setLayout(vertLayout)
+        widget = QtWidgets.QWidget()
+        widget.setLayout(vertLayout)
+        self.setCentralWidget(widget)
 
         self.setWindowTitle(window_title)
         self.logtree.header().resizeSection(0, 280)
@@ -115,13 +114,35 @@ class DataViewer(QtWidgets.QWidget):
 
         self.logtree.doubleClicked.connect(self.logCallback)
         self.outCombo.currentIndexChanged.connect(self.comboCallback)
-        self.select_dir.clicked.connect(self.selectDirectory)
-        self.reloadbutton.clicked.connect(self.updateLogs)
-        self.loadinfobutton.clicked.connect(self.loadInfo)
+        self.filterbutton.clicked.connect(
+            lambda: self.updateLogs(
+                filter_str=self.filtertext.text()))
         self.pptbutton.clicked.connect(self.pptCallback)
         self.clipboardbutton.clicked.connect(self.clipboardCallback)
+
+        menuBar = self.menuBar()
+
+        menuDict = {
+            '&Data': {'&Reload Data': self.updateLogs,
+                      '&Preload all Info': self.loadInfo,
+                      '&Quit': self.close},
+            '&Folder': {'&Select Dir1': lambda: self.selectDirectory(index=0),
+                        'Select &Dir2': lambda: self.selectDirectory(index=1),
+                        '&Toggle Dirs': self.toggleDatadir
+                        },
+            '&Help': {'&Info': self.showHelpBox}
+        }
+        for (k, menu) in menuDict.items():
+            mb = menuBar.addMenu(k)
+            for (kk, action) in menu.items():
+
+                act = QtWidgets.QAction(kk, self)
+                mb.addAction(act)
+                act.triggered.connect(action)
+
         if self.verbose >= 2:
             print('created gui...')
+
         # get logs from disk
         self.updateLogs()
         self.datatag = None
@@ -131,18 +152,39 @@ class DataViewer(QtWidgets.QWidget):
 
         self.show()
 
-    def setDatadir(self, datadir):
+    def setDatadir(self, datadir, index=0):
+        self.datadirlist[index] = datadir
+        self.datadirindex = index
         self.datadir = datadir
         self.io = qcodes.DiskIO(datadir)
         logging.info('DataViewer: data directory %s' % datadir)
         self.text.setText('Log files at %s' %
                           self.datadir)
 
+    def showHelpBox(self):
+        """ Show help dialog """
+        self.infotext = "Dataviewer for qcodes datasets"
+
+        QtWidgets.QMessageBox.information(
+            self, 'qtt dataviwer control info', self.infotext)
+
+    def toggleDatadir(self):
+        newindex = (self.datadirindex + 1) % len(self.datadirlist)
+        print(newindex)
+        datadir = self.datadirlist[newindex]
+        self.datadirindex = newindex
+        self.datadir = datadir
+        self.io = qcodes.DiskIO(datadir)
+        logging.info('DataViewer: data directory %s' % datadir[newindex])
+        self.text.setText('Log files at %s' %
+                          self.datadir)
+        self.updateLogs()
+
     def pptCallback(self):
         if self.dataset is None:
             print('no data selected')
             return
-        qtt.utilities.tools.addPPT_dataset(self.dataset, customfig=self.qplot)
+        qtt.tools.addPPT_dataset(self.dataset, customfig=self.qplot)
 
     def clipboardCallback(self):
         self.qplot.copyToClipboard()
@@ -152,18 +194,22 @@ class DataViewer(QtWidgets.QWidget):
         try:
             if 'loop' in metadata.keys():
                 sv = metadata['loop']['sweep_values']
-                params.append('%s [%.2f to %.2f %s]' % (sv['parameter']['label'],
-                                                        sv['values'][0]['first'],
-                                                        sv['values'][0]['last'],
-                                                        sv['parameter']['unit']))
+                params.append(
+                    '%s [%.2f to %.2f %s]' %
+                    (sv['parameter']['label'],
+                     sv['values'][0]['first'],
+                        sv['values'][0]['last'],
+                        sv['parameter']['unit']))
 
                 for act in metadata['loop']['actions']:
                     if 'sweep_values' in act.keys():
                         sv = act['sweep_values']
-                        params.append('%s [%.2f - %.2f %s]' % (sv['parameter']['label'],
-                                                               sv['values'][0]['first'],
-                                                               sv['values'][0]['last'],
-                                                               sv['parameter']['unit']))
+                        params.append(
+                            '%s [%.2f - %.2f %s]' %
+                            (sv['parameter']['label'],
+                             sv['values'][0]['first'],
+                                sv['values'][0]['last'],
+                                sv['parameter']['unit']))
                 infotxt = ' ,'.join(params)
                 infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (
                     k, v) in metadata['arrays'].items() if not v['is_setpoint']])
@@ -208,18 +254,19 @@ class DataViewer(QtWidgets.QWidget):
         except Exception as e:
             print(e)
 
-    def selectDirectory(self):
+    def selectDirectory(self, index=0):
         from qtpy.QtWidgets import QFileDialog
         d = QtWidgets.QFileDialog(caption='Select data directory')
         d.setFileMode(QFileDialog.Directory)
         if d.exec():
             datadir = d.selectedFiles()[0]
-            self.setDatadir(datadir)
+            self.setDatadir(datadir, index)
             print('update logs')
             self.updateLogs()
 
     @staticmethod
-    def find_datafiles(datadir, extensions=['dat', 'hdf5'], show_progress=True):
+    def find_datafiles(datadir, extensions=[
+                       'dat', 'hdf5'], show_progress=True):
         """ Find all datasets in a directory with a given extension """
         dd = []
         for e in extensions:
@@ -229,14 +276,17 @@ class DataViewer(QtWidgets.QWidget):
         datafiles = sorted(dd)
         #datafiles = [os.path.join(datadir, d) for d in datafiles]
         return datafiles
-        
-    def updateLogs(self):
+
+    def updateLogs(self, filter_str=None):
         ''' Update the list of measurements '''
         model = self._treemodel
-        
-        self.datafiles=self.find_datafiles(self.datadir, self.extensions)
-        dd=self.datafiles
-        
+
+        self.datafiles = self.find_datafiles(self.datadir, self.extensions)
+        dd = self.datafiles
+
+        if filter_str:
+            dd = [s for s in dd if filter_str in s]
+
         if self.verbose:
             print('DataViewer: found %d files' % (len(dd)))
 
@@ -307,12 +357,16 @@ class DataViewer(QtWidgets.QWidget):
             self.meta_tabs.addTab(self._create_meta_tree(meta['gates']),
                                   'gates')
         elif meta.get('station', dict()).get('instruments', dict()).get('gates', None) is not None:
-            self.meta_tabs.addTab(self._create_meta_tree(meta['station']['instruments']['gates']),
-                                  'gates')
+            self.meta_tabs.addTab(
+                self._create_meta_tree(
+                    meta['station']['instruments']['gates']),
+                'gates')
         if meta.get('station', dict()).get('instruments', None) is not None:
             if 'instruments' in meta['station'].keys():
-                self.meta_tabs.addTab(self._create_meta_tree(meta['station']['instruments']),
-                                      'instruments')
+                self.meta_tabs.addTab(
+                    self._create_meta_tree(
+                        meta['station']['instruments']),
+                    'instruments')
 
         self.meta_tabs.addTab(self._create_meta_tree(meta), 'metadata')
 
