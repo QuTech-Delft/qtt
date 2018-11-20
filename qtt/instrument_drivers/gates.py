@@ -82,6 +82,7 @@ class VirtualDAC(Instrument):
         self.get_all()
 
     def _instrument_index(self, instrument):
+        """ From an instrument name or index return the index """
         if isinstance(instrument, str):
                 instrument_index=self._instrument_names.index(instrument)
         else:
@@ -170,7 +171,7 @@ class VirtualDAC(Instrument):
             if gx is None:
                 # gate is not connected
                 continue
-            instrument = self._instrument_list[gx[0]]
+            instrument = self._instrument_list[self._instrument_index(gx[0])]
             param = self.get_instrument_parameter(g)
             param.vals = Numbers(bnds[0], max_value=bnds[1])
             if hasattr(instrument, 'adjust_parameter_validator'):
@@ -278,7 +279,7 @@ class VirtualDAC(Instrument):
         gates = self
         dot = graphviz.Digraph(name=self.name)
 
-        inames = [x.name for x in gates._instrument_list]
+        inames = [instrument.name for instrument in gates._instrument_list]
 
         cgates = graphviz.Digraph('cluster_gates')
         cgates.body.append('color=lightgrey')
