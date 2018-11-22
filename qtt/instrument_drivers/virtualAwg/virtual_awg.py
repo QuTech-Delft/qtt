@@ -9,7 +9,6 @@ from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 
 
-
 class VirtualAwgError(Exception):
     """ Exception for a specific error related to the virtual AWG."""
 
@@ -94,8 +93,9 @@ class VirtualAwg(Instrument):
 
     def enable_outputs(self, gate_names):
         """ Sets the given gates output to enabled. The gate map translates the given gate
-            names to the correct AWG and channels. A start command is required to
-            enable the outputs.
+            names to the correct AWG and channels. The digitizer and awg marker channels
+            are automatically enabled if the channels are provided by the setttings awg_map.
+            A start command is required to enable the outputs.
 
         Arguments;
             gate_names (list): The names of the gates which needs to be enabled.
@@ -110,11 +110,12 @@ class VirtualAwg(Instrument):
 
     def disable_outputs(self, gate_names):
         """ Sets the given gates output to disabled. The gate map translates the given gate
-            names to the correct AWG and channels. A start command is required to
-            enable the outputs.
+            names to the correct AWG and channels. The digitizer and awg marker channels
+            are automatically disabled if the channels are provided by the setttings awg_map.
+            A start command is required to enable the outputs.
 
         Arguments:
-            gate_names (list) The names of the gates which needs to be enabled.
+            gate_names (list) The names of the gates which needs to be disabled.
         """
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             gate_names.extend([VirtualAwg.__digitizer_name])
@@ -156,10 +157,11 @@ class VirtualAwg(Instrument):
 
     def __make_markers(self, period, repetitions=1):
         """ Constructs the markers for triggering the digitizer readout and the slave AWG
-            start sequence.
+            start sequence. The sequence length equals the period x repetitions.
 
         Arguments:
             period (float): The period of the markers in seconds.
+            repetitions (int): The number of markers in the sequence.
         """
         marker_properies = dict()
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
@@ -369,7 +371,7 @@ class VirtualAwg(Instrument):
                     continue
 
                 sequence_data = Sequencer.get_data(sequence, sampling_rate)
-                if not marker_number:                    
+                if not marker_number:
                     awg_to_plunger = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
                     scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt * awg_to_plunger / vpp_amplitude
                     sequence_data *= scaling_ratio
