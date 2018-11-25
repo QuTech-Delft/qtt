@@ -57,7 +57,7 @@ class VirtualMeter(Instrument):
 
 class VirtualIVVI(Instrument):
 
-    def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], dac_unit = 'a.u.', **kwargs):
+    def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], dac_unit='a.u.', **kwargs):
         """ Virtual instrument representing a DAC
 
         Args:
