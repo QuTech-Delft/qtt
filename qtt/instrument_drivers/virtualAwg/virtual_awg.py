@@ -201,7 +201,7 @@ class VirtualAwg(Instrument):
             sequences[gate_name] = Sequencer.make_square_wave(amplitude, period)
         sweep_data = self.sequence_gates(sequences, do_upload)
         sweep_data.update({'sweeprange': sweep_range, 'period': period})
-        if VirtualAwg.__digitizer_name in self._settings.gate_map:
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
 
