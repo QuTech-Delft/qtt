@@ -174,6 +174,35 @@ class VirtualAwg(Instrument):
             marker_properies[VirtualAwg.__awg_slave_name] = awg_marker
         return marker_properies
 
+    def update_digitizer_marker_settings(self, uptime, delay):
+        """ Updates the marker settings of the AWG to trigger the digitizer. Note that the
+            uptime and delay time in seconds must not be bigger then the period of the
+            uploaded waveform.
+
+        Arguments:
+            uptime (float): The marker up period in seconds.
+            offset (float): The marker delay in seconds.
+        """
+        if not VirtualAwg.__digitizer_name in self._settings.awg_map:
+            raise ValueError('Digitizer marker not present in settings awg map!')
+        self.digitizer_marker_uptime(uptime)
+        self.digitizer_marker_delay(delay)
+
+    def update_slave_awg_marker_settings(self, uptime, delay):
+        """ Updates the marker settings of the AWG to trigger the other AWG's. Note that the
+            uptime and delay time in seconds must not be bigger then the period of the
+            uploaded waveform.
+
+        Arguments:
+            awg_number (int): The AWG number for the settings that will be changed.
+            uptime (float): The marker up period in seconds.
+            offset (float): The marker delay in seconds.
+        """
+        if not VirtualAwg.__awg_slave_name in self._settings.awg_map:
+            raise ValueError('Slave AWG marker not present in settings awg map!')
+        self.awg_marker_uptime(uptime)
+        self.awg_marker_delay(delay)
+
     def pulse_gates(self, gates, sweep_range, period, do_upload=True):
         """ Supplies a square wave to the given gates and returns the settings required
             for processing and constucting the readout times for the digitizer.
