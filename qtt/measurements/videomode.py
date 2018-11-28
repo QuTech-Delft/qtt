@@ -165,16 +165,16 @@ class VideoMode:
         self.name = name
 
         # parse instrument
-        if 'fpga' in station.components:
-            self.sampling_frequency = station.fpga.sampling_frequency
-        elif 'digitizer' in station.components:
+        minstrumenthandle = qtt.measurements.scans.get_instrument(self.minstrumenthandle, station)
+        
+        if minstrumenthandle.name in ['digitizer','m4i']:
             if sample_rate == 'default':
-                self.sampling_frequency = station.digitizer.sample_rate
+                self.sampling_frequency = minstrumenthandle.sample_rate
             else:
-                station.digitizer.sample_rate(sample_rate)
+                minstrumenthandle.sample_rate(sample_rate)
                 self.sampling_frequency = station.digitizer.sample_rate
-        elif 'ZIUHFLI' in station.components:
-            self.sampling_frequency = station.ZIUHFLI.scope_samplingrate
+        elif minstrumenthandle.name in ['ZIUHFLI', 'ziuhfli']:
+            self.sampling_frequency = minstrumenthandle.scope_samplingrate
         else:
             try:
                 minstrumenthandle = qtt.measurements.scans.get_instrument(

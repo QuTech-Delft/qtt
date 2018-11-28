@@ -1560,9 +1560,9 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
 
     scope_records = get_uhfli_scope_records(zi.device, zi.daq, zi.scope, 1)
     data = []
-    for input_channel in channels:
+    for index, input_channel in enumerate(channels):
         for index, record in enumerate(scope_records['/{}/scopes/0/wave'.format(zi.device)]):
-            wave = record[0]['wave'][input_channel - 1, :]
+            wave = record[0]['wave'][index, :]
             data.append(wave)
     return data
 
