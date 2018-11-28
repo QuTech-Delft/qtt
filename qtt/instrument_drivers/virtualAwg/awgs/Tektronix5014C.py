@@ -66,7 +66,7 @@ class Tektronix5014C_AWG(AwgCommon):
         modes = ['CONT', 'SEQ']
         if mode not in modes:
             raise AwgCommonError('Invalid AWG mode ({})'.format(mode))
-        self.__awg.set('run_mode', 'CONT')
+        self.__awg.set('run_mode', mode)
 
     def retrieve_running_mode(self):
         self.__awg.get('run_mode')
@@ -99,6 +99,7 @@ class Tektronix5014C_AWG(AwgCommon):
             waveform_data[name][index] = data_array
         if reload:
             self._upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))
+        self._channel_data = channel_data
         self._set_sequence(list(channel_data.keys()), list(channel_data.values()))
 
     def retrieve_waveforms(self):

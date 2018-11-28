@@ -9,7 +9,6 @@ from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 
 
-
 class VirtualAwgError(Exception):
     """ Exception for a specific error related to the virtual AWG."""
 
@@ -35,7 +34,7 @@ class VirtualAwg(Instrument):
             awgs (list): A list with AWG instances. Currently the following AWG's are supported:
                          Tektronix5014C, KeysightM3202A and the ZurichInstrumentsHDAWG8.
             settings (Instument): A class containing the settings of the quantum device, which are the
-                                  gate_map (specificies the relation between the quantum gates, marker outputs
+                                  awg_map (specificies the relation between the quantum gates, marker outputs
                                   and AWG channels) and the awg_to_plunger (specifies the attenuation factor between
                                   the AWG output and the voltage on the plunger).
         """
@@ -47,7 +46,7 @@ class VirtualAwg(Instrument):
 
     def _get_virtual_info(self):
         """ Returns the data needed for snapshot of instrument."""
-        return {'gate_map': self._settings.gate_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
+        return {'awg_map': self._settings.awg_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
 
     def __set_hardware(self, awgs):
         """ Sets the virtual AWG backends using the QCoDeS driver. Currently the following AWG are supported:
@@ -73,10 +72,10 @@ class VirtualAwg(Instrument):
         """ Constructs the parameters needed for setting the marker output settings for
             triggering the digitizer readout and starting slave AWG's when running a sequence.
         """
-        if VirtualAwg.__awg_slave_name in self._settings.gate_map:
+        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
             self.add_parameter('awg_marker_delay', initial_value=0, set_cmd=None)
             self.add_parameter('awg_marker_uptime', initial_value=1e-8, set_cmd=None)
-        if VirtualAwg.__digitizer_name in self._settings.gate_map:
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
             self.add_parameter('digitizer_marker_delay', initial_value=0, set_cmd=None)
             self.add_parameter('digitizer_marker_uptime', initial_value=1e-8, set_cmd=None)
 
@@ -94,34 +93,36 @@ class VirtualAwg(Instrument):
 
     def enable_outputs(self, gate_names):
         """ Sets the given gates output to enabled. The gate map translates the given gate
-            names to the correct AWG and channels. A start command is required to
-            enable the outputs.
+            names to the correct AWG and channels. The digitizer and awg marker channels
+            are automatically enabled if the channels are provided by the setttings awg_map.
+            A start command is required to enable the outputs.
 
         Arguments;
             gate_names (list): The names of the gates which needs to be enabled.
         """
-        if VirtualAwg.__digitizer_name in self._settings.gate_map:
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
             gate_names.extend([VirtualAwg.__digitizer_name])
-        if VirtualAwg.__awg_slave_name in self._settings.gate_map:
+        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
             gate_names.extend([VirtualAwg.__awg_slave_name])
         for name in gate_names:
-            (awg_number, channel_number, *_) = self._settings.gate_map[name]
+            (awg_number, channel_number, *_) = self._settings.awg_map[name]
             self.awgs[awg_number].enable_outputs([channel_number])
 
     def disable_outputs(self, gate_names):
         """ Sets the given gates output to disabled. The gate map translates the given gate
-            names to the correct AWG and channels. A start command is required to
-            enable the outputs.
+            names to the correct AWG and channels. The digitizer and awg marker channels
+            are automatically disabled if the channels are provided by the setttings awg_map.
+            A start command is required to enable the outputs.
 
         Arguments:
-            gate_names (list) The names of the gates which needs to be enabled.
+            gate_names (list) The names of the gates which needs to be disabled.
         """
-        if VirtualAwg.__digitizer_name in self._settings.gate_map:
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
             gate_names.extend([VirtualAwg.__digitizer_name])
-        if VirtualAwg.__awg_slave_name in self._settings.gate_map:
+        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
             gate_names.extend([VirtualAwg.__awg_slave_name])
         for name in gate_names:
-            (awg_number, channel_number, *_) = self._settings.gate_map[name]
+            (awg_number, channel_number, *_) = self._settings.awg_map[name]
             self.awgs[awg_number].disable_outputs([channel_number])
 
     def update_setting(self, awg_number, setting, value):
@@ -152,25 +153,55 @@ class VirtualAwg(Instrument):
             return np.all([self.are_awg_gates(g) for g in gate_names])
         if VirtualAwg.__digitizer_name or VirtualAwg.__awg_slave_name in gate_names:
             return False
-        return True if gate_names in self._settings.gate_map else False
+        return True if gate_names in self._settings.awg_map else False
 
-    def __make_markers(self, period):
+    def __make_markers(self, period, repetitions=1):
         """ Constructs the markers for triggering the digitizer readout and the slave AWG
-            start sequence.
+            start sequence. The sequence length equals the period x repetitions.
 
         Arguments:
             period (float): The period of the markers in seconds.
+            repetitions (int): The number of markers in the sequence.
         """
         marker_properies = dict()
-        if VirtualAwg.__digitizer_name in self._settings.gate_map:
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
             digitizer_marker = Sequencer.make_marker(period, self.digitizer_marker_uptime(),
-                                                     self.digitizer_marker_delay())
+                                                     self.digitizer_marker_delay(), repetitions)
             marker_properies[VirtualAwg.__digitizer_name] = digitizer_marker
-        if VirtualAwg.__awg_slave_name in self._settings.gate_map:
+        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
             awg_marker = Sequencer.make_marker(period, self.awg_marker_uptime(),
-                                               self.awg_marker_delay())
+                                               self.awg_marker_delay(), repetitions)
             marker_properies[VirtualAwg.__awg_slave_name] = awg_marker
         return marker_properies
+
+    def update_digitizer_marker_settings(self, uptime, delay):
+        """ Updates the marker settings of the AWG to trigger the digitizer. Note that the
+            uptime and delay time in seconds must not be bigger then the period of the
+            uploaded waveform.
+
+        Arguments:
+            uptime (float): The marker up period in seconds.
+            offset (float): The marker delay in seconds.
+        """
+        if not VirtualAwg.__digitizer_name in self._settings.awg_map:
+            raise ValueError('Digitizer marker not present in settings awg map!')
+        self.digitizer_marker_uptime(uptime)
+        self.digitizer_marker_delay(delay)
+
+    def update_slave_awg_marker_settings(self, uptime, delay):
+        """ Updates the marker settings of the AWG to trigger the other AWG's. Note that the
+            uptime and delay time in seconds must not be bigger then the period of the
+            uploaded waveform.
+
+        Arguments:
+            awg_number (int): The AWG number for the settings that will be changed.
+            uptime (float): The marker up period in seconds.
+            offset (float): The marker delay in seconds.
+        """
+        if not VirtualAwg.__awg_slave_name in self._settings.awg_map:
+            raise ValueError('Slave AWG marker not present in settings awg map!')
+        self.awg_marker_uptime(uptime)
+        self.awg_marker_delay(delay)
 
     def pulse_gates(self, gates, sweep_range, period, do_upload=True):
         """ Supplies a square wave to the given gates and returns the settings required
@@ -199,7 +230,7 @@ class VirtualAwg(Instrument):
             sequences[gate_name] = Sequencer.make_square_wave(amplitude, period)
         sweep_data = self.sequence_gates(sequences, do_upload)
         sweep_data.update({'sweeprange': sweep_range, 'period': period})
-        if VirtualAwg.__digitizer_name in self._settings.gate_map:
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
 
@@ -233,7 +264,7 @@ class VirtualAwg(Instrument):
             sequences[gate_name] = Sequencer.make_sawtooth_wave(amplitude, period, width)
         sweep_data = self.sequence_gates(sequences, do_upload)
         sweep_data.update({'sweeprange': sweep_range, 'period': period, 'width': width})
-        if VirtualAwg.__digitizer_name in self._settings.gate_map:
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
 
@@ -265,12 +296,12 @@ class VirtualAwg(Instrument):
             >>> sweep_data = virtualawg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
-        sequences.update(self.__make_markers(period))
 
         period_x = resolution[0] * period
+        sequences.update(self.__make_markers(period_x, repetitions=resolution[1]))
         for gate_name_x, rel_amplitude_x in gates[0].items():
             amplitude_x = rel_amplitude_x * sweep_ranges[0]
-            sequences[gate_name_x] = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width)
+            sequences[gate_name_x] = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width, repetitions=resolution[1])
 
         period_y = resolution[0] * resolution[1] * period
         for gate_name_y, rel_amplitude_y in gates[1].items():
@@ -286,7 +317,7 @@ class VirtualAwg(Instrument):
             'resolution': resolution,
             'period': period_y, 'period_horz': period_x,
             'samplerate': self.awgs[0].retrieve_setting('sampling_rate'),
-            'markerdelay': self.awg_marker_delay()
+            'markerdelay': self.digitizer_marker_delay()
         })
         return sweep_data
 
@@ -354,6 +385,7 @@ class VirtualAwg(Instrument):
             >>> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude_in_volt, period_in_seconds)
             >>> virual_awg.sequence_gates(sawtooth_signal)
         """
+        upload_data = []
         if do_upload:
             _ = [awg.delete_waveforms() for awg in self.awgs]
         for number in self.__awg_range:
@@ -363,21 +395,24 @@ class VirtualAwg(Instrument):
             vpp_amplitude = self.awgs[number].retrieve_gain()
             sampling_rate = self.awgs[number].retrieve_sampling_rate()
             for gate_name, sequence in sequences.items():
-                (awg_number, channel_number, *marker_number) = self._settings.gate_map[gate_name]
+                (awg_number, channel_number, *marker_number) = self._settings.awg_map[gate_name]
                 if awg_number != number:
                     continue
-                awg_to_plunger = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
-                scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt * awg_to_plunger / vpp_amplitude
 
-                sample_data = Sequencer.get_data(sequence, sampling_rate)
-                sequence_data = sample_data if marker_number else sample_data * scaling_ratio
+                sequence_data = Sequencer.get_data(sequence, sampling_rate)
+                if not marker_number:
+                    awg_to_plunger = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
+                    scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt * awg_to_plunger / vpp_amplitude
+                    sequence_data *= scaling_ratio
 
                 sequence_names.append('{}_{}'.format(gate_name, sequence['name']))
                 sequence_channels.append((channel_number, *marker_number))
                 sequence_items.append(sequence_data)
-            if do_upload:
+
+            upload_data.append((sequence_names, sequence_channels, sequence_items))
+            if do_upload and sequence_items:
                 self.awgs[number].upload_waveforms(sequence_names, sequence_channels, sequence_items)
-        return {'gate_comb': sequences}
+        return {'gate_comb': sequences, 'upload_data': upload_data}
 
 
 # UNITTESTS #
@@ -392,7 +427,7 @@ def test_init_HasNoErrors():
 
         def __init__(self):
             super().__init__('settings')
-            self.gate_map = {
+            self.awg_map = {
                 'P1': (0, 1),
                 'P2': (0, 2),
                 'dig_mk': (0, 1, 1)
