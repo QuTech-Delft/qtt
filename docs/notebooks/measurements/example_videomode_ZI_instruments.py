@@ -82,3 +82,7 @@ video_mode = VideoMode(station, sweepparams='P1', sweepranges=100,
 #%% Execute the run or press the run button
 
 video_mode.run()
+
+#%%
+awg.disable_channel(4)
+
