@@ -225,11 +225,10 @@ class sensingdot_t:
             'value function is not defined for this sensing dot object')
 
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
-        """Make 1D-scan of the sensing dot."""
+        """ Make 1D-scan of the sensing dot."""
         print('### sensing dot scan')
         minstrument = sd.minstrument
         if sd.index is not None:
-            # legacy code
             minstrument = [sd.index]
         gg = sd.gg
         sdval = sd.sdval
@@ -239,11 +238,8 @@ class sensingdot_t:
             gates.set(gg[ii], sdval[ii])
 
         startval = sdval[1] + scanrange
-        startval = np.minimum(startval, 300)
         endval = sdval[1] - scanrange
-        endval = np.maximum(endval, -700)
-
-        wait_time = .8
+        wait_time = 0.8
         try:
             wait_time = sd.station.gate_settle(gg[1])
         except:
@@ -258,11 +254,8 @@ class sensingdot_t:
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
-        print('sensingdot_t: scan1D: gate %s, wait_time %.3f' %
-              (sd.gg[1], wait_time))
-
+        print('sensingdot_t: scan1D: gate %s, wait_time %.3f' % (sd.gg[1], wait_time))
         alldata = qtt.measurements.scans.scan1D(sd.station, scanjob=scanjob1)
-
         return alldata
 
     def detuning_scan(sd, stepsize=2, nsteps=5, verbose=1, fig=None):

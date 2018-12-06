@@ -1,35 +1,13 @@
 from unittest import TestCase
 
-import qcodes
-import qcodes.tests.data_mocks
 
 import qtt.data
 import qtt.measurements.scans
-from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
 from qtt.simulation.dotsystem import TripleDot
 
+from qtt.simulation.virtual_dot_array import generate_configuration
 
 #%%
-
-
-class TestVirtualGates(TestCase):
-
-    def setUp(self):
-        gate_map = {
-            'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4),
-            'L': (0, 5), 'D1': (0, 6), 'R': (0, 7)}
-
-        self.ivvi = VirtualIVVI(qtt.measurements.scans.instrumentName('ivvi'), model=None)
-        self.gates = virtual_gates(qtt.measurements.scans.instrumentName('gates'), instruments=[self.ivvi], gate_map=gate_map)
-
-    def tearDown(self):
-        self.gates.close()
-        self.ivvi.close()
-
-    def test_gates(self):
-        self.gates.R.set(100)
-        self.assertEqual(self.gates.R.get(), 100)
 
 
 class TestVirtualDot(TestCase):
@@ -40,11 +18,22 @@ class TestVirtualDot(TestCase):
     def tearDown(self):
         pass
 
+    def test_virtualdot(self):
+        nr_ivvi, gate_map, gates, bottomgates = generate_configuration(6)
+        
+        station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
+        _=station.keithley1.amplitude()
+        _=station.keithley4.amplitude()
+    
+        self.assertTrue('P5' in gates)
+        self.assertTrue('SD1a' in gates)
+        qtt.simulation.virtual_dot_array.close(verbose=0)
+
     def test_dotmodel(self):
         self.ds.calculate_energies({})
 
 
 if __name__ == '__main__':
-    t = TestVirtualGates()
-    t = TestVirtualDot()
+    import unittest
+    unittest.main()
     pass

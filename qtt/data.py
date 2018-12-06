@@ -62,6 +62,7 @@ def DataSet_to_dictionary(data_set, include_data=True, include_metadata=True):
 
 
 def test_dataset_to_dictionary():
+    import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet2D()
     dct = DataSet_to_dictionary(ds, include_data=False, include_metadata=False)
     assert(dct['metadata'] is None)

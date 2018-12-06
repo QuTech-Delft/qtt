@@ -5,6 +5,7 @@
 """
 
 #%% Load packages
+import numpy as np
 import logging
 from functools import partial
 
@@ -25,7 +26,8 @@ class VirtualMeter(Instrument):
 
         Args:
             name (str)
-            model (object): class that provides a `.get` function
+            model (object or None): Class that provides a `.get` function. If the model is None, then the amplitude
+                                    parameter returns a random value
 
         """
         super().__init__(name, **kwargs)
@@ -35,17 +37,14 @@ class VirtualMeter(Instrument):
         self.add_parameter(g,
                            label='%s amplitude' % name,
                            unit='a.u.',
-                           get_cmd=partial(self.get_gate, g),
+                           get_cmd=partial(self._get_gate, g),
                            )
         self.add_parameter('readnext', get_cmd=partial(self.get, 'amplitude'), label=name)
 
-    def get_gate(self, gate):
+    def _get_gate(self, gate):
+        if self.model is None:
+            return np.random.rand()
         return self.model.get(self.name + '_' + gate)
-
-    @qtt.utilities.tools.deprecated
-    def set_gate(self, gate, value):
-        self.model.set(self.name + '_' + gate, value)
-        return
 
     def get_idn(self):
         """ Overrule because the default get_idn yields a warning """
@@ -58,7 +57,7 @@ class VirtualMeter(Instrument):
 
 class VirtualIVVI(Instrument):
 
-    def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], mydebug=False, **kwargs):
+    def __init__(self, name, model, gates=['dac%d' % i for i in range(1, 17)], dac_unit='a.u.', **kwargs):
         """ Virtual instrument representing a DAC
 
         Args:
@@ -68,6 +67,7 @@ class VirtualIVVI(Instrument):
                   Here INSTR is the name of the VirtualIVVI, PARAM is the name
                   of the gate
             gates (list of gate names)
+            dac_unit (str): unit to set for the dac parameters
         """
         super().__init__(name, **kwargs)
 
@@ -81,14 +81,14 @@ class VirtualIVVI(Instrument):
                                    set_cmd=None,
                                    initial_value=0,
                                    label='Gate {} (arb. units)'.format(g),
-                                   unit='arb. units',
+                                   unit=dac_unit,
                                    vals=Numbers(-800, 400))
             else:
                 self.add_parameter(g,
                                    label='Gate {} (mV)'.format(g),
-                                   get_cmd=partial(self.get_gate, g),
-                                   set_cmd=partial(self.set_gate, g),
-                                   unit='arb.units',
+                                   get_cmd=partial(self._get_gate, g),
+                                   set_cmd=partial(self._set_gate, g),
+                                   unit=dac_unit,
                                    vals=Numbers(-800, 400))
 
         self.add_function('reset', call_cmd='rst')
@@ -99,23 +99,22 @@ class VirtualIVVI(Instrument):
                 'get_{}'.format(g), call_cmd=partial(self.get, g))
             logger.debug('add gates function %s: %s' % (self.name, g))
 
-        if not mydebug:
-            self.get_all()
+        self._get_all()
 
     def get_idn(self):
         """
         Overwrites the get_idn function using constants as the virtual device
         does not have a proper `*IDN` function.
         """
-        return {'firmware': None, 'model': None, 'serial': None, 'vendor': None}
+        return {'firmware': None, 'model': None, 'serial': None, 'vendor': 'QuTech'}
 
-    def get_gate(self, gate):
+    def _get_gate(self, gate):
         if self.model is None:
             return 0
         value = self.model.get(self.name + '_' + gate)
         return value
 
-    def set_gate(self, gate, value):
+    def _set_gate(self, gate, value):
         if self.model is None:
             return
         value = float(value)
@@ -130,10 +129,10 @@ class VirtualIVVI(Instrument):
         """
         return dict([(g, self.get(g) ) for g in self.parameters])
     
-    def get_all(self):
+    def _get_all(self):
         """ Get all parameters in instrument """
         for g in self._gates:
-            logger.debug('get_all %s: %s' % (self.name, g))
+            logger.debug('_get_all %s: %s' % (self.name, g))
             self.get(g)
 
     def __repr__(self):
