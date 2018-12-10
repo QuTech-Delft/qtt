@@ -1,50 +1,49 @@
 # %% Load packages
 
-import os
-import logging
 import argparse
-
-import qtpy.QtGui as QtGui
-import qtpy.QtWidgets as QtWidgets
-from qtpy.QtWidgets import QWidget
+import logging
+import os
 
 import pyqtgraph as pg
+import qtpy.QtGui as QtGui
+import qtpy.QtWidgets as QtWidgets
+from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
-from qcodes.plots.pyqtgraph import QtPlot
 import qtt
+from qcodes.plots.pyqtgraph import QtPlot
 
 # %% Main class
 
 
 class DataViewer(QtWidgets.QMainWindow):
 
-    def __init__(self, datadir=None, window_title='Data browser',
-                 default_parameter='amplitude', extensions=['dat', 'hdf5'],
-                 verbose=1):
-        """ Simple viewer for Qcodes data
+    def __init__(self, data_directory=None, window_title='Data browser',
+                 default_parameter='amplitude', extensions=['dat', 'hdf5'], verbose=1):
+        """ Contstructs a simple viewer for Qcodes data.
 
         Args:
-
-            datadir (string or None): directory to scan for experiments
-            default_parameter (string): name of default parameter to plot
+            data_directory (string or None): The directory to scan for experiments.
+            default_parameter (string): A name of default parameter to plot.
+            extensions (list): A list with the data file extensions to filter.
+            verbose (int): The logging verbosity level.
         """
         super(DataViewer, self).__init__()
-        self.verbose = verbose  # for debugging
+        self.verbose = verbose
         self.default_parameter = default_parameter
-        self.datadirlist = [None, None]
-        if datadir is None:
-            datadir = qcodes.DataSet.default_io.base_location
+        self.data_directories = [None]*2
+        self.directory_index = 0
+        if data_directory is None:
+            data_directory = qcodes.DataSet.default_io.base_location
 
         self.extensions = extensions
 
         # setup GUI
-
         self.dataset = None
         self.text = QtWidgets.QLabel()
 
         # logtree
-        self.logtree = QtWidgets.QTreeView()  # QTreeWidget
+        self.logtree = QtWidgets.QTreeView()
         self.logtree.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
         self._treemodel = QtGui.QStandardItemModel()
@@ -56,9 +55,9 @@ class DataViewer(QtWidgets.QMainWindow):
 
         self.__debug = dict()
         if isinstance(QtPlot, QWidget):
-            self.qplot = QtPlot()  # remote=False, interval=0)
+            self.qplot = QtPlot()
         else:
-            self.qplot = QtPlot(remote=False)  # remote=False, interval=0)
+            self.qplot = QtPlot(remote=False)
         if isinstance(self.qplot, QWidget):
             self.plotwindow = self.qplot
         else:
@@ -69,7 +68,6 @@ class DataViewer(QtWidgets.QMainWindow):
         self.filterbutton = QtWidgets.QPushButton()
         self.filterbutton.setText('Filter data')
         self.filtertext = QtWidgets.QLineEdit()
-
         self.outCombo = QtWidgets.QComboBox()
 
         topLayout.addWidget(self.text)
@@ -97,8 +95,6 @@ class DataViewer(QtWidgets.QMainWindow):
         bLayout.addWidget(self.clipboardbutton)
 
         vertLayout.addItem(bLayout)
-
-#        self.setLayout(vertLayout)
         widget = QtWidgets.QWidget()
         widget.setLayout(vertLayout)
         self.setCentralWidget(widget)
@@ -110,32 +106,30 @@ class DataViewer(QtWidgets.QMainWindow):
         self.logtree.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        self.setDatadir(datadir)
-
-        self.logtree.doubleClicked.connect(self.logCallback)
-        self.outCombo.currentIndexChanged.connect(self.comboCallback)
+        self.set_data_directory(data_directory)
+        self.logtree.doubleClicked.connect(self.log_callback)
+        self.outCombo.currentIndexChanged.connect(self.combobox_callback)
         self.filterbutton.clicked.connect(
-            lambda: self.updateLogs(
+            lambda: self.update_logs(
                 filter_str=self.filtertext.text()))
-        self.pptbutton.clicked.connect(self.pptCallback)
-        self.clipboardbutton.clicked.connect(self.clipboardCallback)
+        self.pptbutton.clicked.connect(self.ppt_callback)
+        self.clipboardbutton.clicked.connect(self.clipboard_callback)
 
         menuBar = self.menuBar()
 
         menuDict = {
-            '&Data': {'&Reload Data': self.updateLogs,
-                      '&Preload all Info': self.loadInfo,
+            '&Data': {'&Reload Data': self.update_logs,
+                      '&Preload all Info': self.load_info,
                       '&Quit': self.close},
-            '&Folder': {'&Select Dir1': lambda: self.selectDirectory(index=0),
-                        'Select &Dir2': lambda: self.selectDirectory(index=1),
-                        '&Toggle Dirs': self.toggleDatadir
+            '&Folder': {'&Select Dir1': lambda: self.select_directory(index=0),
+                        'Select &Dir2': lambda: self.select_directory(index=1),
+                        '&Toggle Dirs': self.toggle_data_directory
                         },
-            '&Help': {'&Info': self.showHelpBox}
+            '&Help': {'&Info': self.show_help}
         }
         for (k, menu) in menuDict.items():
             mb = menuBar.addMenu(k)
             for (kk, action) in menu.items():
-
                 act = QtWidgets.QAction(kk, self)
                 mb.addAction(act)
                 act.triggered.connect(action)
@@ -144,52 +138,44 @@ class DataViewer(QtWidgets.QMainWindow):
             print('created gui...')
 
         # get logs from disk
-        self.updateLogs()
+        self.update_logs()
         self.datatag = None
 
         self.logtree.setColumnHidden(2, True)
         self.logtree.setColumnHidden(3, True)
-
         self.show()
 
-    def setDatadir(self, datadir, index=0):
-        self.datadirlist[index] = datadir
-        self.datadirindex = index
-        self.datadir = datadir
-        self.io = qcodes.DiskIO(datadir)
-        logging.info('DataViewer: data directory %s' % datadir)
-        self.text.setText('Log files at %s' %
-                          self.datadir)
+    def set_data_directory(self, data_directory, index=0):
+        self.data_directories[index] = data_directory
+        self.data_directory = data_directory
+        self.disk_io = qcodes.DiskIO(data_directory)
+        logging.info('DataViewer: data directory %s' % data_directory)
+        self.text.setText('Log files at %s' % self.data_directory)
 
-    def showHelpBox(self):
+    def show_help(self):
         """ Show help dialog """
         self.infotext = "Dataviewer for qcodes datasets"
+        QtWidgets.QMessageBox.information(self, 'qtt dataviwer control info', self.infotext)
 
-        QtWidgets.QMessageBox.information(
-            self, 'qtt dataviwer control info', self.infotext)
+    def toggle_data_directory(self):
+        index = (self.directory_index + 1) % len(self.data_directories)
+        self.directory_index = index
+        self.data_directory = self.data_directories[index]
+        self.disk_io = qcodes.DiskIO(self.data_directory)
+        logging.info('DataViewer: data directory %s' % self.data_directory)
+        self.text.setText('Log files at %s' % self.data_directory)
+        self.update_logs()
 
-    def toggleDatadir(self):
-        newindex = (self.datadirindex + 1) % len(self.datadirlist)
-        print(newindex)
-        datadir = self.datadirlist[newindex]
-        self.datadirindex = newindex
-        self.datadir = datadir
-        self.io = qcodes.DiskIO(datadir)
-        logging.info('DataViewer: data directory %s' % datadir[newindex])
-        self.text.setText('Log files at %s' %
-                          self.datadir)
-        self.updateLogs()
-
-    def pptCallback(self):
+    def ppt_callback(self):
         if self.dataset is None:
             print('no data selected')
             return
         qtt.tools.addPPT_dataset(self.dataset, customfig=self.qplot)
 
-    def clipboardCallback(self):
+    def clipboard_callback(self):
         self.qplot.copyToClipboard()
 
-    def getArrayStr(self, metadata):
+    def get_data_info(self, metadata):
         params = []
         try:
             if 'loop' in metadata.keys():
@@ -235,7 +221,7 @@ class DataViewer(QtWidgets.QMainWindow):
 
         return infotxt
 
-    def loadInfo(self):
+    def load_info(self):
         try:
             for row in range(self._treemodel.rowCount()):
                 index = self._treemodel.index(row, 0)
@@ -245,7 +231,7 @@ class DataViewer(QtWidgets.QMainWindow):
                     loc = '\\'.join(filename.split('\\')[:-1])
                     tempdata = qcodes.DataSet(loc)
                     tempdata.read_metadata()
-                    infotxt = self.getArrayStr(tempdata.metadata)
+                    infotxt = self.get_data_info(tempdata.metadata)
                     self._treemodel.setData(index.child(i, 1), infotxt)
                     if 'comment' in tempdata.metadata.keys():
                         self._treemodel.setData(index.child(
@@ -254,15 +240,14 @@ class DataViewer(QtWidgets.QMainWindow):
         except Exception as e:
             print(e)
 
-    def selectDirectory(self, index=0):
-        from qtpy.QtWidgets import QFileDialog
+    def select_directory(self, index=0):
         d = QtWidgets.QFileDialog(caption='Select data directory')
         d.setFileMode(QFileDialog.Directory)
         if d.exec():
             datadir = d.selectedFiles()[0]
-            self.setDatadir(datadir, index)
+            self.set_data_directory(datadir, index)
             print('update logs')
-            self.updateLogs()
+            self.update_logs()
 
     @staticmethod
     def find_datafiles(datadir, extensions=[
@@ -274,14 +259,13 @@ class DataViewer(QtWidgets.QMainWindow):
                                            e, show_progress=show_progress)
 
         datafiles = sorted(dd)
-        #datafiles = [os.path.join(datadir, d) for d in datafiles]
         return datafiles
 
-    def updateLogs(self, filter_str=None):
+    def update_logs(self, filter_str=None):
         ''' Update the list of measurements '''
         model = self._treemodel
 
-        self.datafiles = self.find_datafiles(self.datadir, self.extensions)
+        self.datafiles = self.find_datafiles(self.data_directory, self.extensions)
         dd = self.datafiles
 
         if filter_str:
@@ -322,15 +306,12 @@ class DataViewer(QtWidgets.QMainWindow):
                 child4 = QtGui.QStandardItem(filename)
                 parent1.appendRow([child1, child2, child3, child4])
             model.appendRow(parent1)
-            # span container columns
-#            self.logtree.setFirstColumnSpanned(
-#                i, self.logtree.rootIndex(), True)
             self.logtree.setColumnWidth(0, 240)
             self.logtree.setColumnHidden(2, True)
             self.logtree.setColumnHidden(3, True)
 
         if self.verbose >= 2:
-            print('DataViewer: updateLogs done')
+            print('DataViewer: update_logs done')
 
     def _create_meta_tree(self, meta_dict):
         metatree = QtWidgets.QTreeView()
@@ -348,7 +329,7 @@ class DataViewer(QtWidgets.QMainWindow):
         except Exception as ex:
             print(ex)
 
-    def updateMetaTabs(self):
+    def update_meta_tabs(self):
         ''' Update metadata tree '''
         meta = self.dataset.metadata
 
@@ -390,7 +371,7 @@ class DataViewer(QtWidgets.QMainWindow):
         else:
             new_item(item, str(value))
 
-    def getPlotParameter(self):
+    def get_plot_parameter(self):
         ''' Return parameter to be plotted '''
         param_name = self.outCombo.currentText()
         if param_name is not '':
@@ -400,18 +381,18 @@ class DataViewer(QtWidgets.QMainWindow):
             return self.default_parameter
         return self.dataset.default_parameter_name()
 
-    def selectedDatafile(self):
+    def selected_data_file(self):
         """ Return currently selected data file """
         return self.datatag
 
-    def comboCallback(self, index):
+    def combobox_callback(self, index):
         if not self._update_plot_:
             return
-        param_name = self.getPlotParameter()
+        param_name = self.get_plot_parameter()
         if self.dataset is not None:
-            self.updatePlot(param_name)
+            self.update_plot(param_name)
 
-    def logCallback(self, index):
+    def log_callback(self, index):
         """ Function called when. a log entry is selected """
         logging.info('logCallback: index %s' % str(index))
         self.__debug['last'] = index
@@ -428,27 +409,27 @@ class DataViewer(QtWidgets.QMainWindow):
                   (tag, filename))
         try:
             logging.debug('DataViewer: load tag %s' % tag)
-            data = self.loadData(filename, tag)
+            data = self.load_data(filename, tag)
             if not data:
                 raise ValueError('File invalid (%s) ...' % filename)
             self.dataset = data
-            self.updateMetaTabs()
+            self.update_meta_tabs()
 
             data_keys = data.arrays.keys()
-            infotxt = self.getArrayStr(data.metadata)
+            infotxt = self.get_data_info(data.metadata)
             q = pp.child(row, 1).model()
             q.setData(pp.child(row, 1), infotxt)
             if 'comment' in data.metadata.keys():
                 q.setData(pp.child(row, 2), data.metadata['comment'])
-            self.resetComboItems(data, data_keys)
-            param_name = self.getPlotParameter()
-            self.updatePlot(param_name)
+            self.reset_combo_items(data, data_keys)
+            param_name = self.get_plot_parameter()
+            self.update_plot(param_name)
         except Exception as e:
             print('logCallback! error: %s' % str(e))
             logging.exception(e)
         return
 
-    def resetComboItems(self, data, keys):
+    def reset_combo_items(self, data, keys):
         old_key = self.outCombo.currentText()
         self._update_plot_ = False
         self.outCombo.clear()
@@ -461,12 +442,12 @@ class DataViewer(QtWidgets.QMainWindow):
         self._update_plot_ = True
         return
 
-    def loadData(self, filename, tag):
+    def load_data(self, filename, tag):
         location = os.path.split(filename)[0]
         data = qtt.data.load_dataset(location)
         return data
 
-    def updatePlot(self, parameter):
+    def update_plot(self, parameter):
         self.qplot.clear()
         if parameter is None:
             logging.info('could not find parameter for DataSet')
