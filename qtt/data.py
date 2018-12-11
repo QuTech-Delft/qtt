@@ -384,25 +384,31 @@ def dataset1Ddata(alldata):
     return x, y
 
 
-def dataset_labels(alldata, tag=None):
+def dataset_labels(alldata, tag=None, add_unit=False):
     """ Return label for axis of dataset
 
     Args:
         ds (DataSet): dataset
-        tag (str): can be 'x', 'y' or 'z'
+        tag (str or None): can be 'x', 'y' or 'z' or the index of the axis
+        add_units (bool): If True then add units
     """
-    if tag == 'x':
+    if tag == 'y' or tag==0:
         d = alldata.default_parameter_array()
-        return d.set_arrays[0].label
-    if tag == 'y':
+        array = d.set_arrays[0]
+    elif tag == 'x' or tag==1:
         d = alldata.default_parameter_array()
-        return d.set_arrays[1].label
-    if tag is None or tag == 'z':
-        d = alldata.default_parameter_array()
-        return d.label
-    return '?'
+        array = d.set_arrays[1]
+    elif tag is None or tag == 'z':
+        array = alldata.default_parameter_array()
+    else:
+        raise Exception('invalid value %s for tag' % (tag, ))
+    label= array.label
+    
+    if  add_unit:
+        label+= ' [' + str(array.unit) + ']'
+    return label
 
-
+    
 def uniqueArrayName(dataset, name0):
     ''' Generate a unique name for a DataArray in a dataset '''
     ii = 0
