@@ -6450,7 +6450,7 @@
                         "instrument_name": "fridge",
                         "post_delay": 0,
                         "inter_delay": 0,
-                        "unit": "°C",
+                        "unit": "Â°C",
                         "label": "cpatempwo"
                     },
                     "cpatempwi": {
@@ -6464,7 +6464,7 @@
                         "instrument_name": "fridge",
                         "post_delay": 0,
                         "inter_delay": 0,
-                        "unit": "°C",
+                        "unit": "Â°C",
                         "label": "cpatempwi"
                     },
                     "cpawarn": {
@@ -7150,6 +7150,57 @@
         "timestamp": "2018-07-30T10:08:03.463823",
         "system": {
             "node": "TUD278090"
+        }
+    },
+    "__dataset_metadata": {
+        "extra": {
+            "location": "C:\\svn\\qtt\\qtt\\exampledata\\misc\\Lever_arm_Charging_energy\\10-06-59_qtt_scan2Dfast"
+        },
+        "metadata": null,
+        "arrays": {
+            "P5": {
+                "label": "P5",
+                "name": null,
+                "unit": "mV",
+                "is_setpoint": true,
+                "full_name": null,
+                "array_id": "P5",
+                "shape": [
+                    750
+                ],
+                "set_arrays": []
+            },
+            "P4": {
+                "label": "P4",
+                "name": null,
+                "unit": "mV",
+                "is_setpoint": true,
+                "full_name": null,
+                "array_id": "P4",
+                "shape": [
+                    750,
+                    1854
+                ],
+                "set_arrays": [
+                    "P5"
+                ]
+            },
+            "measured": {
+                "label": "measured",
+                "name": null,
+                "unit": null,
+                "is_setpoint": false,
+                "full_name": null,
+                "array_id": "measured",
+                "shape": [
+                    750,
+                    1854
+                ],
+                "set_arrays": [
+                    "P5",
+                    "P4"
+                ]
+            }
         }
     }
 }
