@@ -13,6 +13,7 @@ from qtt.utilities.tools import addPPTslide
 import warnings
 
 from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay
+from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 
 #%% calculate durations of states
 
@@ -220,7 +221,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         plt.clf()
         plt.plot(bincentres_dn, counts_dn, 'o', label='Counts down')
         plt.plot(bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),
-                 'r', label='Fitted exponantial decay \n $\Gamma_{dn}$: %.1f kHz' % tunnelrate_dn)
+                 'r', label='Fitted exponantial decay \n $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Counts per bin')
         plt.legend()
@@ -250,7 +251,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         plt.clf()
         plt.plot(bincentres_up, counts_up, 'o', label='Counts up')
         plt.plot(bincentres_up, exp_function(bincentres_up,  A_up_fit, B_up_fit, gamma_up_fit),
-                 'r', label='Fitted exponantial decay \n $\Gamma_{up}$: %.1f kHz' % tunnelrate_up)
+                 'r', label='Fitted exponantial decay \n $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
         plt.xlabel('Lifetime (s)')
         plt.ylabel('Data points per bin')
         plt.legend()
@@ -269,31 +270,32 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     return tunnelrate_dn, tunnelrate_up, parameters
 
 
-def generate_RTS_signal(number_of_samples=100000, std_noise=0.1, p_up=.98, p_down=.08):
-    """ Generate an RTS signal
+def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1, uniform_noise=0.05, rate_up=10e3, rate_down=15e3, samplerate=1e6):
+    """ Generate a RTS signal
 
     Args:
         number_of_samples (int): number of samples to generate
-        std_noise (float): std of noise
-        p_up (float): probability to go from down to up state
-        p_down (float): probability to go from up to down state
+        std_normal_noise (float): std of Gaussian noise added to the signal
+        uniform_noise (float): uniform noise in the range +- uniform_noise/2 is added to the signal
+        rate_up (float): rate from down to up
+        rate_down (float): rate from up to down
+        samplerate (float):
     Returns:
         array: generated signal (0 is down, 1 is up)
 
     """
 
-    data = np.zeros((number_of_samples,))
-    probabilities = np.random.rand(data.size)
+    rts_model = ContinuousTimeMarkovModel(['down', 'up'], [rate_up/samplerate,rate_down/samplerate], np.array([[0.,1],[1,0]]) )        
 
-    for i in range(1, data.size):
-        p = p_down if data[i - 1] else p_up
-        if probabilities[i] > p:
-            data[i] = 1 - data[i - 1]
-        else:
-            data[i] = data[i - 1]
-    data = data + np.random.rand(data.size, ) / 15
-    noise = np.random.normal(0, std_noise, data.size)
-    return data + noise
+    data = rts_model.generate_sequence(number_of_samples, delta_time=1)
+
+    if uniform_noise !=0 :
+        data = data + uniform_noise*(np.random.rand(data.size, )-.5)
+    if std_gaussian_noise!=0:
+        data += np.random.normal(0, std_gaussian_noise, data.size)
+    return data 
+
+
 
 #%%
 
@@ -313,11 +315,12 @@ def test_RTS(fig=None):
         # fitting exception is good, since data is random
         pass
 
-    data = generate_RTS_signal(100000, std_noise=0.1, p_up=.99, p_down=.95)
+    samplerate=2e6
+    data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down = 20e3, samplerate=samplerate)
 
     with warnings.catch_warnings():  # catch any warnings
         warnings.simplefilter("ignore")
-        tunnelrate_dn, tunnelrate_up, parameters = tunnelrates_RTS(data, plungers=[], samplerate=10e6, fig=fig)
+        tunnelrate_dn, tunnelrate_up, parameters = tunnelrates_RTS(data, plungers=[], samplerate=samplerate, fig=fig)
 
 
 if __name__ == '__main__':
