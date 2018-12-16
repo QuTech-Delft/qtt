@@ -9,6 +9,7 @@
 import numpy as np
 import random
 import scipy.linalg
+import itertools
 
 
 class ContinuousTimeMarkovModel:
@@ -120,7 +121,6 @@ class ContinuousTimeMarkovModel:
         state_indices = range(n)
 
         # pre-calculate cummulative weights
-        import itertools
         Pcum = np.zeros(P.shape)
         for jj in range(n):
             cum_weights = list(itertools.accumulate(P[:, jj]))
