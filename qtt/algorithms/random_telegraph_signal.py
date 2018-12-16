@@ -292,7 +292,7 @@ def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1, unifor
     if uniform_noise !=0 :
         data = data + uniform_noise*(np.random.rand(data.size, )-.5)
     if std_gaussian_noise!=0:
-        data += np.random.normal(0, std_gaussian_noise, data.size)
+        data = data + np.random.normal(0, std_gaussian_noise, data.size)
     return data 
 
 
@@ -315,6 +315,9 @@ def test_RTS(fig=None):
         # fitting exception is good, since data is random
         pass
 
+    data = generate_RTS_signal(100, std_gaussian_noise=0, uniform_noise=.1)
+    data = generate_RTS_signal(100, std_gaussian_noise=0.1, uniform_noise=.1)
+    
     samplerate=2e6
     data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down = 20e3, samplerate=samplerate)
 
