@@ -11,6 +11,15 @@ import random
 import scipy.linalg
 import itertools
 
+def _solve_least_squares(A, B):
+    from distutils.version import StrictVersion
+    if StrictVersion(np.__version__) < StrictVersion('1.14.0'):
+        # legacy numpy versions
+        rcond=-1
+    else:
+        rcond = None
+    solution = np.linalg.lstsq(A, B, rcond=rcond)[0]
+    return solution
 
 class ContinuousTimeMarkovModel:
 
@@ -82,7 +91,7 @@ class ContinuousTimeMarkovModel:
         A = np.vstack((Q, np.ones((1, n))))
         B = np.zeros((n + 1, 1))
         B[-1] = 1
-        pi = np.linalg.lstsq(A, B, rcond=None)[0]
+        pi = _solve_least_squares(A, B)
         return pi
 
     @staticmethod
@@ -93,7 +102,7 @@ class ContinuousTimeMarkovModel:
         A = np.vstack((jump_chain - np.eye(n), np.ones((1, n))))
         B = np.zeros((n + 1, 1))
         B[-1] = 1
-        pi = np.linalg.lstsq(A, B, rcond=None)[0]
+        pi = _solve_least_squares(A, B)
         return pi
 
     def generate_sequence(self, length, delta_time, initial_state=None):
