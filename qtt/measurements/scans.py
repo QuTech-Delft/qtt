@@ -1425,7 +1425,7 @@ def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
 
     return data
 
-
+  
 def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0):
     """ Measure block data with M4i
 

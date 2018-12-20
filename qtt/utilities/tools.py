@@ -858,6 +858,8 @@ try:
         if fig is None:
             titlebox = slide.shapes.Item(1)
             mainbox = slide.shapes.Item(2)
+            if maintext is None:
+                raise Exception('maintext argument is None')
             mainbox.TextFrame.TextRange.Text = maintext
         else:
             titlebox = slide.shapes.Item(1)

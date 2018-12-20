@@ -76,8 +76,8 @@ class VirtualAwg(Instrument):
             self.add_parameter('awg_marker_delay', initial_value=0, set_cmd=None)
             self.add_parameter('awg_marker_uptime', initial_value=1e-8, set_cmd=None)
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
-            self.add_parameter('digitizer_marker_delay', initial_value=0, set_cmd=None)
-            self.add_parameter('digitizer_marker_uptime', initial_value=1e-8, set_cmd=None)
+            self.add_parameter('digitizer_marker_delay', initial_value=0, set_cmd=None, unit='s')
+            self.add_parameter('digitizer_marker_uptime', initial_value=1e-8, set_cmd=None, unit='s')
 
     def run(self):
         """ Enables the main output of the AWG's."""
@@ -264,6 +264,7 @@ class VirtualAwg(Instrument):
             sequences[gate_name] = Sequencer.make_sawtooth_wave(amplitude, period, width)
         sweep_data = self.sequence_gates(sequences, do_upload)
         sweep_data.update({'sweeprange': sweep_range, 'period': period, 'width': width})
+        sweep_data.update({'start_zero': True})
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
