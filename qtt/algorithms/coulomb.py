@@ -44,11 +44,11 @@ def analyseCoulombPeaks(alldata, fig=None, verbose=1):
     """
     xdata, ydata = qtt.data.dataset1Ddata(alldata)
 
-    goodpeaks = detectCoulombpeaks(xdata, ydata)
+    goodpeaks = detectCoulombpeaks(xdata, ydata, fig=fig, verbose=verbose)
 
     return goodpeaks
 
-def detectCoulombPeaks(xdata, ydata):
+def detectCoulombPeaks(xdata, ydata, fig=None, verbose=1):
     """ Detect Coulomb peaks in the data.
     
     This is very similar to analyseCoulombPeaks, but takes arrays of data as input. Hence the ydata
@@ -61,8 +61,7 @@ def detectCoulombPeaks(xdata, ydata):
     Returns:
         goodpeaks (list of dict): detected peaks
     """
-    istep = qtt.data.dataset_get_istep(alldata)
-    xdata, ydata = peakdataOrientation(xdata, ydata)
+    istep = (xdata[-1] - xdata[0]) / (xdata.size - 1)
 
     goodpeaks = coulombPeaks(
         xdata, ydata, verbose=verbose, fig=fig, plothalf=True, istep=istep)
