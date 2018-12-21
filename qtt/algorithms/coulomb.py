@@ -42,17 +42,32 @@ def analyseCoulombPeaks(alldata, fig=None, verbose=1):
     Returns:
         peaks (list): fitted peaks
     """
-    x, y = qtt.data.dataset1Ddata(alldata)
+    xdata, ydata = qtt.data.dataset1Ddata(alldata)
 
-    istep = qtt.data.dataset_get_istep(alldata)
-    #istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
-    x, y = peakdataOrientation(x, y)
-
-    goodpeaks = coulombPeaks(
-        x, y, verbose=verbose, fig=fig, plothalf=True, istep=istep)
+    goodpeaks = detectCoulombpeaks(xdata, ydata)
 
     return goodpeaks
 
+def detectCoulombPeaks(xdata, ydata):
+    """ Detect Coulomb peaks in the data.
+    
+    This is very similar to analyseCoulombPeaks, but takes arrays of data as input. Hence the ydata
+    can for example be either the I, Q or any combination of both obtained with RF reflectometry.
+    
+    Args:
+        xdata (1D array): data of varied parameter
+        ydata (1D array): signal data
+    
+    Returns:
+        goodpeaks (list of dict): detected peaks
+    """
+    istep = qtt.data.dataset_get_istep(alldata)
+    xdata, ydata = peakdataOrientation(xdata, ydata)
+
+    goodpeaks = coulombPeaks(
+        xdata, ydata, verbose=verbose, fig=fig, plothalf=True, istep=istep)
+
+    return goodpeaks
 
 def fitCoulombPeaks(x, y, lowvalue=None, verbose=1, fig=None, istep=1):
     """ Fit Coulumb peaks in a measurement series 
