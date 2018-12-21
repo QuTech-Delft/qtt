@@ -53,10 +53,24 @@ def initFermiLinear(x_data, y_data, fig=None):
         # subtract linear part
         yr = ydata - y
 
-        cc = np.mean(xdata)
+        sigma = xdata.size/250
+        dyr = scipy.ndimage.gaussian_filter(yr, sigma, order=1)
+        
+        # assume step is steeper than overall slope
+        cc_idx = np.argmax(np.abs(dyr))            
+        h = int(xdata.size / 2)
+        
+        # prevent guess to be at the edges
+        if cc_idx < xdata.size/100 or cc_idx > (99/100)*xdata.size:
+            cc = np.mean(xdata)
+            A = -(np.mean(yr[h:]) - np.mean(yr[:h]))
+        else:
+            cc = xdata[cc_idx]
+            A = -1*np.sign(dyr[cc_idx])*(np.mean(yr[h:]) - np.mean(yr[:h]))
+        
         h = int(xdata.size / 2)
         A = -(np.mean(yr[h:]) - np.mean(yr[:h]))
-        T = np.std(xdata) / 10
+        T = np.std(xdata) / 100
         ab[1] = ab[1] - A / 2  # correction
         ylin = linear_function(xdata, ab[0], ab[1])
 
@@ -144,6 +158,32 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
 
 
 # %%
+
+def fit_add_line_arr(xdata, ydata, trimborder=True):
+    """ Fits a FermiLinear function to the addition line and finds the middle of the step.
+    
+    Note: Similar to fit_addition_line but directly works with arrays of data.
+    
+    Args:
+        x_data, y_data (array): independent and dependent variable data
+        trimborder (bool): determines if the edges of the data are taken into account for the fit
+
+    Returns:
+        m_addition_line (float): x value of the middle of the addition line
+        pfit (array): fit parameters of the Fermi Linear function
+        pguess (array): parameters of initial guess
+    """
+    if trimborder:
+        ncut = max(min(int(xdata.size / 40), 100), 1)
+        xdata, ydata = xdata[ncut: -ncut], ydata[ncut:-ncut]
+
+    # fitting of the FermiLinear function
+    pp = fitFermiLinear(xdata, ydata, verbose=1, fig=None)
+    pfit = pp[0]  # fit parameters
+    pguess = pp[1]['p0']  # initial guess parameters
+    m_addition_line = pfit[2]
+    result_dict = {'fit parameters': pfit, 'parameters initial guess': pguess}
+    return m_addition_line, result_dict
 
 def fit_addition_line(dataset, trimborder=True):
     """Fits a FermiLinear function to the addition line and finds the middle of the step.
