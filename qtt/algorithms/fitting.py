@@ -8,6 +8,34 @@ from qcodes import DataArray
 import qtt.pgeometry
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function
 
+def _estimate_fermi_model_center(xdata, yr):
+    """ Estimate the location of the center and amplitude of the step of a 
+    charge addition line.
+    
+    Args:
+        xdata (1D array): independent data
+        yr (1D array): dependent data with linear estimate subtracted
+        
+    Returns:
+        cc (float): estimate of xdata value at the center
+        A (float): estimate of the amplitude of the step
+    """
+    sigma = xdata.size/250
+    dyr = scipy.ndimage.gaussian_filter(yr, sigma, order=1)
+    
+    # assume step is steeper than overall slope
+    cc_idx = np.argmax(np.abs(dyr))            
+    h = int(xdata.size / 2)
+    
+    # prevent guess to be at the edges
+    if cc_idx < xdata.size/100 or cc_idx > (99/100)*xdata.size:
+        cc = np.mean(xdata)
+    else:
+        cc = xdata[cc_idx]
+    
+    A = -1*np.sign(dyr[cc_idx])*(np.mean(yr[h:]) - np.mean(yr[:h]))
+
+    return cc, A
 
 def initFermiLinear(x_data, y_data, fig=None):
     """ Initalization of fitting a FermiLinear function.
@@ -26,7 +54,7 @@ def initFermiLinear(x_data, y_data, fig=None):
         a = p1[0]
         b = p1[1]
         ab = [a, b]
-        y = linear_function(xdata, ab[0], ab[1])
+        ylin = linear_function(xdata, ab[0], ab[1])
         cc = np.mean(xdata)
         A = 0
         T = np.std(xdata) / 10
@@ -48,35 +76,17 @@ def initFermiLinear(x_data, y_data, fig=None):
         b = my - a * mx
         xx = np.hstack((xdata[0:nx], xdata[-nx:]))
         ab = [a, b]
-        y = linear_function(xdata, ab[0], ab[1])
-
-        # subtract linear part
-        yr = ydata - y
-
-        sigma = xdata.size/250
-        dyr = scipy.ndimage.gaussian_filter(yr, sigma, order=1)
-        
-        # assume step is steeper than overall slope
-        cc_idx = np.argmax(np.abs(dyr))            
-        h = int(xdata.size / 2)
-        
-        # prevent guess to be at the edges
-        if cc_idx < xdata.size/100 or cc_idx > (99/100)*xdata.size:
-            cc = np.mean(xdata)
-            A = -(np.mean(yr[h:]) - np.mean(yr[:h]))
-        else:
-            cc = xdata[cc_idx]
-            A = -1*np.sign(dyr[cc_idx])*(np.mean(yr[h:]) - np.mean(yr[:h]))
-        
-        h = int(xdata.size / 2)
-        A = -(np.mean(yr[h:]) - np.mean(yr[:h]))
-        T = np.std(xdata) / 100
-        ab[1] = ab[1] - A / 2  # correction
         ylin = linear_function(xdata, ab[0], ab[1])
 
         # subtract linear part
         yr = ydata - ylin
+
+        cc, A = _estimate_fermi_model_center(xdata, yr)
+        
+        T = np.std(xdata) / 100
+        ab[1] = ab[1] - A / 2  # correction
         ff = [cc, A, T]
+        
     if fig is not None:
         yf = FermiLinear(xdata, ab[0], ab[1], *ff)
 
@@ -159,7 +169,7 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
 
 # %%
 
-def fit_add_line_arr(xdata, ydata, trimborder=True):
+def fit_add_line_array(xdata, ydata, trimborder=True):
     """ Fits a FermiLinear function to the addition line and finds the middle of the step.
     
     Note: Similar to fit_addition_line but directly works with arrays of data.
@@ -179,8 +189,8 @@ def fit_add_line_arr(xdata, ydata, trimborder=True):
 
     # fitting of the FermiLinear function
     pp = fitFermiLinear(xdata, ydata, verbose=1, fig=None)
-    pfit = pp[0]  # fit parameters
-    pguess = pp[1]['p0']  # initial guess parameters
+    pfit = pp[0]
+    pguess = pp[1]['p0']
     m_addition_line = pfit[2]
     result_dict = {'fit parameters': pfit, 'parameters initial guess': pguess}
     return m_addition_line, result_dict
@@ -194,8 +204,8 @@ def fit_addition_line(dataset, trimborder=True):
 
     Returns:
         m_addition_line (float): x value of the middle of the addition line
-        pfit (array): fit parameters of the Fermi Linear function
-        pguess (array): parameters of initial guess
+        fit parameters (array): fit parameters of the Fermi Linear function
+        parameters initial guess (array): parameters of initial guess
         dataset_fit (qcodes dataset): dataset with fitted Fermi Linear function
         dataset_guess (qcodes dataset):dataset with guessed Fermi Linear function
 
@@ -210,17 +220,15 @@ def fit_addition_line(dataset, trimborder=True):
         ncut = max(min(int(xdata.size / 40), 100), 1)
         xdata, ydata, setarray = xdata[ncut: -ncut], ydata[ncut:-ncut], setarray[ncut:-ncut]
 
-    # fitting of the FermiLinear function
-    pp = fitFermiLinear(xdata, ydata, verbose=1, fig=None)
-    pfit = pp[0]  # fit parameters
-    pguess = pp[1]['p0']  # initial guess parameters
-    y0 = FermiLinear(xdata, *list(pguess))
+    m_addition_line, result_dict = fit_add_line_array(xdata, ydata, trimborder=False)
+    
+    y0 = FermiLinear(xdata, *list(result_dict['parameters initial guess']))
     dataset_guess = DataArray(name='fit', label='fit', preset_data=y0, set_arrays=(setarray,))
-    y = FermiLinear(xdata, *list(pfit))
+    y = FermiLinear(xdata, *list(result_dict['fit parameters']))
     dataset_fit = DataArray(name='fit', label='fit', preset_data=y, set_arrays=(setarray,))
-    m_addition_line = pfit[2]
-    result_dict = {'fit parameters': pfit, 'parameters initial guess': pguess,
-                   'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
+    result_dict['dataset fit'] = dataset_fit
+    result_dict['dataset initial guess'] = dataset_guess
+    
     return m_addition_line, result_dict
 
 
