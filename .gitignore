@@ -91,3 +91,4 @@ test*.pickle
 model.png
 .pytest_cache
 .vscode
+docs/modules.rst
