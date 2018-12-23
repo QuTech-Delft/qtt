@@ -177,7 +177,7 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
 
 # %%
 
-def fit_add_line_array(xdata, ydata, trimborder=True):
+def fit_addition_line_array(xdata, ydata, trimborder=True):
     """ Fits a FermiLinear function to the addition line and finds the middle of the step.
     
     Note: Similar to fit_addition_line but directly works with arrays of data.
@@ -229,7 +229,7 @@ def fit_addition_line(dataset, trimborder=True):
         ncut = max(min(int(xdata.size / 40), 100), 1)
         xdata, ydata, setarray = xdata[ncut: -ncut], ydata[ncut:-ncut], setarray[ncut:-ncut]
 
-    m_addition_line, result_dict = fit_add_line_array(xdata, ydata, trimborder=False)
+    m_addition_line, result_dict = fit_addition_line_array(xdata, ydata, trimborder=False)
     
     y0 = FermiLinear(xdata, *list(result_dict['parameters initial guess']))
     dataset_guess = DataArray(name='fit', label='fit', preset_data=y0, set_arrays=(setarray,))
@@ -248,15 +248,22 @@ def test_fitfermilinear(fig=None):
     y_data += 0.005 * np.random.rand(y_data.size)
 
     actual_parameters, fit_results = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=False)
-    absolute_difference = np.abs(actual_parameters - expected_parameters)
+    absolute_difference_parameters = np.abs(actual_parameters - expected_parameters)
+
+    y_data_fitted = FermiLinear(x_data, *actual_parameters)
+    max_difference = np.max(np.abs(y_data_fitted-y_data))
 
     if fig:
         print('expected: %s' % expected_parameters)
         print('fitted:   %s' % actual_parameters)
         print('temperature: %.2f' % (actual_parameters[-1]) )
-        print('max diff: %.2f' % (absolute_difference.max()))
+        print('max diff parameters: %.2f' % (absolute_difference_parameters.max()))
+        print('max diff values: %.4f' % (max_difference.max()))
 
-    assert np.all(absolute_difference < 1e-1)
+    
+
+    assert np.all(max_difference < 1e-2)
+    assert np.all(absolute_difference_parameters < 6e-1)
 
     try:
         import lmfit
@@ -265,8 +272,8 @@ def test_fitfermilinear(fig=None):
         have_lmfit=0
     if have_lmfit:
         actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=True)
-        absolute_difference = np.abs(actual_parameters - expected_parameters)
-        assert np.all(absolute_difference < 1e-1)
+        absolute_difference_parameters = np.abs(actual_parameters - expected_parameters)
+        assert np.all(absolute_difference_parameters < 1e-1)
 
 
 if __name__ == '__main__':
