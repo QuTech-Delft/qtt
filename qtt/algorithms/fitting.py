@@ -38,9 +38,17 @@ def _estimate_fermi_model_center(xdata, yr):
     return cc, A
 
 def initFermiLinear(x_data, y_data, fig=None):
-    """ Initalization of fitting a FermiLinear function.
+    """ Initialization of fitting a FermiLinear function.
 
     First the linear part is estimated, then the Fermi part of the function.
+    
+    Args:
+        x_data (array): data for independent variable
+        y_data (array): dependent variable
+    
+    Returns:
+        linear_part (array)
+        fermi_part (array)
     """
     xdata = np.array(x_data)
     ydata = np.array(y_data)
@@ -53,12 +61,12 @@ def initFermiLinear(x_data, y_data, fig=None):
 
         a = p1[0]
         b = p1[1]
-        ab = [a, b]
-        ylin = linear_function(xdata, ab[0], ab[1])
+        linear_part = [a, b]
+        ylin = linear_function(xdata, linear_part[0], linear_part[1])
         cc = np.mean(xdata)
         A = 0
         T = np.std(xdata) / 10
-        ff = [cc, A, T]
+        fermi_part = [cc, A, T]
     else:
         # guess initial linear part
         mx = np.mean(xdata)
@@ -75,8 +83,8 @@ def initFermiLinear(x_data, y_data, fig=None):
             a = np.mean(dd) / dx
         b = my - a * mx
         xx = np.hstack((xdata[0:nx], xdata[-nx:]))
-        ab = [a, b]
-        ylin = linear_function(xdata, ab[0], ab[1])
+        linear_part = [a, b]
+        ylin = linear_function(xdata, linear_part[0], linear_part[1])
 
         # subtract linear part
         yr = ydata - ylin
@@ -84,11 +92,11 @@ def initFermiLinear(x_data, y_data, fig=None):
         cc, A = _estimate_fermi_model_center(xdata, yr)
         
         T = np.std(xdata) / 100
-        ab[1] = ab[1] - A / 2  # correction
-        ff = [cc, A, T]
+        linear_part[1] = linear_part[1] - A / 2  # correction
+        fermi_part = [cc, A, T]
         
     if fig is not None:
-        yf = FermiLinear(xdata, ab[0], ab[1], *ff)
+        yf = FermiLinear(xdata, linear_part[0], linear_part[1], *fermi_part)
 
         xx = np.hstack((xdata[0:nx], xdata[-nx:]))
         yy = np.hstack((ydata[0:nx], ydata[-nx:]))
@@ -112,7 +120,7 @@ def initFermiLinear(x_data, y_data, fig=None):
         # plt.plot(xdata, yr, '.b', label='Fermi part')
 
         plt.legend()
-    return ab, ff
+    return linear_part, fermi_part
 
 
 # %%
@@ -120,7 +128,7 @@ def initFermiLinear(x_data, y_data, fig=None):
 def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
     """ Fit data to a Fermi-Linear function
 
-    Arguments:
+    Args:
         x_data, y_data (array): independent and dependent variable data
         l (float): leverarm passed to FermiLinear function
         use_lmfit (bool): If True use lmfit for optimization, otherwise use scipy
@@ -204,10 +212,11 @@ def fit_addition_line(dataset, trimborder=True):
 
     Returns:
         m_addition_line (float): x value of the middle of the addition line
-        fit parameters (array): fit parameters of the Fermi Linear function
-        parameters initial guess (array): parameters of initial guess
-        dataset_fit (qcodes dataset): dataset with fitted Fermi Linear function
-        dataset_guess (qcodes dataset):dataset with guessed Fermi Linear function
+        result_dict (dict): dictionary with the following results
+            fit parameters (array): fit parameters of the Fermi Linear function
+            parameters initial guess (array): parameters of initial guess
+            dataset fit (qcodes dataset): dataset with fitted Fermi Linear function
+            dataset initial guess (qcodes dataset):dataset with guessed Fermi Linear function
 
     See also: FermiLinear and fitFermiLinear
     """
@@ -238,12 +247,13 @@ def test_fitfermilinear(fig=None):
     y_data = FermiLinear(x_data, *expected_parameters)
     y_data += 0.005 * np.random.rand(y_data.size)
 
-    actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=False)
+    actual_parameters, fit_results = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=False)
     absolute_difference = np.abs(actual_parameters - expected_parameters)
 
     if fig:
         print('expected: %s' % expected_parameters)
         print('fitted:   %s' % actual_parameters)
+        print('temperature: %.2f' % (actual_parameters[-1]) )
         print('max diff: %.2f' % (absolute_difference.max()))
 
     assert np.all(absolute_difference < 1e-1)
