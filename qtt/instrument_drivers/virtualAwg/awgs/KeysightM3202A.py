@@ -26,7 +26,7 @@ class KeysightM3202A_AWG(AwgCommon):
                            Parameter(name='sampling_rate', unit='GS/s', initial_value=5e7,
                                      vals=Numbers(0, 2e8), set_cmd=None),
                            Parameter(name='amplitude', unit='Volt', initial_value=1.0,
-                                     vals=Numbers(0.0, 2.0), set_cmd=None),
+                                     vals=Numbers(0.0, 1.5), set_cmd=None),
                            Parameter(name='offset', unit='seconds', initial_value=0.0,
                                      vals=Numbers(0.0, 2.0), set_cmd=None),
                            Parameter(name='wave_shape', initial_value=6,
@@ -116,6 +116,7 @@ class KeysightM3202A_AWG(AwgCommon):
         amplitude = self.retrieve_setting('amplitude')
         offset = self.retrieve_setting('offset')
         for (channel_number, sequence) in zip(channel_numbers, sequence_items):
+            print(len(np.array(sequence)))
             wave_object = AWG.Keysight_M3201A.new_waveform_from_double(0, np.array(sequence))
             self.__awg.load_waveform(wave_object, wave_number)
             self.__awg.set('frequency_channel_%d' % channel_number, frequency)
