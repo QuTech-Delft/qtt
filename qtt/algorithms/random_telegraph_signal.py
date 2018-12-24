@@ -180,21 +180,31 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if len(durations_dn) < 1:
         raise FittingException('All durations_dn are shorter than the minimal duration.')
 
+
+    def _create_histogram(durations, verbose=0):
+        """ Calculate number of bins, bin edges and histogram for durations
+        
+        This method works if the data is sampled at integer durations.
+        """
+        numbins = int(np.sqrt(len(durations)))
+        bin_size = int(np.ceil( (durations.max()-durations.min())/numbins))
+        # choose bins carefully, since our data is sampled only an discrete times
+        bins=np.arange(durations.min()-.5, durations.max()+bin_size, bin_size)
+        counts, bins = np.histogram(durations, bins=bins)
+        
+        print('_create_histogram: nbins %d, %d' % (numbins, bin_size))
+        return counts, bins
+    
+    # calculating the number of bins and counts for down level   
+    counts_dn, bins_dn = _create_histogram(durations_dn)
+
+    # calculating the number of bins and counts for up level
+    counts_up, bins_up = _create_histogram(durations_up)
+
     # calculating durations in seconds
     durations_dn = durations_dn / samplerate
     durations_up = durations_up / samplerate
 
-    # sorting the durations
-    durations_dn_srt = np.sort(durations_dn)
-    durations_up_srt = np.sort(durations_up)
-
-    # calculating the number of bins and counts for down level
-    numbins_dn = int(np.sqrt(len(durations_dn_srt)))
-    counts_dn, bins_dn = np.histogram(durations_dn_srt, bins=numbins_dn)
-
-    # calculating the number of bins and counts for up level
-    numbins_up = int(np.sqrt(len(durations_up_srt)))
-    counts_up, bins_up = np.histogram(durations_up_srt, bins=numbins_up)
 
     if verbose>=2:
         print('counts_dn %d, counts_up %d' % (counts_dn[0], counts_up[0]))
