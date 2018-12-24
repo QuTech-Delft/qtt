@@ -191,8 +191,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         # choose bins carefully, since our data is sampled only an discrete times
         bins=np.arange(durations.min()-.5, durations.max()+bin_size, bin_size)
         counts, bins = np.histogram(durations, bins=bins)
-        
-        print('_create_histogram: nbins %d, %d' % (numbins, bin_size))
+        if verbose:
+            print('_create_histogram: nbins %d, %d' % (numbins, bin_size))
         return counts, bins
     
     # calculating the number of bins and counts for down level   
