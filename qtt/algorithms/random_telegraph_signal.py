@@ -205,6 +205,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     durations_dn = durations_dn / samplerate
     durations_up = durations_up / samplerate
 
+    bins_dn=bins_dn/samplerate
+    bins_up=bins_up/samplerate
 
     if verbose>=2:
         print('counts_dn %d, counts_up %d' % (counts_dn[0], counts_up[0]))
@@ -344,6 +346,16 @@ def test_RTS(fig=None):
         assert(parameters['down_segments']['mean']>0)
         
 
+    samplerate=1e6
+    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=400e3, rate_down = 20e3, samplerate=samplerate)
+
+
+    tunnelrate_dn, tunnelrate_up, results = tunnelrates_RTS(data, samplerate=samplerate, min_sep = 1.0, max_sep=2222,
+                                        min_duration = 1, num_bins = 40, plungers=[], fig=1, verbose=2)
+
+    assert(np.abs(tunnelrate_dn-400)<100)
+    assert(np.abs(tunnelrate_up-20)<10)
+    
 
 if __name__ == '__main__':
     test_RTS(fig=100)
