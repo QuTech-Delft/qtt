@@ -169,9 +169,9 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
 
     # throwing away the durations with less data points then min_duration
-    durations_up_min_duration = durations_up_idx > min_duration
+    durations_up_min_duration = durations_up_idx >= min_duration
     durations_up = durations_up_idx[durations_up_min_duration]
-    durations_dn_min_duration = durations_dn_idx > min_duration
+    durations_dn_min_duration = durations_dn_idx >= min_duration
     durations_dn = durations_dn_idx[durations_dn_min_duration]
 
     if len(durations_up) < 1:
@@ -215,14 +215,16 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if verbose:
         print('Tunnel rate down: %.1f kHz' % tunnelrate_dn)
 
+    time_scaling = 1e3
+    
     if fig:
         title = 'Fitted exponantial decay, level down'
         plt.figure(title)
         plt.clf()
-        plt.plot(bincentres_dn, counts_dn, 'o', label='Counts down')
-        plt.plot(bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),
-                 'r', label='Fitted exponantial decay \n $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
-        plt.xlabel('Lifetime (s)')
+        plt.plot(time_scaling*bincentres_dn, counts_dn, 'o', label='Counts down')
+        plt.plot(time_scaling*bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),
+                 'r', label='Fitted exponential decay \n $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
+        plt.xlabel('Lifetime (ms)')
         plt.ylabel('Counts per bin')
         plt.legend()
         plt.title(title)
@@ -249,10 +251,10 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         title = 'Fitted exponantial decay, level up'
         plt.figure(title)
         plt.clf()
-        plt.plot(bincentres_up, counts_up, 'o', label='Counts up')
-        plt.plot(bincentres_up, exp_function(bincentres_up,  A_up_fit, B_up_fit, gamma_up_fit),
-                 'r', label='Fitted exponantial decay \n $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
-        plt.xlabel('Lifetime (s)')
+        plt.plot(time_scaling*bincentres_up, counts_up, 'o', label='Counts up')
+        plt.plot(time_scaling*bincentres_up, exp_function(bincentres_up,  A_up_fit, B_up_fit, gamma_up_fit),
+                 'r', label='Fitted exponential decay \n $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
+        plt.xlabel('Lifetime (ms)')
         plt.ylabel('Data points per bin')
         plt.legend()
         plt.title(title)
@@ -264,8 +266,9 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
                   'split between the two levels': split, 'fit parameters exp. decay down': [A_dn_fit, B_dn_fit, gamma_dn_fit],
                   'fit parameters exp. decay up': [A_up_fit, B_up_fit, gamma_up_fit]}
 
-    parameters['down_segments']={'mean': np.mean(durations_dn), 'p50': np.percentile(durations_dn, 50)}
-    parameters['up_segments']={'mean': np.mean(durations_up), 'p50': np.percentile(durations_up, 50)}
+    parameters['down_segments']={'mean': np.mean(durations_dn_idx)/ samplerate, 'p50': np.percentile(durations_dn_idx, 50)/ samplerate, 'mean_filtered': np.mean(durations_dn_idx)}
+    parameters['up_segments']=  {'mean': np.mean(durations_up_idx)/ samplerate, 'p50': np.percentile(durations_up_idx, 50)/ samplerate, 'mean_filtered': np.mean(durations_up_idx)}
+    
     
     return tunnelrate_dn, tunnelrate_up, parameters
 
@@ -321,9 +324,15 @@ def test_RTS(fig=None):
     samplerate=2e6
     data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down = 20e3, samplerate=samplerate)
 
+
     with warnings.catch_warnings():  # catch any warnings
         warnings.simplefilter("ignore")
         tunnelrate_dn, tunnelrate_up, parameters = tunnelrates_RTS(data, plungers=[], samplerate=samplerate, fig=fig)
+
+
+        assert(parameters['up_segments']['mean']>0)
+        assert(parameters['down_segments']['mean']>0)
+        
 
 
 if __name__ == '__main__':
