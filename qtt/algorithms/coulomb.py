@@ -44,12 +44,12 @@ def analyseCoulombPeaks(alldata, fig=None, verbose=1):
     """
     xdata, ydata = qtt.data.dataset1Ddata(alldata)
 
-    goodpeaks = detectCoulombpeaks(xdata, ydata, fig=fig, verbose=verbose)
+    goodpeaks = analyseCoulombPeaksArray(xdata, ydata, fig=fig, verbose=verbose)
 
     return goodpeaks
 
-def detectCoulombPeaks(xdata, ydata, fig=None, verbose=1):
-    """ Detect Coulomb peaks in the data.
+def analyseCoulombPeaksArray(xdata, ydata, fig=None, verbose=1):
+    """ Find Coulomb peaks in arrays of data.
     
     This is very similar to analyseCoulombPeaks, but takes arrays of data as input. Hence the ydata
     can for example be either the I, Q or any combination of both obtained with RF reflectometry.
