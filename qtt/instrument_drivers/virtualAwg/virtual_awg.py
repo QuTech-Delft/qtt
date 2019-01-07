@@ -240,7 +240,7 @@ class VirtualAwg(Instrument):
 
         Arguments:
             gates (dict): Contains the gate name keys with relative amplitude values.
-            sweep_range (float): The overall amplitude of the sawtooth waves in millivolt.
+            sweep_range (float): The peak-to-peak amplitude of the sawtooth waves in millivolt.
             period (float): The period of the pulse waves in seconds.
             width (float): Width of the rising sawtooth ramp as a proportion of the total cycle.
                            Needs a value between 0 and 1. The value 1 producing a rising ramp,
@@ -389,12 +389,14 @@ class VirtualAwg(Instrument):
         upload_data = []
         if do_upload:
             _ = [awg.delete_waveforms() for awg in self.awgs]
+        _debug={}
         for number in self.__awg_range:
             sequence_channels = list()
             sequence_names = list()
             sequence_items = list()
             vpp_amplitude = self.awgs[number].retrieve_gain()
             sampling_rate = self.awgs[number].retrieve_sampling_rate()
+            _debug[number]={'vpp_amplitude': vpp_amplitude, 'sampling_rate':sampling_rate}
             for gate_name, sequence in sequences.items():
                 (awg_number, channel_number, *marker_number) = self._settings.awg_map[gate_name]
                 if awg_number != number:
@@ -406,6 +408,8 @@ class VirtualAwg(Instrument):
                     scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt * awg_to_plunger / vpp_amplitude
                     sequence_data *= scaling_ratio
 
+                    _debug[number][gate_name]={'scaling_ratio': scaling_ratio}
+
                 sequence_names.append('{}_{}'.format(gate_name, sequence['name']))
                 sequence_channels.append((channel_number, *marker_number))
                 sequence_items.append(sequence_data)
@@ -413,7 +417,7 @@ class VirtualAwg(Instrument):
             upload_data.append((sequence_names, sequence_channels, sequence_items))
             if do_upload and sequence_items:
                 self.awgs[number].upload_waveforms(sequence_names, sequence_channels, sequence_items)
-        return {'gate_comb': sequences, 'upload_data': upload_data}
+        return {'gate_comb': sequences, 'upload_data': upload_data, '_debug': _debug}
 
 
 # UNITTESTS #
