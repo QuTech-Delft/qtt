@@ -108,7 +108,7 @@ class VideoMode:
     Attributes:
         station (qcodes station): contains all the information about the set-up
         sweepparams (string, 1 x 2 list or dict): the parameter(s) to be swept
-        sweepranges (int or 1 x 2 list): the range(s) to be swept over
+        sweepranges (int or 1 x 2 list): the range(s) to be swept over (peak-to-peak range)
         minstrument (int or tuple): the channel of the FPGA, or tuple (instrument, channel)
         Naverage (int): the number of times the FPGA averages
         resolution (1 x 2 list): for 2D the resolution
@@ -449,13 +449,13 @@ class VideoMode:
         """ Programs the AWG, starts the read-out and the plotting. """
         if self.verbose:
             print(Fore.BLUE + '%s: run ' % (self.__class__.__name__,) + Fore.RESET)
-        scan_dimentions = self.scan_dimension()
+        scan_dimensions = self.scan_dimension()
         virtual_awg = getattr(self.station, 'virtual_awg', None)
         awg = getattr(self.station, 'awg', None)
 
-        if scan_dimentions == 1:
+        if scan_dimensions == 1:
             self.__run_1d_scan(awg, virtual_awg)
-        elif scan_dimentions == 2:
+        elif scan_dimensions == 2:
             self.__run_2d_scan(awg, virtual_awg)
         else:
             raise Exception('type of scan not supported')
@@ -470,7 +470,7 @@ class VideoMode:
         if virtual_awg:
             if not isinstance(self.sweepparams, (str, dict)):
                 raise Exception('arguments not supported')
-            sweep_range = self.sweepranges * 2
+            sweep_range = self.sweepranges
             gates = self.sweepparams if isinstance(self.sweepparams, dict) else {self.sweepparams: 1}
             waveform = virtual_awg.sweep_gates(gates, sweep_range, period)
             virtual_awg.enable_outputs(list(gates.keys()))
@@ -487,7 +487,7 @@ class VideoMode:
 
     def __run_2d_scan(self, awg, virtual_awg, period=1e-6):
         if virtual_awg:
-            sweep_ranges = [i * 2 for i in self.sweepranges]
+            sweep_ranges = [i for i in self.sweepranges]
             if isinstance(self.sweepparams, dict):
                 gates = self.sweepparams
             elif isinstance(self.sweepparams, list):
