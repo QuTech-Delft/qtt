@@ -838,7 +838,7 @@ try:
                 warnings.warn('please do not use the txt field any more')
                 subtitle = txt
             else:
-                raise Exception('please do not use the txt field any more')
+                raise ValueError('please do not use the txt field any more')
 
             txt = None
 
@@ -859,7 +859,7 @@ try:
             titlebox = slide.shapes.Item(1)
             mainbox = slide.shapes.Item(2)
             if maintext is None:
-                raise Exception('maintext argument is None')
+                raise TypeError('maintext argument is None')
             mainbox.TextFrame.TextRange.Text = maintext
         else:
             titlebox = slide.shapes.Item(1)
@@ -923,8 +923,7 @@ try:
                 fig.save(fname)
             else:
                 if verbose:
-                    raise Exception(
-                        'figure is of an unknown type %s' % (type(fig), ))
+                    raise TypeError('figure is of an unknown type %s' % (type(fig), ))
             top = 120
             if figsize is not None:
                 left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
@@ -939,7 +938,7 @@ try:
 
                 try:
                     import cv2
-                    imwh = cv2.imread(fname).shape[1],  cv2.imread(fname).shape[0]
+                    imwh = cv2.imread(fname).shape[1], cv2.imread(fname).shape[0]
                 except:
                     imwh = None
                 if imwh is not None:

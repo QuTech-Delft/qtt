@@ -24,7 +24,7 @@ class VirtualAwg(Instrument):
 
     __digitizer_name = 'm4i_mk'
     __awg_slave_name = 'awg_mk'
-    __volt_to_millivolt = 1e-3
+    __volt_to_millivolt = 1e3
 
     def __init__(self, awgs, settings, name='virtual_awg', logger=logging, **kwargs):
         """ Creates and initializes an virtual AWG object and sets the relation between the quantum gates,
@@ -387,16 +387,20 @@ class VirtualAwg(Instrument):
             >>> virual_awg.sequence_gates(sawtooth_signal)
         """
         upload_data = []
+        settings_data = {}
+
         if do_upload:
             _ = [awg.delete_waveforms() for awg in self.awgs]
-        _debug={}
+
         for number in self.__awg_range:
             sequence_channels = list()
             sequence_names = list()
             sequence_items = list()
+
             vpp_amplitude = self.awgs[number].retrieve_gain()
             sampling_rate = self.awgs[number].retrieve_sampling_rate()
-            _debug[number]={'vpp_amplitude': vpp_amplitude, 'sampling_rate':sampling_rate}
+            settings_data[number] = {'vpp_amplitude': vpp_amplitude, 'sampling_rate': sampling_rate}
+
             for gate_name, sequence in sequences.items():
                 (awg_number, channel_number, *marker_number) = self._settings.awg_map[gate_name]
                 if awg_number != number:
@@ -405,10 +409,9 @@ class VirtualAwg(Instrument):
                 sequence_data = Sequencer.get_data(sequence, sampling_rate)
                 if not marker_number:
                     awg_to_plunger = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
-                    scaling_ratio = 2 * VirtualAwg.__volt_to_millivolt * awg_to_plunger / vpp_amplitude
+                    scaling_ratio = 2 * awg_to_plunger / (vpp_amplitude * VirtualAwg.__volt_to_millivolt)
+                    settings_data[number][gate_name] = {'scaling_ratio': scaling_ratio}
                     sequence_data *= scaling_ratio
-
-                    _debug[number][gate_name]={'scaling_ratio': scaling_ratio}
 
                 sequence_names.append('{}_{}'.format(gate_name, sequence['name']))
                 sequence_channels.append((channel_number, *marker_number))
@@ -417,7 +420,7 @@ class VirtualAwg(Instrument):
             upload_data.append((sequence_names, sequence_channels, sequence_items))
             if do_upload and sequence_items:
                 self.awgs[number].upload_waveforms(sequence_names, sequence_channels, sequence_items)
-        return {'gate_comb': sequences, 'upload_data': upload_data, '_debug': _debug}
+        return {'gate_comb': sequences, 'upload_data': upload_data, 'settings': settings_data}
 
 
 # UNITTESTS #
