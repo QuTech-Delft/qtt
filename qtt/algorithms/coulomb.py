@@ -33,75 +33,60 @@ def gauss(x, p):
     return p[2] * 1.0 / (p[1] * np.sqrt(2 * np.pi)) * np.exp(-(x - p[0])**2 / (2 * p[1]**2))
 
 
-def analyseCoulombPeaks(alldata, fig=None, verbose=1):
-    """ Find Coulomb peaks in a 1D dataset 
+def analyseCoulombPeaks(all_data, fig=None, verbose=1):
+    """ Find Coulomb peaks in a 1D dataset
 
     Args:
-        alldata (DataSet): data to analyse
-        fig (int or None): figure handle to plot
+        all_data (DataSet): The data to analyse.
+        fig (int or None): Figure handle to the plot.
+
     Returns:
         peaks (list): fitted peaks
     """
-    xdata, ydata = qtt.data.dataset1Ddata(alldata)
+    x_data, y_data = qtt.data.dataset1Ddata(all_data)
+    return analyseCoulombPeaksArray(x_data, y_data, fig=fig, verbose=verbose)
 
-    goodpeaks = analyseCoulombPeaksArray(xdata, ydata, fig=fig, verbose=verbose)
 
-    return goodpeaks
+def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1):
+    """ Find Coulomb peaks in arrays of data. This is very similar to analyseCoulombPeaks,
+        but takes arrays of data as input. Hence the y_data can for example be either the
+        I, Q or any combination of both obtained with RF reflectometry.
 
-def analyseCoulombPeaksArray(xdata, ydata, fig=None, verbose=1):
-    """ Find Coulomb peaks in arrays of data.
-    
-    This is very similar to analyseCoulombPeaks, but takes arrays of data as input. Hence the ydata
-    can for example be either the I, Q or any combination of both obtained with RF reflectometry.
-    
     Args:
-        xdata (1D array): data of varied parameter
-        ydata (1D array): signal data
-    
+        x_data (1D array): The data of varied parameter.
+        y_data (1D array): The signal data.
+
     Returns:
-        goodpeaks (list of dict): detected peaks
+        (list of dict): The detected peaks.
     """
-    istep = (xdata[-1] - xdata[0]) / (xdata.size - 1)
+    sampling_rate = (x_data[-1] - x_data[0]) / (x_data.size - 1)
+    return coulombPeaks(x_data, y_data, verbose=verbose, fig=fig, plothalf=True, sampling_rate=sampling_rate)
 
-    goodpeaks = coulombPeaks(
-        xdata, ydata, verbose=verbose, fig=fig, plothalf=True, istep=istep)
 
-    return goodpeaks
+def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling_rate=1):
+    """ Fit Coulumb peaks in a measurement series.
 
-def fitCoulombPeaks(x, y, lowvalue=None, verbose=1, fig=None, istep=1):
-    """ Fit Coulumb peaks in a measurement series 
+    Args:
+        x_data (1D array): The data of varied parameter.
+        y_data (1D array): The signal data.
+        sampling_rate (float): The sampling rate in mV/pixel.
 
-    Arguments
-    ---------
-        x : array
-            data series
-        y : array
-            data series
-        istep : float
-            sampling rate in [mV/pixel]
-
-    Returns
-    -------
-    peaks : list
-        list with detected peaks
-
+    Returns:
+        (list): A list with detected peaks.
     """
-    minval = np.percentile(
-        y, 5) + .1 * (np.percentile(y, 95) - np.percentile(y, 5))
-    pt, w = nonmaxsuppts(y, d=int(12 / istep), minval=minval)
-    fp = fitPeaks(x, y, pt, verbose=verbose >= 2, fig=fig)
+    minval = np.percentile(y_data, 5) + 0.1 * (np.percentile(y_data, 95) - np.percentile(y_data, 5))
+    pt, w = nonmaxsuppts(y_data, d=int(12 / sampling_rate), minval=minval)
+    fp = fitPeaks(x_data, y_data, pt, verbose=verbose >= 2, fig=fig)
 
     if lowvalue == None:
-        lowvalue = np.percentile(y, 1)
-    highvalue = np.percentile(y, 99)
+        lowvalue = np.percentile(y_data, 1)
+    highvalue = np.percentile(y_data, 99)
     peaks = []
     for ii, f in enumerate(fp):
         p = pt[ii]
-        peak = dict(
-            {'p': p, 'x': pt[ii], 'x': x[p], 'y': y[p], 'gaussfit': f})
-
-        peak['halfvaluelow'] = (y[p] - lowvalue) / 2 + lowvalue
-        peak['height'] = (y[p] - lowvalue)
+        peak = dict({'p': p, 'x': pt[ii], 'x': x_data[p], 'y': y_data[p], 'gaussfit': f})
+        peak['halfvaluelow'] = (y_data[p] - lowvalue) / 2 + lowvalue
+        peak['height'] = (y_data[p] - lowvalue)
         if peak['height'] < .1 * (highvalue - lowvalue):
             peak['valid'] = 0
         else:
@@ -561,24 +546,23 @@ def peakdataOrientation(x, y):
     return x, y
 
 
-def coulombPeaks(x, y, verbose=1, fig=None, plothalf=False, istep=None):
-    """ Detect Coulumb peaks in a 1D scan
+def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_rate=None):
+    """ Detects the Coulumb peaks in a 1D scan.
 
     Args:
         x, y (arrays): 
         verbose (int)
         fig (int or None)
-        istep (float): scale in mV / pixel ?
+        sampling_rate (float): The sampling rate in in mV/pixel.
 
     """
 
-    if istep is None:
+    if sampling_rate is None:
         warnings.warn('istep is None, please add istep as a parameter')
 
-    x, y = peakdataOrientation(x, y)  # i=np.argsort(x); x=x[i]; y=y[i]
-
-    peaks = fitCoulombPeaks(x, y, verbose=verbose, fig=None, istep=istep)
-    peaks = analysePeaks(x, y, peaks, verbose=verbose>=2, doplot=0, istep=istep)
+    x, y = peakdataOrientation(x_data, y_data)  # i=np.argsort(x); x=x[i]; y=y[i]
+    peaks = fitCoulombPeaks(x, y, verbose=verbose, fig=None, sampling_rate=sampling_rate)
+    peaks = analysePeaks(x, y, peaks, verbose=verbose>=2, doplot=0, istep=sampling_rate)
     peaks = peakFindBottom(x, y, peaks, verbose=verbose>=2)
     goodpeaks = filterPeaks(x, y, peaks, verbose=verbose)
 
@@ -775,21 +759,17 @@ def filterOverlappingPeaks(goodpeaks, threshold=.6, verbose=0):
 
 
 def test_analysepeaks(fig=None):
-    
-    x=np.arange(0,100)
-    y=np.random.rand(x.size)
-    y+=qtt.algorithms.functions.gaussian(x, 30, 6, 30)
-    y+=qtt.algorithms.functions.gaussian(x, 70, 8, 70)
-    
-    peaks=coulombPeaks(x,y, verbose=1, istep=1, fig=fig)
-    
-    assert(len(peaks)==2)
-    assert(np.abs(peaks[0]['x']-70)<2)
-    assert(np.abs(peaks[1]['x']-30)<2)
-    
-    
+    x_data = np.arange(0,100)
+    y_data = np.random.rand(x_data.size)
+    y_data += qtt.algorithms.functions.gaussian(x_data, 30, 6, 30)
+    y_data += qtt.algorithms.functions.gaussian(x_data, 70, 8, 70)
+
+    peaks = coulombPeaks(x_data, y_data, verbose=1, sampling_rate=1, fig=fig)
+    assert len(peaks) == 2
+    assert np.abs(peaks[0]['x']-70) < 2
+    assert np.abs(peaks[1]['x']-30) < 2
+
+
 if __name__=='__main__':
     pass
     test_analysepeaks(fig=100)
-    
-    

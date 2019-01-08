@@ -121,7 +121,7 @@ def correctChargeSensor(xscan, yscan, xs, ys, fig=None):
 
     """
 
-    peaks = qtt.algorithms.coulomb.coulombPeaks(xs, ys, fig=fig, istep=1)
+    peaks = qtt.algorithms.coulomb.coulombPeaks(xs, ys, fig=fig, sampling_rate=1)
 
     try:
         # range for fit: select from the first detected peak
