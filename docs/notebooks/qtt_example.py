@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """ Example script to show QTT capabilities
 
+The script should be executed from an interactive environment such as Spyder. An event loop should be running for the GUI elements.
+
 @author: eendebakpt
 """
 
 #%% Load packages
-from imp import reload
 import numpy as np
 import matplotlib.pyplot as plt
 import tempfile
 from collections import OrderedDict
+import pyqtgraph
+_ = pyqtgraph.mkQApp()
 
 import qcodes
 from qcodes import MatPlot
@@ -26,7 +29,6 @@ import qtt.simulation.virtual_dot_array
 
 datadir = tempfile.mkdtemp(prefix='qtt_example')
 qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
-
 
 #%% Create a virtual model for testing
 #
