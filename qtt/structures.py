@@ -391,7 +391,7 @@ class sensingdot_t:
         else:
 
             goodpeaks = coulombPeaks(
-                x, y, verbose=verbose, fig=fig, plothalf=True, istep=istep)
+                x, y, verbose=verbose, fig=fig, plothalf=True, sampling_rate=istep)
         if fig is not None:
             plt.xlabel('%s' % (self.tunegate(), ))
             plt.ylabel('%s' % (self.minstrument, ))
