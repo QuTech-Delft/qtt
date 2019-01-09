@@ -237,7 +237,7 @@ class VirtualAwg(Instrument):
         for gate_name, amplitudes in gate_voltages.items():
             sequences[gate_name] = Sequencer.make_pulse_table(amplitudes, waiting_times, repetitions, gate_name)
         sweep_data = self.sequence_gates(sequences, do_upload)
-        sweep_data.update({'period': period, 'start_zero': True})
+        sweep_data.update({'period': period, 'start_zero': True, 'width': 1.0})
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data

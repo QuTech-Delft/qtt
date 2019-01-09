@@ -118,3 +118,7 @@ class Templates:
                                  ('period*2/3', '-amplitude', 'linear'),
                                  ('period*5/6', 'amplitude', 'linear'),
                                  ('period', 0, 'linear')]})
+
+    @staticmethod
+    def pulse_table(name, entries):
+        return TablePT({name: entries})

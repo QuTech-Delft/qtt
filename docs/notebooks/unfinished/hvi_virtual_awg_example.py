@@ -15,6 +15,7 @@ from qtt.gui.dataviewer import DataViewer
 from qtt.measurements.videomode import VideoMode
 from qtt.measurements.scans import measuresegment as measure_segment
 from qtt.instrument_drivers.virtualAwg.hvi.KeysightM3601A import KeysightM3601A
+from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 
 #%%
 
@@ -119,6 +120,34 @@ virtual_awg.stop()
 virtual_awg.disable_outputs([output_gate])
 
 plot_data_1d(data, 'Digitizer Data Points [a.u.]', 'Amplitude [V]')
+
+#%%
+
+uptime_in_seconds = 5.0e-6
+marker_delay_in_sec = 2.0e-6
+virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_sec)
+
+output_gates=['B0', 'B2']
+
+gate_voltages = {'B0': [50, 0, 75, 0, 100, 0], 'B2': [0, 50, 0, 75, 0, 100]}
+waiting_times = [1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5]
+
+sweep_data = virtual_awg.pulse_gates(gate_voltages, waiting_times)
+
+Sequencer.plot(sweep_data['gate_comb']['B2'], sampling_rate)
+
+virtual_awg.enable_outputs(output_gates)
+virtual_awg.run()
+
+readout_channels = [0]
+number_of_averages = 100
+data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
+
+virtual_awg.stop()
+virtual_awg.disable_outputs(output_gates)
+
+plot_data_1d(data, 'Digitizer Data Points [a.u.]', 'Amplitude [V]')
+
 
 #%%
 
