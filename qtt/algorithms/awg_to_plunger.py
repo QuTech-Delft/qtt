@@ -39,7 +39,7 @@ def get_dataset(ds):
 
 
 def click_line(fig=None):
-    """Define a line through two points. The points are choosen by clicking on a position in a plot, two times.
+    """ Define a line through two points. The points are choosen by clicking on a position in a plot, two times.
     
     Args:
         fig (int or None): number of figure to plot the points in, when None it will plot a figure
@@ -51,13 +51,15 @@ def click_line(fig=None):
     if fig is not None:
         plt.figure(fig)
     pts0, pts1 = plt.ginput(2)
+    if (pts1[0]-pts0[0])==0:
+        raise Exception('vertical line not implemented')
     slope = (pts1[1]-pts0[1])/(pts1[0]-pts0[0])
     offset = (pts0[1] - slope*pts0[0])
 
     return offset, slope
 
 #%% Main functions
-def measure_awg_to_plunger(station, gate, minstrument, srange=30, step = 0.5):
+def measure_awg_to_plunger(station, gate, minstrument, scanrange=30, step = 0.5):
     """ Performing a scan2Dfast measurement, same gate on both axis, where the one axis is sweeped with the awg 
     and one axis is stepped with the DAC's. Measurement should be centred around an addition line. From the slope of the addition line
     the awg to plunger conversion factor can be checked with the function analyse_awg_to_plunger.
@@ -66,7 +68,7 @@ def measure_awg_to_plunger(station, gate, minstrument, srange=30, step = 0.5):
         station (QCoDeS station): measurement setup
         gate (str): gate for which the awg to plunger conversion 
         minstrument (str, int): list with the name of the measurement instrument (str), and the channel number (int)
-        srange (float): sweep- and steprange (mV), making a square 2d measurement
+        scanrange (float): sweep- and steprange (mV), making a square 2d measurement
         step (float): stepsize (mV)
         
     Returns:
@@ -76,7 +78,7 @@ def measure_awg_to_plunger(station, gate, minstrument, srange=30, step = 0.5):
     """
     gates=station.gates
     value0=gates.get(gate)
-    scanjob=scanjob_t({'sweepdata': {'param': gate, 'range': srange}, 'stepdata':{'param': gate, 'range':srange, 'step': step, 'start': value0-srange/2} })
+    scanjob=scanjob_t({'sweepdata': {'param': gate, 'range': scanrange}, 'stepdata':{'param': gate, 'range':scanrange, 'step': step, 'start': value0 - scanrange / 2}})
     scanjob['minstrument']=minstrument
     scanjob['minstrumenthandle']=minstrument
     scanjob['Naverage']=500
