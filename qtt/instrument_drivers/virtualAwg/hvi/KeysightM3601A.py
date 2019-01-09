@@ -1,41 +1,42 @@
-import sys
+import os
 import logging
+
+try:
+    import keysightSD1
+except ImportError:
+    raise ImportError('To use the Keysight SD drivers install the keysightSD1 module '
+                      '(http://www.keysight.com/main/software.jspx?ckey=2784055)')
 
 from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg, VirtualAwgError
 
-try:
-    sys.path.append("C:\\Program Files (x86)\\Keysight\\SD1\\Libraries\\Python")
-    import keysightSD1
-except ImportError:
-    keysightSD1 = None
 
-
-class HviVirtualAwg(VirtualAwg):
+class KeysightM3601A(VirtualAwg):
 
     __awg_name = 'Keysight_M3201A'
     module_names = ['Module 0', 'Module 1', 'Module 2', 'Module 3']
 
     def __init__(self, awgs, settings, name='virtual_awg', logger=logging, **kwargs):
         super().__init__(awgs, settings, name, logger, **kwargs)
-        if not all(type(awg.fetch_awg).__name__ == HviVirtualAwg.__awg_name for awg in self.awgs):
+        if not all(type(awg.fetch_awg).__name__ == KeysightM3601A.__awg_name for awg in self.awgs):
             raise VirtualAwgError('Unusable device added! Not a Keysight M3201A AWG.')
         self.hvi = keysightSD1.SD_HVI()
         self.load_hvi_file()
         self.set_hvi_modules()
+        self.set_awg_settings()
 
     def set_hvi_modules(self):
-        settings = zip(HviVirtualAwg.module_names, self.awgs)
+        settings = zip(KeysightM3601A.module_names, self.awgs)
         for module, awg_wrapper in settings:
             error_code = self.hvi.assignHardwareWithUserNameAndModuleID(module, awg_wrapper.fetch_awg.awg)
             self.check_for_error(error_code)
 
-    def load_hvi_file(self):
-        file_path = "D:\\users\\lucblom\\spin-projects\\users\\lucblom\\debug\\XLD\\sequence.HVI"
+    def load_hvi_file(self, hvi_file='sync_four_awgs.HVI'):
+        file_path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__), '../hvi/', hvi_file))
         error_code = self.hvi.open(file_path)
         self.check_for_error(error_code, show_warnings=False)
 
     def set_hvi_settings(self, length_sequence=100, number_of_repetitions=-1, steps=0):
-        module_count = len(HviVirtualAwg.module_names)
+        module_count = len(KeysightM3601A.module_names)
         for index in range(module_count):
             error_code = self.hvi.writeIntegerConstantWithIndex(index, "length_sequence", length_sequence)
             self.check_for_error(error_code)
@@ -43,6 +44,11 @@ class HviVirtualAwg(VirtualAwg):
             self.check_for_error(error_code)
             error_code = self.hvi.writeIntegerConstantWithIndex(index, "step", steps)
             self.check_for_error(error_code)
+
+    def set_awg_settings(self):
+        awg_count = len(self.awgs)
+        for awg_number in range(awg_count):
+            self.update_setting(awg_number, 'auto_trigger', keysightSD1.SD_TriggerModes.AUTOTRIG)
 
     def compile_hvi_file(self):
         error_code = self.hvi.compile()

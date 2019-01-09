@@ -14,7 +14,7 @@ import qcodes.instrument_drivers.Keysight.M3201A as AWG
 from qtt.gui.dataviewer import DataViewer
 from qtt.measurements.videomode import VideoMode
 from qtt.measurements.scans import measuresegment as measure_segment
-from qtt.instrument_drivers.virtualAwg.hvi_virtual_awg import HviVirtualAwg
+from qtt.instrument_drivers.virtualAwg.hvi.KeysightM3601A import KeysightM3601A
 
 #%%
 
@@ -39,7 +39,6 @@ def update_awg_settings(virtual_awg, sampling_rate, amplitude):
     for awg_number in range(len(virtual_awg.awgs)):
         virtual_awg.update_setting(awg_number, 'sampling_rate', sampling_rate)
         virtual_awg.update_setting(awg_number, 'amplitude', amplitude)
-        virtual_awg.update_setting(awg_number, 'auto_trigger', keysightSD1.SD_TriggerModes.AUTOTRIG)
     
 def plot_data_1d(digitizer_data, label_x_axis='', label_y_axis=''):
     plt.figure(); 
@@ -65,7 +64,7 @@ def plot_data_2d(digitizer_data, label_x_axis='', label_y_axis='', label_colorba
 ## DIGITIZER ##
 digitizer = M4i(name='digitizer')
 
-sample_rate_in_Hz = 2e7
+sample_rate_in_Hz = 1e7
 digitizer.sample_rate(sample_rate_in_Hz)
 
 timeout_in_ms = 10 * 1000
@@ -92,24 +91,19 @@ awg_4 = AWG.Keysight_M3201A("AWG_slot4", 1, 4)
 awg_5 = AWG.Keysight_M3201A("AWG_slot5", 1, 5)
 
 hardware = Hardware('hardware')
-virtual_awg = HviVirtualAwg([awg_2, awg_3, awg_4, awg_5], hardware)
-
-
-for awg in virtual_awg.awgs:
-    awg.change_setting('sampling_rate', 1e8)
-    awg.change_setting('auto_trigger', keysightSD1.SD_TriggerModes.AUTOTRIG)
+virtual_awg = KeysightM3601A([awg_2, awg_3, awg_4, awg_5], hardware)
 
 amplitude = 1.5
-sampling_rate = 1e8
+sampling_rate = 5e7
 update_awg_settings(virtual_awg, sampling_rate, amplitude)
 
 uptime_in_seconds = 5.0e-6
-marker_delay_in_sec = 0 #3.0e-5
+marker_delay_in_sec = 3.0e-5
 virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_sec)
 
 #%%
 
-output_gate = 'B0'
+output_gate = 'B2'
 mV_sweep_range = 50
 sec_period = 1.0e-4
 sweep_data = virtual_awg.sweep_gates({output_gate: 1}, mV_sweep_range, sec_period)
@@ -118,14 +112,13 @@ virtual_awg.enable_outputs([output_gate])
 virtual_awg.run()
 
 readout_channels = [0]
-number_of_averages = 1000
+number_of_averages = 1
 data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
 
 virtual_awg.stop()
 virtual_awg.disable_outputs([output_gate])
 
 plot_data_1d(data, 'Digitizer Data Points [a.u.]', 'Amplitude [V]')
-
 
 #%%
 
@@ -153,14 +146,23 @@ logviewer.show()
 #%%
 
 
-vm = VideoMode(station, 'B0', 160, minstrument=(digitizer.name,[0]), resolution = 100, diff_dir=[None, 'g'])
+vm = VideoMode(station, 'B2', 160, minstrument=(digitizer.name,[0]), resolution = 100, diff_dir=[None, 'g'])
 vm.stopreadout()
 vm.updatebg()
 
 
 #%%
 
-vm = VideoMode(station, [{'B0': 1}, {'B2': 1}], [40, 40], minstrument=(digitizer.name, [3]), resolution = [48, 48])
+vm = VideoMode(station, [{'B0': 1}, {'B2': 1}], [40, 40], minstrument=(digitizer.name, [0]), resolution = [48, 48])
 vm.stopreadout()
 vm.updatebg()
 
+
+#%%
+
+from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
+
+def plot(sweep_data, measured_data=None):
+    for gate_name, sequence in sweep_data.items():
+        Sequencer.plot(sequence)
+    

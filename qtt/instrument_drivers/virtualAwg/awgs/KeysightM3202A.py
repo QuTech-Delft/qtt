@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 
 from qcodes import Parameter
@@ -7,18 +6,17 @@ from qtt.instrument_drivers.virtualAwg.awgs.common import (AwgCommon,
                                                            AwgCommonError)
 
 try:
-    sys.path.append("C:\\Program Files (x86)\\Keysight\\SD1\\Libraries\\Python")
-    import qcodes.instrument_drivers.Keysight.M3201A as AWG
+    from qcodes.instrument_drivers.Keysight.M3201A import Keysight_M3201A
 except ImportError:
-    AWG = None
+    Keysight_M3201A = None
 
 
 class KeysightM3202A_AWG(AwgCommon):
 
     def __init__(self, awg):
         super().__init__('Keysight_M3201A', channel_numbers=[1, 2, 3, 4], marker_numbers=[1])
-        if not AWG:
-            raise AwgCommonError('The keysight AWG module could not be found!')
+        if not Keysight_M3201A:
+            raise AwgCommonError('The Keysight SD drivers are not be found!')
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
         self.__settings = [Parameter(name='enabled_outputs', initial_value=0b0000,
@@ -117,7 +115,7 @@ class KeysightM3202A_AWG(AwgCommon):
         offset = self.retrieve_setting('offset')
         for (channel_number, sequence) in zip(channel_numbers, sequence_items):
             print(len(np.array(sequence)))
-            wave_object = AWG.Keysight_M3201A.new_waveform_from_double(0, np.array(sequence))
+            wave_object = Keysight_M3201A.new_waveform_from_double(0, np.array(sequence))
             self.__awg.load_waveform(wave_object, wave_number)
             self.__awg.set('frequency_channel_%d' % channel_number, frequency)
             self.__awg.set('wave_shape_channel_%d' % channel_number, wave_shape)
