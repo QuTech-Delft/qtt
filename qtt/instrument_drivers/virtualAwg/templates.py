@@ -60,3 +60,7 @@ class Templates:
         """
         return TablePT({name: [(0, 0), ('offset', 1),
                                ('offset+uptime', 0), ('period', 0)]})
+
+    @staticmethod
+    def pulse_table(name, entries):
+        return TablePT({name: entries})

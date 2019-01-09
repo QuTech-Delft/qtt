@@ -59,6 +59,32 @@ class Sequencer:
                 'type': DataTypes.QU_PULSE}
 
     @staticmethod
+    def make_pulse_table(amplitudes, waiting_times, repetitions=1, name='pulse_table'):
+        """ Creates a sequence of pulses from a list of amplitudes and waiting times.
+            Note that the initial voltage level will be given by the last element in amplitudes.
+
+        Args:
+            amplitudes (list of floats): List with voltage amplitudes of the pulses.
+            waiting_times (list of float): List with durations containing the waiting time of each pulse.
+            repetitions (int): The number of oscillations in the sequence.
+            name (str): The name of the returned sequence.
+
+        Returns:
+            Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
+                  sequence data type and the actual qupulse sequencePT respectively.
+        """
+        if len(amplitudes) != len(waiting_times):
+            raise ValueError('Arguments have invalid lengths! (amplitudes={}, waiting_times={}'.format(
+                             len(amplitudes), len(waiting_times)))
+        time_in_ns = 0.0
+        entry_list = list()
+        for waiting_time, amplitude in zip(waiting_times, amplitudes):
+            time_in_ns += waiting_time * Sequencer.__sec_to_ns
+            entry_list.append((time_in_ns, amplitude, 'jump'))
+        sequence_data = Templates.pulse_table(name, entry_list)
+        return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions), 'type': DataTypes.QU_PULSE}
+
+    @staticmethod
     def make_marker(period, uptime=0.2, offset=0.0, repetitions=1, name='marker'):
         """ Creates a marker block waveforms of the type qupulse template.
 
@@ -105,7 +131,7 @@ class Sequencer:
         instructions = sequencer.build()
         if not sequencer.has_finished():
             raise PlottingNotPossibleException(template)
-        (_, voltages, measurements) = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
+        (_, voltages, _) = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
         return voltages[next(iter(voltages))]
 
     @staticmethod
@@ -292,3 +318,15 @@ def test_serializer():
         amplitude = 1.5
         sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
         Sequencer.serialize(sawtooth)
+
+
+def test_make_pulse_table():
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
+        amplitudes = [1, 2, 3]
+        waiting_times = [1e-4, 2e-5, 3e-3]
+        sampling_rate = 1e9
+        pulse_data = Sequencer.make_pulse_table(amplitudes, waiting_times)
+        raw_data = Sequencer.get_data(pulse_data, sampling_rate)
+        assert raw_data[0] == amplitudes[0]
+        assert raw_data[-1] == amplitudes[-1]

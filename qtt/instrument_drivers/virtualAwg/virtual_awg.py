@@ -203,14 +203,15 @@ class VirtualAwg(Instrument):
         self.awg_marker_uptime(uptime)
         self.awg_marker_delay(delay)
 
-    def pulse_gates(self, gates, sweep_range, period, do_upload=True):
-        """ Supplies a square wave to the given gates and returns the settings required
-            for processing and constucting the readout times for the digitizer.
+    def pulse_gates(self, gate_voltages, waiting_times, repetitions=1, do_upload=True):
+        """ Supplies custom sequences to the gates. The supplied list of voltage setpoints with
+            waiting times are converted into sequences for each gate and upload to the AWG.
 
         Arguments:
-            gates (dict): Contains the gate name keys with relative amplitude values.
-            sweep_range (float): The overall amplitude of the pulse waves in millivolt.
-            period (float): The period of the pulse waves in seconds.
+            gate_voltages (dict): Each gate name key contains a an array with millivolt
+                                  setpoint level to be converted into a sequence.
+            waiting_times (list of floats): The duration in seconds of each pulse in the sequence.
+            repetitions (int): The number of times to repeat the sequence.
             do_upload (bool, Optional): Does not upload the waves to the AWG's when set to False.
 
         Returns:
@@ -218,18 +219,17 @@ class VirtualAwg(Instrument):
             the sweep ranges and the marker properties and period of the pulse waves.
 
         Example:
-            >>> sec_period = 1e-6
-            >>> mV_sweep_range = 100
-            >>> gates = {'P4': 1, 'P7': 0.1}
-            >>> pulse_data = virtualawg.pulse_gates(gates, 100, 1e-3)
+            >>> gates_voltages = {'P4': [50, 0, -50], 'P7': [-25, 0, 25]}
+            >>> waiting_times = [1e-4, 1e-4, 1e-4]
+            >>> pulse_data = virtualawg.pulse_gates(gate_voltages, waiting_times)
         """
         sequences = dict()
-        sequences.update(self.__make_markers(period))
-        for gate_name, rel_amplitude in gates.items():
-            amplitude = rel_amplitude * sweep_range
-            sequences[gate_name] = Sequencer.make_square_wave(amplitude, period)
+        period = sum(waiting_times)
+        sequences.update(self.__make_markers(period, repetitions))
+        for gate_name, amplitudes in gate_voltages.items():
+            sequences[gate_name] = Sequencer.make_pulse_table(amplitudes, waiting_times, repetitions, gate_name)
         sweep_data = self.sequence_gates(sequences, do_upload)
-        sweep_data.update({'sweeprange': sweep_range, 'period': period})
+        sweep_data.update({'period': period, 'start_zero': True})
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
