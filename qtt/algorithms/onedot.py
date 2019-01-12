@@ -39,9 +39,11 @@ def _onedotGetBlobs(fimg, fig=None):
 
     xx = detect_blobs_binary(bim)
 
-    if int(cv2.__version__[0]) >= 3:
-        # opencv 3
-        ww, contours, tmp = cv2.findContours(
+    if int(cv2.__version__[0]) >= 4:
+        contours, tmp = cv2.findContours(
+            bim.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    elif int(cv2.__version__[0]) >= 3:
+        _, contours, tmp = cv2.findContours(
             bim.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     else:
         contours, tmp = cv2.findContours(
@@ -57,7 +59,6 @@ def _onedotGetBlobs(fimg, fig=None):
         pgeometry.imshowz(fimg, interpolation='nearest')
         plt.axis('image')
         plt.colorbar()
-        # ax = plt.gca()
         pgeometry.plotPoints(xx.T, '.g', markersize=16, label='blob centres')
         plt.title('Reponse image with detected blobs')
 
@@ -66,7 +67,6 @@ def _onedotGetBlobs(fimg, fig=None):
         pgeometry.imshowz(bim, interpolation='nearest')
         plt.axis('image')
         plt.colorbar()
-        # ax = plt.gca()
         pgeometry.plotPoints(xxw.T, '.g', markersize=16, label='blob centres')
         pgeometry.plotPoints(xx.T, '.m', markersize=12, label='blob centres (alternative)')
         plt.title('Binary blobs')

@@ -326,12 +326,9 @@ class DotModel(Instrument):
     def compute(self, random=0.02):
         """ Compute output of the model """
 
-        try:
-            logging.debug('DummyModel: compute values')
-            
+        try:           
             # current through 3
             val = self._calculate_pinchoff(self.bottomgates, offset=self.gate_pinchoff, random=.01)
-            logging.debug('compute: value %f' % val)
 
             self._data['instrument_amplitude'] = val
 
@@ -358,9 +355,7 @@ class DotModel(Instrument):
 
     def keithley3_get(self, param):
         with self.lock:
-            logging.debug('keithley3_get: %s' % param)
             val = self.compute()
-
             self._data['keithley3_amplitude'] = val
         return val
 
