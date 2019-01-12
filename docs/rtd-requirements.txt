@@ -14,7 +14,7 @@ pyzmqrpc
 PyQt5
 qcodes
 qtpy
--e git+https://github.com/qutech/qc-toolkit.git@12af2dff0506c42e721b65696126849f23d7a4ce#egg=qupulse
+qupulse
 sympy
 slacker
 scikit-image
