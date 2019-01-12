@@ -65,15 +65,15 @@ class FittingException(Exception):
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5, num_bins=None, plungers=[], fig=None, ppt=None, verbose=0):
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels, 
-    determines the durations in these two levels, fits a decaying exponantial on two arrays of durations, 
+    determines the durations in these two levels, fits a decaying exponential on two arrays of durations, 
     which gives the tunneling frequency for both the levels. If the number of datapoints is too low to get enough points per bin
     for the exponential fit (for either the up or the down level), this analysis step is passed over. tunnelrate_dn and tunnelrate_up
-    are returned as None, but similar information can be substrected from parameters['down_segments'] and parameters['up_segments'].
+    are returned as None, but similar information can be substracted from parameters['down_segments'] and parameters['up_segments'].
 
     Args:
         data (array): qcodes DataSet (or 1d data array) with the RTS data
         plungers ([str, str]): array of the two plungers used to perform the RTS measurement
-        samplerate (int or float): sampling rate of either the fpga or the digitizer, optional if given in the metadata
+        samplerate (int or float): sampling rate of the acquisition device, optional if given in the metadata
                 of the measured data
         min_sep (float): if the separation found for the fit of the double gaussian is less then this value, the fit probably failed 
             and a FittingException is raised
@@ -91,7 +91,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
     """
 
-    if type(data) == qcodes.data.data_set.DataSet:
+    if isinstance(data, qcodes.data.data_set.DataSet):
         try:
             plungers = plungers
             metadata = data.metadata
@@ -156,7 +156,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         plt.legend()
         plt.title(title)
         if ppt:
-            addPPTslide(title=title, fig=plt.figure(title), notes='Fit paramaters double gaussian:\n mean down: %.3f counts' %
+            addPPTslide(title=title, fig=plt.figure(title), notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
                         par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] + ', std up:%.3f counts' % par_fit[3] + '.Separation between peaks gaussians: %.3f std' % separation + '. Split between two levels: %.3f' % split)
 
     if separation < min_sep:
@@ -223,7 +223,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_dn = None
         tunnelrate_up = None
         warnings.warn(
-            'Number of up datapoints %d is not be enough to make an acurate fit of the exponantial decay for level up.'% counts_dn[0]+ 'Look therefore at the mean value of the measurement segments')
+            'Number of up datapoints %d is not be enough to make an acurate fit of the exponential decay for level up.'% counts_dn[0]+ 'Look therefore at the mean value of the measurement segments')
     
     parameters = {'plunger value': plungervalue, 'sampling rate': samplerate, 'fit parameters double gaussian': par_fit,
                   'separations between peaks gaussians': separation,
@@ -237,7 +237,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     
         bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
 
-        # fitting exponantial decay for down level
+        # fitting exponential decay for down level
         A_dn_fit, B_dn_fit, gamma_dn_fit = fit_exp_decay(bincentres_dn, counts_dn)
         tunnelrate_dn = gamma_dn_fit / 1000
     
@@ -247,7 +247,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         time_scaling = 1e3
         
         if fig:
-            title = 'Fitted exponantial decay, level down'
+            title = 'Fitted exponential decay, level down'
             plt.figure(title)
             plt.clf()
             plt.plot(time_scaling*bincentres_dn, counts_dn, 'o', label='Counts down')
@@ -262,7 +262,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     
         bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
     
-        # fitting exponantial decay for up level
+        # fitting exponential decay for up level
         A_up_fit, B_up_fit, gamma_up_fit = fit_exp_decay(bincentres_up, counts_up)
         tunnelrate_up = gamma_up_fit / 1000
     
@@ -270,7 +270,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             print('Tunnel rate up: %.1f kHz' % tunnelrate_up)
     
         if fig:
-            title = 'Fitted exponantial decay, level up'
+            title = 'Fitted exponential decay, level up'
             plt.figure(title)
             plt.clf()
             plt.plot(time_scaling*bincentres_up, counts_up, 'o', label='Counts up')
