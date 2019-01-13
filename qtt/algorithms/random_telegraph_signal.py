@@ -294,6 +294,12 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         parameters['fit parameters exp. decay down'] = [A_dn_fit, B_dn_fit, gamma_dn_fit]
         parameters['fit parameters exp. decay up'] = [A_up_fit, B_up_fit, gamma_up_fit]
 
+        parameters['tunnelrate_down_exponential_fit'] = tunnelrate_dn
+        parameters['tunnelrate_up_exponential_fit'] = tunnelrate_up
+    else:
+        parameters['tunnelrate_down_exponential_fit'] = None
+        parameters['tunnelrate_up_exponential_fit'] = None
+        
     return tunnelrate_dn, tunnelrate_up, parameters
 
 

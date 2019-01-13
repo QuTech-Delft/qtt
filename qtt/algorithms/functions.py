@@ -7,7 +7,7 @@ import qtt.pgeometry
 import matplotlib.pyplot as plt
 
 
-def gaussian(x, mean, s, amplitude=1, offset=0):
+def gaussian(x, mean, std, amplitude=1, offset=0):
     """ Model for Gaussian function
 
        $$y = offset + amplitude * np.exp(-(1/2)*(x-mean)^2/s^2)$$
@@ -19,7 +19,7 @@ def gaussian(x, mean, s, amplitude=1, offset=0):
         y (array)
 
     """
-    y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * s * s))
+    y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * std * std))
     return y
 
 
@@ -34,8 +34,8 @@ def _cost_gaussian(x_data, y_data, params):
         cost (float): value which indicates the difference between the data and the fit
     """
     
-    [mean, s, amplitude, offset] = params
-    model_y_data = gaussian(x_data, mean, s, amplitude, offset)
+    [mean, std, amplitude, offset] = params
+    model_y_data = gaussian(x_data, mean, std, amplitude, offset)
     cost = np.linalg.norm(y_data - model_y_data)
     return cost
 
@@ -80,7 +80,7 @@ def test_fit_gaussian():
         Nothing
     """
     x_data = np.linspace(0,10,100)
-    gauss_data = gaussian(x_data,mean = 4,s=1,amplitude=5)
+    gauss_data = gaussian(x_data,mean = 4,std=1,amplitude=5)
     noise = np.random.rand(100)
     [mean,s,amplitude,offset],_ = fit_gaussian(x_data = x_data, y_data = (gauss_data+noise))
     assert(3.5 < mean < 4.5)
@@ -165,13 +165,17 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
         initial_params = np.array([A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up])
     par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
+    if par_fit[4]>par_fit[5]:
+        par_fit = par_fit[1,0,3,2,5,4]
     # separation is the difference between the max of the gaussians devided by the sum of the std of both gaussians
     separation = (par_fit[5] - par_fit[4]) / (abs(par_fit[2]) + abs(par_fit[3]))
     # split equal distant to both peaks measured in std from the peak
     split = par_fit[4] + separation * abs(par_fit[2])
 
     result_dict = {'parameters initial guess': initial_params, 'separation': separation, 'split': split}
-
+    result_dict['left'] = par_fit[4,2,0]
+    result_dict['right'] = par_fit[5,3,1]
+    
     return par_fit, result_dict
 
 
