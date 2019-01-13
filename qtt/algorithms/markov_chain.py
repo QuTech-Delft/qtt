@@ -30,8 +30,11 @@ class ContinuousTimeMarkovModel:
 
         Args:
             states (str[]): list with names for the states
-            holding_parameters(float[]): list with the holding parameters
-            jump_chain (array): The jump chain or transition matrix
+            holding_parameters(float[]): List with the holding parameters. The holding parameters determine the average
+                time before the system will make a jump to a new state
+            jump_chain (array): The jump chain or transition matrix. This matrix gives the probability for the system
+                        to jump from a state to one of the other states. The sum of the probabilities in each row must
+                        equal one.
 
         For an introduction to Markov chains see https://www.probabilitycourse.com/chapter11/11_3_1_introduction.php
 
@@ -74,27 +77,28 @@ class ContinuousTimeMarkovModel:
                                                          id(self), self.states, self.generator_matrix)
 
     def stationary_distribution_direct(self):
-        """ Return the stationary distrubution of the model
+        """ Return the stationary distribution of the model
 
-        From https://www.probabilitycourse.com/chapter11/11_3_2_stationary_and_limiting_distributions.php, Theorem 11.3
+        The calculation method is taken from https://www.probabilitycourse.com/chapter11/11_3_2_stationary_and_limiting_distributions.php, Theorem 11.3
+        
         """
         pi_tilde = self.stationary_distribution_discrete(self.jump_chain)
         norm = np.sum((pi_tilde / self.holding_parameters))
-        pi = (pi_tilde / self.holding_parameters) / norm
-        return pi
+        stationary_distribution = (pi_tilde / self.holding_parameters) / norm
+        return stationary_distribution
 
     def stationary_distribution(self):
-        """ Return the stationary distrubution of the model
+        """ Return the stationary distribution of the model
 
-        From https://vknight.org/unpeudemath/code/2015/08/01/simulating_continuous_markov_chains.html
+        The calculation method is taken from https://vknight.org/unpeudemath/code/2015/08/01/simulating_continuous_markov_chains.html
         """
         Q = self.generator_matrix
         n = Q.shape[0]
         A = np.vstack((Q, np.ones((1, n))))
         B = np.zeros((n + 1, 1))
         B[-1] = 1
-        pi = _solve_least_squares(A, B)
-        return pi
+        stationary_distribution = _solve_least_squares(A, B)
+        return stationary_distribution
 
     @staticmethod
     def stationary_distribution_discrete(jump_chain):
@@ -112,8 +116,12 @@ class ContinuousTimeMarkovModel:
 
         Args:
             length (int): number of elements in the sequence
-            delta_time (float): time step to be used
-            initial_state (None or int or list): If an int, then use that state is initial state. If None then take a random state weighted by the stationary distribution
+            delta_time (float): time step to be used. This is equal to one over the samplerate.
+            initial_state (None or int or list): This parameter determines how the first element of the generated
+                sequence is chosen. If an int, then use that state is initial state. If None then take
+                a random state weighted by the stationary distribution. If the initial_state is a list, then the list
+                is interpreted as a probability distribution and the first element is samples from all possible states
+                according to the distribution specified.
         Returns:
             array : generated sequence
 
@@ -137,7 +145,6 @@ class ContinuousTimeMarkovModel:
             cum_weights = list(itertools.accumulate(P[:, jj]))
             Pcum[:, jj] = cum_weights
         for i in range(1, sequence.size):
-            #weights = P[:, sequence[i-1]]
             cum_weights = Pcum[:, sequence[i - 1]]
             sequence[i] = random.choices(state_indices, weights=None, cum_weights=cum_weights, k=1)[0]
         return sequence
@@ -148,8 +155,9 @@ class ContinuousTimeMarkovModel:
         Args:
             length (int): number of elements in the sequence
             delta_time (float): time step to be used
-            initial_state (None or int or list): If an int, then use that state is initial state. If None then take a random state weighted by the stationary distribution
-            number_of_sequences (int):
+            initial_state (None or int or list): This parameter determines how the first element of the generated
+                sequences are chosen. The parameter is passed to the :func:`generate_sequence` method.
+            number_of_sequences (int): Specified the number of sequences to generate
         Returns:
             array : generated sequences
         """
@@ -210,6 +218,7 @@ class TestMarkovChain(unittest.TestCase):
 
     def test_stationary_distribution(self):
         jump_chain = self.rts_model.jump_chain
+        self.assertIsInstance(jump_chain, np.ndarray)
         generator_matrix = self.rts_model.generator_matrix
         expected_generator = np.array([[-0.002, 0.001], [0.002, -0.001]])
         np.testing.assert_array_almost_equal(generator_matrix, expected_generator)
@@ -227,7 +236,7 @@ class TestMarkovChain(unittest.TestCase):
         G = np.array([[-10., 2000., 2000.], [0., -12000., 0.], [10., 10000., -2000.]])
         holding_parameters = -np.diag(G).reshape((-1, 1))
         jump_chain = (1. / holding_parameters.T) * G
-        jump_chain[np.diag_indices(G.shape[0])] = 0  # -holding_parameters.flatten()
+        jump_chain[np.diag_indices(G.shape[0])] = 0 
 
         elzerman_model = ContinuousTimeMarkovModel(
             ['spin-down', 'spin-up', 'empty'], holding_parameters * model_unit, jump_chain)

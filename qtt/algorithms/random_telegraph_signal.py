@@ -217,6 +217,9 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if verbose >= 2:
         print('counts_dn %d, counts_up %d' % (counts_dn[0], counts_up[0]))
 
+    tunnelrate_dn = None
+    tunnelrate_up = None
+
     if counts_dn[0] < 50:
         tunnelrate_dn = None
         tunnelrate_up = None
@@ -299,12 +302,12 @@ def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1,
     """ Generate a RTS signal
 
     Args:
-        number_of_samples (int): number of samples to generate
+        number_of_samples (int): Length the the trace to be generated
         std_normal_noise (float): std of Gaussian noise added to the signal
         uniform_noise (float): uniform noise in the range +- uniform_noise/2 is added to the signal
         rate_up (float): rate from down to up
         rate_down (float): rate from up to down
-        samplerate (float):
+        samplerate (float): The samplerate of the signal to be generated
     Returns:
         array: generated signal (0 is down, 1 is up)
 
