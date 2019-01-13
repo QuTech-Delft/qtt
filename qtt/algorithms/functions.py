@@ -166,18 +166,29 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     if par_fit[4]>par_fit[5]:
-        par_fit = par_fit[1,0,3,2,5,4]
+        par_fit = np.take(par_fit, [1,0,3,2,5,4])
     # separation is the difference between the max of the gaussians devided by the sum of the std of both gaussians
     separation = (par_fit[5] - par_fit[4]) / (abs(par_fit[2]) + abs(par_fit[3]))
     # split equal distant to both peaks measured in std from the peak
     split = par_fit[4] + separation * abs(par_fit[2])
 
     result_dict = {'parameters initial guess': initial_params, 'separation': separation, 'split': split}
-    result_dict['left'] = par_fit[4,2,0]
-    result_dict['right'] = par_fit[5,3,1]
+    result_dict['parameters'] = par_fit
+    result_dict['left'] = np.take(par_fit, [4,2,0])
+    result_dict['right'] = np.take(par_fit, [5,3,1])
+    result_dict['type']='fitted double gaussian'
     
     return par_fit, result_dict
 
+def test_fit_double_gaussian():
+    x_data=np.arange(-4,4, .05)
+    initial_parameters= [10,20,1,1,-2,2]
+    y_data = double_gaussian(x_data, initial_parameters)
+    
+    fitted_parameters, results = fit_double_gaussian(x_data, y_data)
+    
+    parameter_diff = np.abs(fitted_parameters-initial_parameters)
+    assert(np.all(parameter_diff<1e-3))
 
 def exp_function(x, a, b, c):
     """ Model for exponential function
