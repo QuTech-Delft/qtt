@@ -19,25 +19,27 @@ from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 
 
 def transitions_durations(data, split):
-    """ For data of a two level system (up and down), this funtion determines which datapoints belong to which level and finds the transitions, in order to determines 
+    """ For data of a two level system (up and down), this funtion determines which datapoints belong to which level and finds the transitions, in order to determines
     how long the system stays in these levels.
 
     Args:
         data (numpy array): data from the two level system
         split (float): value that separates the up and down level
 
-    Returns: 
+    Returns:
         duration_dn (numpy array): array of the durations (unit: data points) in the down level
         duration_up (numpy array): array of durations (unit: data points) in the up level
     """
 
-    # split the data and find the index of the transitions, transitions from up to down are marked with -1 and from down to up with 1
+    # split the data and find the index of the transitions, transitions from
+    # up to down are marked with -1 and from down to up with 1
     b = data > split
     d = np.diff(b.astype(int))
     transitions_dn = (d == -1).nonzero()[0]
     transitions_up = (d == 1).nonzero()[0]
 
-    # durations are calculated by taking the difference in data points between the transitions, first and last duration are ignored
+    # durations are calculated by taking the difference in data points between
+    # the transitions, first and last duration are ignored
     if data[0] <= split and data[-1] <= split:
         duration_up = transitions_dn - transitions_up
         duration_dn = transitions_up[1:] - transitions_dn[:-1]
@@ -62,10 +64,11 @@ class FittingException(Exception):
     pass
 
 
-def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5, num_bins=None, plungers=[], fig=None, ppt=None, verbose=0):
+def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
+                    num_bins=None, plungers=[], fig=None, ppt=None, verbose=0):
     """
-    This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels, 
-    determines the durations in these two levels, fits a decaying exponential on two arrays of durations, 
+    This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
+    determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
     which gives the tunneling frequency for both the levels. If the number of datapoints is too low to get enough points per bin
     for the exponential fit (for either the up or the down level), this analysis step is passed over. tunnelrate_dn and tunnelrate_up
     are returned as None, but similar information can be substracted from parameters['down_segments'] and parameters['up_segments'].
@@ -75,7 +78,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         plungers ([str, str]): array of the two plungers used to perform the RTS measurement
         samplerate (int or float): sampling rate of the acquisition device, optional if given in the metadata
                 of the measured data
-        min_sep (float): if the separation found for the fit of the double gaussian is less then this value, the fit probably failed 
+        min_sep (float): if the separation found for the fit of the double gaussian is less then this value, the fit probably failed
             and a FittingException is raised
         max_sep (float): if the separation found for the fit of the double gaussian is more then this value, the fit probably failed
             and a FittingException is raised
@@ -97,7 +100,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             metadata = data.metadata
             gates = metadata['allgatevalues']
             plungervalue = gates[plungers[0]]
-        except:
+        except BaseException:
             plungervalue = []
         if samplerate is None:
             metadata = data.metadata
@@ -132,7 +135,9 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     counts, bins = np.histogram(data, bins=num_bins)
     bincentres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
 
-    # fitting the double gaussian and finding the split between the up and the down state, separation between the max of the two gaussians measured in the sum of the std
+    # fitting the double gaussian and finding the split between the up and the
+    # down state, separation between the max of the two gaussians measured in
+    # the sum of the std
     par_fit, result_dict = fit_double_gaussian(bincentres, counts)
     separation = result_dict['separation']
     split = result_dict['split']
@@ -182,35 +187,34 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if len(durations_dn) < 1:
         raise FittingException('All durations_dn are shorter than the minimal duration.')
 
-
     def _create_histogram(durations, level, verbose=verbose):
         """ Calculate number of bins, bin edges and histogram for durations
-        
+
         This method works if the data is sampled at integer durations.
         """
         numbins = int(np.sqrt(len(durations)))
-        bin_size = int(np.ceil( (durations.max()-durations.min())/numbins))
+        bin_size = int(np.ceil((durations.max() - durations.min()) / numbins))
         # choose bins carefully, since our data is sampled only an discrete times
-        bins=np.arange(durations.min()-.5, durations.max()+bin_size, bin_size)
+        bins = np.arange(durations.min() - .5, durations.max() + bin_size, bin_size)
         counts, bins = np.histogram(durations, bins=bins)
         if verbose:
             print(' _create_histogram level ' + level + ': nbins %d, %d' % (numbins, bin_size))
         return counts, bins
-    
-    # calculating the number of bins and counts for down level   
-    counts_dn, bins_dn = _create_histogram(durations_dn, level = 'down')
+
+    # calculating the number of bins and counts for down level
+    counts_dn, bins_dn = _create_histogram(durations_dn, level='down')
 
     # calculating the number of bins and counts for up level
-    counts_up, bins_up = _create_histogram(durations_up, level = 'up')
+    counts_up, bins_up = _create_histogram(durations_up, level='up')
 
     # calculating durations in seconds
     durations_dn = durations_dn / samplerate
     durations_up = durations_up / samplerate
 
-    bins_dn=bins_dn/samplerate
-    bins_up=bins_up/samplerate
+    bins_dn = bins_dn / samplerate
+    bins_up = bins_up / samplerate
 
-    if verbose>=2:
+    if verbose >= 2:
         print('counts_dn %d, counts_up %d' % (counts_dn[0], counts_up[0]))
 
     if counts_dn[0] < 50:
@@ -218,40 +222,41 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_up = None
         warnings.warn(
             'Number of down datapoints %d is not be enough to make an acurate fit of the exponential decay for level down.' % counts_dn[0] + 'Look therefore at the mean value of the measurement segments')
-        
+
     if counts_up[0] < 50:
         tunnelrate_dn = None
         tunnelrate_up = None
         warnings.warn(
-            'Number of up datapoints %d is not be enough to make an acurate fit of the exponential decay for level up.'% counts_dn[0]+ 'Look therefore at the mean value of the measurement segments')
-    
+            'Number of up datapoints %d is not be enough to make an acurate fit of the exponential decay for level up.' % counts_dn[0] + 'Look therefore at the mean value of the measurement segments')
+
     parameters = {'plunger value': plungervalue, 'sampling rate': samplerate, 'fit parameters double gaussian': par_fit,
                   'separations between peaks gaussians': separation,
                   'split between the two levels': split}
-    
-    parameters['down_segments']={'mean': np.mean(durations_dn_idx)/ samplerate, 'p50': np.percentile(durations_dn_idx, 50)/ samplerate, 'mean_filtered': np.mean(durations_dn_idx)}
-    parameters['up_segments']=  {'mean': np.mean(durations_up_idx)/ samplerate, 'p50': np.percentile(durations_up_idx, 50)/ samplerate, 'mean_filtered': np.mean(durations_up_idx)}
-    
-    
-    if (counts_dn[0] > 50) and (counts_up[0] > 50): 
-    
+
+    parameters['down_segments'] = {'mean': np.mean(durations_dn_idx) / samplerate, 'p50': np.percentile(
+        durations_dn_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_dn_idx)}
+    parameters['up_segments'] = {'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
+        durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up_idx)}
+
+    if (counts_dn[0] > 50) and (counts_up[0] > 50):
+
         bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
 
         # fitting exponential decay for down level
         A_dn_fit, B_dn_fit, gamma_dn_fit = fit_exp_decay(bincentres_dn, counts_dn)
         tunnelrate_dn = gamma_dn_fit / 1000
-    
+
         if verbose:
             print('Tunnel rate down: %.1f kHz' % tunnelrate_dn)
-    
+
         time_scaling = 1e3
-        
+
         if fig:
             title = 'Fitted exponential decay, level down'
             plt.figure(title)
             plt.clf()
-            plt.plot(time_scaling*bincentres_dn, counts_dn, 'o', label='Counts down')
-            plt.plot(time_scaling*bincentres_dn, exp_function(bincentres_dn,  A_dn_fit, B_dn_fit, gamma_dn_fit),
+            plt.plot(time_scaling * bincentres_dn, counts_dn, 'o', label='Counts down')
+            plt.plot(time_scaling * bincentres_dn, exp_function(bincentres_dn, A_dn_fit, B_dn_fit, gamma_dn_fit),
                      'r', label='Fitted exponential decay \n $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
             plt.xlabel('Lifetime (ms)')
             plt.ylabel('Counts per bin')
@@ -259,22 +264,22 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             plt.title(title)
             if ppt:
                 addPPTslide(title=title, fig=plt.figure(title))
-    
+
         bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
-    
+
         # fitting exponential decay for up level
         A_up_fit, B_up_fit, gamma_up_fit = fit_exp_decay(bincentres_up, counts_up)
         tunnelrate_up = gamma_up_fit / 1000
-    
+
         if verbose:
             print('Tunnel rate up: %.1f kHz' % tunnelrate_up)
-    
+
         if fig:
             title = 'Fitted exponential decay, level up'
             plt.figure(title)
             plt.clf()
-            plt.plot(time_scaling*bincentres_up, counts_up, 'o', label='Counts up')
-            plt.plot(time_scaling*bincentres_up, exp_function(bincentres_up,  A_up_fit, B_up_fit, gamma_up_fit),
+            plt.plot(time_scaling * bincentres_up, counts_up, 'o', label='Counts up')
+            plt.plot(time_scaling * bincentres_up, exp_function(bincentres_up, A_up_fit, B_up_fit, gamma_up_fit),
                      'r', label='Fitted exponential decay \n $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
             plt.xlabel('Lifetime (ms)')
             plt.ylabel('Data points per bin')
@@ -289,7 +294,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     return tunnelrate_dn, tunnelrate_up, parameters
 
 
-def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1, uniform_noise=0.05, rate_up=10e3, rate_down=15e3, samplerate=1e6):
+def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1,
+                        uniform_noise=0.05, rate_up=10e3, rate_down=15e3, samplerate=1e6):
     """ Generate a RTS signal
 
     Args:
@@ -304,16 +310,16 @@ def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1, unifor
 
     """
 
-    rts_model = ContinuousTimeMarkovModel(['down', 'up'], [rate_up/samplerate,rate_down/samplerate], np.array([[0.,1],[1,0]]) )        
+    rts_model = ContinuousTimeMarkovModel(['down', 'up'], [rate_up / samplerate,
+                                                           rate_down / samplerate], np.array([[0., 1], [1, 0]]))
 
     data = rts_model.generate_sequence(number_of_samples, delta_time=1)
 
-    if uniform_noise !=0 :
-        data = data + uniform_noise*(np.random.rand(data.size, )-.5)
-    if std_gaussian_noise!=0:
+    if uniform_noise != 0:
+        data = data + uniform_noise * (np.random.rand(data.size, ) - .5)
+    if std_gaussian_noise != 0:
         data = data + np.random.normal(0, std_gaussian_noise, data.size)
-    return data 
-
+    return data
 
 
 #%%
@@ -336,30 +342,26 @@ def test_RTS(fig=None):
 
     data = generate_RTS_signal(100, std_gaussian_noise=0, uniform_noise=.1)
     data = generate_RTS_signal(100, std_gaussian_noise=0.1, uniform_noise=.1)
-    
-    samplerate=2e6
-    data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down = 20e3, samplerate=samplerate)
 
+    samplerate = 2e6
+    data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down=20e3, samplerate=samplerate)
 
     with warnings.catch_warnings():  # catch any warnings
         warnings.simplefilter("ignore")
         tunnelrate_dn, tunnelrate_up, parameters = tunnelrates_RTS(data, plungers=[], samplerate=samplerate, fig=fig)
 
+        assert(parameters['up_segments']['mean'] > 0)
+        assert(parameters['down_segments']['mean'] > 0)
 
-        assert(parameters['up_segments']['mean']>0)
-        assert(parameters['down_segments']['mean']>0)
-        
+    samplerate = 1e6
+    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=400e3, rate_down=20e3, samplerate=samplerate)
 
-    samplerate=1e6
-    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=400e3, rate_down = 20e3, samplerate=samplerate)
+    tunnelrate_dn, tunnelrate_up, results = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
+                                                            min_duration=1, num_bins=40, plungers=[], fig=1, verbose=2)
 
+    assert(np.abs(tunnelrate_dn - 400) < 100)
+    assert(np.abs(tunnelrate_up - 20) < 10)
 
-    tunnelrate_dn, tunnelrate_up, results = tunnelrates_RTS(data, samplerate=samplerate, min_sep = 1.0, max_sep=2222,
-                                        min_duration = 1, num_bins = 40, plungers=[], fig=1, verbose=2)
-
-    assert(np.abs(tunnelrate_dn-400)<100)
-    assert(np.abs(tunnelrate_up-20)<10)
-    
 
 if __name__ == '__main__':
     test_RTS(fig=100)
