@@ -363,13 +363,15 @@ def test_RTS(fig=None):
         assert(parameters['down_segments']['mean'] > 0)
 
     samplerate = 1e6
-    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=400e3, rate_down=20e3, samplerate=samplerate)
+    rate_up = 200e3
+    rate_down = 20e3
+    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=rate_up, rate_down=rate_down, samplerate=samplerate)
 
     tunnelrate_dn, tunnelrate_up, results = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
-                                                            min_duration=1, num_bins=40, plungers=[], fig=1, verbose=2)
+                                                            min_duration=1, num_bins=40, plungers=[], fig=fig, verbose=2)
 
-    assert(np.abs(tunnelrate_dn - 400) < 100)
-    assert(np.abs(tunnelrate_up - 20) < 10)
+    assert(np.abs(tunnelrate_dn - rate_up*1e-3) < 100)
+    assert(np.abs(tunnelrate_up - rate_down*1e-3) < 10)
 
 
 if __name__ == '__main__':
