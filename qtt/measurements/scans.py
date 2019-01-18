@@ -6,6 +6,7 @@ This is part of qtt.
 
 import numpy as np
 import os
+import re
 import copy
 import logging
 import time
@@ -629,6 +630,12 @@ def test_sample_data():
     v = s.restrict_boundaries('D0', 1000)
     assert (v == 100)
 
+def _convert_vectorname_to_parametername(vector_name, extra_string = None):
+    parameter_name = re.sub('\(.*?\)', '', vector_name)
+    if extra_string is not None:
+        parameter_name += '_'  + extra_string
+    return parameter_name
+
 
 class scanjob_t(dict):
     """ Structure that contains information about a scan 
@@ -848,7 +855,8 @@ class scanjob_t(dict):
                     sweepname = self['sweepdata']['paramname']
                 else:
                     sweepname = 'sweepparam'
-                sweepparam = VectorParameter(name=sweepname, label=sweepname, comb_map=[(
+                sweepname_identifier = _convert_vectorname_to_parametername(sweepname, 'sweep_parameter')
+                sweepparam = VectorParameter(name=sweepname_identifier, label=sweepname, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan1D', 'scan1Dfast']:
                 sweepparam = get_param(gates, sweepdata['param'])
@@ -903,11 +911,13 @@ class scanjob_t(dict):
                 else:
                     sweepname = 'sweepparam'
                 if stepvalues is None:
-                    stepparam = VectorParameter(name=stepname, comb_map=[(
+                    stepname_identifier = _convert_vectorname_to_parametername(stepname, 'step_parameter')
+                    stepparam = VectorParameter(name=stepname_identifier, comb_map=[(
                         gates.parameters[x], stepdata['param'][x]) for x in stepdata['param']])
                 else:
                     stepparam = self['stepdata']['param']
-                sweepparam = VectorParameter(name=sweepname, comb_map=[(
+                sweepname_identifier = _convert_vectorname_to_parametername(sweepname, 'sweep_parameter')
+                sweepparam = VectorParameter(name=sweepname_identifier, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan2D', 'scan2Dfast', 'scan2Dturbo']:
                 stepparam = stepdata['param']

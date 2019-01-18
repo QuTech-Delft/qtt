@@ -4,15 +4,53 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 
-from qcodes import DataArray
 import qtt.pgeometry
+from qcodes import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function
 
 
+def _estimate_fermi_model_center(x_data, y_data_linerized):
+    """ Estimates the following properties of a charge addition line; the center location
+        of the addition line. The amplitude step size caused by the addition line.
+
+    Args:
+        x_data (1D array): The independent data.
+        y_data_linerized (1D array): The dependent data with linear estimate subtracted.
+
+    Returns:
+        xdata_center_est (float): Estimate of x-data value at the center.
+        amplitude_step (float): Estimate of the amplitude of the step.
+    """
+    sigma = x_data.size / 250
+    y_filtered = scipy.ndimage.gaussian_filter(y_data_linerized, sigma, order=1)
+
+    # assume step is steeper than overall slope
+    estimated_index = np.argmax(np.abs(y_filtered))
+    center_index = int(x_data.size / 2)
+
+    # prevent guess to be at the edges
+    if estimated_index < 0.01 * x_data.size or estimated_index > 0.99 * x_data.size:
+        estimated_center_xdata = np.mean(x_data)
+    else:
+        estimated_center_xdata = x_data[estimated_index]
+
+    step_size = (np.mean(y_filtered[center_index:]) - np.mean(y_filtered[:center_index]))
+    amplitude_step = -1.0 * np.sign(y_filtered[estimated_index]) * step_size
+    return estimated_center_xdata, amplitude_step
+
+
 def initFermiLinear(x_data, y_data, fig=None):
-    """ Initalization of fitting a FermiLinear function.
+    """ Initialization of fitting a FermiLinear function.
 
     First the linear part is estimated, then the Fermi part of the function.
+
+    Args:
+        x_data (array): data for independent variable
+        y_data (array): dependent variable
+
+    Returns:
+        linear_part (array)
+        fermi_part (array)
     """
     xdata = np.array(x_data)
     ydata = np.array(y_data)
@@ -25,12 +63,12 @@ def initFermiLinear(x_data, y_data, fig=None):
 
         a = p1[0]
         b = p1[1]
-        ab = [a, b]
-        y = linear_function(xdata, ab[0], ab[1])
+        linear_part = [a, b]
+        ylin = linear_function(xdata, linear_part[0], linear_part[1])
         cc = np.mean(xdata)
         A = 0
         T = np.std(xdata) / 10
-        ff = [cc, A, T]
+        fermi_part = [cc, A, T]
     else:
         # guess initial linear part
         mx = np.mean(xdata)
@@ -47,24 +85,20 @@ def initFermiLinear(x_data, y_data, fig=None):
             a = np.mean(dd) / dx
         b = my - a * mx
         xx = np.hstack((xdata[0:nx], xdata[-nx:]))
-        ab = [a, b]
-        y = linear_function(xdata, ab[0], ab[1])
-
-        # subtract linear part
-        yr = ydata - y
-
-        cc = np.mean(xdata)
-        h = int(xdata.size / 2)
-        A = -(np.mean(yr[h:]) - np.mean(yr[:h]))
-        T = np.std(xdata) / 10
-        ab[1] = ab[1] - A / 2  # correction
-        ylin = linear_function(xdata, ab[0], ab[1])
+        linear_part = [a, b]
+        ylin = linear_function(xdata, linear_part[0], linear_part[1])
 
         # subtract linear part
         yr = ydata - ylin
-        ff = [cc, A, T]
+
+        cc, A = _estimate_fermi_model_center(xdata, yr)
+
+        T = np.std(xdata) / 100
+        linear_part[1] = linear_part[1] - A / 2  # correction
+        fermi_part = [cc, A, T]
+
     if fig is not None:
-        yf = FermiLinear(xdata, ab[0], ab[1], *ff)
+        yf = FermiLinear(xdata, linear_part[0], linear_part[1], *fermi_part)
 
         xx = np.hstack((xdata[0:nx], xdata[-nx:]))
         yy = np.hstack((ydata[0:nx], ydata[-nx:]))
@@ -88,7 +122,7 @@ def initFermiLinear(x_data, y_data, fig=None):
         # plt.plot(xdata, yr, '.b', label='Fermi part')
 
         plt.legend()
-    return ab, ff
+    return linear_part, fermi_part
 
 
 # %%
@@ -96,11 +130,11 @@ def initFermiLinear(x_data, y_data, fig=None):
 def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
     """ Fit data to a Fermi-Linear function
 
-    Arguments:
+    Args:
         x_data, y_data (array): independent and dependent variable data
         l (float): leverarm passed to FermiLinear function
         use_lmfit (bool): If True use lmfit for optimization, otherwise use scipy
-        
+
     Returns:
         p (array): fitted function parameters
         results (dict): extra fitting data
@@ -145,71 +179,105 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
 
 # %%
 
-def fit_addition_line(dataset, trimborder=True):
-    """Fits a FermiLinear function to the addition line and finds the middle of the step.
+def fit_addition_line_array(x_data, y_data, trimborder=True):
+    """ Fits a FermiLinear function to the addition line and finds the middle of the step.
+
+    Note: Similar to fit_addition_line but directly works with arrays of data.
 
     Args:
-        dataset (qcodes dataset): 1d measured data of additionline
+        x_data, y_data (array): independent and dependent variable data
         trimborder (bool): determines if the edges of the data are taken into account for the fit
 
     Returns:
         m_addition_line (float): x value of the middle of the addition line
         pfit (array): fit parameters of the Fermi Linear function
         pguess (array): parameters of initial guess
-        dataset_fit (qcodes dataset): dataset with fitted Fermi Linear function
-        dataset_guess (qcodes dataset):dataset with guessed Fermi Linear function
+    """
+    if trimborder:
+        cut_index = max(min(int(x_data.size / 40), 100), 1)
+        x_data = x_data[cut_index: -cut_index]
+        y_data = y_data[cut_index: -cut_index]
+
+    # fitting of the FermiLinear function
+    fit_parameters, extra_data = fitFermiLinear(x_data, y_data, verbose=1, fig=None)
+    initial_parameters = extra_data['p0']
+    m_addition_line = fit_parameters[2]
+
+    return m_addition_line, {'fit parameters': fit_parameters, 'parameters initial guess': initial_parameters}
+
+
+def fit_addition_line(dataset, trimborder=True):
+    """Fits a FermiLinear function to the addition line and finds the middle of the step.
+
+    Args:
+        dataset (qcodes dataset): The 1d measured data of addition line.
+        trimborder (bool): determines if the edges of the data are taken into account for the fit.
+
+    Returns:
+        m_addition_line (float): x value of the middle of the addition line
+        result_dict (dict): dictionary with the following results
+            fit parameters (array): fit parameters of the Fermi Linear function
+            parameters initial guess (array): parameters of initial guess
+            dataset fit (qcodes dataset): dataset with fitted Fermi Linear function
+            dataset initial guess (qcodes dataset):dataset with guessed Fermi Linear function
 
     See also: FermiLinear and fitFermiLinear
     """
     y_array = dataset.default_parameter_array()
     setarray = y_array.set_arrays[0]
-    xdata = np.array(setarray)
-    ydata = np.array(y_array)
+    x_data = np.array(setarray)
+    y_data = np.array(y_array)
 
     if trimborder:
-        ncut = max(min(int(xdata.size / 40), 100), 1)
-        xdata, ydata, setarray = xdata[ncut: -ncut], ydata[ncut:-ncut], setarray[ncut:-ncut]
+        cut_index = max(min(int(x_data.size / 40), 100), 1)
+        x_data = x_data[cut_index: -cut_index]
+        y_data = y_data[cut_index: -cut_index]
+        setarray = setarray[cut_index: -cut_index]
 
-    # fitting of the FermiLinear function
-    pp = fitFermiLinear(xdata, ydata, verbose=1, fig=None)
-    pfit = pp[0]  # fit parameters
-    pguess = pp[1]['p0']  # initial guess parameters
-    y0 = FermiLinear(xdata, *list(pguess))
-    dataset_guess = DataArray(name='fit', label='fit', preset_data=y0, set_arrays=(setarray,))
-    y = FermiLinear(xdata, *list(pfit))
-    dataset_fit = DataArray(name='fit', label='fit', preset_data=y, set_arrays=(setarray,))
-    m_addition_line = pfit[2]
-    result_dict = {'fit parameters': pfit, 'parameters initial guess': pguess,
-                   'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
-    return m_addition_line, result_dict
+    m_addition_line, result_dict = fit_addition_line_array(x_data, y_data, trimborder=False)
+
+    y_initial_guess = FermiLinear(x_data, *list(result_dict['parameters initial guess']))
+    dataset_guess = DataArray(name='fit', label='fit', preset_data=y_initial_guess, set_arrays=(setarray,))
+
+    y_fit = FermiLinear(x_data, *list(result_dict['fit parameters']))
+    dataset_fit = DataArray(name='fit', label='fit', preset_data=y_fit, set_arrays=(setarray,))
+
+    return m_addition_line, {'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
 
 
-def test_fitfermilinear(fig=None):
+def test_fit_fermi_linear(fig=100, verbose=0):
     expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
     x_data = np.arange(-20, 10, 0.1)
     y_data = FermiLinear(x_data, *expected_parameters)
     y_data += 0.005 * np.random.rand(y_data.size)
 
-    actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=False)
-    absolute_difference = np.abs(actual_parameters - expected_parameters)
+    actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=verbose, fig=fig, use_lmfit=False)
+    absolute_difference_parameters = np.abs(actual_parameters - expected_parameters)
 
-    if fig:
+    y_data_fitted = FermiLinear(x_data, *actual_parameters)
+    max_difference = np.max(np.abs(y_data_fitted - y_data))
+
+    if verbose:
         print('expected: %s' % expected_parameters)
         print('fitted:   %s' % actual_parameters)
-        print('max diff: %.2f' % (absolute_difference.max()))
+        print('temperature: %.2f' % (actual_parameters[-1]))
+        print('max diff parameters: %.2f' % (absolute_difference_parameters.max()))
+        print('max diff values: %.4f' % (max_difference.max()))
 
-    assert np.all(absolute_difference < 1e-1)
+    assert np.all(max_difference < 1.0e-2)
+    assert np.all(absolute_difference_parameters < 0.6)
 
     try:
         import lmfit
-        have_lmfit=1
+        have_lmfit = True
     except ImportError:
-        have_lmfit=0
+        have_lmfit = False
+
     if have_lmfit:
         actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=True)
-        absolute_difference = np.abs(actual_parameters - expected_parameters)
-        assert np.all(absolute_difference < 1e-1)
+        absolute_difference_parameters = np.abs(actual_parameters - expected_parameters)
+        assert np.all(absolute_difference_parameters < 0.1)
 
 
 if __name__ == '__main__':
-    test_fitfermilinear(fig=100)
+    test_fit_fermi_linear(verbose=1)
