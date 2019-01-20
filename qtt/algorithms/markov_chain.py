@@ -80,7 +80,7 @@ class ContinuousTimeMarkovModel:
         """ Return the stationary distribution of the model
 
         The calculation method is taken from https://www.probabilitycourse.com/chapter11/11_3_2_stationary_and_limiting_distributions.php, Theorem 11.3
-        
+
         """
         pi_tilde = self.stationary_distribution_discrete(self.jump_chain)
         norm = np.sum((pi_tilde / self.holding_parameters))
@@ -236,7 +236,7 @@ class TestMarkovChain(unittest.TestCase):
         G = np.array([[-10., 2000., 2000.], [0., -12000., 0.], [10., 10000., -2000.]])
         holding_parameters = -np.diag(G).reshape((-1, 1))
         jump_chain = (1. / holding_parameters.T) * G
-        jump_chain[np.diag_indices(G.shape[0])] = 0 
+        jump_chain[np.diag_indices(G.shape[0])] = 0
 
         elzerman_model = ContinuousTimeMarkovModel(
             ['spin-down', 'spin-up', 'empty'], holding_parameters * model_unit, jump_chain)
