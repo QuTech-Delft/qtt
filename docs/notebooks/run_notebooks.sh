@@ -2,6 +2,7 @@
 echo "running 14 notebooks"
 
 set -ev
+jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_elzerman_readout.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_anticrossing.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_awg_to_plunger.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_charge_sensor.ipynb
