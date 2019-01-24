@@ -494,6 +494,21 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     t0 = time.time()
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
+    try:
+        isfpga = isinstance(
+            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
+    except:
+        isfpga = False
+    try:
+        ism4i = isinstance(
+            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+    except:
+        ism4i = False
+    if isfpga:
+        samp_freq = minstrhandle.get_sampling_frequency()
+    elif ism4i:
+        samp_freq = minstrhandle.sample_rate()
+
     if scanjob['scantype'] == 'scan1Dfast':
         if 'range' in sweepdata:
             sweeprange = sweepdata['range']
@@ -512,7 +527,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                 virtual_awg.enable_outputs(list(measure_gates.keys()))
                 virtual_awg.run()
             else:
-                waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
+                waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete, samp_freq=samp_freq)
     else:
         sweeprange = sweepdata['range']
         if 'pulsedata' in scanjob:
@@ -531,7 +546,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
             else:
-                waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweeprange, period, delete=delete)
+                waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweeprange, period, delete=delete, samp_freq=samp_freq)
 
     time.sleep(wait_time_startscan)
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
@@ -1788,6 +1803,21 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     wait_time = stepdata.get('wait_time', 0)
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
+    try:
+        isfpga = isinstance(
+            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
+    except:
+        isfpga = False
+    try:
+        ism4i = isinstance(
+            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+    except:
+        ism4i = False
+    if isfpga:
+        samp_freq = minstrhandle.get_sampling_frequency()
+    elif ism4i:
+        samp_freq = minstrhandle.sample_rate()
+
     if scanjob['scantype'] == 'scan2Dfastvec':
         scanjob._parse_2Dvec()
         if 'pulsedata' in scanjob:
@@ -1806,7 +1836,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
             else:
-                waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweepdata['range'], period)
+                waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweepdata['range'], period, samp_freq=samp_freq)
     else:
         if 'range' in sweepdata:
             sweeprange = sweepdata['range']
@@ -1824,7 +1854,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                 virtual_awg.enable_outputs(list(gates.keys()))
                 virtual_awg.run()
             else:
-                waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'].name, sweeprange, period)
+                waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'].name, sweeprange, period, samp_freq=samp_freq)
 
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
     if len(read_ch) == 1:
