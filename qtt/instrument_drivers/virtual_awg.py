@@ -110,7 +110,7 @@ class virtual_awg(Instrument):
         if verbose:
             print('Stopped AWGs')
 
-    def sweep_init(self, waveforms, period=1e-3, delete=True, samp_freq = None):
+    def sweep_init(self, waveforms, period=1e-3, delete=True, samp_freq=None):
         ''' Send waveform(s) to gate(s)
 
         Arguments:
@@ -299,7 +299,7 @@ class virtual_awg(Instrument):
             warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (old_sr / 1e6, new_sr / 1e6, 1e3 * period), UserWarning)
         return new_sr
 
-    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
+    def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True, samp_freq=None):
         ''' Send a sawtooth signal with the AWG to a gate to sweep. Also
         send a marker to the measurement instrument.
 
@@ -330,7 +330,7 @@ class virtual_awg(Instrument):
             waveform[gate]['name'] = 'sweep_%s' % gate
         else:
             waveform[gate]['name'] = wave_name
-        sweep_info = self.sweep_init(waveform, period, delete)
+        sweep_info = self.sweep_init(waveform, period, delete, samp_freq=samp_freq)
         self.sweep_run(sweep_info)
         waveform['width'] = width
         waveform['start_zero']=start_zero
@@ -343,7 +343,7 @@ class virtual_awg(Instrument):
 
         return waveform, sweep_info
 
-    def sweep_gate_virt(self, gate_comb, sweeprange, period, width=.95, delete=True):
+    def sweep_gate_virt(self, gate_comb, sweeprange, period, width=.95, delete=True, samp_freq=None):
         ''' Send a sawtooth signal with the AWG to a linear combination of 
         gates to sweep. Also send a marker to the measurement instrument.
 
@@ -370,7 +370,7 @@ class virtual_awg(Instrument):
             waveform[g]['wave'] = wave
             waveform[g]['name'] = 'sweep_%s' % g
 
-        sweep_info = self.sweep_init(waveform, period, delete)
+        sweep_info = self.sweep_init(waveform, period, delete, samp_freq=samp_freq)
         self.sweep_run(sweep_info)
         waveform['width'] = width
         waveform['sweeprange'] = sweeprange
@@ -543,7 +543,7 @@ class virtual_awg(Instrument):
                 else:
                     raise Exception('Can not compensate a sweepgate')
 
-        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete, samp_freq = samp_freq)
+        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete, samp_freq=samp_freq)
         self.sweep_run(sweep_info)
 
         waveform['width_horz'] = width
