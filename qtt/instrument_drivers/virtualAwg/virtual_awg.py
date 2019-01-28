@@ -98,7 +98,7 @@ class VirtualAwg(Instrument):
             A start command is required to enable the outputs.
 
         Arguments;
-            gate_names (list): The names of the gates which needs to be enabled.
+            gate_names (list[str]): The names of the gates which needs to be enabled.
         """
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             gate_names.extend([VirtualAwg.__digitizer_name])
@@ -210,7 +210,7 @@ class VirtualAwg(Instrument):
         Arguments:
             gate_voltages (dict): Each gate name key contains a an array with millivolt
                                   setpoint level to be converted into a sequence.
-            waiting_times (list of floats): The duration in seconds of each pulse in the sequence.
+            waiting_times (list[float]): The duration in seconds of each pulse in the sequence.
             repetitions (int): The number of times to repeat the sequence.
             do_upload (bool, Optional): Does not upload the waves to the AWG's when set to False.
 
@@ -273,7 +273,7 @@ class VirtualAwg(Instrument):
         """ Supplies sawtooth signals to a linear combination of gates, which effectively does a 2D scan.
 
         Arguments:
-            gates (list(dict)): A list containing two dicionaries with both the the gate name keys
+            gates (list[dict]): A list containing two dicionaries with both the the gate name keys
                                 and relative amplitude values.
             sweep_ranges (list): A list two overall amplitude of the sawtooth waves in millivolt in
                                  the x- and y-direction.
@@ -326,7 +326,7 @@ class VirtualAwg(Instrument):
         """ Supplies square signals to a linear combination of gates, which effectively does a 2D scan.
 
         Arguments:
-            gates (list(dict)): A list containing two dicionaries with both the the gate name keys
+            gates (list[dict]): A list containing two dicionaries with both the the gate name keys
                                 and relative amplitude values.
             sweep_ranges (list): A list two overall amplitude of the square signal in millivolt in
                                  the x- and y-direction.

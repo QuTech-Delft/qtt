@@ -61,11 +61,10 @@ class Sequencer:
     @staticmethod
     def make_pulse_table(amplitudes, waiting_times, repetitions=1, name='pulse_table'):
         """ Creates a sequence of pulses from a list of amplitudes and waiting times.
-            Note that the initial voltage level will be given by the last element in amplitudes.
 
         Args:
-            amplitudes (list of floats): List with voltage amplitudes of the pulses.
-            waiting_times (list of float): List with durations containing the waiting time of each pulse.
+            amplitudes (list[float]): List with voltage amplitudes of the pulses.
+            waiting_times (list[float]): List with durations containing the waiting time of each pulse.
             repetitions (int): The number of oscillations in the sequence.
             name (str): The name of the returned sequence.
 
