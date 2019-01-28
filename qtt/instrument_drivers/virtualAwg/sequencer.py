@@ -2,7 +2,7 @@ import warnings
 import numpy as np
 from matplotlib import pyplot as plt
 
-from qupulse.pulses import SequencePT
+from qupulse.pulses import SequencePT, TablePT
 from qupulse.pulses.plotting import (PlottingNotPossibleException, plot, render)
 from qupulse.pulses.sequencing import Sequencer as Sequencing
 from qupulse.serialization import Serializer, DictBackend
@@ -80,7 +80,7 @@ class Sequencer:
         for waiting_time, amplitude in zip(waiting_times, amplitudes):
             time_in_ns += waiting_time * Sequencer.__sec_to_ns
             entry_list.append((time_in_ns, amplitude, 'jump'))
-        sequence_data = Templates.pulse_table(name, entry_list)
+        sequence_data = TablePT({name: entry_list})
         return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions), 'type': DataTypes.QU_PULSE}
 
     @staticmethod
