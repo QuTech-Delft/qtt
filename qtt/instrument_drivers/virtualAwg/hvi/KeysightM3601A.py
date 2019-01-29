@@ -4,8 +4,7 @@ import logging
 try:
     import keysightSD1
 except ImportError:
-    raise ImportError('To use the Keysight SD drivers install the keysightSD1 module '
-                      '(http://www.keysight.com/main/software.jspx?ckey=2784055)')
+    keysightSD1 = None
 
 from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg, VirtualAwgError
 
@@ -17,6 +16,9 @@ class KeysightM3601A(VirtualAwg):
 
     def __init__(self, awgs, settings, name='virtual_awg', logger=logging, **kwargs):
         super().__init__(awgs, settings, name, logger, **kwargs)
+        if not keysightSD1:
+            raise ImportError('To use the Keysight SD drivers install the keysightSD1 module '
+                              '(http://www.keysight.com/main/software.jspx?ckey=2784055)')
         if not all(type(awg.fetch_awg).__name__ == KeysightM3601A.__awg_name for awg in self.awgs):
             raise VirtualAwgError('Unusable device added! Not a Keysight M3201A AWG.')
         self.hvi = keysightSD1.SD_HVI()
