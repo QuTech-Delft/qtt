@@ -99,21 +99,21 @@ sampling_rate = 5e7
 update_awg_settings(virtual_awg, sampling_rate, amplitude)
 
 uptime_in_seconds = 5.0e-6
-marker_delay_in_sec = 3.0e-5
+marker_delay_in_sec = 1.0e-6
 virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_sec)
 
 #%%
 
 output_gate = 'B2'
-mV_sweep_range = 50
-sec_period = 1.0e-4
+mV_sweep_range = 250
+sec_period = 1.0e-3
 sweep_data = virtual_awg.sweep_gates({output_gate: 1}, mV_sweep_range, sec_period)
 
 virtual_awg.enable_outputs([output_gate])
 virtual_awg.run()
 
 readout_channels = [0]
-number_of_averages = 1
+number_of_averages = 100
 data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
 
 virtual_awg.stop()
@@ -134,12 +134,12 @@ waiting_times = [1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5]
 
 sweep_data = virtual_awg.pulse_gates(gate_voltages, waiting_times)
 
-Sequencer.plot(sweep_data['gate_comb']['B2'], sampling_rate)
+Sequencer.plot(sweep_data['gate_comb']['B0'], sampling_rate)
 
 virtual_awg.enable_outputs(output_gates)
 virtual_awg.run()
 
-readout_channels = [0]
+readout_channels = [3]
 number_of_averages = 100
 data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
 
