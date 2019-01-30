@@ -5,8 +5,6 @@ import numpy as np
 import warnings
 import copy
 
-import qcodes
-
 import qtt.measurements.scans
 import qtt.data
 
