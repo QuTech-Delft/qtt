@@ -232,12 +232,12 @@ def generate_traces(markov_model, std_gaussian_noise=1, state_mapping=None, *arg
 
 
 import unittest
-
+import numbers
 
 class TestChoiceGenerator(unittest.TestCase):
     def test_ChoiceGenerator(self):
         generator = ChoiceGenerator(3, [0, .5, 1.])
-        self.assertIsInstance(generator.generate_choice(), np.int32)
+        self.assertIsInstance(generator.generate_choice(), numbers.Integral)
 
         choices = [generator.generate_choice() for _ in range(1000)]
         self.assertNotIn(0, choices)
