@@ -23,26 +23,32 @@ import scipy.optimize as opt
 
 def gauss(x, p):
     """ Gaussian function with parameters
-        p[0]==mean, p[1]==stdev, p[2]=scale
+    
+    Args:
+        x (array or float): input variable
+        p (array): parameters [mean, std. dev., amplitude]
+    Returns:
+        array or float: calculated Gaussian
     """
     return p[2] * 1.0 / (p[1] * np.sqrt(2 * np.pi)) * np.exp(-(x - p[0])**2 / (2 * p[1]**2))
 
 
-def analyseCoulombPeaks(all_data, fig=None, verbose=1):
+def analyseCoulombPeaks(all_data, fig=None, verbose=1, parameters = {}):
     """ Find Coulomb peaks in a 1D dataset
 
     Args:
         all_data (DataSet): The data to analyse.
         fig (int or None): Figure handle to the plot.
-
+        parameters (dict): dictionary with parameters that is passed to subfunctions
+        
     Returns:
         peaks (list): fitted peaks
     """
     x_data, y_data = qtt.data.dataset1Ddata(all_data)
-    return analyseCoulombPeaksArray(x_data, y_data, fig=fig, verbose=verbose)
+    return analyseCoulombPeaksArray(x_data, y_data, fig=fig, verbose=verbose, parameters = parameters)
 
 
-def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1):
+def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1, parameters = {}):
     """ Find Coulomb peaks in arrays of data. This is very similar to analyseCoulombPeaks,
         but takes arrays of data as input. Hence the y_data can for example be either the
         I, Q or any combination of both obtained with RF reflectometry.
@@ -54,8 +60,8 @@ def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1):
     Returns:
         (list of dict): The detected peaks.
     """
-    sampling_rate = (x_data[-1] - x_data[0]) / (x_data.size - 1)
-    return coulombPeaks(x_data, y_data, verbose=verbose, fig=fig, plothalf=True, sampling_rate=sampling_rate)
+    sampling_rate = parameters.get('sampling_rate', (x_data[-1] - x_data[0]) / (x_data.size - 1))
+    return coulombPeaks(x_data, y_data, verbose=verbose, fig=fig, plothalf=True, sampling_rate=sampling_rate, parameters = parameters)
 
 
 def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling_rate=1):
@@ -71,13 +77,13 @@ def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling
     """
     minval = np.percentile(y_data, 5) + 0.1 * (np.percentile(y_data, 95) - np.percentile(y_data, 5))
     local_maxima, w = nonmaxsuppts(y_data, d=int(12 / sampling_rate), minval=minval)
-    fp = fitPeaks(x_data, y_data, local_maxima, verbose=verbose >= 2, fig=fig)
+    fit_data = fitPeaks(x_data, y_data, local_maxima, verbose=verbose >= 2, fig=fig)
 
     if lowvalue == None:
         lowvalue = np.percentile(y_data, 1)
     highvalue = np.percentile(y_data, 99)
     peaks = []
-    for ii, f in enumerate(fp):
+    for ii, f in enumerate(fit_data):
         p = local_maxima[ii]
         peak = dict({'p': p, 'x': local_maxima[ii], 'x': x_data[p], 'y': y_data[p], 'gaussfit': f})
         peak['halfvaluelow'] = (y_data[p] - lowvalue) / 2 + lowvalue
@@ -144,15 +150,16 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
                 labelh += [lh]
     halfhandle = []
     if plothalf:
-        for p in peaks:
-            hh = plt.plot(p['xhalfl'], p['yhalfl'], '.m',
-                          markersize=12, label='peak half height')
-            halfhandle += [hh[0]]
+        for peak in peaks:
+            if 'xhalfl' in peak:
+                hh = plt.plot(peak['xhalfl'], peak['yhalfl'], '.m',
+                              markersize=12, label='peak half height')
+                halfhandle += [hh[0]]
     if plotbottom:
-        for p in peaks:
-            if p['valid']:
+        for peak in peaks:
+            if peak['valid']:
                 plt.plot(
-                    p['xbottoml'], p['ybottoml'], '.', color=[.5, 1, .5], markersize=12, label='peak bottom left')
+                    peak['xbottoml'], peak['ybottoml'], '.', color=[.5, 1, .5], markersize=12, label='peak bottom left')
 
     th = plt.title('Local maxima')
     return dict({'linehandle': h, 'title': th, 'labelh': labelh, 'halfhandle': halfhandle})
@@ -434,19 +441,26 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
 #%%
 
 
-def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=13, istep=1):
+def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parameters = {}, istep = None):
     """ Analyse Coulomb peaks
 
-    Arguments
-    ---------
+    Args:
 
-    x,y: arrays with data
-        data in mV
-    peaks: list of detected peaks to be analysed
-    typicalhalfwidth : float
-        typical width of peak (half side) in mV (mV ??)
+        x,y: arrays with data
+            data in mV
+        peaks: list of detected peaks to be analysed
+        typicalhalfwidth : float
+            typical width of peak (half side) in mV (mV ??)
     """
 
+    if istep is not None:
+        warnings.warn('ignoring legacy argument istep')
+        
+    if typicalhalfwidth is not None:
+        raise Exception('please set typicalhalfwidth in the parameters argument')
+        
+    typicalhalfwidth =  parameters.get('typicalhalfwidth', 13)
+    
     if not issorted(x):
         pass
     if x[0] > x[-1]:
@@ -547,7 +561,7 @@ def peakdataOrientation(x, y):
     return x, y
 
 
-def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_rate=None):
+def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_rate=None, parameters = {}):
     """ Detects the Coulumb peaks in a 1D scan.
 
     Args:
@@ -555,15 +569,15 @@ def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_r
         verbose (int)
         fig (int or None)
         sampling_rate (float): The sampling rate in in mV/pixel.
-
+        parameters (dict): parameters passed to subfunctions
     """
 
     if sampling_rate is None:
         warnings.warn('istep is None, please add istep as a parameter')
 
-    x, y = peakdataOrientation(x_data, y_data)  # i=np.argsort(x); x=x[i]; y=y[i]
+    x, y = peakdataOrientation(x_data, y_data)
     peaks = fitCoulombPeaks(x, y, verbose=verbose, fig=None, sampling_rate=sampling_rate)
-    peaks = analysePeaks(x, y, peaks, verbose=verbose>=2, doplot=0, istep=sampling_rate)
+    peaks = analysePeaks(x, y, peaks, verbose=verbose>=2, doplot=0, parameters = parameters)
     peaks = peakFindBottom(x, y, peaks, verbose=verbose>=2)
     goodpeaks = filterPeaks(x, y, peaks, verbose=verbose)
 
