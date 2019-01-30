@@ -108,19 +108,14 @@ def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling
 def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=False, plotsmooth=True, plothalf=False, plotbottom=False, plotmarker='.-b'):
     """ Plot detected peaks
 
-
-    Arguments
-    ---------
-        x,y : numpy arrays
-            scandata
-        peaks : list
-            list of peaks to plot
-        showPeaks, plotLabels, plotScore, plothalf : boolean
-            plotting options
-    Returns
-    -------
-        handles : dictionary
-            graphics handles
+    Args:
+        x (array): independent variable data    
+        y (array): dependent variable data    
+        peaks (list): list of peaks to plot
+        showPeaks, plotLabels, plotScore, plothalf (bool): plotting options
+        
+    Returns:
+        dictionary: graphics handles
 
     """
     kk = np.ones(3) / 3.
@@ -128,14 +123,12 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     stdY = np.std(y)
     pgeometry.cfigure(fig)
     plt.clf()
-    h = plt.plot(x, y, plotmarker)  # , label='data points')
+    h = plt.plot(x, y, plotmarker) 
     if plotsmooth:
         plt.plot(x, ys, 'g')
-    # plt.plot(x,w)
     labelh = []
     for jj, peak in enumerate(peaks):
         if peak['valid']:
-            p = peak['p']
             xpos = peak['x']
             ypos = peak['y']
 
@@ -146,7 +139,6 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
                 lbl = '%s %d' % (tp, jj)
                 if plotScore:
                     lbl += ': score %.1f ' % peak['score']
-                # print('plot label!')
                 lh = plt.text(xpos, ypos + .05 * stdY, lbl)
                 labelh += [lh]
     halfhandle = []
@@ -171,6 +163,14 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
 def filterPeaks(x, y, peaks, verbose=1, minheight=None):
     """ Filter the detected peaks
 
+    Args:
+        x (array): independent variable data
+        y (array): signal data
+        peaks (list): list of peaks
+    
+    Returns:
+        list : selected good peaks
+        
     Filtering criteria are:
 
         - minimal height
@@ -286,7 +286,6 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
                     print('peakFindBottom: invalid peak (%s)' % ('rising part ww.size == 0', ))
                     print(w)
                     print(ys)
- #                   print(w)
             continue
         bidx = ww[-1]
 
@@ -298,7 +297,6 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
         peak['ybottoml'] = y[bidx]
 
         if verbose >= 3:
-            # for debugging
             plt.figure(53)
             plt.clf()
             plt.plot(x[ind], 0 * np.array(ind) + 1, '.b', label='ind')
@@ -326,6 +324,12 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 def fitPeaks(XX, YY, points, fig=None, verbose=0):
     """ Fit Gaussian model on local maxima
 
+    Args:
+        XX (array): independent variable data    
+        YY (array): dependent variable data    
+        points (list): indices of points to fit
+        fig (None or int): if int, plot results
+        verbose (int): verbosity level
      Returns:
          fit_data (array): for each point the fitted Gaussian
      """
@@ -377,13 +381,12 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
 
 
 def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
-    """ Calculate score for peak 
+    """ Calculate scores for list of peaks 
 
-    Arguments
-    ---------
-
-    x,y - arrays with 1D scan data
-    peaks -  list with detected peaks
+    Args:
+        x (array): independent variable data    
+        y (array): dependent variable data    
+        peaksx (list): list with detected peaks
 
     """
     lowvalue = np.percentile(y, 5)
@@ -416,11 +419,8 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
             # special case
             h = (h2 + h) / 2
 
-        # hw=peak['halfwidth']
         hw = peak['p'] - peak['pbottom']
         hw = np.abs(x[peak['p']] - peak['xhalfl'])
-        # peak['halfwidth']=hw
-        # slopeX=h/(hw+.5)
         vv = peak['phalf0']
         slope1 = (y[vv + 1] - y[vv]) / (x[vv + 1] - x[vv])
         slope2 = (y[vv] - y[vv - 1]) / (x[vv] - x[vv - 1])
@@ -432,7 +432,6 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
         peak['score'] = (h) * (2 / (1 + hw / hwtypical))
         peak['scorerelative'] = (
             h / (highvalue - lowvalue)) * (2 / (1 + hw / hwtypical))
-        # peak['score']= peak['score']*noisefac
         peak['noisefactor'] = noisefac
         if verbose:
             print('peakScores: %d: height %.1f halfwidth %.1f, score %.2f' %
@@ -557,7 +556,14 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
 
 
 def peakdataOrientation(x, y):
-    ''' Make sure x and y data are ordered '''
+    """ For measured 1D scans order the data such that the independent variable is ordered
+    
+    Args:
+        x (array): independent variable data    
+        y (array): dependent variable data    
+    Returns:
+        x,y (array): reordered data
+    """
     i = np.argsort(x)
     x = x[i]
     y = y[i]
@@ -568,7 +574,7 @@ def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_r
     """ Detects the Coulumb peaks in a 1D scan.
 
     Args:
-        x, y (arrays): 
+        x_data, y_data (arrays): indep
         verbose (int)
         fig (int or None)
         sampling_rate (float): The sampling rate in in mV/pixel.
@@ -597,20 +603,30 @@ import scipy.ndimage
 import scipy.ndimage.measurements
 
 
-def getOverlap(a, b):
+def _intervalOverlap(a, b):
     """ Return overlap between two intervals
 
-    >>> getOverlap( [0,2], [0,1])    
+    Args:
+        a (list or tuple): first interval
+        b (list or tuple): second interval
+    Returns:
+        float: overlap between the intervals
+        
+    Example:
+    >>> _intervalOverlap( [0,2], [0,1])    
     1
     """
     return max(0, min(a[1], b[1]) - max(a[0], b[0]))
 
 
-def findBestSlope(x, y, minder=None, fig=None, verbose=1):
+def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
     """ Find good slopes to use in sensing dot
 
     Args:
-        ...
+        x (array): independent variable data    
+        y (array): dependent variable data    
+        minimal_derivative (None or float): minimal derivative
+        
     Returns:
         slopes (...)
         results (object): additional data
@@ -619,14 +635,14 @@ def findBestSlope(x, y, minder=None, fig=None, verbose=1):
     highvalue = np.percentile(y, 99)
     H = highvalue - lowvalue
 
-    if minder is None:
-        minder = (highvalue - lowvalue) / 100
+    if minimal_derivative is None:
+        minimal_derivative = (highvalue - lowvalue) / 100
 
     k = np.array([1, 0, -1])
     dy = scipy.ndimage.filters.convolve(y, k, mode='nearest')
 
     labeled_array, num_features = scipy.ndimage.measurements.label(
-        dy >= minder)
+        dy >= minimal_derivative)
 
     slopes = []
     for ii in range(num_features):
@@ -689,11 +705,11 @@ def findBestSlope(x, y, minder=None, fig=None, verbose=1):
         plt.subplot(2, 1, 2)
         plt.plot(x[:], dy, '.-b')
         plt.ylabel('Derivative')
-        qtt.pgeometry.plot2Dline([0, -1, minder], '--r', label='Minimum derivative')
+        qtt.pgeometry.plot2Dline([0, -1, minimal_derivative], '--r', label='Minimum derivative')
         plt.title('findBestSlopes: derivative')
 
     peakScores(slopes, x, y)
-    return slopes, (dy, minder)
+    return slopes, (dy, minimal_derivative)
 
 
 def findSensingDotPosition(x, y, verbose=1, fig=None, plotLabels=True, plotScore=True, plothalf=False, useslopes=True, istep=None):
@@ -723,21 +739,19 @@ def findSensingDotPosition(x, y, verbose=1, fig=None, plotLabels=True, plotScore
 
 
 def peakOverlap(p1, p2):
-    """ Calculate overlap between two peaks or sloped
+    """ Calculate overlap between two peaks or slopes
 
-    Arguments
-    ---------
-    p1 - Peak object
-    p2 - Peak object
+    Args:
+        p1 (dict): Peak object
+        p2 (dict): Peak object
 
-    Returns
-    -------
-    o - A number representing the amount of overlap. 0: no overlap, 1: complete overlap
+    Returns:
+        float: A number representing the amount of overlap. 0: no overlap, 1: complete overlap
 
     """
     a1 = p1['xbottoml'] - p1['x']
     a2 = p2['xbottoml'] - p2['x']
-    o = getOverlap([p1['xbottoml'], p1['x']], [p2['xbottoml'], p2['x']])
+    o = _intervalOverlap([p1['xbottoml'], p1['x']], [p2['xbottoml'], p2['x']])
     s = (1 + o) / (1 + np.sqrt(a1 * a2))
     return s
 
