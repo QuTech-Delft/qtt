@@ -21,9 +21,10 @@ from qtt.algorithms.generic import nonmaxsuppts
 
 import scipy.optimize as opt
 
+
 def gauss(x, p):
     """ Gaussian function with parameters
-    
+
     Args:
         x (array or float): input variable
         p (array): parameters [mean, std. dev., amplitude]
@@ -33,22 +34,22 @@ def gauss(x, p):
     return p[2] * 1.0 / (p[1] * np.sqrt(2 * np.pi)) * np.exp(-(x - p[0])**2 / (2 * p[1]**2))
 
 
-def analyseCoulombPeaks(all_data, fig=None, verbose=1, parameters = {}):
+def analyseCoulombPeaks(all_data, fig=None, verbose=1, parameters={}):
     """ Find Coulomb peaks in a 1D dataset
 
     Args:
         all_data (DataSet): The data to analyse.
         fig (int or None): Figure handle to the plot.
         parameters (dict): dictionary with parameters that is passed to subfunctions
-        
+
     Returns:
         peaks (list): fitted peaks
     """
     x_data, y_data = qtt.data.dataset1Ddata(all_data)
-    return analyseCoulombPeaksArray(x_data, y_data, fig=fig, verbose=verbose, parameters = parameters)
+    return analyseCoulombPeaksArray(x_data, y_data, fig=fig, verbose=verbose, parameters=parameters)
 
 
-def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1, parameters = {}):
+def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1, parameters={}):
     """ Find Coulomb peaks in arrays of data. This is very similar to analyseCoulombPeaks,
         but takes arrays of data as input. Hence the y_data can for example be either the
         I, Q or any combination of both obtained with RF reflectometry.
@@ -61,7 +62,7 @@ def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1, parameters = {
         (list of dict): The detected peaks.
     """
     sampling_rate = parameters.get('sampling_rate', (x_data[-1] - x_data[0]) / (x_data.size - 1))
-    return coulombPeaks(x_data, y_data, verbose=verbose, fig=fig, plothalf=True, sampling_rate=sampling_rate, parameters = parameters)
+    return coulombPeaks(x_data, y_data, verbose=verbose, fig=fig, plothalf=True, sampling_rate=sampling_rate, parameters=parameters)
 
 
 def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling_rate=1):
@@ -225,9 +226,10 @@ def filterPeaks(x, y, peaks, verbose=1, minheight=None):
 
 #%%
 
+
 def peakFindBottom(x, y, peaks, fig=None, verbose=1):
     """ Find the left bottom of a detected peak
-    
+
     Args:
         x (array): independent variable data
         y (array): signal data
@@ -306,13 +308,13 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
             pgeometry.enlargelims()
             pgeometry.plot2Dline([-1, 0, peak['x']], '--c', label='x')
             pgeometry.plot2Dline([-1, 0, x[peak['phalf0']]],
-                               '--y', label='phalf0')
+                                 '--y', label='phalf0')
 
             pgeometry.plot2Dline([-1, 0, x[peak['pbottomlow']]],
-                               ':k', label='pbottomlow')
+                                 ':k', label='pbottomlow')
 
             pgeometry.plot2Dline([-1, 0, peak['xbottoml']],
-                               '--y', label='xbottoml')
+                                 '--y', label='xbottoml')
 
             plt.legend(loc=0)
 
@@ -323,7 +325,7 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
 def fitPeaks(XX, YY, points, fig=None, verbose=0):
     """ Fit Gaussian model on local maxima
-     
+
      Returns:
          fit_data (array): for each point the fitted Gaussian
      """
@@ -344,9 +346,10 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
         # Fit a Gaussian
         p0 = [X[point_sub_index], 1, 2 * Y[point_sub_index]]  # Initial guess is a normal distribution
         # Distance to the target function
-        errfunc = lambda p, x, y: gauss(x, p) - y
+
+        def errfunc(p, x, y): return gauss(x, p) - y
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=RuntimeWarning)    
+            warnings.simplefilter("ignore", category=RuntimeWarning)
             gaussian_parameters, success = opt.leastsq(errfunc, p0[:], args=(X, Y), maxfev=1800)
 
         fit_mu, fit_stdev, fit_scale = gaussian_parameters
@@ -441,7 +444,7 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
 #%%
 
 
-def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parameters = {}, istep = None):
+def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parameters={}, istep=None):
     """ Analyse Coulomb peaks
 
     Args:
@@ -455,19 +458,19 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
 
     if istep is not None:
         warnings.warn('ignoring legacy argument istep')
-        
+
     if typicalhalfwidth is not None:
         raise Exception('please set typicalhalfwidth in the parameters argument')
-        
-    typicalhalfwidth =  parameters.get('typicalhalfwidth', 13)
-    
+
+    typicalhalfwidth = parameters.get('typicalhalfwidth', 13)
+
     if not issorted(x):
         pass
     if x[0] > x[-1]:
         print('analysePeaks: warning: x values are not sorted!!!!')
 
-    leftp=max(3, x.size/200) # ignore all data to the left of this point
-    
+    leftp = max(3, x.size / 200)  # ignore all data to the left of this point
+
     for ii, peak in enumerate(peaks):
         p = peak['p']
         if verbose:
@@ -485,9 +488,9 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
         zi = np.interp(
             [x[p] - 3. * typicalhalfwidth, x[p], x[p] + 3. * typicalhalfwidth], x, range(x.size))
         zi = np.round(zi).astype(int)
-        
-        zi[0]=max(zi[0],leftp) # discard points on the left of scan
-        zi[1]=max(zi[1],leftp)
+
+        zi[0] = max(zi[0], leftp)  # discard points on the left of scan
+        zi[1] = max(zi[1], leftp)
 
         if doplot >= 2:
             plt.plot(x[zi[0]], y[zi[0]], '.g', markersize=11, label='mu-3*thw')
@@ -502,7 +505,7 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
             peak['xhalf'] = np.NaN
             peak['phalf'] = np.NaN
             continue
-        if verbose>=2:
+        if verbose >= 2:
             print('  peak %d: range to search for half width %d to %d' % (ii, zi[0], zi[1]))
         xl, yl = x[ind], y[ind]
 
@@ -532,7 +535,7 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
             plt.plot(
                 peak['xhalfl'], yhalfl, '.', color=[1, 1, 0], markersize=11)
             pgeometry.plot2Dline(
-                [-1, 0, x[p] - 3 * typicalhalfwidth ], ':c', label='3*thw')
+                [-1, 0, x[p] - 3 * typicalhalfwidth], ':c', label='3*thw')
             pgeometry.plot2Dline([-1, 0, peak['xfoot']], ':y', label='xfoot')
 
         pratio = np.abs(
@@ -561,7 +564,7 @@ def peakdataOrientation(x, y):
     return x, y
 
 
-def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_rate=None, parameters = {}):
+def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_rate=None, parameters={}):
     """ Detects the Coulumb peaks in a 1D scan.
 
     Args:
@@ -577,8 +580,8 @@ def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_r
 
     x, y = peakdataOrientation(x_data, y_data)
     peaks = fitCoulombPeaks(x, y, verbose=verbose, fig=None, sampling_rate=sampling_rate)
-    peaks = analysePeaks(x, y, peaks, verbose=verbose>=2, doplot=0, parameters = parameters)
-    peaks = peakFindBottom(x, y, peaks, verbose=verbose>=2)
+    peaks = analysePeaks(x, y, peaks, verbose=verbose >= 2, doplot=0, parameters=parameters)
+    peaks = peakFindBottom(x, y, peaks, verbose=verbose >= 2)
     goodpeaks = filterPeaks(x, y, peaks, verbose=verbose)
 
     peakScores(goodpeaks, x, y, verbose=verbose)
@@ -587,6 +590,7 @@ def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_r
     if fig:
         plotPeaks(x, y, goodpeaks, fig=fig, plotLabels=True, plothalf=plothalf)
     return goodpeaks
+
 
 #%% Find best slope
 import scipy.ndimage
@@ -604,7 +608,7 @@ def getOverlap(a, b):
 
 def findBestSlope(x, y, minder=None, fig=None, verbose=1):
     """ Find good slopes to use in sensing dot
-    
+
     Args:
         ...
     Returns:
@@ -642,7 +646,7 @@ def findBestSlope(x, y, minder=None, fig=None, verbose=1):
 
         slope['halfvalue'] = (slope['y'] + slope['ybottoml']) / 2
         halfvalue = slope['halfvalue']
-        phalfl = int( np.round((p + pbottom) / 2) )
+        phalfl = int(np.round((p + pbottom) / 2))
         # print(phalfl)
         slope['phalfl'] = phalfl
         slope['phalf0'] = phalfl
@@ -698,7 +702,7 @@ def findSensingDotPosition(x, y, verbose=1, fig=None, plotLabels=True, plotScore
     Arguments:
         x,y (array): data
     verbose (int): output level
-    
+
     Returns:
         goodpeaks (list): list of detected positions
 
@@ -772,17 +776,17 @@ def filterOverlappingPeaks(goodpeaks, threshold=.6, verbose=0):
 
 
 def test_analysepeaks(fig=None):
-    x_data = np.arange(0,100)
+    x_data = np.arange(0, 100)
     y_data = np.random.rand(x_data.size)
     y_data += qtt.algorithms.functions.gaussian(x_data, 30, 6, 30)
     y_data += qtt.algorithms.functions.gaussian(x_data, 70, 8, 70)
 
     peaks = coulombPeaks(x_data, y_data, verbose=1, sampling_rate=1, fig=fig)
     assert len(peaks) == 2
-    assert np.abs(peaks[0]['x']-70) < 2
-    assert np.abs(peaks[1]['x']-30) < 2
+    assert np.abs(peaks[0]['x'] - 70) < 2
+    assert np.abs(peaks[1]['x'] - 30) < 2
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     pass
     test_analysepeaks(fig=100)
