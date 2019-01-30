@@ -777,9 +777,6 @@ def filterOverlappingPeaks(goodpeaks, threshold=.6, verbose=0):
         else:
             gidx.append(jj)
 
-        if verbose >= 2:
-            print('%f %f %f -> %f ' % (a1, a2, o, s))
-
     if verbose:
         print('filterOverlappingPeaks: %d -> %d peaks' % (len(pp), len(gidx)))
     pp = [pp[jj] for jj in gidx]
