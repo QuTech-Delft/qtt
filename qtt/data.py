@@ -20,7 +20,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 #%% Serialization tools
 
 
-def DataArray_to_dictionary(da, include_data=True):
+def _DataArray_to_dictionary(da, include_data=True):
     """ Convert DataArray to dictionary
 
     Args:
@@ -38,6 +38,44 @@ def DataArray_to_dictionary(da, include_data=True):
     return dct
 
 
+def _dictionary_to_DataArray(array_dictionary):
+    
+    array_id=array_dictionary.get('array_id', array_dictionary['name'])
+    preset_data=array_dictionary['ndarray']
+    data_array=qcodes.DataArray(name=array_dictionary['name'],
+                                full_name=array_dictionary['full_name'],
+                                label=array_dictionary['label'],
+                                unit=array_dictionary['unit'],
+                                is_setpoint=array_dictionary['is_setpoint'],
+                                shape=array_dictionary['shape'],
+                                array_id=array_id,
+                                preset_data=preset_data
+                                )
+    return data_array
+
+def dictionary_to_DataSet(data_set_dictionary):
+    """ Convert dictionary to DataSet 
+
+    Args:
+        data_set_dictionary (dict): data to convert
+    Returns:
+        DataSet: converted data 
+    """
+    dataset = qcodes.new_data()
+    dataset.metadata.update(data_set_dictionary['metadata'])
+    
+    for array_key, array_dct in data_set_dictionary['arrays'].items():
+        data_array = _dictionary_to_DataArray(array_dct)        
+        dataset.add_array(data_array)
+    
+    # update set arrays
+    for array_key, array_dct in data_set_dictionary['arrays'].items():
+        set_arrays_names=array_dct['set_arrays']
+        set_arrays=tuple([dataset.arrays[name] for name in set_arrays_names])
+        dataset.arrays[array_key].set_arrays = set_arrays
+      
+    return dataset
+
 def DataSet_to_dictionary(data_set, include_data=True, include_metadata=True):
     """ Convert DataSet to dictionary
 
@@ -52,23 +90,26 @@ def DataSet_to_dictionary(data_set, include_data=True, include_metadata=True):
     for array_id in data_set.arrays.keys():
         da = data_set.arrays[array_id]
 
-        d['arrays'][array_id] = DataArray_to_dictionary(da, include_data)
+        d['arrays'][array_id] = _DataArray_to_dictionary(da, include_data)
 
     if include_metadata:
         d['metadata'] = data_set.metadata
 
     d['extra']['location'] = data_set.location
+    d['extra']['_version'] = qtt.__version__
     return d
 
 
 def test_dataset_to_dictionary():
     import qcodes.tests.data_mocks
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    dct = DataSet_to_dictionary(ds, include_data=False, include_metadata=False)
-    assert(dct['metadata'] is None)
-    dct = DataSet_to_dictionary(ds, include_data=True, include_metadata=True)
-    assert('metadata' in dct)
+    input_dataset = qcodes.tests.data_mocks.DataSet2D()
+    data_set_dictionary = DataSet_to_dictionary(input_dataset, include_data=False, include_metadata=False)
+    assert(data_set_dictionary['metadata'] is None)
+    data_set_dictionary = DataSet_to_dictionary(input_dataset, include_data=True, include_metadata=True)
+    assert('metadata' in data_set_dictionary)
 
+    dataset2 = dictionary_to_DataSet(data_set_dictionary)
+    assert(dataset2.default_parameter_name()==input_dataset.default_parameter_name())
 #%%
 
 
