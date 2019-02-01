@@ -422,6 +422,44 @@ class VirtualAwg(Instrument):
                 self.awgs[number].upload_waveforms(sequence_names, sequence_channels, sequence_items)
         return {'gate_comb': sequences, 'upload_data': upload_data, 'settings': settings_data}
 
+    def _upload_waveforms(self, awg_number, waveform_list):
+        """ Uploads waveforms directly to the user defined waveform list.
+
+        Args:
+            awg_number (int): the selected AWG to upload.
+            waveform_list (dict): A dictionary with keys the waveform names and
+                                  values; a list with three arrays [channel, marker1, marker2]
+
+        Example:
+            length = 100
+            waveform = [np.zeros(length), np.zeros(length), np.zeros(length)]
+            waveform_list = {'X2': waveform}
+            virtual_awg._upload_waveforms(waveform, waveform_list)
+        """
+        if not isinstance(self.awgs[awg_number], Tektronix5014C_AWG):
+            raise ValueError('Not possible with AWG: {}'.format(type(self.awgs[awg_number])))
+        waveform_names = list(waveform_list.keys())
+        waveforms = list(waveform_list.values())
+        self.awgs[awg_number]._upload_waveforms(waveform_names, waveforms)
+
+    def _set_sequence_order(self, awg_number, channel_numbers, waveform_names):
+        """ Sets the sequence using the waveforms and channels numbers.
+
+        Args:
+            awg_number (int): the selected AWG to upload.
+            channel_numbers (list): A list with the channel numbers. 
+            waveform_names (list): A list with the waveforms names.
+
+        Example:
+            >>> channel_numbers = [1, 2, 4]
+            >>> waveform_names = [['ramp1', 'fall2', 'hold1'], ['fall2', 'hold1', 'ramp1']]
+            >> virtual_awg._upload_waveforms(channel_numbers, waveform_names)
+        """
+        if not isinstance(self.awgs[awg_number], Tektronix5014C_AWG):
+            raise ValueError('Not possible with AWG: {}'.format(type(self.awgs[awg_number])))
+        self.awgs[awg_number]._set_sequence(channel_numbers, waveform_names)
+
+
 
 # UNITTESTS #
 
