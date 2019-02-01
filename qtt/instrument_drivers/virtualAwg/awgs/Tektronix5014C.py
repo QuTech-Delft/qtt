@@ -106,10 +106,10 @@ class Tektronix5014C_AWG(AwgCommon):
         return self._waveform_data if self._waveform_data else None
 
     def _set_sequence(self, channels, sequence):
-        if not sequence or len(sequence) != len(channels):
-            raise AwgCommonError('Invalid sequence and channel count!')
-        if not all(len(idx) == len(sequence[0]) for idx in sequence):
-            raise AwgCommonError('Invalid sequence list lengthts!')
+        #if not sequence or len(sequence) != len(channels):
+        #    raise AwgCommonError('Invalid sequence and channel count!')
+        #if not all(len(idx) == len(sequence[0]) for idx in sequence):
+        #    raise AwgCommonError('Invalid sequence list lengthts!')
         request_rows = len(sequence[0])
         current_rows = self.__get_sequence_length()
         if request_rows != current_rows:
