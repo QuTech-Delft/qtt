@@ -35,7 +35,7 @@ class VirtualAwg(Instrument):
                          Tektronix5014C, KeysightM3202A and the ZurichInstrumentsHDAWG8.
             settings (Instument): A class containing the settings of the quantum device, which are the
                                   awg_map (specificies the relation between the quantum gates, marker outputs
-                                  and AWG channels) and the awg_to_plunger [mV/V] (specifies how many millivolt
+                                  and AWG channels) and the awg_to_gate [mV/V] (specifies how many millivolt
                                   on a sample is induced by an output in Volt from the AWG).
         """
         super().__init__(name, **kwargs)
@@ -408,8 +408,8 @@ class VirtualAwg(Instrument):
 
                 sequence_data = Sequencer.get_data(sequence, sampling_rate)
                 if not marker_number:
-                    awg_to_plunger = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
-                    scaling_ratio = 2 / (awg_to_plunger * vpp_amplitude)
+                    awg_to_gate = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
+                    scaling_ratio = 2 / (awg_to_gate * vpp_amplitude)
                     settings_data[number][gate_name] = {'scaling_ratio': scaling_ratio}
                     sequence_data *= scaling_ratio
 
