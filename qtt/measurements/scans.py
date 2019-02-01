@@ -2140,7 +2140,9 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     if len(read_ch) == 1:
         measure_names = ['measured']
     else:
-        measure_names = ['FPGA_ch%d' % c for c in read_ch]
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
+        if plotparam == 'measured':
+            plotparam = measure_names[0]
 
     if scanjob['scantype'] == 'scan2Dturbo':
         alldata, _ = makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names=measure_names,
