@@ -1031,6 +1031,10 @@ try:
             raise IndexError('The dataset contains less than two data arrays')
 
         if customfig is None:
+            
+            if title is None:
+                parameter_name = dataset.default_parameter_name(paramname=paramname)
+                title = 'Parameter: %s'  % parameter_name
             temp_fig = QtPlot(dataset.default_parameter_array(
                               paramname=paramname), show_window=False)
         else:

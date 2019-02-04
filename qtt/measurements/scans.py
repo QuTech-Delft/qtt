@@ -377,8 +377,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow:
         liveplotwindow.clear()
-        liveplotwindow.add(
-            alldata.default_parameter_array(paramname=plotparam))
+        if isinstance(plotparam, (list, tuple)):
+            for plot_parameter in plotparam:
+                liveplotwindow.add(alldata.default_parameter_array(paramname=plot_parameter))
+        else:
+            liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
 
     def myupdate():
         if liveplotwindow:

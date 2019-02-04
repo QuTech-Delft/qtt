@@ -1104,14 +1104,14 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
     mnamesx = measure_names
     measure_names = []
     measure_units = []
-    for p in mnamesx:
-        if isinstance(p, str):
-            measure_names += [p]
+    for parameter in mnamesx:
+        if isinstance(parameter, str):
+            measure_names += [parameter]
             measure_units += [None]
         else:
             # assume p is a Parameter
-            measure_names += [p.full_name]
-            measure_units += [p.unit]
+            measure_names += [parameter.name]
+            measure_units += [parameter.unit]
 
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
 
@@ -1204,7 +1204,7 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
             measure_names += [p]
         else:
             # assume p is a Parameter
-            measure_names += [p.full_name]
+            measure_names += [p.name]
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     for idm, mname in enumerate(measure_names):
         z = DataArray(name=mname, array_id=mname, label=mname,
