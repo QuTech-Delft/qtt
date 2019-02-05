@@ -450,7 +450,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 
 # %%
-def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, extra_metadata=None):
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, plotparam=None, extra_metadata=None):
     """ Fast 1D scan. The scan is performed by putting a sawtooth signal on the AWG and measuring with a fast acquisition device.
 
     Args:
@@ -483,6 +483,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     if isinstance(read_ch, int):
         read_ch = [read_ch]
+        
+    if isinstance(read_ch, str):
+        raise Exception('for fast scans the minstrument should be a list of channel numbers' )
 
     if isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan1Dfastvec'
@@ -556,7 +559,11 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow is not None:
         liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array())
+        if plotparam is None:
+            liveplotwindow.add(alldata.default_parameter_array())
+        else:
+            for plot_parameter in plotparam:
+                liveplotwindow.add(alldata.default_parameter_array(plot_parameter))
         pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
 
     dt = time.time() - t0

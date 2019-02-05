@@ -1008,7 +1008,7 @@ try:
                        printformat='fancy', customfig=None, extranotes=None, **kwargs):
         """ Add slide based on dataset to current active Powerpoint presentation
 
-        Arguments:
+        Args:
             dataset (DataSet): data and metadata from DataSet added to slide
             customfig (QtPlot): custom QtPlot object to be added to
                                 slide (for dataviewer)
@@ -1031,12 +1031,24 @@ try:
             raise IndexError('The dataset contains less than two data arrays')
 
         if customfig is None:
-            
-            if title is None:
-                parameter_name = dataset.default_parameter_name(paramname=paramname)
-                title = 'Parameter: %s'  % parameter_name
-            temp_fig = QtPlot(dataset.default_parameter_array(
-                              paramname=paramname), show_window=False)
+           
+            if isinstance(paramname, str):
+                if title is None:
+                    parameter_name = dataset.default_parameter_name(paramname=paramname)
+                    title = 'Parameter: %s'  % parameter_name
+                temp_fig = QtPlot(dataset.default_parameter_array(
+                                      paramname=paramname), show_window=False)
+            else:
+                if title is None:
+                    title = 'Parameter: %s'  % (str(paramname),)
+                for idx, parameter_name in enumerate(paramname):
+                        if idx==0:
+                            temp_fig = QtPlot(dataset.default_parameter_array(
+                              paramname=parameter_name), show_window=False)
+                        else:
+                            temp_fig.add(dataset.default_parameter_array(
+                              paramname=parameter_name))
+                    
         else:
             temp_fig = customfig
 
