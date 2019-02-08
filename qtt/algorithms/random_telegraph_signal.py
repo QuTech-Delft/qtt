@@ -88,8 +88,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         verbose (int): prints info to the console when > 0
 
     Returns:
-        tunnelrate_dn (numpy.float64): tunneling rate of the down level (kHz) or None in case of not enough datapoints
-        tunnelrate_up (numpy.float64): tunneling rate of the up level (kHz) or None in case of not enough datapoints
+        tunnelrate_dn (numpy.float64): tunneling rate of the down level to the up level (kHz) or None in case of not enough datapoints
+        tunnelrate_up (numpy.float64): tunneling rate of the up level to the down level (kHz) or None in case of not enough datapoints
         parameters (dict): dictionary with relevent (fit) parameters. this includes:
                 tunnelrate_down (float): tunnel rate in Hz
                 tunnelrate_up (float): tunnel rate up in Hz
@@ -242,8 +242,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         durations_dn_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_dn_idx)}
     parameters['up_segments'] = {'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
         durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up_idx)}
-    parameters['tunnelrate_down'] = 1./parameters['down_segments']['mean']
-    parameters['tunnelrate_up'] = 1./parameters['up_segments']['mean']
+    parameters['tunnelrate_down_to_up'] = 1./parameters['down_segments']['mean']
+    parameters['tunnelrate_up_to_down'] = 1./parameters['up_segments']['mean']
     
     if (counts_dn[0] > 50) and (counts_up[0] > 50):
 
