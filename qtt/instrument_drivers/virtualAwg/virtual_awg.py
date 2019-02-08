@@ -420,7 +420,9 @@ class VirtualAwg(Instrument):
             upload_data.append((sequence_names, sequence_channels, sequence_items))
             if do_upload and sequence_items:
                 self.awgs[number].upload_waveforms(sequence_names, sequence_channels, sequence_items)
-        return {'gate_comb': sequences, 'upload_data': upload_data, 'settings': settings_data}
+                
+        self._sequence_data = {'gate_comb': sequences, 'upload_data': upload_data, 'settings': settings_data}                        
+        return self._sequence_data
 
 
 # UNITTESTS #
