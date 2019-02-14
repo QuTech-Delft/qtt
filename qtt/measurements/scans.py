@@ -1989,7 +1989,7 @@ def plotData(alldata, diff_dir=None, fig=1):
 # %%
 
 
-def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', delete=True, verbose=1):
+def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1):
     """Perform a very fast 2d scan by varying two physical gates with the AWG.
 
     The function assumes the station contains an FPGA with readFPGA function. 
@@ -2092,7 +2092,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, plotparam=
     if len(read_ch) == 1:
         measure_names = ['measured']
     else:
-        measure_names = ['FPGA_ch%d' % c for c in read_ch]
+        measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
     if scanjob['scantype'] == 'scan2Dturbo':
         alldata, _ = makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names=measure_names,
