@@ -23,6 +23,47 @@ def _solve_least_squares(A, B):
     return solution
 
 
+class ChoiceGenerator():
+    """ Class to generate random elements with weighted selection """
+
+    def __init__(self, number_of_states, cum_weights, block_size=5000):
+        """ Class to generate random elements with weighted selection
+
+        This is a replacement for random.choices that is efficient when a large number of choices has to be generated.
+
+        Args:
+            number_of_states (int): number of choices that has to be generated
+            cum_weights (array[float]): cummulative probabilities of the choices
+            block_size (int): size of blocks of choices to generate
+        """
+        if not number_of_states == len(cum_weights):
+            raise Exception('specification of cummulative weights does not match number of states')
+
+        self.number_of_states = number_of_states
+        self._idx = 0
+        self._block_size = block_size
+        self.cum_weights = cum_weights
+        self._generate_block()
+
+    def _generate_block(self):
+        values = np.random.rand(self._block_size, )
+        counts, bins = np.histogram(values, [0] + list(self.cum_weights))
+        self._block = np.hstack(tuple([choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)]))
+        np.random.shuffle(self._block)
+
+    def generate_choice(self):
+        """ Generate a choice
+
+        Returns:
+            int: integer in the range 0 to the number of states
+        """
+        self._idx = self._idx + 1
+        if self._idx == self._block_size:
+            self._idx = 0
+            self._generate_block()
+        return self._block[self._idx]
+
+
 class ContinuousTimeMarkovModel:
 
     def __init__(self, states, holding_parameters, jump_chain):
@@ -126,27 +167,26 @@ class ContinuousTimeMarkovModel:
             array : generated sequence
 
         """
-        n = self.number_of_states()
+        number_of_states = self.number_of_states()
         if initial_state is None:
             initial_state = self.stationary_distribution()
-            initial_state = random.choices(range(n), weights=initial_state, k=1)[0]
+            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]
         elif isinstance(initial_state, (list, np.ndarray, tuple)):
-            initial_state = random.choices(range(n), weights=initial_state, k=1)[0]
+            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]
 
         P = self.transition_matrix(delta_time)
 
         sequence = np.zeros(length, dtype=int)
         sequence[0] = initial_state
-        state_indices = range(n)
 
         # pre-calculate cummulative weights
-        Pcum = np.zeros(P.shape)
-        for jj in range(n):
+        generators = [None] * number_of_states
+        for jj in range(number_of_states):
             cum_weights = list(itertools.accumulate(P[:, jj]))
-            Pcum[:, jj] = cum_weights
+            generators[jj] = ChoiceGenerator(number_of_states, cum_weights)
+
         for i in range(1, sequence.size):
-            cum_weights = Pcum[:, sequence[i - 1]]
-            sequence[i] = random.choices(state_indices, weights=None, cum_weights=cum_weights, k=1)[0]
+            sequence[i] = generators[sequence[i - 1]].generate_choice()
         return sequence
 
     def generate_sequences(self, length, delta_time=1, initial_state=None, number_of_sequences=1):
@@ -192,6 +232,19 @@ def generate_traces(markov_model, std_gaussian_noise=1, state_mapping=None, *arg
 
 
 import unittest
+import numbers
+
+class TestChoiceGenerator(unittest.TestCase):
+    def test_ChoiceGenerator(self):
+        generator = ChoiceGenerator(3, [0, .5, 1.])
+        self.assertIsInstance(generator.generate_choice(), numbers.Integral)
+
+        choices = [generator.generate_choice() for _ in range(1000)]
+        self.assertNotIn(0, choices)
+
+    def test_ChoiceGenerator_invalid_input(self):
+        with self.assertRaises(Exception):
+            ChoiceGenerator(2, cum_weights=[.3, .6, 1.])
 
 
 class TestMarkovChain(unittest.TestCase):
