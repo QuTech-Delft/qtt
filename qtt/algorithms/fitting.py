@@ -39,10 +39,9 @@ def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
     split_offset = int(np.floor(x_data.size/10))
     mean_right = np.mean(y_data_linearized[(center_index+split_offset):])
     mean_left = np.mean(y_data_linearized[:(center_index-split_offset)])
-    step_size = -(mean_right - mean_left)
+    amplitude_step = -(mean_right - mean_left)
     
-    amplitude_step = step_size
-    if np.sign(-y_derivative_filtered[estimated_index]) != np.sign(step_size):
+    if np.sign(-y_derivative_filtered[estimated_index]) != np.sign(amplitude_step):
         warnings.warn('step size might be incorrect')
         
     if fig is not None:
