@@ -1,20 +1,23 @@
+import unittest
 import numpy as np
 import base64
 import json
 
 from json import JSONDecoder, JSONEncoder
 
+
 class JsonSerializeKey:
     """The custum value types for the JSON serializer."""
     OBJECT = '__object__'
     CONTENT = '__content__'
     DATA_TYPE = '__data_type__'
-    
+
+
 class QttJsonDecoder(JSONDecoder):
 
     def __init__(self, *args, **kwargs):
         """ JSON decoder that handles numpy arrays and tuples """
-        
+
         super().__init__(object_hook=QttJsonDecoder.__object_hook, *args, **kwargs)
 
     @staticmethod
@@ -25,23 +28,22 @@ class QttJsonDecoder(JSONDecoder):
     def __decode_tuple(item):
         return tuple(item[JsonSerializeKey.CONTENT])
 
-
     @staticmethod
     def __decode_numpy_number(item):
-        obj = item[JsonSerializeKey.CONTENT]       
+        obj = item[JsonSerializeKey.CONTENT]
         return np.frombuffer(
-                base64.b64decode(obj['__npnumber__']),
-                dtype=np.dtype(obj['dtype'])
-            )[0]
+            base64.b64decode(obj['__npnumber__']),
+            dtype=np.dtype(obj['dtype'])
+        )[0]
 
     @staticmethod
     def __decode_numpy_array(item):
         obj = item[JsonSerializeKey.CONTENT]
         return np.frombuffer(
-                base64.b64decode(obj['__ndarray__']),
-                dtype=np.dtype(obj['dtype'])
-            ).reshape(obj['shape'])
-        
+            base64.b64decode(obj['__ndarray__']),
+            dtype=np.dtype(obj['dtype'])
+        ).reshape(obj['shape'])
+
     @staticmethod
     def __object_hook(obj):
         decoders = {
@@ -54,8 +56,6 @@ class QttJsonDecoder(JSONDecoder):
             decoder_function = decoders.get(obj[JsonSerializeKey.OBJECT])
             return decoder_function(obj)
         return obj
-    
-
 
 
 class QttJsonEncoder(JSONEncoder):
@@ -77,14 +77,14 @@ class QttJsonEncoder(JSONEncoder):
 
     @staticmethod
     def __encode_list(item):
-        return [QttJsonEncoder.__encoder(value) for value in item] 
+        return [QttJsonEncoder.__encoder(value) for value in item]
 
     @staticmethod
     def __encode_dict(item):
         return {
             key: QttJsonEncoder.__encoder(value) for key, value in item.items()
         }
-           
+
     @staticmethod
     def __encode_numpy_number(item):
         return {
@@ -123,21 +123,23 @@ class QttJsonEncoder(JSONEncoder):
         return encoder_function(item) if encoder_function else item
 
     def encode(self, o):
-        return super().encode(QttJsonEncoder.__encoder(o))    
+        return super().encode(QttJsonEncoder.__encoder(o))
+
 
 def save_json(data, filename):
     """ Write a Python object to a JSON file
-    
+
     Args:
         data (object): object to be serialized
         filename (str): filename to write data to
     """
     with open(filename, 'wt') as fid:
         fid.write(json.dumps(data, cls=QttJsonEncoder, indent=2))
-        
+
+
 def load_json(filename):
     """ Write a Python object from a JSON file
-    
+
     Args:
         filename (str): filename to write data to
     Returns:
@@ -146,29 +148,29 @@ def load_json(filename):
     with open(filename, 'rt') as fid:
         data = fid.read()
     return json.loads(data, cls=QttJsonDecoder)
-    
-import unittest
+
 
 class TestJSON(unittest.TestCase):
     def test_custom_encoders(self):
-        data = {'float': 1.0, 'str': 'hello', 'tuple': (1,2,3)}
+        data = {'float': 1.0, 'str': 'hello', 'tuple': (1, 2, 3)}
         serialized_data = json.dumps(data, cls=QttJsonEncoder)
-        
+
         loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
-    
+
         self.assertDictEqual(data, loaded_data)
 
     def test_numpy_encoders(self):
-        data = {'array': np.array([1.,2,3]), 'intarray': np.array([1,2])}
+        data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}
         serialized_data = json.dumps(data, cls=QttJsonEncoder)
         loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
-    
+
         for key in data.keys():
             np.testing.assert_array_equal(data[key], loaded_data[key])
-    
+
         data = {'int32': np.int32(2.), 'float': np.float(3.), 'float64': np.float64(-1)}
         serialized_data = json.dumps(data, cls=QttJsonEncoder)
         loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
-    
-if __name__=='__main__':
-    unittest.main()    
+
+
+if __name__ == '__main__':
+    unittest.main()
