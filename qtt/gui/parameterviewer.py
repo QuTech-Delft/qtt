@@ -302,25 +302,25 @@ def createParameterWidget(instruments, doexec=False, remote=False):
     return p
 
 #%%
-    
-def test_parameterviewer():
+
+def skip_test_parameterviewer():
     import pyqtgraph
     _ = pyqtgraph.mkQApp()
     import qtt.measurements.scans
     from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 
     ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
-    p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi']);
+    p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi'])
     p.show()
     p.stop()
     print('stop')
     p.close()
     print('close done: is_running %s' % (p.is_running(), ))
-    
+
 #%% Debugging code
 
 if __name__ == '__main__':
-    test_parameterviewer()
+    skip_test_parameterviewer()
 
     if 0:
         import qcodes
