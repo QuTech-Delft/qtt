@@ -15,120 +15,127 @@ import matplotlib.pyplot as plt
 from qcodes import DataArray, new_data
 from qtt import pgeometry
 import qtt.algorithms.generic
+
+from qcodes import DataSet
 from qcodes.plots.qcmatplotlib import MatPlot
 
-#%% Serialization tools
 
-
-def _DataArray_to_dictionary(da, include_data=True):
-    """ Convert DataArray to dictionary
+def _data_array_to_dictionary(data_array, include_data=True):
+    """ Convert DataArray to a dictionary.
 
     Args:
-        da (DataArray): data to convert
-        include_data (bool): If True then include the .ndarray field
+        data_array (DataArray): The data to convert.
+        include_data (bool): If True then include the ndarray field.
+
     Returns:
-        dict: dictionary containing the serialized data
-
+        dict: A dictionary containing the serialized data.
     """
-    fields = ['label', 'name', 'unit', 'is_setpoint', 'full_name', 'array_id', 'shape', 'set_arrays']
+    keys = ['label', 'name', 'unit', 'is_setpoint', 'full_name', 'array_id', 'shape']
     if include_data:
-        fields += ['ndarray']
-    dct = dict([(f, getattr(da, f)) for f in fields])
-    dct['set_arrays'] = tuple([x.array_id for x in dct['set_arrays']])
-    return dct
+        keys.append('ndarray')
+
+    data_dictionary = {key: getattr(data_array, key) for key in keys}
+    data_dictionary['set_arrays'] = tuple((array.array_id) for array in data_array.set_arrays)
+
+    return data_dictionary
 
 
-def _dictionary_to_DataArray(array_dictionary):
-    
-    array_id=array_dictionary.get('array_id', array_dictionary['name'])
-    preset_data=array_dictionary['ndarray']
-    data_array=qcodes.DataArray(name=array_dictionary['name'],
-                                full_name=array_dictionary['full_name'],
-                                label=array_dictionary['label'],
-                                unit=array_dictionary['unit'],
-                                is_setpoint=array_dictionary['is_setpoint'],
-                                shape=array_dictionary['shape'],
-                                array_id=array_id,
-                                preset_data=preset_data
-                                )
+def _dictionary_to_data_array(array_dictionary):
+    preset_data = array_dictionary['ndarray']
+    array_id = array_dictionary.get('array_id', array_dictionary['name'])
+    data_array = qcodes.DataArray(name=array_dictionary['name'],
+                                  full_name=array_dictionary['full_name'],
+                                  label=array_dictionary['label'],
+                                  unit=array_dictionary['unit'],
+                                  is_setpoint=array_dictionary['is_setpoint'],
+                                  shape=array_dictionary['shape'],
+                                  array_id=array_id,
+                                  preset_data=preset_data)
     return data_array
 
-def dictionary_to_DataSet(data_set_dictionary):
-    """ Convert dictionary to DataSet 
+
+def dictionary_to_dataset(data_dictionary):
+    """ Convert dictionary to DataSet.
 
     Args:
-        data_set_dictionary (dict): data to convert
+        data_dictionary (dict): data to convert
+
     Returns:
-        DataSet: converted data 
+        DataSet: converted data.
     """
     dataset = qcodes.new_data()
-    dataset.metadata.update(data_set_dictionary['metadata'])
-    
-    for array_key, array_dct in data_set_dictionary['arrays'].items():
-        data_array = _dictionary_to_DataArray(array_dct)        
+    dataset.metadata.update(data_dictionary['metadata'])
+
+    for array_key, array_dict in data_dictionary['arrays'].items():
+        data_array = _dictionary_to_data_array(array_dict)
         dataset.add_array(data_array)
-    
-    # update set arrays
-    for array_key, array_dct in data_set_dictionary['arrays'].items():
-        set_arrays_names=array_dct['set_arrays']
-        set_arrays=tuple([dataset.arrays[name] for name in set_arrays_names])
+
+        set_arrays_names = array_dict['set_arrays']
+        set_arrays = tuple([dataset.arrays[name] for name in set_arrays_names])
         dataset.arrays[array_key].set_arrays = set_arrays
-      
+
     return dataset
 
-def DataSet_to_dictionary(data_set, include_data=True, include_metadata=True):
-    """ Convert DataSet to dictionary
+
+def dataset_to_dictionary(data_set, include_data=True, include_metadata=True):
+    """ Convert DataSet to dictionary.
 
     Args:
-        data_set (DataSet): data to convert
-        include_data (bool): If True then include the .ndarray field
-        include_metadata (bool): If True then include the metadata
+        data_set (DataSet): The data to convert.
+        include_data (bool): If True then include the ndarray field.
+        include_metadata (bool): If True then include the metadata.
+
     Returns:
-        dict: dictionary containing the serialized data
+        dict: dictionary containing the serialized data.
     """
-    d = {'extra': {}, 'metadata': None, 'arrays': {}}
-    for array_id in data_set.arrays.keys():
-        da = data_set.arrays[array_id]
+    data_dictionary = {'extra': {}, 'metadata': None, 'arrays': {}}
 
-        d['arrays'][array_id] = _DataArray_to_dictionary(da, include_data)
+    for array_id, data_array in data_set.arrays.items():
+        data_dictionary['arrays'][array_id] = _data_array_to_dictionary(data_array, include_data)
 
+    data_dictionary['extra']['location'] = data_set.location
+    data_dictionary['extra']['_version'] = qtt.__version__
     if include_metadata:
-        d['metadata'] = data_set.metadata
+        data_dictionary['metadata'] = data_set.metadata
 
-    d['extra']['location'] = data_set.location
-    d['extra']['_version'] = qtt.__version__
-    return d
+    return data_dictionary
 
 
 def test_dataset_to_dictionary():
     import qcodes.tests.data_mocks
+
     input_dataset = qcodes.tests.data_mocks.DataSet2D()
-    data_set_dictionary = DataSet_to_dictionary(input_dataset, include_data=False, include_metadata=False)
-    assert(data_set_dictionary['metadata'] is None)
-    data_set_dictionary = DataSet_to_dictionary(input_dataset, include_data=True, include_metadata=True)
-    assert('metadata' in data_set_dictionary)
 
-    dataset2 = dictionary_to_DataSet(data_set_dictionary)
-    assert(dataset2.default_parameter_name()==input_dataset.default_parameter_name())
-#%%
+    data_dictionary = dataset_to_dictionary(input_dataset, include_data=False, include_metadata=False)
+    assert data_dictionary['metadata'] is None
+
+    data_dictionary = dataset_to_dictionary(input_dataset, include_data=True, include_metadata=True)
+    assert 'metadata' in data_dictionary
+
+    converted_dataset = dictionary_to_dataset(data_dictionary)
+    assert converted_dataset.default_parameter_name() == input_dataset.default_parameter_name()
 
 
-def get_dataset(ds):
-    """ Get a dataset from a results dictionary, a string or a dataset
+def get_dataset(dataset_handle):
+    """ Get a dataset from a results dictionary, a string or a dataset.
 
     Args:
-        ds (str, dict or DataSet): either location of dataset, the dataset itself or a calibration structure
+        dataset_handle (str, dict or DataSet): either location of dataset,
+            the dataset itself or a calibration structure.
 
     Returns:
-        ds (DataSet)
+        DataSet: The dataset from the handle.
     """
-    if isinstance(ds, dict):
-        ds = ds.get('dataset', None)
-    if ds is None:
-        return None
-    if isinstance(ds, str):
-        ds = qtt.data.load_dataset(ds)
-    return ds
+    if isinstance(dataset_handle, dict):
+        return dataset_handle.get('dataset', None)
+
+    if isinstance(dataset_handle, str):
+        return qtt.data.load_dataset(dataset_handle)
+
+    if isinstance(dataset_handle, DataSet):
+        return dataset_handle
+
+    raise ValueError('Invalid dataset argument type ({})!'.format(type(dataset_handle)))
 
 
 def load_dataset(location, io=None, verbose=0):
