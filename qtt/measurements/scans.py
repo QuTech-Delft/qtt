@@ -325,7 +325,7 @@ def _add_dataset_metadata(dataset):
     """ Add different kinds of metadata to a dataset """
     update_dictionary(dataset.metadata, scantime=str(datetime.datetime.now()))
     update_dictionary(dataset.metadata, code_version=qtt.utilities.tools.code_version())
-    update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.DataSet_to_dictionary(dataset, include_data=False, include_metadata=False) )
+    update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.dataset_to_dictionary(dataset, include_data=False, include_metadata=False))
 
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
