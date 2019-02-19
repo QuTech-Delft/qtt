@@ -1,7 +1,7 @@
-""" Basic scan functions
+""" Basic measurement scan functions
 
 This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
-This is part of qtt. 
+This is part of qtt.
 """
 
 import numpy as np
@@ -18,7 +18,6 @@ import skimage.filters
 import matplotlib.pyplot as plt
 
 import qcodes
-#import qcodes as qc
 from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter
 from qcodes import DataArray
@@ -38,7 +37,83 @@ from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
 
 
-# %%
+def _is_instrument_instance(instrument_handle, class_info):
+    """ Returns True if handle is of type class_info (direct, indirect or virtual), else False.
+
+    Args:
+        instrument_handle (object): The instrument instance handle.
+        class_info (classinfo): The class which should be check for the instance.
+
+    Returns:
+        bool: True if the handle is of type class_info, else False.
+    """
+    try:
+        return isinstance(instrument_handle, class_info)
+    except TypeError:
+        return False
+
+
+def _check_usable_instruments(instrument_handle, class_infos):
+    """ Checks whether any of the class_info's is of the instrument handle types.
+
+    Args:
+        instrument_handle (object): The instrument instance handle.
+        class_info (list[classinfo] or classinfo): The list of instrument class which should be checked.
+
+    Raises:
+        ValueError: If none of the class_info's is of the instance handle type.
+    """
+    if not isinstance(class_infos, list):
+        class_infos = [class_infos]
+
+    for class_info in class_infos:
+        if _is_instrument_instance(instrument_handle, class_info):
+            return
+
+    error_text = 'Unrecognized fast readout instrument ({0})!'.format(handle)
+    raise ValueError(error_text)
+
+
+def _get_sample_frequency(instrument_handle):
+    """" Gets the sampling rate in Hz from the instrument.
+
+    Args:
+        instrument_handle: The instrument instance handle.
+
+    Raises:
+        NotImplementedError: If the instrument_handle is not an FPGA or M4i.
+    """
+    fpga_class = qtt.instrument_drivers.FPGA_ave.FPGA_ave
+    if _is_instrument_instance(instrument_handle, fpga_class):
+        return instrument_handle.get_sampling_frequency()
+
+    m4i_class = qcodes.instrument_drivers.Spectrum.M4i.M4i
+    if _is_instrument_instance(instrument_handle, m4i_class):
+        return instrument_handle.sample_rate()
+
+    error_text = 'Sample frequency not implemented ({0})!'.format(instrument_handle.__name__)
+    raise NotImplementedError(error_text)
+
+
+def _set_resolution(instrument_handle, resolution):
+    """" Updated the resolution of the 2D scan, since some measure instruments (M4i) depend on it.
+
+    Args:
+        instrument_handle: The instrument instance handle.
+
+    Raises:
+        NotImplementedError: If the instrument_handle is not an FPGA or M4i.
+    """
+    fpga_class = qtt.instrument_drivers.FPGA_ave.FPGA_ave
+    if _is_instrument_instance(instrument_handle, fpga_class):
+        return
+
+    m4i_class = qcodes.instrument_drivers.Spectrum.M4i.M4i
+    if _is_instrument_instance(instrument_handle, m4i_class):
+        resolution[0] = np.ceil(resolution[0] / 16) * 16
+
+    error_text = 'Set resolution not implemented ({0})!'.format(instrument_handle.__name__)
+    raise NotImplementedError(error_text)
 
 
 def checkReversal(im0, verbose=0):
@@ -494,20 +569,12 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     t0 = time.time()
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
-    try:
-        isfpga = isinstance(
-            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
-    except:
-        isfpga = False
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    if isfpga:
-        samp_freq = minstrhandle.get_sampling_frequency()
-    elif ism4i:
-        samp_freq = minstrhandle.sample_rate()
+    usable_instruments = [
+        qtt.instrument_drivers.FPGA_ave.FPGA_ave,
+        qcodes.instrument_drivers.Spectrum.M4i.M4i]
+
+    _check_usable_instruments(minstrhandle, usable_instruments)
+    samp_freq = _get_sample_frequency(minstrhandle)
 
     if scanjob['scantype'] == 'scan1Dfast':
         if 'range' in sweepdata:
@@ -1593,45 +1660,38 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
 
 
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
-    """Wrapper to identify measurement instrument and run appropriate acquisition function.
-    Supported instruments: m4i digitizer, ZI UHF-LI,  qtt fpga.
+    """ Wrapper to identify measurement instrument and run appropriate acquisition function.
+        Supported instruments: m4i digitizer, ZI UHF-LI,  qtt fpga.
     """
-    try:
-        isfpga = isinstance(
-            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
-    except:
-        isfpga = False
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    try:
-        uhfli = isinstance(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
-    except:
-        uhfli = False
+    instrument_handle = minstrhandle
+    measure_instrument = get_instrument(minstrhandle)
 
-    minstrument = get_instrument(minstrhandle)
-    is_simulation = minstrument.name.startswith('sdigitizer')
+    # FPGA
+    if _is_instrument_instance(instrument_handle, qtt.instrument_drivers.FPGA_ave.FPGA_ave):
+        data = measuresegment_fpga(measure_instrument, waveform, read_ch, Naverage)
 
-    if isfpga:
-        data = measuresegment_fpga(minstrhandle, waveform, read_ch, Naverage)
-    elif ism4i:
-        data = measuresegment_m4i(
-            minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
-    elif uhfli:
-        data = measure_segment_uhfli(
-            minstrhandle, waveform, read_ch, Naverage)
-    elif minstrhandle == 'dummy':
-        # for testing purposes
-        data = np.random.rand(100, )
-    elif is_simulation:
+    # M4i
+    elif _is_instrument_instance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+        data = measuresegment_m4i(measure_instrument, waveform, read_ch, mV_range, Naverage, process=process)
+
+    # UFHLI
+    elif _is_instrument_instance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
+        data = measure_segment_uhfli(measure_instrument, waveform, read_ch, Naverage)
+
+    # Simulator
+    elif minstrument.name.startswith('sdigitizer'):
         data = minstrument.measuresegment(waveform, channels=read_ch)
+
+    # For testing purposes
+    elif instrument_handle == 'dummy':
+        data = np.random.rand(100, )
+
     else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % minstrhandle)
+        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+
     if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
+
     return data
 
 
@@ -1803,20 +1863,12 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     wait_time = stepdata.get('wait_time', 0)
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
 
-    try:
-        isfpga = isinstance(
-            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
-    except:
-        isfpga = False
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    if isfpga:
-        samp_freq = minstrhandle.get_sampling_frequency()
-    elif ism4i:
-        samp_freq = minstrhandle.sample_rate()
+    usable_instruments = [
+        qtt.instrument_drivers.FPGA_ave.FPGA_ave,
+        qcodes.instrument_drivers.Spectrum.M4i.M4i]
+
+    _check_usable_instruments(minstrhandle, usable_instruments)
+    samp_freq = _get_sample_frequency(minstrhandle)
 
     if scanjob['scantype'] == 'scan2Dfastvec':
         scanjob._parse_2Dvec()
@@ -2081,24 +2133,13 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     else:
         sweepranges = [sweepdata['range'], stepdata['range']]
 
-    try:
-        isfpga = isinstance(
-            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
-    except:
-        isfpga = False
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    if isfpga:
-        samp_freq = minstrhandle.get_sampling_frequency()
-    elif ism4i:
-        samp_freq = minstrhandle.sample_rate()
-        resolution[0] = np.ceil(resolution[0] / 16) * 16
-    else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % minstrhandle)
+    usable_instruments = [
+        qtt.instrument_drivers.FPGA_ave.FPGA_ave,
+        qcodes.instrument_drivers.Spectrum.M4i.M4i]
+
+    _check_usable_instruments(minstrhandle, usable_instruments)
+    _set_resolution(minstrhandle, resolution)
+    samp_freq = _get_sample_frequency(minstrhandle)
 
     if scanjob['scantype'] == 'scan2Dturbo':
         sweepgates = [sweepdata['param'].name, stepdata['param'].name]
