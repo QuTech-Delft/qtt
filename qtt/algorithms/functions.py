@@ -233,7 +233,7 @@ def exp_function(x, a, b, c):
     return y
 
 
-def cost_exp_decay(x_data, y_data, params, threshold=None, offset_parameter = None):
+def cost_exp_decay(x_data, y_data, params, threshold=None):
     """ Cost function for exponential decay.
 
     Args:
@@ -242,14 +242,10 @@ def cost_exp_decay(x_data, y_data, params, threshold=None, offset_parameter = No
         params (array): parameters of the exponential decay function, [A,B, gamma]
         threshold (float or None or 'auto'): if the difference between data and model is larger then the threshold, then the cost penalty is reduced.
             If None use normal cost function. If 'auto' use automatic detection (at 95th percentile)
-        offset_parameter (None or float): if None, then estimate the offset, otherwise fix the offset to the specified value
     Returns:
         cost (float): value which indicates the difference between the data and the fit
     """
-    if offset_parameter is None:
-        model = exp_function(x_data, *params)
-    else:
-        model = exp_function(x_data, offset_parameter, *params)
+    model = exp_function(x_data, *params)
     cost = qtt.pgeometry.robustCost(y_data - model, thr=threshold)
     cost = np.linalg.norm(cost)
     return cost
@@ -294,7 +290,6 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
 
     """
 
-    def func(params): return cost_exp_decay(x_data, y_data, params, threshold, offset_parameter)
     if initial_params is None:
         maxsignal = np.percentile(y_data, 98)
         minsignal = np.percentile(y_data, 2)
@@ -303,8 +298,10 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
         if offset_parameter is None:
             A = minsignal
             initial_params = np.array([A, B, gamma])
+            def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
         else:
-            initial_params = np.array([B, gamma])
+            initial_params = np.array([B, gamma])           
+            def func(params): return cost_exp_decay(x_data, y_data, np.hstack( (offset_parameter, params)), threshold)
 
     par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     if offset_parameter is not None:
