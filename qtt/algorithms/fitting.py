@@ -36,33 +36,36 @@ def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
     else:
         estimated_center_xdata = x_data[estimated_index]
 
-    split_offset = int(np.floor(x_data.size/10))
-    mean_right = np.mean(y_data_linearized[(center_index+split_offset):])
-    mean_left = np.mean(y_data_linearized[:(center_index-split_offset)])
+    split_offset = int(np.floor(x_data.size / 10))
+    mean_right = np.mean(y_data_linearized[(center_index + split_offset):])
+    mean_left = np.mean(y_data_linearized[:(center_index - split_offset)])
     amplitude_step = -(mean_right - mean_left)
-    
+
     if np.sign(-y_derivative_filtered[estimated_index]) != np.sign(amplitude_step):
         warnings.warn('step size might be incorrect')
-        
+
     if fig is not None:
-        T = np.std(x_data) / 100
-        fermi_parameters = [estimated_center_xdata, amplitude_step, T]
-
-        plt.figure(fig); plt.clf()
-        plt.plot(x_data, y_data_linearized, '.b', label='y_data_linearized')
-        plt.plot(x_data, Fermi(x_data, *fermi_parameters), '-c', label='estimated model')
-        plt.plot(x_data[estimated_index], y_data_linearized[estimated_index], '.g', label='max slope')
-        plt.legend()
-        
-        plt.figure(fig+1); plt.clf()
-        plt.plot(x_data, y_derivative_filtered, '-r')
-        plt.plot(x_data[estimated_index], y_derivative_filtered[estimated_index], '.g', label='max slope')
-
+        _plot_fermi_model_estimate(x_data, y_data_linearized, estimated_center_xdata,
+                                   amplitude_step, estimated_index, fig=fig)
 
     return estimated_center_xdata, amplitude_step
 
 
-    
+def _plot_fermi_model_estimate(x_data, y_data_linearized, estimated_center_xdata, amplitude_step, estimated_index, fig):
+    T = np.std(x_data) / 100
+    fermi_parameters = [estimated_center_xdata, amplitude_step, T]
+
+    plt.figure(fig)
+    plt.clf()
+    plt.plot(x_data, y_data_linearized, '.b', label='y_data_linearized')
+    plt.plot(x_data, Fermi(x_data, *fermi_parameters), '-c', label='estimated model')
+    plt.plot(x_data[estimated_index], y_data_linearized[estimated_index], '.g', label='max slope')
+    vline = plt.axvline(estimated_center_xdata, label='estimated_center_xdata')
+    vline.set_color('c')
+    vline.set_alpha(.5)
+    plt.legend()
+
+
 def initFermiLinear(x_data, y_data, fig=None):
     """ Initialization of fitting a FermiLinear function.
 
@@ -143,9 +146,6 @@ def initFermiLinear(x_data, y_data, fig=None):
         plt.plot(xdata, yr, '.b', label='Fermi part')
         fermi_part_values = Fermi(xdata, cc, A, T)
         plt.plot(xdata, fermi_part_values, '-m', label='initial estimate')
-
-        plt.legend()
-
         plt.legend()
     return linear_part, fermi_part
 
@@ -270,6 +270,22 @@ def fit_addition_line(dataset, trimborder=True):
     return m_addition_line, {'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
 
 
+def test_initial_estimate_fermi_linear(fig=None):
+    expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
+    x_data = np.arange(-20, 10, 0.1)
+    y_data = FermiLinear(x_data, *expected_parameters)
+    y_data += 0.005 * np.random.rand(y_data.size)
+
+    linear_part, fermi_part = initFermiLinear(x_data, y_data, fig=fig)
+
+    ylin = linear_function(x_data, *linear_part)
+    yr = y_data - ylin
+
+    cc, A = _estimate_fermi_model_center_amplitude(x_data, yr, fig=fig)
+    np.testing.assert_almost_equal(cc, expected_parameters[2], decimal=1)
+    np.testing.assert_almost_equal(A, expected_parameters[3], decimal=1)
+
+
 def test_fit_fermi_linear(fig=100, verbose=0):
     expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
     x_data = np.arange(-20, 10, 0.1)
@@ -303,33 +319,33 @@ def test_fit_fermi_linear(fig=100, verbose=0):
         absolute_difference_parameters = np.abs(actual_parameters - expected_parameters)
         assert np.all(absolute_difference_parameters < 0.1)
 
-
-
     # test with data from F006
-    x_data = np.array([-20. , -19.9, -19.8, -19.7, -19.6, -19.5, -19.4, -19.3, -19.2,
-       -19.1, -19. , -18.9, -18.8, -18.7, -18.6, -18.5, -18.4, -18.3,
-       -18.2, -18.1, -18. , -17.9, -17.8, -17.7, -17.6, -17.5, -17.4,
-       -17.3, -17.2, -17.1, -17. , -16.9, -16.8, -16.7, -16.6, -16.5,
-       -16.4, -16.3, -16.2, -16.1, -16. , -15.9, -15.8, -15.7, -15.6,
-       -15.5, -15.4, -15.3, -15.2, -15.1, -15. , -14.9, -14.8, -14.7,
-       -14.6, -14.5, -14.4, -14.3, -14.2, -14.1])
-    y_data = np.array([0.03055045, 0.0311075 , 0.03098561, 0.03033496, 0.03006341,
-       0.03072266, 0.03183486, 0.03170599, 0.03199145, 0.03224666,
-       0.03164276, 0.03156053, 0.03133487, 0.03184649, 0.03224385,
-       0.03207413, 0.03196082, 0.03229934, 0.03158735, 0.03120681,
-       0.03119833, 0.03220412, 0.03185901, 0.03124884, 0.03129008,
-       0.0314923 , 0.0315841 , 0.0313667 , 0.03115382, 0.03069049,
-       0.03058055, 0.02923863, 0.02789339, 0.02437544, 0.01896179,
-       0.01776424, 0.01175409, 0.01074043, 0.00950811, 0.0074723 ,
-       0.0060949 , 0.00575982, 0.00501728, 0.00490061, 0.00465821,
-       0.00440039, 0.00434098, 0.00429608, 0.00421024, 0.0042945 ,
-       0.0042552 , 0.00433429, 0.00440945, 0.00446915, 0.00446351,
-       0.00439317, 0.00447768, 0.0044295 , 0.00450926, 0.0045605 ])
-    
-    figx = fig if fig is None else fig+100
+    x_data = np.array([-20., -19.9, -19.8, -19.7, -19.6, -19.5, -19.4, -19.3, -19.2,
+                       -19.1, -19., -18.9, -18.8, -18.7, -18.6, -18.5, -18.4, -18.3,
+                       -18.2, -18.1, -18., -17.9, -17.8, -17.7, -17.6, -17.5, -17.4,
+                       -17.3, -17.2, -17.1, -17., -16.9, -16.8, -16.7, -16.6, -16.5,
+                       -16.4, -16.3, -16.2, -16.1, -16., -15.9, -15.8, -15.7, -15.6,
+                       -15.5, -15.4, -15.3, -15.2, -15.1, -15., -14.9, -14.8, -14.7,
+                       -14.6, -14.5, -14.4, -14.3, -14.2, -14.1])
+    y_data = np.array([0.03055045, 0.0311075, 0.03098561, 0.03033496, 0.03006341,
+                       0.03072266, 0.03183486, 0.03170599, 0.03199145, 0.03224666,
+                       0.03164276, 0.03156053, 0.03133487, 0.03184649, 0.03224385,
+                       0.03207413, 0.03196082, 0.03229934, 0.03158735, 0.03120681,
+                       0.03119833, 0.03220412, 0.03185901, 0.03124884, 0.03129008,
+                       0.0314923, 0.0315841, 0.0313667, 0.03115382, 0.03069049,
+                       0.03058055, 0.02923863, 0.02789339, 0.02437544, 0.01896179,
+                       0.01776424, 0.01175409, 0.01074043, 0.00950811, 0.0074723,
+                       0.0060949, 0.00575982, 0.00501728, 0.00490061, 0.00465821,
+                       0.00440039, 0.00434098, 0.00429608, 0.00421024, 0.0042945,
+                       0.0042552, 0.00433429, 0.00440945, 0.00446915, 0.00446351,
+                       0.00439317, 0.00447768, 0.0044295, 0.00450926, 0.0045605])
+
+    figx = fig if fig is None else fig + 100
     linear_part, fermi_part = initFermiLinear(x_data, y_data, fig=figx)
-    np.testing.assert_almost_equal(linear_part,[0, 0], decimal=1)
-    np.testing.assert_almost_equal(fermi_part,[-16.7, 0.02755, 0.01731], decimal=2)
-    
+    np.testing.assert_almost_equal(linear_part, [0, 0], decimal=1)
+    np.testing.assert_almost_equal(fermi_part, [-16.7, 0.02755, 0.01731], decimal=2)
+
+
 if __name__ == '__main__':
     test_fit_fermi_linear(verbose=1)
+    test_initial_estimate_fermi_linear(fig=500)
