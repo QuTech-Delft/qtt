@@ -561,13 +561,13 @@ def opencvpose2attpos(rvecs, tvecs):
     rvec = np.array(rvecs).flatten()
     R, tmp = cv2.Rodrigues(rvec)
     att = RBE2euler(R)
-    pos = -R.transpose().dot(np.matrix(tvec.reshape((3, 1))))
+    pos = -R.transpose().dot(np.array(tvec.reshape((3, 1))))
     return att, pos
 
 
 def opencv2TX(rvecs, tvecs):
     """ Convert OpenCV pose to homogenous transform """
-    T = np.matrix(np.eye(4))
+    T = np.array(np.eye(4))
     R = cv2.Rodrigues(rvecs)[0]
     T[0:3, 0:3] = R
     T[0:3, 3:4] = tvecs
@@ -576,7 +576,7 @@ def opencv2TX(rvecs, tvecs):
 
 def opencv2T(rvec, tvec):
     """ Convert OpenCV pose to homogenous transform """
-    T = np.matrix(np.eye(4))
+    T = np.array(np.eye(4))
     T[0:3, 0:3] = cv2.Rodrigues(rvec)[0]
     T[0:3, 3] = tvec
     return T
@@ -614,7 +614,7 @@ def euler2RBE(theta):
     cy = math.cos(theta[2])
     sy = math.sin(theta[2])
 
-    out = np.matrix([cp * cy, sr * sp * cy - cr * sy, cr * sp * cy + sr * sy,
+    out = np.array([cp * cy, sr * sp * cy - cr * sy, cr * sp * cy + sr * sy,
                      cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - sr * cy, -sp, sr * cp, cr * cp])
     return out.reshape((3, 3))
 
@@ -632,7 +632,7 @@ def RBE2euler(Rbe):
 
 def pg_rotation2H(R):
     """ Convert rotation matrix to homogenous transform matrix """
-    X = np.matrix(np.eye((R.shape[0] + 1)))
+    X = np.array(np.eye((R.shape[0] + 1)))
     X[0:-1, 0:-1] = R
     return X
 
@@ -847,7 +847,7 @@ def pg_transl2H(tr):
     sh = np.array(tr)
     H = np.eye(sh.size + 1)
     H[0:-1, -1] = sh.flatten()
-    H = np.matrix(H)
+    H = np.array(H)
     return H
 
 
@@ -2132,12 +2132,12 @@ def decomposeProjectiveTransformation(H, verbose=0):
 
     >>> Ha, Hs, Hp, rest = decomposeProjectiveTransformation( np.eye(3) )
     """
-    H = np.matrix(H)
+    H = np.array(H)
     k = H.shape[0]
     km = k - 1
 
     eta = H[k - 1, k - 1]
-    Hp = np.matrix(np.vstack((np.eye(km, k), H[k - 1, :])))
+    Hp = np.array(np.vstack((np.eye(km, k), H[k - 1, :])))
     A = H[0:km, 0:km]
     t = H[0:km, -1]
     v = H[k - 1, 0:km].T
@@ -2146,11 +2146,11 @@ def decomposeProjectiveTransformation(H, verbose=0):
     if np.abs(np.linalg.det(A)) < 4 * eps:
         print('decomposeProjectiveTransformation: part A of matrix is (near) singular')
 
-    sRK = A - np.matrix(t).dot(np.matrix(v.T))
+    sRK = A - np.array(t).dot(np.array(v.T))
     # upper left block of H*inv(Hp)
     R, K = np.linalg.qr(sRK)
-    K = np.matrix(K)
-    R = np.matrix(R)
+    K = np.array(K)
+    R = np.array(R)
 
     s = (np.abs(np.linalg.det(K)))**(1. / km)
     K = K / s
@@ -2164,8 +2164,8 @@ def decomposeProjectiveTransformation(H, verbose=0):
         K = np.diag(sc) * K
         R = R * np.diag(sc)
     br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
-    Hs = np.matrix(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
-    Ha = np.matrix(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))
+    Hs = np.array(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
+    Ha = np.array(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))
 
     phi = np.arctan2(R[1, 0], R[0, 0])
 
