@@ -262,11 +262,6 @@ def test_cost_exp_decay():
     assert(c == 10.0)
     c = cost_exp_decay(x_data, y_data, params, threshold='auto')
     assert(c < 10.0)
-    c = cost_exp_decay(x_data, y_data, params[1:], threshold=None, offset_parameter = 1)
-    np.testing.assert_almost_equal(c, 10.)
-
-    c = cost_exp_decay(x_data, y_data, params[1:], threshold=None, offset_parameter = 10)
-    np.testing.assert_almost_equal(c, 43.58898943540674)
 
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None, threshold=None,
                   offset_parameter = None):
@@ -513,3 +508,4 @@ def test_logistic_and_linear_function():
 
 if __name__ == '__main__':
     test_logistic_and_linear_function()
+    test_cost_exp_decay()
