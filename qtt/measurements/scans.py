@@ -250,15 +250,15 @@ def get_instrument(instr, station=None):
 
 
 def test_get_instrument_parameter():
-    i = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(qtt.measurements.scans.instrumentName('test'), None)
-    ix, p = get_instrument_parameter((i.name, 'dac2'))
-    assert (id(ix) == id(i))
-    assert (id(p) == id(i.dac2))
-    ix, p = get_instrument_parameter((i, 'dac2'))
-    assert (id(p) == id(i.dac2))
-    ix, p = get_instrument_parameter(i.name + '.dac2')
-    assert (id(p) == id(i.dac2))
-
+    instrument = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(qtt.measurements.scans.instrumentName('test'), None)
+    ix, p = get_instrument_parameter((instrument.name, 'dac2'))
+    assert (id(ix) == id(instrument))
+    assert (id(p) == id(instrument.dac2))
+    ix, p = get_instrument_parameter((instrument, 'dac2'))
+    assert (id(p) == id(instrument.dac2))
+    ix, p = get_instrument_parameter(instrument.name + '.dac2')
+    assert (id(p) == id(instrument.dac2))
+    instrument.close()
 
 def get_minstrument_channels(minstrument):
     if isinstance(minstrument, tuple):
@@ -631,7 +631,7 @@ def test_sample_data():
     assert (v == 100)
 
 def _convert_vectorname_to_parametername(vector_name, extra_string = None):
-    parameter_name = re.sub('\(.*?\)', '', vector_name)
+    parameter_name = re.sub(r'\(.*?\)', '', vector_name)
     if extra_string is not None:
         parameter_name += '_'  + extra_string
     return parameter_name

@@ -602,9 +602,9 @@ def euler2RBE(theta):
       -------
       >>> np.set_printoptions(precision=4, suppress=True)
       >>> euler2RBE( [0,0,np.pi/2] )
-      matrix([[ 0., -1.,  0.],
-              [ 1.,  0.,  0.],
-              [-0.,  0.,  1.]])
+      array([[ 0., -1.,  0.],
+             [ 1.,  0.,  0.],
+             [-0.,  0.,  1.]])
 
     """
     cr = math.cos(theta[0])
@@ -839,7 +839,7 @@ def pg_transl2H(tr):
     """ Convert translation to homogeneous transform matrix
 
     >>> pg_transl2H( [1,2])
-    matrix([[ 1.,  0.,  1.],
+    array([[ 1.,  0.,  1.],
             [ 0.,  1.,  2.],
             [ 0.,  0.,  1.]])
 
