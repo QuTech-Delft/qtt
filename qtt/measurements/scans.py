@@ -1687,7 +1687,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
         data = np.random.rand(100, )
 
     else:
-        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+        raise ValueError('Unrecognized fast readout instrument {0}'.format(instrument_handle))
 
     if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
