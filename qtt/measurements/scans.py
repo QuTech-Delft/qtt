@@ -1908,19 +1908,17 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     dt = time.time() - t0
 
     if liveplotwindow is not None:
-        # final update
         liveplotwindow.update_plot()
         pyqtgraph.mkQApp().processEvents()
 
-    # when using multiparameter object as stepdata param add stepped values to dataset for all step parameters
-    if hasattr(stepvalues, 'ndim'):
-        if stepvalues.ndim > 1:
-            for idp, steppm_add in enumerate(stepdata['param'].params):
-                if idp > 0:
-                    data_arr_step_add = DataArray(steppm_add, name=steppm_add.name, full_name=steppm_add.name, array_id=steppm_add.name,
-                                                  preset_data=np.repeat(stepvalues[:,idp,np.newaxis], alldata.arrays[measure_names[0]].shape[1], axis=1),
-                                                  set_arrays=(alldata.arrays[measure_names[0]].set_arrays))
-                    alldata.add_array(data_arr_step_add)
+    if hasattr(stepvalues, 'ndim') and stepvalues.ndim > 1:
+        for idp, steppm_add in enumerate(stepdata['param'].params):
+            if idp <= 0:
+                continue
+            data_arr_step_add = DataArray(steppm_add, name=steppm_add.name, full_name=steppm_add.name, array_id=steppm_add.name,
+                                          preset_data=np.repeat(stepvalues[:, idp, np.newaxis], alldata.arrays[measure_names[0]].shape[1], axis=1),
+                                          set_arrays=(alldata.arrays[measure_names[0]].set_arrays))
+            alldata.add_array(data_arr_step_add)
 
     if diff_dir is not None:
         for mname in measure_names:
