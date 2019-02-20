@@ -1843,7 +1843,15 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     t0 = time.time()
 
     if type(stepvalues) is np.ndarray:
-        stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
+        if stepvalues.ndim > 1:
+            stepvalues_tmp = stepdata['param'].params[0][list(stepvalues[:, 0])]
+        else:
+            stepvalues_tmp = stepdata['param'][list(stepvalues[:, 0])]
+        # added to overwrite array names for setpoint arrays
+        if 'paramname' in sweepdata:
+            stepvalues_tmp.name = sweepdata['paramname']
+        if 'paramname' in stepdata:
+            stepvalues_tmp.name = stepdata['paramname']                        
         alldata = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=measure_names,
                                 location=location, loc_record={'label': scanjob['scantype']})
     else:
@@ -1900,9 +1908,17 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     dt = time.time() - t0
 
     if liveplotwindow is not None:
-        # final update
         liveplotwindow.update_plot()
         pyqtgraph.mkQApp().processEvents()
+
+    if hasattr(stepvalues, 'ndim') and stepvalues.ndim > 1:
+        for idp, steppm_add in enumerate(stepdata['param'].params):
+            if idp <= 0:
+                continue
+            data_arr_step_add = DataArray(steppm_add, name=steppm_add.name, full_name=steppm_add.name, array_id=steppm_add.name,
+                                          preset_data=np.repeat(stepvalues[:, idp, np.newaxis], alldata.arrays[measure_names[0]].shape[1], axis=1),
+                                          set_arrays=(alldata.arrays[measure_names[0]].set_arrays))
+            alldata.add_array(data_arr_step_add)
 
     if diff_dir is not None:
         for mname in measure_names:
