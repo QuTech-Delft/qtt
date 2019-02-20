@@ -154,3 +154,6 @@ def test_load_save_state():
     tmpfile = tempfile.mktemp()
     tag = save_state(station, virtual_gates = virts, statefile=tmpfile)
     r = load_state(station=station, tag=tag, verbose=1, statefile=tmpfile)
+    
+    virts.close()
+    
