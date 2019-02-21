@@ -265,6 +265,7 @@ class VirtualAwg(Instrument):
         sweep_data = self.sequence_gates(sequences, do_upload)
         sweep_data.update({'sweeprange': sweep_range, 'period': period, 'width': width})
         sweep_data.update({'start_zero': True})
+        sweep_data.update({'_gates': gates})
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data

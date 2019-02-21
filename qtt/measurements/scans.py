@@ -532,7 +532,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                                                                    'period': period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
-                sweep_range = sweeprange * 2
+                sweep_range = sweeprange 
                 waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
