@@ -1487,8 +1487,9 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 
-    # remove padding
+    measuresegment_m4i._waveform = waveform  # for debugging
     measuresegment_m4i._dataraw = dataraw  # for debugging
+    measuresegment_m4i._variables = {'padding_offset': padding_offset, 'drate': drate, 'period': period}
 
     if isinstance(dataraw, tuple):
         dataraw = dataraw[0]
