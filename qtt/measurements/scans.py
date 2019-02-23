@@ -353,6 +353,7 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = Fal
             
             
     pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
+    return liveplotwindow
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -399,7 +400,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                                                         location=location, loc_record={'label': scanjob['scantype']},
                                                         return_names=True)
 
-    _initialize_live_plotting(alldata, plotparam, liveplotwindow)
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
 
     def myupdate():
         if liveplotwindow:
@@ -573,7 +574,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     else:
         station.awg.stop()
 
-    _initialize_live_plotting(alldata, plotparam, liveplotwindow)
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
 
     dt = time.time() - t0
     if not hasattr(alldata, 'metadata'):
@@ -1123,9 +1124,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 
     if plotparam is 'all':
-        _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots = True)
+        liveplotwindow = _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots = True)
     else:
-        _initialize_live_plotting(alldata, plotparam, liveplotwindow)
+        liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = True)
 
     t0 = time.time()
     tprev = time.time()
@@ -1874,7 +1875,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
                                 location=location, loc_record={'label': scanjob['scantype']})
 
-    _initialize_live_plotting(alldata, plotparam, liveplotwindow)
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
 
     tprev = time.time()
 
@@ -2131,7 +2132,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     dt = time.time() - t0
 
-    _initialize_live_plotting(alldata, plotparam = None, liveplotwindow)
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam = None, liveplotwindow = liveplotwindow)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
