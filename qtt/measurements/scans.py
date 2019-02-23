@@ -328,6 +328,32 @@ def _add_dataset_metadata(dataset):
     update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.dataset_to_dictionary(dataset, include_data=False, include_metadata=False))
 
 
+def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = False):
+    """ Initialize live plotting
+    
+    Args:
+        alldata (DataSet): DataSet to plot from
+        plotparam (str or list or None): Arrays in the DataSet to plot
+        liveplotwindow (None or object): handle to live plotting window
+    """
+    if liveplotwindow is None:
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
+    if liveplotwindow:
+        liveplotwindow.clear()
+        if isinstance(plotparam, (list, tuple)):
+            for ii, plot_parameter in enumerate(plotparam):
+                if subplots:
+                    liveplotwindow.add(alldata.default_parameter_array(paramname=plot_parameter), subplot=ii + 1)
+                else:
+                    liveplotwindow.add(alldata.default_parameter_array(paramname=plot_parameter))
+        elif plotparam is None:
+            liveplotwindow.add(alldata.default_parameter_array())
+        else:
+            liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
+            
+            
+    pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
+
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
 
@@ -373,15 +399,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                                                         location=location, loc_record={'label': scanjob['scantype']},
                                                         return_names=True)
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow:
-        liveplotwindow.clear()
-        if isinstance(plotparam, (list, tuple)):
-            for plot_parameter in plotparam:
-                liveplotwindow.add(alldata.default_parameter_array(paramname=plot_parameter))
-        else:
-            liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
+    _initialize_live_plotting(alldata, plotparam, liveplotwindow)
 
     def myupdate():
         if liveplotwindow:
@@ -555,16 +573,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     else:
         station.awg.stop()
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow is not None:
-        liveplotwindow.clear()
-        if plotparam is None:
-            liveplotwindow.add(alldata.default_parameter_array())
-        else:
-            for plot_parameter in plotparam:
-                liveplotwindow.add(alldata.default_parameter_array(plot_parameter))
-        pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
+    _initialize_live_plotting(alldata, plotparam, liveplotwindow)
 
     dt = time.time() - t0
     if not hasattr(alldata, 'metadata'):
@@ -1112,20 +1121,13 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
 
+
+    if plotparam is 'all':
+        _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots = True)
+    else:
+        _initialize_live_plotting(alldata, plotparam, liveplotwindow)
+
     t0 = time.time()
-
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow:
-        liveplotwindow.clear()
-        if plotparam is 'all':
-            for i in range(np.min(len(mparams))):
-                liveplotwindow.add(
-                    alldata.default_parameter_array(paramname=measure_names[i]), subplot=i + 1)
-        else:
-            liveplotwindow.add(
-                alldata.default_parameter_array(paramname=plotparam))
-
     tprev = time.time()
 
     # disable time-based write period
@@ -1812,7 +1814,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                                                                    'period':period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
-                sweep_range = sweeprange * 2
+                sweep_range = sweepdata['range']
                 waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
@@ -1872,12 +1874,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
                                 location=location, loc_record={'label': scanjob['scantype']})
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow is not None:
-        liveplotwindow.clear()
-        liveplotwindow.add(
-            alldata.default_parameter_array(paramname=plotparam))
+    _initialize_live_plotting(alldata, plotparam, liveplotwindow)
 
     tprev = time.time()
 
@@ -2134,11 +2131,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     dt = time.time() - t0
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow is not None:
-        liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array())
+    _initialize_live_plotting(alldata, plotparam = None, liveplotwindow)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
