@@ -28,7 +28,8 @@ install:
 script: 
     - ls
     - pytest --version
-    - xvfb-run -a pytest 
+    - pytest 
+    #- xvfb-run -a pytest 
     # run notebooks
     - if [ $FULL_INSTALL == "1" ]; then
       jupyter --version;
