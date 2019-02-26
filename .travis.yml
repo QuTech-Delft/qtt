@@ -21,6 +21,7 @@ install:
     # opencv is needed for most of the tests right now
     - pip install opencv-python;
     # doing a normal python setup.py install gives issues with pytest
+    - pip list
     - python setup.py develop
 
 # for xvfb details see https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui
