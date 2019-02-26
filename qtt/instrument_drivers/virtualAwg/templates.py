@@ -60,3 +60,19 @@ class Templates:
         """
         return TablePT({name: [(0, 0), ('offset', 1),
                                ('offset+uptime', 0), ('period', 0)]})
+
+    @staticmethod
+    def rollover_marker(name):
+        """Creates a TTL pulse qupulse template for sequencing.
+
+        Args:
+            name (str): The user defined name of the sequence.
+
+        Returns:
+            TablePT: The sequence with the wait pulse and rollover.
+        """
+        return TablePT({name: [(0, 'rollover'),
+                               ('rollover_duration', 0),
+                               ('pulse_rise', 1),
+                               ('pulse_fall', 0),
+                               ('period', 0)]})
