@@ -4,7 +4,7 @@ from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonEr
 
 class ZurichInstrumentsHDAWG8(AwgCommon):
     __sampling_rate_map = {0: 2.4e9, 1: 1.2e9, 2: 600e6, 3: 300e6, 4: 150e6, 5: 72e6, 6: 37.50e6, 7: 18.75e6,
-                           8: 9.4e6, 9: 4.5e6, 10: 2.34e6, 11: 1.2e3, 12: 586e3, 13: 293e3}
+                           8: 9.4e6, 9: 4.5e6, 10: 2.34e6, 11: 1.2e6, 12: 586e3, 13: 293e3}
 
     def __init__(self, awg, awg_number=0):
         """ Implements the common functionality of the AwgCommon for the Zurich Instruments HDAWG8 to be controlled by
