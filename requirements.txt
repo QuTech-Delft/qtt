@@ -1,5 +1,5 @@
 apscheduler
-attrs
+attrs >= 18.2.0
 colorama
 coverage
 dulwich
