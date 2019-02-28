@@ -8,11 +8,12 @@ from qupulse.pulses.sequencing import Sequencer as Sequencing
 from qupulse.serialization import Serializer, DictBackend
 
 from qtt.instrument_drivers.virtualAwg.templates import DataTypes, Templates
+
+
 # from qtt.instrument_drivers.virtualAwg.serializer import StringBackend
 
 
 class Sequencer:
-
     """ Conversion factor from seconds to nano-seconds."""
     __sec_to_ns = 1e9
 
@@ -33,10 +34,10 @@ class Sequencer:
         """
         if width <= 0 or width >= 1:
             raise ValueError('Invalid argument value (0 < width < 1)!')
-        input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0,
+        input_variables = {'period': period * Sequencer.__sec_to_ns, 'amplitude': amplitude / 2.0,
                            'width': width}
         sequence_data = (Templates.sawtooth(name), input_variables)
-        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
+        return {'name': name, 'wave': SequencePT(*((sequence_data,) * repetitions)),
                 'type': DataTypes.QU_PULSE}
 
     @staticmethod
@@ -53,9 +54,9 @@ class Sequencer:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
                   sequence data type and the actual qupulse sequencePT respectively.
         """
-        input_variables = {'period': period*Sequencer.__sec_to_ns, 'amplitude': amplitude/2.0}
+        input_variables = {'period': period * Sequencer.__sec_to_ns, 'amplitude': amplitude / 2.0}
         sequence_data = (Templates.square(name), input_variables)
-        return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions),
+        return {'name': name, 'wave': SequencePT(*(sequence_data,) * repetitions),
                 'type': DataTypes.QU_PULSE}
 
     @staticmethod
@@ -74,14 +75,14 @@ class Sequencer:
         """
         if len(amplitudes) != len(waiting_times):
             raise ValueError('Arguments have invalid lengths! (amplitudes={}, waiting_times={}'.format(
-                             len(amplitudes), len(waiting_times)))
+                len(amplitudes), len(waiting_times)))
         time_in_ns = 0.0
         entry_list = list()
         for waiting_time, amplitude in zip(waiting_times, amplitudes):
             time_in_ns += waiting_time * Sequencer.__sec_to_ns
             entry_list.append((time_in_ns, amplitude, 'jump'))
         sequence_data = TablePT({name: entry_list})
-        return {'name': name, 'wave': SequencePT(*(sequence_data,)*repetitions), 'type': DataTypes.QU_PULSE}
+        return {'name': name, 'wave': SequencePT(*(sequence_data,) * repetitions), 'type': DataTypes.QU_PULSE}
 
     @staticmethod
     def make_marker(period, uptime=0.2, offset=0.0, repetitions=1, name='marker'):
@@ -98,15 +99,21 @@ class Sequencer:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
                   sequence data type and the actual qupulse sequencePT respectively.
         """
-        if uptime <= 0 or offset < 0:
-            raise ValueError('Invalid argument value (uptime <= 0 or offset < 0)!')
-        if uptime + offset > period:
-            raise ValueError('Invalid argument value (uptime + offset > period)!')
+
+        if abs(offset) > period:
+            raise ValueError('Invalid argument value for offset: |{}| > {}!'.format(offset, period))
+        if not 0 < uptime < period:
+            raise ValueError("Invalid argument value for uptime '{}'!".format(uptime))
+        updated_offset = period + offset if offset < 0 else offset
         input_variables = {'period': period * Sequencer.__sec_to_ns,
                            'uptime': uptime * Sequencer.__sec_to_ns,
-                           'offset': offset * Sequencer.__sec_to_ns}
-        sequence_data = (Templates.marker(name), input_variables)
-        return {'name': name, 'wave': SequencePT(*((sequence_data,)*repetitions)),
+                           'offset': updated_offset * Sequencer.__sec_to_ns}
+        rollover = updated_offset + uptime > period
+        if rollover:
+            warnings.warn('Marker rolls over to subsequent period.')
+        pulse_template = Templates.rollover_marker(name) if rollover else Templates.marker(name)
+        sequence_data = (pulse_template, input_variables)
+        return {'name': name, 'wave': SequencePT(*((sequence_data,) * repetitions)),
                 'type': DataTypes.QU_PULSE, 'uptime': uptime, 'offset': offset}
 
     @staticmethod
@@ -186,7 +193,7 @@ class Sequencer:
             axes = figure.add_subplot(111)
         raw_data = Sequencer.__raw_data_to_array(sequence, sampling_rate)
         sample_count = len(raw_data)
-        total_time = (sample_count - 1)/(sampling_rate * Sequencer.__sec_to_ns)
+        total_time = (sample_count - 1) / (sampling_rate * Sequencer.__sec_to_ns)
         times = np.linspace(0, total_time, num=sample_count, dtype=float)
         axes.step(times, raw_data, where='post')
         axes.get_figure().show()
@@ -292,9 +299,9 @@ def test_qupulse_sawtooth_HasCorrectProperties():
         sampling_rate = 1e9
         sequence = Sequencer.make_sawtooth_wave(amplitude, period)
         raw_data = Sequencer.get_data(sequence, sampling_rate)
-        assert len(raw_data) == sampling_rate*period + 1
-        assert np.abs(np.min(raw_data) + amplitude/2) <= epsilon
-        assert np.abs(np.max(raw_data) - amplitude/2) <= epsilon
+        assert len(raw_data) == sampling_rate * period + 1
+        assert np.abs(np.min(raw_data) + amplitude / 2) <= epsilon
+        assert np.abs(np.max(raw_data) - amplitude / 2) <= epsilon
 
 
 def test_raw_wave_HasCorrectProperties():
@@ -303,10 +310,10 @@ def test_raw_wave_HasCorrectProperties():
         period = 1e-3
         sampling_rate = 1e9
         name = 'test_raw_data'
-        sequence = {'name': name, 'wave': [0]*int(period*sampling_rate+1),
+        sequence = {'name': name, 'wave': [0] * int(period * sampling_rate + 1),
                     'type': DataTypes.RAW_DATA}
         raw_data = Sequencer.get_data(sequence, sampling_rate)
-        assert len(raw_data) == sampling_rate*period+1
+        assert len(raw_data) == sampling_rate * period + 1
         assert np.min(raw_data) == 0
 
 
