@@ -50,7 +50,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
 
     def test_update_sampling_rate(self):
         sample_rates = [2400000000.0, 1200000000.0, 600000000.0, 300000000.0, 150000000.0, 72000000.0, 37500000.0,
-                        18750000.0, 9400000.0, 4500000.0, 2340000.0, 1200.0, 586000.0, 293000.0]
+                        18750000.0, 9400000.0, 4500000.0, 2340000.0, 1200000.0, 586000.0, 293000.0]
 
         for sample_rate in sample_rates:
             self.zi_hdawg8.update_sampling_rate(sample_rate)
