@@ -77,7 +77,7 @@ class Templates:
             name (str): The user defined name of the sequence.
 
         Returns:
-            TablePT: The sequence with the wait pulse and rollover.
+            TablePT: The sequence with the marker pulse and rollover part of the pulse.
         """
         return TablePT({name: [(0, 1),
                                ('offset + uptime - period', 0),
