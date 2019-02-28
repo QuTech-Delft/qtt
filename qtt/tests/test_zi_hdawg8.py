@@ -16,6 +16,9 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
         self.awg = ZIHDAWG8()
         self.zi_hdawg8 = ZurichInstrumentsHDAWG8(self.awg, 0)
 
+    def tearDown(self):
+        self.zi_hdawg8.close()
+        
     def test_enable_outputs(self):
         self.zi_hdawg8.enable_outputs()
         calls = [call.enable_channel(ch) for ch in range(0, 8)]
