@@ -28,7 +28,7 @@ install:
 script: 
     - ls
     - pytest --version
-    - pytest 
+    - pytest -v
     #- xvfb-run -a pytest 
     # run notebooks
     - if [ $FULL_INSTALL == "1" ]; then
