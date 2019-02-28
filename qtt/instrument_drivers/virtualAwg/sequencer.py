@@ -104,27 +104,17 @@ class Sequencer:
             raise ValueError('Invalid argument value for offset: |{}| > {}!'.format(offset, period))
         if not 0 < uptime < period:
             raise ValueError("Invalid argument value for uptime '{}'!".format(uptime))
-        input_variables = Sequencer.__calculate_pulse_parameters(offset, period, uptime)
-        sequence_data = (Templates.rollover_marker(name), input_variables)
-        return {'name': name, 'wave': SequencePT(*((sequence_data,) * repetitions)),
-                'type': DataTypes.QU_PULSE, 'uptime': uptime, 'offset': offset}
-
-    @staticmethod
-    def __calculate_pulse_parameters(offset, period, uptime):
-        pulse_rise = period + offset if offset < 0 else offset
-        rollover = 1 if pulse_rise + uptime > period else 0
-        pulse_fall = period if rollover else uptime + pulse_rise
-        rollover_duration = pulse_rise + uptime - period if rollover else 0
-        
-        input_variables = {'rollover': rollover,
-                           'rollover_duration': rollover_duration * Sequencer.__sec_to_ns, 
-                           'pulse_rise': pulse_rise * Sequencer.__sec_to_ns,
-                           'pulse_fall': pulse_fall * Sequencer.__sec_to_ns, 
-                           'period': period * Sequencer.__sec_to_ns}
-
+        updated_offset = period + offset if offset < 0 else offset
+        input_variables = {'period': period * Sequencer.__sec_to_ns,
+                           'uptime': uptime * Sequencer.__sec_to_ns,
+                           'offset': updated_offset * Sequencer.__sec_to_ns}
+        rollover = updated_offset + uptime > period
         if rollover:
             warnings.warn('Marker rolls over to subsequent period.')
-        return input_variables
+        pulse_template = Templates.rollover_marker(name) if rollover else Templates.marker(name)
+        sequence_data = (pulse_template, input_variables)
+        return {'name': name, 'wave': SequencePT(*((sequence_data,) * repetitions)),
+                'type': DataTypes.QU_PULSE, 'uptime': uptime, 'offset': offset}
 
     @staticmethod
     def __qupulse_template_to_array(sequence, sampling_rate):

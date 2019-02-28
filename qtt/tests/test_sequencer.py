@@ -14,11 +14,9 @@ class TestSequencer(unittest.TestCase):
         self.assertEqual(uptime, marker['uptime'])
 
         parameters = marker['wave'].subtemplates[0].parameter_mapping
-        self.assertEqual(0, parameters['rollover'])
-        self.assertEqual(0, parameters['rollover_duration'])
-        self.assertEqual(0, parameters['pulse_rise'])
-        self.assertEqual(4, parameters['pulse_fall'])
         self.assertEqual(10, parameters['period'])
+        self.assertEqual(0, parameters['offset'])
+        self.assertEqual(4, parameters['uptime'])
 
     def test_make_marker_no_regression_with_offset(self):
         period = 10e-9
@@ -29,10 +27,8 @@ class TestSequencer(unittest.TestCase):
         self.assertEqual(uptime, marker['uptime'])
 
         parameters = marker['wave'].subtemplates[0].parameter_mapping
-        self.assertEqual(0, parameters['rollover'])
-        self.assertEqual(0, parameters['rollover_duration'])
-        self.assertEqual(3, parameters['pulse_rise'])
-        self.assertEqual(7, parameters['pulse_fall'])
+        self.assertEqual(3, parameters['offset'])
+        self.assertEqual(4, parameters['uptime'])
         self.assertEqual(10, parameters['period'])
 
     def test_make_marker_negative_offset(self):
@@ -44,10 +40,8 @@ class TestSequencer(unittest.TestCase):
         self.assertEqual(uptime, marker['uptime'])
 
         parameters = marker['wave'].subtemplates[0].parameter_mapping
-        self.assertEqual(0, parameters['rollover'])
-        self.assertEqual(0, parameters['rollover_duration'])
-        self.assertEqual(7, parameters['pulse_rise'])
-        self.assertEqual(9, parameters['pulse_fall'])
+        self.assertEqual(7, parameters['offset'])
+        self.assertEqual(2, parameters['uptime'])
         self.assertEqual(10, parameters['period'])
 
     def test_make_marker_negative_offset_rollover(self):
@@ -61,10 +55,8 @@ class TestSequencer(unittest.TestCase):
         self.assertEqual(uptime, marker['uptime'])
 
         parameters = marker['wave'].subtemplates[0].parameter_mapping
-        self.assertEqual(1, parameters['rollover'])
-        self.assertEqual(2, parameters['rollover_duration'].evaluate_numeric())
-        self.assertEqual(8, parameters['pulse_rise'])
-        self.assertEqual(10, parameters['pulse_fall'])
+        self.assertEqual(8, parameters['offset'])
+        self.assertEqual(4, parameters['uptime'])
         self.assertEqual(10, parameters['period'])
 
     def test_offset_raises_errors(self):

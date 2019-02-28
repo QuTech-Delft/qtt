@@ -63,7 +63,15 @@ class Templates:
 
     @staticmethod
     def rollover_marker(name):
-        """Creates a TTL pulse qupulse template for sequencing.
+        """Creates a TTL pulse qupulse template for sequencing that rolls over to the subsequent period.
+
+            ---------         ----------
+                     |        |
+                     |        |
+                     ----------
+            <---------period------------>
+            <-----offset----->
+            <--------> uptime <--------->
 
         Args:
             name (str): The user defined name of the sequence.
@@ -71,8 +79,7 @@ class Templates:
         Returns:
             TablePT: The sequence with the wait pulse and rollover.
         """
-        return TablePT({name: [(0, 'rollover'),
-                               ('rollover_duration', 0),
-                               ('pulse_rise', 1),
-                               ('pulse_fall', 0),
-                               ('period', 0)]})
+        return TablePT({name: [(0, 1),
+                               ('offset + uptime - period', 0),
+                               ('offset', 1),
+                               ('period', 1)]})
