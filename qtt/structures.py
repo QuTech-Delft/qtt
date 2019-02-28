@@ -512,11 +512,11 @@ class sensingdot_t:
         return self.sdval[1], alldata
 
 def test_sensingdot_t():
-    import qcodes
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
     sensing_dot = qtt.structures.sensingdot_t(['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')
-    _ = sensing_dot.autoTune(step=-8)
+    _ = sensing_dot.autoTune(step=-8, fig=None)
+    qtt.simulation.virtual_dot_array.close()
 
 #%%
 class VectorParameter(qcodes.instrument.parameter.Parameter):
