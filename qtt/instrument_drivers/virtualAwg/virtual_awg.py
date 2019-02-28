@@ -15,11 +15,17 @@ class VirtualAwgError(Exception):
 
 class VirtualAwg(Instrument):
     """ The virtual AWG is an abstraction layer to produce pulse driven state manipulation of physical qubits.
-        The class aims for hardware independent control, where only common arbitrary waveform generator (AWG)
-        functionality is used. A translation between the AWG channels and the connected quantum gates provide
-        the user control of the AWG's in terms of gate names and waveform sequences only. The virtual AWG is
-        used for fast change of the DC landscape by changing the voltage levels of the gates. No microwave
-        control is involved, meaning not related to the spin degrees of freedom of the qubits.
+
+    The class aims for hardware independent control, where only common arbitrary waveform generator (AWG)
+    functionality is used. A translation between the AWG channels and the connected quantum gates provide
+    the user control of the AWG's in terms of gate names and waveform sequences only. The virtual AWG is
+    used for fast change of the DC landscape by changing the voltage levels of the gates. No microwave
+    control is involved, meaning not related to the spin degrees of freedom of the qubits.
+        
+        
+    Attributes:
+        enable_debug (bool): If Tre that store intermediate results in debugging variables
+        
     """
 
     __digitizer_name = 'm4i_mk'
@@ -44,6 +50,8 @@ class VirtualAwg(Instrument):
         self.__set_hardware(awgs)
         self.__set_parameters()
 
+        self.enable_debug = False
+        
     def _get_virtual_info(self):
         """ Returns the data needed for snapshot of instrument."""
         return {'awg_map': self._settings.awg_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
@@ -422,8 +430,10 @@ class VirtualAwg(Instrument):
             if do_upload and sequence_items:
                 self.awgs[number].upload_waveforms(sequence_names, sequence_channels, sequence_items)
                 
-        self._sequence_data = {'gate_comb': sequences, 'upload_data': upload_data, 'settings': settings_data}                        
-        return self._sequence_data
+        sequence_data = {'gate_comb': sequences, 'upload_data': upload_data, 'settings': settings_data}                        
+        if self.enable_debug:
+            self._latest_sequence_data = sequence_data
+        return sequence_data
 
 
 # UNITTESTS #
