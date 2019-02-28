@@ -333,9 +333,12 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = Fal
     
     Args:
         alldata (DataSet): DataSet to plot from
-        plotparam (str or list or None): Arrays in the DataSet to plot
+        plotparam (str or list or None): Arrays in the DataSet to plot. If None then automatically select. If False then perform no live plotting
         liveplotwindow (None or object): handle to live plotting window
     """
+    if plotparam is False:
+        return None
+    
     if liveplotwindow is None:
         liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow:
