@@ -83,3 +83,37 @@ class Templates:
                                ('offset + uptime - period', 0),
                                ('offset', 1),
                                ('period', 1)]})
+
+    @staticmethod
+    def skewed_sawtooth(name):
+        """ Creates a skewed sawtooth qupulse template for sequencing.
+        This pulse is symmetric, has total integral zero and right at T/2 it
+        has amplitude 0 and a sharp corner.
+
+          A     /\              /\
+               /  \            /  \
+          0   /    \    /\    /    \
+                    \  /  \  /
+         -A          \/    \/
+               T/6
+              <->
+                 T/3
+              <------>
+                  T/2
+              <--------->
+                         T
+              <-------------------->
+
+        Args:
+            name (str): The user defined name of the sequence.
+
+        Returns:
+            TablePT: The sequence with the skewed sawtooth wave.
+        """
+        return TablePT({name: [(0, 0),
+                                 ('T/6', 'A', 'linear'),
+                                 ('T/3', '-A', 'linear'),
+                                 ('T/2', 0, 'linear'),
+                                 ('T*2/3', '-A', 'linear'),
+                                 ('T*5/6', 'A', 'linear'),
+                                 ('T', 0, 'linear')]})
