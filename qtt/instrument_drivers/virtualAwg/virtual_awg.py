@@ -163,7 +163,7 @@ class VirtualAwg(Instrument):
             return False
         return True if gate_names in self._settings.awg_map else False
 
-    def __make_markers(self, period, repetitions=1):
+    def make_markers(self, period, repetitions=1):
         """ Constructs the markers for triggering the digitizer readout and the slave AWG
             start sequence. The sequence length equals the period x repetitions.
 
@@ -233,7 +233,7 @@ class VirtualAwg(Instrument):
         """
         sequences = dict()
         period = sum(waiting_times)
-        sequences.update(self.__make_markers(period, repetitions))
+        sequences.update(self.make_markers(period, repetitions))
         for gate_name, amplitudes in gate_voltages.items():
             sequences[gate_name] = Sequencer.make_pulse_table(amplitudes, waiting_times, repetitions, gate_name)
         sweep_data = self.sequence_gates(sequences, do_upload)
@@ -266,7 +266,7 @@ class VirtualAwg(Instrument):
             >>> sweep_data = virtualawg.sweep_gates(gates, 100, 1e-3)
         """
         sequences = dict()
-        sequences.update(self.__make_markers(period))
+        sequences.update(self.make_markers(period))
         for gate_name, rel_amplitude in gates.items():
             amplitude = rel_amplitude * sweep_range
             sequences[gate_name] = Sequencer.make_sawtooth_wave(amplitude, period, width)
@@ -308,7 +308,7 @@ class VirtualAwg(Instrument):
         sequences = dict()
 
         period_x = resolution[0] * period
-        sequences.update(self.__make_markers(period_x, repetitions=resolution[1]))
+        sequences.update(self.make_markers(period_x, repetitions=resolution[1]))
         for gate_name_x, rel_amplitude_x in gates[0].items():
             amplitude_x = rel_amplitude_x * sweep_ranges[0]
             sequences[gate_name_x] = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width, repetitions=resolution[1])
@@ -359,7 +359,7 @@ class VirtualAwg(Instrument):
             >>> sweep_data = virtualawg.pulse_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
-        sequences.update(self.__make_markers(period))
+        sequences.update(self.make_markers(period))
 
         period_x = resolution[0] * period
         for gate_name_x, rel_amplitude_x in gates[0].items():
