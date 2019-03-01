@@ -87,8 +87,10 @@ class Templates:
     @staticmethod
     def skewed_sawtooth(name):
         """ Creates a skewed sawtooth qupulse template for sequencing.
-        This pulse is symmetric, has total integral zero and right at T/2 it
+        This pulse is symmetric, has total integral zero and right at period/2 it
         has amplitude 0 and a sharp corner.
+
+        A visual representation of the waveform is:
 
           A     /\              /\
                /  \            /  \
@@ -110,6 +112,7 @@ class Templates:
 
         Returns:
             TablePT: The sequence with the skewed sawtooth wave.
+                     Parameter of the pulse template are the `amplitude` and `period`.
         """
         return TablePT({name: [(0, 0),
                                  ('period/6', 'amplitude', 'linear'),
