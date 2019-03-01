@@ -7,7 +7,6 @@ This is part of qtt.
 import numpy as np
 import os
 import re
-import copy
 import logging
 import time
 import datetime
@@ -18,7 +17,6 @@ import skimage.filters
 import matplotlib.pyplot as plt
 
 import qcodes
-#import qcodes as qc
 from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter
 from qcodes import DataArray
@@ -355,7 +353,7 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = Fal
             liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
             
             
-    pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
+        pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
     return liveplotwindow
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
