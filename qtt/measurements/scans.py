@@ -7,7 +7,6 @@ This is part of qtt.
 import numpy as np
 import os
 import re
-import copy
 import logging
 import time
 import datetime
@@ -18,7 +17,6 @@ import skimage.filters
 import matplotlib.pyplot as plt
 
 import qcodes
-#import qcodes as qc
 from qcodes.utils.helpers import tprint
 from qcodes.instrument.parameter import Parameter, StandardParameter
 from qcodes import DataArray
@@ -328,6 +326,36 @@ def _add_dataset_metadata(dataset):
     update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.dataset_to_dictionary(dataset, include_data=False, include_metadata=False))
 
 
+def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = False):
+    """ Initialize live plotting
+    
+    Args:
+        alldata (DataSet): DataSet to plot from
+        plotparam (str or list or None): Arrays in the DataSet to plot. If None then automatically select. If False then perform no live plotting
+        liveplotwindow (None or object): handle to live plotting window
+    """
+    if plotparam is False:
+        return None
+    
+    if liveplotwindow is None:
+        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
+    if liveplotwindow:
+        liveplotwindow.clear()
+        if isinstance(plotparam, (list, tuple)):
+            for ii, plot_parameter in enumerate(plotparam):
+                if subplots:
+                    liveplotwindow.add(alldata.default_parameter_array(paramname=plot_parameter), subplot=ii + 1)
+                else:
+                    liveplotwindow.add(alldata.default_parameter_array(paramname=plot_parameter))
+        elif plotparam is None:
+            liveplotwindow.add(alldata.default_parameter_array())
+        else:
+            liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
+            
+            
+        pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
+    return liveplotwindow
+
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
 
@@ -373,12 +401,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                                                         location=location, loc_record={'label': scanjob['scantype']},
                                                         return_names=True)
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow:
-        liveplotwindow.clear()
-        liveplotwindow.add(
-            alldata.default_parameter_array(paramname=plotparam))
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
 
     def myupdate():
         if liveplotwindow:
@@ -447,7 +470,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 
 # %%
-def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, extra_metadata=None):
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, plotparam=None, extra_metadata=None):
     """ Fast 1D scan. The scan is performed by putting a sawtooth signal on the AWG and measuring with a fast acquisition device.
 
     Args:
@@ -480,6 +503,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     if isinstance(read_ch, int):
         read_ch = [read_ch]
+        
+    if isinstance(read_ch, str):
+        raise Exception('for fast scans the minstrument should be a list of channel numbers' )
 
     if isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan1Dfastvec'
@@ -526,7 +552,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                                                                    'period': period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
-                sweep_range = sweeprange * 2
+                sweep_range = sweeprange 
                 waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
@@ -549,12 +575,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     else:
         station.awg.stop()
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow is not None:
-        liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array())
-        pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
 
     dt = time.time() - t0
     if not hasattr(alldata, 'metadata'):
@@ -1102,20 +1123,13 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
 
+
+    if plotparam is 'all':
+        liveplotwindow = _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots = True)
+    else:
+        liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = True)
+
     t0 = time.time()
-
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow:
-        liveplotwindow.clear()
-        if plotparam is 'all':
-            for i in range(np.min(len(mparams))):
-                liveplotwindow.add(
-                    alldata.default_parameter_array(paramname=measure_names[i]), subplot=i + 1)
-        else:
-            liveplotwindow.add(
-                alldata.default_parameter_array(paramname=plotparam))
-
     tprev = time.time()
 
     # disable time-based write period
@@ -1477,8 +1491,9 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 
-    # remove padding
+    measuresegment_m4i._waveform = waveform  # for debugging
     measuresegment_m4i._dataraw = dataraw  # for debugging
+    measuresegment_m4i._variables = {'padding_offset': padding_offset, 'drate': drate, 'period': period}
 
     if isinstance(dataraw, tuple):
         dataraw = dataraw[0]
@@ -1801,7 +1816,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                                                                    'period':period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
-                sweep_range = sweeprange * 2
+                sweep_range = sweepdata['range']
                 waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
@@ -1861,12 +1876,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
                                 location=location, loc_record={'label': scanjob['scantype']})
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow is not None:
-        liveplotwindow.clear()
-        liveplotwindow.add(
-            alldata.default_parameter_array(paramname=plotparam))
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
 
     tprev = time.time()
 
@@ -2123,11 +2133,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     dt = time.time() - t0
 
-    if liveplotwindow is None:
-        liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
-    if liveplotwindow is not None:
-        liveplotwindow.clear()
-        liveplotwindow.add(alldata.default_parameter_array())
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam = None, liveplotwindow = liveplotwindow)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()

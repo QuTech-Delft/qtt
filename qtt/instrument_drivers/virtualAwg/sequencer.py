@@ -99,7 +99,6 @@ class Sequencer:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
                   sequence data type and the actual qupulse sequencePT respectively.
         """
-
         if abs(offset) > period:
             raise ValueError('Invalid argument value for offset: |{}| > {}!'.format(offset, period))
         if not 0 < uptime < period:

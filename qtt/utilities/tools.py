@@ -983,7 +983,7 @@ try:
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
         if isinstance(notes, qcodes.DataSet):
-            notes = reshape_metadata(notes, printformat='s')
+            notes = reshape_metadata(notes, printformat='s', add_gates = True)
 
         if notes is not None:
             if notes == '':
@@ -1008,7 +1008,7 @@ try:
                        printformat='fancy', customfig=None, extranotes=None, **kwargs):
         """ Add slide based on dataset to current active Powerpoint presentation
 
-        Arguments:
+        Args:
             dataset (DataSet): data and metadata from DataSet added to slide
             customfig (QtPlot): custom QtPlot object to be added to
                                 slide (for dataviewer)
@@ -1031,8 +1031,24 @@ try:
             raise IndexError('The dataset contains less than two data arrays')
 
         if customfig is None:
-            temp_fig = QtPlot(dataset.default_parameter_array(
-                              paramname=paramname), show_window=False)
+           
+            if isinstance(paramname, str):
+                if title is None:
+                    parameter_name = dataset.default_parameter_name(paramname=paramname)
+                    title = 'Parameter: %s'  % parameter_name
+                temp_fig = QtPlot(dataset.default_parameter_array(
+                                      paramname=paramname), show_window=False)
+            else:
+                if title is None:
+                    title = 'Parameter: %s'  % (str(paramname),)
+                for idx, parameter_name in enumerate(paramname):
+                        if idx==0:
+                            temp_fig = QtPlot(dataset.default_parameter_array(
+                              paramname=parameter_name), show_window=False)
+                        else:
+                            temp_fig.add(dataset.default_parameter_array(
+                              paramname=parameter_name))
+                    
         else:
             temp_fig = customfig
 
@@ -1074,13 +1090,15 @@ except:
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict', add_scanjob=True, verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates = True, verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
         dataset (DataSet or qcodes.Station): a dataset of which the metadata 
                                              will be reshaped.
         printformat (str): can be 'dict' or 'txt','fancy' (text format)
+        add_scanjob (bool): If True, then add the scanjob at the beginning of the notes
+        add_gates (bool): If True, then add the scanjob at the beginning of the notes
     Returns:
         metadata (string): the reshaped metadata
     '''
@@ -1103,6 +1121,13 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, verbose=0):
 
         if hasattr(dataset.io, 'base_location'):
             header += ' (base %s)' % dataset.io.base_location
+
+    if add_gates:
+        gate_values = dataset.metadata.get('allgatevalues', None)        
+
+        if gate_values is not None:
+            gate_values = dict( [ (key, np.around(value, 3)) for key, value in gate_values.items()])
+            header += '\ngates: ' + str(gate_values) + '\n'
 
     scanjob = dataset.metadata.get('scanjob', None)
     if scanjob is not None and add_scanjob:
