@@ -18,6 +18,21 @@ class Sequencer:
     __sec_to_ns = 1e9
 
     @staticmethod
+    def make_wave_from_template(qupulse_template,  name='pulse'):
+        """ Creates a waveform from a qupulse template.
+
+        Args:
+            qupulse_template (obj): Qupulse template
+            name (str): The name of the returned sequence.
+
+        Returns:
+            Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
+                  sequence data type and the actual qupulse sequencePT respectively.
+        """
+        return {'name': name, 'wave': qupulse_template ,
+                'type': DataTypes.QU_PULSE}
+        
+    @staticmethod
     def make_sawtooth_wave(amplitude, period, width=0.95, repetitions=1, name='sawtooth'):
         """ Creates a sawtooth waveform of the type qupulse template.
 

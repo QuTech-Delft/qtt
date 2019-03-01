@@ -390,10 +390,10 @@ class VirtualAwg(Instrument):
 
         Example:
             >>> from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer.
-            >>> amplitude_in_volt = 1.5
-            >>> period_in_seconds = 1e-6
-            >>> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude_in_volt, period_in_seconds)
-            >>> virual_awg.sequence_gates(sawtooth_signal)
+            >>> amplitude = 1.5
+            >>> period = 1e-6
+            >>> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude, period)
+            >>> virtual_awg.sequence_gates(sawtooth_signal)
         """
         upload_data = []
         settings_data = {}
