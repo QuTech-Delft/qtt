@@ -120,7 +120,7 @@ class VideoMode:
     videomode_class_index = 0
     
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
-                 resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
+                 resolution=[96, 96], sample_rate='default', diff_dir=None, verbose=1,
                  dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name=None,
                  mouse_click_callback=None):
         """ Tool for fast acquisition of charge stability diagram

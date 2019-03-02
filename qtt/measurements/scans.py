@@ -1378,14 +1378,14 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
     digitizer.data_memory_size.set(memsize)
     digitizer.posttrigger_memory_size(post_trigger)
     if verbose:
-        print('%s: sample rate %.3f Mhz, period %f [ms]' % (
+        print('select_m4i_memsize %s: sample rate %.3f Mhz, period %f [ms]' % (
             digitizer.name, sample_rate / 1e6, period * 1e3))
-        print('%s: trace %d points, selected memsize %d' %
+        print('select_m4i_memsize %s: trace %d points, selected memsize %d' %
               (digitizer.name, number_points_period, memsize))
-        print('%s: pre and post trigger: %d %d' % (digitizer.name,
+        print('select_m4i_memsize %s: pre and post trigger: %d %d' % (digitizer.name,
                                                    digitizer.data_memory_size() - digitizer.posttrigger_memory_size(),
                                                    digitizer.posttrigger_memory_size()))
-        print('%s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
+        print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
     return memsize, pre_trigger, signal_start, signal_end
 
 def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0):
@@ -1412,7 +1412,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     # code for compensating for trigger delays in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
 
-    memsize, pre_trigger, signal_start, signal_end=select_m4i_memsize(digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=1)
+    memsize, pre_trigger, signal_start, signal_end=select_m4i_memsize(digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
     post_trigger = digitizer.posttrigger_memory_size()
 
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
@@ -1483,7 +1483,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     """
 
     period = waveform['period']
-    data = measure_raw_segment_m4i(digitizer, period, [1,2], mV_range=5000, Naverage=800, verbose=1)
+    data = measure_raw_segment_m4i(digitizer, period, [1,2], mV_range=5000, Naverage=Naverage, verbose=verbose)
 
     if process:
         resolution = waveform.get('resolution', None)
