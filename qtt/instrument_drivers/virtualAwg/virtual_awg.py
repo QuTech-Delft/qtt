@@ -286,7 +286,7 @@ class VirtualAwg(Instrument):
                                 and relative amplitude values.
             sweep_ranges (list): A list two overall amplitude of the sawtooth waves in millivolt in
                                  the x- and y-direction.
-            period (float): The period of the sawtooth signals in seconds.
+            period (float): The total period of the sawtooth signals in seconds.
             resolution (list): Two integer values with the number of sawtooth signal (pixels) in the
                                x- and y-direction.
             width (float): Width of the rising sawtooth ramp as a proportion of the total cycle.
@@ -306,14 +306,19 @@ class VirtualAwg(Instrument):
             >>> sweep_data = virtualawg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
+        total_period = period
+        base_period = period / np.prod(resolution)
+        period_x = resolution[0] * base_period
+        if 0:
+            sequences.update(self.make_markers(period_x, repetitions=resolution[1]))
+        else:
+            sequences.update(self.make_markers(total_period, repetitions=1))
 
-        period_x = resolution[0] * period
-        sequences.update(self.make_markers(period_x, repetitions=resolution[1]))
         for gate_name_x, rel_amplitude_x in gates[0].items():
             amplitude_x = rel_amplitude_x * sweep_ranges[0]
             sequences[gate_name_x] = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width, repetitions=resolution[1])
 
-        period_y = resolution[0] * resolution[1] * period
+        period_y = resolution[0] * resolution[1] * base_period
         for gate_name_y, rel_amplitude_y in gates[1].items():
             amplitude_y = rel_amplitude_y * sweep_ranges[1]
             sequences[gate_name_y] = Sequencer.make_sawtooth_wave(amplitude_y, period_y, width)
@@ -325,6 +330,7 @@ class VirtualAwg(Instrument):
             'width_horz': width,
             'width_vert': width,
             'resolution': resolution,
+            'start_zero': True,
             'period': period_y, 'period_horz': period_x,
             'samplerate': self.awgs[0].retrieve_setting('sampling_rate'),
             'markerdelay': self.digitizer_marker_delay()
