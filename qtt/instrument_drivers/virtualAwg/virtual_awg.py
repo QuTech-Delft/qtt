@@ -242,7 +242,7 @@ class VirtualAwg(Instrument):
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
 
-    def sweep_gates(self, gates, sweep_range, period, width=0.95, do_upload=True):
+    def sweep_gates(self, gates, sweep_range, period, width=0.9375, do_upload=True):
         """ Supplies a sawtooth wave to the given gates and returns the settings required
             for processing and constucting the readout times for the digitizer.
 
@@ -309,10 +309,7 @@ class VirtualAwg(Instrument):
         total_period = period
         base_period = period / np.prod(resolution)
         period_x = resolution[0] * base_period
-        if 0:
-            sequences.update(self.make_markers(period_x, repetitions=resolution[1]))
-        else:
-            sequences.update(self.make_markers(total_period, repetitions=1))
+        sequences.update(self.make_markers(total_period, repetitions=1))
 
         for gate_name_x, rel_amplitude_x in gates[0].items():
             amplitude_x = rel_amplitude_x * sweep_ranges[0]
@@ -397,8 +394,8 @@ class VirtualAwg(Instrument):
         Example:
             >>> from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer.
             >>> amplitude = 1.5
-            >>> period = 1e-6
-            >>> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude, period)
+            >>> period_in_seconds = 1e-6
+            >>> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude, period_in_seconds)
             >>> virtual_awg.sequence_gates(sawtooth_signal)
         """
         upload_data = []

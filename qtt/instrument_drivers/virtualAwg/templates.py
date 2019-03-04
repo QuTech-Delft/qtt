@@ -112,7 +112,7 @@ class Templates:
 
         Returns:
             TablePT: The sequence with the skewed sawtooth wave.
-                     Parameter of the pulse template are the `amplitude` and `period`.
+                     Parameters of the pulse template are the `amplitude` and `period`.
         """
         return TablePT({name: [(0, 0),
                                  ('period/6', 'amplitude', 'linear'),
