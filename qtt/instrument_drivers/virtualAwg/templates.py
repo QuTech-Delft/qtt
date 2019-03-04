@@ -103,6 +103,7 @@ class Templates:
               <--------->
                          T
               <-------------------->
+        T is period and A is the amplitude. Negative amplitude will produce an inverted pulse. 
 
         Args:
             name (str): The user defined name of the sequence.
@@ -111,9 +112,9 @@ class Templates:
             TablePT: The sequence with the skewed sawtooth wave.
         """
         return TablePT({name: [(0, 0),
-                                 ('T/6', 'A', 'linear'),
-                                 ('T/3', '-A', 'linear'),
-                                 ('T/2', 0, 'linear'),
-                                 ('T*2/3', '-A', 'linear'),
-                                 ('T*5/6', 'A', 'linear'),
-                                 ('T', 0, 'linear')]})
+                                 ('period/6', 'amplitude', 'linear'),
+                                 ('period/3', '-amplitude', 'linear'),
+                                 ('period/2', 0, 'linear'),
+                                 ('period*2/3', '-amplitude', 'linear'),
+                                 ('period*5/6', 'amplitude', 'linear'),
+                                 ('period', 0, 'linear')]})
