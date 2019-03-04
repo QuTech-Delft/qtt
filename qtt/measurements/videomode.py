@@ -350,12 +350,9 @@ class VideoMode:
             try:
                 dd = self.datafunction()
                 self.datafunction_result = dd
-                if self.nplots == 1:
-                    self.lp[0].update(data=dd[0])
-                else:
-                    for ii, d in enumerate(dd):
+                for ii, d in enumerate(dd):
                         self.lp[ii].update(data=d, processevents=False)
-                    pyqtgraph.mkQApp().processEvents()
+                pyqtgraph.mkQApp().processEvents()
             except Exception as e:
                 logging.exception(e)
                 print('%s: Exception in updatebg, stopping readout' %
@@ -494,7 +491,7 @@ class VideoMode:
                 gates = self.sweepparams
 
             if period is None:
-                sampling_frequency = virtual_awg.awgs[0].retrieve_sampling_rate()
+                sampling_frequency = qtt.measurements.scans.get_sampling_frequency(self.minstrumenthandle)
                 base_period=1./sampling_frequency
                 total_period =  base_period*np.prod(self.resolution)
             else:

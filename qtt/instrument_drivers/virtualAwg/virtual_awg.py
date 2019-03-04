@@ -278,7 +278,7 @@ class VirtualAwg(Instrument):
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
 
-    def sweep_gates_2d(self, gates, sweep_ranges, period, resolution, width=0.95, do_upload=True):
+    def sweep_gates_2d(self, gates, sweep_ranges, period, resolution, width=0.9375, do_upload=True):
         """ Supplies sawtooth signals to a linear combination of gates, which effectively does a 2D scan.
 
         Arguments:
