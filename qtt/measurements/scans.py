@@ -1583,7 +1583,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     """
 
     period = waveform['period']
-    rawdata = measure_raw_segment_m4i(digitizer, period, [1,2], mV_range=5000, Naverage=Naverage, verbose=verbose)
+    rawdata = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range, Naverage=Naverage, verbose=verbose)
 
     if process:
         samplerate = digitizer.sample_rate()
