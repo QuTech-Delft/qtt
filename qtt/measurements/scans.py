@@ -1237,7 +1237,13 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 # %%
 
 def get_sampling_frequency(instrument_handle):
-    """ Return sampling frequency of acquisition device """
+    """ Return sampling frequency of acquisition device
+    
+    Args:
+        instrument_handle (str or Instrument): handle to instrument
+    Returns:
+        float: sampling frequency
+    """
     instrument_handle = get_instrument(instrument_handle)
         
     if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
@@ -1279,7 +1285,7 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
     if np.abs(npoints-npoints_expected)>0:
         raise Exception('process_2d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
         
-    full_trace=True;
+    full_trace=False;
     if start_zero and (not full_trace):
         padding_x_time=((1-width[0])/2)*period_x
         padding_y_time=((1-width[0])/2)*period_y
@@ -1328,7 +1334,7 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
         print('   horizontal mismatch %d/%.1f'  % (npoints_forward_x, width_horz*period_x*samplerate))
 
     processed_data = []
-    row_offsets = res_horz*np.arange(0, npoints_forward_y).astype(int)+int(padding_y*res_horz)
+    row_offsets = res_horz*np.arange(0, npoints_forward_y).astype(int)+int(padding_y)
     for channel in range(nchannels):
         row_slices = [ data[(idx+padding_x):(idx + padding_x+ npoints_forward_x), channel] for idx in row_offsets]       
         processed_data.append(np.array(row_slices))
@@ -1369,8 +1375,9 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
 
     return processed_data, {'row_offsets': row_offsets, 'period': period}
 
-def process_digitizer_trace(data, width, period, samplerate, resolution=None, padding=0, start_zero=False,
-                            fig=None, pre_trigger=None):
+
+def process_1d_sawtooth(data, width, period, samplerate, resolution=None, padding=0, start_zero=False,
+                            fig=None, verbose=0):
     """ Process data from the M4i and a sawtooth trace 
 
     This is done to remove the extra padded data of the digitizer and to 
@@ -1385,60 +1392,25 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         processed_data (Nxk array): processed data
         rr (tuple)
     """
-    npoints = int(period * samplerate)  # expected number of points
-    if len(width) == 1:
-        npoints2 = width[0] * npoints
-        npoints2 = npoints2 - (npoints2 % 2)
-        r1 = int(padding)
-        r2 = int(npoints2)
-        if start_zero:
-            delta = int(period * samplerate * (1 - width[0]) / 2)
-            r1 += delta
-            r2 += delta
-        processed_data = data[r1:r2, :].T
-    else:
-        warnings.warn('deprecated, please use process_2d_sawtooth')
-        if start_zero:
-            raise Exception('not implemented')
-        width_horz = width[0]
-        width_vert = width[1]
-        res_horz = int(resolution[0])
-        res_vert = int(resolution[1])
+    npoints_expected = int(period * samplerate)  # expected number of points
+    npoints = data.shape[0]
+    if verbose:
+        print('process_1d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
 
-        if resolution[0] % 16 != 0 or resolution[1] % 16 != 0:
-            # send out warning, due to rounding of the digitizer memory buffers
-            # this is not supported
-            # print('resolution argument: %s'  % (resolution,) )
-            warnings.warn(
-                'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
-            raise Exception(
-                'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
-        npoints2 = width_horz * res_horz
-        npoints2 = npoints2 - (npoints2 % 2)
-        npoints3 = width_vert * res_vert
-        npoints3 = npoints3 - (npoints3 % 2)
-        r1 = int(padding)
-        r2 = int(npoints2)
-        r3 = int(npoints3)
-        processed_data = []
+    if len(width) != 1:
+        raise Exception('specification is not for a 1D sawtooth signal')
+    npoints2 = int(width[0] * period * samplerate)
+    npoints2 = npoints2 - (npoints2 % 2)
+    trace_start = int(padding)
+    trace_end = trace_start + int(npoints2)
+    if start_zero:
+        delta = int(period * samplerate * (1 - width[0]) / 2)
+        trace_start += delta
+        trace_end += delta
+    processed_data = data[trace_start:trace_end, :].T
 
-        for j in range(data[0].shape[0]):
-            processed_data.append([data[x:x + res_horz, j]
-                                   for x in range(0, npoints, res_horz)])
-            processed_data[j] = [processed_data[j][i][1 + r1:r2]
-                                 for i in range(0, res_vert)]
-            processed_data[j] = processed_data[j][r1:r3]
-        processed_data = [np.array(processed_data[x])
-                          for x in range(data[0].shape[0])]
 
-    rwidth = 1 - width[0]
-    if pre_trigger is None:
-        # assume trigger is in middle of trace
-        cctrigger = data.shape[0] / 2  # position of trigger in signal
-    else:
-        cctrigger = pre_trigger  # position of trigger in signal
-
-    cc = cctrigger + width[0] * npoints / 2
+    cc = (trace_start+trace_end)/2
     if fig is not None:
         plt.figure(fig)
         plt.clf()
@@ -1447,23 +1419,17 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         plt.axis('tight')
 
         qtt.pgeometry.plot2Dline(
-            [-1, 0, cctrigger], ':g', linewidth=3, label='trigger')
-        qtt.pgeometry.plot2Dline(
             [-1, 0, cc], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
         qtt.pgeometry.plot2Dline(
             [0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
 
         qtt.pgeometry.plot2Dline(
-            [-1, 0, r1], ':k', label='range of forward slope')
-        qtt.pgeometry.plot2Dline([-1, 0, r2], ':k')
+            [-1, 0, trace_start], ':k', label='start of forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, trace_end], ':k', label='end of forward slope')
 
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, cc + samplerate * period * (width[0] / 2 + rwidth)], '--m', label='?')
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, cc + samplerate * period * -(width[0] / 2 + rwidth)], '--m')
         plt.legend(numpoints=1)
 
-    return processed_data, (r1, r2)
+    return processed_data, (trace_start, trace_end)
 
 
 def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
@@ -1635,17 +1601,15 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
             if verbose:
                 print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
                     width, data.shape, digitizer.data_memory_size()))
-    
-            pre_trigger = digitizer.pretrigger_memory_size()
-    
+      
             start_zero = waveform.get('start_zero', False)
     
-            data, (r1, r2) = process_digitizer_trace(rawdata.T, width, period,
-                                                     samplerate, pre_trigger=pre_trigger, resolution=resolution,
-                                                     start_zero=start_zero)
+            data, (trace_start, trace_end) = process_1d_sawtooth(rawdata.T, width, period,
+                                                     samplerate, resolution=resolution,
+                                                     start_zero=start_zero, verbose=verbose)
     
             if verbose:
-                print('measuresegment_m4i: processing data: r1 %s, r2 %s' % (r1, r2))
+                print('measuresegment_m4i: processing data: trace_start %s, trace_end %s' % (trace_start, trace_end))
     return data
 
 
