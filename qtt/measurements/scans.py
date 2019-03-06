@@ -1409,6 +1409,8 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
         trace_end += delta
     processed_data = data[trace_start:trace_end, :].T
 
+    if verbose:
+            print('process_1d_sawtooth: processing data: shape %s: trace_start %s, trace_end %s' % (data.shape, trace_start, trace_end))
 
     cc = (trace_start+trace_end)/2
     if fig is not None:
@@ -1418,13 +1420,9 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
         plt.title('Processing of digitizer trace')
         plt.axis('tight')
 
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, cc], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
-        qtt.pgeometry.plot2Dline(
-            [0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
-
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, trace_start], ':k', label='start of forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, cc], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
+        qtt.pgeometry.plot2Dline([0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
+        qtt.pgeometry.plot2Dline([-1, 0, trace_start], ':k', label='start of forward slope')
         qtt.pgeometry.plot2Dline([-1, 0, trace_end], ':k', label='end of forward slope')
 
         plt.legend(numpoints=1)
@@ -1594,22 +1592,20 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         width = [waveform['width_horz'], waveform['width_vert']]
 
     resolution = waveform.get('resolution', None)
+    start_zero = waveform.get('start_zero', False)
+
+
     if len(width) == 2:
-        data, results = process_2d_sawtooth(raw_data.T, period, samplerate, resolution, width, start_zero=True, fig=None)
+        data, results = process_2d_sawtooth(raw_data.T, period, samplerate, resolution, width, start_zero=start_zero, fig=None)
         measuresegment_m4i._latest_data=data
         measuresegment_m4i._latest_rawdata = raw_data
     else:
-        if verbose:
-            print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
-                width, data.shape, digitizer.data_memory_size()))
-
-        start_zero = waveform.get('start_zero', False)
 
         data, (trace_start, trace_end) = process_1d_sawtooth(raw_data.T, width, period, samplerate,
                                                              resolution=resolution, start_zero=start_zero,
                                                              verbose=verbose)
-        if verbose:
-            print('measuresegment_m4i: processing data: trace_start %s, trace_end %s' % (trace_start, trace_end))
+    if verbose:
+        print('measuresegment_m4i: processed_data: width %s, data shape %s, memsize %s' % (width, data.shape,))
 
     return data
 
