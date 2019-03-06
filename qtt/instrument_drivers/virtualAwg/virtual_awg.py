@@ -406,7 +406,8 @@ class VirtualAwg(Instrument):
             sequence_names = list()
             sequence_items = list()
 
-            vpp_amplitude = self.awgs[number].retrieve_gain()
+            gain_factor = self.awgs[number].retrieve_gain()
+            vpp_amplitude = 2 * gain_factor
             sampling_rate = self.awgs[number].retrieve_sampling_rate()
             settings_data[number] = {'vpp_amplitude': vpp_amplitude, 'sampling_rate': sampling_rate}
 
@@ -418,7 +419,7 @@ class VirtualAwg(Instrument):
                 sequence_data = Sequencer.get_data(sequence, sampling_rate)
                 if not marker_number:
                     awg_to_gate = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
-                    scaling_ratio = 2 / (awg_to_gate * vpp_amplitude)
+                    scaling_ratio = 1 / (awg_to_gate * gain_factor)
                     settings_data[number][gate_name] = {'scaling_ratio': scaling_ratio}
                     sequence_data *= scaling_ratio
 

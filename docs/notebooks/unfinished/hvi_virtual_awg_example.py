@@ -3,7 +3,7 @@ sys.path.append("C:\\Program Files (x86)\\Keysight\\SD1\\Libraries\\Python")
 import keysightSD1
 
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 from qcodes import Instrument, ManualParameter
 from qcodes.utils.validators import Numbers
@@ -32,26 +32,31 @@ class Hardware(Instrument):
         for gate in self.awg_map.keys():
             p = 'awg_to_%s' % gate
             self.add_parameter(p, parameter_class=ManualParameter,
-                               initial_value=1,
+                               initial_value=1000,
                                label='{} (factor)'.format(p),
-                               vals=Numbers(1, 400))
+                               vals=Numbers(1, 1000))
 
 def update_awg_settings(virtual_awg, sampling_rate, amplitude):
     for awg_number in range(len(virtual_awg.awgs)):
         virtual_awg.update_setting(awg_number, 'sampling_rate', sampling_rate)
         virtual_awg.update_setting(awg_number, 'amplitude', amplitude)
-    
-def plot_data_1d(digitizer_data, label_x_axis='', label_y_axis=''):
-    plt.figure(); 
-    plt.clf(); 
+
+def plot_data_1d(digitizer_data, label_x_axis='', label_y_axis='', fig=100):
+    plot_window = plt.figure(num=fig)
+    plot_window.canvas.manager.window.activateWindow()
+    plot_window.canvas.manager.window.raise_()
+    plt.clf()
     plt.xlabel(label_x_axis)
     plt.ylabel(label_y_axis)
     plt.plot(digitizer_data.flatten(),'.b')
     plt.show()
 
-def plot_data_2d(digitizer_data, label_x_axis='', label_y_axis='', label_colorbar=''):
-    plt.figure(); 
-    plt.clf(); 
+def plot_data_2d(digitizer_data, label_x_axis='', label_y_axis='', label_colorbar='', fig=100):
+    plot_window = plt.figure(num=fig)
+    plot_window.canvas.manager.window.activateWindow()
+    plot_window.canvas.manager.window.raise_()
+    plt.figure(num=fig)
+    plt.clf()
     im = plt.imshow(digitizer_data[0])
     cbar = plt.colorbar(im)
     plt.xlabel(label_x_axis)
@@ -81,6 +86,8 @@ digitizer.clock_mode(external_clock_mode)
 reference_clock_10mHz = int(1e7)
 digitizer.reference_clock(reference_clock_10mHz)
 
+for ii in range(4):
+    getattr(digitizer, 'termination_%d' %ii)(0)
 
 # %%
 
@@ -105,16 +112,16 @@ virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_
 #%%
 
 output_gate = 'B2'
-mV_sweep_range = 250
-sec_period = 1.0e-3
+mV_sweep_range = 10
+sec_period = 1.0e-5
 sweep_data = virtual_awg.sweep_gates({output_gate: 1}, mV_sweep_range, sec_period)
 
 virtual_awg.enable_outputs([output_gate])
 virtual_awg.run()
 
-readout_channels = [0]
+readout_channels = [0, 3]
 number_of_averages = 100
-data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
+data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels, process=False)
 
 virtual_awg.stop()
 virtual_awg.disable_outputs([output_gate])
@@ -130,23 +137,34 @@ virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_
 output_gates=['B0', 'B2']
 
 gate_voltages = {'B0': [50, 0, 75, 0, 100, 0], 'B2': [0, 50, 0, 75, 0, 100]}
-waiting_times = [1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5]
+waiting_times = np.array([1e-5, 1e-5, 1e-5, 1e-5, 1e-5, 1e-5])
 
 sweep_data = virtual_awg.pulse_gates(gate_voltages, waiting_times)
-
-Sequencer.plot(sweep_data['gate_comb']['B0'], sampling_rate)
 
 virtual_awg.enable_outputs(output_gates)
 virtual_awg.run()
 
-readout_channels = [3]
+readout_channels = [0, 3]
 number_of_averages = 100
-data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
+data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels, process=False)
 
 virtual_awg.stop()
 virtual_awg.disable_outputs(output_gates)
 
-plot_data_1d(data, 'Digitizer Data Points [a.u.]', 'Amplitude [V]')
+def plot_data_1d_x(digitizer_data, label_x_axis='', label_y_axis='', fig=100):
+    plot_window = plt.figure(num=fig)
+    plot_window.canvas.manager.window.activateWindow()
+    plot_window.canvas.manager.window.raise_()
+    plt.clf()
+    plt.xlabel(label_x_axis)
+    plt.ylabel(label_y_axis)
+    for ii in range(digitizer_data.shape[0]):
+        plt.plot(digitizer_data[ii,:],'.', label='%d' % ii)
+    plt.show()
+    plt.legend()
+
+#Sequencer.plot(sweep_data['gate_comb']['B0'], sampling_rate)
+plot_data_1d_x(data, 'Digitizer Data Points [a.u.]', 'Amplitude [V]')
 
 
 #%%

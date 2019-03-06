@@ -114,7 +114,6 @@ class KeysightM3202A_AWG(AwgCommon):
         amplitude = self.retrieve_setting('amplitude')
         offset = self.retrieve_setting('offset')
         for (channel_number, sequence) in zip(channel_numbers, sequence_items):
-            print(len(np.array(sequence)))
             wave_object = Keysight_M3201A.new_waveform_from_double(0, np.array(sequence))
             self.__awg.load_waveform(wave_object, wave_number)
             self.__awg.set('frequency_channel_%d' % channel_number, frequency)
