@@ -1583,33 +1583,34 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     """
 
     period = waveform['period']
-    rawdata = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range, Naverage=Naverage, verbose=verbose)
+    raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range, Naverage=Naverage, verbose=verbose)
+    if not process:
+        return raw_data
 
-    if process:
-        samplerate = digitizer.sample_rate()
-        if 'width' in waveform:
-            width = [waveform['width']]
-        else:
-            width = [waveform['width_horz'], waveform['width_vert']]
-        resolution = waveform.get('resolution', None)
-        
-        if len(width) == 2:
-            data, results = process_2d_sawtooth(rawdata.T, period, samplerate, resolution, width, start_zero=True, fig=None)
-            measuresegment_m4i._latest_data=data
-            measuresegment_m4i._latest_rawdata=rawdata
-        else:
-            if verbose:
-                print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
-                    width, data.shape, digitizer.data_memory_size()))
-      
-            start_zero = waveform.get('start_zero', False)
-    
-            data, (trace_start, trace_end) = process_1d_sawtooth(rawdata.T, width, period,
-                                                     samplerate, resolution=resolution,
-                                                     start_zero=start_zero, verbose=verbose)
-    
-            if verbose:
-                print('measuresegment_m4i: processing data: trace_start %s, trace_end %s' % (trace_start, trace_end))
+    samplerate = digitizer.sample_rate()
+    if 'width' in waveform:
+        width = [waveform['width']]
+    else:
+        width = [waveform['width_horz'], waveform['width_vert']]
+
+    resolution = waveform.get('resolution', None)
+    if len(width) == 2:
+        data, results = process_2d_sawtooth(raw_data.T, period, samplerate, resolution, width, start_zero=True, fig=None)
+        measuresegment_m4i._latest_data=data
+        measuresegment_m4i._latest_rawdata = raw_data
+    else:
+        if verbose:
+            print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
+                width, data.shape, digitizer.data_memory_size()))
+
+        start_zero = waveform.get('start_zero', False)
+
+        data, (trace_start, trace_end) = process_1d_sawtooth(raw_data.T, width, period, samplerate,
+                                                             resolution=resolution, start_zero=start_zero,
+                                                             verbose=verbose)
+        if verbose:
+            print('measuresegment_m4i: processing data: trace_start %s, trace_end %s' % (trace_start, trace_end))
+
     return data
 
 

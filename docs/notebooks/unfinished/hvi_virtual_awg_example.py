@@ -106,22 +106,22 @@ sampling_rate = 5e7
 update_awg_settings(virtual_awg, sampling_rate, amplitude)
 
 uptime_in_seconds = 5.0e-6
-marker_delay_in_sec = 1.0e-6
+marker_delay_in_sec = 2.5e-6
 virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_sec)
 
 #%%
 
 output_gate = 'B2'
-mV_sweep_range = 10
-sec_period = 1.0e-5
+mV_sweep_range = 50
+sec_period = 1.0e-4
 sweep_data = virtual_awg.sweep_gates({output_gate: 1}, mV_sweep_range, sec_period)
 
 virtual_awg.enable_outputs([output_gate])
 virtual_awg.run()
 
-readout_channels = [0, 3]
+readout_channels = [0]
 number_of_averages = 100
-data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels, process=False)
+data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
 
 virtual_awg.stop()
 virtual_awg.disable_outputs([output_gate])
@@ -146,7 +146,7 @@ virtual_awg.run()
 
 readout_channels = [0, 3]
 number_of_averages = 100
-data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels, process=False)
+data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
 
 virtual_awg.stop()
 virtual_awg.disable_outputs(output_gates)
