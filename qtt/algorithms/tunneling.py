@@ -218,7 +218,7 @@ def test_polFitting():
     par_init = np.array([20, 2, 100, -.5, -.45, 300])
     y_data = polmod_all_2slopes(x_data, par_init, kT)
     noise = np.random.normal(0, 3, y_data.shape)
-    par_fit, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
+    par_fit, _, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
     assert np.all(np.isclose(par_fit[0], par_init[0], .1))
 
 # %% Example fitting
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     """
     import matplotlib.pyplot as plt
     import time
-    from qtt import pmatlab as pgeometry
+    from qtt import pgeometry
     import pandas as pd
     from pandas import Series
 
@@ -248,7 +248,7 @@ if __name__ == '__main__':
 
     t0 = time.time()
     for ii in range(5):
-        parfit, _ = fit_pol_all(xx, yy, kT=0.001)
+        parfit, _, _ = fit_pol_all(xx, yy, kT=0.001)
     dt = time.time() - t0
     yyfit = polmod_all_2slopes(xx, parfit, kT=0.001)
     print('dt: %.3f [s]' % dt)
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     for ii, n in enumerate(noise):
         pgeometry.tprint('quick fit %d/%d' % (ii, len(noise)))
         yyx = yy + n * (np.random.rand(yy.size) - .5)
-        parfit, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None)
+        parfit, _ , _= fit_pol_all(xx, yyx, kT=0.001, par_guess=None)
         pp[ii] = parfit
 
     plt.figure(200)
@@ -286,9 +286,9 @@ if __name__ == '__main__':
 
     # %% Show effect of proper initialization
     yyx = yy + n * (np.random.rand(yy.size) - .5)
-    parfit1, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=par)
-    parfit2, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None, verbose=2)
-    parfit2i, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=parfit2)
+    parfit1, _, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=par)
+    parfit2, _, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None, verbose=2)
+    parfit2i, _, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=parfit2)
 
     yy1 = polmod_all_2slopes(xx, parfit1, kT=0.001)
     yy2 = polmod_all_2slopes(xx, parfit2, kT=0.001)
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         print('full fit %d/%d' % (ii, len(noise)))
         for j in range(niter):
             yyx = yy + n * (np.random.rand(yy.size) - .5)
-            parfit, _ = fit_pol_all(xx, yyx, kT=0.001)
+            parfit, _, _ = fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
 
     # %% Show uncertainties
@@ -360,7 +360,7 @@ if __name__ == '__main__':
 
         for j in range(niter):
             yyx = yy + Noise * (np.random.rand(yy.size) - .5)
-            parfit, _ = fit_pol_all(xx, yyx, kT=0.001)
+            parfit, _ , _= fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
     # %%
     mean = np.mean(ppall[:, :, 0], axis=1)
