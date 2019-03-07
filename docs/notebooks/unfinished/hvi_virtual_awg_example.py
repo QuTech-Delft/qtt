@@ -36,9 +36,9 @@ class Hardware(Instrument):
                                label='{} (factor)'.format(p),
                                vals=Numbers(1, 1000))
 
-def update_awg_settings(virtual_awg, sampling_rate, amplitude):
+def update_awg_settings(virtual_awg, prescaler, amplitude):
     for awg_number in range(len(virtual_awg.awgs)):
-        virtual_awg.update_setting(awg_number, 'sampling_rate', sampling_rate)
+        virtual_awg.update_setting(awg_number, 'prescaler', prescaler)
         virtual_awg.update_setting(awg_number, 'amplitude', amplitude)
 
 def plot_data_1d(digitizer_data, label_x_axis='', label_y_axis='', fig=100):
@@ -73,7 +73,7 @@ digitizer = M4i(name='digitizer')
 sample_rate_in_Hz = 1e7
 digitizer.sample_rate(sample_rate_in_Hz)
 
-timeout_in_ms = 10 * 1000
+timeout_in_ms = 10 * 1e3
 digitizer.timeout(timeout_in_ms)
 
 millivolt_range = 2000
@@ -101,13 +101,15 @@ awg_5 = AWG.Keysight_M3201A("AWG_slot5", 1, 5)
 hardware = Hardware('hardware')
 virtual_awg = KeysightM3601A([awg_2, awg_3, awg_4, awg_5], hardware)
 
-amplitude = 1.5
-sampling_rate = 5e7
-update_awg_settings(virtual_awg, sampling_rate, amplitude)
+#%%
 
-uptime_in_seconds = 5.0e-6
-marker_delay_in_sec = 2.5e-6
+uptime_in_seconds = 1e-7
+marker_delay_in_sec = 2e-7
 virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_sec)
+
+prescaler = 10
+amplitude = 1.5
+update_awg_settings(virtual_awg, prescaler, amplitude)
 
 #%%
 
@@ -130,9 +132,6 @@ plot_data_1d(data, 'Digitizer Data Points [a.u.]', 'Amplitude [V]')
 
 #%%
 
-uptime_in_seconds = 5.0e-6
-marker_delay_in_sec = 2.0e-6
-virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_sec)
 
 output_gates=['B0', 'B2']
 
@@ -146,7 +145,7 @@ virtual_awg.run()
 
 readout_channels = [0, 3]
 number_of_averages = 100
-data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels)
+data = measure_segment(sweep_data, number_of_averages, digitizer, readout_channels, process=False)
 
 virtual_awg.stop()
 virtual_awg.disable_outputs(output_gates)
@@ -163,9 +162,7 @@ def plot_data_1d_x(digitizer_data, label_x_axis='', label_y_axis='', fig=100):
     plt.show()
     plt.legend()
 
-#Sequencer.plot(sweep_data['gate_comb']['B0'], sampling_rate)
 plot_data_1d_x(data, 'Digitizer Data Points [a.u.]', 'Amplitude [V]')
-
 
 #%%
 
@@ -182,7 +179,7 @@ _ = station.add_component(digitizer)
 from qtt.measurements.scans import scan1Dfast, scanjob_t
 
 scanjob = scanjob_t({'minstrument': [0],'Naverage':100,'wait_time_start_scan':2,
-                     'sweepdata': {'param': 'B0','start': 100,'end': 250, 'step': 1,'wait_time': 0.28}})
+                     'sweepdata': {'param': 'B2','start': 100,'end': 250, 'step': 1,'wait_time': 0.28}})
 dataset_measurement_fast = scan1Dfast(station, scanjob)
 
 
@@ -193,23 +190,13 @@ logviewer.show()
 #%%
 
 
-vm = VideoMode(station, 'B2', 160, minstrument=(digitizer.name,[0]), resolution = 100, diff_dir=[None, 'g'])
+vm = VideoMode(station, 'B0', 50, minstrument=(digitizer.name,[3]), resolution = 50, diff_dir=[None, 'g'])
 vm.stopreadout()
 vm.updatebg()
 
 
 #%%
 
-vm = VideoMode(station, [{'B0': 1}, {'B2': 1}], [40, 40], minstrument=(digitizer.name, [0]), resolution = [48, 48])
+vm = VideoMode(station, [{'B0': 1}, {'B2': 1}], [40, 40], minstrument=(digitizer.name, [0, 3]), resolution = [96, 96])
 vm.stopreadout()
 vm.updatebg()
-
-
-#%%
-
-from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
-
-def plot(sweep_data, measured_data=None):
-    for gate_name, sequence in sweep_data.items():
-        Sequencer.plot(sequence)
-    

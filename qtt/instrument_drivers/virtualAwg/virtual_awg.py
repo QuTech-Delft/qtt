@@ -329,7 +329,7 @@ class VirtualAwg(Instrument):
             'resolution': resolution,
             'start_zero': True,
             'period': period_y, 'period_horz': period_x,
-            'samplerate': self.awgs[0].retrieve_setting('sampling_rate'),
+            'samplerate': self.awgs[0].retrieve_sampling_rate(),
             'markerdelay': self.digitizer_marker_delay()
         })
         return sweep_data
