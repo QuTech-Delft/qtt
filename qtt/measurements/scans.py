@@ -1288,11 +1288,11 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
     full_trace=False;
     if start_zero and (not full_trace):
         padding_x_time=((1-width[0])/2)*period_x
-        padding_y_time=((1-width[0])/2)*period_y
+        padding_y_time=((1-width[1])/2)*period_y
               
         sawtooth_centre_pixels = ((1-width[1])/2 + .5 *width[1])* period * samplerate 
-        start_forward_slope_pixels =  ((1-width[1])/2)* period * samplerate 
-        end_forward_slope_pixels = ((1-width[1])/2 + width[1])* period * samplerate 
+        start_forward_slope_step_pixels =  ((1-width[1])/2)* period * samplerate 
+        end_forward_slope_step_pixels = ((1-width[1])/2 + width[1])* period * samplerate 
         
     else:
         if full_trace == True:
@@ -1305,8 +1305,8 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
             padding_x_time=0
             padding_y_time=0
             sawtooth_centre_pixels = .5 * width[1] * period * samplerate 
-            start_forward_slope_pixels =  0
-            end_forward_slope_pixels = (width[1])* period * samplerate 
+            start_forward_slope_step_pixels =  0
+            end_forward_slope_step_pixels = (width[1])* period * samplerate 
             
     padding_x=int(padding_x_time*samplerate)
     padding_y=int(padding_y_time*samplerate)
@@ -1334,9 +1334,9 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
         print('   horizontal mismatch %d/%.1f'  % (npoints_forward_x, width_horz*period_x*samplerate))
 
     processed_data = []
-    row_offsets = res_horz*np.arange(0, npoints_forward_y).astype(int)+int(padding_y)
+    row_offsets = res_horz*np.arange(0, npoints_forward_y).astype(int)+int(padding_y)+int(padding_x)
     for channel in range(nchannels):
-        row_slices = [ data[(idx+padding_x):(idx + padding_x+ npoints_forward_x), channel] for idx in row_offsets]       
+        row_slices = [ data[(idx):(idx + npoints_forward_x), channel] for idx in row_offsets]       
         processed_data.append(np.array(row_slices))
    
     if verbose:
@@ -1348,7 +1348,7 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
         plt.figure(fig)
         plt.clf()        
         
-        plt.plot(times, data[:,3], label='raw data')
+        plt.plot(times, data[:,:], '.-', label='raw data')
         plt.title('Processing of digitizer trace')
         plt.axis('tight')
 
@@ -1358,21 +1358,23 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
         qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*sawtooth_centre_pixels], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
         qtt.pgeometry.plot2Dline([0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
 
-        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*start_forward_slope_pixels], ':k', label='start of forward slope')
-        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*end_forward_slope_pixels], ':k', label='end of forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*start_forward_slope_step_pixels], ':k', label='start of step forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*end_forward_slope_step_pixels], ':k', label='end of step forward slope')
 
         qtt.pgeometry.plot2Dline([-1, 0, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='start trace')
         qtt.pgeometry.plot2Dline([-1, 0, period, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='end trace')
 
-        qtt.pgeometry.plot2Dline([0, -1, data[0,3], ], '--', color=(1, 0, 0, .41), linewidth=.8, label='first value of data')
+        #qtt.pgeometry.plot2Dline([0, -1, data[0,3], ], '--', color=(1, 0, 0, .41), linewidth=.8, label='first value of data')
 
         plt.legend(numpoints=1)
 
-        plt.figure(fig+10); plt.clf();
-        plt.plot(row_slices[0], '.-r')
-        plt.plot(row_slices[-1], '.-b')
-        plt.plot(row_slices[int(len(row_slices)/2)], '.-c')
-
+        if verbose>=2:
+            plt.figure(fig+10); plt.clf();
+            plt.plot(row_slices[0], '.-r', label='first trace')
+            plt.plot(row_slices[-1], '.-b', label='last trace')
+            plt.plot(row_slices[int(len(row_slices)/2)], '.-c')
+            plt.legend()
+            
     return processed_data, {'row_offsets': row_offsets, 'period': period}
 
 
@@ -1513,7 +1515,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     memsize, pre_trigger, signal_start, signal_end=select_m4i_memsize(digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
     post_trigger = digitizer.posttrigger_memory_size()
 
-    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
+    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination = 1)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 

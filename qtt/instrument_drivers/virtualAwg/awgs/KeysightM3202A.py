@@ -16,7 +16,7 @@ class KeysightM3202A_AWG(AwgCommon):
     def __init__(self, awg):
         super().__init__('Keysight_M3201A', channel_numbers=[1, 2, 3, 4], marker_numbers=[1])
         if not Keysight_M3201A:
-            raise AwgCommonError('The Keysight SD drivers are not be found!')
+            raise AwgCommonError('The Keysight SD drivers can not be found!')
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
         self.__settings = [Parameter(name='enabled_outputs', initial_value=0b0000,
