@@ -7,7 +7,7 @@
 import scipy.optimize
 import numpy as np
 import scipy.ndimage
-
+import matplotlib.pyplot as plt
 
 def polmod_all_2slopes(x_data, par, kT, model=None):
     """ Polarization line model.
@@ -107,7 +107,7 @@ def _polarization_fit_initial_guess(x_data, y_data, kT=0, padding_fraction=0.15,
     return par_guess
 
 
-def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
+def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin'):
     """ Polarization line fitting. 
 
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
@@ -119,7 +119,7 @@ def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, 
     Returns:
         par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
         par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
-        fitdata (dictionary): extra data returned by fit functions
+        results (dictionary): dictionary with fitting results
     """
     if par_guess is None:
         par_guess = _polarization_fit_initial_guess(x_data, y_data, kT, fig=None)
@@ -136,12 +136,37 @@ def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, 
     else:
         raise Exception('Unrecognized fitting method')
 
-    if returnextra:
-        return par_fit, par_guess, fitdata
-    else:
-        return par_fit, par_guess
+    results = {'fitted_parameters': par_fit, 'initial_parameters': par_guess, 'type': 'polarization fit', 'kT': kT}
+    return par_fit, par_guess, results
 
-
+def plot_polarization_fit(detuning, signal, results, fig, verbose = 1):
+    """ Plot the results of a polarization line fit
+    
+    Args:
+        detuning (array): detuning in ueV
+        signal (array): measured signal
+        results (dict): results of fit_pol_all
+        fig (int or None): figure handle
+        verbose (int): Verbosity level
+    
+    """
+    h = scipy.constants.physical_constants['Planck constant in eV s'][0]*1e15  # ueV/GHz; Planck's constant in eV/Hz*1e15 -> ueV/GHz
+    
+    par_fit = results['fitted_parameters']
+    initial_parameters = results['initial_parameters']
+    kT = results['kT']
+    
+    if fig is not None:        
+        plt.figure(fig); plt.clf()
+        plt.plot(detuning, signal, 'bo')
+        plt.plot(detuning, polmod_all_2slopes(detuning, par_fit, kT), 'r', label='fitted model')
+        if verbose>=2:
+            plt.plot(detuning, polmod_all_2slopes(detuning, initial_parameters, kT), ':c', label='initial guess')
+        plt.title('Tunnel coupling: %.2f (ueV) = %.2f (GHz)' % (par_fit[0], par_fit[0]/h))
+        plt.xlabel('Difference in chemical potentials (ueV)')
+        _ = plt.ylabel('Signal (a.u.)')
+        plt.legend()
+        
 def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
     raise Exception('please use fit_pol_all instead')
 
