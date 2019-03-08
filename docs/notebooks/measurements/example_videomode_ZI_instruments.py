@@ -26,7 +26,7 @@ class HardwareSettings(Instrument):
             parameter_name = 'awg_to_{}'.format(awg_gate)
             parameter_label = '{} (factor)'.format(parameter_name)
             self.add_parameter(parameter_name, parameter_class=ManualParameter,
-                               initial_value=1.0, label=parameter_label, vals=Numbers(1, 400))
+                               initial_value=1000, label=parameter_label, vals=Numbers(1, 1000))
 
 settings = HardwareSettings()
 

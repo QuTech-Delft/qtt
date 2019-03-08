@@ -1577,7 +1577,6 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
     if 2 in channels:
         zi.scope_channel2_input.set('Signal Input 2')
     zi.scope_channels.set(sum(channels))  # 1: Chan1 only, 2: Chan2 only, 3: Chan1 + Chan2
-    zi.scope_segments_count.set(number_of_averages)
 
     if not zi.scope_correctly_built:
         zi.Scope.prepare_scope()
@@ -1588,8 +1587,8 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
         for _, record in enumerate(scope_records):
             wave = record[0]['wave'][channel_index, :]
             data.append(wave)
-    return data
-
+    avarage = np.average(np.asarray(data), axis=0)
+    return [avarage]
 
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
