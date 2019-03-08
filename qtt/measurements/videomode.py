@@ -288,27 +288,26 @@ class VideoMode:
                     print('  set %s to %s' % (param, delta))
                 return
         try:
-            for ii, p in enumerate(self.scanparams['sweepparams']):
+            for ii, parameter in enumerate(self.scanparams['sweepparams']):
                 delta = position[ii]
                 if verbose:
-                    print('param %s: delta %.3f' % (p, delta))
+                    print('param %s: delta %.3f' % (parameter, delta))
 
-                if isinstance(p, str):
-                    if p == 'gates_horz' or p == 'gates_vert':
-                        d = self.scanparams['sweepparams'][p]
+                if isinstance(parameter, str):
+                    if parameter == 'gates_horz' or parameter == 'gates_vert':
+                        d = self.scanparams['sweepparams'][parameter]
                         for g, f in d.items():
                             if verbose >= 2:
-                                print('  %: increment %s with %s' % (p, g, f * delta))
+                                print('  %: increment %s with %s' % (parameter, g, f * delta))
                             param = getattr(station.gates, g)
                             param.increment(f * delta)
                     else:
-                        g = p
                         if verbose > 2:
-                            print('  set %s to %s' % (g, delta))
-                        param = getattr(station.gates, g)
+                            print('  set %s to %s' % (parameter, delta))
+                        param = getattr(station.gates, parameter)
                         param.set(delta)
                 else:
-                    raise Exception('not supported')
+                    raise Exception('_update_position with parameter type %s not supported' % (type(parameter),))
         except Exception as ex:
             logging.exception(ex)
 
@@ -489,6 +488,7 @@ class VideoMode:
                 gates = self.sweepparams
             elif isinstance(self.sweepparams, list):
                 gates = self.sweepparams
+                gates = [dict( [(gate, 1)]) for gate in gates]
 
             if period is None:
                 sampling_frequency = qtt.measurements.scans.get_sampling_frequency(self.minstrumenthandle)
@@ -496,7 +496,7 @@ class VideoMode:
                 total_period =  base_period*np.prod(self.resolution)
             else:
                 total_period = period
-                warings.warn('code untested')
+                warnings.warn('code untested')
             waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, total_period, self.resolution)
             keys = [list(item.keys())[0] for item in gates]
             virtual_awg.enable_outputs(keys)
