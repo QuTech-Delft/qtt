@@ -235,7 +235,7 @@ def test_load_dataset(verbose=0):
             print(r)
 
 #%%
-def default_setpoint_array(dataset, measured_name=''):
+def default_setpoint_array(dataset, measured_name='measured'):
     """ Return the default setpoint array for a dataset """
     setpoint_array = dataset.default_parameter_array(measured_name).set_arrays[0]
     return setpoint_array
