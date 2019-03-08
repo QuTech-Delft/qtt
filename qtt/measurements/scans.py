@@ -1525,37 +1525,36 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     return data
 
 
-def get_uhfli_scope_records(device, daq, scopeModule, num_records=1):
+def get_uhfli_scope_records(device, daq, scopeModule, number_of_records=1, timeout=30):
     """
     Obtain scope records from the device using an instance of the Scope Module.
     """
-    scopeModule.execute()
     # Enable the scope: Now the scope is ready to record data upon receiving triggers.
+    scopeModule.set('scopeModule/mode', 1)
+    scopeModule.subscribe('/' + device + '/scopes/0/wave')
     daq.setInt('/%s/scopes/0/enable' % device, 1)
+    scopeModule.execute()
     daq.sync()
 
+    # Wait until the Scope Module has received and processed the desired number of records.
     start = time.time()
-    timeout = 30  # [s]
     records = 0
     progress = 0
-    # Wait until the Scope Module has received and processed the desired number of records.
-    while (records < num_records) or (progress < 1.0):
+    while (records < number_of_records) or (progress < 1.0):
         records = scopeModule.getInt("scopeModule/records")
         progress = scopeModule.progress()[0]
         if (time.time() - start) > timeout:
             # Break out of the loop if for some reason we're no longer receiving scope data from the device.
             logging.warning(
-                "\nScope Module did not return {} records after {} s - forcing stop.".format(num_records, timeout))
+                "\nScope Module did not return {} records after {} s - forcing stop.".format(number_of_records, timeout))
             break
     daq.setInt('/%s/scopes/0/enable' % device, 0)
-
     # Read out the scope data from the module.
     data = scopeModule.read(True)
-
     # Stop the module; to use it again we need to call execute().
     scopeModule.finish()
-
-    return data
+    wave_nodepath = '/{}/scopes/0/wave'.format(device)
+    return data[wave_nodepath][:number_of_records]
 
 
 def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
@@ -1586,7 +1585,7 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
     scope_records = get_uhfli_scope_records(zi.device, zi.daq, zi.scope, 1)
     data = []
     for channel_index, channel_number in enumerate(channels):
-        for _, record in enumerate(scope_records['/{}/scopes/0/wave'.format(zi.device)]):
+        for _, record in enumerate(scope_records):
             wave = record[0]['wave'][channel_index, :]
             data.append(wave)
     return data
