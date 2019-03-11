@@ -120,7 +120,7 @@ class VideoMode:
     videomode_class_index = 0
     
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
-                 resolution=[90, 90], sample_rate='default', diff_dir=None, verbose=1,
+                 resolution=[96, 96], sample_rate='default', diff_dir=None, verbose=1,
                  dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name=None,
                  mouse_click_callback=None):
         """ Tool for fast acquisition of charge stability diagram
@@ -288,27 +288,26 @@ class VideoMode:
                     print('  set %s to %s' % (param, delta))
                 return
         try:
-            for ii, p in enumerate(self.scanparams['sweepparams']):
+            for ii, parameter in enumerate(self.scanparams['sweepparams']):
                 delta = position[ii]
                 if verbose:
-                    print('param %s: delta %.3f' % (p, delta))
+                    print('param %s: delta %.3f' % (parameter, delta))
 
-                if isinstance(p, str):
-                    if p == 'gates_horz' or p == 'gates_vert':
-                        d = self.scanparams['sweepparams'][p]
+                if isinstance(parameter, str):
+                    if parameter == 'gates_horz' or parameter == 'gates_vert':
+                        d = self.scanparams['sweepparams'][parameter]
                         for g, f in d.items():
                             if verbose >= 2:
-                                print('  %: increment %s with %s' % (p, g, f * delta))
+                                print('  %: increment %s with %s' % (parameter, g, f * delta))
                             param = getattr(station.gates, g)
                             param.increment(f * delta)
                     else:
-                        g = p
                         if verbose > 2:
-                            print('  set %s to %s' % (g, delta))
-                        param = getattr(station.gates, g)
+                            print('  set %s to %s' % (parameter, delta))
+                        param = getattr(station.gates, parameter)
                         param.set(delta)
                 else:
-                    raise Exception('not supported')
+                    raise Exception('_update_position with parameter type %s not supported' % (type(parameter),))
         except Exception as ex:
             logging.exception(ex)
 
@@ -350,12 +349,9 @@ class VideoMode:
             try:
                 dd = self.datafunction()
                 self.datafunction_result = dd
-                if self.nplots == 1:
-                    self.lp[0].update(data=dd[0])
-                else:
-                    for ii, d in enumerate(dd):
+                for ii, d in enumerate(dd):
                         self.lp[ii].update(data=d, processevents=False)
-                    pyqtgraph.mkQApp().processEvents()
+                pyqtgraph.mkQApp().processEvents()
             except Exception as e:
                 logging.exception(e)
                 print('%s: Exception in updatebg, stopping readout' %
@@ -485,15 +481,23 @@ class VideoMode:
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels))
 
-    def __run_2d_scan(self, awg, virtual_awg, period=1e-6):
+    def __run_2d_scan(self, awg, virtual_awg, period=None):
         if virtual_awg:
             sweep_ranges = [i for i in self.sweepranges]
             if isinstance(self.sweepparams, dict):
                 gates = self.sweepparams
             elif isinstance(self.sweepparams, list):
                 gates = self.sweepparams
+                gates = [dict( [(gate, 1)]) for gate in gates]
 
-            waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, period, self.resolution)
+            if period is None:
+                sampling_frequency = qtt.measurements.scans.get_sampling_frequency(self.minstrumenthandle)
+                base_period=1./sampling_frequency
+                total_period =  base_period*np.prod(self.resolution)
+            else:
+                total_period = period
+                warnings.warn('code untested')
+            waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, total_period, self.resolution)
             keys = [list(item.keys())[0] for item in gates]
             virtual_awg.enable_outputs(keys)
             virtual_awg.run()

@@ -1236,52 +1236,150 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 # %%
 
-@qtt.utilities.tools.rdeprecated(expire='1 Nov 2018')
-def process_fpga_trace(data, width, resolution=None, Naverage=1, direction='forwards', start_offset=1):
-    """ Process the data returned by reading out based on the shape of
-        the sawtooth send with the AWG.
-
-        Args:
-            data (list or Nxk array): the data (N is the number of samples)
-            waveform (dict): contains the wave and the sawtooth width
-            Naverage (int): number of times the signal was averaged
-            direction (string): option to use backwards signal i.o. forwards
-
-        Returns:
-            data_processed (array): The data after dropping part of it.
+def get_sampling_frequency(instrument_handle):
+    """ Return sampling frequency of acquisition device
+    
+    Args:
+        instrument_handle (str or Instrument): handle to instrument
+    Returns:
+        float: sampling frequency
     """
-    if isinstance(width, float):
-        width = [width]  # legacy
-
-    if len(width) == 1:
-        if isinstance(data, list):
-            data = np.array(data)
-
-        if direction == 'forwards':
-            end = int(np.floor(width[0] * data.shape[0] - 1))
-            data_processed = data[start_offset:end]
-        elif direction == 'backwards':
-            begin = int(np.ceil(width[0] * data.shape[0] + 1))
-            data_processed = data[begin:]
-            data_processed = data_processed[::-1]
-
-        data_processed = np.array(data_processed) / Naverage
-
+    instrument_handle = get_instrument(instrument_handle)
+        
+    if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+        return instrument_handle.sample_rate()
+    elif isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
+        return Exception('not implemented yet')
     else:
-        width_horz = width[0]
-        width_vert = width[1]
-        # split up the fpga data in chunks of horizontal sweeps
-        chunks_ch1 = [data[x:x + resolution[0]]
-                      for x in range(0, len(data), resolution[0])]
-        chunks_ch1 = [chunks_ch1[i][1:int(
-            width_horz * len(chunks_ch1[i]))] for i in range(0, len(chunks_ch1))]
-        data_processed = chunks_ch1[:int(width_vert * len(chunks_ch1))]
+        raise Exception(
+            'Unrecognized fast readout instrument %s' % instrument_handle)
+        
+def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, start_zero=True, fig=None):
+    """ Extract a 2D image from a double sawtooth signal 
+    
+    Args:
+        data (numpy array): measured trace
+        period (float): period of the full signal
+        samplerate (float): sample rate of the acquisition device
+        resolution (list): resolution nx, ny. The nx corresonds to the fast oscillating sawtooth
+        width (list of float): width paramter of the sawtooth signals
+        verbose (int): verbosity level
+        start_zero (bool): Default is True
+        fig (int or None): figure handle
+        
+    Returns
+    
+        processed_data (list of arrays): the extracted 2D arrays
+        results (dict): contains metadata
+    
+    """
+    npoints_expected = int(period * samplerate)  # expected number of points
+    npoints = data.shape[0]
+    nchannels = data.shape[1]
+    period_x = period/(resolution[1])
+    period_y = period
+    
+    if verbose:
+        print('process_2d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
+        
+    if np.abs(npoints-npoints_expected)>0:
+        raise Exception('process_2d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
+        
+    full_trace=False;
+    if start_zero and (not full_trace):
+        padding_x_time=((1-width[0])/2)*period_x
+        padding_y_time=((1-width[1])/2)*period_y
+              
+        sawtooth_centre_pixels = ((1-width[1])/2 + .5 *width[1])* period * samplerate 
+        start_forward_slope_step_pixels =  ((1-width[1])/2)* period * samplerate 
+        end_forward_slope_step_pixels = ((1-width[1])/2 + width[1])* period * samplerate 
+        
+    else:
+        if full_trace == True:
+            padding_x_time=0
+            padding_y_time=0
+            sawtooth_centre_pixels = .5 * width[1] * period * samplerate 
+            start_forward_slope_pixels =  0
+            end_forward_slope_pixels = period * samplerate 
+        else:
+            padding_x_time=0
+            padding_y_time=0
+            sawtooth_centre_pixels = .5 * width[1] * period * samplerate 
+            start_forward_slope_step_pixels =  0
+            end_forward_slope_step_pixels = (width[1])* period * samplerate 
+            
+    padding_x=int(padding_x_time*samplerate)
+    padding_y=int(padding_y_time*samplerate)
 
-    return data_processed
+
+    width_horz = width[0]
+    width_vert = width[1]
+    res_horz = int(resolution[0])
+    res_vert = int(resolution[1])
+
+    if resolution[0] % 16 != 0 or resolution[1] % 16 != 0:
+        # send out warning, due to rounding of the digitizer memory buffers
+        # this is not supported
+        raise Exception(
+            'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
+    if full_trace:
+        npoints_forward_x = int(res_horz)
+        npoints_forward_y =int( res_vert)
+    else:
+        npoints_forward_x = int(width_horz * res_horz)
+        npoints_forward_y =int( width_vert * res_vert)
+        
+    if verbose:
+        print('process_2d_sawtooth: number of points in forward trace (horizontal) %d, vertical %d'% (npoints_forward_x, npoints_forward_y, ) )
+        print('   horizontal mismatch %d/%.1f'  % (npoints_forward_x, width_horz*period_x*samplerate))
+
+    processed_data = []
+    row_offsets = res_horz*np.arange(0, npoints_forward_y).astype(int)+int(padding_y)+int(padding_x)
+    for channel in range(nchannels):
+        row_slices = [ data[(idx):(idx + npoints_forward_x), channel] for idx in row_offsets]       
+        processed_data.append(np.array(row_slices))
+   
+    if verbose:
+        print('process_2d_sawtooth: processed_data shapes: %s' % ( [array.shape for array in processed_data]) )
+        
+    if fig is not None:
+        pixel_to_axis = 1./samplerate
+        times=np.arange(npoints)/samplerate
+        plt.figure(fig)
+        plt.clf()        
+        
+        plt.plot(times, data[:,:], '.-', label='raw data')
+        plt.title('Processing of digitizer trace')
+        plt.axis('tight')
+
+        for row_offset in row_offsets:
+            qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*row_offset, ], ':', color='r', linewidth=.8, alpha=.5)
+            
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*sawtooth_centre_pixels], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
+        qtt.pgeometry.plot2Dline([0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
+
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*start_forward_slope_step_pixels], ':k', label='start of step forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*end_forward_slope_step_pixels], ':k', label='end of step forward slope')
+
+        qtt.pgeometry.plot2Dline([-1, 0, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='start trace')
+        qtt.pgeometry.plot2Dline([-1, 0, period, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='end trace')
+
+        #qtt.pgeometry.plot2Dline([0, -1, data[0,3], ], '--', color=(1, 0, 0, .41), linewidth=.8, label='first value of data')
+
+        plt.legend(numpoints=1)
+
+        if verbose>=2:
+            plt.figure(fig+10); plt.clf();
+            plt.plot(row_slices[0], '.-r', label='first trace')
+            plt.plot(row_slices[-1], '.-b', label='last trace')
+            plt.plot(row_slices[int(len(row_slices)/2)], '.-c')
+            plt.legend()
+            
+    return processed_data, {'row_offsets': row_offsets, 'period': period}
 
 
-def process_digitizer_trace(data, width, period, samplerate, resolution=None, padding=0, start_zero=False,
-                            fig=None, pre_trigger=None):
+def process_1d_sawtooth(data, width, period, samplerate, resolution=None, padding=0, start_zero=False,
+                            fig=None, verbose=0):
     """ Process data from the M4i and a sawtooth trace 
 
     This is done to remove the extra padded data of the digitizer and to 
@@ -1296,59 +1394,27 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         processed_data (Nxk array): processed data
         rr (tuple)
     """
-    npoints = int(period * samplerate)  # expected number of points
-    if len(width) == 1:
-        npoints2 = width[0] * npoints
-        npoints2 = npoints2 - (npoints2 % 2)
-        r1 = int(padding)
-        r2 = int(npoints2)
-        if start_zero:
-            delta = int(period * samplerate * (1 - width[0]) / 2)
-            r1 += delta
-            r2 += delta
-        processed_data = data[r1:r2, :].T
-    else:
-        if start_zero:
-            raise Exception('not implemented')
-        width_horz = width[0]
-        width_vert = width[1]
-        res_horz = int(resolution[0])
-        res_vert = int(resolution[1])
+    npoints_expected = int(period * samplerate)  # expected number of points
+    npoints = data.shape[0]
+    if verbose:
+        print('process_1d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
 
-        if resolution[0] % 16 != 0 or resolution[1] % 16 != 0:
-            # send out warning, due to rounding of the digitizer memory buffers
-            # this is not supported
-            # print('resolution argument: %s'  % (resolution,) )
-            warnings.warn(
-                'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
-            raise Exception(
-                'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
-        npoints2 = width_horz * res_horz
-        npoints2 = npoints2 - (npoints2 % 2)
-        npoints3 = width_vert * res_vert
-        npoints3 = npoints3 - (npoints3 % 2)
-        r1 = int(padding)
-        r2 = int(npoints2)
-        r3 = int(npoints3)
-        processed_data = []
+    if len(width) != 1:
+        raise Exception('specification is not for a 1D sawtooth signal')
+    npoints2 = int(width[0] * period * samplerate)
+    npoints2 = npoints2 - (npoints2 % 2)
+    trace_start = int(padding)
+    trace_end = trace_start + int(npoints2)
+    if start_zero:
+        delta = int(period * samplerate * (1 - width[0]) / 2)
+        trace_start += delta
+        trace_end += delta
+    processed_data = data[trace_start:trace_end, :].T
 
-        for j in range(data[0].shape[0]):
-            processed_data.append([data[x:x + res_horz, j]
-                                   for x in range(0, npoints, res_horz)])
-            processed_data[j] = [processed_data[j][i][1 + r1:r2]
-                                 for i in range(0, res_vert)]
-            processed_data[j] = processed_data[j][r1:r3]
-        processed_data = [np.array(processed_data[x])
-                          for x in range(data[0].shape[0])]
+    if verbose:
+            print('process_1d_sawtooth: processing data: shape %s: trace_start %s, trace_end %s' % (data.shape, trace_start, trace_end))
 
-    rwidth = 1 - width[0]
-    if pre_trigger is None:
-        # assume trigger is in middle of trace
-        cctrigger = data.shape[0] / 2  # position of trigger in signal
-    else:
-        cctrigger = pre_trigger  # position of trigger in signal
-
-    cc = cctrigger + width[0] * npoints / 2
+    cc = (trace_start+trace_end)/2
     if fig is not None:
         plt.figure(fig)
         plt.clf()
@@ -1356,31 +1422,117 @@ def process_digitizer_trace(data, width, period, samplerate, resolution=None, pa
         plt.title('Processing of digitizer trace')
         plt.axis('tight')
 
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, cctrigger], ':g', linewidth=3, label='trigger')
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, cc], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
-        qtt.pgeometry.plot2Dline(
-            [0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
+        qtt.pgeometry.plot2Dline([-1, 0, cc], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
+        qtt.pgeometry.plot2Dline([0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
+        qtt.pgeometry.plot2Dline([-1, 0, trace_start], ':k', label='start of forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, trace_end], ':k', label='end of forward slope')
 
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, r1], ':k', label='range of forward slope')
-        qtt.pgeometry.plot2Dline([-1, 0, r2], ':k')
-
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, cc + samplerate * period * (width[0] / 2 + rwidth)], '--m', label='?')
-        qtt.pgeometry.plot2Dline(
-            [-1, 0, cc + samplerate * period * -(width[0] / 2 + rwidth)], '--m')
         plt.legend(numpoints=1)
 
-    return processed_data, (r1, r2)
+    return processed_data, (trace_start, trace_end)
 
 
+def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
+    """ Select suitable memory size for a given period
+
+    The selected memory size is the period times the sample rate, but rounded above to a multiple of 16.
+    Additionally, extra pixels are added because of pretrigger_memsize requirements of the m4i.
+    
+    Args:
+        digitizer (object)
+        period (float): period of signal to measure
+        trigger_delay (float): delay in seconds between ingoing signal and returning signal
+        nsegments (int): number of segments of period length to fit in memory
+    Returns:
+        memsize (int): total memory size selected
+        pre_trigger (int): size of pretrigger selected
+        signal_start (int): starting position of signal in pixels
+        signal_start (int): end position of signal in pixels
+        
+    """
+    sample_rate = digitizer.sample_rate()
+    if sample_rate == 0:
+        raise Exception('digitizer samplerate is zero, please reset digitizer')
+    number_points_period = int(period * sample_rate)
+    
+    if trigger_delay is None:
+        trigger_delay = 0
+    else:
+        warnings.warn('untested')
+    trigger_delay_points = 16*trigger_delay
+
+    basic_pretrigger_size = 16
+    base_segment_size = int(np.ceil( (number_points_period+trigger_delay_points) / 16) * 16) + basic_pretrigger_size
+
+
+    memsize = base_segment_size * nsegments
+    if memsize > digitizer.memory():
+        raise Exception('Trying to acquire too many points. Reduce sampling rate, period or number segments')
+        
+    pre_trigger = int(np.ceil( (trigger_delay * sample_rate)//16 )*16) + basic_pretrigger_size
+    post_trigger = int(np.ceil((base_segment_size - pre_trigger) // 16) * 16)
+
+    signal_start = basic_pretrigger_size + int(trigger_delay_points)
+    signal_end = signal_start+number_points_period
+    
+    digitizer.data_memory_size.set(memsize)
+    digitizer.posttrigger_memory_size(post_trigger)
+    if verbose:
+        print('select_m4i_memsize %s: sample rate %.3f Mhz, period %f [ms]' % (
+            digitizer.name, sample_rate / 1e6, period * 1e3))
+        print('select_m4i_memsize %s: trace %d points, selected memsize %d' %
+              (digitizer.name, number_points_period, memsize))
+        print('select_m4i_memsize %s: pre and post trigger: %d %d' % (digitizer.name,
+                                                   digitizer.data_memory_size() - digitizer.posttrigger_memory_size(),
+                                                   digitizer.posttrigger_memory_size()))
+        print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
+    return memsize, pre_trigger, signal_start, signal_end
+
+def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0):
+    """ Record a trace from the digitizer 
+    
+    Args:
+        digitizer (obj): handle to instrument
+        period (float): length of segment to read
+        read_ch (list): channels to read from the instrument
+        mV_range (float): range for input
+        Naverage (int): number of averages to perform
+        verbose (int): verbosity level
+    
+    """
+    sample_rate = digitizer.sample_rate()
+    maxrate = digitizer.max_sample_rate()
+    if sample_rate == 0:
+        raise Exception(
+            'sample rate of m4i is zero, please reset the digitizer')
+    if sample_rate > maxrate:
+        raise Exception(
+            'sample rate of m4i is > %d MHz, this is not supported' % (maxrate // 1e6))
+
+    # code for compensating for trigger delays in software
+    signal_delay = getattr(digitizer, 'signal_delay', None)
+
+    memsize, pre_trigger, signal_start, signal_end=select_m4i_memsize(digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
+    post_trigger = digitizer.posttrigger_memory_size()
+
+    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination = 1)
+    dataraw = digitizer.blockavg_hardware_trigger_acquisition(
+        mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
+
+    if isinstance(dataraw, tuple):
+        dataraw = dataraw[0]
+    data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
+    data = data[:, signal_start:signal_end]
+
+    return data
+
+
+@qtt.utilities.tools.deprecated
 def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
     """ Select suitable memory size for a given period
 
     Args:
-        digitizer (object)
+        digitizer (object): handle to instrument
         period (float): period of signal to measure
         trigger_delay (float): delay in seconds between ingoing signal and returning signal
         nsegments (int): number of segments of period length to fit in memory
@@ -1414,114 +1566,49 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
     return memsize
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Nov 2018')
-def measuresegment_fpga(fpga, waveform, read_ch, Naverage=1):
-    """ Measure and process data with fpga for different scan types
-
-    Args:
-        fpga (instrument handle)
-        read_ch (list): channel numbers to read from
-        Naverage (int): number of average reads to take
-        waittime (float): time (seconds) to wait before beginning acquisition
-    Returns:
-        data (numpy array)
-
-    """
-    if 'width' in waveform:
-        width = [waveform['width']]
-        ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
-        devicedata = fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
-        data_raw = [devicedata[ii] for ii in read_ch]
-        data = np.vstack([process_fpga_trace(d, width, Naverage)
-                          for d in data_raw])
-    elif 'width_horz' in waveform and 'width_vert' in waveform:
-        width = [waveform['width_horz'], waveform['width_vert']]
-        resolution = waveform['resolution']
-        waittime = waveform['period'] * Naverage
-        ReadDevice = ['FPGA_ch%d' % c for c in read_ch]
-        devicedata = fpga.readFPGA(
-            Naverage=Naverage, ReadDevice=ReadDevice, waittime=waittime)
-        data_raw = [devicedata[ii] for ii in read_ch]
-        data = np.array(
-            [process_fpga_trace(d, width, resolution=resolution) for d in data_raw])
-    else:
-        raise ValueError('The waveform argument requires to have width or width_horz and width_vert')
-
-    return data
-
 
 def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0):
     """ Measure block data with M4i
 
     Args:
-        width (None or float): if a float, then process data
+        digitizer (object): handle to instrument
+        waveform (dict): waveform specification
+        read_ch (list): channels to read from the instrument
+        mV_range (float): range for input
+        Naverage (int): number of averages to perform
+        verbose (int): verbosity level
     Returns:
-        data (numpy array)
+        data (numpy array): recorded and processed data
 
     """
 
-    drate = digitizer.sample_rate()
-    maxrate = digitizer.max_sample_rate()
-    if drate == 0:
-        raise Exception(
-            'sample rate of m4i is zero, please reset the digitizer')
-    if drate > maxrate:
-        raise Exception(
-            'sample rate of m4i is > %d MHz, this is not supported' % (maxrate // 1e6))
-
-    # code for offsetting the data in software
-    signal_delay = getattr(digitizer, 'signal_delay', None)
-    if signal_delay is None:
-        signal_delay = 0
-    padding_offset = int(drate * signal_delay)
-
     period = waveform['period']
+    raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range, Naverage=Naverage, verbose=verbose)
+    if not process:
+        return raw_data
+
+    samplerate = digitizer.sample_rate()
+    if 'width' in waveform:
+        width = [waveform['width']]
+    else:
+        width = [waveform['width_horz'], waveform['width_vert']]
+
     resolution = waveform.get('resolution', None)
+    start_zero = waveform.get('start_zero', False)
 
-    paddingpix = 16
-    padding = paddingpix / drate
-    pretrigger_period = 16 / drate  # waveform['markerdelay'],  16 / samp_freq
-    if period is None:
-        raise Exception('please set period for block measurements')
-    memsize = select_digitizer_memsize(
-        digitizer, period + 2 * padding, pretrigger_period + padding, verbose=verbose >= 1)
-    post_trigger = digitizer.posttrigger_memory_size()
 
-    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
-    dataraw = digitizer.blockavg_hardware_trigger_acquisition(
-        mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
+    if len(width) == 2:
+        data, results = process_2d_sawtooth(raw_data.T, period, samplerate, resolution, width, start_zero=start_zero, fig=None)
+        measuresegment_m4i._latest_data=data
+        measuresegment_m4i._latest_rawdata = raw_data
+    else:
 
-    measuresegment_m4i._waveform = waveform  # for debugging
-    measuresegment_m4i._dataraw = dataraw  # for debugging
-    measuresegment_m4i._variables = {'padding_offset': padding_offset, 'drate': drate, 'period': period}
+        data, (trace_start, trace_end) = process_1d_sawtooth(raw_data.T, width, period, samplerate,
+                                                             resolution=resolution, start_zero=start_zero,
+                                                             verbose=verbose)
+    if verbose:
+        print('measuresegment_m4i: processed_data: width %s, data shape %s, memsize %s' % (width, data.shape,))
 
-    if isinstance(dataraw, tuple):
-        dataraw = dataraw[0]
-    data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
-    data = data[:, padding_offset +
-                paddingpix:(padding_offset + paddingpix + int(period * drate))]
-
-    if process:
-        if 'width' in waveform:
-            width = [waveform['width']]
-        else:
-            width = [waveform['width_horz'], waveform['width_vert']]
-
-        if verbose:
-            print('measuresegment_m4i: processing data: width %s, data shape %s, memsize %s' % (
-                width, data.shape, digitizer.data_memory_size()))
-
-        samplerate = digitizer.sample_rate()
-        pre_trigger = digitizer.pretrigger_memory_size()
-
-        start_zero = waveform.get('start_zero', False)
-
-        data, (r1, r2) = process_digitizer_trace(data.T, width, period,
-                                                 samplerate, pre_trigger=pre_trigger, resolution=resolution,
-                                                 start_zero=start_zero)
-
-        if verbose:
-            print('measuresegment_m4i: processing data: r1 %s, r2 %s' % (r1, r2))
     return data
 
 
@@ -1592,13 +1679,19 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
 
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
-    Supported instruments: m4i digitizer, ZI UHF-LI,  qtt fpga.
+    Supported instruments: m4i digitizer, ZI UHF-LI
+    
+    Args:
+        waveform (dict): waveform specification
+        Naverage (int): number of averages to perform
+        minstrhandle (str or Instrument): handle to acquisition device
+        read_ch (list): channels to read from the instrument
+        mV_range (float): range for input
+        verbose (int): verbosity level
+    Returns:
+        data (numpy array): recorded and processed data
+
     """
-    try:
-        isfpga = isinstance(
-            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
-    except:
-        isfpga = False
     try:
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
@@ -1612,9 +1705,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     minstrument = get_instrument(minstrhandle)
     is_simulation = minstrument.name.startswith('sdigitizer')
 
-    if isfpga:
-        data = measuresegment_fpga(minstrhandle, waveform, read_ch, Naverage)
-    elif ism4i:
+    if ism4i:
         data = measuresegment_m4i(
             minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
     elif uhfli:
@@ -1641,7 +1732,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
 
     Args:
         parameters (dict): dictionary containing the following compulsory parameters:
-            minstrhandle (instrument handle): measurement instrument handle (m4i digitizer, qtt fpga supported).
+            minstrhandle (instrument handle): measurement instrument handle (m4i digitizer).
             read_ch (list of int): channel numbers to record.
             period (float): time in seconds to record for each segment.
             nsegments (int): number of segments to record.
@@ -2016,8 +2107,8 @@ def plotData(alldata, diff_dir=None, fig=1):
 def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1):
     """Perform a very fast 2d scan by varying two physical gates with the AWG.
 
-    The function assumes the station contains an FPGA with readFPGA function. 
-        The number of the FPGA channel is supplied via the minstrument field in the scanjob.
+    The function assumes the station contains an acquisition device that is supported by the measuresegment function.
+    The number of the measurement channels is supplied via the minstrument field in the scanjob.
 
     Args:
         station (object): contains all the instruments
@@ -2076,18 +2167,11 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
         sweepranges = [sweepdata['range'], stepdata['range']]
 
     try:
-        isfpga = isinstance(
-            minstrhandle, qtt.instrument_drivers.FPGA_ave.FPGA_ave)
-    except:
-        isfpga = False
-    try:
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
     except:
         ism4i = False
-    if isfpga:
-        samp_freq = minstrhandle.get_sampling_frequency()
-    elif ism4i:
+    if ism4i:
         samp_freq = minstrhandle.sample_rate()
         resolution[0] = np.ceil(resolution[0] / 16) * 16
     else:

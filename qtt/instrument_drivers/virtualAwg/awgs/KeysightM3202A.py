@@ -16,13 +16,11 @@ class KeysightM3202A_AWG(AwgCommon):
     def __init__(self, awg):
         super().__init__('Keysight_M3201A', channel_numbers=[1, 2, 3, 4], marker_numbers=[1])
         if not Keysight_M3201A:
-            raise AwgCommonError('The Keysight SD drivers are not be found!')
+            raise AwgCommonError('The Keysight SD drivers can not be found!')
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError('The AWG does not correspond with {}'.format(self._awg_name))
         self.__settings = [Parameter(name='enabled_outputs', initial_value=0b0000,
                                      set_cmd=None),
-                           Parameter(name='sampling_rate', unit='GS/s', initial_value=5e7,
-                                     vals=Numbers(0, 2e8), set_cmd=None),
                            Parameter(name='amplitude', unit='Volt', initial_value=1.0,
                                      vals=Numbers(0.0, 1.5), set_cmd=None),
                            Parameter(name='offset', unit='seconds', initial_value=0.0,
@@ -35,7 +33,7 @@ class KeysightM3202A_AWG(AwgCommon):
                                      set_cmd=None),
                            Parameter(name='cycles', initial_value=0,
                                      set_cmd=None),
-                           Parameter(name='prescaler', initial_value=2,
+                           Parameter(name='prescaler', initial_value=10,
                                      set_cmd=None)]
         self.__awg = awg
 
@@ -89,10 +87,16 @@ class KeysightM3202A_AWG(AwgCommon):
         raise NotImplementedError
 
     def update_sampling_rate(self, sampling_rate):
-        self.change_setting('sampling_rate', sampling_rate)
+        raise ValueError('The sample rate can only be set via the prescaler!')
 
     def retrieve_sampling_rate(self):
-        return self.retrieve_setting('sampling_rate')
+        prescaler = self.retrieve_setting('prescaler')
+        if prescaler == 0:
+            return 1e9
+        elif prescaler == 1:
+            return 2e8
+        else:
+            return 1e8 / prescaler
 
     def update_gain(self, gain):
         self.change_setting('amplitude', gain)
@@ -109,14 +113,12 @@ class KeysightM3202A_AWG(AwgCommon):
         cycles = self.retrieve_setting('cycles')
         prescaler = self.retrieve_setting('prescaler')
         auto_trigger = self.retrieve_setting('auto_trigger')
-        frequency = self.retrieve_setting('sampling_rate')
         wave_shape = self.retrieve_setting('wave_shape')
         amplitude = self.retrieve_setting('amplitude')
         offset = self.retrieve_setting('offset')
         for (channel_number, sequence) in zip(channel_numbers, sequence_items):
             wave_object = Keysight_M3201A.new_waveform_from_double(0, np.array(sequence))
             self.__awg.load_waveform(wave_object, wave_number)
-            self.__awg.set('frequency_channel_%d' % channel_number, frequency)
             self.__awg.set('wave_shape_channel_%d' % channel_number, wave_shape)
             self.__awg.set('amplitude_channel_%d' % channel_number, amplitude)
             self.__awg.set('offset_channel_%d' % channel_number, offset)
