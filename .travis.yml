@@ -23,6 +23,9 @@ install:
     # doing a normal python setup.py install gives issues with pytest
     - python setup.py develop
 
+    # from https://code-maven.com/coverall-with-python-minimal-setup
+    - pip install pytest pytest-cov coveralls
+    
 # for xvfb details see https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui
 
 script: 
@@ -35,3 +38,6 @@ script:
       jupyter --version;
       source docs/notebooks/run_notebooks.sh;
       fi
+
+after_success:
+  - coveralls
