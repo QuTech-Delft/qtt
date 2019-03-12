@@ -37,10 +37,10 @@ If you registered qtt with Python via `setup.py develop`, all you need to do to 
 See the [documentation](https://qtt.readthedocs.io/en/latest/) and the example notebooks in the [docs/notebooks](docs/notebooks/) directory.
 
 For a general introduction also see
-* [Introduction to Github](https://guides.github.com/activities/hello-world/)
-* [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
+  * [Introduction to Github](https://guides.github.com/activities/hello-world/)
+  * [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
 
-* If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following settings:
+If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following settings:
    - Use a `IPython` console and in `Tools->Preferences->IPython console->Graphics` set the IPython backend graphics option to `Qt5`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
    - In `Tools->Preferences->Console->Advanced settings` uncheck the box `Enable UMR`
 
