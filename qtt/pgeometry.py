@@ -2321,11 +2321,3 @@ if __name__ == '__main__':
     test_geometry()
     test_intersect2lines()
 
-# %% Run tests from documentation
-if __name__ == "__main__":
-    """ Dummy main for testing
-    """
-
-    import unittest
-    #testcase = unittest.FunctionTestCase(test_intersect2lines)
-    unittest.main()

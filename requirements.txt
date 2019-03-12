@@ -1,11 +1,11 @@
 apscheduler
-attrs >= 18.2.0
+attrs>=18.2.0
 colorama
 coverage
 dulwich
-hickle >= 3.1
-numpy
-matplotlib >= 2.1
+hickle>=3.1
+numpy>=1.13
+matplotlib>=2.1
 pandas
 Polygon3
 pyqtgraph
@@ -13,9 +13,9 @@ pyzmqrpc
 PyQt5
 qcodes
 qtpy
-git+https://github.com/qutech/qupulse#egg=qupulse
+qupulse
 sympy
 slacker
 scikit-image
-scipy >= 0.18
+scipy>=0.18
 tables
