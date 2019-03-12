@@ -41,8 +41,8 @@ For a general introduction also see
 * [Scientific python lectures](https://github.com/jrjohansson/scientific-python-lectures)
 
 If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following settings:
-   - Use a `IPython` console and in `Tools->Preferences->IPython console->Graphics` set the IPython backend graphics option to `Qt5`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
-   - In `Tools->Preferences->Console->Advanced settings` uncheck the box `Enable UMR`
+  - Use a `IPython` console and in `Tools->Preferences->IPython console->Graphics` set the IPython backend graphics option to `Qt5`. This ensures correctly displaying the `ParameterViewer` and `DataBrowser`
+  - In `Tools->Preferences->Console->Advanced settings` uncheck the box `Enable UMR`
 
 ## Contributing
 
