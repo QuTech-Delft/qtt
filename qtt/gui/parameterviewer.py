@@ -149,7 +149,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             box.setSingleStep(value)
         except Exception as ex:
             print(ex)
-            pass
 
     def setSingleStep(self, value, instrument_name=None):
         """ Set the default step size for all parameters in the viewer

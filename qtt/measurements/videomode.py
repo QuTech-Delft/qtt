@@ -530,8 +530,7 @@ class VideoMode:
     def single(self):
         """Do a single scan with a lot averaging.
 
-        Note: this does not yet support the usage of linear combinations of 
-        gates (a.k.a. virtual gates).
+        Note: this does not yet support the usage of linear combinations of gates (a.k.a. virtual gates).
         """
         raise Exception('not implemented')
 

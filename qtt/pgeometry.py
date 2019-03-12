@@ -2236,7 +2236,7 @@ def minAlg_5p4(A):
     """
 
     # Compute the SVD of A
-    (U, D, V) = np.linalg.svd(A)
+    (_, _, V) = np.linalg.svd(A)
 
     # Take last vector in V
     x = V[-1, :]

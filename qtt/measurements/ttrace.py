@@ -18,7 +18,6 @@ import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
 
 try:
-    import pycqed
     from pycqed.measurement.waveform_control import pulse
     from pycqed.measurement.waveform_control import pulsar as ps
 
@@ -170,7 +169,7 @@ class ttrace_t(dict):
         samplingfreq: readout frequency of the acquisition device
         awgclock: clock frequency of the AWG
         traces: contains the extrema the traces have to have
-        ....           
+        ....
 
     """
 
@@ -475,15 +474,12 @@ def init_ttrace(station, awgclock=10e6):
 
         define_awg5014_channels(p, marker1highs=2.6)
 
-        # p._clock_prequeried(False) # needed?
         _ = p.clock(list(p.channels.keys())[0])
         p._clock_prequeried(True)  # if not set the interface is _very_ slow
 
         setattr(station, 'pulsar%d' % ii, p)
-        # p.AWG=a
 
         pulsar_objects += [p]
-        #p.clock = awgclock
 
     return pulsar_objects
 
@@ -507,7 +503,7 @@ def run_ttrace(virtualawg, pulsar_objects, ttrace, ttrace_elements, sequence_nam
 
         # program the Sequence
         pulsar = pulsar_objects[ii]
-        ss = pulsar.program_awgs(seq, *elts)
+        _ = pulsar.program_awgs(seq, *elts)
 
     for awg in awgs:
         awg.run()

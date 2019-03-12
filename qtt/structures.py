@@ -454,7 +454,6 @@ class sensingdot_t:
                 scanjob['sweepdata']['paramname'] = vsensorgate
             else:
                 gate = self.gg[1]
-                sdplg = getattr(self.station.gates, gate)
                 cc = self.station.gates.get(gate)
                 scanjob['sweepdata'] = {'param': gate, 'start': cc -
                                         sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
@@ -466,31 +465,6 @@ class sensingdot_t:
             alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
         else:
             raise Exception('legacy code, please do not use')
-            waveform, sweep_info = self.station.awg.sweep_gate(
-                self.gg[1], sweeprange, period, wave_name='fastTune_%s' % self.gg[1], delete=delete)
-
-            # time for AWG signal to reach the sample
-            qtt.time.sleep(sleeptime)
-
-            ReadDevice = ['FPGA_ch%d' % self.fpga_ch]
-            _, DataRead_ch1, DataRead_ch2 = self.station.fpga.readFPGA(
-                Naverage=Naverage, ReadDevice=ReadDevice)
-
-            self.station.awg.stop()
-
-            if self.fpga_ch == 1:
-                datr = DataRead_ch1
-            else:
-                datr = DataRead_ch2
-            data = self.station.awg.sweep_process(datr, waveform, Naverage)
-
-            sdplg = getattr(self.station.gates, self.gg[1])
-            initval = sdplg.get()
-            sweepvalues = sdplg[initval - sweeprange /
-                                2:sweeprange / 2 + initval:sweeprange / len(data)]
-
-            alldata = qtt.data.makeDataSet1D(sweepvalues, y=data, location=location, loc_record={
-                                             'label': 'sensingdot_t.fastTune'})
 
         alldata.add_metadata({'scanjob': scanjob, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
