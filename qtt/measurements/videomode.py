@@ -133,6 +133,9 @@ class VideoMode:
             mouse_click_callback (None or function): if None then update scan position with callback
 
         """
+        if VideoMode.videomode_class_index == 0:
+            # create instance of QApplication
+            _ = pyqtgraph.mkQApp()
         VideoMode.videomode_class_index = VideoMode.videomode_class_index + 1  # increment index of VideoMode objects
         self.videomode_index = VideoMode.videomode_class_index
 
