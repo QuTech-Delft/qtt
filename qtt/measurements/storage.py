@@ -1,4 +1,4 @@
-#%%
+# %%
 from datetime import datetime
 import os
 import h5py
@@ -16,7 +16,7 @@ except:
     warnings.warn('could not import hickle, not all functionality available',
                   qtt.exceptions.MissingOptionalPackageWarning)
 
-#%%
+# %%
 
 
 def list_states(verbose=1):
@@ -44,16 +44,18 @@ def list_states(verbose=1):
         print(', '.join([str(x) for x in tags]))
     return tags
 
-#%%
+# %%
 
-def _get_statefile(statefile = None):
+
+def _get_statefile(statefile=None):
     if statefile is None:
         statefile = qcodes.config.get('statefile', None)
     if statefile is None:
         statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
     return statefile
 
-def load_state(tag=None, station=None, verbose=1, statefile = None ):
+
+def load_state(tag=None, station=None, verbose=1, statefile=None):
     """ Load state of the system from disk
 
     Args:
@@ -88,7 +90,8 @@ def load_state(tag=None, station=None, verbose=1, statefile = None ):
         if verbose:
             print('load_state %s: creating virtual gate matrix' % tag)
 
-        virtual_gates = qtt.instrument_drivers.virtual_gates.virtual_gates.from_dictionary(virtual_gates, station.gates)
+        virtual_gates = qtt.instrument_drivers.virtual_gates.virtual_gates.from_dictionary(
+            virtual_gates, station.gates)
     return obj, virtual_gates
 
 
@@ -108,7 +111,7 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
 
     The data is written to an HDF5 file. The default location is the user
     home directory with name qtt_statefile.hdf5.
-    
+
     To install hickle: pip install git+https://github.com/telegraphic/hickle.git@dev
     """
     statefile = _get_statefile(statefile)
@@ -116,7 +119,7 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
     snapshot = station.snapshot()
     gv = station.gates.allvalues()
 
-    datestring = "{:%Y%m%d-%H%M%S}".format(datetime.now());
+    datestring = "{:%Y%m%d-%H%M%S}".format(datetime.now())
 
     if verbose >= 2:
         print(datestring)
@@ -127,19 +130,19 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
            'datestring': datestring, 'data': data}
 
     if virtual_gates is not None:
-        obj['virtual_gates']=virtual_gates.to_dictionary()
-        
+        obj['virtual_gates'] = virtual_gates.to_dictionary()
+
     if verbose:
         print('save_state: writing to file %s, tag %s' % (statefile, tag))
     with h5py.File(statefile, 'a') as h5group:
             # implementation using dev branch of hickle
-            if (tag in h5group):
-                if overwrite:
-                    del h5group[tag]
-                else:
-                    raise Exception(
-                        'tag %s already exists in state file %s' % (tag, statefile))
-            hickle.dump(obj, h5group, path=tag)
+        if (tag in h5group):
+            if overwrite:
+                del h5group[tag]
+            else:
+                raise Exception(
+                    'tag %s already exists in state file %s' % (tag, statefile))
+        hickle.dump(obj, h5group, path=tag)
     return tag
 
 
@@ -147,13 +150,12 @@ def test_load_save_state():
     import qtt.simulation.virtual_dot_array
     import tempfile
     from qtt.instrument_drivers.virtual_gates import virtual_gates
-    
+
     station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=2, maxelectrons=2, verbose=0)
-    virts=virtual_gates('vgtestx', station.gates, {'vP1': {'P1': 1, 'P2': .1}, 'vP2': {'P1': .2, 'P2': 1.}})
+    virts = virtual_gates('vgtestx', station.gates, {'vP1': {'P1': 1, 'P2': .1}, 'vP2': {'P1': .2, 'P2': 1.}})
 
     tmpfile = tempfile.mktemp()
-    tag = save_state(station, virtual_gates = virts, statefile=tmpfile)
+    tag = save_state(station, virtual_gates=virts, statefile=tmpfile)
     r = load_state(station=station, tag=tag, verbose=1, statefile=tmpfile)
-    
+
     virts.close()
-    

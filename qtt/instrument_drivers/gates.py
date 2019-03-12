@@ -23,6 +23,7 @@ except:
 
 # %%
 
+
 class VirtualDAC(Instrument):
     """ This class maps the dacs of IVVI('s) to named gates.
 
@@ -39,20 +40,20 @@ class VirtualDAC(Instrument):
 
     def __init__(self, name, instruments, gate_map, rc_times=None, **kwargs):
         """ Virtual instrument providing a translation to physical instruments
-        
+
         Args:
             name (str): The name given to the VirtualDAC object
             instruments (list): a list of qcodes instruments
             gate_map (dict): the map between the names gates and the physical instrument channels
             rc_times (None or dict): dictionary with rc times for the gates
-        
+
         The format of the `gate_map` to map the gate 'P1' to dac4 of the first instrument and
         'B0' to dac3 of the second instrument is: `{'P1': (0, 4), 'B0': (0, 3)}`.
- 
+
         If the DAC gates are connected to the sample with a bias-T then there is a typical RC time
         for a voltage change to arrive at the sample. These RC times can be provides to the instument 
         with the `rc_times` argument.
-        
+
         """
         super().__init__(name, **kwargs)
         self._instrument_list = instruments
@@ -68,14 +69,14 @@ class VirtualDAC(Instrument):
             self._get_variable, '_rc_times'), set_cmd=False)
 
         # Create all functions for the gates as defined in self._gate_map
-        
+
         self._instrument_names = [instrument.name for instrument in self._instrument_list]
         for gate in self._gate_map.keys():
             logging.debug('gates: make gate %s' % gate)
             self._make_gate(gate)
 
             gatemap = self._gate_map[gate]
-            instrument_index=self._instrument_index(gatemap[0])
+            instrument_index = self._instrument_index(gatemap[0])
             i = self._instrument_list[instrument_index]
             igate = 'dac%d' % gatemap[1]
             self._direct_gate_map[gate] = getattr(i, igate)
@@ -84,11 +85,11 @@ class VirtualDAC(Instrument):
     def _instrument_index(self, instrument):
         """ From an instrument name or index return the index """
         if isinstance(instrument, str):
-                instrument_index=self._instrument_names.index(instrument)
+            instrument_index = self._instrument_names.index(instrument)
         else:
             instrument_index = instrument
         return instrument_index
-    
+
     def _get_variable(self, v):
         return getattr(self, v)
 
@@ -128,7 +129,6 @@ class VirtualDAC(Instrument):
             param = self._direct_gate_map[gate]
             param.set(value)
             return
-
 
         gatemap = self._gate_map[gate]
         instrument_index = self._instrument_index(gatemap[0])
@@ -241,7 +241,7 @@ class VirtualDAC(Instrument):
         gateparam = getattr(self, gate)
         rc = self._rc_times.get(gate, None)
         value0 = gateparam.get_latest()
-        dv = value-value0
+        dv = value - value0
 
         if rc is None:
             warnings.warn('could not find rc time for gate %s' % gate)
@@ -253,8 +253,8 @@ class VirtualDAC(Instrument):
             time.sleep(extra_delay)
         else:
             try:
-                self.set(gate, value0+4*dv)
-                time.sleep(rc/3)
+                self.set(gate, value0 + 4 * dv)
+                time.sleep(rc / 3)
             except ValueError:
                 # outside safe boundaries
                 warnings.warn('set outside boundaries?')
@@ -318,8 +318,5 @@ class VirtualDAC(Instrument):
 
         return dot
 
+
 virtual_IVVI = VirtualDAC
-
-
-
-    

@@ -15,7 +15,7 @@ There are virtual instruments for
  """
 
 
-#%% Load packages
+# %% Load packages
 
 import sys
 import os
@@ -42,31 +42,32 @@ from qtt.simulation.dotsystem import OneDot
 from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer, SimulationAWG
 
-logger=logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 qtt.check_version('0.24', qtt)
 
 
-#%% Data for the model
+# %% Data for the model
 
 class virtualdot_t:
-    
+
     def __init__(self, ndots):
         self.ndots = ndots
         raise Exception('do not use this class any more')
-        
+
     def ndots(self):
         """ Return number of dots in the sample """
         return self.ndots
 
+
 def gate_settle(gate):
     """ Return gate settle times """
 
-    return 0 # the virtual gates have no latency
+    return 0  # the virtual gates have no latency
 
 
 def gate_boundaries(gate_map):
     """ Return gate boundaries 
-    
+
     Args:
         gate_map (dict)
     Returns:
@@ -75,20 +76,21 @@ def gate_boundaries(gate_map):
     gate_boundaries = {}
     for g in gate_map:
         if 'bias' in g:
-                gate_boundaries[g]=(-900, 900)
-        elif 'SD' in g: 
-                gate_boundaries[g]=(-1000, 1000)
-        elif 'O' in g: 
+            gate_boundaries[g] = (-900, 900)
+        elif 'SD' in g:
+            gate_boundaries[g] = (-1000, 1000)
+        elif 'O' in g:
             # ohmics
-            gate_boundaries[g]=(-4000, 4000)
+            gate_boundaries[g] = (-4000, 4000)
         else:
-                gate_boundaries[g]=(-1000, 800)
-        
+            gate_boundaries[g] = (-1000, 800)
+
     return gate_boundaries
+
 
 def generate_configuration(ndots):
     """ Generate configuration for a standard linear dot array sample
-    
+
     Args:
         ndots (int): number of dots
     Returns:
@@ -97,27 +99,28 @@ def generate_configuration(ndots):
         gates (list)
         bottomgates (list)
     """
-    bottomgates=[]
-    for ii in range(ndots+1): 
-        if ii>0:
-           bottomgates+=['P%d' % ii]
-        bottomgates+=['B%d' % ii]
+    bottomgates = []
+    for ii in range(ndots + 1):
+        if ii > 0:
+            bottomgates += ['P%d' % ii]
+        bottomgates += ['B%d' % ii]
 
-    sdgates=[]
+    sdgates = []
     for ii in [1]:
-        sdgates+=['SD%da' % ii, 'SD%db' % ii, 'SD%dc' % ii]
-    gates = ['D0']+bottomgates+sdgates
-    gates+=['bias_1', 'bias_2']
-    gates+=['O1', 'O2','O3', 'O4', 'O5']
-    
-    nr_ivvi = int(np.ceil(len(gates) /14)       )
+        sdgates += ['SD%da' % ii, 'SD%db' % ii, 'SD%dc' % ii]
+    gates = ['D0'] + bottomgates + sdgates
+    gates += ['bias_1', 'bias_2']
+    gates += ['O1', 'O2', 'O3', 'O4', 'O5']
+
+    nr_ivvi = int(np.ceil(len(gates) / 14))
     gate_map = {}
     for ii, g in enumerate(sorted(gates)):
-        i = int(np.floor(ii/16))
-        d = ii%16
-        gate_map[g]= (i, d+1)
-        
+        i = int(np.floor(ii / 16))
+        d = ii % 16
+        gate_map[g] = (i, d + 1)
+
     return nr_ivvi, gate_map, gates, bottomgates
+
 
 if 0:
     nr_ivvi, gate_map, gates, bottomgates = generate_configuration(6)
@@ -126,26 +129,25 @@ if 0:
     print(bottomgates)
 
 
-
-#%%
+# %%
 class DotModel(Instrument):
     """ Simulation model for linear dot array
-    
+
     The model is intended for testing the code and learning. It does _not simulate any meaningfull physics. 
-    
+
     """
 
     def __init__(self, name, verbose=0, nr_dots=3, maxelectrons=2, sdplunger=None, **kwargs):
         """ The model is for a linear arrays of dots with a single sensing dot
-        
+
             Args:
                 name (str): name for the instrument
                 verbose (int)
                 nr_dots (int)
                 maxelectrons (int)
-                
+
         """
-        
+
         super().__init__(name, **kwargs)
         logging.info('DotModel.__init__: start')
 
@@ -153,14 +155,14 @@ class DotModel(Instrument):
 
         self.nr_ivvi = nr_ivvi
         self.gate_map = gate_map
-        
+
         self._sdplunger = sdplunger
-        
+
         # dictionary to hold the data of the model
         self._data = dict()
         self.lock = threading.Lock()
 
-        self.sdnoise = .001 # noise for the sensing dot
+        self.sdnoise = .001  # noise for the sensing dot
 
         # make parameters for all the gates...
         gate_map = self.gate_map
@@ -168,11 +170,11 @@ class DotModel(Instrument):
 
         self.gates = list(gate_map.keys())
 
-        self.bottomgates = bottomgates 
+        self.bottomgates = bottomgates
 
         self.gate_pinchoff = -200
-        
-        if verbose>=1:
+
+        if verbose >= 1:
             print('DotModel: ndots %s, bottomgates %s' % (nr_dots, bottomgates))
 
         gateset = [(i, a) for a in range(1, 17) for i in range(nr_ivvi)]
@@ -196,24 +198,24 @@ class DotModel(Instrument):
                                )
 
         # initialize the actual dot system
-        if nr_dots==1:
+        if nr_dots == 1:
             self.ds = OneDot(maxelectrons=maxelectrons)
-            self.ds.alpha=np.eye(self.ds.ndots)
-            self.sourcenames = bottomgates                
-        elif nr_dots==2:
+            self.ds.alpha = np.eye(self.ds.ndots)
+            self.sourcenames = bottomgates
+        elif nr_dots == 2:
             self.ds = DoubleDot(maxelectrons=maxelectrons)
-            self.ds.alpha=np.eye(self.ds.ndots)
+            self.ds.alpha = np.eye(self.ds.ndots)
             self.sourcenames = bottomgates
-        elif nr_dots==3:
+        elif nr_dots == 3:
             self.ds = TripleDot(maxelectrons=maxelectrons)
-            self.ds.alpha=np.eye(self.ds.ndots)
+            self.ds.alpha = np.eye(self.ds.ndots)
             self.sourcenames = bottomgates
-        elif nr_dots==6 or nr_dots==4 or  nr_dots==5:
+        elif nr_dots == 6 or nr_dots == 4 or nr_dots == 5:
             self.ds = MultiDot(name='dotmodel', ndots=nr_dots, maxelectrons=maxelectrons)
             if verbose:
                 print('ndots: %s maxelectrons %s' % (self.ds.ndots, maxelectrons))
-                print('self.ds.coulomb_energy.shape %s' % ( self.ds.coulomb_energy.shape, ) )
-            self.ds.alpha=np.eye(self.ds.ndots)
+                print('self.ds.coulomb_energy.shape %s' % (self.ds.coulomb_energy.shape, ))
+            self.ds.alpha = np.eye(self.ds.ndots)
             self.sourcenames = bottomgates
         else:
             raise Exception('not implemented yet...')
@@ -222,7 +224,7 @@ class DotModel(Instrument):
         Vmatrix = np.zeros((len(self.targetnames) + 1, len(self.sourcenames) + 1))
 
         Vmatrix[-1, -1] = 1
-        if verbose>=1:
+        if verbose >= 1:
             print('ndots? %s' % self.ds.ndots)
             print('targetnames: %s' % self.targetnames)
         for ii in range(self.ds.ndots):
@@ -231,12 +233,12 @@ class DotModel(Instrument):
             v = 1 / (1 + .08 * np.abs(v)**3)
             Vmatrix[ii, 0:ns] = v
             # compensate for the barriers
-            Vmatrix[0:self.ds.ndots, -1] = (Vmatrix[ii,[2*ii, 2*ii+2 ] ].sum() ) * -self.gate_pinchoff
+            Vmatrix[0:self.ds.ndots, -1] = (Vmatrix[ii, [2 * ii, 2 * ii + 2]].sum()) * -self.gate_pinchoff
         self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
 
         self.sddist1 = self.ds.ndots / (1 + np.arange(self.ds.ndots))
         self.sddist2 = self.sddist1[::-1]
-        
+
         if isinstance(self.ds, qtt.simulation.dotsystem.DoubleDot):
             for ii in range(self.ds.ndots):
                 setattr(self.ds, 'osC%d' % (ii + 1), 55)
@@ -250,7 +252,7 @@ class DotModel(Instrument):
         IDN = {'vendor': 'QuTech', 'model': self.name,
                'serial': None, 'firmware': None}
         return IDN
-    
+
     def _dummy_get(self, param):
         return 0
 
@@ -296,14 +298,14 @@ class DotModel(Instrument):
         ds = self.ds
 
         if verbose:
-                for k, val in tv.items():
-                    print('computeSD: %s, %f' % (k, val))
-                    setattr(ds, k, val)
+            for k, val in tv.items():
+                print('computeSD: %s, %f' % (k, val))
+                setattr(ds, k, val)
         gatevalues = [float(tv[k]) for k in sorted(tv.keys())]
         ret = ds.calculate_ground_state(gatevalues)
         if 0:
             for k, val in tv.items():
-                    setattr(ds, k, val)
+                setattr(ds, k, val)
             ds.makeHsparse()
             ds.solveH(usediag=usediag)
             ret = ds.OCC
@@ -313,20 +315,20 @@ class DotModel(Instrument):
 
         sd1 += self.sdnoise * (np.random.rand() - .5)
         sd2 += self.sdnoise * (np.random.rand() - .5)
-        
+
         if self._sdplunger:
             val = self._calculate_pinchoff([self._sdplunger], offset=-100, random=.01)
             sd1 += val
 
         self.sd1 = sd1
         self.sd2 = sd2
-            
+
         return sd1
 
     def compute(self, random=0.02):
         """ Compute output of the model """
 
-        try:           
+        try:
             # current through 3
             val = self._calculate_pinchoff(self.bottomgates, offset=self.gate_pinchoff, random=.01)
 
@@ -349,7 +351,7 @@ class DotModel(Instrument):
 
     def keithley4_get(self, param):
         with self.lock:
-            k = 4e-3*self.get_gate('O1')
+            k = 4e-3 * self.get_gate('O1')
             self._data['keithley4_amplitude'] = k
         return k
 
@@ -359,7 +361,7 @@ class DotModel(Instrument):
             self._data['keithley3_amplitude'] = val
         return val
 
-    def honeycomb(self, p1, p2, nx=50, ny=50, scanrange=300,  multiprocess=False):
+    def honeycomb(self, p1, p2, nx=50, ny=50, scanrange=300, multiprocess=False):
         raise Exception('code not tested')
         test_dot = self.ds
         test2Dparams = np.zeros((test_dot.ngates, ny, nx))
@@ -394,8 +396,9 @@ def close(verbose=1):
             print('could not close instrument %s' % station.components[instr])
 
     _initialized = False
-    
-#%%
+
+
+# %%
 _initialized = False
 
 # pointer to qcodes station
@@ -411,7 +414,8 @@ def boundaries():
         raise Exception('model has not been initialized yet')
     return gate_boundaries(model.gate_map)
 
-#%%
+# %%
+
 
 def getStation():
     global station
@@ -434,14 +438,14 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
             return station
     logger.info('virtualDot: make DotModel')
     model = DotModel(name=qtt.measurements.scans.instrumentName('dotmodel'),
-                     verbose=verbose>=3, nr_dots=nr_dots, 
+                     verbose=verbose >= 3, nr_dots=nr_dots,
                      maxelectrons=maxelectrons, sdplunger='SD1b')
-    gate_map=model.gate_map
+    gate_map = model.gate_map
     if verbose >= 2:
         logger.info('initialize: DotModel created')
     ivvis = []
     for ii in range(model.nr_ivvi):
-        ivvis.append(VirtualIVVI(name='ivvi%d' % (ii+1), model=model) )
+        ivvis.append(VirtualIVVI(name='ivvi%d' % (ii + 1), model=model))
     gates = virtual_gates(name='gates', gate_map=gate_map, instruments=ivvis)
     gates.set_boundaries(gate_boundaries(gate_map))
 
@@ -452,8 +456,8 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
 
     # take into account the voltage divider on the ohmics
     for g in gates.parameters.keys():
-        if g.startswith('O'):            
-            gg=getattr(gates, g)
+        if g.startswith('O'):
+            gg = getattr(gates, g)
             gg.unit = 'uV'
 
     vawg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
@@ -464,11 +468,11 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
     keithley4 = VirtualMeter('keithley4', model=model)
 
     digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('sdigitizer'), model=model)
-       
+
     logger.info('initialize: create station')
     station = qcodes.Station(gates, keithley1, keithley3, keithley4, *ivvis,
-                         vawg, digitizer, update_snapshot= False)
-    station.awg=station.vawg
+                             vawg, digitizer, update_snapshot=False)
+    station.awg = station.vawg
     station.metadata['sample'] = 'virtual_dot'
     station.model = model
 
@@ -479,17 +483,20 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
     station.jobmanager = None
     station.calib_master = None
 
-    _initialized=True
+    _initialized = True
     if verbose:
         print('initialized virtual dot system (%d dots)' % nr_dots)
     return station
-  
-#%%
+
+# %%
+
 
 from qtt.structures import onedot_t
 
+
 def _getModel():
     return model
+
 
 def bottomGates():
     return _getModel().bottomgates
@@ -501,8 +508,8 @@ def bottomBarrierGates():
 
 def get_two_dots(full=1):
     """ return all posible simple two-dots """
-    bg= bottomGates()
-    two_dots = [dict({'gates':bg[0:3]+bg[2:5]})] # two dot case
+    bg = bottomGates()
+    two_dots = [dict({'gates': bg[0:3] + bg[2:5]})]  # two dot case
 
     for td in two_dots:
         td['name'] = '-'.join(td['gates'])
@@ -518,42 +525,40 @@ def get_one_dots(full=1, sdidx=[]):
     """
     one_dots = []
     ki = 'keithley3.amplitude'
-    
-    bg= bottomGates()
 
-    for ii in range(int((len(bg)-1)/2)) :    
-        one_dots.append( onedot_t(gates= bg[2*ii:2*ii+3], transport_instrument= ki) )
+    bg = bottomGates()
 
+    for ii in range(int((len(bg) - 1) / 2)):
+        one_dots.append(onedot_t(gates=bg[2 * ii:2 * ii + 3], transport_instrument=ki))
 
     for x in sdidx:
-        assert(x in [1,2,3])
+        assert(x in [1, 2, 3])
         ki = 'keithley%d.amplitude' % x
-        od = onedot_t(gates=['SD%d%s' % (x, l) for l in ['a', 'b', 'c']],transport_instrument=ki )
+        od = onedot_t(gates=['SD%d%s' % (x, l) for l in ['a', 'b', 'c']], transport_instrument=ki)
         one_dots.append(od)
 
-            
     for od in one_dots:
         od['name'] = 'dot-%s' % ('-'.join(od['gates']))
     return one_dots
 
-#%%
+# %%
 
 
 if __name__ == '__main__' and 1:
-    import pdb    
+    import pdb
     np.set_printoptions(precision=2, suppress=True)
 
     try:
         close()
     except:
         pass
-            
+
     station = initialize(reinit=True, verbose=2)
-    self=station.model
+    self = station.model
     model = station.model
     model.compute()
     model.computeSD()
-    _=station.keithley1.amplitude()
-    _=station.keithley4.amplitude()
+    _ = station.keithley1.amplitude()
+    _ = station.keithley4.amplitude()
     np.set_printoptions(suppress=True)
     print(model.gate_transform.Vmatrix)

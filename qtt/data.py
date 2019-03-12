@@ -234,13 +234,16 @@ def test_load_dataset(verbose=0):
         if verbose:
             print(r)
 
-#%%
+# %%
+
+
 def default_setpoint_array(dataset, measured_name='measured'):
     """ Return the default setpoint array for a dataset """
     setpoint_array = dataset.default_parameter_array(measured_name).set_arrays[0]
     return setpoint_array
 
-#%% Monkey patch qcodes to store latest dataset
+
+# %% Monkey patch qcodes to store latest dataset
 from functools import wraps
 
 
@@ -310,7 +313,7 @@ if __name__ == '__main__':
     # ds=qcodes.tests.data_mocks.DataSet2D()
     #print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
 
-#%%
+# %%
 
 
 def datasetCentre(ds, ndim=None):
@@ -362,7 +365,7 @@ def drawCrosshair(ds, ax=None, ndim=None):
         ax.axhline(y=cc[1], linestyle=':', color='c')
 
 
-#%%
+# %%
 
 
 def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
@@ -414,7 +417,7 @@ def dataset2image2(dataset, arrayname=None):
 
     return imraw, impixel, tr
 
-#%%
+# %%
 
 
 def dataset_get_istep(alldata, mode=None):
@@ -451,23 +454,23 @@ def dataset_labels(alldata, tag=None, add_unit=False):
         tag (str or None): can be 'x', 'y' or 'z' or the index of the axis
         add_units (bool): If True then add units
     """
-    if tag == 'y' or tag==0:
+    if tag == 'y' or tag == 0:
         d = alldata.default_parameter_array()
         array = d.set_arrays[0]
-    elif tag == 'x' or tag==1:
+    elif tag == 'x' or tag == 1:
         d = alldata.default_parameter_array()
         array = d.set_arrays[1]
     elif tag is None or tag == 'z':
         array = alldata.default_parameter_array()
     else:
         raise Exception('invalid value %s for tag' % (tag, ))
-    label= array.label
-    
-    if  add_unit:
-        label+= ' [' + str(array.unit) + ']'
+    label = array.label
+
+    if add_unit:
+        label += ' [' + str(array.unit) + ']'
     return label
 
-    
+
 def uniqueArrayName(dataset, name0):
     ''' Generate a unique name for a DataArray in a dataset '''
     ii = 0
@@ -510,7 +513,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
 
     return alldata
 
-#%%
+# %%
 
 
 def sweepgate(scanjob):
@@ -623,7 +626,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
     return xx, vstep, vsweep
 
 
-#%% Extract metadata
+# %% Extract metadata
 
 
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
@@ -687,7 +690,7 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
 if __name__ == '__main__' and 0:
     test_dataset()
 
-#%%
+# %%
 
 
 class image_transform:
@@ -917,7 +920,7 @@ def test_image_transform(verbose=0):
 if __name__ == '__main__':
     test_image_transform()
 
-#%%
+# %%
 
 
 def pickleload(pkl_file):
@@ -1248,7 +1251,7 @@ def test_makeDataSet1Dplain():
     y = np.vstack((x - 1, x + 10))
     ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
 
-#%%
+# %%
 
 
 def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbose=1):
@@ -1282,7 +1285,7 @@ def test_compare():
     ds = qcodes.tests.data_mocks.DataSet2D()
     compare_dataset_metadata(ds, ds, verbose=0)
 
-#%%
+# %%
 
 
 def test_numpy_on_dataset():

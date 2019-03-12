@@ -4,7 +4,7 @@
 @author: eendebakpt
 """
 
-#%% Load packages
+# %% Load packages
 import numpy as np
 import logging
 from functools import partial
@@ -16,7 +16,7 @@ import qtt.utilities.tools
 
 logger = logging.getLogger(__name__)
 
-#%%
+# %%
 
 
 class VirtualMeter(Instrument):
@@ -52,7 +52,7 @@ class VirtualMeter(Instrument):
                'serial': None, 'firmware': None}
         return IDN
 
-#%%
+# %%
 
 
 class VirtualIVVI(Instrument):
@@ -123,12 +123,12 @@ class VirtualIVVI(Instrument):
 
     def allvalues(self):
         """ Return all DAC values 
-        
+
         Returns:
             dict: dictionary with all DAC values
         """
-        return dict([(g, self.get(g) ) for g in self.parameters])
-    
+        return dict([(g, self.get(g)) for g in self.parameters])
+
     def _get_all(self):
         """ Get all parameters in instrument """
         for g in self._gates:

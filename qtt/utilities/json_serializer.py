@@ -83,7 +83,7 @@ class QttJsonEncoder(JSONEncoder):
     def __encode_numpy_number(item):
         return {
             JsonSerializeKey.OBJECT: '__npnumber__',
-            JsonSerializeKey.CONTENT:  {
+            JsonSerializeKey.CONTENT: {
                 '__npnumber__': base64.b64encode(item.tobytes()).decode('ascii'),
                 'dtype': item.dtype.str,
             }
@@ -93,7 +93,7 @@ class QttJsonEncoder(JSONEncoder):
     def __encode_numpy_array(item):
         return {
             JsonSerializeKey.OBJECT: np.array.__name__,
-            JsonSerializeKey.CONTENT:  {
+            JsonSerializeKey.CONTENT: {
                 '__ndarray__': base64.b64encode(item.tobytes()).decode('ascii'),
                 'dtype': item.dtype.str,
                 'shape': item.shape,

@@ -5,7 +5,7 @@ import qcodes.tests.data_mocks
 
 import qtt.data
 
-#%%
+# %%
 
 
 class TestDataSetHelpers(unittest.TestCase):

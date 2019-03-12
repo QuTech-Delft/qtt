@@ -9,7 +9,8 @@ try:
     import cv2
 except:
     import qtt.exceptions
-    warnings.warn('could not find opencv, not all functionality available', qtt.exceptions.MissingOptionalPackageWarning)
+    warnings.warn('could not find opencv, not all functionality available',
+                  qtt.exceptions.MissingOptionalPackageWarning)
 
 import qtt.pgeometry as pgeometry
 
@@ -19,14 +20,15 @@ from qtt.utilities.tools import diffImage, diffImageSmooth
 from qtt.algorithms.generic import smoothImage
 from qtt.algorithms.misc import polyfit2d, polyval2d
 
-#%%
+# %%
+
 
 def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=False, returndict=None):
     """ Fit smooth background to 1D or 2D image 
-    
+
     Args:
         im (array): input image
-        
+
     Returns
         vv (array): estimated background
 
@@ -115,16 +117,17 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
         returndict['ims'] = ims
     return vv
 
+
 def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeoutliers=False, verbose=0):
     """ Clean up image from sensing dot
-    
+
     Args:
         im (numpy array)
         dy (int or str): direction for differentiation
         order (int)
         fixreversal (bool)
         removeoutliers (bool)
-    
+
     Returns:
         ww (image): processed image
     """
@@ -136,7 +139,8 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
     else:
         imx = diffImageSmooth(im, dy=dy, sigma=sigma)
     if order >= 0:
-        vv = fitBackground(imx, smooth=True, verbose=verbose, fig=None, order=int(order), removeoutliers=removeoutliers)
+        vv = fitBackground(imx, smooth=True, verbose=verbose, fig=None,
+                           order=int(order), removeoutliers=removeoutliers)
         ww = (imx - vv).copy()
     else:
         ww = imx.copy()
@@ -144,16 +148,19 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
         ww = fixReversal(ww, verbose=verbose)
     return ww
 
+
 def test_fitBackground():
-    im = np.random.rand( 200,100)
+    im = np.random.rand(200, 100)
     bg = fitBackground(im, verbose=0)
     bg = fitBackground(im, verbose=0, removeoutliers=True)
     c = cleanSensingImage(im)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     test_fitBackground()
 
-#%%
+# %%
+
 
 def _showIm(ims, fig=1, title=''):
     """ Show image with nearest neighbor interpolation and axis scaling """
@@ -161,6 +168,7 @@ def _showIm(ims, fig=1, title=''):
     matplotlib.pyplot.clf()
     matplotlib.pyplot.imshow(ims, interpolation='nearest')
     matplotlib.pyplot.axis('image')
+
 
 @pgeometry.static_var("scaling0", np.diag([1., 1, 1]))
 def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewidth=2,
@@ -283,14 +291,16 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         _showIm(patch, fig=fig)
         plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
         pgeometry.addfigurecopy(fig=fig)
-        plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m', linewidth=linewidth, markersize=10, label='transition line')
+        plt.plot([float(lp[0]), float(hp[0])], [float(lp[1]), float(hp[1])], '.--m',
+                 linewidth=linewidth, markersize=10, label='transition line')
         plt.plot(cc[0], cc[1], '.m', markersize=12)
         for ii in range(4):
             if ii == 0:
                 lbl = 'electron line'
             else:
                 lbl = None
-            plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-', linewidth=linewidth, color=[0, .7, 0], label=lbl)
+            plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-',
+                     linewidth=linewidth, color=[0, .7, 0], label=lbl)
             pgeometry.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
         if verbose >= 1:
             _showIm(modelpatch, fig=fig + 1)
@@ -307,8 +317,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     pass
 
 
-
-def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None, 
+def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
                 lines=range(4), istep=1, centermodel=True, linesegment=True, addX=True, verbose=0):
     """ Create a cross model
     The parameters are [x, y, width, alpha_1, ..., alpha_4, [rotation of polarization line] ]
@@ -326,7 +335,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
         addX (bool): if True add polarization line to model
         H (float): intensity of cross    
         linesegment (bool): if True create line segments instead of full lines
-    
+
     Returns:
         modelpatch, (cc, lp, hp, ip, opr, w, H, lsegment): return data
     """
@@ -341,7 +350,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
     if samplesize is None:
         cc = param[0:2].reshape((2, 1))
     else:
-        #if scale is None:
+        # if scale is None:
         #    scale = np.mean(samplesize)
         samplesize = np.array(samplesize).flatten()
         if centermodel:
@@ -378,38 +387,42 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
                 semiLine(modelpatch, x0=ip[ii], theta=aa[ii], w=w / istep, l=l / istep, H=H)
         if addX:
             lx = np.linalg.norm(hp - lp, ord=2)
-            lineSegment(modelpatch, x0=np.array(hp.reshape((2, 1))), x1=np.array(lp.reshape((2, 1))), w=w / istep, l=lx, H=H)
+            lineSegment(modelpatch, x0=np.array(hp.reshape((2, 1))),
+                        x1=np.array(lp.reshape((2, 1))), w=w / istep, l=lx, H=H)
 
     else:
         modelpatch = None
     modelpatch = np.minimum(modelpatch, H)
     return modelpatch, (cc, lp, hp, ip, opr, w, H, lsegment)
 
-#%%
-    
-def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None, 
+# %%
+
+
+def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
              istepmodel=.5, cb=None, use_abs=False, w=2.5):
     """ Fit model of an anti-crossing 
-    
+
     This is a wrapper around evaluateCross and the scipy optimization routines.
-    
+
     Args:
         param0 (array): parameters for the anti-crossing model
         imx (array): input image
-        
-    
+
+
     """
-    
+
     samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
-    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
+    def costfun(param0): return evaluateCross(param0, imx, fig=None,
+                                              istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
 
     vv = []
+
     def fmCallback(plocal, pglobal):
         """ Helper function to store intermediate results """
         vv.append((plocal, pglobal))
     if cfig is not None:
-        cb = lambda x: fmCallback(x, None)
+        def cb(x): return fmCallback(x, None)
         #cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
         #cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
 
@@ -423,13 +436,15 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
         paramy = res
     else:
         paramy = param0
-    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead', options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
+    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead',
+                                  options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
     #res = scipy.optimize.minimize(costfun, res.x, method='Powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
 
     if verbose:
         print('fitModel: score %.2f -> %.2f' % (costfun(param0), res.fun))
     return res
-#%%
+# %%
+
 
 def lineSegment(im, x0, x1=None, theta=None, w=2, l=12, H=200, ml=0):
     """ Plot half-line into image 
@@ -449,7 +464,7 @@ def lineSegment(im, x0, x1=None, theta=None, w=2, l=12, H=200, ml=0):
         thetar = -theta
 
         dx = np.linalg.norm(x0 - x1)
-        
+
     xx0, yy0 = np.meshgrid(np.arange(im.shape[1]) - x0[0], np.arange(im.shape[0]) - x0[1])
     xx0 = xx0.astype(np.float32)
     yy0 = yy0.astype(np.float32)
@@ -462,7 +477,8 @@ def lineSegment(im, x0, x1=None, theta=None, w=2, l=12, H=200, ml=0):
 
     im += data
     return im
-    
+
+
 def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
     """ Plot half-line into image 
 
@@ -474,7 +490,7 @@ def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
         l (float): length of line segment
         H (float): intensity of line segment
         dohalf (bool): add smoothing?
-        
+
     >>> im=semiLine(np.zeros( (160,240)), [60,40], theta=np.deg2rad(20), w=10, l=60)
     >>> plt.imshow(im)
 
@@ -503,9 +519,10 @@ def __calcSlope(pp):
 
     return psi, slope
 
+
 def Vtrace(cdata, param, fig=None):
     """ Calculate position of next V-trace from fitted model 
-    
+
     Args:
         cdata (?)
         param (?)
@@ -530,11 +547,10 @@ def Vtrace(cdata, param, fig=None):
 
 
 def test_semiline():
-    im = np.zeros( (300,400))
-    semiLine(im, [100,200], 10, w=12, l=300)
-    lineSegment(im, [5,5], [50,100])
-    
-if __name__=='__main__':
-    test_semiline()    
-    
-    
+    im = np.zeros((300, 400))
+    semiLine(im, [100, 200], 10, w=12, l=300)
+    lineSegment(im, [5, 5], [50, 100])
+
+
+if __name__ == '__main__':
+    test_semiline()

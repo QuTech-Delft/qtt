@@ -46,7 +46,7 @@ class FridgeDataReceiver(InstrumentDataClient):
             return self.temperatures.get_latest()[key][0]
 
         for key in self.temperatures().keys():
-            self.add_parameter('T'+key.lower(), unit='K',
+            self.add_parameter('T' + key.lower(), unit='K',
                                get_cmd=partial(get_temp, key))
 
 # -----------------------------------------------------------------------------
@@ -81,7 +81,7 @@ class FridgeDataSender():
             blocks = []
             while lines_to_go > 0 and end_byte > 0:
                 if (end_byte - block_size > 0):
-                    fstream.seek(block_number*block_size, 2)
+                    fstream.seek(block_number * block_size, 2)
                     data = fstream.read(block_size)
                 else:
                     fstream.seek(0, 0)
@@ -152,7 +152,7 @@ class FridgeDataSender():
         E = FridgeDataSender._get_tail_line_(file_path)
         try:
             index = E.index(name)
-            return float(E[index+1])
+            return float(E[index + 1])
         except ValueError:
             return None
 
@@ -246,6 +246,7 @@ class BlueforsApp():
 
 # -----------------------------------------------------------------------------
 # Main block for creating py-installer
+
 
 if __name__ == '__main__':
     BlueforsApp().main(sys.argv)

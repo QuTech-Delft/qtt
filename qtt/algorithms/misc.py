@@ -5,9 +5,10 @@ Created on Wed Aug 31 16:19:30 2016
 @author: eendebakpt
 """
 
-#%%
+# %%
 import itertools
 import numpy as np
+
 
 def polyarea(p):
     """ Return signed area of polygon
@@ -31,9 +32,10 @@ def polyarea(p):
             return zip(p, np.vstack((p[1:], p[0:1])))
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
+
 def point_in_poly(x, y, poly):
     """ Return true if a point is contained in a polygon 
-    
+
     Args:
         x (float)
         y (float):
@@ -61,7 +63,7 @@ def point_in_poly(x, y, poly):
 
 def points_in_poly(points, poly_verts):
     """ Determine whether points are contained in a polygon or not
-    
+
     Args:
         points (kx2 array)
         poly_verts (array)
@@ -73,6 +75,7 @@ def points_in_poly(points, poly_verts):
 
     rr = rr.astype(np.bool)
     return rr
+
 
 def fillPoly(im, poly_verts, color=None):
     """ Fill a polygon in an image with the specified color
@@ -114,9 +117,10 @@ def fillPoly(im, poly_verts, color=None):
 
     return grid
 
+
 def polyfit2d(x, y, z, order=3):
     """ Fit a polynomial on 2D data
-    
+
     Args:
         x (array): 1D array
         y (array): 1D array
@@ -130,17 +134,17 @@ def polyfit2d(x, y, z, order=3):
     ij = itertools.product(range(order + 1), range(order + 1))
     for k, (i, j) in enumerate(ij):
         G[:, k] = x**i * y**j
-    rcond=None
+    rcond = None
     from distutils.version import StrictVersion
     if StrictVersion(np.__version__) < StrictVersion('1.14.0'):
-        rcond=-1
+        rcond = -1
     m, _, _, _ = np.linalg.lstsq(G, z, rcond=rcond)
     return m
 
 
 def polyval2d(x, y, m):
     """ Evaluate a 2D polynomial
-    
+
     Args:
         x (array)
         y (array)
@@ -155,6 +159,7 @@ def polyval2d(x, y, m):
         z += a * x**i * y**j
     return z
 
+
 def test_polyfitting():
     x = np.arange(10., 20)
     y = np.arange(20., 30)
@@ -162,5 +167,6 @@ def test_polyfitting():
     p = polyfit2d(x, y, z)
     _ = polyval2d(x, y, p)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     test_polyfitting()

@@ -36,6 +36,7 @@ class OxfordInstruments_ILM200(VisaInstrument):
     which is sent to the device starts with '@n', where n is the ISOBUS instrument number.
 
     """
+
     def __init__(self, name, address, number=1, **kwargs):
         """
         Initializes the Oxford Instruments ILM 200 Helium Level Meter.

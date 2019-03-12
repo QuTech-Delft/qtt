@@ -5,7 +5,7 @@ Created on Wed Jul 12 08:08:57 2017
 @author: diepencjv / eendebakpt
 """
 
-#%%
+# %%
 import copy
 import numpy as np
 import qtt
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from qcodes import MatPlot
 
-#%%
+# %%
 
 
 def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2.5,

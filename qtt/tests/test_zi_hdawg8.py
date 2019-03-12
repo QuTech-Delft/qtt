@@ -15,7 +15,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
 
         self.awg = ZIHDAWG8()
         self.zi_hdawg8 = ZurichInstrumentsHDAWG8(self.awg, 0)
-       
+
     def test_enable_outputs(self):
         self.zi_hdawg8.enable_outputs()
         calls = [call.enable_channel(ch) for ch in range(0, 8)]
@@ -90,4 +90,4 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
                  call.generate_csv_sequence_program([(2, 'seq1', 'mark'), (3, 'seq2', None)]),
                  call.upload_sequence_program(0, 'program')]
         self.awg.assert_has_calls(calls)
-        self.assertListEqual(list(range(2,12)), list(self.awg.waveform_to_csv.call_args[0][1]))
+        self.assertListEqual(list(range(2, 12)), list(self.awg.waveform_to_csv.call_args[0][1]))

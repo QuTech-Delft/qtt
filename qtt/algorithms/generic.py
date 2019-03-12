@@ -9,11 +9,12 @@ try:
     import cv2
 except:
     import qtt.exceptions
-    warnings.warn('could not find opencv, not all functionality available', qtt.exceptions.MissingOptionalPackageWarning)
+    warnings.warn('could not find opencv, not all functionality available',
+                  qtt.exceptions.MissingOptionalPackageWarning)
 
-import qtt.utilities.tools    
+import qtt.utilities.tools
 from qtt import pgeometry
-#%%
+# %%
 
 import warnings
 
@@ -22,7 +23,7 @@ try:
 except:
     warnings.warn('could not load pylab')
 
-#%%
+# %%
 
 import scipy.ndimage.filters as filters
 import scipy.ndimage
@@ -57,76 +58,79 @@ def localMaxima(arr, radius=1, thr=None):
         local_max[arr < thr] = 0
     return np.where(local_max)
 
-import skimage.feature #import peak_local_max
+
+import skimage.feature  # import peak_local_max
 
 
 def subpixelmax(A, mpos, verbose=0):
     """ Calculate maximum position with subpixel accuracy
-    
+
     Args:
         A (1D array):
         mpos (array with integer indicess):
         verbose (int):
-        
+
     Returns:
         subpos (array with subpixel positions):
         subval (array):
     """
-    
-    A=np.array(A)
-    if np.array(mpos).size==0:
+
+    A = np.array(A)
+    if np.array(mpos).size == 0:
         # corner case
         import copy
         subpos = copy.copy(mpos)
         return subpos, []
-    
-    dsize=A.size
-    val=A[mpos]
-    
-    mp = np.maximum(mpos-1,0);
-    pp = np.minimum(mpos+1, dsize-1);
-        
-    valm=A[mp]; # value to the left
-    valp=A[pp]; # value to the right
-    
-    cy = val;
-    ay = (valm + valp)/2 - cy;
+
+    dsize = A.size
+    val = A[mpos]
+
+    mp = np.maximum(mpos - 1, 0)
+    pp = np.minimum(mpos + 1, dsize - 1)
+
+    valm = A[mp]  # value to the left
+    valp = A[pp]  # value to the right
+
+    cy = val
+    ay = (valm + valp) / 2 - cy
     by = ay + cy - valm
-    shift = -by/(2*ay)  # Maxima of quadradic
-    
-    if verbose:
-        print('subpixelmax: mp %d, pp %d\n', mp, pp);
-        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n', ay, by, cy);
-    
-    shift[ay==0]=0;   # fix for flat areas
-    subpos = mpos+shift
-
-    subval= ay*shift*shift+by*shift+cy;
+    shift = -by / (2 * ay)  # Maxima of quadradic
 
     if verbose:
-        print('subpixelmax1d: shift %.3f\n', shift);
-    
+        print('subpixelmax: mp %d, pp %d\n', mp, pp)
+        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n', ay, by, cy)
+
+    shift[ay == 0] = 0   # fix for flat areas
+    subpos = mpos + shift
+
+    subval = ay * shift * shift + by * shift + cy
+
+    if verbose:
+        print('subpixelmax1d: shift %.3f\n', shift)
+
     return subpos, subval
-    
+
 
 def test_subpixel(fig=None):
     import qtt
     import matplotlib.pyplot as plt
-    A = np.random.rand(40,)**2+1e1;
-    A=qtt.algorithms.generic.smoothImage(A)
+    A = np.random.rand(40,)**2 + 1e1
+    A = qtt.algorithms.generic.smoothImage(A)
 
     mpos = skimage.feature.peak_local_max(A, min_distance=3).flatten()
-    subpos, subval=subpixelmax(A, mpos);
+    subpos, subval = subpixelmax(A, mpos)
 
-    if fig:    
-        plt.figure(fig); plt.clf();
-        plt.plot(np.arange(A.size), A, '.:r', label='data points');
-        
-        plt.plot(mpos, A[mpos], 'om', label='integer maxima');
-        plt.plot(subpos, subval, '.g', markersize=15, label='subpixel maxima');
-        plt.legend(numpoints=1 )  
+    if fig:
+        plt.figure(fig)
+        plt.clf()
+        plt.plot(np.arange(A.size), A, '.:r', label='data points')
 
-#%%
+        plt.plot(mpos, A[mpos], 'om', label='integer maxima')
+        plt.plot(subpos, subval, '.g', markersize=15, label='subpixel maxima')
+        plt.legend(numpoints=1)
+
+# %%
+
 
 def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None, fig=None):
     """ Scale image to make pixels at specified resolution
@@ -147,7 +151,7 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
     """
     if interpolation is None:
         interpolation = cv2.INTER_AREA
-        
+
     dxmv = imextent[1] - imextent[0]
     dymv = imextent[3] - imextent[2]
 
@@ -274,7 +278,7 @@ def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
         cv2.imshow('input', im8)
         cv2.imshow('flow', vis)
     return flow, ll
-#%%
+# %%
 
 
 def signedmin(val, w):
@@ -332,7 +336,7 @@ def showFlowField(im, flow, ll=None, ff=None, d=12, fig=-1):
         cv2.imshow('flow', vis)
     return flow, ll
 
-#%%
+# %%
 
 
 def showCoulombDirection(ptx, ww, im=None, dd=None, fig=100):
@@ -405,7 +409,7 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
     return val
 
 
-#%% Visualization
+# %% Visualization
 
 
 def extent2fullextent(extent0, im):
@@ -473,11 +477,12 @@ def show2Dimage(im, dd, **kwargs):
         plt.show()
     return extentImage
 
+
 if __name__ == '__main__':
     pass
     #show2Dimage(im, alldata)
 
-#%%
+# %%
 
 
 def getValuePixel(imx, pt):
@@ -486,7 +491,7 @@ def getValuePixel(imx, pt):
     Args:
         im (numpy array): input image
         pt (numpy array): list of points
-    
+
     Returns:
         vv (numpy array): interpolated value
     """

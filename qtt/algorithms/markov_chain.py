@@ -5,7 +5,7 @@
 @author: pieter.eendebak@gmail.com
 """
 
-#%%
+# %%
 import numpy as np
 import random
 import scipy.linalg
@@ -233,6 +233,7 @@ def generate_traces(markov_model, std_gaussian_noise=1, state_mapping=None, *arg
 
 import unittest
 import numbers
+
 
 class TestChoiceGenerator(unittest.TestCase):
     def test_ChoiceGenerator(self):

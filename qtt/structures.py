@@ -15,7 +15,7 @@ import qtt.measurements.scans
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks, findSensingDotPosition
 from qtt.utilities.tools import freezeclass
 
-#%%
+# %%
 
 
 @freezeclass
@@ -23,7 +23,7 @@ class twodot_t(dict):
 
     def __init(self, gates, name=None):
         """ Class to represent a double quantum dot
-        
+
         Args:
             gates (list of str): gate names of barrier left, plunger left, barrier middle, plunger right and barrier right
             name (str): name for the object
@@ -106,7 +106,7 @@ def test_spin_structures(verbose=0):
 if __name__ == '__main__':
     test_spin_structures()
 
-#%%
+# %%
 
 
 def _scanlabel(ds):
@@ -127,7 +127,7 @@ class sensingdot_t:
 
         We assume the sensing dot can be controlled by two barrier gates and a single plunger gate.
         An instrument to measure the current through the dot is provided by the minstrument argument.
-        
+
         Args:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
@@ -216,7 +216,7 @@ class sensingdot_t:
         """ Return current value of the chemical potential plunger """
         gates = self.station.gates
         return gates.get(self.tunegate())
-    
+
     def value(self):
         """Return current through sensing dot """
         if self.valuefunc is not None:
@@ -356,10 +356,10 @@ class sensingdot_t:
         """ Automatically determine optimal value of plunger """
         if not scanjob is None:
             sd.autoTuneInit(scanjob)
-            
+
         if sd.virt_gates is not None:
             raise Exception('virtual gates for slow scan not supported')
-            
+
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
@@ -381,7 +381,7 @@ class sensingdot_t:
         istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = qtt.data.dataset1Ddata(alldata)
         x, y = peakdataOrientation(x, y)
-        
+
         if invert:
             y = -y
 
@@ -443,10 +443,10 @@ class sensingdot_t:
             instrument = self.minstrument[0]
             channel = self.minstrument[1]
             if not isinstance(channel, list):
-                channel=[channel]
+                channel = [channel]
 
             scanjob = qtt.measurements.scans.scanjob_t(
-                    {'Naverage': Naverage, })
+                {'Naverage': Naverage, })
             if self.virt_gates is not None:
                 vsensorgate = self.virt_gates.vgates()[self.virt_gates.pgates().index(self.gg[1])]
                 scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(
@@ -456,7 +456,7 @@ class sensingdot_t:
                 gate = self.gg[1]
                 sdplg = getattr(self.station.gates, gate)
                 cc = self.station.gates.get(gate)
-                scanjob['sweepdata'] = {'param':  gate, 'start': cc -
+                scanjob['sweepdata'] = {'param': gate, 'start': cc -
                                         sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
 
             scanjob['minstrument'] = channel
@@ -511,14 +511,18 @@ class sensingdot_t:
 
         return self.sdval[1], alldata
 
+
 def test_sensingdot_t():
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
-    sensing_dot = qtt.structures.sensingdot_t(['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')
+    sensing_dot = qtt.structures.sensingdot_t(
+        ['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')
     _ = sensing_dot.autoTune(step=-8, fig=None)
     qtt.simulation.virtual_dot_array.close()
 
-#%%
+# %%
+
+
 class VectorParameter(qcodes.instrument.parameter.Parameter):
     """Create parameter which controls linear combinations.
 
@@ -556,7 +560,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         for (param, coeff) in self.comb_map:
             param.set(param.get() + coeff * val_diff / self.coeffs_sum)
 
-#%%
+# %%
 
 
 class MultiParameter(qcodes.instrument.parameter.Parameter):

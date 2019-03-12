@@ -31,7 +31,7 @@ class DataViewer(QtWidgets.QMainWindow):
         super(DataViewer, self).__init__()
         self.verbose = verbose
         self.default_parameter = default_parameter
-        self.data_directories = [None]*2
+        self.data_directories = [None] * 2
         self.directory_index = 0
         if data_directory is None:
             data_directory = qcodes.DataSet.default_io.base_location

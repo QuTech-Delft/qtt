@@ -9,6 +9,7 @@ class TimeStampInstrument(Instrument):
     '''
     Instrument that generates a timestamp
     '''
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
         # we need this to be a parameter (a function does not work with measure)

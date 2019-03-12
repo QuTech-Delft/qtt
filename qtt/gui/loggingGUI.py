@@ -7,7 +7,7 @@ Pieter Eendebak <pieter.eendebak@tno.nl>
 
 """
 
-#%% Import packages
+# %% Import packages
 import logging
 import os
 import signal
@@ -25,7 +25,7 @@ from zmq.log.handlers import PUBHandler
 
 import pyqtgraph.multiprocess as mp
 import qtt
-#%% Util functions
+# %% Util functions
 
 
 def static_var(varname, value):
@@ -52,7 +52,7 @@ def tprint(string, dt=1, output=False):
         else:
             return
 
-#%% Functions for installing the logger
+# %% Functions for installing the logger
 
 
 def removeZMQlogger(name=None, verbose=0):
@@ -94,13 +94,13 @@ def installZMQlogger(port=5800, name=None, clear=True, level=None, logger=None):
     pid = os.getpid()
     pstr = 'pid %d: ' % pid
     handler.formatters = {
-        logging.DEBUG: logging.Formatter(pstr +
-                                         "%(levelname)s %(filename)s:%(lineno)d - %(message)s\n"),
+        logging.DEBUG: logging.Formatter(pstr
+                                         + "%(levelname)s %(filename)s:%(lineno)d - %(message)s\n"),
         logging.INFO: logging.Formatter(pstr + "%(message)s\n"),
-        logging.WARN: logging.Formatter(pstr +
-                                        "%(levelname)s %(filename)s:%(lineno)d - %(message)s\n"),
-        logging.ERROR: logging.Formatter(pstr +
-                                         "%(levelname)s %(filename)s:%(lineno)d - %(message)s - %(exc_info)s\n"),
+        logging.WARN: logging.Formatter(pstr
+                                        + "%(levelname)s %(filename)s:%(lineno)d - %(message)s\n"),
+        logging.ERROR: logging.Formatter(pstr
+                                         + "%(levelname)s %(filename)s:%(lineno)d - %(message)s - %(exc_info)s\n"),
         logging.CRITICAL: logging.Formatter(pstr +
                                             "%(levelname)s %(filename)s:%(lineno)d - %(message)s\n")}
 
@@ -109,7 +109,7 @@ def installZMQlogger(port=5800, name=None, clear=True, level=None, logger=None):
     # first message always is discarded
     return logger
 
-#%%
+# %%
 
 
 class zmqLoggingGUI(QtWidgets.QDialog):
@@ -159,11 +159,11 @@ class zmqLoggingGUI(QtWidgets.QDialog):
         self._levelBox.setCurrentIndex(1)
         self.loglevel = logging.INFO
         self.nkill = 0
-        
+
     def closeEvent(self, evnt):
         print('loggingGUI: close event')
         super().closeEvent(evnt)
-            
+
     def setLevel(self, boxidx):
         name = self._levelBox.itemText(boxidx)
         lvl = self.imap.get(name, None)
@@ -172,20 +172,21 @@ class zmqLoggingGUI(QtWidgets.QDialog):
             self.loglevel = lvl
 
     addMessageSignal = Signal(str)
+
     @Slot(str)
     def _addMessage(self, msg):
         """ Helper function to solve threading issues """
         self._console.moveCursor(QtGui.QTextCursor.End)
         self._console.insertPlainText(msg)
         self._console.moveCursor(QtGui.QTextCursor.End)
-        
+
     def addMessage(self, msg, level=None):
         """ Add a message to the GUI list """
         if level is not None:
             if level < self.loglevel:
                 return
         self.addMessageSignal.emit(msg)
-        
+
     def clearMessages(self):
         ''' Clear the messages in the logging window '''
         self._console.clear()
@@ -219,7 +220,7 @@ class zmqLoggingGUI(QtWidgets.QDialog):
     def close(self):
         self.scheduler.pause()
         self.sub.close()
-                
+
     def _callback(self, verbose=1):
         logging.debug('ZMQ logger: logging...')
         app = QtWidgets.QApplication.instance()
@@ -238,11 +239,11 @@ class zmqLoggingGUI(QtWidgets.QDialog):
                 level = level.lower().decode('ascii')
                 log = getattr(logging, level)
                 lvlvalue = dlg.imap.get(level, None)
-    
+
                 if verbose >= 2:
                     log(message)
                 dlg.addMessage(message + '\n', lvlvalue)
-    
+
                 if dlg.nkill > 0:
                     print('check pid')
                     m = re.match(r'pid (\d*): heartbeat', message)
@@ -290,7 +291,8 @@ def start_logging_gui():
     qtt._dummy_logging_gui = mc
     # return mc
 
-#%%
+
+# %%
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', default=1, help="verbosity level")
@@ -318,7 +320,7 @@ if __name__ == '__main__':
         pass
 
 
-#%% Send message to logger
+# %% Send message to logger
 if 0:
     port = 5800
     installZMQlogger(port=port, level=None)

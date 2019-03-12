@@ -17,8 +17,7 @@ from qtt.algorithms.functions import logistic
 from qtt.algorithms.generic import nonmaxsuppts
 
 
-#%% Functions related to detection of Coulumb peaks
-
+# %% Functions related to detection of Coulumb peaks
 
 
 def gauss(x, p):
@@ -105,7 +104,7 @@ def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling
                   (ii, peak['x'], peak['y'], peak['valid']))
     return peaks
 
-#%%
+# %%
 
 
 def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=False, plotsmooth=True, plothalf=False, plotbottom=False, plotmarker='.-b'):
@@ -116,7 +115,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
         y (array): dependent variable data    
         peaks (list): list of peaks to plot
         showPeaks, plotLabels, plotScore, plothalf (bool): plotting options
-        
+
     Returns:
         dictionary: graphics handles
 
@@ -126,7 +125,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     stdY = np.std(y)
     pgeometry.cfigure(fig)
     plt.clf()
-    h = plt.plot(x, y, plotmarker) 
+    h = plt.plot(x, y, plotmarker)
     if plotsmooth:
         plt.plot(x, ys, 'g')
     labelh = []
@@ -138,7 +137,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
 
             if showPeaks:
                 label = 'peaks' if first_label else None
-                first_label = False                
+                first_label = False
                 plt.plot(xpos, ypos, '.r', markersize=15, label=label)
             if plotLabels:
                 tp = peak.get('type', 'peak')
@@ -153,7 +152,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
         for peak in peaks:
             if 'xhalfl' in peak:
                 label = 'peak at half height' if first_label else None
-                first_label = False                
+                first_label = False
 
                 hh = plt.plot(peak['xhalfl'], peak['yhalfl'], '.m',
                               markersize=12, label=label)
@@ -167,7 +166,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     th = plt.title('Fitted peaks')
     return dict({'linehandle': h, 'title': th, 'labelh': labelh, 'halfhandle': halfhandle})
 
-#%%
+# %%
 
 
 def filterPeaks(x, y, peaks, verbose=1, minheight=None):
@@ -177,10 +176,10 @@ def filterPeaks(x, y, peaks, verbose=1, minheight=None):
         x (array): independent variable data
         y (array): signal data
         peaks (list): list of peaks
-    
+
     Returns:
         list : selected good peaks
-        
+
     Filtering criteria are:
 
         - minimal height
@@ -234,7 +233,7 @@ def filterPeaks(x, y, peaks, verbose=1, minheight=None):
         print('filterPeaks: %d -> %d good peaks' % (len(peaks), ngoodpeaks))
     return goodpeaks
 
-#%%
+# %%
 
 
 def peakFindBottom(x, y, peaks, fig=None, verbose=1):
@@ -328,7 +327,7 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
     return peaks
 
-#%%
+# %%
 
 
 def fitPeaks(XX, YY, points, fig=None, verbose=0):
@@ -387,7 +386,7 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
                 fit_mu - FWHM / 2, fit_mu + FWHM / 2, facecolor='g', alpha=0.25)
         plt.show()
     return fit_data
-#%%
+# %%
 
 
 def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
@@ -450,7 +449,7 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
                 print('   slope: %.1f, heightscore %.2f, score %.2f' %
                       (peak['slope'], peak['heightscore'], peak['score']))
 
-#%%
+# %%
 
 
 def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parameters=None, istep=None):
@@ -567,7 +566,7 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
 
 def peakdataOrientation(x, y):
     """ For measured 1D scans order the data such that the independent variable is ordered
-    
+
     Args:
         x (array): independent variable data    
         y (array): dependent variable data    
@@ -610,7 +609,7 @@ def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_r
     return goodpeaks
 
 
-#%% Find best slope
+# %% Find best slope
 import scipy.ndimage
 import scipy.ndimage.measurements
 
@@ -623,7 +622,7 @@ def _intervalOverlap(a, b):
         b (list or tuple): second interval
     Returns:
         float: overlap between the intervals
-        
+
     Example:
     >>> _intervalOverlap( [0,2], [0,1])    
     1
@@ -638,7 +637,7 @@ def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
         x (array): independent variable data    
         y (array): dependent variable data    
         minimal_derivative (None or float): minimal derivative
-        
+
     Returns:
         slopes (...)
         results (object): additional data

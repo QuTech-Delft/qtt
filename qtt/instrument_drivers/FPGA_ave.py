@@ -14,6 +14,7 @@ class FPGA_ave(VisaInstrument):
     <name> = instruments.create('name', 'FPGA_AVE', address='<COM PORT>')
     <COM PORT> = COM5 e.g.
     '''
+
     def __init__(self, name, address, mirrorfactors=[1, 1], verbose=1, **kwargs):
         logging.debug(__name__ + ' : Initializing instrument')
         super().__init__(name, address, **kwargs)
@@ -280,7 +281,8 @@ class FPGA_ave(VisaInstrument):
         fs = internal_clock / Ndivision
         self._sampling_frequency = fs
         if self.verbose:
-            print('FPGA internal clock is 50MHz, dividing it by %d, yields samp. freq. is %d Hz' % (Ndivision, self._sampling_frequency))
+            print('FPGA internal clock is 50MHz, dividing it by %d, yields samp. freq. is %d Hz' %
+                  (Ndivision, self._sampling_frequency))
 
         return self.write_to_serial(132, int(Ndivision))
 
@@ -352,7 +354,8 @@ class FPGA_ave(VisaInstrument):
 
         return totalpoints, DataRead_ch1, DataRead_ch2
 
-#%% Testing driver functionality
+
+# %% Testing driver functionality
 if __name__ == '__main__':
     server_name = None
     fpga = FPGA_ave_x('FPGA', 'ASRL4::INSTR', server_name=server_name)

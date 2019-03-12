@@ -44,7 +44,7 @@ def checkReversal(im0, verbose=0):
 
     We assume that the current is either zero or positive 
     Needed when the keithley (or some other measurement device) has been reversed
-    
+
     Args:
         im0 (array): measured data
     Returns
@@ -168,7 +168,6 @@ def get_param_name(gates, sweepgate):
         return sweepgate.name
 
 
-
 # %%
 
 
@@ -248,7 +247,8 @@ def get_instrument(instr, station=None):
 
 
 def test_get_instrument_parameter():
-    instrument = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(qtt.measurements.scans.instrumentName('test'), None)
+    instrument = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
+        qtt.measurements.scans.instrumentName('test'), None)
     ix, p = get_instrument_parameter((instrument.name, 'dac2'))
     assert (id(ix) == id(instrument))
     assert (id(p) == id(instrument.dac2))
@@ -257,6 +257,7 @@ def test_get_instrument_parameter():
     ix, p = get_instrument_parameter(instrument.name + '.dac2')
     assert (id(p) == id(instrument.dac2))
     instrument.close()
+
 
 def get_minstrument_channels(minstrument):
     if isinstance(minstrument, tuple):
@@ -323,12 +324,13 @@ def _add_dataset_metadata(dataset):
     """ Add different kinds of metadata to a dataset """
     update_dictionary(dataset.metadata, scantime=str(datetime.datetime.now()))
     update_dictionary(dataset.metadata, code_version=qtt.utilities.tools.code_version())
-    update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.dataset_to_dictionary(dataset, include_data=False, include_metadata=False))
+    update_dictionary(dataset.metadata, __dataset_metadata=qtt.data.dataset_to_dictionary(
+        dataset, include_data=False, include_metadata=False))
 
 
-def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = False):
+def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=False):
     """ Initialize live plotting
-    
+
     Args:
         alldata (DataSet): DataSet to plot from
         plotparam (str or list or None): Arrays in the DataSet to plot. If None then automatically select. If False then perform no live plotting
@@ -336,7 +338,7 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = Fal
     """
     if plotparam is False:
         return None
-    
+
     if liveplotwindow is None:
         liveplotwindow = qtt.gui.live_plotting.getLivePlotWindow()
     if liveplotwindow:
@@ -351,10 +353,10 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = Fal
             liveplotwindow.add(alldata.default_parameter_array())
         else:
             liveplotwindow.add(alldata.default_parameter_array(paramname=plotparam))
-            
-            
+
         pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
     return liveplotwindow
+
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -465,7 +467,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     alldata.write(write_metadata=True)
 
-
     return alldata
 
 
@@ -503,9 +504,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     if isinstance(read_ch, int):
         read_ch = [read_ch]
-        
+
     if isinstance(read_ch, str):
-        raise Exception('for fast scans the minstrument should be a list of channel numbers' )
+        raise Exception('for fast scans the minstrument should be a list of channel numbers')
 
     if isinstance(scanjob['sweepdata']['param'], lin_comb_type):
         scanjob['scantype'] = 'scan1Dfastvec'
@@ -552,7 +553,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                                                                    'period': period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
-                sweep_range = sweeprange 
+                sweep_range = sweeprange
                 waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
@@ -603,14 +604,14 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 
     nx = len(sweepgates)
     step = sweepranges[0] / resolution[0]
-    stepdata = {'gates': [sweepgates[0]], 'start': values[0] -
-                sweepranges[0] / 2, 'end': values[0] + sweepranges[0] / 2,
+    stepdata = {'gates': [sweepgates[0]], 'start': values[0]
+                - sweepranges[0] / 2, 'end': values[0] + sweepranges[0] / 2,
                 'step': step}
     sj['stepdata'] = stepdata
     if nx == 2:
         step = sweepranges[1] / resolution[1]
-        sweepdata = {'gates': [sweepgates[1]], 'start': values[1] -
-                     sweepranges[1] / 2, 'end': values[1] + sweepranges[0] / 2,
+        sweepdata = {'gates': [sweepgates[1]], 'start': values[1]
+                     - sweepranges[1] / 2, 'end': values[1] + sweepranges[0] / 2,
                      'step': step}
         sj['sweepdata'] = sweepdata
         sj['wait_time_step'] = 4
@@ -651,10 +652,11 @@ def test_sample_data():
     v = s.restrict_boundaries('D0', 1000)
     assert (v == 100)
 
-def _convert_vectorname_to_parametername(vector_name, extra_string = None):
+
+def _convert_vectorname_to_parametername(vector_name, extra_string=None):
     parameter_name = re.sub(r'\(.*?\)', '', vector_name)
     if extra_string is not None:
-        parameter_name += '_'  + extra_string
+        parameter_name += '_' + extra_string
     return parameter_name
 
 
@@ -678,21 +680,21 @@ class scanjob_t(dict):
 
     Note: currently the scanjob_t is a thin wrapper around a dict.
     """
-    
+
     def add_sweep(self, param, start, end, step, **kwargs):
         """ Add sweep to scan job """
         sweep = {'param': param, 'start': start, 'end': end, 'step': step, **kwargs}
         if not 'sweepdata' in self:
-            self['sweepdata']=sweep
+            self['sweepdata'] = sweep
         elif 'stepdata' not in self:
-            self['stepdata']=sweep
+            self['stepdata'] = sweep
         else:
             raise Exception('3d scans not implemented')
 
     def add_minstrument(self, minstrument):
         """ Add measurement instrument to scan job """
-        self['minstrument']=minstrument
-        
+        self['minstrument'] = minstrument
+
     def check_format(self):
         """ Check the format of the scanjob for consistency and legacy style arguments """
         if 'stepvalues' in self:
@@ -884,8 +886,8 @@ class scanjob_t(dict):
             else:
                 raise Exception('unknown scantype')
             if sweeplength is not None:
-                sweepdata['step'] = (sweepdata['end'] -
-                                     sweepdata['start']) / sweeplength
+                sweepdata['step'] = (sweepdata['end']
+                                     - sweepdata['start']) / sweeplength
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 last = sweepdata['start'] + sweepdata['range']
                 scanvalues = sweepparam[sweepdata['start']:last:sweepdata.get('step', 1.)]
@@ -1123,11 +1125,10 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
 
-
     if plotparam is 'all':
-        liveplotwindow = _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots = True)
+        liveplotwindow = _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots=True)
     else:
-        liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots = True)
+        liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
 
     t0 = time.time()
     tprev = time.time()
@@ -1238,14 +1239,14 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 def get_sampling_frequency(instrument_handle):
     """ Return sampling frequency of acquisition device
-    
+
     Args:
         instrument_handle (str or Instrument): handle to instrument
     Returns:
         float: sampling frequency
     """
     instrument_handle = get_instrument(instrument_handle)
-        
+
     if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
         return instrument_handle.sample_rate()
     elif isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
@@ -1253,10 +1254,11 @@ def get_sampling_frequency(instrument_handle):
     else:
         raise Exception(
             'Unrecognized fast readout instrument %s' % instrument_handle)
-        
+
+
 def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, start_zero=True, fig=None):
     """ Extract a 2D image from a double sawtooth signal 
-    
+
     Args:
         data (numpy array): measured trace
         period (float): period of the full signal
@@ -1266,51 +1268,50 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
         verbose (int): verbosity level
         start_zero (bool): Default is True
         fig (int or None): figure handle
-        
+
     Returns
-    
+
         processed_data (list of arrays): the extracted 2D arrays
         results (dict): contains metadata
-    
+
     """
     npoints_expected = int(period * samplerate)  # expected number of points
     npoints = data.shape[0]
     nchannels = data.shape[1]
-    period_x = period/(resolution[1])
+    period_x = period / (resolution[1])
     period_y = period
-    
+
     if verbose:
-        print('process_2d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
-        
-    if np.abs(npoints-npoints_expected)>0:
-        raise Exception('process_2d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
-        
-    full_trace=False;
+        print('process_2d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints, ))
+
+    if np.abs(npoints - npoints_expected) > 0:
+        raise Exception('process_2d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints, ))
+
+    full_trace = False
     if start_zero and (not full_trace):
-        padding_x_time=((1-width[0])/2)*period_x
-        padding_y_time=((1-width[1])/2)*period_y
-              
-        sawtooth_centre_pixels = ((1-width[1])/2 + .5 *width[1])* period * samplerate 
-        start_forward_slope_step_pixels =  ((1-width[1])/2)* period * samplerate 
-        end_forward_slope_step_pixels = ((1-width[1])/2 + width[1])* period * samplerate 
-        
+        padding_x_time = ((1 - width[0]) / 2) * period_x
+        padding_y_time = ((1 - width[1]) / 2) * period_y
+
+        sawtooth_centre_pixels = ((1 - width[1]) / 2 + .5 * width[1]) * period * samplerate
+        start_forward_slope_step_pixels = ((1 - width[1]) / 2) * period * samplerate
+        end_forward_slope_step_pixels = ((1 - width[1]) / 2 + width[1]) * period * samplerate
+
     else:
         if full_trace == True:
-            padding_x_time=0
-            padding_y_time=0
-            sawtooth_centre_pixels = .5 * width[1] * period * samplerate 
-            start_forward_slope_pixels =  0
-            end_forward_slope_pixels = period * samplerate 
+            padding_x_time = 0
+            padding_y_time = 0
+            sawtooth_centre_pixels = .5 * width[1] * period * samplerate
+            start_forward_slope_pixels = 0
+            end_forward_slope_pixels = period * samplerate
         else:
-            padding_x_time=0
-            padding_y_time=0
-            sawtooth_centre_pixels = .5 * width[1] * period * samplerate 
-            start_forward_slope_step_pixels =  0
-            end_forward_slope_step_pixels = (width[1])* period * samplerate 
-            
-    padding_x=int(padding_x_time*samplerate)
-    padding_y=int(padding_y_time*samplerate)
+            padding_x_time = 0
+            padding_y_time = 0
+            sawtooth_centre_pixels = .5 * width[1] * period * samplerate
+            start_forward_slope_step_pixels = 0
+            end_forward_slope_step_pixels = (width[1]) * period * samplerate
 
+    padding_x = int(padding_x_time * samplerate)
+    padding_y = int(padding_y_time * samplerate)
 
     width_horz = width[0]
     width_vert = width[1]
@@ -1324,42 +1325,46 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
             'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
     if full_trace:
         npoints_forward_x = int(res_horz)
-        npoints_forward_y =int( res_vert)
+        npoints_forward_y = int(res_vert)
     else:
         npoints_forward_x = int(width_horz * res_horz)
-        npoints_forward_y =int( width_vert * res_vert)
-        
+        npoints_forward_y = int(width_vert * res_vert)
+
     if verbose:
-        print('process_2d_sawtooth: number of points in forward trace (horizontal) %d, vertical %d'% (npoints_forward_x, npoints_forward_y, ) )
-        print('   horizontal mismatch %d/%.1f'  % (npoints_forward_x, width_horz*period_x*samplerate))
+        print('process_2d_sawtooth: number of points in forward trace (horizontal) %d, vertical %d' %
+              (npoints_forward_x, npoints_forward_y, ))
+        print('   horizontal mismatch %d/%.1f' % (npoints_forward_x, width_horz * period_x * samplerate))
 
     processed_data = []
-    row_offsets = res_horz*np.arange(0, npoints_forward_y).astype(int)+int(padding_y)+int(padding_x)
+    row_offsets = res_horz * np.arange(0, npoints_forward_y).astype(int) + int(padding_y) + int(padding_x)
     for channel in range(nchannels):
-        row_slices = [ data[(idx):(idx + npoints_forward_x), channel] for idx in row_offsets]       
+        row_slices = [data[(idx):(idx + npoints_forward_x), channel] for idx in row_offsets]
         processed_data.append(np.array(row_slices))
-   
+
     if verbose:
-        print('process_2d_sawtooth: processed_data shapes: %s' % ( [array.shape for array in processed_data]) )
-        
+        print('process_2d_sawtooth: processed_data shapes: %s' % ([array.shape for array in processed_data]))
+
     if fig is not None:
-        pixel_to_axis = 1./samplerate
-        times=np.arange(npoints)/samplerate
+        pixel_to_axis = 1. / samplerate
+        times = np.arange(npoints) / samplerate
         plt.figure(fig)
-        plt.clf()        
-        
-        plt.plot(times, data[:,:], '.-', label='raw data')
+        plt.clf()
+
+        plt.plot(times, data[:, :], '.-', label='raw data')
         plt.title('Processing of digitizer trace')
         plt.axis('tight')
 
         for row_offset in row_offsets:
-            qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*row_offset, ], ':', color='r', linewidth=.8, alpha=.5)
-            
-        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*sawtooth_centre_pixels], '-c', linewidth=1, label='centre of sawtooth', zorder=-10)
+            qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis * row_offset, ], ':', color='r', linewidth=.8, alpha=.5)
+
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis * sawtooth_centre_pixels], '-c',
+                                 linewidth=1, label='centre of sawtooth', zorder=-10)
         qtt.pgeometry.plot2Dline([0, -1, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8)
 
-        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*start_forward_slope_step_pixels], ':k', label='start of step forward slope')
-        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis*end_forward_slope_step_pixels], ':k', label='end of step forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis * start_forward_slope_step_pixels],
+                                 ':k', label='start of step forward slope')
+        qtt.pgeometry.plot2Dline([-1, 0, pixel_to_axis * end_forward_slope_step_pixels],
+                                 ':k', label='end of step forward slope')
 
         qtt.pgeometry.plot2Dline([-1, 0, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='start trace')
         qtt.pgeometry.plot2Dline([-1, 0, period, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='end trace')
@@ -1368,18 +1373,19 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
 
         plt.legend(numpoints=1)
 
-        if verbose>=2:
-            plt.figure(fig+10); plt.clf();
+        if verbose >= 2:
+            plt.figure(fig + 10)
+            plt.clf()
             plt.plot(row_slices[0], '.-r', label='first trace')
             plt.plot(row_slices[-1], '.-b', label='last trace')
-            plt.plot(row_slices[int(len(row_slices)/2)], '.-c')
+            plt.plot(row_slices[int(len(row_slices) / 2)], '.-c')
             plt.legend()
-            
+
     return processed_data, {'row_offsets': row_offsets, 'period': period}
 
 
 def process_1d_sawtooth(data, width, period, samplerate, resolution=None, padding=0, start_zero=False,
-                            fig=None, verbose=0):
+                        fig=None, verbose=0):
     """ Process data from the M4i and a sawtooth trace 
 
     This is done to remove the extra padded data of the digitizer and to 
@@ -1397,7 +1403,7 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
     npoints_expected = int(period * samplerate)  # expected number of points
     npoints = data.shape[0]
     if verbose:
-        print('process_1d_sawtooth: expected %d data points, got %d'% (npoints_expected, npoints, ) )
+        print('process_1d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints, ))
 
     if len(width) != 1:
         raise Exception('specification is not for a 1D sawtooth signal')
@@ -1412,9 +1418,10 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
     processed_data = data[trace_start:trace_end, :].T
 
     if verbose:
-            print('process_1d_sawtooth: processing data: shape %s: trace_start %s, trace_end %s' % (data.shape, trace_start, trace_end))
+        print('process_1d_sawtooth: processing data: shape %s: trace_start %s, trace_end %s' %
+              (data.shape, trace_start, trace_end))
 
-    cc = (trace_start+trace_end)/2
+    cc = (trace_start + trace_end) / 2
     if fig is not None:
         plt.figure(fig)
         plt.clf()
@@ -1437,7 +1444,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
 
     The selected memory size is the period times the sample rate, but rounded above to a multiple of 16.
     Additionally, extra pixels are added because of pretrigger_memsize requirements of the m4i.
-    
+
     Args:
         digitizer (object)
         period (float): period of signal to measure
@@ -1448,33 +1455,32 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         pre_trigger (int): size of pretrigger selected
         signal_start (int): starting position of signal in pixels
         signal_start (int): end position of signal in pixels
-        
+
     """
     sample_rate = digitizer.sample_rate()
     if sample_rate == 0:
         raise Exception('digitizer samplerate is zero, please reset digitizer')
     number_points_period = int(period * sample_rate)
-    
+
     if trigger_delay is None:
         trigger_delay = 0
     else:
         warnings.warn('untested')
-    trigger_delay_points = 16*trigger_delay
+    trigger_delay_points = 16 * trigger_delay
 
     basic_pretrigger_size = 16
-    base_segment_size = int(np.ceil( (number_points_period+trigger_delay_points) / 16) * 16) + basic_pretrigger_size
-
+    base_segment_size = int(np.ceil((number_points_period + trigger_delay_points) / 16) * 16) + basic_pretrigger_size
 
     memsize = base_segment_size * nsegments
     if memsize > digitizer.memory():
         raise Exception('Trying to acquire too many points. Reduce sampling rate, period or number segments')
-        
-    pre_trigger = int(np.ceil( (trigger_delay * sample_rate)//16 )*16) + basic_pretrigger_size
+
+    pre_trigger = int(np.ceil((trigger_delay * sample_rate) // 16) * 16) + basic_pretrigger_size
     post_trigger = int(np.ceil((base_segment_size - pre_trigger) // 16) * 16)
 
     signal_start = basic_pretrigger_size + int(trigger_delay_points)
-    signal_end = signal_start+number_points_period
-    
+    signal_end = signal_start + number_points_period
+
     digitizer.data_memory_size.set(memsize)
     digitizer.posttrigger_memory_size(post_trigger)
     if verbose:
@@ -1483,14 +1489,15 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         print('select_m4i_memsize %s: trace %d points, selected memsize %d' %
               (digitizer.name, number_points_period, memsize))
         print('select_m4i_memsize %s: pre and post trigger: %d %d' % (digitizer.name,
-                                                   digitizer.data_memory_size() - digitizer.posttrigger_memory_size(),
-                                                   digitizer.posttrigger_memory_size()))
+                                                                      digitizer.data_memory_size() - digitizer.posttrigger_memory_size(),
+                                                                      digitizer.posttrigger_memory_size()))
         print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
     return memsize, pre_trigger, signal_start, signal_end
 
+
 def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0):
     """ Record a trace from the digitizer 
-    
+
     Args:
         digitizer (obj): handle to instrument
         period (float): length of segment to read
@@ -1498,7 +1505,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         mV_range (float): range for input
         Naverage (int): number of averages to perform
         verbose (int): verbosity level
-    
+
     """
     sample_rate = digitizer.sample_rate()
     maxrate = digitizer.max_sample_rate()
@@ -1512,10 +1519,11 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     # code for compensating for trigger delays in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
 
-    memsize, pre_trigger, signal_start, signal_end=select_m4i_memsize(digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
+    memsize, pre_trigger, signal_start, signal_end = select_m4i_memsize(
+        digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
     post_trigger = digitizer.posttrigger_memory_size()
 
-    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination = 1)
+    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=1)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 
@@ -1566,7 +1574,6 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
     return memsize
 
 
-
 def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0):
     """ Measure block data with M4i
 
@@ -1583,7 +1590,8 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     """
 
     period = waveform['period']
-    raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range, Naverage=Naverage, verbose=verbose)
+    raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range,
+                                       Naverage=Naverage, verbose=verbose)
     if not process:
         return raw_data
 
@@ -1596,10 +1604,10 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     resolution = waveform.get('resolution', None)
     start_zero = waveform.get('start_zero', False)
 
-
     if len(width) == 2:
-        data, results = process_2d_sawtooth(raw_data.T, period, samplerate, resolution, width, start_zero=start_zero, fig=None)
-        measuresegment_m4i._latest_data=data
+        data, results = process_2d_sawtooth(raw_data.T, period, samplerate,
+                                            resolution, width, start_zero=start_zero, fig=None)
+        measuresegment_m4i._latest_data = data
         measuresegment_m4i._latest_rawdata = raw_data
     else:
 
@@ -1677,10 +1685,11 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
     avarage = np.average(np.asarray(data), axis=0)
     return [avarage]
 
+
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
     Supported instruments: m4i digitizer, ZI UHF-LI
-    
+
     Args:
         waveform (dict): waveform specification
         Naverage (int): number of averages to perform
@@ -1901,8 +1910,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                     sg.append(g)
             if len(sg) > 1:
                 raise(Exception('AWG pulses does not yet support virtual gates'))
-            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate':sg[0], 'sweeprange':sweepdata['range'],
-                                                                   'period':period}, scanjob['pulsedata'])
+            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate': sg[0], 'sweeprange': sweepdata['range'],
+                                                                   'period': period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
                 sweep_range = sweepdata['range']
@@ -1955,7 +1964,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if 'paramname' in sweepdata:
             stepvalues_tmp.name = sweepdata['paramname']
         if 'paramname' in stepdata:
-            stepvalues_tmp.name = stepdata['paramname']                        
+            stepvalues_tmp.name = stepdata['paramname']
         alldata = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=measure_names,
                                 location=location, loc_record={'label': scanjob['scantype']})
     else:
@@ -1978,8 +1987,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                    (ix, len(stepvalues), stepvalues.name, x), dt=.5)
         if scanjob['scantype'] == 'scan2Dfastvec' and isinstance(stepdata['param'], dict):
             for g in stepdata['param']:
-                gates.set(g, (scanjob['phys_gates_vals'][g][ix, 0] +
-                              scanjob['phys_gates_vals'][g][ix, -1]) / 2)
+                gates.set(g, (scanjob['phys_gates_vals'][g][ix, 0]
+                              + scanjob['phys_gates_vals'][g][ix, -1]) / 2)
         else:
             stepdata['param'].set(x)
         if ix == 0:
@@ -2015,7 +2024,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             if idp <= 0:
                 continue
             data_arr_step_add = DataArray(steppm_add, name=steppm_add.name, full_name=steppm_add.name, array_id=steppm_add.name,
-                                          preset_data=np.repeat(stepvalues[:, idp, np.newaxis], alldata.arrays[measure_names[0]].shape[1], axis=1),
+                                          preset_data=np.repeat(
+                                              stepvalues[:, idp, np.newaxis], alldata.arrays[measure_names[0]].shape[1], axis=1),
                                           set_arrays=(alldata.arrays[measure_names[0]].set_arrays))
             alldata.add_array(data_arr_step_add)
 
@@ -2215,7 +2225,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     dt = time.time() - t0
 
-    liveplotwindow = _initialize_live_plotting(alldata, plotparam = None, liveplotwindow = liveplotwindow)
+    liveplotwindow = _initialize_live_plotting(alldata, plotparam=None, liveplotwindow=liveplotwindow)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
@@ -2227,7 +2237,6 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     alldata.write(write_metadata=True)
 
     return alldata, waveform, sweep_info
-
 
 
 # %% Measurement tools
@@ -2374,10 +2383,10 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
         else:
             data_measured = data
 
-        sweep_horz = gate_horz[initval_horz - sweepranges[0] /
-                               2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data_measured[0])]
-        sweep_vert = gate_vert[initval_vert - sweepranges[1] /
-                               2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data_measured)]
+        sweep_horz = gate_horz[initval_horz - sweepranges[0]
+                               / 2:sweepranges[0] / 2 + initval_horz:sweepranges[0] / len(data_measured[0])]
+        sweep_vert = gate_vert[initval_vert - sweepranges[1]
+                               / 2:sweepranges[1] / 2 + initval_vert:sweepranges[1] / len(data_measured)]
     else:
         # vector scan
         gate_horz = 'gate_horz'
