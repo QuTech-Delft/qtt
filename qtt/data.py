@@ -925,17 +925,8 @@ if __name__ == '__main__':
 
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
-    try:
-        with open(pkl_file, 'rb') as output:
-            data2 = pickle.load(output)
-    except:
-        if sys.version_info.major >= 3:
-            # if pickle file was saved in python2 we might fix issues with a
-            # different encoding
-            with open(pkl_file, 'rb') as output:
-                data2 = pickle.load(output, encoding='latin')
-        else:
-            data2 = None
+    with open(pkl_file, 'rb') as output:
+        data2 = pickle.load(output)
     return data2
 
 
