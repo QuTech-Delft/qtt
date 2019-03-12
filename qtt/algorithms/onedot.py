@@ -250,7 +250,7 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
 
     # simlpy smoothing of the image
     kk = np.ones((3, 3)) / 9.
-    for ii in range(2):
+    for _ in range(2):
         ims = scipy.ndimage.convolve(ims, kk, mode='nearest', cval=0.0)
 
     r = np.percentile(ims, 99) - np.percentile(ims, 1)

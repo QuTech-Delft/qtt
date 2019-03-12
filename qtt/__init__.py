@@ -4,7 +4,7 @@ The QTT package contains functionality for the tuning and calibration of spin-qu
 divided into subpacakges:
 
     - Measurements: functionality to perform measurements on devices
-    - Algorithms: functionality to analyse measurements 
+    - Algorithms: functionality to analyse measurements
     - Simulation: contains simulations of quantom dot systems
     - Tools: misc tools
     - Gui: Several gui element for visualization of data
@@ -73,7 +73,8 @@ def check_version(version, module=qcodes, optional=False, install_message=None):
             raise Exception(' from %s need version %s (version is %s)' % (module, version, mversion))
 
 
-# we make an explicit check on versions, since people often upgrade their installation without upgrading the required packages
+# we make an explicit check on versions, since people often upgrade their
+# installation without upgrading the required packages
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'colorama')
@@ -104,7 +105,7 @@ try:
     import redis
     _redis_connection = redis.Redis(host='127.0.0.1', port=6379)
     _redis_connection.set('qtt_abort_running_measurement', 0)
-except:
+except BaseException:
     _redis_connection = None
 
 
@@ -127,7 +128,7 @@ def reset_abort(value=0):
 
 
 def _redisStrValue(var='qtt_live_value1'):
-    """ Return live control value retrieved from redis server 
+    """ Return live control value retrieved from redis server
         and convert to string """
     if _redis_connection is None:
         return 0
@@ -208,7 +209,7 @@ try:
 
     # update the keypress callback function
     QtPlot.keyPressEvent = _qtt_keyPressEvent
-except:
+except BaseException:
     pass
 
 # %% Enhance the qcodes functionality
@@ -223,5 +224,5 @@ try:
         clipboard.setPixmap(self.win.grab())
 
     QtPlot.copyToClipboard = _copyToClipboard
-except:
+except BaseException:
     pass
