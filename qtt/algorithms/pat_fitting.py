@@ -6,14 +6,14 @@ For more details see: https://arxiv.org/abs/1803.10352
 @author: diepencjv / eendebakpt
 """
 
-#%% Load packages
+# %% Load packages
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.ndimage
 from qtt.pgeometry import robustCost
 import scipy.constants
 
-#%%
+# %%
 ueV2Hz = scipy.constants.e / scipy.constants.h * 1e-6
 
 
@@ -60,7 +60,7 @@ def two_ele_pat_model(x_data, pp):
 
     return yl, ym, yr
 
-#%%
+# %%
 
 
 class pat_score():
@@ -129,7 +129,7 @@ class pat_score():
             sc *= 10000
         return sc
 
-#%%
+# %%
 
 
 def pre_process_pat(x_data, y_data, background, z_data, fig=None):
@@ -162,7 +162,7 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
     imx = imx / scale
 
     if fig is not None:
-#        y_data = np.arange(imq.shape[0])
+        #        y_data = np.arange(imq.shape[0])
         plt.figure(fig)
         plt.clf()
         plt.subplot(2, 2, 1)
@@ -184,7 +184,7 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
 
     return imx, imq, backgr_sm
 
-#%%
+# %%
 
 
 def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='one_ele'):
@@ -264,9 +264,9 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
 
-    return detected_peaks, {'weights': weights, 'detected_peaks': detected_peaks }
+    return detected_peaks, {'weights': weights, 'detected_peaks': detected_peaks}
 
-#%%
+# %%
 
 
 def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, True], weights=None, xoffset=None, verbose=1, branch_reduction=None):
@@ -326,7 +326,7 @@ def fit_pat_to_peaks(pp, xd, yd, trans='one_ele', even_branches=[True, True, Tru
 
     return ppx
 
-#%%
+# %%
 
 
 def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
@@ -366,7 +366,7 @@ def fit_pat(x_data, y_data, z_data, background, trans='one_ele', period=1e-3,
 
     return pp, {'imq': imq, 'xd': xd, 'yd': yd, 'ydf': ydf, 'par_guess': par_guess}
 
-#%%
+# %%
 
 
 def plot_pat_fit(x_data, y_data, z_data, pp, trans='one_ele', fig=400, title='Fitted model', label='model'):
@@ -402,7 +402,7 @@ def plot_pat_fit(x_data, y_data, z_data, pp, trans='one_ele', fig=400, title='Fi
 
     plt.ylim([np.min(y_data), np.max(y_data)])
 
-#%%
+# %%
 
 
 def show_traces(x_data, z_data, fig=100, direction='h', title=None):

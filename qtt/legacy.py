@@ -21,14 +21,14 @@ from qtt.algorithms.images import straightenImage
 
 import qtt.data
 from qtt.data import loadExperimentData
-import qtt.algorithms.onedot 
+import qtt.algorithms.onedot
 from qtt.measurements.scans import scanjob_t
 import matplotlib.pyplot as plt
 import datetime
 
 from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
-#%%
+# %%
 
 from qtt.data import dataset2Dmetadata, dataset2image
 
@@ -45,13 +45,14 @@ from qtt.pgeometry import plotPoints, tilefigs
 
 warnings.warn('please do not this import this module')
 
-#%%
+# %%
 
 try:
     import graphviz
 except:
     pass
 import matplotlib.pyplot as plt
+
 
 @rdeprecated(expire='1 Sep 2018')
 def showDotGraph(dot, fig=10):
@@ -67,8 +68,7 @@ def showDotGraph(dot, fig=10):
     plt.axis('off')
 
 
-
-#%%
+# %%
 
 
 @rdeprecated(expire='7-1-2018')
@@ -90,9 +90,7 @@ def positionScanjob(scanjob, pt):
     return scanjob
 
 
-
-
-#%%
+# %%
 
 
 @rdeprecated(expire='1-7-2018')
@@ -136,6 +134,7 @@ def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     plt.gca().add_artist(c2)
     return c2
 
+
 @rdeprecated(expire='1 Sep 2018')
 def scaleCmap(imx, setclim=True, verbose=0):
     """ Scale colormap of sensing dot image """
@@ -168,7 +167,7 @@ def writeBatchData(outputdir, tag, timestart, timecomplete):
         fid.close()
         print('writeBatchData: %s' % fid.name)
 
-#%%
+# %%
 
 
 @rdeprecated(expire='1 Sep 2018')
@@ -217,7 +216,8 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
     sigmax = cwidth / 2 * gammax
     sigmay = clength / 2
 
-    gfilter = pmatlab.gaborFilter(ksize, sigma=sigmax, theta=theta0, Lambda=cwidth, psi=0, gamma=sigmax / sigmay, cut=cut)
+    gfilter = pmatlab.gaborFilter(ksize, sigma=sigmax, theta=theta0, Lambda=cwidth,
+                                  psi=0, gamma=sigmax / sigmay, cut=cut)
     # gfilter=cv2.getGaborKernel( (ksize,ksize), sigma=sigmax, theta=theta0, lambd=cwidth, gamma=sigmax/sigmay, psi=0*np.pi/2)
     gfilter -= gfilter.sum() / gfilter.size
     imf = cv2.filter2D(im, -1, gfilter)
@@ -231,8 +231,7 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
     return imf, (gfilter, )
 
 
-#%%
-
+# %%
 
 
 @rdeprecated(expire='1 Sep 2018')
@@ -248,7 +247,8 @@ def cmap_map(function, cmap):
     step_list = sum(step_dict.values(), [])
     step_list = np.array(list(set(step_list)))
     # Then compute the LUT, and apply the function to the LUT
-    reduced_cmap = lambda step: np.array(cmap(step)[0:3])
+
+    def reduced_cmap(step): return np.array(cmap(step)[0:3])
     old_LUT = np.array(map(reduced_cmap, step_list))
     new_LUT = np.array(map(function, old_LUT))
     # Now try to make a minimal segment definition of the new LUT
@@ -291,14 +291,16 @@ def cmap_discretize(cmap, N, m=1024):
     # Return colormap object.
     return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d" % m, cdict, m)
 
-#%%
+# %%
+
 
 from qtt.algorithms.misc import polyval2d, polyfit2d
 
 from qtt.utilities.imagetools import fitBackground as fitBackgroundTmp
 from qtt.utilities.imagetools import cleanSensingImage
 
-fitBackground= qtt.utilities.tools.deprecated(fitBackgroundTmp)
+fitBackground = qtt.utilities.tools.deprecated(fitBackgroundTmp)
+
 
 @qtt.tools.deprecated
 def showIm(ims, fig=1, title='', showz=False):
@@ -313,12 +315,9 @@ def showIm(ims, fig=1, title='', showz=False):
     plt.title(title)
 
 
-
-
-#%%
-
-
+# %%
 from qtt.algorithms.misc import point_in_poly, points_in_poly, fillPoly
+
 
 @rdeprecated(expire='1 Sep 2018')
 def getPinchvalues(od, xdir, verbose=1):
@@ -345,7 +344,7 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
     raise Exception('function was removed from qtt')
 
 
-#%%
+# %%
 
 @rdeprecated(expire='1-1-2019')
 def printGateValues(gv, verbose=1):
@@ -359,7 +358,6 @@ def getODbalancepoint(od):
     if 'balancepointfine' in od:
         bp = od['balancepointfine']
     return bp
-
 
 
 @rdeprecated(expire='1-6-2018')
@@ -379,5 +377,3 @@ def loadpickle(pkl_file):
         else:
             data2 = None
     return data2
-
-

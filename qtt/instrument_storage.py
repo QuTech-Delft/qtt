@@ -5,6 +5,7 @@ import numbers
 import configparser
 import qtt.utilities.tools
 
+
 @qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def save_instrument_json(instr, ifile, verbose=1):
     """ Save instrument configuration to json """
@@ -36,9 +37,10 @@ def load_instrument_json(instr, ifile, verbose=1):
         p.set(val)
     return jdict
 
+
 def save_instrument_configparser(instr, ifile, verbose=1):
     """ Save instrument configuration to configparser structure
-    
+
     Args:
         instr (Instrument): instrument to apply settings to
         ifile (str): configuration file    
@@ -62,7 +64,7 @@ def save_instrument_configparser(instr, ifile, verbose=1):
 
 def load_instrument_configparser(instr, ifile, verbose=1):
     """ Load instrument configuration from configparser structure
-    
+
     Args:
         instr (Instrument): instrument to apply settings to
         ifile (str): configuration file    
@@ -87,10 +89,11 @@ def load_instrument_configparser(instr, ifile, verbose=1):
             pass
     return jdict
 
+
 load_instrument = load_instrument_configparser
 save_instrument = save_instrument_configparser
 
-#%% Testing
+# %% Testing
 
 if __name__ == '__main__':
     import os
@@ -102,5 +105,3 @@ if __name__ == '__main__':
 
     save_instrument(v2hardware, ifile)
     load_instrument(v2hardware, ifile)
-
-

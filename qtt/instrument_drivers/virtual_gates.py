@@ -5,7 +5,7 @@ Created on Thu Dec  8 10:37:36 2016
 @author: diepencjv, eendebakpt
 """
 
-#%% Load packages
+# %% Load packages
 from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
@@ -553,9 +553,10 @@ def extend_virtual_gates(vgates, pgates, virts, name='vgates', verbose=0):
     virts = virtual_gates(qtt.measurements.scans.instrumentName(name), virts.gates, crosscap_map)
     return virts
 
+
 def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
     """ Create a new virtual gates object using an update matrix
-    
+
     Args:
         virt_gates (virtual_gates): virtual gates object
         update_cc (array): update to cc matrix
@@ -588,6 +589,7 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
         print(virt_gates.get_crosscap_matrix_inv())
 
     return new_virt_gates, new_cc, {'old_cc': old_cc}
+
 
 def test_virtual_gates(verbose=0):
     """ Test for virtual gates object """
@@ -638,15 +640,15 @@ def test_virtual_gates(verbose=0):
     extended_vgates = extend_virtual_gates(v_gates, p_gates, vgates, name='vgates')
     if verbose:
         extended_vgates.print_matrix()
-       
+
     _ = update_cc_matrix(vgates, update_cc=np.eye(3), verbose=0)
 
-    update_matrix= 0.1 * np.random.rand(3, 3)
+    update_matrix = 0.1 * np.random.rand(3, 3)
     np.fill_diagonal(update_matrix, 1)
-    
+
     # test normalization of virtual gate matrix
     extended_vgates, _, _ = update_cc_matrix(vgates, update_cc=update_matrix, verbose=0)
-    np.testing.assert_almost_equal(extended_vgates.get_crosscap_matrix(), 
+    np.testing.assert_almost_equal(extended_vgates.get_crosscap_matrix(),
                                    update_matrix.dot(vgates.get_crosscap_matrix()))
 
     # test normalization of virtual gate matrix
@@ -654,14 +656,15 @@ def test_virtual_gates(verbose=0):
     extended_vgates.normalize_matrix()
     crosscap_matrix = extended_vgates.get_crosscap_matrix()
     for row in range(serialized_matrix.shape[0]):
-    	    np.testing.assert_almost_equal(serialized_matrix[row]/serialized_matrix[row][row], crosscap_matrix[row])
-    cc_matrix_diagonal = crosscap_matrix.diagonal()    
+        np.testing.assert_almost_equal(serialized_matrix[row] / serialized_matrix[row][row], crosscap_matrix[row])
+    cc_matrix_diagonal = crosscap_matrix.diagonal()
     np.testing.assert_almost_equal(cc_matrix_diagonal, 1.)
 
     vgates.close()
     extended_vgates.close()
     gates.close()
-    
+
+
 def test_virtual_gates_serialization(verbose=0):
     """ Test for virtual gates object """
     import qtt.instrument_drivers.virtual_instruments

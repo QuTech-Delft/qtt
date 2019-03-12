@@ -36,17 +36,17 @@ try:
     import qtt.gui.live_plotting
     import qtt.gui.parameterviewer
     from qtt.gui.parameterviewer import createParameterWidget
-    
+
     from qtt.gui.dataviewer import DataViewer
 except ImportError:
     # no gui available
     warnings.warn('pyqtgraph could not be imported, gui elements not available')
-    
-
-#%% Check packages
 
 
-def check_version(version, module=qcodes, optional = False, install_message=None):
+# %% Check packages
+
+
+def check_version(version, module=qcodes, optional=False, install_message=None):
     """ Check whether a module has the corret version """
     if isinstance(module, str):
         try:
@@ -54,35 +54,36 @@ def check_version(version, module=qcodes, optional = False, install_message=None
             module = m
         except ModuleNotFoundError:
             if optional:
-                warnings.warn('optional package %s is not available' % module, qtt.exceptions.MissingOptionalPackageWarning)
+                warnings.warn('optional package %s is not available' %
+                              module, qtt.exceptions.MissingOptionalPackageWarning)
                 return
             else:
                 if install_message is not None:
                     print(install_message)
                 raise Exception('could not load module %s' % module)
-            
+
     mversion = getattr(module, '__version__', None)
     if mversion is None:
         raise Exception(' module %s has no __version__ attribute' % (module,))
 
-            
     if distutils.version.StrictVersion(mversion) < distutils.version.StrictVersion(version):
         if optional:
             warnings.warn('package %s has incorrect version' % module, qtt.exceptions.PackageVersionWarning)
         else:
             raise Exception(' from %s need version %s (version is %s)' % (module, version, mversion))
 
+
 # we make an explicit check on versions, since people often upgrade their installation without upgrading the required packages
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'colorama')
 check_version('0.1', 'redis', optional=True)
-check_version('0.1.10', qcodes) 
+check_version('0.1.10', qcodes)
 check_version('0.2', 'qupulse')
 
-check_version('3.0', 'Polygon', install_message= "use command 'pip install Polygon3' to install the package")
+check_version('3.0', 'Polygon', install_message="use command 'pip install Polygon3' to install the package")
 
-#%% Load often used constructions
+# %% Load often used constructions
 
 from qtt.gui.live_plotting import start_measurement_control
 
@@ -95,7 +96,7 @@ def start_dataviewer():
     return dv
 
 
-#%% Add hook to abort measurement
+# %% Add hook to abort measurement
 
 # connect to redis server
 _redis_connection = None
@@ -107,25 +108,25 @@ except:
     _redis_connection = None
 
 
-
 def _abort_measurement(value=None):
     """ Return True if the currently running measurement should be aborted """
     if _redis_connection is None:
         return 0
     if value is not None:
         _redis_connection.set('qtt_abort_running_measurement', value)
-        
+
     v = _redis_connection.get('qtt_abort_running_measurement')
     if v is None:
         v = 0
     return int(v)
 
 
-def reset_abort(value = 0):
+def reset_abort(value=0):
     """ reset qtt_abort_running_measurement """
     _redis_connection.set('qtt_abort_running_measurement', value)
 
-def _redisStrValue(var = 'qtt_live_value1'):
+
+def _redisStrValue(var='qtt_live_value1'):
     """ Return live control value retrieved from redis server 
         and convert to string """
     if _redis_connection is None:
@@ -133,9 +134,11 @@ def _redisStrValue(var = 'qtt_live_value1'):
     v = _redis_connection.get(var)
     return v.decode('utf-8')
 
-def _redisStrSet(value, var = 'qtt_live_value1'):
+
+def _redisStrSet(value, var='qtt_live_value1'):
     """ Set live control value on redis server """
     _redis_connection.set(var, value)
+
 
 liveValue = _redisStrValue
 liveValueSet = _redisStrSet
@@ -147,7 +150,7 @@ qcodes.loops.abort_measurements = _abort_measurement
 
 qtt._dummy_mc = []
 
-#%% Override default location formatter
+# %% Override default location formatter
 
 from qcodes.data.location import FormatLocation
 FormatLocation.default_fmt = '{date}/{time}_{name}_{label}'
@@ -159,7 +162,8 @@ def set_location_name(name, verbose=1):
     if verbose:
         print('setting location name tag to %s' % name)
     qcodes.DataSet.location_provider.base_record['name'] = name
-#%%
+# %%
+
 
 def _copy_to_str(x, memo):
     return str(x)
@@ -178,17 +182,17 @@ qcodes.Parameter.__getstate__ = lambda self: str(self)
 def _setstate(self, d):
     self.name = d
     self._instrument = None
-    
+
     def _get():
         print('instrument %s was serialized, no get available' % self.name)
         raise Exception('no get function defined')
     self.get = _get
-    
+
 
 qcodes.Instrument.__setstate__ = _setstate
 qcodes.Parameter.__setstate__ = _setstate
 
-#%% Enhance the qcodes functionality
+# %% Enhance the qcodes functionality
 
 try:
     from qtpy.QtCore import Qt
@@ -207,19 +211,17 @@ try:
 except:
     pass
 
-#%% Enhance the qcodes functionality
+# %% Enhance the qcodes functionality
 
 try:
     import pyqtgraph as pg
-    
-    
+
     def _copyToClipboard(self):
         ''' Copy the current image to a the system clipboard '''
         app = pg.mkQApp()
         clipboard = app.clipboard()
         clipboard.setPixmap(self.win.grab())
-    
-    
+
     QtPlot.copyToClipboard = _copyToClipboard
 except:
     pass

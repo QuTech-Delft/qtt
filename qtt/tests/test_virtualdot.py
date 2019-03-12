@@ -7,7 +7,7 @@ from qtt.simulation.dotsystem import TripleDot
 
 from qtt.simulation.virtual_dot_array import generate_configuration
 
-#%%
+# %%
 
 
 class TestVirtualDot(TestCase):
@@ -20,11 +20,11 @@ class TestVirtualDot(TestCase):
 
     def test_virtualdot(self):
         nr_ivvi, gate_map, gates, bottomgates = generate_configuration(6)
-        
+
         station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
-        _=station.keithley1.amplitude()
-        _=station.keithley4.amplitude()
-    
+        _ = station.keithley1.amplitude()
+        _ = station.keithley4.amplitude()
+
         self.assertTrue('P5' in gates)
         self.assertTrue('SD1a' in gates)
         qtt.simulation.virtual_dot_array.close(verbose=0)

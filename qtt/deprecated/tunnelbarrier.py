@@ -5,7 +5,7 @@
     Pieter Eendebak <pieter.eendebak@tno.nl>
     2015
 """
-#%% Import the modules used in this program:
+# %% Import the modules used in this program:
 
 from __future__ import division
 from __future__ import print_function
@@ -39,10 +39,10 @@ except Exception as inst:
     # print(inst)
     warnings.warn('could not import OpenCv, not all functionality available...')
     pass
- 
+
 warnings.warn('do not import this module, it will be removed in the future', DeprecationWarning)
 
-#%% Custom packages
+# %% Custom packages
 from qtt import pgeometry as pmatlab
 
 
@@ -61,7 +61,7 @@ def extent2fullextent(extent0, im):
     return extent
 
 
-#%% Functions
+# %% Functions
 ueV2Hz = scipy.constants.e / scipy.constants.h * 1e-6
 
 
@@ -95,7 +95,7 @@ def barrierModel(x, *p):
     y = np.sqrt(np.power((x - xoffset) * leverarm, 2) + 4 * t**2) * ueV2Hz
     return y
 
-#%%
+# %%
 
 
 @qtt.utilities.tools.rdeprecated('use pat_functions.plot_pat_fit')
@@ -119,9 +119,10 @@ def plotBarrierFit(imq, imextent, pp, fig=400, title='Fitted model'):
     yfit = barrierModel(x0, ppx)
     plt.plot(x0, yfit, '--g')
 
+
 import scipy.optimize
 
-#%%
+# %%
 
 from qtt.pgeometry import robustCost
 
@@ -193,9 +194,9 @@ def preprocessPAT(imextent, im0, im, fig=None):
 def detectVshape(imextent, xdata, ydata, imx, sigmamv=.25, fig=400, returndict=None):
     """ Helper function """
     pass
-    
 
-#%%
+
+# %%
 
 @qtt.utilities.tools.deprecated
 def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=None):
@@ -208,7 +209,7 @@ def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=Non
     ppx = pp.copy()
 
     if 1:
-        ff = lambda x: barrierScore(xd, yd, [pp[0], pp[1], x], weights=weights)
+        def ff(x): return barrierScore(xd, yd, [pp[0], pp[1], x], weights=weights)
         #r=scipy.optimize.minimize(ff, pp[2:], method='Nelder-Mead', options=dict({'disp': True}))
         r = scipy.optimize.brute(ff, ranges=[(0, 100)], Ns=20, disp=False)
         ppx[2] = r
@@ -218,7 +219,7 @@ def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=Non
             print('fitBarrierModel: %s: %.4f -> %.4f' % (['%.2f' % x for x in ppx], sc0 / 1e6, sc / 1e6))
 
     if 1:
-        ff = lambda x: barrierScore(xd, yd, [x, pp[1], ppx[2]], weights=weights)
+        def ff(x): return barrierScore(xd, yd, [x, pp[1], ppx[2]], weights=weights)
         #r=scipy.optimize.minimize(ff, pp[2:], method='Nelder-Mead', options=dict({'disp': True}))
         r = scipy.optimize.brute(ff, ranges=[(pp[0] - 2, pp[0] + 2)], Ns=20, disp=False)
         ppx[0] = r
@@ -227,7 +228,7 @@ def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=Non
         if verbose >= 2:
             print('fitBarrierModel: %s: %.4f -> %.4f' % (['%.2f' % x for x in ppx], sc0 / 1e6, sc / 1e6))
     if 0:
-        ff = lambda x: barrierScore(xd, yd, x, weights=weights)
+        def ff(x): return barrierScore(xd, yd, x, weights=weights)
 
         r = scipy.optimize.brute(ff, ranges=[(pp[0] - 2, pp[0] + 2)], Ns=20, disp=False)
         ppx[0] = r
@@ -236,13 +237,13 @@ def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=Non
         if verbose >= 2:
             print('fitBarrierModel: %s: %.4f -> %.4f' % (['%.2f' % x for x in ppx], sc0 / 1e6, sc / 1e6))
 
-    ff = lambda x: barrierScore(xd, yd, x, weights=weights)
+    def ff(x): return barrierScore(xd, yd, x, weights=weights)
     if 1:
         r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': True}))
         ppx = r['x']
 
     if 1:
-        ff = lambda x: barrierScore(xd, yd, x, weights=weights)
+        def ff(x): return barrierScore(xd, yd, x, weights=weights)
         r = scipy.optimize.minimize(ff, ppx, method='Powell', options=dict({'disp': True}))
         ppx = r['x']
 
@@ -255,4 +256,3 @@ def fitBarrierModel(pp0, xd, yd, weights=None, verbose=1, curvefit=False, dd=Non
         dd['pp'] = pp
         dd['weights'] = weights
     return ppx
-

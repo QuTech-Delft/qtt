@@ -20,7 +20,7 @@ Original code:
 @author: eendebakpt
 """
 
-#%% Load necessary packages
+# %% Load necessary packages
 import os
 import sys
 import tempfile
@@ -40,7 +40,7 @@ from functools import wraps
 
 __version__ = '0.7.0'
 
-#%% Load qt functionality
+# %% Load qt functionality
 
 
 def qtModules(verbose=0):
@@ -122,7 +122,7 @@ except Exception as ex:
     print(ex)
     print('pgeometry: no Qt found')
 
-#%% Load other modules
+# %% Load other modules
 try:
     import pylab
     import pylab as p
@@ -162,16 +162,16 @@ except:
     warnings.warn('could not find OpenCV, not all functionality is available')
     pass
 
-#%% Utils
+# %% Utils
 
 try:
     import resource
 
     def memUsage():
         """ Prints the memory usage in MB
-        
+
         Uses the resource module
-        
+
         """
         # http://chase-seibert.github.io/blog/2013/08/03/diagnosing-memory-leaks-python.html
         print('Memory usage: %s (mb)' %
@@ -180,9 +180,10 @@ except:
     def memUsage():
         print('Memory usage: ? (mb)')
 
+
 def memory():
     """ Return the memory usage in MB
-    
+
     Returns:
             float: memory usage in mb
     """
@@ -220,8 +221,6 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
     return ll
 
 
-
-
 def package_versions(verbose=1):
     """ Report package versions installed """
     print('numpy.__version__ %s' % numpy.__version__)
@@ -249,7 +248,7 @@ def package_versions(verbose=1):
 
 def freezeclass(cls):
     """ Decorator to freeze a class
-    
+
     This means that no attributes can be added to the class after instantiation.
     """
     cls.__frozen = False
@@ -378,11 +377,11 @@ class fps_t:
 
     def __init__(self, nn=40):
         """ Class for framerate measurements
-        
+
         Args:
             nn (int): number of time measurements to store
         Example usage:
-    
+
         >>> fps = fps_t(nn=8)
         >>> for kk in range(12):
         ...       fps.addtime(.2*kk )
@@ -536,7 +535,8 @@ def runcmd(cmd, verbose=0):
     output = subprocess.check_output(cmd, shell=True)
     return output
 
-#%% Geometry functions
+# %% Geometry functions
+
 
 def angleDiff(x, y):
     """ Return difference between two angles in radians modulo 2* pi
@@ -615,7 +615,7 @@ def euler2RBE(theta):
     sy = math.sin(theta[2])
 
     out = np.array([cp * cy, sr * sp * cy - cr * sy, cr * sp * cy + sr * sy,
-                     cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - sr * cy, -sp, sr * cp, cr * cp])
+                    cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - sr * cy, -sp, sr * cp, cr * cp])
     return out.reshape((3, 3))
 
 
@@ -627,7 +627,7 @@ def RBE2euler(Rbe):
     out[2, 0] = math.atan2(Rbe[1, 0], Rbe[0, 0])
     return out
 
-#%% Helper functions
+# %% Helper functions
 
 
 def pg_rotation2H(R):
@@ -945,6 +945,7 @@ def plotLabels(xx, *args, **kwargs):
         th[ii] = ax.annotate(lbltxt, xx[:, ii], **kwargs)
     return th
 
+
 def plotPoints(xx, *args, **kwargs):
     """ Plot 2D or 3D points
 
@@ -966,6 +967,7 @@ def plotPoints(xx, *args, **kwargs):
         h = None
     return h
 
+
 def plot2Dline(line, *args, **kwargs):
     """ Plot a 2D line in a matplotlib figure
 
@@ -985,7 +987,7 @@ def plot2Dline(line, *args, **kwargs):
         plt.plot(xx, yy, *args, **kwargs)
 
 
-#%%
+# %%
 
 def scaleImage(image, display_min=None, display_max=None):
     """ Scale any image into uint8 range
@@ -999,7 +1001,7 @@ def scaleImage(image, display_min=None, display_max=None):
 
     Example:
         >>> im=scaleImage(255*np.random.rand( 30,40), 40, 100)
-        
+
     Code modified from: https://stackoverflow.com/questions/14464449/using-numpy-to-efficiently-convert-16-bit-image-data-to-8-bit-for-display-with?noredirect=1&lq=1        
     """
     image = np.array(image, copy=True)
@@ -1046,7 +1048,8 @@ def auto_canny(image, sigma=0.33):
     edged = cv2.Canny(image, lower, upper)
     return edged
 
-#%% Plotting functions
+# %% Plotting functions
+
 
 def orthogonal_proj(zfront, zback):
     """ see http://stackoverflow.com/questions/23840756/how-to-disable-perspective-in-mplot3d """
@@ -1092,7 +1095,7 @@ def plotPoints3D(xx, *args, **kwargs):
     p.draw()
     return ax
 
-#%%
+# %%
 
 
 def polyarea(p):
@@ -1136,9 +1139,10 @@ def polyarea(p):
 
 import Polygon as polygon3
 
+
 def polyintersect(x1, x2):
     """ Intersection of two polygons
-    
+
     >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
     >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
     >>> x=polyintersect(x1, x2)
@@ -1146,9 +1150,9 @@ def polyintersect(x1, x2):
     >>> plotPoints(x1.T, '.-r' )
     >>> plotPoints(x2.T, '.-b' )
     >>> plotPoints(x.T, '.-g' , linewidth=2)
-    
+
     """
-    
+
     p1 = polygon3.Polygon(x1)
     p2 = polygon3.Polygon(x2)
     p = p1 & p2
@@ -1156,14 +1160,15 @@ def polyintersect(x1, x2):
     x = x.reshape((-1, 2))
     return x
 
+
 def test_polyintersect():
-    x1=np.array([(0, 0), (1, 1), (1, 0)] )
-    x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-    x=polyintersect(x1, x2)
-    assert(len(x)==3)
-    assert(np.abs(polyarea(x))==0.25)
-    
-#%%
+    x1 = np.array([(0, 0), (1, 1), (1, 0)])
+    x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+    x = polyintersect(x1, x2)
+    assert(len(x) == 3)
+    assert(np.abs(polyarea(x)) == 0.25)
+
+# %%
 
 
 def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0), thickness=-1, copyimage=True):
@@ -1300,7 +1305,7 @@ def smoothstep(x, x0=0, alpha=1):
 
 def logistic(x, x0=0, alpha=1):
     """ Simple logistic function
-    
+
     Args:
         x (float or array)
 
@@ -1321,7 +1326,7 @@ def findfiles(p, patt, recursive=False):
     lst = [l for l in lst if re.match(rr, l)]
     return lst
 
-#%%
+# %%
 
 
 def blur_measure(im, verbose=0):
@@ -1381,7 +1386,7 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
     gb = np.exp(-.5 * (x_theta**2 / sigma_x**2 + y_theta**2 / sigma_y**2)) * np.cos(xt + psi)
     return gb
 
-#%%
+# %%
 
 
 import numpy as np
@@ -1430,7 +1435,7 @@ def detect_local_minima(arr, thr=None):
     return np.where(detected_minima)
 
 
-#%% Matlab compatibility functions
+# %% Matlab compatibility functions
 
 def fullpath(*args):
     """ Return full path from a list """
@@ -1529,16 +1534,16 @@ def choose(n, k):
     return ntok
 
 
-#def closefn():
+# def closefn():
 #    """ Destructor function for the module """
 #    return
 #
 #
 #import atexit
-#atexit.register(closefn)
+# atexit.register(closefn)
 
 
-#%%
+# %%
 import warnings
 
 
@@ -1547,9 +1552,7 @@ def deprecation(message):
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
-
-#%%
-
+# %%
 try:
     import PIL
     from PIL import ImageFont
@@ -1580,7 +1583,7 @@ except:
     pass
 
 
-#%% Copy mplimage to clipboard
+# %% Copy mplimage to clipboard
 
 try:
     _usegtk = 0
@@ -1653,10 +1656,11 @@ def addfigurecopy(fig=None):
         Fig = plt.gcf()
     else:
         Fig = plt.figure(fig)
-    ff = lambda xx, figx=Fig: mpl2clipboard(fig=figx)
+
+    def ff(xx, figx=Fig): return mpl2clipboard(fig=figx)
     Fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
 
-#%%
+# %%
 
 
 class plotCallback:
@@ -1739,11 +1743,12 @@ def cfigure(*args, **kwargs):
         fig = plt.figure(*args, **kwargs)
     else:
         fig = plt.figure(*args, facecolor='w', **kwargs)
-    ff = lambda xx, figx=fig: mpl2clipboard(fig=figx)
+
+    def ff(xx, figx=fig): return mpl2clipboard(fig=figx)
     fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
     return fig
 
-#%%
+# %%
 
 
 try:
@@ -1789,7 +1794,7 @@ except:
         return [[0, 0, 1600, 1200]]
     pass
 
-#%%
+# %%
 
 
 def getWindowRectangle():
@@ -1862,7 +1867,7 @@ def raiseWindow(fig):
     w.show()
 
 
-#%%
+# %%
 
 
 @static_var('monitorindex', -1)
@@ -1952,7 +1957,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         if tofront:
             plt.figure(f)
 
-#%%
+# %%
 
 
 def robustCost(x, thr, method='L1'):
@@ -2029,7 +2034,7 @@ def robustCost(x, thr, method='L1'):
         raise Exception('no such method')
     return y
 
-#%%
+# %%
 
 
 def test_robustCost():
@@ -2037,7 +2042,7 @@ def test_robustCost():
     _ = robustCost(x, 2)
     _ = robustCost(x, 'auto')
 
-#%%
+# %%
 
 
 def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
@@ -2092,7 +2097,7 @@ def otsu(im, fig=None):
         plt.xlim(min(bin_edges), max(bin_edges))
     return thr
 
-#%%
+# %%
 
 
 def histogram(x, nbins=30, fig=1):
@@ -2112,22 +2117,22 @@ def histogram(x, nbins=30, fig=1):
     return nn, bin_edges, None
 
 
-#%%
+# %%
 def decomposeProjectiveTransformation(H, verbose=0):
     """ Decompose projective transformation
     H is decomposed as H = Hs*Ha*Hp with
 
      Hs = [sR t]
           [0  1]
-    
+
      Ha = [K 0]
           [0 1]
-    
+
      Hp = [I 0]
           [v' eta]
-    
+
     If H is 3-dimensional, then R = [ cos(phi) -sin(phi); sin(phi) cos(phi)];
-    
+
     For more information see "Multiple View Geometry", paragraph 1.4.6.
 
     >>> Ha, Hs, Hp, rest = decomposeProjectiveTransformation( np.eye(3) )
@@ -2174,7 +2179,7 @@ def decomposeProjectiveTransformation(H, verbose=0):
     rest = (s, phi, t, v, )
     return Ha, Hs, Hp, rest
 
-#%% Geometry
+# %% Geometry
 
 
 def points_in_polygon(pts, pp):
@@ -2255,9 +2260,10 @@ def fitPlane(X):
     t = minAlg_5p4(AA)
     return t
 
+
 def modulepath(m):
     """ Return path for module
-    
+
     Args:
         m (str or module): module to return path
     Returns:
@@ -2271,7 +2277,7 @@ def modulepath(m):
 
 def checkmodule(module_name, verbose=1):
     """ Return location of module based on module name
-    
+
     Args:
         module_name (str): name of module to inspect
     Returns
@@ -2315,13 +2321,11 @@ if __name__ == '__main__':
     test_geometry()
     test_intersect2lines()
 
-#%% Run tests from documentation
+# %% Run tests from documentation
 if __name__ == "__main__":
     """ Dummy main for testing
-    """   
-    
-    import unittest      
+    """
+
+    import unittest
     #testcase = unittest.FunctionTestCase(test_intersect2lines)
     unittest.main()
-
-

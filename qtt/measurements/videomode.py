@@ -72,7 +72,7 @@ class videomode_callback:
             self.waveform, self.Naverage, minstrumenthandle, self.unique_channels)
 
         if np.all(data == 0):
-            #self.stopreadout()
+            # self.stopreadout()
             raise Exception('data returned contained only zeros, aborting')
 
         dd = []
@@ -118,30 +118,29 @@ class VideoMode:
     """
 
     videomode_class_index = 0
-    
+
     def __init__(self, station, sweepparams, sweepranges, minstrument, nplots=None, Naverage=10,
                  resolution=[96, 96], sample_rate='default', diff_dir=None, verbose=1,
                  dorun=True, show_controls=True, add_ppt=True, crosshair=False, averaging=True, name=None,
                  mouse_click_callback=None):
         """ Tool for fast acquisition of charge stability diagram
-        
+
         The class assumes that the station has a station.digitizer and a station.awg.
-        
+
         Args:
             station (QCoDeS station): reference for the instruments
             sweepparams (list or dict or str): parameters to sweep
             mouse_click_callback (None or function): if None then update scan position with callback
-            
+
         """
-        VideoMode.videomode_class_index = VideoMode.videomode_class_index+1 # increment index of VideoMode objects
+        VideoMode.videomode_class_index = VideoMode.videomode_class_index + 1  # increment index of VideoMode objects
         self.videomode_index = VideoMode.videomode_class_index
 
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
         self.sweepranges = sweepranges
-        self.virtual_awg = getattr(station, ' virtual_awg' , None)
-
+        self.virtual_awg = getattr(station, ' virtual_awg', None)
 
         self.minstrumenthandle = minstrument[0]
         self.channels = minstrument[1]
@@ -161,13 +160,13 @@ class VideoMode:
         if name is None:
             name = 'VideoMode %d' % self.videomode_index
             if isinstance(self.sweepparams, (str, list)):
-                name +=': %s' % str(self.sweepparams)
+                name += ': %s' % str(self.sweepparams)
         self.name = name
 
         # parse instrument
         minstrumenthandle = qtt.measurements.scans.get_instrument(self.minstrumenthandle, station)
-        
-        if minstrumenthandle.name in ['digitizer','m4i']:
+
+        if minstrumenthandle.name in ['digitizer', 'm4i']:
             if sample_rate == 'default':
                 self.sampling_frequency = minstrumenthandle.sample_rate
             else:
@@ -329,9 +328,9 @@ class VideoMode:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
         qtt.utilities.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
-                              notes=self.station,
-                              extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
-                                  self.scanparams))
+                                        notes=self.station,
+                                        extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
+                                            self.scanparams))
         if isrunning:
             self.startreadout()
 
@@ -350,7 +349,7 @@ class VideoMode:
                 dd = self.datafunction()
                 self.datafunction_result = dd
                 for ii, d in enumerate(dd):
-                        self.lp[ii].update(data=d, processevents=False)
+                    self.lp[ii].update(data=d, processevents=False)
                 pyqtgraph.mkQApp().processEvents()
             except Exception as e:
                 logging.exception(e)
@@ -488,12 +487,12 @@ class VideoMode:
                 gates = self.sweepparams
             elif isinstance(self.sweepparams, list):
                 gates = self.sweepparams
-                gates = [dict( [(gate, 1)]) for gate in gates]
+                gates = [dict([(gate, 1)]) for gate in gates]
 
             if period is None:
                 sampling_frequency = qtt.measurements.scans.get_sampling_frequency(self.minstrumenthandle)
-                base_period=1./sampling_frequency
-                total_period =  base_period*np.prod(self.resolution)
+                base_period = 1. / sampling_frequency
+                total_period = base_period * np.prod(self.resolution)
             else:
                 total_period = period
                 warnings.warn('code untested')
@@ -591,7 +590,7 @@ class VideoMode:
         """ Return instance by index """
         lst = VideoMode.all_instances(verbose=0)
         for l in lst:
-            if l.videomode_index==idx:
+            if l.videomode_index == idx:
                 return l
         return None
 
@@ -608,12 +607,12 @@ def guitest_videomode():
     _ = pyqtgraph.mkQApp()
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
-    
+
     assert(VideoMode.get_instance(-1) is None)
-    
+
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
-    gates=station.gates
+    gates = station.gates
 
     digitizer = SimulationDigitizer(
         qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
@@ -622,27 +621,27 @@ def guitest_videomode():
     station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
     station.components[station.awg.name] = station.awg
 
-    
-    sweepparams = {'gates_horz': {'P1':1}, 'gates_vert': {'P2':1} }
+    sweepparams = {'gates_horz': {'P1': 1}, 'gates_vert': {'P2': 1}}
     minstrument = (digitizer.name, [0])
 
-    vm = VideoMode(station, sweepparams, sweepranges=[120]*2, minstrument=minstrument, resolution=[12]*2, Naverage=2)
+    vm = VideoMode(station, sweepparams, sweepranges=[120] * 2,
+                   minstrument=minstrument, resolution=[12] * 2, Naverage=2)
     vm.stop()
     vm.close()
 
     all = VideoMode.all_instances(verbose=0)
     assert(vm in all)
-    
+
 # %% Testing
 
 
 if __name__ == '__main__':
     guitest_videomode()
-    
+
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
-    gates=station.gates
-    
+    gates = station.gates
+
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
     import pdb
@@ -681,9 +680,10 @@ if __name__ == '__main__':
                    verbose=1, nplots=None, dorun=True)
 
     if 0:
-        sweepparams = {'gates_horz': {'P1':1}, 'gates_vert': {'P2':1} }
+        sweepparams = {'gates_horz': {'P1': 1}, 'gates_vert': {'P2': 1}}
 
-        vm = VideoMode(station, sweepparams, sweepranges=[120]*2, minstrument=minstrument, resolution=[12]*2, Naverage=2)
+        vm = VideoMode(station, sweepparams, sweepranges=[120] * 2,
+                       minstrument=minstrument, resolution=[12] * 2, Naverage=2)
         vm.stop()
 
     self = vm
@@ -695,7 +695,6 @@ if __name__ == '__main__':
     nplots = 3
     ncurves = 2
 
-
     def read_trace_dummy():
         data = qtt.measurements.scans.measuresegment(
             waveform, Naverage=1, minstrhandle=station.sdigitizer.name, read_ch=[1, 2])
@@ -704,7 +703,6 @@ if __name__ == '__main__':
                          waveform['sweeprange'] / 2, data[0].size)
         xdata = [xd] * nplots
         return xdata, dd
-
 
     xd, yd = read_trace_dummy()
 
@@ -718,12 +716,10 @@ if __name__ == '__main__':
     mt.win.setGeometry(1400, 40, 500, 500)
     mt.add_verticals()
 
-
     def callback():
         xdata, ydata = read_trace_dummy()
         mt.plot_curves(xdata, ydata)
         app.processEvents()
-
 
     mt.startreadout(callback=callback)
     mt.updatefunction()

@@ -216,7 +216,7 @@ def get_jupyter_kernel(verbose=2):
             return kernelbase
     return None
 
-#%% Debugging
+# %% Debugging
 
 
 def deprecated(func):
@@ -315,7 +315,7 @@ def test_rdeprecated():
     def dummy2():
         pass
 
-#%%
+# %%
 
 
 def update_dictionary(alldata, **kwargs):
@@ -354,7 +354,7 @@ def stripDataset(dataset):
 
     return dataset
 
-#%%
+# %%
 
 
 def negfloat(x):
@@ -402,7 +402,7 @@ def freezeclass(cls):
 
     return cls
 
-#%%
+# %%
 
 
 def resampleImage(im):
@@ -567,7 +567,7 @@ def test_image_operations(verbose=0):
         print('testing diffImage')
     d = diffImage(ds.z, dy='x')
 
-#%%
+# %%
 
 
 import dateutil
@@ -610,7 +610,7 @@ def plot1D(dataset, fig=1):
         MatPlot(array, num=fig)
 
 
-#%%
+# %%
 
 def showImage(im, extent=None, fig=None, title=None):
     """ Show image in figure window
@@ -632,7 +632,7 @@ def showImage(im, extent=None, fig=None, title=None):
             plt.title(title)
 
 
-#%% Measurement tools
+# %% Measurement tools
 
 @deprecated  # part of the gates object
 def resetgates(gates, activegates, basevalues=None, verbose=2):
@@ -662,7 +662,7 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
             print('  setting gate %s to %.1f [mV]' % (g, val))
         gates.set(g, val)
 
-#%% Tools from pgeometry
+# %% Tools from pgeometry
 
 
 @deprecated
@@ -694,7 +694,8 @@ def cfigure(*args, **kwargs):
         fig = plt.figure(*args, **kwargs)
     else:
         fig = plt.figure(*args, facecolor='w', **kwargs)
-    ff = lambda xx, figx=fig: mpl2clipboard(fig=figx)
+
+    def ff(xx, figx=fig): return mpl2clipboard(fig=figx)
     fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
     return fig
 
@@ -746,7 +747,7 @@ except:
 from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 
 
-#%% Helper tools
+# %% Helper tools
 
 def in_ipynb():
     try:
@@ -771,7 +772,7 @@ def pythonVersion():
           (pversion, ipversion, in_ipynb()))
 
 
-#%%
+# %%
 try:
     import win32com
     import win32com.client
@@ -983,7 +984,7 @@ try:
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
         if isinstance(notes, qcodes.DataSet):
-            notes = reshape_metadata(notes, printformat='s', add_gates = True)
+            notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
         if notes is not None:
             if notes == '':
@@ -1031,24 +1032,24 @@ try:
             raise IndexError('The dataset contains less than two data arrays')
 
         if customfig is None:
-           
+
             if isinstance(paramname, str):
                 if title is None:
                     parameter_name = dataset.default_parameter_name(paramname=paramname)
-                    title = 'Parameter: %s'  % parameter_name
+                    title = 'Parameter: %s' % parameter_name
                 temp_fig = QtPlot(dataset.default_parameter_array(
-                                      paramname=paramname), show_window=False)
+                    paramname=paramname), show_window=False)
             else:
                 if title is None:
-                    title = 'Parameter: %s'  % (str(paramname),)
+                    title = 'Parameter: %s' % (str(paramname),)
                 for idx, parameter_name in enumerate(paramname):
-                        if idx==0:
-                            temp_fig = QtPlot(dataset.default_parameter_array(
-                              paramname=parameter_name), show_window=False)
-                        else:
-                            temp_fig.add(dataset.default_parameter_array(
-                              paramname=parameter_name))
-                    
+                    if idx == 0:
+                        temp_fig = QtPlot(dataset.default_parameter_array(
+                            paramname=parameter_name), show_window=False)
+                    else:
+                        temp_fig.add(dataset.default_parameter_array(
+                            paramname=parameter_name))
+
         else:
             temp_fig = customfig
 
@@ -1086,11 +1087,11 @@ except:
         ''' Dummy implementation '''
         warnings.warn('addPPT_dataset is not available on your system')
 
-#%%
+# %%
 from collections import OrderedDict
 
 
-def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates = True, verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, verbose=0):
     '''Reshape the metadata of a DataSet
 
     Arguments:
@@ -1123,10 +1124,10 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates = 
             header += ' (base %s)' % dataset.io.base_location
 
     if add_gates:
-        gate_values = dataset.metadata.get('allgatevalues', None)        
+        gate_values = dataset.metadata.get('allgatevalues', None)
 
         if gate_values is not None:
-            gate_values = dict( [ (key, np.around(value, 3)) for key, value in gate_values.items()])
+            gate_values = dict([(key, np.around(value, 3)) for key, value in gate_values.items()])
             header += '\ngates: ' + str(gate_values) + '\n'
 
     scanjob = dataset.metadata.get('scanjob', None)
@@ -1137,7 +1138,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates = 
     metadata = OrderedDict()
     # make sure the gates instrument is in front
     all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
-                         'gates',  reverse=True)
+                         'gate s',  reverse=True)
     for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
@@ -1200,7 +1201,7 @@ def test_reshape_metadata():
     instr.close()
 
 
-#%%
+# %%
 
 def setupMeasurementWindows(*args, **kwargs):
     raise Exception('use qtt.gui.live_plotting.setupMeasurementWindows instead')
@@ -1228,7 +1229,7 @@ def timeProgress(data):
     remaining = (t1 - t0) * (1 - fraction) / fraction
     return fraction, remaining
 
-#%%
+# %%
 
 
 def flatten(lst):
@@ -1244,7 +1245,7 @@ def flatten(lst):
     '''
     return list(chain(*lst))
 
-#%%
+# %%
 
 
 def cutoffFilter(x, thr, omega):
@@ -1264,7 +1265,7 @@ def cutoffFilter(x, thr, omega):
     y[x > thr + omega] = 0
     return y
 
-#%%
+# %%
 
 
 def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
@@ -1294,7 +1295,7 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
 F = smoothFourierFilter([36, 36])
 
 
-#%%
+# %%
 
 def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     """ Implement simple high pass filter using the Fourier transform """
@@ -1333,7 +1334,7 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
     return imf
 
 
-#%%
+# %%
 import copy
 
 
@@ -1391,7 +1392,7 @@ def clickGatevals(plot, drawmode='ro'):
 
     return gatevals
 
-#%%
+# %%
 
 
 def connect_slot(target):

@@ -54,11 +54,11 @@ class ClassicalDotSystem(BaseDotSystem):
 
         """
         self.name = name
-        
+
         logging.info('ClassicalDotSystem: max number of electrons %d' % maxelectrons)
         self.makebasis(ndots=ndots, maxelectrons=maxelectrons)
         self.ngates = ngates
-        
+
         # initialize characterizing dot variables
         self.varnames = ['mu0', 'Eadd', 'W', 'alpha']
         self.mu0 = np.zeros((ndots,))  # chemical potential at zero gate voltage
@@ -70,7 +70,7 @@ class ClassicalDotSystem(BaseDotSystem):
 
     def _makebasis_extra(self):
         """ Define a basis of occupancy states
-        
+
         These addition structures are used for efficient construction of the Hamiltonian
         """
         # make addition energy basis
@@ -84,14 +84,14 @@ class ClassicalDotSystem(BaseDotSystem):
         """ Calculate the energies of all dot states, given a set of gate values. Returns array of energies. """
         energies = np.zeros((self.number_of_basis_states,))
         tmp1 = -(self.mu0 + np.dot(self.alpha, gatevalues))
-        energies += self.basis.dot(tmp1) # chemical potential times number of electrons
-        energies += self._coulomb_energy.dot(self.W) # coulomb repulsion
-        energies += self._add_basis.dot(self.Eadd) # addition energy
+        energies += self.basis.dot(tmp1)  # chemical potential times number of electrons
+        energies += self._coulomb_energy.dot(self.W)  # coulomb repulsion
+        energies += self._add_basis.dot(self.Eadd)  # addition energy
         self.energies = energies
 
         idx = np.argsort(self.energies)
         self.energies = self.energies[idx]
-        self.eigenstates[:] = 0  
+        self.eigenstates[:] = 0
         for i, j in enumerate(idx):
             self.eigenstates[j, i] = 1
         return energies
@@ -104,25 +104,26 @@ class ClassicalDotSystem(BaseDotSystem):
     def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
         """ Simulating a honeycomb by looping over a 2D array of parameter values (paramvalues2D),
          resulting honeycomb is stored in self.honeycomb 
-         
+
          Args:
              paramvalues2D (array): shape nparams x nx x ny
              verbose (int)
              usediag (bool)
              multiprocess(bool)
-         
+
          """
         t0 = time.time()
 
         nparams = np.shape(paramvalues2D)[0]
         npointsx = np.shape(paramvalues2D)[1]
-        if len(paramvalues2D.shape)==3:
+        if len(paramvalues2D.shape) == 3:
             npointsy = np.shape(paramvalues2D)[2]
         else:
             npointsy = 1
 
         if nparams != self.ngates:
-            print('simulate_honeycomb: number of parameters (%d) does not equal number of gates (%d)...' % (nparams, self.ngates))
+            print('simulate_honeycomb: number of parameters (%d) does not equal number of gates (%d)...' %
+                  (nparams, self.ngates))
             return
 
         self.hcgs = np.empty((npointsx, npointsy, self.ndots))
@@ -152,10 +153,10 @@ class ClassicalDotSystem(BaseDotSystem):
         self.nstates = np.sum(self.stateoccs, axis=1, dtype=float)
         self.orderstatesbyE()
         self.findcurrentoccupancy()
-        
+
     def findcurrentoccupancy(self, exact=True):
         """ Find electron occupancy
-        
+
         Args:
             exact (bool): If True then average over all ground states
         """
@@ -167,6 +168,7 @@ class ClassicalDotSystem(BaseDotSystem):
             # first order approximation
             self.OCC = np.around(self.stateoccs[0], decimals=2)
         return self.OCC
+
 
 class TripleDot(ClassicalDotSystem):
 
@@ -182,7 +184,8 @@ class TripleDot(ClassicalDotSystem):
 
         vardict["mu0_values"] = np.array([-27.0, -20.0, -25.0])  # chemical potential at zero gate voltage
         vardict["Eadd_values"] = np.array([54.0, 52.8, 54.0])  # addition energy
-        vardict["W_values"] = 3 * np.array([6.0, 1.0, 5.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        vardict["W_values"] = 3 * np.array([6.0, 1.0, 5.0])
         vardict["alpha_values"] = np.array([[1.0, 0.25, 0.1],
                                             [0.25, 1.0, 0.25],
                                             [0.1, 0.25, 1.0]])
@@ -190,9 +193,10 @@ class TripleDot(ClassicalDotSystem):
         for name in self.varnames:
             setattr(self, name, vardict[name + '_values'])
 
+
 class MultiDot(ClassicalDotSystem):
 
-    def __init__(self, name='multidot', ndots=6, maxelectrons = 3,  **kwargs):
+    def __init__(self, name='multidot', ndots=6, maxelectrons=3, **kwargs):
         """ Classical simulation of multi dot """
         super().__init__(name=name, ndots=ndots, ngates=ndots, maxelectrons=maxelectrons, **kwargs)
 
@@ -200,17 +204,15 @@ class MultiDot(ClassicalDotSystem):
 
         vardict = {}
 
+        vardict["mu0_values"] = 10 * np.sin(np.arange(ndots))  # chemical potential at zero gate voltage
+        vardict["Eadd_values"] = 50 + np.sin(2 + np.arange(ndots))  # addition energy
 
-        vardict["mu0_values"] = 10*np.sin(np.arange(ndots))  # chemical potential at zero gate voltage
-        vardict["Eadd_values"] = 50+np.sin(2+np.arange(ndots))  # addition energy
-        
-        
         dotpairs = list(itertools.combinations(range(ndots), 2))
-        
-        
-        coulomb_repulsion = [np.Inf, 18.0, 3.0, 0.05,]+[0]*ndots
-        W=np.array([ coulomb_repulsion[p[1]-p[0]] for p in dotpairs] )
-        vardict["W_values"] = W # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+
+        coulomb_repulsion = [np.Inf, 18.0, 3.0, 0.05, ] + [0] * ndots
+        W = np.array([coulomb_repulsion[p[1] - p[0]] for p in dotpairs])
+        # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        vardict["W_values"] = W
         vardict["alpha_values"] = np.eye(self.ndots)
 
         for name in self.varnames:
@@ -229,7 +231,8 @@ class DoubleDot(ClassicalDotSystem):
 
         vardict["mu0_values"] = np.array([120.0, 100.0])  # chemical potential at zero gate voltage
         vardict["Eadd_values"] = np.array([54.0, 52.8])  # addition energy
-        vardict["W_values"] = np.array([6.0])  # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        # coulomb repulsion (!order is important: (1,2), (1,3), (2,3)) (lexicographic ordering)
+        vardict["W_values"] = np.array([6.0])
         vardict["alpha_values"] = np.array([[1.0, 0.25], [0.25, 1.0]])
 
         for name in self.varnames:
@@ -248,7 +251,8 @@ class SquareDot(ClassicalDotSystem):
 
         vardict["mu0_values"] = np.array([-30.0, -30.0, -30.0, -30.0])
         vardict["Eadd_values"] = np.array([50.0, 50.0, 50.0, 50.0])
-        vardict["W_values"] = np.array([5.0, 2.0, 5.0, 5.0, 2.0, 5.0])  # order:(1,2), (1,3), (1,4), (2,3), (2,4), (3,4)
+        # order:(1,2), (1,3), (1,4), (2,3), (2,4), (3,4)
+        vardict["W_values"] = np.array([5.0, 2.0, 5.0, 5.0, 2.0, 5.0])
         vardict["alpha_values"] = np.array([[1.0, 0.25, 0.1, 0.25],
                                             [0.25, 1.0, 0.25, 0.1],
                                             [0.1, 0.25, 1.0, 0.25],
@@ -259,12 +263,12 @@ class SquareDot(ClassicalDotSystem):
 
 
 def test_dotsystem():
-    m=MultiDot('multidot', 4, maxelectrons=3)
+    m = MultiDot('multidot', 4, maxelectrons=3)
     m.calculate_energies(np.random.rand(m.ndots))
     m.solve()
-    if __name__=='__main__':
+    if __name__ == '__main__':
         m.showstates(8)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     test_dotsystem()
-    

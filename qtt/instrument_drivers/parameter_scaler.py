@@ -51,9 +51,9 @@ class ParameterScaler(Parameter):
                  output: Parameter,
                  division: Union[int, float, Parameter] = None,
                  gain: Union[int, float, Parameter] = None,
-                 name: str=None,
-                 label: str=None,
-                 unit: str=None) -> None:
+                 name: str = None,
+                 label: str = None,
+                 unit: str = None) -> None:
         self._wrapper_param = output
 
         # Set the role, either as divider or amplifier

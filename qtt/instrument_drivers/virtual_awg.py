@@ -5,7 +5,7 @@ Created on Wed Aug 31 13:04:09 2016
 @author: diepencjv
 """
 
-#%%
+# %%
 import numpy as np
 import scipy.signal
 import logging
@@ -19,20 +19,21 @@ import qtt
 import qtt.utilities.tools
 
 logger = logging.getLogger(__name__)
-#%%
+# %%
 
 
 class virtual_awg(Instrument):
     """ 
-    
+
     Attributes:
         _awgs (list): handles to instruments
         awg_map (dict)
         hardware (Instrument): contains AWG to plunger values
         corr (float): unknown
         delay_FPGA (float): time delay of signals going through fridge
-        
+
     """
+
     def __init__(self, name, instruments=[], awg_map=None, hardware=None, verbose=1, **kwargs):
         super().__init__(name, **kwargs)
         logger.info('initialize virtual_awg %s' % name)
@@ -41,7 +42,7 @@ class virtual_awg(Instrument):
         self.hardware = hardware
         self.verbose = verbose
         self.delay_FPGA = 2.0e-6  # should depend on filterboxes
-        self.corr = .0 # legacy code, specific for FPGA board not used any more
+        self.corr = .0  # legacy code, specific for FPGA board not used any more
         self.maxdatapts = 16e6  # This used to be set to the fpga maximum, but that maximum should not be handled here
 
         self.awg_seq = None
@@ -54,7 +55,7 @@ class virtual_awg(Instrument):
             self.awg_cont = self._awgs[self.awg_map['awg_mk'][0]]
             self.awg_cont.set('run_mode', 'CONT')
             self.awg_seq = self._awgs[(self.awg_map['awg_mk'][0] + 1) % 2]
-            
+
             self._set_seq_mode(self.awg_seq)
             self.delay_AWG = self.hardware.parameters['delay_AWG'].get()
         else:
@@ -73,7 +74,7 @@ class virtual_awg(Instrument):
         a.set('run_mode', 'SEQ')
         a.sequence_length.set(1)
         a.set_sqel_trigger_wait(1, 0)
-        
+
     def get_idn(self):
         ''' Overrule because the default VISA command does not work '''
         IDN = {'vendor': 'QuTech', 'model': 'virtual_awg',
@@ -82,24 +83,24 @@ class virtual_awg(Instrument):
 
     def awg_gate(self, gate):
         """ Return true of the gate can be controlled by the awg
-        
+
         Args:
             gate ()
         """
         if gate is None:
             return False
-        
+
         if isinstance(gate, dict):
             # vector scan, assume we can do it fast if all components are fast
             return np.all([self.awg_gate(g) for g in gate])
         if self.awg_map is None:
             return False
-        
+
         if gate in self.awg_map:
             return True
         else:
             return False
-        
+
     def stop(self, verbose=0):
         ''' Stops all AWGs and turns of all channels '''
         for awg in self._awgs:
@@ -110,7 +111,7 @@ class virtual_awg(Instrument):
         if verbose:
             print('Stopped AWGs')
 
-    def sweep_init(self, waveforms, period=1e-3, delete=True, samp_freq = None):
+    def sweep_init(self, waveforms, period=1e-3, delete=True, samp_freq=None):
         ''' Send waveform(s) to gate(s)
 
         Arguments:
@@ -259,20 +260,20 @@ class virtual_awg(Instrument):
 #        idx_zero = np.argmin(np.abs(wave_raw))
 #        wave_raw = np.roll(wave_raw, wave_raw.size-idx_zero)
         if start_zero:
-            o=int((wave_raw.size)*(1-width)/2)
+            o = int((wave_raw.size) * (1 - width) / 2)
             wave_raw = np.roll(wave_raw, o)
 
         return wave_raw
-    
+
     def make_pulses(self, voltages, waittimes, reps=1, filtercutoff=None, mvrange=None):
         """Make a pulse sequence with custom voltage levels and wait times at each level.
-        
+
         Arguments:
             voltages (list of floats): voltage levels to be applied in the sequence
             waittimes (list of floats): duration of each pulse in the sequence
             reps (int): number of times to repeat the pulse sequence in the waveform
             filtercutoff (float): cutoff frequency of a 1st order butterworth filter to make the pulse steps smoother 
-            
+
         Returns:
             wave_raw (array): raw data which represents the waveform
         """
@@ -285,10 +286,10 @@ class virtual_awg(Instrument):
         v_prop = [2 * ((x - mvrange[1]) / (mvrange[0] - mvrange[1])) - 1 for x in voltages]
         wave_raw = np.concatenate([x * v_wave * np.ones(y) for x, y in zip(v_prop, samples)])
         if filtercutoff is not None:
-            b,a = scipy.signal.butter(1,0.5*filtercutoff/self.AWG_clock, btype='low', analog=False, output='ba')
-            wave_raw = scipy.signal.filtfilt(b,a,wave_raw)
+            b, a = scipy.signal.butter(1, 0.5 * filtercutoff / self.AWG_clock, btype='low', analog=False, output='ba')
+            wave_raw = scipy.signal.filtfilt(b, a, wave_raw)
         wave_raw = np.tile(wave_raw, reps)
-            
+
         return wave_raw
 
     def check_frequency_waveform(self, period, width):
@@ -296,7 +297,8 @@ class virtual_awg(Instrument):
         old_sr = self.AWG_clock
         new_sr = 5 / (period * (1 - width))
         if (new_sr) > old_sr:
-            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (old_sr / 1e6, new_sr / 1e6, 1e3 * period), UserWarning)
+            warnings.warn('awg sampling frequency %.1f MHz is too low for signal requested (sr %.1f [MHz], period %.1f [ms])' % (
+                old_sr / 1e6, new_sr / 1e6, 1e3 * period), UserWarning)
         return new_sr
 
     def sweep_gate(self, gate, sweeprange, period, width=.95, wave_name=None, delete=True):
@@ -319,7 +321,7 @@ class virtual_awg(Instrument):
         self.check_frequency_waveform(period, width)
         self.check_amplitude(gate, sweeprange)
 
-        start_zero=True
+        start_zero = True
         waveform = dict()
         wave_raw = self.make_sawtooth(sweeprange, period, width, start_zero=start_zero)
         awg_to_plunger = self.hardware.parameters['awg_to_%s' % gate].get()
@@ -333,7 +335,7 @@ class virtual_awg(Instrument):
         sweep_info = self.sweep_init(waveform, period, delete)
         self.sweep_run(sweep_info)
         waveform['width'] = width
-        waveform['start_zero']=start_zero
+        waveform['start_zero'] = start_zero
         waveform['sweeprange'] = sweeprange
         waveform['samplerate'] = 1 / self.AWG_clock
         waveform['period'] = period
@@ -402,31 +404,32 @@ class virtual_awg(Instrument):
         sweepgate = sweepdata['gate']
         sweeprange = sweepdata['sweeprange']
         period = sweepdata['period']
-        width = sweepdata.get('width',0.95)
-        
+        width = sweepdata.get('width', 0.95)
+
         gate_voltages = pulsedata['gate_voltages'].copy()
         if shift_zero:
             for g in gate_voltages:
                 gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
         waittimes = pulsedata['waittimes']
-        filtercutoff = pulsedata.get('filtercutoff',None)
-        
+        filtercutoff = pulsedata.get('filtercutoff', None)
+
         pulsesamp = [int(round(x * self.AWG_clock)) for x in waittimes]
         sawsamp = int(round(period * width * self.AWG_clock))
         pulsereps = int(np.ceil(self.AWG_clock * period * width / sum(pulsesamp)))
         allvoltages = np.concatenate([v for v in gate_voltages.values()])
         mvrange = [max(allvoltages), min(allvoltages)]
-                
+
         self.check_frequency_waveform(period, width)
 
         waveform = dict()
         wave_sweep = self.make_sawtooth(sweeprange, period, width)
         for g in gate_voltages:
-            self.check_amplitude(g, sweeprange + (mvrange[0]-mvrange[1]))
+            self.check_amplitude(g, sweeprange + (mvrange[0] - mvrange[1]))
         for g in gate_voltages:
-            wave_raw = self.make_pulses(gate_voltages[g], waittimes, reps=pulsereps, filtercutoff=filtercutoff, mvrange=mvrange)
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, reps=pulsereps,
+                                        filtercutoff=filtercutoff, mvrange=mvrange)
             wave_raw = wave_raw[:sawsamp]
-            wave_raw = np.pad(wave_raw, (0,len(wave_sweep) - len(wave_raw)), 'edge')
+            wave_raw = np.pad(wave_raw, (0, len(wave_sweep) - len(wave_raw)), 'edge')
             if sweepgate == g:
                 wave_raw += wave_sweep
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
@@ -489,7 +492,7 @@ class virtual_awg(Instrument):
         scan.
 
         The first sweepgate is the fast changing gate (on the horizontal axis).
-        
+
         Arguments:
             samp_freq (float): sampling frequency of the measurement instrument in Hertz.
             sweepgates (list): two strings with names of gates to sweep
@@ -543,7 +546,7 @@ class virtual_awg(Instrument):
                 else:
                     raise Exception('Can not compensate a sweepgate')
 
-        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete, samp_freq = samp_freq)
+        sweep_info = self.sweep_init(waveform, period=period_vert, delete=delete, samp_freq=samp_freq)
         self.sweep_run(sweep_info)
 
         waveform['width_horz'] = width
@@ -566,7 +569,7 @@ class virtual_awg(Instrument):
         gates.
 
         The horizontal direction is the direction where the AWG signal is changing fastest. It is the first element in the resolution and sweepranges.
-        
+
         Arguments:
             samp_freq (float): sampling frequency of the measurement instrument in Hertz.
             gates_horz (dict): the gates for the horizontal direction and their coefficients
@@ -678,12 +681,13 @@ class virtual_awg(Instrument):
         period = sum(waittimes)
         if reset_to_zero:
             for g in gate_voltages:
-                gate_voltages[g] = [x-gate_voltages[g][-1] for x in gate_voltages[g]]
+                gate_voltages[g] = [x - gate_voltages[g][-1] for x in gate_voltages[g]]
         allvoltages = np.concatenate([v for v in gate_voltages.values()])
         mvrange = [max(allvoltages), min(allvoltages)]
         waveform = dict()
         for g in gate_voltages:
-            wave_raw = self.make_pulses(gate_voltages[g], waittimes, reps=reps, filtercutoff=filtercutoff, mvrange=mvrange)
+            wave_raw = self.make_pulses(gate_voltages[g], waittimes, reps=reps,
+                                        filtercutoff=filtercutoff, mvrange=mvrange)
             awg_to_plunger = self.hardware.parameters['awg_to_%s' % g].get()
             wave = wave_raw / awg_to_plunger
             waveform[g] = dict()
@@ -700,7 +704,7 @@ class virtual_awg(Instrument):
                 waveform['markerdelay'] = sweep_info[channels]['delay']
 
         return waveform, sweep_info
-   
+
     def reset_AWG(self, clock=1e8):
         """ Reset AWG to videomode and scanfast """
         self.AWG_clock = clock
@@ -716,7 +720,7 @@ class virtual_awg(Instrument):
                     warnings.warn('AWG channel %d output not at 4.0 V' % ii)
         if self.awg_seq is not None:
             self._set_seq_mode(self.awg_seq)
-            
+
     def set_amplitude(self, amplitude):
         """ Set the AWG peak-to-peak amplitude for all channels
 
@@ -736,12 +740,12 @@ class virtual_awg(Instrument):
         for awg in self._awgs:
             for i in range(1, 5):
                 awg.set('ch%s_amp' % i, self.ch_amp)
-                
+
     def check_amplitude(self, gate, mvrange):
         """ Calculates the lowest allowable AWG peak-to-peak amplitude based on the
         ranges to be applied to the gates. If the AWG amplitude is too low, it gives
         a warning and increases the amplitude.
-        
+
         Args:
             gate (str): name of the gate to check
             mvrange (float): voltage range, in mV, that the gate needs to reach
@@ -754,7 +758,7 @@ class virtual_awg(Instrument):
             self.set_amplitude(min_amp)
             warnings.warn('AWG amplitude too low for this range, setting to %.1f' % min_amp)
 
-#%%
+# %%
 
 
 def plot_wave_raw(wave_raw, samplerate=None, station=None):

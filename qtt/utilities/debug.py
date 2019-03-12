@@ -1,4 +1,4 @@
-#%% Tools for debugging code
+# %% Tools for debugging code
 
 import os
 import functools
@@ -6,13 +6,13 @@ import tempfile
 import time
 import datetime
 
-#%% Debugging
+# %% Debugging
 
 
 def dumpstring(txt, tag='dump', showfile=False):
     """ Dump a text string to temperary file on disk """
-    _ = tempfile.mkdtemp() # init
-    tdir=tempfile.tempdir
+    _ = tempfile.mkdtemp()  # init
+    tdir = tempfile.tempdir
     if tdir is None:
         tdir = tempfile.mkdtemp()
     tfile = os.path.join(tdir, 'qtt-%s.txt' % tag)
@@ -20,7 +20,8 @@ def dumpstring(txt, tag='dump', showfile=False):
     with open(tfile, 'a+t') as fid:
         fid.write(txt + '\n')
 
-#%% Decorator for generic function
+# %% Decorator for generic function
+
 
 def functioncalldecorator(f, name=None):
     """ Decorate a function to log input and output arguments """
@@ -43,7 +44,8 @@ def functioncalldecorator(f, name=None):
         return r
     return wrapped
 
-#%%
+# %%
+
 
 def logInstrument(instrument):
     """ Decorate all parameters of an instrument with logging methods """
@@ -54,4 +56,3 @@ def logInstrument(instrument):
             p.get = functioncalldecorator(p.get, '%s.get' % p.name)
         if hasattr(p, 'get') and hasattr(p, 'set'):
             p.set = functioncalldecorator(p.set, '%s.set' % p.name)
-

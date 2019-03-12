@@ -5,7 +5,7 @@ Created on Wed Mar  4 12:40:53 2015
 @author: eendebakpt
 """
 
-#%% Load packages
+# %% Load packages
 from __future__ import division
 
 import numpy as np
@@ -54,8 +54,7 @@ from qtt.algorithms.generic import scaleImage, smoothImage, localMaxima
 
 warnings.warn('do not import this module, it will be removed in the future', DeprecationWarning)
 
-#%% Functions
-
+# %% Functions
 
 
 def showIm(ims, fig=1, title=''):
@@ -65,7 +64,7 @@ def showIm(ims, fig=1, title=''):
     matplotlib.pyplot.imshow(ims, interpolation='nearest')
     matplotlib.pyplot.axis('image')
 
-#%%
+# %%
 
 
 def dummy():
@@ -92,14 +91,13 @@ def getBlobPosition(ims, label_im, idx):
     return xstart
 
 
-
-
 @qtt.utilities.tools.deprecated
 def getpatch(ims, pp, samplesize, fig=None):
     """ Return image patch from parameters 
     """
     patch = sampleImage(ims, pp, samplesize=samplesize, fig=fig)
     return patch
+
 
 def sampleImage(im, pp, samplesize, fig=None, clearfig=True, nrsub=1):
     """ Sample image patch
@@ -162,11 +160,11 @@ def sampleImage(im, pp, samplesize, fig=None, clearfig=True, nrsub=1):
     return patch
 
 
-
-#%%
+# %%
 import math
 from qtt.algorithms.misc import polyarea
 from qtt.utilities.imagetools import semiLine, lineSegment
+
 
 @pmatlab.static_var("HH", np.matrix(np.eye(3)))
 def createH(samplesize, pp, scale=1):
@@ -187,7 +185,7 @@ def createH(samplesize, pp, scale=1):
     H.itemset(5, scale * (-s * cc[0] - c * cc[1]) + cx[1])
     return H
 
-#%%
+# %%
 
 
 def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, lenmv=20., sepmv=2.0, dy=5):
@@ -209,9 +207,10 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
     """
     samplesize = np.array([ksize, ksize + dy])
-    param = [None, None, sepmv / istep, 3 * np.pi /
-             8, -7 * np.pi / 8, 11 * np.pi / 8, np.pi / 8]
-    modelpatch, cdata = createCross(param, samplesize, w=widthmv / istep, l=lenmv / istep, lsegment=lenmv / istep, H=100)
+    param = [None, None, sepmv / istep, 3 * np.pi
+             / 8, -7 * np.pi / 8, 11 * np.pi / 8, np.pi / 8]
+    modelpatch, cdata = createCross(param, samplesize, w=widthmv / istep,
+                                    l=lenmv / istep, lsegment=lenmv / istep, H=100)
 
     imtmp = pmatlab.setregion(scaleImage(imx), scaleImage(modelpatch), [0, 0])
 
@@ -247,30 +246,33 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
 
 from qtt.utilities.imagetools import evaluateCross
 
+
 @qtt.utilities.tools.rdeprecated('use qtt.utilities.imagetools.fitModel instead', expire='1-6-2018')
-def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None, 
+def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
              istepmodel=.5, cb=None, use_abs=False, w=2.5):
     """ Fit model of an anti-crossing 
-    
+
     This is a wrapper around evaluateCross and the scipy optimization routines.
-    
+
     Args:
         param0 (array): parameters for the anti-crossing model
         imx (array): input image
-        
-    
+
+
     """
-    
+
     samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
 
-    costfun = lambda param0: evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
+    def costfun(param0): return evaluateCross(param0, imx, fig=None,
+                                              istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
 
     vv = []
+
     def fmCallback(plocal, pglobal):
         """ Helper function to store intermediate results """
         vv.append((plocal, pglobal))
     if cfig is not None:
-        cb = lambda x: fmCallback(x, None)
+        def cb(x): return fmCallback(x, None)
         #cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
         #cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
 
@@ -284,15 +286,13 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
         paramy = res
     else:
         paramy = param0
-    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead', options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
+    res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead',
+                                  options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
     #res = scipy.optimize.minimize(costfun, res.x, method='Powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
 
     if verbose:
         print('fitModel: score %.2f -> %.2f' % (costfun(param0), res.fun))
     return res
-
-
-
 
 
 @qtt.utilities.tools.rdeprecated(expire='1-1-2018')
@@ -304,9 +304,9 @@ def calcSlope(pp):
     return psi, slope
 
 
-#%%
+# %%
 
-#%%
+# %%
 @pmatlab.static_var("scaling0", np.diag([1., 1, 1]))
 def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=np.deg2rad(70), ksizemv=12, dthr=8, dwidth=3, alldata=None, px=None):
     """ Cost function for line fitting
@@ -413,7 +413,7 @@ def costFunctionLine(pp, imx, istep, maxshift=12, verbose=0, fig=None, maxangle=
     return cost
 
 
-#%%
+# %%
 
 from scipy.optimize import minimize
 
@@ -428,8 +428,9 @@ def fitLine(alldata, param0=None, fig=None):
     imx = -np.array(alldata.diff_dir_xy)
     px = [imx.shape[1] / 2, imx.shape[0] / 2]
 
-    costfun = lambda x: costFunctionLine(x, imx, istep, verbose=0, px=px, dthr=7, dwidth=4)
-    res = minimize(costfun, param0, method='powell', options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose >= 2}, callback=cb)
+    def costfun(x): return costFunctionLine(x, imx, istep, verbose=0, px=px, dthr=7, dwidth=4)
+    res = minimize(costfun, param0, method='powell', options={
+                   'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose >= 2}, callback=cb)
 
     cgate = alldata.diff_dir_xy.set_arrays[1].name
     igate = alldata.diff_dir_xy.set_arrays[0].name

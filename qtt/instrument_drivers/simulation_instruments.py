@@ -3,12 +3,12 @@
 Contains code to do live plotting 
 
 """
-#%%
+# %%
 import numpy as np
 import logging
 import qcodes
 
-#%%
+# %%
 
 
 class SimulationDigitizer(qcodes.Instrument):
@@ -24,7 +24,7 @@ class SimulationDigitizer(qcodes.Instrument):
 
     def measuresegment(self, waveform, channels=[0]):
         """ Measure a segment of data
-        
+
         Args:
             waveform (object): waveform currently on AWG
             channels (list): channels to measure
@@ -45,10 +45,10 @@ class SimulationDigitizer(qcodes.Instrument):
         period = waveform.get('period', 1e-3)
         number_samples = int(period * sample_rate)
         data = np.array([self.model.keithley1_amplitude() for ii in range(number_samples)])
-    
-        noise_frequencies = [16e3, 100e3] # Hz
+
+        noise_frequencies = [16e3, 100e3]  # Hz
         for noise_frequency in noise_frequencies:
-            noise = 0.01 * np.sin(noise_frequency * np.arange(data.size) / sample_rate) 
+            noise = 0.01 * np.sin(noise_frequency * np.arange(data.size) / sample_rate)
             data += noise
         return ([data] * 2)[0:len(channels)]
 
@@ -65,8 +65,8 @@ class SimulationDigitizer(qcodes.Instrument):
         model = self.model
         sweepgates = waveform['sweepgates']
         if isinstance(sweepgates, dict):
-            sweepgates=[sweepgates]
-            
+            sweepgates = [sweepgates]
+
         ndim = len(sweepgates)
 
         nn = waveform['resolution']
@@ -94,9 +94,9 @@ class SimulationDigitizer(qcodes.Instrument):
 
         if wtype == 'sweep_2D_virt' or wtype == 'sweep_2D':
             if wtype == 'sweep_2D_virt':
-                sweepgatesx=sweepgates
+                sweepgatesx = sweepgates
             else:
-                sweepgatesx=[ {sweepgates[0]:1}, {sweepgates[1]:1}]
+                sweepgatesx = [{sweepgates[0]:1}, {sweepgates[1]:1}]
 
             iih = [v.index(s) for s in sweepgatesx[0]]
             iiv = [v.index(s) for s in sweepgatesx[1]]
@@ -109,7 +109,6 @@ class SimulationDigitizer(qcodes.Instrument):
                 Vmatrix[0, j] = vh[idx]
             for idx, j in enumerate(iiv):
                 Vmatrix[1, j] = vv[idx]
-
 
             inverseV = Vmatrix.T
             Vmatrix = None
@@ -127,7 +126,7 @@ class SimulationDigitizer(qcodes.Instrument):
             inverseV = np.linalg.inv(Vmatrix)
         sweeps = []
         for ii in range(ndim):
-            sweeps.append(np.linspace(-rr[ii]/2, rr[ii]/2, nn[ii]))
+            sweeps.append(np.linspace(-rr[ii] / 2, rr[ii] / 2, nn[ii]))
         meshgrid = np.meshgrid(*sweeps)
         mm = tuple([xv.flatten() for xv in meshgrid])
         w = np.vstack((*mm, np.zeros((ng - ndim, mm[0].size))))
@@ -135,7 +134,7 @@ class SimulationDigitizer(qcodes.Instrument):
 
         for ii, p in enumerate(model.gate_transform.sourcenames):
             val = model.get_gate(p)
-            if verbose>=2:
+            if verbose >= 2:
                 print('p %s: centre %s' % (p, val))
             gate2Dparams[ii] = val
 
@@ -164,10 +163,10 @@ class SimulationDigitizer(qcodes.Instrument):
         sd1 *= (1 / np.sum(model.sddist1))
         sd2 *= (1 / np.sum(model.sddist2))
 
-        if verbose>=2:
+        if verbose >= 2:
             print('sd1.shape %s' % (sd1.shape,))
             print('sd2.shape %s' % (sd2.shape,))
-            
+
         if model.sdnoise > 0:
             sd1 += model.sdnoise * \
                 (np.random.rand(*test_dot.honeycomb.shape) - .5)
@@ -177,7 +176,7 @@ class SimulationDigitizer(qcodes.Instrument):
             sd1 = sd1.reshape((-1,))
             sd2 = sd2.reshape((-1,))
         #plt.figure(1000); plt.clf(); plt.plot(sd1, '.b'); plt.plot(sd2,'.r')
-        self.debug['sd']=sd1, sd2
+        self.debug['sd'] = sd1, sd2
         return sd1, sd2
 
 
@@ -202,34 +201,33 @@ class SimulationAWG(qcodes.Instrument):
         waveform['sweepranges'] = [waveform['sweeprange']]
 
         sweep_info = None
-        self._waveform  = waveform
+        self._waveform = waveform
         return waveform, sweep_info
 
     def sweep_gate_virt(self, fast_sweep_gates, sweeprange, period, delete=None):
-        self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates':  [fast_sweep_gates], 'sweeprange': sweeprange,
+        self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates': [fast_sweep_gates], 'sweeprange': sweeprange,
                               'type': 'sweep_1D_virt', 'period': period, }
         waveform = self.current_sweep
 
         waveform['resolution'] = [int(period * self.sampling_frequency())]
         waveform['sweepranges'] = [waveform['sweeprange']]
 
-        self._waveform  = waveform
+        self._waveform = waveform
         return waveform, None
 
     def sweep_2D_virt(self, samp_freq, gates_horz, gates_vert, sweepranges, resolution):
-        self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates':  [gates_horz, gates_vert], 'sweepranges': sweepranges,
+        self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates': [gates_horz, gates_vert], 'sweepranges': sweepranges,
                               'type': 'sweep_2D_virt', 'samp_freq': samp_freq, 'resolution': resolution}
         waveform = self.current_sweep
-        self._waveform  = waveform
+        self._waveform = waveform
         return waveform, None
 
     def sweep_2D(self, samp_freq, sweepgates, sweepranges, resolution):
         self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates': sweepgates, 'sweepranges': sweepranges,
                               'type': 'sweep_2D', 'samp_freq': samp_freq, 'resolution': resolution}
         waveform = self.current_sweep
-        self._waveform  = waveform
+        self._waveform = waveform
         return waveform, None
-
 
     def stop(self):
         pass
@@ -239,7 +237,7 @@ def test_SimulationDigitizer():
     import qtt
     digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('test_digitizer'))
     digitizer.close()
-    
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
     test_SimulationDigitizer()
-    

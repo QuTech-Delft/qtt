@@ -115,12 +115,12 @@ class Templates:
                      Parameters of the pulse template are the `amplitude` and `period`.
         """
         return TablePT({name: [(0, 0),
-                                 ('period/6', 'amplitude', 'linear'),
-                                 ('period/3', '-amplitude', 'linear'),
-                                 ('period/2', 0, 'linear'),
-                                 ('period*2/3', '-amplitude', 'linear'),
-                                 ('period*5/6', 'amplitude', 'linear'),
-                                 ('period', 0, 'linear')]})
+                               ('period/6', 'amplitude', 'linear'),
+                               ('period/3', '-amplitude', 'linear'),
+                               ('period/2', 0, 'linear'),
+                               ('period*2/3', '-amplitude', 'linear'),
+                               ('period*5/6', 'amplitude', 'linear'),
+                               ('period', 0, 'linear')]})
 
     @staticmethod
     def pulse_table(name, entries):

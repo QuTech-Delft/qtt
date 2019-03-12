@@ -1,6 +1,6 @@
 """ Functionality to analyse pinch-off scans """
 
-#%% Load packages
+# %% Load packages
 
 import scipy
 import scipy.ndimage
@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import qtt.data
 import qtt.pgeometry
 
-#%%
+# %%
+
 
 def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=False):
     """ Analyse sweep of a gate for pinch value, low value and high value
@@ -22,7 +23,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         minthr, maxthr : float
             parameters for the algorithm (default: None)
         verbose (int): Verbosity level
-        
+
     Returns:
         result (dict): dictionary with analysis results
     """
@@ -33,7 +34,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     XX = None
 
     # should be made generic
-    setpoint_name = [x for x in list(data.arrays.keys()) if not x.endswith('amplitude') and getattr(data, x).is_setpoint][0]
+    setpoint_name = [x for x in list(data.arrays.keys()) if not x.endswith(
+        'amplitude') and getattr(data, x).is_setpoint][0]
     value_parameter_name = data.default_parameter_name()  # e.g. 'amplitude'
 
     x = data.arrays[setpoint_name]
@@ -45,7 +47,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         scandirection = 1
         x = x[::-1]
         value = value[::-1]
-
 
     # crude estimate of noise
     noise = np.nanpercentile(np.abs(np.diff(value)), 50)
@@ -103,7 +104,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         leftval = smoothed_data[mp:]
         rightval = smoothed_data[0:mp]
     st = smoothed_data.std()
-    if verbose>=2:
+    if verbose >= 2:
         print('analyseGateSweep: leftval %.2f, rightval %.2f' %
               (leftval.mean(), rightval.mean()))
     if goodgate and (rightval.mean() - leftval.mean() < .3 * st):
@@ -121,7 +122,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
         p0 = np.polyval(fit, xleft[-1])
         pmid = np.polyval(fit, xleft[0])
-        if verbose>=2:
+        if verbose >= 2:
             print('analyseGateSweep: p0 %.1f, pmid %.1f, leftval[0] %.1f' % (p0, pmid, leftval[0]))
 
         if pmid + (pmid - p0) * .25 > leftval[0]:
@@ -173,13 +174,13 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     adata['highvalue'] = highvalue
     adata['xlabel'] = 'Sweep %s [mV]' % setpoint_name
     adata['pinchoff_point'] = midpoint2 - 50
-    pinchoff_index = np.interp(-70.5, x, np.arange(x.size) )
+    pinchoff_index = np.interp(-70.5, x, np.arange(x.size))
     adata['pinchoff_value'] = value[int(pinchoff_index)]
     adata['midpoint'] = float(midpoint2)
-    adata['_debug'] = {'midpoint1': midpoint1, 'midpoint2': midpoint2 }
+    adata['_debug'] = {'midpoint1': midpoint1, 'midpoint2': midpoint2}
     adata['midvalue'] = midvalue
-    adata['dataset']=dd.location
-    adata['type']='gatesweep'
+    adata['dataset'] = dd.location
+    adata['type'] = 'gatesweep'
 
     if fig is not None:
         plot_pinchoff(adata, ds=dd, fig=fig)
@@ -191,8 +192,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1, label='leftpred')
             plt.plot(x[leftidx], leftval, '--m', markersize=15, linewidth=1, label='leftval')
 
-    if verbose>=1:
-        print('analyseGateSweep: pinch-off point %.3f, value %.3f' % (adata['midpoint'], adata['midvalue']) )
+    if verbose >= 1:
+        print('analyseGateSweep: pinch-off point %.3f, value %.3f' % (adata['midpoint'], adata['midvalue']))
 
     if verbose >= 2:
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %
@@ -207,45 +208,45 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     return adata
 
 
-#%% Testing
+# %% Testing
 
-def plot_pinchoff(result, ds=None, fig=10, verbose = 1):
+def plot_pinchoff(result, ds=None, fig=10, verbose=1):
     """ Plot result of a pinchoff scan """
     if ds is None:
         ds = qtt.data.get_dataset(result)
-    
+
     if not result.get('type', 'none') in ['gatesweep', 'pinchoff']:
         raise Exception('calibration result of incorrect type')
-    
+
     if fig is not None:
         plt.figure(fig)
         plt.clf()
         qcodes.MatPlot(ds.default_parameter_array(), num=fig)
-        
-        lowvalue=result['lowvalue']
-        highvalue=result['highvalue']
-        pinchoff_point=result['pinchoff_point']
-        midpoint=result['midpoint']
-        midvalue=result['midvalue']
+
+        lowvalue = result['lowvalue']
+        highvalue = result['highvalue']
+        pinchoff_point = result['pinchoff_point']
+        midpoint = result['midpoint']
+        midvalue = result['midvalue']
 
         plot2Dline([0, -1, lowvalue], '--c', alpha=.5, label='low value')
         plot2Dline([0, -1, highvalue], '--c', alpha=.5, label='high value')
 
         plot2Dline([-1, 0, midpoint], ':m', linewidth=2, alpha=0.5, label='midpoint')
-        if verbose>=2:
+        if verbose >= 2:
             plt.plot(midpoint, midvalue, '.m', label='midpoint')
         plot2Dline([-1, 0, pinchoff_point], '--g', linewidth=1, alpha=0.5, label='pinchoff_point')
 
+
 def test_analyseGateSweep(fig=None):
-    x=np.arange(-800, 0, 1) # mV
-    y=qtt.algorithms.functions.logistic(x, x0=-400, alpha=.05)
-    dataset=qtt.data.makeDataSet1Dplain('plunger', x, 'current', y)
+    x = np.arange(-800, 0, 1)  # mV
+    y = qtt.algorithms.functions.logistic(x, x0=-400, alpha=.05)
+    dataset = qtt.data.makeDataSet1Dplain('plunger', x, 'current', y)
     result = analyseGateSweep(dataset)
     if fig:
         plot_pinchoff(result, ds=dataset, fig=fig)
-    
+
+
 if __name__ == '__main__':
     # test
     test_analyseGateSweep(fig=100)
-
-            

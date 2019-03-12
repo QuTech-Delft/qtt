@@ -9,6 +9,7 @@ import numpy as np
 import scipy.ndimage
 import matplotlib.pyplot as plt
 
+
 def polmod_all_2slopes(x_data, par, kT, model=None):
     """ Polarization line model.
 
@@ -139,34 +140,38 @@ def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, 
     results = {'fitted_parameters': par_fit, 'initial_parameters': par_guess, 'type': 'polarization fit', 'kT': kT}
     return par_fit, par_guess, results
 
-def plot_polarization_fit(detuning, signal, results, fig, verbose = 1):
+
+def plot_polarization_fit(detuning, signal, results, fig, verbose=1):
     """ Plot the results of a polarization line fit
-    
+
     Args:
         detuning (array): detuning in ueV
         signal (array): measured signal
         results (dict): results of fit_pol_all
         fig (int or None): figure handle
         verbose (int): Verbosity level
-    
+
     """
-    h = scipy.constants.physical_constants['Planck constant in eV s'][0]*1e15  # ueV/GHz; Planck's constant in eV/Hz*1e15 -> ueV/GHz
-    
+    h = scipy.constants.physical_constants['Planck constant in eV s'][0] * \
+        1e15  # ueV/GHz; Planck's constant in eV/Hz*1e15 -> ueV/GHz
+
     par_fit = results['fitted_parameters']
     initial_parameters = results['initial_parameters']
     kT = results['kT']
-    
-    if fig is not None:        
-        plt.figure(fig); plt.clf()
+
+    if fig is not None:
+        plt.figure(fig)
+        plt.clf()
         plt.plot(detuning, signal, 'bo')
         plt.plot(detuning, polmod_all_2slopes(detuning, par_fit, kT), 'r', label='fitted model')
-        if verbose>=2:
+        if verbose >= 2:
             plt.plot(detuning, polmod_all_2slopes(detuning, initial_parameters, kT), ':c', label='initial guess')
-        plt.title('Tunnel coupling: %.2f (ueV) = %.2f (GHz)' % (par_fit[0], par_fit[0]/h))
+        plt.title('Tunnel coupling: %.2f (ueV) = %.2f (GHz)' % (par_fit[0], par_fit[0] / h))
         plt.xlabel('Difference in chemical potentials (ueV)')
         _ = plt.ylabel('Signal (a.u.)')
         plt.legend()
-        
+
+
 def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
     raise Exception('please use fit_pol_all instead')
 
@@ -186,8 +191,8 @@ def pol_mod_two_ele_boltz(x_data, par, kT):
     E_Splus = omega / 2
     part_func = np.exp(- E_Smin / kT) + 3 * np.exp(- E_T / kT) + np.exp(- E_Splus / kT)
 
-    excess_charge = (np.exp(- E_Smin / kT) * 1 / 2 * (1 + (x_data - x_offset) / omega) +
-                     np.exp(- E_Splus / kT) * 1 / 2 * (1 - (x_data - x_offset) / omega )) / part_func
+    excess_charge = (np.exp(- E_Smin / kT) * 1 / 2 * (1 + (x_data - x_offset) / omega)
+                     + np.exp(- E_Splus / kT) * 1 / 2 * (1 - (x_data - x_offset) / omega )) / part_func
 
     signal = y_offset + dy * excess_charge + (dy_left + (dy_right - dy_left) * excess_charge) * (x_data - x_offset)
 
@@ -273,7 +278,7 @@ if __name__ == '__main__':
     for ii, n in enumerate(noise):
         pgeometry.tprint('quick fit %d/%d' % (ii, len(noise)))
         yyx = yy + n * (np.random.rand(yy.size) - .5)
-        parfit, _ , _= fit_pol_all(xx, yyx, kT=0.001, par_guess=None)
+        parfit, _, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None)
         pp[ii] = parfit
 
     plt.figure(200)
@@ -360,7 +365,7 @@ if __name__ == '__main__':
 
         for j in range(niter):
             yyx = yy + Noise * (np.random.rand(yy.size) - .5)
-            parfit, _ , _= fit_pol_all(xx, yyx, kT=0.001)
+            parfit, _, _ = fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
     # %%
     mean = np.mean(ppall[:, :, 0], axis=1)

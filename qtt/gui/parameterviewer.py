@@ -15,7 +15,7 @@ import pyqtgraph
 from qtt import pgeometry
 from functools import partial
 
-#%%
+# %%
 
 
 class QCodesTimer(threading.Thread):
@@ -42,7 +42,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
 
     def __init__(self, instruments, instrumentnames=None,
-                 name='QuTech Parameter Viewer',  start_timer=False, **kwargs):
+                 name='QuTech Parameter Viewer', start_timer=False, **kwargs):
         """ Simple class to show qcodes parameters
 
         Args:
@@ -83,7 +83,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.update_field.connect(self._set_field)
 
         self.updatecallback()
-        
+
     def close(self):
         self.stop()
         super(ParameterViewer, self).close()
@@ -128,7 +128,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.setSortingEnabled(True)
         self.expandAll()
 
-
     def is_running(self):
         if self._timer is None:
             return False
@@ -136,26 +135,25 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             return True
         else:
             return False
-        
+
     def setParamSingleStep(self, instr, param, value):
         """ Set the default step size for a parameter in the viewer
-        
+
         Args:
             instr (str): instrument
             param (str): parameter of the instrument
             value (float): step size
         """
         try:
-            box=self._itemsdict[instr][param]
+            box = self._itemsdict[instr][param]
             box.setSingleStep(value)
         except Exception as ex:
             print(ex)
             pass
 
-
     def setSingleStep(self, value, instrument_name=None):
         """ Set the default step size for all parameters in the viewer
-        
+
         Args:
             value (float): step size
         """
@@ -301,7 +299,8 @@ def createParameterWidget(instruments, doexec=False, remote=False):
         app.exec()
     return p
 
-#%%
+# %%
+
 
 def skip_test_parameterviewer():
     import pyqtgraph
@@ -317,7 +316,8 @@ def skip_test_parameterviewer():
     p.close()
     print('close done: is_running %s' % (p.is_running(), ))
 
-#%% Debugging code
+# %% Debugging code
+
 
 if __name__ == '__main__':
     skip_test_parameterviewer()
@@ -328,20 +328,21 @@ if __name__ == '__main__':
         import pdb
         import qtt.measurements.scans
         from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-    
+
         ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
-        p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi']); self=p
+        p = ParameterViewer(instruments=[ivvi], instrumentnames=['ivvi'])
+        self = p
         p.show()
         self = p
         p.updatecallback()
-    
+
         p.setGeometry(1540, 60, 360, 600)
-    
+
         time.sleep(.1)
         ivvi.dac1.set(101)
         ivvi.dac2.set(102)
 
-#%%
+# %%
 if __name__ == '__main__' and 0:
     box = QtWidgets.QDoubleSpinBox()
     box.setMaximum(10)

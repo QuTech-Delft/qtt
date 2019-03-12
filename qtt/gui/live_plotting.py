@@ -21,7 +21,7 @@ liveplotwindow = None  # global handle for live plotting
 
 def getLivePlotWindow():
     """ Return handle to live plotting window
-    
+
     Returns:
         None or object: handle to live plotting window
     """
@@ -31,6 +31,7 @@ def getLivePlotWindow():
     return None
 
 # %% Communication
+
 
 try:
     import redis
@@ -252,17 +253,18 @@ def start_measurement_control(doexec=False):
     if doexec:
         app.exec()
 
+
 try:
     import qtt.gui.parameterviewer
     import qtt.gui
     from qtt.utilities.tools import monitorSizes
     from qcodes import QtPlot
 
-    def setupMeasurementWindows(station = None, create_parameter_widget = True, 
-                                ilist = None):
+    def setupMeasurementWindows(station=None, create_parameter_widget=True,
+                                ilist=None):
         """ 
         Create liveplot window and parameter widget (optional)
-        
+
         Args:
             station (QCoDeS station): station with instruments
             create_parameter_widget (bool): if True create ParameterWidget
@@ -271,10 +273,10 @@ try:
             dict: created gui objects
         """
         windows = {}
-        
+
         ms = monitorSizes()
         vv = ms[-1]
-        
+
         if create_parameter_widget and any([station, ilist]):
             if ilist is None:
                 ilist = [station.gates]
@@ -287,14 +289,14 @@ try:
         plotQ.update()
 
         qtt.gui.live_plotting.liveplotwindow = plotQ
-        
+
         windows['plotwindow'] = plotQ
 
         app = QtWidgets.QApplication.instance()
         app.processEvents()
 
         return windows
-    
+
 except Exception as ex:
     logging.exception(ex)
     print('failed to add setupMeasurementWindows!')
@@ -624,13 +626,13 @@ class livePlot(QtCore.QObject):
                     self._sweepvalues = [
                         np.linspace(
                             self.horz_low,
-                            self.horz_low +
-                            self.horz_range,
+                            self.horz_low
+                            + self.horz_range,
                             self.data.shape[1]),
                         np.linspace(
                             self.vert_low,
-                            self.vert_low +
-                            self.vert_range,
+                            self.vert_low
+                            + self.vert_range,
                             self.data.shape[0])]
             else:
                 raise Exception('ndim %d not supported' % self.data.ndim)

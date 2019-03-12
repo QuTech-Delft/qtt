@@ -2,7 +2,7 @@
 
 For more details see https://arxiv.org/abs/1603.02274
 """
-#%%
+# %%
 
 import scipy
 import scipy.ndimage
@@ -23,10 +23,11 @@ try:
     import cv2
 except:
     import qtt.exceptions
-    warnings.warn('could not find opencv, not all functionality available', qtt.exceptions.MissingOptionalPackageWarning)
+    warnings.warn('could not find opencv, not all functionality available',
+                  qtt.exceptions.MissingOptionalPackageWarning)
 
 
-#%%
+# %%
 
 
 def _onedotGetBlobs(fimg, fig=None):
@@ -114,8 +115,8 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
     The position is determined by scanning with Gabor filters and then performing blob detection
 
     The image should be in pixel coordinates
-    
-    
+
+
     Returns:    
         pt (array): detected point
         results (dict): dictionary with all results
@@ -129,7 +130,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
 
         im = np.array(impixel)
 
-    theta0 = baseangle  
+    theta0 = baseangle
     step = np.abs(np.nanmean(np.diff(vstep)))
 
     filters, angles, _ = qtt.algorithms.generic.makeCoulombFilter(theta0=theta0, step=step, fig=None)
@@ -169,15 +170,15 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
     if (np.abs(ptvalue) / bestvalue < 0.05):
         acc = 0
         logging.debug('accuracy: %d: %.2f' % (acc, (np.abs(ptvalue) / bestvalue)))
-        
+
     results = dict({'step': step, 'ptv': pt, 'ptpixel': ptpixel, 'accuracy': acc, 'gfilter': gfilter})
     if full_output:
-        results['fimg']=fimg
-        
+        results['fimg'] = fimg
+
     return pt, results
 
 
-#%%
+# %%
 
 def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     """ Cost function for simple fit of one-dot open area
@@ -198,8 +199,8 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     imx = 0 * ww.copy().astype(np.uint8)
     cv2.fillConvexPoly(imx, pts, color=[1])
 
-    area=np.abs(pgeometry.polyarea(pts.reshape( (-1,2))))
-    
+    area = np.abs(pgeometry.polyarea(pts.reshape((-1, 2))))
+
     cost = -(imx == ww).sum()
 
     # add penalty for moving out of range
@@ -207,9 +208,9 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     cost += (.025 * ww.size) * np.maximum(-a, 0) / ww.shape[1]
 
     cost += (.025 * ww.size) * 2 * (pts[2, 0, 1] < 0)
-    cost += (.025 * ww.size) * 2 * (pt[0] < 0) # x too far left
-    cost += (.025 * ww.size) * 2 * (pt[1] > ww.shape[0]) # y too far down
-    cost += 1e-3*area
+    cost += (.025 * ww.size) * 2 * (pt[0] < 0)  # x too far left
+    cost += (.025 * ww.size) * 2 * (pt[1] > ww.shape[0])  # y too far down
+    cost += 1e-3 * area
 
     if verbose:
         print('costscore %.2f' % cost)
@@ -218,35 +219,35 @@ def costscoreOD(a, b, pt, ww, verbose=0, output=False):
     else:
         return cost
 
-#%%
+# %%
 
 
 def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth=2,
                      linecolor='c', full_output=False, od=None):
     """ Determine tuning point from a 2D scan of a 1-dot
-    
+
     This function performs a simple fitting of the open (conducting region).
-    
+
     Args:
         od (one-dot structure or None): data for one-dot
         dd (2D dataset): data containing charge stability diagram
-        
+
     Returns:
         fitresults (dict): dictionary with fitting results
         od (obj): modified one-dot object
-    
+
     """
     if od is not None:
         warnings.warn('od argument will be removed in the future', DeprecationWarning)
-        
+
     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(dataset, arrayname=None)
 
     im, tr = qtt.data.dataset2image(dataset)
 
     extentImageMatlab = tr.matplotlib_image_extent()
-    
+
     ims = im.copy()
-    
+
     # simlpy smoothing of the image
     kk = np.ones((3, 3)) / 9.
     for ii in range(2):
@@ -279,9 +280,9 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
     # balance point: method 2 (fit quadrilateral)
     wwarea = ims > lv
 
-    x0 = np.array([pt[0] - .1 * im.shape[1], pt[1] + .1 *
-                   im.shape[0], pt[0], pt[1]]).reshape(4,)  # initial square
-    ff = lambda x: costscoreOD(x[0], x[1], x[2:4], wwarea)
+    x0 = np.array([pt[0] - .1 * im.shape[1], pt[1] + .1 * im.shape[0], pt[0], pt[1]]).reshape(4,)  # initial square
+
+    def ff(x): return costscoreOD(x[0], x[1], x[2:4], wwarea)
 
     # scipy.optimize.show_options(method='Nelder-Mead')
 
@@ -298,7 +299,7 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
     cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True)
     pt = pts[1, :, :].transpose()
 
-    fitresults={}
+    fitresults = {}
     fitresults['balancepoint0'] = ptv
     fitresults['balancepointpixel'] = pt
     fitresults['balancepointpolygon'] = tr.pixel2scan(pt)
@@ -308,23 +309,22 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
     fitresults['balancefit1'] = tr.pixel2scan(balancefitpixel0)
     fitresults['setpoint'] = fitresults['balancepoint'] + 8
     fitresults['x0'] = x0
-    fitresults['gatevalues']=dataset.metadata.get('allgatevalues', None)
-    
+    fitresults['gatevalues'] = dataset.metadata.get('allgatevalues', None)
+
     if od is not None:
-        
+
         fitresults['gatevalues'][od['gates'][2]] = float(fitresults['balancepoint'][0])
         fitresults['gatevalues'][od['gates'][0]] = float(fitresults['balancepoint'][1])
-
 
     ptv = fitresults['balancepoint']
 
     if od is not None:
         # copy results into od structure
         for k in fitresults:
-            od[k]=fitresults[k]
-        od['onedotbalance']=fitresults
-        
-        odname=od['name']
+            od[k] = fitresults[k]
+        od['onedotbalance'] = fitresults
+
+        odname = od['name']
     else:
         odname = 'one-dot'
 
@@ -333,78 +333,85 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
         print('onedotGetBalance: balance point at: %.1f %.1f [mV]' % (
             fitresults['balancepoint'][0, 0], fitresults['balancepoint'][1, 0]))
 
-    if verbose>=3:
-        #%
-        plt.figure(9); plt.clf(); plt.imshow(im, interpolation='nearest');
+    if verbose >= 3:
+        # %
+        plt.figure(9)
+        plt.clf()
+        plt.imshow(im, interpolation='nearest')
         pgeometry.plotPoints(balancefitpixel0, '.-r', label='balancefitpixel0')
         pgeometry.plotLabels(balancefitpixel0)
         pgeometry.plotPoints(fitresults['balancefitpixel'], '.-m')
         pgeometry.plotLabels(fitresults['balancefitpixel'])
-        
+
         cost, pts, imx = costscoreOD(x[0], x[1], x[2:4], wwarea, output=True, verbose=1)
-        
-        #%
+
+        # %
     if fig is not None:
-        plot_onedot(fitresults, ds = dataset, verbose=2, fig=100, linecolor='c', ims=ims, extentImageMatlab=extentImageMatlab, lv=lv)
-        
+        plot_onedot(fitresults, ds=dataset, verbose=2, fig=100, linecolor='c',
+                    ims=ims, extentImageMatlab=extentImageMatlab, lv=lv)
+
         qtt.utilities.tools.showImage(im, extentImageMatlab, fig=fig)
 
         if verbose >= 2 or drawpoly:
-            pgeometry.plotPoints(fitresults['balancefit'], '--', color=linecolor, linewidth=polylinewidth, label='balancefit')
+            pgeometry.plotPoints(fitresults['balancefit'], '--', color=linecolor,
+                                 linewidth=polylinewidth, label='balancefit')
         if verbose >= 2:
             pgeometry.plotPoints(fitresults['balancepoint0'], '.r', markersize=13, label='balancepoint0')
         pgeometry.plotPoints(fitresults['balancepoint'], '.m', markersize=17, label='balancepoint')
         plt.axis('image')
 
     if full_output:
-        fitresults['ims']=ims
-        fitresults['lv']=lv
-        fitresults['wwarea']=wwarea
+        fitresults['ims'] = ims
+        fitresults['lv'] = lv
+        fitresults['wwarea'] = wwarea
 
-    return fitresults, ptv 
+    return fitresults, ptv
+
 
 def _plot_dataset(dataset, fig):
-    plt.figure(fig); plt.clf()
-    m=qcodes.MatPlot(dataset.default_parameter_array(), num=fig)
+    plt.figure(fig)
+    plt.clf()
+    m = qcodes.MatPlot(dataset.default_parameter_array(), num=fig)
     return m
 
-def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = None, extentImageMatlab=None, lv=None):
+
+def plot_onedot(results, ds=None, verbose=2, fig=100, linecolor='c', ims=None, extentImageMatlab=None, lv=None):
     """ Plot results of a barrier-barrier scan of a single dot
-    
+
     Args:
         results (dict): results of the onedotGetBalance function
         ds (None or DataSet): dataset to use for plotting
         fig (int or None): figure window to plot to
     """
-    
+
     if ds is None:
-        ds=qtt.data.get_dataset(results)
-    
+        ds = qtt.data.get_dataset(results)
+
     if fig is not None:
         _plot_dataset(ds, fig)
-        
+
         if verbose >= 2:
             pgeometry.plotPoints(results['balancefit'], '--', color=linecolor, linewidth=2, label='balancefit')
         if verbose >= 2:
             pgeometry.plotPoints(results['balancepoint0'], '.r', markersize=13, label='balancepoint0')
         pgeometry.plotPoints(results['balancepoint'], '.m', markersize=17, label='balancepoint')
-        
+
         if ims is not None:
-            qtt.utilities.tools.showImage((ims), extentImageMatlab, fig=fig + 1) # XX
+            qtt.utilities.tools.showImage((ims), extentImageMatlab, fig=fig + 1)  # XX
             plt.axis('image')
             plt.title('Smoothed image')
             pgeometry.plotPoints(results['balancepoint'], '.m', markersize=16, label='balancepoint')
-    
+
             qtt.utilities.tools.showImage(ims > lv, None, fig=fig + 2)
             pgeometry.plotPoints(results['balancefitpixel'], '--c', markersize=16, label='balancefit')
             pgeometry.plotLabels(results['balancefitpixel'])
             plt.axis('image')
             plt.title('thresholded area')
             pgeometry.tilefigs([fig, fig + 1, fig + 2], [2, 2])
-    
+
             if verbose >= 2:
                 qq = ims.flatten()
-                plt.figure(fig+3)
+                plt.figure(fig + 3)
                 plt.clf()
                 plt.hist(qq, 20)
                 plot2Dline([-1, 0, np.percentile(ims, 1)], '--m', label='percentile 1')
@@ -415,31 +422,32 @@ def plot_onedot(results, ds = None, verbose=2, fig=100, linecolor='c', ims = Non
                 plt.title('Histogram of image intensities')
                 plt.xlabel('Image (smoothed) values')
 
+
 def test_onedot(fig=None):
     import qtt
     import qtt.simulation.virtual_dot_array
     import qtt.algorithms.onedot
-    
+
     nr_dots = 3
     station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2, verbose=0)
     gates = station.gates
-    
-    gv={'B0': -300.000,'B1': 0.487,'B2': -0.126,'B3': 0.000,'D0': 0.111,'O1': -0.478,'O2': 0.283,'O3': 0.404,'O4': 0.070,'O5': 0.392,'P1': 0.436,'P2': 0.182,'P3': 39.570,'SD1a': -0.160,'SD1b': -0.022,'SD1c': 0.425,'bias_1': -0.312,'bias_2': 0.063}
-    gates.resetgates(gv,gv, verbose=0)
-    
+
+    gv = {'B0': -300.000, 'B1': 0.487, 'B2': -0.126, 'B3': 0.000, 'D0': 0.111, 'O1': -0.478, 'O2': 0.283, 'O3': 0.404, 'O4': 0.070,
+          'O5': 0.392, 'P1': 0.436, 'P2': 0.182, 'P3': 39.570, 'SD1a': -0.160, 'SD1b': -0.022, 'SD1c': 0.425, 'bias_1': -0.312, 'bias_2': 0.063}
+    gates.resetgates(gv, gv, verbose=0)
+
     start = -250
-    scanjob = qtt.measurements.scans.scanjob_t({'sweepdata': dict({'param': 'B0', 'start': start, 'end': start + 200, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley3.amplitude']})
+    scanjob = qtt.measurements.scans.scanjob_t({'sweepdata': dict(
+        {'param': 'B0', 'start': start, 'end': start + 200, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley3.amplitude']})
     scanjob['stepdata'] = dict({'param': 'B1', 'start': start, 'end': start + 200, 'step': 5.})
     data = qtt.measurements.scans.scan2D(station, scanjob)
-    
-    
-  
-    x= qtt.algorithms.onedot.onedotGetBalance(dataset=data, verbose=1, fig=None)
-    results=x[0]   
-    ptfine, resultsfine=qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=None)
-    qtt.algorithms.onedot.plot_onedot(results, ds = data, fig=fig, verbose=1)
 
-    
+    x = qtt.algorithms.onedot.onedotGetBalance(dataset=data, verbose=1, fig=None)
+    results = x[0]
+    ptfine, resultsfine = qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=None)
+    qtt.algorithms.onedot.plot_onedot(results, ds=data, fig=fig, verbose=1)
+
+
 if __name__ == '__main__':
 
     test_onedot(fig=1000)

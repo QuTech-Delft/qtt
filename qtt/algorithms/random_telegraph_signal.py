@@ -5,7 +5,7 @@ Created on Wed Feb 28 10:20:46 2018
 @author: riggelenfv
 """
 
-#%%
+# %%
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
@@ -15,7 +15,7 @@ import warnings
 from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay
 from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 
-#%% calculate durations of states
+# %% calculate durations of states
 
 
 def transitions_durations(data, split):
@@ -59,9 +59,10 @@ def transitions_durations(data, split):
     return duration_dn, duration_up
 
 
-#%% function to analyse the RTS data
+# %% function to analyse the RTS data
 class FittingException(Exception):
     pass
+
 
 def _plot_rts_histogram(data, num_bins, par_fit, split, figure_title):
     counts, bins, _ = plt.hist(data, bins=num_bins)
@@ -247,9 +248,9 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         durations_dn_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_dn_idx)}
     parameters['up_segments'] = {'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
         durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up_idx)}
-    parameters['tunnelrate_down_to_up'] = 1./parameters['down_segments']['mean']
-    parameters['tunnelrate_up_to_down'] = 1./parameters['up_segments']['mean']
-    
+    parameters['tunnelrate_down_to_up'] = 1. / parameters['down_segments']['mean']
+    parameters['tunnelrate_up_to_down'] = 1. / parameters['up_segments']['mean']
+
     if (counts_dn[0] > 50) and (counts_up[0] > 50):
 
         bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
@@ -308,7 +309,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     else:
         parameters['tunnelrate_down_exponential_fit'] = None
         parameters['tunnelrate_up_exponential_fit'] = None
-        
+
     return tunnelrate_dn, tunnelrate_up, parameters
 
 
@@ -340,7 +341,7 @@ def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1,
     return data
 
 
-#%%
+# %%
 
 
 def test_RTS(fig=None):
@@ -374,13 +375,14 @@ def test_RTS(fig=None):
     samplerate = 1e6
     rate_up = 200e3
     rate_down = 20e3
-    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=rate_up, rate_down=rate_down, samplerate=samplerate)
+    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=rate_up,
+                               rate_down=rate_down, samplerate=samplerate)
 
     tunnelrate_dn, tunnelrate_up, results = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
                                                             min_duration=1, num_bins=40, plungers=[], fig=fig, verbose=2)
 
-    assert(np.abs(tunnelrate_dn - rate_up*1e-3) < 100)
-    assert(np.abs(tunnelrate_up - rate_down*1e-3) < 10)
+    assert(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
+    assert(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)
 
 
 if __name__ == '__main__':

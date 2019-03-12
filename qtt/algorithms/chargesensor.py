@@ -3,7 +3,7 @@
 @author: eendebakpt
 """
 
-#%% Load packages
+# %% Load packages
 import matplotlib.pyplot as plt
 import scipy.interpolate
 import numpy as np
@@ -151,6 +151,7 @@ def test_datalinearizer():
     dl = DataLinearizer(x, y)
     _ = dl.forward([1])
     _ = dl.forward_curve([1])
+
 
 if __name__ == '__main__':
     test_datalinearizer()

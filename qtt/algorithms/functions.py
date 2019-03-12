@@ -263,8 +263,9 @@ def test_cost_exp_decay():
     c = cost_exp_decay(x_data, y_data, params, threshold='auto')
     assert(c < 10.0)
 
+
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None, threshold=None,
-                  offset_parameter = None):
+                  offset_parameter=None):
     """ Fit a exponential decay. 
 
     Args:
@@ -280,7 +281,7 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
         offset_parameter (None or float): if None, then estimate the offset, otherwise fix the offset to the specified value
     Returns:
         par_fit (array): fit parameters of the exponential decay, [A, B, gamma]
-    
+
     See: :func:`exp_function`
 
     """
@@ -293,26 +294,29 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
         if offset_parameter is None:
             A = minsignal
             initial_params = np.array([A, B, gamma])
+
             def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
         else:
-            initial_params = np.array([B, gamma])           
-            def func(params): return cost_exp_decay(x_data, y_data, np.hstack( (offset_parameter, params)), threshold)
+            initial_params = np.array([B, gamma])
+
+            def func(params): return cost_exp_decay(x_data, y_data, np.hstack((offset_parameter, params)), threshold)
 
     par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     if offset_parameter is not None:
-        par_fit = np.hstack( ([offset_parameter] ,  par_fit))
-    
+        par_fit = np.hstack(([offset_parameter], par_fit))
+
     return par_fit
 
 
 def test_fit_exp_decay():
-    x_data =np.arange(0, 10., .1)
+    x_data = np.arange(0, 10., .1)
     parameters = [0, 1, 1]
-    y_data =exp_function(x_data, *parameters)
+    y_data = exp_function(x_data, *parameters)
     fitted = fit_exp_decay(x_data, y_data)
     np.testing.assert_array_almost_equal(fitted, parameters, decimal=3)
     fitted = fit_exp_decay(x_data, y_data, offset_parameter=0.1)
     np.testing.assert_array_almost_equal(fitted, [.1, .95, 1.4], decimal=1)
+
 
 def gauss_ramsey(x_data, params):
     """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase of the second pulse 
