@@ -151,7 +151,7 @@ def load_dataset(location, io=None, verbose=0):
 
     Args:
         location (str): either the relative or full location
-        io (None or qcodes.DiskIO): 
+        io (None or qcodes.DiskIO):
     Returns:
         dataset (DataSet or None)
     """
@@ -163,7 +163,7 @@ def load_dataset(location, io=None, verbose=0):
     try:
         from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
         formatters += [HDF5FormatHickle()]
-    except:
+    except BaseException:
         pass
 
     from qcodes.data.hdf5_format import HDF5Format
@@ -279,7 +279,7 @@ def add_comment(txt, dataset=None, verbose=0):
         if hasattr(qcodes.DataSet, '_latest_datasets'):
             try:
                 dataset = qcodes.DataSet._latest_datasets[0]
-            except:
+            except BaseException:
                 pass
         else:
             raise NotImplementedError('dataset not specified and _latest_datasets not available')
@@ -374,7 +374,7 @@ def dataset2image(dataset, arrayname=None, unitsperpixel=None, mode='pixel'):
     Args:
         dataset (DataSet): structure with 2D data
         arrayname (None or str): nafme of array to select
-        mode (str): if value is 'pixel' then the image is converted so that 
+        mode (str): if value is 'pixel' then the image is converted so that
              it is in conventional coordinates, e.g. the step values
              (vertical axis) go from low to high (bottom to top).
 
@@ -424,12 +424,12 @@ def dataset_get_istep(alldata, mode=None):
     """ Return number of mV per pixel in scan """
     try:
         istep = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
-    except:
+    except BaseException:
         try:
             extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
                 alldata, verbose=0, arrayname=None)
             istep = np.abs(np.nanmean(np.diff(vstep)))
-        except:
+        except BaseException:
             _, _, _, istep, _ = dataset1Dmetadata(alldata)
     return istep
 
@@ -542,8 +542,9 @@ def stepgate(scanjob):
     return g
 
 
-def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, colorbar=False, title=None, midx=2, units=None):
-    """ Show result of a 2D scan 
+def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None,
+           sigma=None, colorbar=False, title=None, midx=2, units=None):
+    """ Show result of a 2D scan
 
     Args:
         dd (DataSet)
@@ -619,7 +620,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None, sigma=None, c
             print('show2D: at show')
         try:
             plt.show(block=False)
-        except:
+        except BaseException:
             # ipython backend does not know about block keyword...
             plt.show()
 
@@ -653,7 +654,7 @@ def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
 
     istep = np.abs(np.mean(np.diff(vstep)))
     if verbose:
-        print('1D scan: gates %s %s' % (g0,))
+        print('dataset1Dmetadata: gate %s' % (g0,))
     return extent, g0, vstep, istep, arrayname
 
 
@@ -667,7 +668,7 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
         g1 (str): sweep gate (array_id)
         vstep (array): step values
         vsweep (array): sweep values
-        arrayname (string): identifier of the main array 
+        arrayname (string): identifier of the main array
 
     """
 
@@ -825,7 +826,7 @@ class image_transform:
 
         if self.unitsperpixel is not None:
             imextent = self.scan_image_extent()
-            ims, Hs, _ = qtt.algorithms.generic.rescaleImage(
+            ims, _, _ = qtt.algorithms.generic.rescaleImage(
                 self._imraw, imextent, mvx=self.unitsperpixel[0], mvy=self.unitsperpixel[1])
         else:
             ims = im
@@ -873,7 +874,7 @@ class image_transform:
         return ptx
 
     def scan2pixel(self, pt):
-        """ Convert scan coordinates to pixel coordinates 
+        """ Convert scan coordinates to pixel coordinates
         Arguments
         ---------
         pt : array
@@ -962,7 +963,7 @@ def loadDataset(path):
     ''' Wrapper function
 
     :param path: filename without extension
-    :returns dateset, metadata: 
+    :returns dateset, metadata:
     '''
     dataset = qcodes.load_data(path)
 
@@ -996,7 +997,7 @@ def writeDataset(path, dataset, metadata=None):
 
 def getTimeString(t=None):
     """ Return time string for datetime.datetime object """
-    if t == None:
+    if t is None:
         t = datetime.datetime.now()
     if isinstance(t, float):
         t = datetime.datetime.fromtimestamp(t)
@@ -1135,7 +1136,8 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
         return dd
 
 
-def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None, yunit=None, zunit=None, location=None, loc_record=None):
+def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
+                       yunit=None, zunit=None, location=None, loc_record=None):
     ''' Make DataSet with one 2D array and two setpoint arrays
 
     Arguments:
@@ -1175,7 +1177,7 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
                   preset_data=None, return_names=False):
     """ Make DataSet with one or multiple 2D array and two setpoint arrays.
 
-    If the preset_data is used for multiple 2D arrays, then the order of 
+    If the preset_data is used for multiple 2D arrays, then the order of
     measure_names should match the order of preset_data.
 
     Args:
