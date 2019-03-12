@@ -851,6 +851,9 @@ try:
             # we have a figure, assume textbox is for dataset name only
             ppLayout = ppLayoutTitleOnly
 
+        if ppt.Slides.Count > 1000:
+            raise Exception('your presentation has more than 1000 slides, please start a new measurement logbook')
+
         if verbose:
             print('addPPTslide: presentation name: %s, adding slide %d' %
                   (ppt.Name, ppt.Slides.count + 1))
