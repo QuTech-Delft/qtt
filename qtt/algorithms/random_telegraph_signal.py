@@ -63,6 +63,17 @@ def transitions_durations(data, split):
 class FittingException(Exception):
     pass
 
+def _plot_rts_histogram(data, num_bins, par_fit, split, figure_title):
+    counts, bins, _ = plt.hist(data, bins=num_bins)
+    bincentres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
+
+    plt.plot(bincentres, double_gaussian(bincentres, par_fit), 'r', label='Fitted double gaussian')
+    plt.plot(split, double_gaussian(split, par_fit), 'ro', markersize=8, label='split: %.3f' % split)
+    plt.xlabel('Measured value (a.u.)')
+    plt.ylabel('Data points per bin')
+    plt.legend()
+    plt.title(figure_title)
+
 
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
                     num_bins=None, plungers=[], fig=None, ppt=None, verbose=0):
@@ -152,16 +163,10 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
-        title = 'Histogram of two levels RTS'
-        plt.figure(title)
+        figure_title = 'Histogram of two levels RTS'
+        plt.figure(figure_title)
         plt.clf()
-        counts, bins, _ = plt.hist(data, bins=num_bins)
-        plt.plot(bincentres, double_gaussian(bincentres, par_fit), 'r', label='Fitted double gaussian')
-        plt.plot(split, double_gaussian(split, par_fit), 'ro', markersize=8, label='split: %.3f' % split)
-        plt.xlabel('Measured value (a.u.)')
-        plt.ylabel('Data points per bin')
-        plt.legend()
-        plt.title(title)
+        _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
         if ppt:
             addPPTslide(title=title, fig=plt.figure(title), notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
                         par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] + ', std up:%.3f counts' % par_fit[3] + '.Separation between peaks gaussians: %.3f std' % separation + '. Split between two levels: %.3f' % split)

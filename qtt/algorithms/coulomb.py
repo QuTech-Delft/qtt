@@ -56,6 +56,8 @@ def analyseCoulombPeaksArray(x_data, y_data, fig=None, verbose=1, parameters=Non
     Args:
         x_data (1D array): The data of varied parameter.
         y_data (1D array): The signal data.
+        fig (None or int): figure handle
+        parameters (dict): dictionary with parameters that is passed to subfunctions
 
     Returns:
         (list of dict): The detected peaks.
@@ -128,13 +130,16 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     if plotsmooth:
         plt.plot(x, ys, 'g')
     labelh = []
+    first_label = True
     for jj, peak in enumerate(peaks):
         if peak['valid']:
             xpos = peak['x']
             ypos = peak['y']
 
             if showPeaks:
-                plt.plot(xpos, ypos, '.r', markersize=15, label='peaks')
+                label = 'peaks' if first_label else None
+                first_label = False                
+                plt.plot(xpos, ypos, '.r', markersize=15, label=label)
             if plotLabels:
                 tp = peak.get('type', 'peak')
                 lbl = '%s %d' % (tp, jj)
@@ -144,10 +149,14 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
                 labelh += [lh]
     halfhandle = []
     if plothalf:
+        first_label = True
         for peak in peaks:
             if 'xhalfl' in peak:
+                label = 'peak at half height' if first_label else None
+                first_label = False                
+
                 hh = plt.plot(peak['xhalfl'], peak['yhalfl'], '.m',
-                              markersize=12, label='peak half height')
+                              markersize=12, label=label)
                 halfhandle += [hh[0]]
     if plotbottom:
         for peak in peaks:
@@ -155,7 +164,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
                 plt.plot(
                     peak['xbottoml'], peak['ybottoml'], '.', color=[.5, 1, .5], markersize=12, label='peak bottom left')
 
-    th = plt.title('Local maxima')
+    th = plt.title('Fitted peaks')
     return dict({'linehandle': h, 'title': th, 'labelh': labelh, 'halfhandle': halfhandle})
 
 #%%

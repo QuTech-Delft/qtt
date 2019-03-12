@@ -3,11 +3,11 @@
 @author: diepencjv
 """
 
-#%%
+# %%
 import scipy.optimize
 import numpy as np
 import scipy.ndimage
-
+import matplotlib.pyplot as plt
 
 def polmod_all_2slopes(x_data, par, kT, model=None):
     """ Polarization line model.
@@ -37,6 +37,7 @@ def polmod_all_2slopes(x_data, par, kT, model=None):
 
     return y_data
 
+
 def polweight_all_2slopes(x_data, y_data, par, kT, model='one_ele'):
     """ Cost function for polarization fitting.
     Args:
@@ -51,6 +52,7 @@ def polweight_all_2slopes(x_data, y_data, par, kT, model='one_ele'):
     total = np.linalg.norm(y_data - mod)
 
     return total
+
 
 def polweight_all_2slopes_2(x_data, y_data, par, kT, model='one_ele'):
     """ Cost function for polarization fitting.
@@ -68,8 +70,46 @@ def polweight_all_2slopes_2(x_data, y_data, par, kT, model='one_ele'):
     return total
 
 
-def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
+def _polarization_fit_initial_guess(x_data, y_data, kT=0, padding_fraction=0.15, fig=None, verbose=0):
+    t_guess = (x_data[-1] - x_data[0]) / 30  # hard-coded guess in ueV
+    number_points_padding = round(padding_fraction * len(x_data))
+    linear_fit = np.polyfit(x_data[-number_points_padding:], y_data[-number_points_padding:], 1)
+    slope_guess = linear_fit[0]
+    data_noslope = y_data - slope_guess * (x_data - x_data[0])
+    data_noslope_1der = scipy.ndimage.filters.gaussian_filter(data_noslope, sigma=20, order=1)
+
+    data_noslope_1der[:number_points_padding] = 0
+    data_noslope_1der[number_points_padding:0] = 0
+    transition_idx = np.abs(data_noslope_1der).argmax()
+    sensitivity_guess = np.sign(x_data[-1] - x_data[0]) * np.sign(data_noslope_1der[transition_idx]
+                                                                  ) * (np.percentile(data_noslope, 90) - np.percentile(data_noslope, 10))
+    x_offset_guess = x_data[transition_idx]
+    y_offset_guess = y_data[transition_idx] - sensitivity_guess / 2
+    par_guess = np.array([t_guess, x_offset_guess, y_offset_guess, slope_guess, slope_guess, sensitivity_guess])
+    if verbose >= 2:
+        print('_polarization_fit_initial_guess: trans_idx %s' % (transition_idx, ))
+
+    if fig:
+        plt.figure(fig)
+        plt.clf()
+        plt.plot(x_data, y_data, '.', label='data')
+        plt.plot(x_data, np.polyval(linear_fit, x_data), 'm', label='linear fit tail')
+        plt.plot(x_data, polmod_all_2slopes(x_data, par_guess, 0), 'r', label='initial guess')
+        vline = plt.axvline(x_offset_guess, label='centre')
+        vline.set_alpha(.5)
+        vline.set_color('c')
+        plt.legend()
+
+        plt.figure(fig + 1)
+        plt.clf()
+        plt.plot(x_data, data_noslope_1der, 'm', label='derivative')
+        plt.legend()
+    return par_guess
+
+
+def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin'):
     """ Polarization line fitting. 
+
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
     the number of variables, i.e. 1200 in our case.
     Args:
@@ -79,39 +119,57 @@ def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, 
     Returns:
         par_fit (1 x 6 array): fitted parameters, see :func:`polmod_all_2slopes`
         par_guess (1 x 6 array): initial guess of parameters for fitting, see :func:`polmod_all_2slopes`
-        fitdata (dictionary): extra data returned by fit functions
+        results (dictionary): dictionary with fitting results
     """
     if par_guess is None:
-        t_guess = (x_data[-1] - x_data[0]) / 30  # hard-coded guess in ueV
-        numpts = round(len(x_data) / 10)
-        slope_guess = np.polyfit(x_data[-numpts:], y_data[-numpts:], 1)[0]
-        dat_noslope = y_data - slope_guess * (x_data - x_data[0])
-        dat_noslope_1der = scipy.ndimage.filters.gaussian_filter(dat_noslope, sigma=20, order=1)
-        trans_idx = np.abs(dat_noslope_1der).argmax()
-        sensitivity_guess = np.sign(x_data[-1] - x_data[0]) * np.sign(dat_noslope_1der[trans_idx]) * (np.percentile(dat_noslope, 90) - np.percentile(dat_noslope, 10))
-        x_offset_guess = x_data[trans_idx]
-        y_offset_guess = y_data[trans_idx] - sensitivity_guess / 2
-        par_guess = np.array([t_guess, x_offset_guess, y_offset_guess, slope_guess, slope_guess, sensitivity_guess])
-        if verbose >= 2:
-            print('fit_pol_all: trans_idx %s' % (trans_idx, ))
+        par_guess = _polarization_fit_initial_guess(x_data, y_data, kT, fig=None)
+
     fitdata = {}
     if method is 'fmin':
-        func = lambda par: polweight_all_2slopes(x_data, y_data, par, kT, model=model)
+        def func(par): return polweight_all_2slopes(x_data, y_data, par, kT, model=model)
         par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     elif method is 'curve_fit':
-        func = lambda x_data, tc, x0, y0, ml, mr, h : polmod_all_2slopes(x_data, (tc, x0, y0, ml, mr, h), kT, model=model)
+        def func(x_data, tc, x0, y0, ml, mr, h): return polmod_all_2slopes(
+            x_data, (tc, x0, y0, ml, mr, h), kT, model=model)
         par_fit, par_cov = scipy.optimize.curve_fit(func, x_data, y_data, par_guess)
         fitdata['par_cov'] = par_cov
     else:
         raise Exception('Unrecognized fitting method')
-        
-    if returnextra:
-        return par_fit, par_guess, fitdata
-    else:
-        return par_fit, par_guess
 
+    results = {'fitted_parameters': par_fit, 'initial_parameters': par_guess, 'type': 'polarization fit', 'kT': kT}
+    return par_fit, par_guess, results
+
+def plot_polarization_fit(detuning, signal, results, fig, verbose = 1):
+    """ Plot the results of a polarization line fit
+    
+    Args:
+        detuning (array): detuning in ueV
+        signal (array): measured signal
+        results (dict): results of fit_pol_all
+        fig (int or None): figure handle
+        verbose (int): Verbosity level
+    
+    """
+    h = scipy.constants.physical_constants['Planck constant in eV s'][0]*1e15  # ueV/GHz; Planck's constant in eV/Hz*1e15 -> ueV/GHz
+    
+    par_fit = results['fitted_parameters']
+    initial_parameters = results['initial_parameters']
+    kT = results['kT']
+    
+    if fig is not None:        
+        plt.figure(fig); plt.clf()
+        plt.plot(detuning, signal, 'bo')
+        plt.plot(detuning, polmod_all_2slopes(detuning, par_fit, kT), 'r', label='fitted model')
+        if verbose>=2:
+            plt.plot(detuning, polmod_all_2slopes(detuning, initial_parameters, kT), ':c', label='initial guess')
+        plt.title('Tunnel coupling: %.2f (ueV) = %.2f (GHz)' % (par_fit[0], par_fit[0]/h))
+        plt.xlabel('Difference in chemical potentials (ueV)')
+        _ = plt.ylabel('Signal (a.u.)')
+        plt.legend()
+        
 def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
     raise Exception('please use fit_pol_all instead')
+
 
 def pol_mod_two_ele_boltz(x_data, par, kT):
     """ Model of the inter-dot transition with two electron spin states, also
@@ -127,12 +185,12 @@ def pol_mod_two_ele_boltz(x_data, par, kT):
     E_T = (x_data - x_offset) / 2
     E_Splus = omega / 2
     part_func = np.exp(- E_Smin / kT) + 3 * np.exp(- E_T / kT) + np.exp(- E_Splus / kT)
-    
-    excess_charge = (np.exp(- E_Smin / kT) * 1 / 2 * (1 + (x_data - x_offset) / omega ) + \
-                          np.exp(- E_Splus / kT) * 1 / 2 * (1 - (x_data - x_offset) / omega )) / part_func
-                   
-    signal = y_offset + dy*excess_charge + (dy_left+(dy_right-dy_left)*excess_charge)*(x_data-x_offset)
-    
+
+    excess_charge = (np.exp(- E_Smin / kT) * 1 / 2 * (1 + (x_data - x_offset) / omega) +
+                     np.exp(- E_Splus / kT) * 1 / 2 * (1 - (x_data - x_offset) / omega )) / part_func
+
+    signal = y_offset + dy * excess_charge + (dy_left + (dy_right - dy_left) * excess_charge) * (x_data - x_offset)
+
     return signal
 
 
@@ -160,17 +218,18 @@ def test_polFitting():
     par_init = np.array([20, 2, 100, -.5, -.45, 300])
     y_data = polmod_all_2slopes(x_data, par_init, kT)
     noise = np.random.normal(0, 3, y_data.shape)
-    par_fit, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
+    par_fit, _, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
     assert np.all(np.isclose(par_fit[0], par_init[0], .1))
 
-#%% Example fitting
+# %% Example fitting
+
 
 if __name__ == '__main__':
     """  Testing of fitting code       
     """
     import matplotlib.pyplot as plt
     import time
-    from qtt import pmatlab as pgeometry
+    from qtt import pgeometry
     import pandas as pd
     from pandas import Series
 
@@ -189,7 +248,7 @@ if __name__ == '__main__':
 
     t0 = time.time()
     for ii in range(5):
-        parfit, _ = fit_pol_all(xx, yy, kT=0.001)
+        parfit, _, _ = fit_pol_all(xx, yy, kT=0.001)
     dt = time.time() - t0
     yyfit = polmod_all_2slopes(xx, parfit, kT=0.001)
     print('dt: %.3f [s]' % dt)
@@ -205,7 +264,7 @@ if __name__ == '__main__':
     plt.title('fitted t %.3f, gt %.3f' % (parfit[0], par[0]))
     plt.legend(numpoints=1)
 
-    #%% Quick estimate
+    # %% Quick estimate
     noise = np.arange(0, .1, .5e-3)
     noise = np.hstack((noise, np.arange(1e-4, 5e-4, 1e-4)))
     noise.sort()
@@ -214,7 +273,7 @@ if __name__ == '__main__':
     for ii, n in enumerate(noise):
         pgeometry.tprint('quick fit %d/%d' % (ii, len(noise)))
         yyx = yy + n * (np.random.rand(yy.size) - .5)
-        parfit, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None)
+        parfit, _ , _= fit_pol_all(xx, yyx, kT=0.001, par_guess=None)
         pp[ii] = parfit
 
     plt.figure(200)
@@ -225,11 +284,11 @@ if __name__ == '__main__':
 
     pgeometry.plot2Dline([0, -1, par[0]], '--c', label='true value')
 
-    #%% Show effect of proper initialization
+    # %% Show effect of proper initialization
     yyx = yy + n * (np.random.rand(yy.size) - .5)
-    parfit1, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=par)
-    parfit2, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None, verbose=2)
-    parfit2i, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=parfit2)
+    parfit1, _, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=par)
+    parfit2, _, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=None, verbose=2)
+    parfit2i, _, _ = fit_pol_all(xx, yyx, kT=0.001, par_guess=parfit2)
 
     yy1 = polmod_all_2slopes(xx, parfit1, kT=0.001)
     yy2 = polmod_all_2slopes(xx, parfit2, kT=0.001)
@@ -250,17 +309,17 @@ if __name__ == '__main__':
     plt.legend()
     _ = plt.ylabel('Frequency')
 
-    #%% Full estimate
+    # %% Full estimate
     niter = 60
     ppall = np.zeros((len(noise), niter, 6))
     for ii, n in enumerate(noise):
         print('full fit %d/%d' % (ii, len(noise)))
         for j in range(niter):
             yyx = yy + n * (np.random.rand(yy.size) - .5)
-            parfit, _ = fit_pol_all(xx, yyx, kT=0.001)
+            parfit, _, _ = fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
 
-    #%% Show uncertainties
+    # %% Show uncertainties
     plot_data = False
     plot_bands = True
 
@@ -278,7 +337,8 @@ if __name__ == '__main__':
         plt.plot(ii, qq.flatten(), '.r', alpha=.1)
     if plot_bands:
         nstd = 2
-        plt.fill_between(tb.index, tb - nstd * mstd, tb + nstd * mstd, color='b', alpha=0.1, label='uncertainty (%d std)' % nstd)
+        plt.fill_between(tb.index, tb - nstd * mstd, tb + nstd * mstd, color='b',
+                         alpha=0.1, label='uncertainty (%d std)' % nstd)
     #plt.plot(tb.index, ma, 'k', label='mean')
 
     plt.plot(tb.index, tb, 'k', label='mean')
@@ -288,7 +348,7 @@ if __name__ == '__main__':
     plt.title('Estimated tunnel barrier', fontsize=14)
     plt.legend()
 
-    #%% Number of data points
+    # %% Number of data points
     Noise = .02
     npoints = np.array([20, 30, 50, 70, 100, 120, 160, 180, 200, 300, 500, 1000])
     niter = 60
@@ -300,9 +360,9 @@ if __name__ == '__main__':
 
         for j in range(niter):
             yyx = yy + Noise * (np.random.rand(yy.size) - .5)
-            parfit, _ = fit_pol_all(xx, yyx, kT=0.001)
+            parfit, _ , _= fit_pol_all(xx, yyx, kT=0.001)
             ppall[ii, j] = parfit
-    #%%
+    # %%
     mean = np.mean(ppall[:, :, 0], axis=1)
     mstd = np.std(ppall[:, :, 0], axis=1)
 
@@ -319,7 +379,8 @@ if __name__ == '__main__':
         plt.plot(ii, qq.flatten(), '.r', alpha=.1)
     if plot_bands:
         nstd = 2
-        plt.fill_between(tb.index, tb - nstd * mstd, tb + nstd * mstd, color='b', alpha=0.1, label='uncertainty (%d std)' % nstd)
+        plt.fill_between(tb.index, tb - nstd * mstd, tb + nstd * mstd, color='b',
+                         alpha=0.1, label='uncertainty (%d std)' % nstd)
     #plt.plot(tb.index, ma, 'k', label='mean')
 
     plt.plot(tb.index, tb, 'k', label='mean')

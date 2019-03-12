@@ -1,26 +1,28 @@
 """ Functionality to analyse pinch-off scans """
+
 #%% Load packages
 
 import scipy
 import scipy.ndimage
-from qtt.pgeometry import cfigure, plot2Dline
+from qtt.pgeometry import plot2Dline
 import qcodes
 import numpy as np
 import matplotlib.pyplot as plt
 
 import qtt.data
-import scipy
+import qtt.pgeometry
 
 #%%
 
-def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=True, drawmidpoints=True):
+def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoothed=False):
     """ Analyse sweep of a gate for pinch value, low value and high value
 
     Args:
         dd (1D qcodes DataSet): structure containing the scan data
         minthr, maxthr : float
             parameters for the algorithm (default: None)
-
+        verbose (int): Verbosity level
+        
     Returns:
         result (dict): dictionary with analysis results
     """
@@ -67,16 +69,14 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     # smooth signal
     kk = np.ones(3) / 3.
-    ww = value
+    smoothed_data = value
     for ii in range(4):
-        ww = scipy.ndimage.filters.correlate1d(ww, kk, mode='nearest')
-        # ww=scipy.signal.convolve(ww, kk, mode='same')
-        # ww=scipy.signal.convolve2d(ww, kk, mode='same', boundary='symm')
+        smoothed_data = scipy.ndimage.filters.correlate1d(smoothed_data, kk, mode='nearest')
     midvalue = .7 * lowvalue + .3 * highvalue
     if scandirection >= 0:
-        mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][0]
+        mp = (smoothed_data >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][0]
     else:
-        mp = (ww >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][-1]
+        mp = (smoothed_data >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][-1]
     mp = max(mp, 2)  # fix for case with zero data signal
     midpoint2 = x[mp]
 
@@ -96,13 +96,13 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     # check for gates that are fully open or closed
     if scandirection > 0:
         xleft = x[0:mp]
-        leftval = ww[0:mp]
-        rightval = ww[mp]
+        leftval = smoothed_data[0:mp]
+        rightval = smoothed_data[mp]
     else:
         xleft = x[mp:]
-        leftval = ww[mp:]
-        rightval = ww[0:mp]
-    st = ww.std()
+        leftval = smoothed_data[mp:]
+        rightval = smoothed_data[0:mp]
+    st = smoothed_data.std()
     if verbose>=2:
         print('analyseGateSweep: leftval %.2f, rightval %.2f' %
               (leftval.mean(), rightval.mean()))
@@ -116,11 +116,9 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     # fit a polynomial to the left side
     if goodgate and leftval.size > 5:
-        # TODO: make this a robust fit
         fit = np.polyfit(xleft, leftval, 1)
         pp = np.polyval(fit, xleft)
 
-        # pmid = np.polyval(fit, midpoint2)
         p0 = np.polyval(fit, xleft[-1])
         pmid = np.polyval(fit, xleft[0])
         if verbose>=2:
@@ -149,9 +147,8 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     if np.abs(scandirection * (xleft[1] - xleft[0])) > 150 and xleft.size > 15:
         xleft0 = x[mp + 6:]
-        leftval0 = ww[mp + 6:]
+        leftval0 = smoothed_data[mp + 6:]
         fitL = np.polyfit(xleft0, leftval0, 1)
-        pp = np.polyval(fitL, xleft0)
         nd = fitL[0] / (highvalue - lowvalue)
         if goodgate and (nd * 750 > 1):
             midpoint1 = np.percentile(x, .5)
@@ -170,29 +167,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
                 'analyseGateSweep: gate not good: gate is not closed (or fully closed) (left region check)')
         pass
 
-    if fig is not None:
-        cfigure(fig)
-        plt.clf()
-        plt.plot(x, value, '.-b', linewidth=2)
-        plt.xlabel('Sweep %s [mV]' % setpoint_name, fontsize=14)
-        plt.ylabel('keithley [pA]', fontsize=14)
-
-        if drawsmoothed:
-            plt.plot(x, ww, '-g', linewidth=1)
-
-        plot2Dline([0, -1, lowvalue], '--m', label='low value')
-        plot2Dline([0, -1, highvalue], '--m', label='high value')
-
-        if drawmidpoints:
-            if verbose >= 2:
-                plot2Dline([-1, 0, midpoint1], '--g', linewidth=1)
-            plot2Dline([-1, 0, midpoint2], '--m', linewidth=2)
-
-        if verbose >= 2:
-            plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1, label='leftpred')
-            plt.plot(x[leftidx], leftval, '--m', markersize=15, linewidth=1, label='leftval')
-
-
     adata = dict({'description': 'pinchoff analysis', 'pinchvalue': 'use pinchoff_point instead',
                   '_pinchvalueX': midpoint1 - 50, 'goodgate': goodgate})
     adata['lowvalue'] = lowvalue
@@ -202,9 +176,20 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     pinchoff_index = np.interp(-70.5, x, np.arange(x.size) )
     adata['pinchoff_value'] = value[int(pinchoff_index)]
     adata['midpoint'] = float(midpoint2)
+    adata['_debug'] = {'midpoint1': midpoint1, 'midpoint2': midpoint2 }
     adata['midvalue'] = midvalue
     adata['dataset']=dd.location
     adata['type']='gatesweep'
+
+    if fig is not None:
+        plot_pinchoff(adata, ds=dd, fig=fig)
+
+        if drawsmoothed:
+            plt.plot(x, smoothed_data, '-g', linewidth=1, label='smoothed data')
+
+        if verbose >= 2:
+            plt.plot(x[leftidx], leftpred, '--r', markersize=15, linewidth=1, label='leftpred')
+            plt.plot(x[leftidx], leftval, '--m', markersize=15, linewidth=1, label='leftval')
 
     if verbose>=1:
         print('analyseGateSweep: pinch-off point %.3f, value %.3f' % (adata['midpoint'], adata['midvalue']) )
@@ -212,11 +197,11 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     if verbose >= 2:
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %
               (goodgate, adata['pinchoff_point']))
-        adata['Xsmooth'] = ww
+        adata['Xsmooth'] = smoothed_data
         adata['XX'] = XX
         adata['X'] = value
         adata['x'] = x
-        adata['ww'] = ww
+        adata['smoothed_data'] = smoothed_data
         adata['_mp'] = mp
 
     return adata
@@ -224,7 +209,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
 #%% Testing
 
-def plot_pinchoff(result, ds=None, fig=10):
+def plot_pinchoff(result, ds=None, fig=10, verbose = 1):
     """ Plot result of a pinchoff scan """
     if ds is None:
         ds = qtt.data.get_dataset(result)
@@ -247,7 +232,8 @@ def plot_pinchoff(result, ds=None, fig=10):
         plot2Dline([0, -1, highvalue], '--c', alpha=.5, label='high value')
 
         plot2Dline([-1, 0, midpoint], ':m', linewidth=2, alpha=0.5, label='midpoint')
-        plt.plot(midpoint, midvalue, '.m', label='midpoint')
+        if verbose>=2:
+            plt.plot(midpoint, midvalue, '.m', label='midpoint')
         plot2Dline([-1, 0, pinchoff_point], '--g', linewidth=1, alpha=0.5, label='pinchoff_point')
 
 def test_analyseGateSweep(fig=None):

@@ -43,7 +43,13 @@ def _data_array_to_dictionary(data_array, include_data=True):
 def _dictionary_to_data_array(array_dictionary):
     preset_data = array_dictionary['ndarray']
     array_id = array_dictionary.get('array_id', array_dictionary['name'])
-    data_array = qcodes.DataArray(name=array_dictionary['name'],
+    array_name = array_dictionary['name']
+    if array_name is None:
+        array_name = array_id
+    array_full_name = array_dictionary['full_name']
+    if array_full_name is None:
+        array_full_name = array_name
+    data_array = qcodes.DataArray(name=array_name,
                                   full_name=array_dictionary['full_name'],
                                   label=array_dictionary['label'],
                                   unit=array_dictionary['unit'],
@@ -228,6 +234,11 @@ def test_load_dataset(verbose=0):
         if verbose:
             print(r)
 
+#%%
+def default_setpoint_array(dataset, measured_name='measured'):
+    """ Return the default setpoint array for a dataset """
+    setpoint_array = dataset.default_parameter_array(measured_name).set_arrays[0]
+    return setpoint_array
 
 #%% Monkey patch qcodes to store latest dataset
 from functools import wraps
