@@ -10,7 +10,7 @@ def readme():
         return f.read()
 
 
-def get_version(verbose=1, filename='qtt/version.py'):
+def get_version(verbose=1, filename='src/qtt/version.py'):
     """ Extract version information from source code """
 
     with open(filename, 'r') as f:
@@ -74,19 +74,11 @@ setup(name='qtt',
           'Topic :: Scientific/Engineering'
       ],
       license='Private',
-      # if we want to install without tests:
-      # packages=find_packages(exclude=["*.tests", "tests"]),
-      packages=find_packages(),
-      #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
+      package_dir={'': 'src'},
+      packages=find_packages(where='./src'),
       install_requires=[
           'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
-          'numpy>=1.11', 'scikit-image',
-          'IPython>=0.1',
-          'qcodes>=0.1.5',
-          'Polygon3',
-          'scipy'
-          # nose is only for tests, but we'd like to encourage people to run tests!
-          # 'nose>=1.3',
+          'numpy>=1.11', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.1.5', 'Polygon3', 'scipy'
       ],
       extras_require=extras_require,
       zip_safe=False,
