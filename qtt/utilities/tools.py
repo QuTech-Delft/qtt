@@ -851,6 +851,12 @@ try:
             # we have a figure, assume textbox is for dataset name only
             ppLayout = ppLayoutTitleOnly
 
+        max_slides_count = 250
+        if ppt.Slides.Count > max_slides_count:
+            error_message = "Your presentation has more than {} slides! \
+                Please start a new measurement logbook.".format(max_slides_count)
+            raise MemoryError(error_message)
+
         if verbose:
             print('addPPTslide: presentation name: %s, adding slide %d' %
                   (ppt.Name, ppt.Slides.count + 1))

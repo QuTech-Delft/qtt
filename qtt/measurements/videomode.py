@@ -133,6 +133,9 @@ class VideoMode:
             mouse_click_callback (None or function): if None then update scan position with callback
 
         """
+        if VideoMode.videomode_class_index == 0:
+            # create instance of QApplication
+            _ = pyqtgraph.mkQApp()
         VideoMode.videomode_class_index = VideoMode.videomode_class_index + 1  # increment index of VideoMode objects
         self.videomode_index = VideoMode.videomode_class_index
 
@@ -483,9 +486,10 @@ class VideoMode:
     def __run_2d_scan(self, awg, virtual_awg, period=None):
         if virtual_awg:
             sweep_ranges = [i for i in self.sweepranges]
-            if isinstance(self.sweepparams, dict):
+            if isinstance(self.sweepparams[0], dict):
                 gates = self.sweepparams
-            elif isinstance(self.sweepparams, list):
+            else:
+                # convert list of strings to dict format
                 gates = self.sweepparams
                 gates = [dict([(gate, 1)]) for gate in gates]
 
