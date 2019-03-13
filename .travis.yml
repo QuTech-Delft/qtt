@@ -21,7 +21,7 @@ install:
         echo "Full Installation";
         pip install -r develop_requirements.txt;
       fi
-    - python setup.py develop
+    - pip install -e .
 
 script:
     - ls
