@@ -631,8 +631,8 @@ class DotSystem(BaseDotSystem):
     def showvars(self):
         print('\nVariable list for %s:' % self.name)
         print('----------------------------')
-        for name in self.varnames:
-            print(name + ' = ' + str(eval('self.' + name)))
+        for name in self.varnames:            
+            print(name + ' = ' + str(getattr(self, 'name')))
         print(' ')
 
     @qtt.utilities.tools.deprecated
