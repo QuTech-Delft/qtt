@@ -772,43 +772,46 @@ def pythonVersion():
           (pversion, ipversion, in_ipynb()))
 
 
-#%%
+# %%
 
 
 def _ppt_color_to_rgb_tuple(c):
-    return (c.RGB  % 256,int(c.RGB / 256) % 256, int(c.RGB / 65536) % 256, )
-    
+    return (c.RGB % 256, int(c.RGB / 256) % 256, int(c.RGB / 65536) % 256, )
+
+
 def _rgb_tuple_to_ppt_color(rgb):
     if not isinstance(rgb, (tuple, int)):
         raise AssertionError('color should be an rgb tuple in the range 0 to 255')
-    rgb=np.array(rgb).astype(int)
-    if (not np.all(rgb>=0)) or (not np.all(rgb<256)):
+    rgb = np.array(rgb).astype(int)
+    if (not np.all(rgb >= 0)) or (not np.all(rgb < 256)):
         raise AssertionError('color should be an rgb tuple in the range 0 to 255')
-        
-    value = int( rgb[0]+255*rgb[1]+255*255*rgb[2] )
+
+    value = int(rgb[0] + 255 * rgb[1] + 255 * 255 * rgb[2])
     return value
+
 
 def set_ppt_slide_background(slide, color, verbose=0):
     """ Set color of PPT slide 
-    
+
     Args:
         slide (object): PowerPoint COM object for slide
         color (tuple): tuple with RGB color specification
     """
     background = slide.Background
-    forecolor=background.Fill.ForeColor
+    forecolor = background.Fill.ForeColor
     if verbose:
-        print('set_ppt_slide_background: current color %s'  % ( _ppt_color_to_rgb_tuple(forecolor),) )
-        print('set_ppt_slide_background: setting to %s -> %d'  % ( color, _rgb_tuple_to_ppt_color(color),) )
-                       
-    slide.FollowMasterBackground=0
-    forecolor.RGB=_rgb_tuple_to_ppt_color(color)    
+        print('set_ppt_slide_background: current color %s' % (_ppt_color_to_rgb_tuple(forecolor),))
+        print('set_ppt_slide_background: setting to %s -> %d' % (color, _rgb_tuple_to_ppt_color(color),))
+
+    slide.FollowMasterBackground = 0
+    forecolor.RGB = _rgb_tuple_to_ppt_color(color)
 
 # %%
-    
+
+
 def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
     top = 120
-    
+
     if figsize is not None:
         left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
         width = figsize[0]
@@ -844,13 +847,14 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
             print('image width height: %d, %d' % (width, height))
     return left, top, width, height
 
+
 try:
     import win32com
     import win32com.client
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None, background_color = None):
+                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
         """ Add slide to current active Powerpoint presentation
 
         Arguments:
@@ -932,10 +936,10 @@ try:
                   (ppt.Name, ppt.Slides.count + 1))
 
         slide = ppt.Slides.Add(ppt.Slides.Count + 1, ppLayout)
-        
+
         if background_color is not None:
             set_ppt_slide_background(slide, background_color)
-       
+
         if fig is None:
             titlebox = slide.shapes.Item(1)
             mainbox = slide.shapes.Item(2)
@@ -1006,7 +1010,7 @@ try:
                 if verbose:
                     raise TypeError('figure is of an unknown type %s' % (type(fig), ))
             top = 120
-            
+
             left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=1)
 
             if verbose >= 2:
