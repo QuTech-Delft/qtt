@@ -782,7 +782,7 @@ def _rgb_tuple_to_ppt_color(rgb):
     if not isinstance(rgb, (tuple, int)):
         raise AssertionError('color should be an rgb tuple in the range 0 to 255')
     rgb=np.array(rgb).astype(int)
-    if (not np.all(rgb)>=0) or (not np.all(rgb)<256):
+    if (not np.all(rgb>=0)) or (not np.all(rgb<256)):
         raise AssertionError('color should be an rgb tuple in the range 0 to 255')
         
     value = int( rgb[0]+255*rgb[1]+255*255*rgb[2] )
