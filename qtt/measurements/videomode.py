@@ -300,7 +300,7 @@ class VideoMode:
                         d = self.scanparams['sweepparams'][parameter]
                         for g, f in d.items():
                             if verbose >= 2:
-                                print('  %: increment %s with %s' % (parameter, g, f * delta))
+                                print('  %s: increment %s with %s' % (parameter, g, f * delta))
                             param = getattr(station.gates, g)
                             param.increment(f * delta)
                     else:
@@ -647,16 +647,10 @@ if __name__ == '__main__':
 
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
-    import pdb
-    from imp import reload
-    import matplotlib.pyplot as plt
+    #from qtt.gui.live_plotting import *
 
-    reload(qtt.gui.live_plotting)
-    from qtt.gui.live_plotting import *
+    pv = qtt.createParameterWidget([gates]) # type: ignore
 
-    pv = qtt.createParameterWidget([gates])
-
-    reload(qtt.measurements.scans)
     verbose = 1
     multiprocess = False
 
@@ -682,16 +676,12 @@ if __name__ == '__main__':
                    resolution=resolution, sample_rate='default', diff_dir=None,
                    verbose=1, nplots=None, dorun=True)
 
-    if 0:
-        sweepparams = {'gates_horz': {'P1': 1}, 'gates_vert': {'P2': 1}}
-
-        vm = VideoMode(station, sweepparams, sweepranges=[120] * 2,
-                       minstrument=minstrument, resolution=[12] * 2, Naverage=2)
-        vm.stop()
-
-    self = vm
     vm.setGeometry(1310, 100, 800, 800)
 
+    vm.stopreadout()
+    vm.updatebg()
+    vm.stop()
+    
     # %% Test MultiTracePlot
     app = pyqtgraph.mkQApp()
     waveform, ix = station.awg.sweep_gate('P1', 50, 1e-3)
@@ -711,8 +701,6 @@ if __name__ == '__main__':
 
     # %%
     import qtt.measurements.ttrace
-
-    reload(qtt.measurements.ttrace)
     from qtt.measurements.ttrace import MultiTracePlot
 
     mt = MultiTracePlot(nplots=nplots, ncurves=ncurves)
@@ -728,3 +716,5 @@ if __name__ == '__main__':
     mt.updatefunction()
 
     mt.get_dataset()
+    
+    mt.stopreadout()
