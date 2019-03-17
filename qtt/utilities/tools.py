@@ -791,7 +791,7 @@ def _rgb_tuple_to_ppt_color(rgb):
 
 
 def set_ppt_slide_background(slide, color, verbose=0):
-    """ Set color of PPT slide 
+    """ Set color of PPT slide
 
     Args:
         slide (object): PowerPoint COM object for slide
