@@ -439,9 +439,3 @@ def fitLine(alldata, param0=None, fig=None):
     plt.xlabel(cgate)
     plt.ylabel(igate)
 
-
-if __name__ == '__main__' and 0:
-    param0 = [0, 0, .5 * np.pi]  # x,y,theta,
-    figl = 100
-
-    fitdata = fitLine(im, param0=None, fig=None)

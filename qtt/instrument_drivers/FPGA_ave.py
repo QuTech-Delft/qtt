@@ -355,8 +355,4 @@ class FPGA_ave(VisaInstrument):
         return totalpoints, DataRead_ch1, DataRead_ch2
 
 
-# %% Testing driver functionality
-if __name__ == '__main__':
-    server_name = None
-    fpga = FPGA_ave_x('FPGA', 'ASRL4::INSTR', server_name=server_name)
-    self = fpga
+
