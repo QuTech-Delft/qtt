@@ -23,7 +23,11 @@ class TestGeometryOperations(unittest.TestCase):
     def test_decomposeProjectiveTransformation(self):
         R = pgeometry.pg_rotation2H(pgeometry.pg_rotx(np.pi / 2))
         Ha, Hs, Hp, rest = pgeometry.decomposeProjectiveTransformation(R)
+        np.testing.assert_array_almost_equal(Hs @ Ha @ Hp, R)
 
+        R = pgeometry.pg_rotation2H(pgeometry.pg_rotx(.012))
+        Ha, Hs, Hp, rest = pgeometry.decomposeProjectiveTransformation(R)
+        np.testing.assert_array_almost_equal(Hs @ Ha @ Hp, R)
 
 if __name__ == "__main__":
     """ Dummy main for testing

@@ -2166,8 +2166,8 @@ def decomposeProjectiveTransformation(H, verbose=0):
     else:
         # primitive...
         sc = np.sign(np.diag(K))
-        K = np.diag(sc) * K
-        R = R * np.diag(sc)
+        K = np.diag(sc).dot(K)
+        R = R.dot( np.diag(sc))
     br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
     Hs = np.array(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
     Ha = np.array(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))
