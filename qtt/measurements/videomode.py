@@ -716,5 +716,4 @@ if __name__ == '__main__':
     mt.updatefunction()
 
     mt.get_dataset()
-    
     mt.stopreadout()
