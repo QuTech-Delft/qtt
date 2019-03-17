@@ -1576,7 +1576,7 @@ try:
         draw.text(pos, txt, fill=color, font=font)
         return np.array(im1)
 except:
-    def writeTxt(*args, **kwargs):
+    def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
         """ Dummy function """
         warnings.warn('writeTxt: could not find PIL')
         return None

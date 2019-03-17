@@ -149,8 +149,6 @@ abort_measurements = _abort_measurement
 # patch the qcodes abort function
 qcodes.loops.abort_measurements = _abort_measurement
 
-qtt._dummy_mc = []
-
 # %% Override default location formatter
 
 from qcodes.data.location import FormatLocation
@@ -173,7 +171,7 @@ def _copy_to_str(x, memo):
 # black magic to make qcodes objects work with deepcopy
 from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, Station
 for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
-    copy._deepcopy_dispatch[c] = _copy_to_str
+    copy._deepcopy_dispatch[c] = _copy_to_str # type: ignore
 
 # make a qcodes instrument pickable
 qcodes.Instrument.__getstate__ = lambda self: str(self)
