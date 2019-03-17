@@ -649,7 +649,7 @@ if __name__ == '__main__':
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
     #from qtt.gui.live_plotting import *
 
-    pv = qtt.createParameterWidget([gates]) # type: ignore
+    pv = qtt.createParameterWidget([gates])  # type: ignore
 
     verbose = 1
     multiprocess = False
@@ -681,7 +681,7 @@ if __name__ == '__main__':
     vm.stopreadout()
     vm.updatebg()
     vm.stop()
-    
+
     # %% Test MultiTracePlot
     app = pyqtgraph.mkQApp()
     waveform, ix = station.awg.sweep_gate('P1', 50, 1e-3)
