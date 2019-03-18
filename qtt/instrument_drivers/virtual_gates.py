@@ -133,7 +133,7 @@ class virtual_gates(Instrument):
         """ Convert a virtual gates object to a dictionary for storage """
         def without_keys(d, keys):
             return {x: d[x] for x in d if x not in keys}
-        d = without_keys(self.__dict__, 'parameters')
+        d = without_keys(self.__dict__, ['parameters', 'log'])
         d['gates'] = str(d['gates'])
         d['crosscap_matrix'] = self.get_crosscap_matrix()
         return d
@@ -669,7 +669,7 @@ def test_virtual_gates_serialization(verbose=0):
     """ Test for virtual gates object """
     import qtt.instrument_drivers.virtual_instruments
     gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
-        name=qtt.measurements.scans.instrumentName('testivvi'), model=None, gates=['P1', 'P2', 'P3', 'P4'])
+        name=qtt.measurements.scans.instrumentName('ivvi_dummy_serialization_test'), model=None, gates=['P1', 'P2', 'P3', 'P4'])
 
     crosscap_map = OrderedDict((
         ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
@@ -684,6 +684,8 @@ def test_virtual_gates_serialization(verbose=0):
     np.testing.assert_almost_equal(vx.get_crosscap_matrix_inv(), virts.get_crosscap_matrix_inv())
     assert(vx.pgates() == ['P%d' % i for i in range(1, 4)])
 
+    gates.close()
+    virts.close()
 
 if __name__ == '__main__':
     verbose = 1
