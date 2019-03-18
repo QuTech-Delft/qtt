@@ -472,10 +472,10 @@ class sensingdot_t:
         goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig, invert=invert)
 
         if len(goodpeaks) > 0:
-            self.sdval[1] = goodpeaks[0]['xhalfl']
-            self.targetvalue = goodpeaks[0]['yhalfl']
+            self.sdval[1] = float(goodpeaks[0]['xhalfl'])
+            self.targetvalue = float(goodpeaks[0]['yhalfl'])
         else:
-            print('autoTune: could not find good peak, may need to adjust mirrorfactor')
+            print('autoTune: could not find good peak, may need to adjust mirror factor')
 
         if self.verbose:
             print(
