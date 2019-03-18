@@ -861,7 +861,7 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
 
 
 
-def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925, 0.075, 0.05) ):
+def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925, 0.075, 0.05)):
     """ Create a callback on a matplotlib figure to copy data to PowerPoint slide
 
     The figure is copied to PowerPoint using @ref addPPTslide.
