@@ -860,9 +860,9 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
 
 
 
-def create_figure_ppt_callback(fig, title='', notes= None, position=[0.9, 0.925, 0.075, 0.05]):
+def create_figure_ppt_callback(fig, title='', notes=None, position=(0.9, 0.925, 0.075, 0.05) ):
     """ Create a callback on a matplotlib figure to copy data to PowerPoint slide
-    
+
     Args:
         fig (int): handle to matplotlib window
         title (str): title for the slide
@@ -871,9 +871,9 @@ def create_figure_ppt_callback(fig, title='', notes= None, position=[0.9, 0.925,
     """
     ppt_axis = plt.axes(position)
     ppt_button = Button(ppt_axis, 'ppt')
-    ppt_axis._button = ppt_button    
+    ppt_axis._button = ppt_button
     ppt_axis.set_alpha(.5)
-    
+
     def figure_ppt_callback(event):
         print('creating PowerPoint slide for figure %d' % fig)
         ppt_axis.set_visible(False)
@@ -881,8 +881,7 @@ def create_figure_ppt_callback(fig, title='', notes= None, position=[0.9, 0.925,
         ppt_axis.set_visible(True)
 
     ppt_button.on_clicked(figure_ppt_callback)
-    
->>>>>>> add method to create powerpoint callback button
+
 try:
     import win32com
     import win32com.client
