@@ -774,7 +774,6 @@ def pythonVersion():
 
 # %%
 
-
 def _covert_integer_to_rgb_color(integer_value):
     if integer_value < 0 or integer_value > 256**3:
         raise ValueError('Integer value cannot be converted to RGB!')
@@ -860,6 +859,30 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
     return left, top, width, height
 
 
+
+def create_figure_ppt_callback(fig, title='', notes= None, position=[0.9, 0.925, 0.075, 0.05]):
+    """ Create a callback on a matplotlib figure to copy data to PowerPoint slide
+    
+    Args:
+        fig (int): handle to matplotlib window
+        title (str): title for the slide
+        notes (None or str or DataSet): notes to add to the slide
+        position (list): position specified as fraction left, right, width, height
+    """
+    ppt_axis = plt.axes(position)
+    ppt_button = Button(ppt_axis, 'ppt')
+    ppt_axis._button = ppt_button    
+    ppt_axis.set_alpha(.5)
+    
+    def figure_ppt_callback(event):
+        print('creating PowerPoint slide for figure %d' % fig)
+        ppt_axis.set_visible(False)
+        addPPTslide(fig=fig, title=title, notes=dataset)
+        ppt_axis.set_visible(True)
+
+    ppt_button.on_clicked(figure_ppt_callback)
+    
+>>>>>>> add method to create powerpoint callback button
 try:
     import win32com
     import win32com.client
