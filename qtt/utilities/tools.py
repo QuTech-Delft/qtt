@@ -21,6 +21,7 @@ from colorama import Fore
 import importlib
 import platform
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 
 try:
     from dulwich.repo import Repo, NotGitRepository
@@ -877,7 +878,7 @@ def create_figure_ppt_callback(fig, title='', notes=None, position=(0.9, 0.925, 
     def figure_ppt_callback(event):
         print('creating PowerPoint slide for figure %d' % fig)
         ppt_axis.set_visible(False)
-        addPPTslide(fig=fig, title=title, notes=dataset)
+        addPPTslide(fig=fig, title=title, notes=notes)
         ppt_axis.set_visible(True)
 
     ppt_button.on_clicked(figure_ppt_callback)
