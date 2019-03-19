@@ -6,7 +6,6 @@ import qcodes
 from qtt.utilities.json_serializer import QttJsonEncoder, QttJsonDecoder
 
 
-
 # %%
 
 class TestJSON(unittest.TestCase):
@@ -22,6 +21,9 @@ class TestJSON(unittest.TestCase):
         data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}
         serialized_data = json.dumps(data, cls=QttJsonEncoder)
         loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
+        self.assertIn('__ndarray__', serialized_data)
+        self.assertIn(r'"dtype": "<f8"', serialized_data)
+        np.testing.assert_array_equal(loaded_data['array'], data['array'])
 
         for key, value in data.items():
             np.testing.assert_array_equal(value, loaded_data[key])
@@ -38,6 +40,7 @@ class TestJSON(unittest.TestCase):
         self.assertEqual(loaded_data['instrument']['__object__'], '__qcodes_instrument__')
         self.assertEqual(loaded_data['instrument']['__content__']['name'], instrument.name)
         instrument.close()
+
 
 if __name__ == '__main__':
     unittest.main()
