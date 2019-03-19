@@ -15,7 +15,7 @@ import logging
 
 try:
     import graphviz
-except BaseException:
+except ModuleNotFoundError:
     pass
 
 try:
