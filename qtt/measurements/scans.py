@@ -1027,13 +1027,25 @@ def fastScan(scanjob, station):
 
     """
 
-    if not 'awg' in station.components:
+
+    awg = getattr(station, 'awg', None)
+    if awg is None:
+        awg = getattr(station, 'virtual_awg', None)
+
+    if 'awg' is None:
         return 0
 
-    awg = getattr(station, 'awg')
-    if awg is None:
-        return False
+    if isinstance(awg, qtt.instrument_drivers.virtualAwg.virtual_awg.VirtualAwg):
+        awg_map = awg._settings.awg_map
+        if not scanjob['sweepdata']['param'] in awg_map:
+            # sweep gate is not fast, so no fast scan possible
+            return 0
+        if 'stepdata' in scanjob:
+            if scanjob['stepdata'].get('param', None) in awg_map:
+                return 2
+        return 1
 
+    warnings.warn('old virtual awg object, ', DeprecationWarning)
     if not awg.awg_gate(scanjob['sweepdata']['param']):
         # sweep gate is not fast, so no fast scan possible
         return 0
