@@ -872,6 +872,7 @@ def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925
         notes (None or str or DataSet): notes to add to the slide
         position (list): position specified as fraction left, right, width, height
     """
+    plt.figure(fig)
     ppt_axis = plt.axes(position)
     ppt_button = Button(ppt_axis, 'ppt')
     ppt_axis._button = ppt_button
