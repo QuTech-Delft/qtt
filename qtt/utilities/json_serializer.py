@@ -4,7 +4,7 @@ import unittest
 from json import JSONDecoder, JSONEncoder
 
 import numpy as np
-
+import qcodes
 
 class JsonSerializeKey:
     """The custum value types for the JSON serializer."""
@@ -23,6 +23,10 @@ class QttJsonDecoder(JSONDecoder):
     @staticmethod
     def __decode_bytes(item):
         return base64.b64decode(item[JsonSerializeKey.CONTENT].encode('ascii'))
+
+    @staticmethod
+    def __decode_qcodes_instrument(item):
+        return item
 
     @staticmethod
     def __decode_tuple(item):
@@ -45,6 +49,7 @@ class QttJsonDecoder(JSONDecoder):
             tuple.__name__: QttJsonDecoder.__decode_tuple,
             np.array.__name__: QttJsonDecoder.__decode_numpy_array,
             '__npnumber__': QttJsonDecoder.__decode_numpy_number,
+            '__qcodes_instrument__': QttJsonDecoder.__decode_qcodes_instrument,
         }
         if JsonSerializeKey.CONTENT in obj:
             decoder_function = decoders.get(obj[JsonSerializeKey.OBJECT])
@@ -60,6 +65,13 @@ class QttJsonEncoder(JSONEncoder):
         return {
             JsonSerializeKey.OBJECT: bytes.__name__,
             JsonSerializeKey.CONTENT: base64.b64encode(item).decode('ascii')
+        }
+
+    @staticmethod
+    def __encode_qcodes_instrument(item):
+        return {
+            JsonSerializeKey.OBJECT: '__qcodes_instrument__',
+            JsonSerializeKey.CONTENT: {'name': item.name, 'qcodes_instrument': str(item) }
         }
 
     @staticmethod
@@ -112,6 +124,7 @@ class QttJsonEncoder(JSONEncoder):
             np.int64: QttJsonEncoder.__encode_numpy_number,
             np.float32: QttJsonEncoder.__encode_numpy_number,
             np.float64: QttJsonEncoder.__encode_numpy_number,
+            qcodes.Instrument: QttJsonEncoder.__encode_qcodes_instrument,
         }
         encoder_function = encoders.get(type(item), None)
         return encoder_function(item) if encoder_function else item
@@ -144,27 +157,3 @@ def load_json(filename):
     return json.loads(data, cls=QttJsonDecoder)
 
 
-class TestJSON(unittest.TestCase):
-
-    def test_custom_encoders(self):
-        data = {'float': 1.0, 'str': 'hello', 'tuple': (1, 2, 3)}
-        serialized_data = json.dumps(data, cls=QttJsonEncoder)
-
-        loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
-        self.assertDictEqual(data, loaded_data)
-
-    def test_numpy_encoders(self):
-        data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}
-        serialized_data = json.dumps(data, cls=QttJsonEncoder)
-        loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
-
-        for key, value in data.items():
-            np.testing.assert_array_equal(value, loaded_data[key])
-
-        data = {'int32': np.int32(2.), 'float': np.float(3.), 'float64': np.float64(-1)}
-        serialized_data = json.dumps(data, cls=QttJsonEncoder)
-        loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
-
-
-if __name__ == '__main__':
-    unittest.main()
