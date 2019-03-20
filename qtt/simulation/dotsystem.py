@@ -9,13 +9,12 @@ import matplotlib.pyplot as plt
 import time
 import copy
 from abc import abstractmethod
-from functools import partial
 import sys
 import logging
 
 try:
     import graphviz
-except ModuleNotFoundError:
+except ImportError:
     pass
 
 try:
@@ -418,7 +417,7 @@ class DotSystem(BaseDotSystem):
         return self.H
 
     def makeHsparse(self, verbose=0):
-        ''' Create a new Hamiltonian '''
+        ''' Create a new sparse Hamiltonian '''
         self.H.fill(0)
         for name in self.varnames:
             if verbose:
@@ -428,7 +427,6 @@ class DotSystem(BaseDotSystem):
                 a = getattr(self, self._sparse_matrix_name(name))
                 ind = getattr(self, 'indM' + name)
                 self.H.flat[ind] += a * val
-                # self.H[ri, ci] +=a.data * val
         self.solved = False
         return self.H
 

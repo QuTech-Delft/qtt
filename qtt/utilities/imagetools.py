@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 try:
     import cv2
-except:
+except ImportError:
     import qtt.exceptions
     warnings.warn('could not find opencv, not all functionality available',
                   qtt.exceptions.MissingOptionalPackageWarning)
@@ -53,10 +53,6 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
     else:
         ims = im
 
-    if 0:
-        s2d = scipy.interpolate.RectBivariateSpline(ydata0, xdata0, im)
-        vv = s2d.ev(xx, yy)
-
     if verbose:
         print('fitBackground: is1d %d, order %d' % (is1d, order))
 
@@ -69,7 +65,6 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
     if removeoutliers:
         ww = im - vv
         gidx = np.abs(ims.flatten() - vv.flatten()) < ww.std()
-        # gidx=gidx.flatten()
         if verbose:
             print('fitBackGround: inliers %d/%d (std %.2f)' %
                   (gidx.sum(), gidx.size, ww.std()))
@@ -103,7 +98,6 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
             plt.subplot(3, 1, 2)
             plt.imshow(vv, interpolation='nearest')
             plt.axis('image')
-            # plt.colorbar()
             plt.title('fitBackground: interpolation')
             plt.subplot(3, 1, 3)
             plt.imshow(im - vv, interpolation='nearest')
@@ -154,12 +148,6 @@ def test_fitBackground():
     bg = fitBackground(im, verbose=0)
     bg = fitBackground(im, verbose=0, removeoutliers=True)
     c = cleanSensingImage(im)
-
-
-if __name__ == '__main__':
-    test_fitBackground()
-
-# %%
 
 
 def _showIm(ims, fig=1, title=''):
@@ -512,8 +500,9 @@ def semiLine(im, x0, theta, w, l, H=200, dohalf=True):
     return im
 
 
-def __calcSlope(pp):
-    q = -np.diff(pp, axis=1)
+def __calcSlope(points):
+    """ Calculate slope between two points """
+    q = -np.diff(points, axis=1)
     psi = math.atan2(q[1], q[0])
     slope = q[1] / q[0]
 

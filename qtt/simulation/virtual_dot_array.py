@@ -17,34 +17,24 @@ There are virtual instruments for
 
 # %% Load packages
 
-import sys
-import os
 import logging
-import warnings
 import threading
-import logging
-
-import qcodes
-import numpy as np
-
-from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
-from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
-from qtt.utilities.debug import dumpstring
-
-from qcodes import Instrument
 from functools import partial
 
-import qtt
-from qtt.simulation.dotsystem import DotSystem, GateTransform
-from qtt.simulation.dotsystem import defaultDotValues
+import numpy as np
+import qcodes
+from qcodes import Instrument
 
-from qtt.simulation.dotsystem import OneDot
-from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
+import qtt
+from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer, SimulationAWG
+from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
+from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
+from qtt.simulation.dotsystem import DotSystem, GateTransform
+from qtt.simulation.dotsystem import OneDot
+from qtt.structures import onedot_t
 
 logger = logging.getLogger(__name__)
-qtt.check_version('0.24', qtt)
-
 
 # %% Data for the model
 
@@ -83,7 +73,7 @@ def generate_configuration(ndots):
     Args:
         ndots (int): number of dots
     Returns:
-        nr_ivvi (int)
+        number_dac_modules (int)
         gate_map (dict)
         gates (list)
         bottomgates (list)
@@ -101,28 +91,21 @@ def generate_configuration(ndots):
     gates += ['bias_1', 'bias_2']
     gates += ['O1', 'O2', 'O3', 'O4', 'O5']
 
-    nr_ivvi = int(np.ceil(len(gates) / 14))
+    number_dac_modules = int(np.ceil(len(gates) / 14))
     gate_map = {}
     for ii, g in enumerate(sorted(gates)):
         i = int(np.floor(ii / 16))
         d = ii % 16
         gate_map[g] = (i, d + 1)
 
-    return nr_ivvi, gate_map, gates, bottomgates
-
-
-if 0:
-    nr_ivvi, gate_map, gates, bottomgates = generate_configuration(6)
-    print(gate_map)
-    print(gates)
-    print(bottomgates)
+    return number_dac_modules, gate_map, gates, bottomgates
 
 
 # %%
 class DotModel(Instrument):
     """ Simulation model for linear dot array
 
-    The model is intended for testing the code and learning. It does _not simulate any meaningfull physics.
+    The model is intended for testing the code and learning. It does _not simulate any meaningful physics.
 
     """
 
@@ -131,18 +114,18 @@ class DotModel(Instrument):
 
             Args:
                 name (str): name for the instrument
-                verbose (int)
-                nr_dots (int)
-                maxelectrons (int)
+                verbose (int): verbosity level
+                nr_dots (int): number of dots in the linear array
+                maxelectrons (int): maximum number of electrons in each dot
 
         """
 
         super().__init__(name, **kwargs)
         logging.info('DotModel.__init__: start')
 
-        nr_ivvi, gate_map, gates, bottomgates = generate_configuration(nr_dots)
+        number_dac_modules, gate_map, gates, bottomgates = generate_configuration(nr_dots)
 
-        self.nr_ivvi = nr_ivvi
+        self.nr_ivvi = number_dac_modules
         self.gate_map = gate_map
 
         self._sdplunger = sdplunger
@@ -155,7 +138,6 @@ class DotModel(Instrument):
 
         # make parameters for all the gates...
         gate_map = self.gate_map
-        gateset = set(gate_map.values())
 
         self.gates = list(gate_map.keys())
 
@@ -164,9 +146,9 @@ class DotModel(Instrument):
         self.gate_pinchoff = -200
 
         if verbose >= 1:
-            print('DotModel: ndots %s, bottomgates %s' % (nr_dots, bottomgates))
+            print('DotModel: number of dots %s, maxelectrons %d, bottomgates %s' % (nr_dots, maxelectrons, bottomgates))
 
-        gateset = [(i, a) for a in range(1, 17) for i in range(nr_ivvi)]
+        gateset = [(i, a) for a in range(1, 17) for i in range(number_dac_modules)]
         for i, idx in gateset:
             g = 'ivvi%d_dac%d' % (i + 1, idx)
             logging.debug('add gate %s' % g)
@@ -203,19 +185,15 @@ class DotModel(Instrument):
             self.ds = MultiDot(name='dotmodel', ndots=nr_dots, maxelectrons=maxelectrons)
             if verbose:
                 print('ndots: %s maxelectrons %s' % (self.ds.ndots, maxelectrons))
-                print('self.ds.coulomb_energy.shape %s' % (self.ds.coulomb_energy.shape, ))
             self.ds.alpha = np.eye(self.ds.ndots)
             self.sourcenames = bottomgates
         else:
-            raise Exception('not implemented yet...')
+            raise Exception('number of dots %d not implemented yet...' % nr_dots)
         self.targetnames = ['det%d' % (i + 1) for i in range(self.ds.ndots)]
 
         Vmatrix = np.zeros((len(self.targetnames) + 1, len(self.sourcenames) + 1))
 
         Vmatrix[-1, -1] = 1
-        if verbose >= 1:
-            print('ndots? %s' % self.ds.ndots)
-            print('targetnames: %s' % self.targetnames)
         for ii in range(self.ds.ndots):
             ns = len(self.sourcenames)
             v = np.arange(ns) - (1 + 2 * ii)
@@ -225,28 +203,20 @@ class DotModel(Instrument):
             Vmatrix[0:self.ds.ndots, -1] = (Vmatrix[ii, [2 * ii, 2 * ii + 2]].sum()) * -self.gate_pinchoff
         self.gate_transform = GateTransform(Vmatrix, self.sourcenames, self.targetnames)
 
-        self.sddist1 = self.ds.ndots / (1 + np.arange(self.ds.ndots))
-        self.sddist2 = self.sddist1[::-1]
+        self.sensingdot1_distance = self.ds.ndots / (1 + np.arange(self.ds.ndots))
+        self.sensingdot2_distance = self.sensingdot1_distance[::-1]
 
         if isinstance(self.ds, qtt.simulation.dotsystem.DoubleDot):
             for ii in range(self.ds.ndots):
                 setattr(self.ds, 'osC%d' % (ii + 1), 55)
             for ii in range(self.ds.ndots - 1):
                 setattr(self.ds, 'isC%d' % (ii + 1), 3)
-        else:
-            pass
 
     def get_idn(self):
         ''' Overrule because the default get_idn yields a warning '''
         IDN = {'vendor': 'QuTech', 'model': self.name,
                'serial': None, 'firmware': None}
         return IDN
-
-    def _dummy_get(self, param):
-        return 0
-
-    def _dummy_set(self, param, value):
-        pass
 
     def _data_get(self, param):
         return self._data.get(param, 0)
@@ -299,8 +269,8 @@ class DotModel(Instrument):
             ds.solveH(usediag=usediag)
             ret = ds.OCC
 
-        sd1 = (1 / np.sum(self.sddist1)) * (ret * self.sddist1).sum()
-        sd2 = (1 / np.sum(self.sddist2)) * (ret * self.sddist2).sum()
+        sd1 = (1 / np.sum(self.sensingdot1_distance)) * (ret * self.sensingdot1_distance).sum()
+        sd2 = (1 / np.sum(self.sensingdot2_distance)) * (ret * self.sensingdot2_distance).sum()
 
         sd1 += self.sdnoise * (np.random.rand() - .5)
         sd2 += self.sdnoise * (np.random.rand() - .5)
@@ -418,7 +388,7 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
 
     logger.info('virtualDot: start')
     if verbose >= 2:
-        print('initialize: create virtualdot')
+        print('initialize: create virtual dot system')
 
     if _initialized:
         if reinit:
@@ -480,7 +450,6 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
 # %%
 
 
-from qtt.structures import onedot_t
 
 
 def _getModel():
@@ -495,8 +464,8 @@ def bottomBarrierGates():
     return _getModel().bottomgates[0::2]
 
 
-def get_two_dots(full=1):
-    """ return all posible simple two-dots """
+def get_two_dots():
+    """ return all possible simple two-dots """
     bg = bottomGates()
     two_dots = [dict({'gates': bg[0:3] + bg[2:5]})]  # two dot case
 
@@ -506,7 +475,7 @@ def get_two_dots(full=1):
 
 
 def get_one_dots(full=1, sdidx=[]):
-    """ return all posible simple one-dots
+    """ return all possible simple one-dots
 
     Each dot objects holds the gates, the name of the channel and the
     instrument measuring over the channel.
@@ -534,7 +503,6 @@ def get_one_dots(full=1, sdidx=[]):
 
 
 if __name__ == '__main__' and 1:
-    import pdb
     np.set_printoptions(precision=2, suppress=True)
 
     try:
