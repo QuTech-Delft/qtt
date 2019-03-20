@@ -1139,7 +1139,7 @@ try:
 except ImportError:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None):
+                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
         ''' Dummy implementation '''
         warnings.warn('addPPTslide is not available on your system')
 
