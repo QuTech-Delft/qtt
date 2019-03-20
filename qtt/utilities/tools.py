@@ -775,36 +775,48 @@ def pythonVersion():
 # %%
 
 
-def _ppt_color_to_rgb_tuple(c):
-    return (c.RGB % 256, int(c.RGB / 256) % 256, int(c.RGB / 65536) % 256, )
+def _covert_integer_to_rgb_color(integer_value):
+    if integer_value < 0 or integer_value > 256**3:
+        raise ValueError('Integer value cannot be converted to RGB!')
+
+    red = integer_value & 0xFF
+    green = (integer_value >> 8) & 0xFF
+    blue = (integer_value >> 16) & 0xFF
+    return red, green, blue
 
 
-def _rgb_tuple_to_ppt_color(rgb):
-    if not isinstance(rgb, (tuple, int)):
-        raise AssertionError('color should be an rgb tuple in the range 0 to 255')
-    rgb = np.array(rgb).astype(int)
-    if (not np.all(rgb >= 0)) or (not np.all(rgb < 256)):
-        raise AssertionError('color should be an rgb tuple in the range 0 to 255')
+def _convert_rgb_color_to_integer(rgb_color):
+    if not isinstance(rgb_color, tuple) or not all(isinstance(i, int) for i in rgb_color):
+        raise ValueError('Color should be an RGB integer tuple.')
 
-    value = int(rgb[0] + 255 * rgb[1] + 255 * 255 * rgb[2])
-    return value
+    if len(rgb_color) != 3:
+        raise ValueError('Color should be an RGB integer tuple with three items.')
+
+    if any(i < 0 or i > 255 for i in rgb_color):
+        raise ValueError('Color should be an RGB tuple in the range 0 to 255.')
+
+    red = rgb_color[0]
+    green = rgb_color[1] << 8
+    blue = rgb_color[2] << 16
+    return int(red + green + blue)
 
 
 def set_ppt_slide_background(slide, color, verbose=0):
-    """ Set color of PPT slide
+    """ Sets the background color of PPT slide.
 
     Args:
-        slide (object): PowerPoint COM object for slide
-        color (tuple): tuple with RGB color specification
+        slide (object): PowerPoint COM object for slide.
+        color (tuple): tuple with RGB color specification.
     """
-    background = slide.Background
-    forecolor = background.Fill.ForeColor
-    if verbose:
-        print('set_ppt_slide_background: current color %s' % (_ppt_color_to_rgb_tuple(forecolor),))
-        print('set_ppt_slide_background: setting to %s -> %d' % (color, _rgb_tuple_to_ppt_color(color),))
+    fore_color = slide.Background.Fill.ForeColor
+    ppt_color = _convert_rgb_color_to_integer(color)
+    if verbose > 1:
+        print('Setting PPT slide background color:')
+        print(' - Current color: {0}'.format(_covert_integer_to_rgb_color(fore_color.RGB)))
+        print(' - Setting to {0} -> {1}'.format(color, ppt_color))
 
     slide.FollowMasterBackground = 0
-    forecolor.RGB = _rgb_tuple_to_ppt_color(color)
+    fore_color.RGB = ppt_color
 
 # %%
 
@@ -885,18 +897,16 @@ try:
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
         if verbose >= 2:
-            print('num of open PPTs: %d' % Application.presentations.Count)
+            print('Number of open PPTs: %d.' % Application.presentations.Count)
 
         try:
             ppt = Application.ActivePresentation
         except Exception:
-            print(
-                'could not open active Powerpoint presentation, opening blank presentation')
+            print('Could not open active Powerpoint presentation, opening blank presentation.')
             try:
                 ppt = Application.Presentations.Add()
             except Exception as ex:
-                warnings.warn(
-                    'could not make connection to Powerpoint presentation')
+                warnings.warn('Could not make connection to Powerpoint presentation.')
                 return None, None
 
         if show:
@@ -938,7 +948,7 @@ try:
         slide = ppt.Slides.Add(ppt.Slides.Count + 1, ppLayout)
 
         if background_color is not None:
-            set_ppt_slide_background(slide, background_color)
+            set_ppt_slide_background(slide, background_color, verbose=verbose)
 
         if fig is None:
             titlebox = slide.shapes.Item(1)
@@ -1451,3 +1461,8 @@ def connect_slot(target):
     def signal_drop_arguments(*args, **kwargs):
         target()
     return signal_drop_arguments
+
+
+if __name__ == '__main__':
+    color = (0, 0, 255)
+    addPPTslide(background_color=color, maintext='test', verbose=2)
