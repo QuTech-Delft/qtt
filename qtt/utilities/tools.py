@@ -21,6 +21,7 @@ from colorama import Fore
 import importlib
 import platform
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 
 try:
     from dulwich.repo import Repo, NotGitRepository
@@ -774,7 +775,6 @@ def pythonVersion():
 
 # %%
 
-
 def _covert_integer_to_rgb_color(integer_value):
     if integer_value < 0 or integer_value > 256**3:
         raise ValueError('Integer value cannot be converted to RGB!')
@@ -859,6 +859,38 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
             print('image width height: %d, %d' % (width, height))
     return left, top, width, height
 
+
+
+def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925, 0.075, 0.05)):
+    """ Create a callback on a matplotlib figure to copy data to PowerPoint slide.
+
+    The figure is copied to PowerPoint using @ref addPPTslide.
+
+    Args:
+        fig (int): handle to matplotlib window.
+        title (None or str): title for the slide.
+        notes (None or str or DataSet): notes to add to the slide.
+        position (list): position specified as fraction left, right, width, height.
+
+    Example:
+        >>> plt.figure(10)
+        >>> plt.plot(np.arange(100), np.random.rand(100), 'o', label='input data')
+        >>> create_figure_ppt_callback(10, 'test')
+        >>> plt.show()
+    """
+    plt.figure(fig)
+    ppt_axis = plt.axes(position)
+    ppt_button = Button(ppt_axis, 'ppt')
+    ppt_axis._button = ppt_button
+    ppt_axis.set_alpha(.5)
+
+    def figure_ppt_callback(event):
+        print('creating PowerPoint slide for figure %d' % fig)
+        ppt_axis.set_visible(False)
+        addPPTslide(fig=fig, title=title, notes=notes)
+        ppt_axis.set_visible(True)
+
+    ppt_button.on_clicked(figure_ppt_callback)
 
 try:
     import win32com
@@ -1462,8 +1494,3 @@ def connect_slot(target):
     def signal_drop_arguments(*args, **kwargs):
         target()
     return signal_drop_arguments
-
-
-if __name__ == '__main__':
-    color = (0, 0, 255)
-    addPPTslide(background_color=color, maintext='test', verbose=2)
