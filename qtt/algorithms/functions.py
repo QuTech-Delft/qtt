@@ -435,7 +435,7 @@ def linear_function(x, a, b):
 
 
 def Fermi(x, cc, A, T, kb=1):
-    """ Fermi distribution 
+    r""" Fermi distribution
 
     Arguments:
         x (numpy array): independent variable
@@ -456,7 +456,7 @@ def Fermi(x, cc, A, T, kb=1):
 
 
 def FermiLinear(x, a, b, cc, A, T, l=1.16):
-    """ Fermi distribution with linear function added 
+    r""" Fermi distribution with linear function added
 
     Arguments:
         x (numpy array): independent variable 

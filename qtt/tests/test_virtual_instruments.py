@@ -27,7 +27,7 @@ class TestVirtualMeter(TestCase):
 class TestVirtualIVVI(TestCase):
 
     def setUp(self):
-        self.virtual_ivvi = VirtualIVVI(qtt.measurements.scans.instrumentName('ivvi'), model=None, dac_unit='mV')
+        self.virtual_ivvi = VirtualIVVI(qtt.measurements.scans.instrumentName('test_ivvi'), model=None, dac_unit='mV')
 
     def tearDown(self):
         self.virtual_ivvi.close()
