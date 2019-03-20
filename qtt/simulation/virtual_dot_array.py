@@ -17,34 +17,23 @@ There are virtual instruments for
 
 # %% Load packages
 
-import sys
-import os
 import logging
-import warnings
 import threading
-import logging
-
-import qcodes
-import numpy as np
-
-from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
-from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
-from qtt.utilities.debug import dumpstring
-
-from qcodes import Instrument
 from functools import partial
 
-import qtt
-from qtt.simulation.dotsystem import DotSystem, GateTransform
-from qtt.simulation.dotsystem import defaultDotValues
+import numpy as np
+import qcodes
+from qcodes import Instrument
 
-from qtt.simulation.dotsystem import OneDot
-from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
+import qtt
+from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer, SimulationAWG
+from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
+from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
+from qtt.simulation.dotsystem import DotSystem, GateTransform
+from qtt.simulation.dotsystem import OneDot
 
 logger = logging.getLogger(__name__)
-qtt.check_version('0.24', qtt)
-
 
 # %% Data for the model
 
@@ -534,7 +523,6 @@ def get_one_dots(full=1, sdidx=[]):
 
 
 if __name__ == '__main__' and 1:
-    import pdb
     np.set_printoptions(precision=2, suppress=True)
 
     try:

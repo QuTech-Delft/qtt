@@ -442,12 +442,13 @@ def test_onedot(fig=None):
     scanjob['stepdata'] = dict({'param': 'B1', 'start': start, 'end': start + 200, 'step': 5.})
     data = qtt.measurements.scans.scan2D(station, scanjob)
 
-    x = qtt.algorithms.onedot.onedotGetBalance(dataset=data, verbose=1, fig=None)
+    x = qtt.algorithms.onedot.onedotGetBalance(dataset=data, verbose=1, fig=fig)
     results = x[0]
-    ptfine, resultsfine = qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=None)
-    qtt.algorithms.onedot.plot_onedot(results, ds=data, fig=fig, verbose=1)
+    ptfine, resultsfine = qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=fig)
+    qtt.algorithms.onedot.plot_onedot(results, ds=data, fig=None, verbose=1)
 
 
 if __name__ == '__main__':
-
+    plt.interactive(False)
     test_onedot(fig=1000)
+    plt.show()
