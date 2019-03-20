@@ -773,13 +773,100 @@ def pythonVersion():
 
 
 # %%
+
+
+def _covert_integer_to_rgb_color(integer_value):
+    if integer_value < 0 or integer_value > 256**3:
+        raise ValueError('Integer value cannot be converted to RGB!')
+
+    red = integer_value & 0xFF
+    green = (integer_value >> 8) & 0xFF
+    blue = (integer_value >> 16) & 0xFF
+    return red, green, blue
+
+
+def _convert_rgb_color_to_integer(rgb_color):
+    if not isinstance(rgb_color, tuple) or not all(isinstance(i, int) for i in rgb_color):
+        raise ValueError('Color should be an RGB integer tuple.')
+
+    if len(rgb_color) != 3:
+        raise ValueError('Color should be an RGB integer tuple with three items.')
+
+    if any(i < 0 or i > 255 for i in rgb_color):
+        raise ValueError('Color should be an RGB tuple in the range 0 to 255.')
+
+    red = rgb_color[0]
+    green = rgb_color[1] << 8
+    blue = rgb_color[2] << 16
+    return int(red + green + blue)
+
+
+def set_ppt_slide_background(slide, color, verbose=0):
+    """ Sets the background color of PPT slide.
+
+    Args:
+        slide (object): PowerPoint COM object for slide.
+        color (tuple): tuple with RGB color specification.
+    """
+    fore_color = slide.Background.Fill.ForeColor
+    ppt_color = _convert_rgb_color_to_integer(color)
+    if verbose > 1:
+        print('Setting PPT slide background color:')
+        print(' - Current color: {0}'.format(_covert_integer_to_rgb_color(fore_color.RGB)))
+        print(' - Setting to {0} -> {1}'.format(color, ppt_color))
+
+    slide.FollowMasterBackground = 0
+    fore_color.RGB = ppt_color
+
+# %%
+
+
+def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
+    top = 120
+
+    if figsize is not None:
+        left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
+        width = figsize[0]
+        height = figsize[1]
+    else:
+        slidewh = [ppt.PageSetup.SlideWidth, ppt.PageSetup.SlideHeight]
+        width = 16 * ((slidewh[0] * .75) // 16)
+        height = 16 * (((slidewh[1] - 120) * .9) // 16)
+        height = min(height, 350)
+        left = (slidewh[0] - width) / 2
+
+        try:
+            import cv2
+            imwh = cv2.imread(fname).shape[1], cv2.imread(fname).shape[0]
+        except:
+            imwh = None
+        if imwh is not None:
+            imratio = imwh[0] / imwh[1]
+            slideratio = slidewh[0] / slidewh[1]
+            if verbose >= 1:
+                print(' image aspect ratio %.2f, slide aspect ratio %.2f' % (imratio, slideratio))
+            if slideratio > imratio:
+                # wide slide, so make the image width smaller
+                print('adjust width %d->%d' % (width, height * imratio))
+                width = height * imratio
+            else:
+                # wide image, so make the image height smaller
+                print('adjust height %d->%d' % (height, width / imratio))
+                height = int(width / imratio)
+
+        if verbose:
+            print('slide width height: %s' % (slidewh,))
+            print('image width height: %d, %d' % (width, height))
+    return left, top, width, height
+
+
 try:
     import win32com
     import win32com.client
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None):
+                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
         """ Add slide to current active Powerpoint presentation
 
         Arguments:
@@ -792,6 +879,7 @@ try:
             figsize (list): size (width,height) of figurebox to add to powerpoint
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
+            background_color (None or tuple): background color for the slide
         Returns:
             ppt: PowerPoint presentation
             slide: PowerPoint slide
@@ -809,19 +897,16 @@ try:
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
         if verbose >= 2:
-            print('num of open PPTs: %d' % Application.presentations.Count)
+            print('Number of open PPTs: %d.' % Application.presentations.Count)
 
-        # ppt = Application.Presentations.Add()
         try:
             ppt = Application.ActivePresentation
         except Exception:
-            print(
-                'could not open active Powerpoint presentation, opening blank presentation')
+            print('Could not open active Powerpoint presentation, opening blank presentation.')
             try:
                 ppt = Application.Presentations.Add()
             except Exception as ex:
-                warnings.warn(
-                    'could not make connection to Powerpoint presentation')
+                warnings.warn('Could not make connection to Powerpoint presentation.')
                 return None, None
 
         if show:
@@ -831,7 +916,6 @@ try:
             print('addPPTslide: presentation name: %s' % ppt.Name)
 
         ppLayoutTitleOnly = 11
-        ppLayoutTitle = 1
         ppLayoutText = 2
 
         if txt is not None:
@@ -862,6 +946,10 @@ try:
                   (ppt.Name, ppt.Slides.count + 1))
 
         slide = ppt.Slides.Add(ppt.Slides.Count + 1, ppLayout)
+
+        if background_color is not None:
+            set_ppt_slide_background(slide, background_color, verbose=verbose)
+
         if fig is None:
             titlebox = slide.shapes.Item(1)
             mainbox = slide.shapes.Item(2)
@@ -932,39 +1020,9 @@ try:
                 if verbose:
                     raise TypeError('figure is of an unknown type %s' % (type(fig), ))
             top = 120
-            if figsize is not None:
-                left = (ppt.PageSetup.SlideWidth - figsize[0]) / 2
-                width = figsize[0]
-                height = figsize[1]
-            else:
-                slidewh = [ppt.PageSetup.SlideWidth, ppt.PageSetup.SlideHeight]
-                width = 16 * ((slidewh[0] * .75) // 16)
-                height = 16 * (((slidewh[1] - 120) * .9) // 16)
-                height = min(height, 350)
-                left = (slidewh[0] - width) / 2
 
-                try:
-                    import cv2
-                    imwh = cv2.imread(fname).shape[1], cv2.imread(fname).shape[0]
-                except:
-                    imwh = None
-                if imwh is not None:
-                    imratio = imwh[0] / imwh[1]
-                    slideratio = slidewh[0] / slidewh[1]
-                    if verbose >= 1:
-                        print(' image aspect ratio %.2f, slide aspect ratio %.2f' % (imratio, slideratio))
-                    if slideratio > imratio:
-                        # wide slide, so make the image width smaller
-                        print('adjust width %d->%d' % (width, height * imratio))
-                        width = height * imratio
-                    else:
-                        # wide image, so make the image height smaller
-                        print('adjust height %d->%d' % (height, width / imratio))
-                        height = int(width / imratio)
+            left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=1)
 
-                if verbose:
-                    print('slide width height: %s' % (slidewh,))
-                    print('image width height: %d, %d' % (width, height))
             if verbose >= 2:
                 print('fname %s' % fname)
             slide.Shapes.AddPicture(FileName=fname, LinkToFile=False,
@@ -997,11 +1055,6 @@ try:
                 notes = ' '
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
-
-        # ActivePresentation.Slides(ActiveWindow.View.Slide.SlideNumber).
-        # s=Application.ActiveWindow.Selection
-
-        # slide.SetName('qcodes measurement')
 
         if activate_slide:
             idx = int(slide.SlideIndex)
@@ -1083,14 +1136,16 @@ try:
                                  **kwargs)
         return ppt, slide
 
-except:
+except ImportError:
     def addPPTslide(title=None, fig=None, subtitle=None, maintext=None,
                     notes=None, show=False, verbose=1, ppLayout=1):
-        ''' Dummy implementation '''
+        """ Dummy implementation """
         warnings.warn('addPPTslide is not available on your system')
 
-    def addPPT_dataset(dataset, title=None, notes=None, show=False, verbose=1):
-        ''' Dummy implementation '''
+    def addPPT_dataset(dataset, title=None, notes=None,
+                       show=False, verbose=1, paramname='measured',
+                       printformat='fancy', customfig=None, extranotes=None, **kwargs):
+        """ Dummy implementation """
         warnings.warn('addPPT_dataset is not available on your system')
 
 # %%
@@ -1406,3 +1461,8 @@ def connect_slot(target):
     def signal_drop_arguments(*args, **kwargs):
         target()
     return signal_drop_arguments
+
+
+if __name__ == '__main__':
+    color = (0, 0, 255)
+    addPPTslide(background_color=color, maintext='test', verbose=2)
