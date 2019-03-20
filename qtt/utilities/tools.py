@@ -862,15 +862,21 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
 
 
 def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925, 0.075, 0.05)):
-    """ Create a callback on a matplotlib figure to copy data to PowerPoint slide
+    """ Create a callback on a matplotlib figure to copy data to PowerPoint slide.
 
     The figure is copied to PowerPoint using @ref addPPTslide.
 
     Args:
-        fig (int): handle to matplotlib window
-        title (None or str): title for the slide
-        notes (None or str or DataSet): notes to add to the slide
-        position (list): position specified as fraction left, right, width, height
+        fig (int): handle to matplotlib window.
+        title (None or str): title for the slide.
+        notes (None or str or DataSet): notes to add to the slide.
+        position (list): position specified as fraction left, right, width, height.
+
+    Example:
+        >>> plt.figure(10)
+        >>> plt.plot(np.arange(100), np.random.rand(100), 'o', label='input data')
+        >>> create_figure_ppt_callback(10, 'test')
+        >>> plt.show()
     """
     plt.figure(fig)
     ppt_axis = plt.axes(position)
@@ -1488,8 +1494,3 @@ def connect_slot(target):
     def signal_drop_arguments(*args, **kwargs):
         target()
     return signal_drop_arguments
-
-
-if __name__ == '__main__':
-    color = (0, 0, 255)
-    addPPTslide(background_color=color, maintext='test', verbose=2)
