@@ -132,7 +132,7 @@ class sensingdot_t:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
             station (Qcodes station)
-            minstrument (tuple): measurement instrument to use. tuple of instrument and channel index
+            minstrument (tuple or str or Parameter): measurement instrument to use. tuple of instrument and channel index
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
             virt_gates (None or object): virtual gates object (optional)
@@ -153,7 +153,7 @@ class sensingdot_t:
         self.index = index
         self.minstrument = minstrument
         if index is not None:
-            self.instrument = 'keithley{}.amplitude'.format(index)
+            raise Exception('use minstrument argument')
         self.virt_gates = virt_gates
 
         self.data = {}
@@ -162,7 +162,6 @@ class sensingdot_t:
             self.fpga_ch = None
         else:
             raise Exception('do not use fpga_ch argument, use minstrument instead')
-            self.fpga_ch = fpga_ch
 
         # values for measurement
         if index is not None:
@@ -175,7 +174,6 @@ class sensingdot_t:
     def __getstate__(self):
         """ Override to make the object pickable."""
         print('sensingdot_t: __getstate__')
-        # d=super().__getstate__()
         import copy
         d = copy.copy(self.__dict__)
         for name in ['station', 'valuefunc']:
@@ -474,10 +472,10 @@ class sensingdot_t:
         goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig, invert=invert)
 
         if len(goodpeaks) > 0:
-            self.sdval[1] = goodpeaks[0]['xhalfl']
-            self.targetvalue = goodpeaks[0]['yhalfl']
+            self.sdval[1] = float(goodpeaks[0]['xhalfl'])
+            self.targetvalue = float(goodpeaks[0]['yhalfl'])
         else:
-            print('autoTune: could not find good peak, may need to adjust mirrorfactor')
+            print('autoTune: could not find good peak, may need to adjust mirror factor')
 
         if self.verbose:
             print(

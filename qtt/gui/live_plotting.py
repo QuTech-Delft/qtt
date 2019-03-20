@@ -242,6 +242,7 @@ def start_measurement_control(doexec=False):
     Args:
         doexec(bool): if True run the event loop
     """
+    _ = pyqtgraph.mkQApp()
     # import warnings
     # from pyqtgraph.multiprocess.remoteproxy import RemoteExceptionWarning
     # warnings.simplefilter('ignore', RemoteExceptionWarning)

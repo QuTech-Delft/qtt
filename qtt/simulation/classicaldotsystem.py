@@ -103,7 +103,7 @@ class ClassicalDotSystem(BaseDotSystem):
 
     def simulate_honeycomb(self, paramvalues2D, verbose=1, usediag=False, multiprocess=True):
         """ Simulating a honeycomb by looping over a 2D array of parameter values (paramvalues2D),
-         resulting honeycomb is stored in self.honeycomb 
+         resulting honeycomb is stored in self.honeycomb
 
          Args:
              paramvalues2D (array): shape nparams x nx x ny

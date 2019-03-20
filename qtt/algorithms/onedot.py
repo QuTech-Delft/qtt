@@ -347,10 +347,10 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
 
         # %
     if fig is not None:
-        plot_onedot(fitresults, ds=dataset, verbose=2, fig=100, linecolor='c',
+        plot_onedot(fitresults, ds=dataset, verbose=2, fig=fig, linecolor='c',
                     ims=ims, extentImageMatlab=extentImageMatlab, lv=lv)
 
-        qtt.utilities.tools.showImage(im, extentImageMatlab, fig=fig)
+        qtt.utilities.tools.showImage(im, extentImageMatlab, fig=fig+1)
 
         if verbose >= 2 or drawpoly:
             pgeometry.plotPoints(fitresults['balancefit'], '--', color=linecolor,
@@ -407,7 +407,7 @@ def plot_onedot(results, ds=None, verbose=2, fig=100, linecolor='c', ims=None, e
             pgeometry.plotLabels(results['balancefitpixel'])
             plt.axis('image')
             plt.title('thresholded area')
-            pgeometry.tilefigs([fig, fig + 1, fig + 2], [2, 2])
+
 
             if verbose >= 2:
                 qq = ims.flatten()

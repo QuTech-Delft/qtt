@@ -133,7 +133,7 @@ def get_dataset(dataset_handle):
         DataSet: The dataset from the handle.
     """
     if isinstance(dataset_handle, dict):
-        return dataset_handle.get('dataset', None)
+        dataset_handle = dataset_handle.get('dataset', None)
 
     if isinstance(dataset_handle, str):
         return qtt.data.load_dataset(dataset_handle)

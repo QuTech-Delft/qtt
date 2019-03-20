@@ -2255,17 +2255,6 @@ def waitTime(gate, station=None, gate_settle=None, default=1e-3):
 
 
 @qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
-def pinchoffFilename(g, od=None):
-    ''' Return default filename of pinch-off scan '''
-    if od is None:
-        basename = 'pinchoff-sweep-1d-%s' % (g,)
-    else:
-        # old style filename
-        basename = '%s-sweep-1d-%s' % (od['name'], g)
-    return basename
-
-
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
 def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None,
                    cache=False, verbose=1, fig=10, full=0, background=False):
     """ Scan pinch-off value for a gate """

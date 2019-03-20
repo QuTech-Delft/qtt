@@ -15,7 +15,7 @@ import logging
 
 try:
     import graphviz
-except:
+except ModuleNotFoundError:
     pass
 
 try:
@@ -90,7 +90,7 @@ def _simulate_row(i, ds, npointsy, usediag):
 
 @qtt.utilities.tools.deprecated
 def defaultVmatrix(n):
-    """ Helper function 
+    """ Helper function
     >>> m=defaultVmatrix(2)
     """
     Vmatrix = np.eye(n)
@@ -149,11 +149,11 @@ class BaseDotSystem:
 
     The main functionality:
 
-        * Build a Hamiltonian from the number of dots 
+        * Build a Hamiltonian from the number of dots
         * Solve for the eigenvalues and eigenstates of the Hamiltonian
         * Present the results.
 
-    The model used is [reference xxx]        
+    The model used is [reference xxx]
 
     Attributes:
 
@@ -395,7 +395,7 @@ class DotSystem(BaseDotSystem):
         return '_sparseM%s' % (variable,)
 
     def initSparse(self):
-        """ Create sparse structures 
+        """ Create sparse structures
         Constructing a matrix using sparse elements can be faster than construction of a full matrix,
         especially for larger systems.
         """
@@ -481,7 +481,7 @@ class DotSystem(BaseDotSystem):
             if var.startswith(param):
                 numvars += 1
         if len(vals) != numvars:
-            raise(Exception('Need same amount of values as ' + param))
+            raise Exception
         for i in range(numvars):
             setattr(self, param + str(i + 1), vals[i])
 
@@ -632,7 +632,7 @@ class DotSystem(BaseDotSystem):
         print('\nVariable list for %s:' % self.name)
         print('----------------------------')
         for name in self.varnames:
-            print(name + ' = ' + str(eval('self.' + name)))
+            print(name + ' = ' + str(getattr(self, 'name')))
         print(' ')
 
     @qtt.utilities.tools.deprecated

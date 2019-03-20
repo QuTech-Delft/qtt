@@ -7,7 +7,7 @@ The system consists of:
 - 2 barriers gates and 1 plunger gate for each dot
 - a sensing dot that always works
 
-There are virtual instruments for 
+There are virtual instruments for
 
 - DACs: several virtual IVVIs
 - Virtual Keithleys (1 and 2 for the SDs, 4 for the ohmic)
@@ -66,7 +66,7 @@ def gate_settle(gate):
 
 
 def gate_boundaries(gate_map):
-    """ Return gate boundaries 
+    """ Return gate boundaries
 
     Args:
         gate_map (dict)
@@ -133,7 +133,7 @@ if 0:
 class DotModel(Instrument):
     """ Simulation model for linear dot array
 
-    The model is intended for testing the code and learning. It does _not simulate any meaningfull physics. 
+    The model is intended for testing the code and learning. It does _not simulate any meaningfull physics.
 
     """
 
@@ -392,7 +392,7 @@ def close(verbose=1):
             print('close %s' % station.components[instr])
         try:
             station.components[instr].close()
-        except:
+        except BaseException:
             print('could not close instrument %s' % station.components[instr])
 
     _initialized = False
@@ -550,7 +550,7 @@ if __name__ == '__main__' and 1:
 
     try:
         close()
-    except:
+    except BaseException:
         pass
 
     station = initialize(reinit=True, verbose=2)
