@@ -8,7 +8,7 @@ __doc__ = """
 This is markup.py - a Python module that attempts to
 make it easier to generate HTML/XML from a Python program
 in an intuitive, lightweight, customizable and pythonic way.
-It works with both python 2 and 3.
+It works with python 3 (to make mypy happy)!
 
 The code is in the public domain.
 
@@ -21,15 +21,6 @@ ideas or questions to nogradi at gmail dot com.
 
 Installation: drop markup.py somewhere into your Python path.
 """ % (__version__, __date__)
-
-try:
-    basestring
-    import string
-except:
-    # python 3
-    basestring = str
-    string = str
-    long = int
 
 # tags which are reserved python keywords will be referred
 # to by a leading underscore otherwise we end up with a syntax error
@@ -350,7 +341,7 @@ class page:
         """This convenience function is only useful for html.
         It adds css stylesheet(s) to the document via the <link> element."""
 
-        if isinstance(filelist, basestring):
+        if isinstance(filelist, str):
             self.link(
                 href=filelist, rel='stylesheet', type='text/css', media='all')
         else:
@@ -446,11 +437,11 @@ def _argsdicts(args, mydict):
 
 
 def _totuple(x):
-    """Utility stuff to convert string, int, long, float, None or anything to a usable tuple."""
+    """Utility stuff to convert string, int, float, None or anything to a usable tuple."""
 
-    if isinstance(x, basestring):
+    if isinstance(x, str):
         out = x,
-    elif isinstance(x, (int, long, float)):
+    elif isinstance(x, (int, float)):
         out = str(x),
     elif x is None:
         out = None,
@@ -463,7 +454,7 @@ def _totuple(x):
 def escape(text, newline=False):
     """Escape special html characters."""
 
-    if isinstance(text, basestring):
+    if isinstance(text, str):
         if '&' in text:
             text = text.replace('&', '&amp;')
         if '>' in text:
@@ -487,7 +478,7 @@ _escape = escape
 def unescape(text):
     """Inverse of escape."""
 
-    if isinstance(text, basestring):
+    if isinstance(text, str):
         if '&amp;' in text:
             text = text.replace('&amp;', '&')
         if '&gt;' in text:
@@ -502,14 +493,13 @@ def unescape(text):
 
 class dummy:
 
-    """A dummy class for attaching attributes."""
-    pass
-
+    def __init__(self):
+        """ A dummy class for attaching attributes."""
+        self.frameset = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">"""
+        self.strict = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">"""
+        self.loose = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
 
 doctype = dummy()
-doctype.frameset = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">"""
-doctype.strict = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">"""
-doctype.loose = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
 
 
 class russell:

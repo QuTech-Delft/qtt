@@ -27,7 +27,7 @@ script:
     - ls
     - pytest --version
     - coverage run --source="./qtt" --omit="*/test_*"  -m pytest
-    - mypy qtt
+    - mypy qtt --ignore-missing-imports
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         jupyter --version;
         source docs/notebooks/run_notebooks.sh;
