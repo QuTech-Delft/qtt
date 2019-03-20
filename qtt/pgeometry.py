@@ -1576,7 +1576,7 @@ try:
         draw.text(pos, txt, fill=color, font=font)
         return np.array(im1)
 except:
-    def writeTxt(*args, **kwargs):
+    def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
         """ Dummy function """
         warnings.warn('writeTxt: could not find PIL')
         return None
@@ -2166,8 +2166,8 @@ def decomposeProjectiveTransformation(H, verbose=0):
     else:
         # primitive...
         sc = np.sign(np.diag(K))
-        K = np.diag(sc) * K
-        R = R * np.diag(sc)
+        K = np.diag(sc).dot(K)
+        R = R.dot( np.diag(sc))
     br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
     Hs = np.array(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
     Ha = np.array(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))

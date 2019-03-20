@@ -249,7 +249,6 @@ def start_measurement_control(doexec=False):
     proc = mp.QtProcess()
     lp = proc._import('qtt.gui.live_plotting')
     mc = lp.MeasurementControl()
-    qtt._dummy_mc = mc
     app = pyqtgraph.mkQApp()
     if doexec:
         app.exec()

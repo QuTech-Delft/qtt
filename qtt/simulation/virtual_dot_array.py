@@ -48,17 +48,6 @@ qtt.check_version('0.24', qtt)
 
 # %% Data for the model
 
-class virtualdot_t:
-
-    def __init__(self, ndots):
-        self.ndots = ndots
-        raise Exception('do not use this class any more')
-
-    def ndots(self):
-        """ Return number of dots in the sample """
-        return self.ndots
-
-
 def gate_settle(gate):
     """ Return gate settle times """
 

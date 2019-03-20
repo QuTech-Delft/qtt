@@ -475,10 +475,9 @@ if __name__ == '__main__':
 
     app = pg.mkQApp()
 
-    dataviewer = DataViewer(datadir=datadir, extensions=['dat', 'hdf5'])
+    dataviewer = DataViewer(data_directory=datadir, extensions=['dat', 'hdf5'])
     dataviewer.verbose = 5
     dataviewer.setGeometry(1280, 60, 700, 900)
     dataviewer.logtree.setColumnWidth(0, 240)
     dataviewer.show()
 
-    # app.exec()

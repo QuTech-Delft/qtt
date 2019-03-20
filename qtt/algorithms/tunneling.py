@@ -127,12 +127,12 @@ def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, 
 
     fitdata = {}
     if method is 'fmin':
-        def func(par): return polweight_all_2slopes(x_data, y_data, par, kT, model=model)
-        par_fit = scipy.optimize.fmin(func, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+        def func_fmin(par): return polweight_all_2slopes(x_data, y_data, par, kT, model=model)
+        par_fit = scipy.optimize.fmin(func_fmin, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     elif method is 'curve_fit':
-        def func(x_data, tc, x0, y0, ml, mr, h): return polmod_all_2slopes(
+        def func_curve_fit(x_data, tc, x0, y0, ml, mr, h): return polmod_all_2slopes(
             x_data, (tc, x0, y0, ml, mr, h), kT, model=model)
-        par_fit, par_cov = scipy.optimize.curve_fit(func, x_data, y_data, par_guess)
+        par_fit, par_cov = scipy.optimize.curve_fit(func_curve_fit, x_data, y_data, par_guess)
         fitdata['par_cov'] = par_cov
     else:
         raise Exception('Unrecognized fitting method')
