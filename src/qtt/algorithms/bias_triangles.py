@@ -126,13 +126,6 @@ def perpLineIntersect(ds, description, vertical=True, points=None):
 
     return {'intersection_point': intersectPoint, 'distance': line_length, 'clicked_points': clicked_pts}
 
-# def intersect2lines(l1, l2):
-#    """ Caculate intersection between 2 lines """
-#    r = qtt.pgeometry.null(np.vstack( (l1, l2)) )
-#    a = qtt.pgeometry.dehom(r[1])
-#    return a
-
-
 def lever_arm(bias, results, fig=None):
     """ Calculates the lever arm of a dot by using bias triangles in charge sensing. Uses currently active figure.
 
