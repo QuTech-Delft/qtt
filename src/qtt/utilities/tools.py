@@ -969,7 +969,12 @@ try:
             # we have a figure, assume textbox is for dataset name only
             ppLayout = ppLayoutTitleOnly
 
-        max_slides_count = 250
+        max_slides_count_warning = 750
+        max_slides_count = 950
+        if ppt.Slides.Count > max_slides_count_warning:
+            warning_message = "Your presentation has more than {} slides! \
+                Please start a new measurement logbook.".format(max_slides_count_warning)
+            warnings.warn(warning_message)
         if ppt.Slides.Count > max_slides_count:
             error_message = "Your presentation has more than {} slides! \
                 Please start a new measurement logbook.".format(max_slides_count)

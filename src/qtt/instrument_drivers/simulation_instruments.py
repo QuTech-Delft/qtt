@@ -158,10 +158,10 @@ class SimulationDigitizer(qcodes.Instrument):
         test_dot.simulate_honeycomb(
             test2Dparams, multiprocess=multiprocess, verbose=0)
 
-        sd1 = ((test_dot.hcgs) * (model.sddist1.reshape((1, 1, -1)))).sum(axis=-1)
-        sd2 = ((test_dot.hcgs) * (model.sddist2.reshape((1, 1, -1)))).sum(axis=-1)
-        sd1 *= (1 / np.sum(model.sddist1))
-        sd2 *= (1 / np.sum(model.sddist2))
+        sd1 = ((test_dot.hcgs) * (model.sensingdot1_distance.reshape((1, 1, -1)))).sum(axis=-1)
+        sd2 = ((test_dot.hcgs) * (model.sensingdot2_distance.reshape((1, 1, -1)))).sum(axis=-1)
+        sd1 *= (1 / np.sum(model.sensingdot1_distance))
+        sd2 *= (1 / np.sum(model.sensingdot2_distance))
 
         if verbose >= 2:
             print('sd1.shape %s' % (sd1.shape,))
@@ -233,11 +233,34 @@ class SimulationAWG(qcodes.Instrument):
         pass
 
 
-def test_SimulationDigitizer():
+def test_SimulationDigitizer(fig=None):
     import qtt
-    digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('test_digitizer'))
+    import qtt.simulation.virtual_dot_array
+    import matplotlib.pyplot as plt
+    station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=3, maxelectrons=2, verbose=0)
+
+    station.model.sdnoise = .05
+
+    station.gates.B0(-300)
+    station.gates.B3(-300)
+    awg = SimulationAWG(qtt.measurements.scans.instrumentName('test_simulation_awg'))
+    waveform, _ = awg.sweep_gate('B3', 400, 1e-3)
+
+    digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('test_digitizer'), model=station.model)
+    r = digitizer.measuresegment(waveform, channels=[1])
+
+    assert(isinstance(r[0], np.ndarray))
+
+    if fig:
+        plt.figure(fig)
+        plt.clf()
+        plt.plot(r[0], label='signal from simulation digitizer')
+
+    awg.close()
     digitizer.close()
+
+    qtt.simulation.virtual_dot_array.close(verbose=0)
 
 
 if __name__ == '__main__':
-    test_SimulationDigitizer()
+    test_SimulationDigitizer(fig=300)
