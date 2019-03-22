@@ -170,7 +170,7 @@ class DataViewer(QtWidgets.QMainWindow):
         if self.dataset is None:
             print('no data selected')
             return
-        qtt.tools.addPPT_dataset(self.dataset, customfig=self.qplot)
+        qtt.utilities.tools.addPPT_dataset(self.dataset, customfig=self.qplot)
 
     def clipboard_callback(self):
         self.qplot.copyToClipboard()
