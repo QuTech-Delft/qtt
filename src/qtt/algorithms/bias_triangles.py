@@ -152,7 +152,7 @@ def lever_arm(bias, results, fig=None):
             gate = ax.get_ylabel()[:2]
         else:
             gate = ax.get_xlabel()[:2]
-        title = 'Lever arm %s:   %.2f $\mu$eV/mV' % (gate, lev_arm)
+        title = r'Lever arm %s:   %.2f $\mu$eV/mV' % (gate, lev_arm)
         plt.annotate('Length %s: %.2f mV' % (gate, line_length), xy=(0.05, 0.1), xycoords='axes fraction', color='k')
         plt.annotate(title, xy=(0.05, 0.05), xycoords='axes fraction', color='k')
         ax.set_title(title)
