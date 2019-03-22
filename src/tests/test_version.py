@@ -1,5 +1,4 @@
 import unittest
-
 import qtt
 
 
@@ -13,7 +12,4 @@ class TestVersion(unittest.TestCase):
 
         self.assertIsInstance(version, str)
 
-
-if __name__ == '__main__':
-    unittest.main()
 

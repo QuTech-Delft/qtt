@@ -239,25 +239,28 @@ def test_SimulationDigitizer(fig=None):
     import matplotlib.pyplot as plt
     station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=3, maxelectrons=2, verbose=0)
 
-    station.model.sdnoise=.05
+    station.model.sdnoise = .05
 
-    station.gates.B0(-300); station.gates.B3(-300)
+    station.gates.B0(-300)
+    station.gates.B3(-300)
     awg = SimulationAWG(qtt.measurements.scans.instrumentName('test_simulation_awg'))
     waveform, _ = awg.sweep_gate('B3', 400, 1e-3)
-    
-    digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('test_digitizer'), model = station.model)
+
+    digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('test_digitizer'), model=station.model)
     r = digitizer.measuresegment(waveform, channels=[1])
 
-    assert(isinstance(r[0], np.ndarray))    
-    
+    assert(isinstance(r[0], np.ndarray))
+
     if fig:
-        plt.figure(fig); plt.clf()
+        plt.figure(fig)
+        plt.clf()
         plt.plot(r[0], label='signal from simulation digitizer')
-           
+
     awg.close()
     digitizer.close()
 
     qtt.simulation.virtual_dot_array.close(verbose=0)
+
 
 if __name__ == '__main__':
     test_SimulationDigitizer(fig=300)
