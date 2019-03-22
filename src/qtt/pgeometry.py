@@ -830,7 +830,7 @@ def pg_scaling(scale, cc=None):
     H = np.diag(scale)
     if cc is not None:
         cc = np.array(cc).flatten()
-        H = pg_transl2H(cc) * H * pg_transl2H(-cc)
+        H = pg_transl2H(cc).dot(H).dot(pg_transl2H(-cc))
 
     return H
 

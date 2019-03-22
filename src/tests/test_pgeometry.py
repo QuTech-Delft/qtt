@@ -15,6 +15,15 @@ class TestGeometryOperations(unittest.TestCase):
             self.assertAlmostEqual(Rx[1, 1], np.cos(phi))
             self.assertAlmostEqual(Rx[2, 1], np.sin(phi))
 
+
+    def test_pg_scaling(self):
+        H = pgeometry.pg_scaling([1,2])
+        np.testing.assert_array_equal(H, np.diag([1,2,1]))
+        H = pgeometry.pg_scaling([2], [1])
+        np.testing.assert_array_equal(H, np.array([[2,-1],[0,1.]]) )
+        with self.assertRaises(ValueError):
+            pgeometry.pg_scaling([1], [1,2])
+            
     def test_pg_rotation2H(self):
         R = pgeometry.pg_rotx(.12)
         H = pgeometry.pg_rotation2H(R)

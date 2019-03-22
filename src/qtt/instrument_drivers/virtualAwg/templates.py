@@ -86,7 +86,7 @@ class Templates:
 
     @staticmethod
     def skewed_sawtooth(name):
-        """ Creates a skewed sawtooth qupulse template for sequencing.
+        r""" Creates a skewed sawtooth qupulse template for sequencing.
         This pulse is symmetric, has total integral zero and right at period/2 it
         has amplitude 0 and a sharp corner.
 
