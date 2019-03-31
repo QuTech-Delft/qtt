@@ -367,7 +367,7 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
             warnings.simplefilter("ignore", category=RuntimeWarning)
             gaussian_parameters, _ = opt.leastsq(errfunc, p0[:], args=(X, Y), maxfev=1800)
 
-        _, fit_stdev, fit_scale = gaussian_parameters
+        _, fit_stdev, _ = gaussian_parameters
 
         FWHM = 2 * np.sqrt(2 * np.log(2)) * fit_stdev
         if verbose:

@@ -273,13 +273,13 @@ def fit_addition_line(dataset, trimborder=True):
 
 class TestFitting(unittest.TestCase):
 
-    def test_initial_estimate_fermi_linear(self, fig=500):
+    def test_initial_estimate_fermi_linear(self, fig=None):
         expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
         x_data = np.arange(-20, 10, 0.1)
         y_data = FermiLinear(x_data, *expected_parameters)
         y_data += 0.005 * np.random.rand(y_data.size)
 
-        linear_part, _ = initFermiLinear(x_data, y_data, fig=fig)
+        linear_part, fermi_part = initFermiLinear(x_data, y_data, fig=fig)
 
         ylin = linear_function(x_data, *linear_part)
         yr = y_data - ylin
@@ -287,8 +287,9 @@ class TestFitting(unittest.TestCase):
         cc, A = _estimate_fermi_model_center_amplitude(x_data, yr, fig=fig)
         np.testing.assert_almost_equal(cc, expected_parameters[2], decimal=1)
         np.testing.assert_almost_equal(A, expected_parameters[3], decimal=1)
+        self.assertTrue(fermi_part is not None)
 
-    def test_fit_fermi_linear(self, fig=100, verbose=0):
+    def test_fit_fermi_linear(self, fig=None, verbose=0):
         expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
         x_data = np.arange(-20, 10, 0.1)
         y_data = FermiLinear(x_data, *expected_parameters)
@@ -351,5 +352,5 @@ class TestFitting(unittest.TestCase):
 
 if __name__ == '__main__':
     fitting_unittest = TestFitting()
-    fitting_unittest.test_fit_fermi_linear(verbose=1)
+    fitting_unittest.test_fit_fermi_linear(verbose=1, fig=100)
     fitting_unittest.test_initial_estimate_fermi_linear(fig=500)
