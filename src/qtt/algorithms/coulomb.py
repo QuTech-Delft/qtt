@@ -3,12 +3,14 @@
 
 import warnings
 import copy
+import unittest
 
 import numpy as np
 import scipy.optimize as opt
 
 import qtt.measurements.scans
 import qtt.data
+
 
 import qtt.pgeometry as pgeometry
 import matplotlib.pyplot as plt
@@ -79,7 +81,7 @@ def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling
         (list): A list with detected peaks.
     """
     minval = np.percentile(y_data, 5) + 0.1 * (np.percentile(y_data, 95) - np.percentile(y_data, 5))
-    local_maxima, w = nonmaxsuppts(y_data, d=int(12 / sampling_rate), minval=minval)
+    local_maxima, _ = nonmaxsuppts(y_data, d=int(12 / sampling_rate), minval=minval)
     fit_data = fitPeaks(x_data, y_data, local_maxima, verbose=verbose >= 2, fig=fig)
 
     if lowvalue == None:
@@ -243,7 +245,7 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
         x (array): independent variable data
         y (array): signal data
         peaks (list): list of detected peaks
-        fig (None or int): if integer, then plot results 
+        fig (None or int): if integer, then plot results
         verbose (int): verbosity level
     """
     kk = np.ones(3) / 3.
@@ -334,8 +336,8 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
     """ Fit Gaussian model on local maxima
 
     Args:
-        XX (array): independent variable data    
-        YY (array): dependent variable data    
+        XX (array): independent variable data
+        YY (array): dependent variable data
         points (list): indices of points to fit
         fig (None or int): if int, plot results
         verbose (int): verbosity level
@@ -363,9 +365,9 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
         def errfunc(p, x, y): return gauss(x, p) - y
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            gaussian_parameters, success = opt.leastsq(errfunc, p0[:], args=(X, Y), maxfev=1800)
+            gaussian_parameters, _ = opt.leastsq(errfunc, p0[:], args=(X, Y), maxfev=1800)
 
-        fit_mu, fit_stdev, fit_scale = gaussian_parameters
+        _, fit_stdev, fit_scale = gaussian_parameters
 
         FWHM = 2 * np.sqrt(2 * np.log(2)) * fit_stdev
         if verbose:
@@ -390,11 +392,11 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
 
 
 def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
-    """ Calculate scores for list of peaks 
+    """ Calculate scores for list of peaks
 
     Args:
-        x (array): independent variable data    
-        y (array): dependent variable data    
+        x (array): independent variable data
+        y (array): dependent variable data
         peaksx (list): list with detected peaks
 
     """
@@ -624,7 +626,7 @@ def _intervalOverlap(a, b):
         float: overlap between the intervals
 
     Example:
-    >>> _intervalOverlap( [0,2], [0,1])    
+    >>> _intervalOverlap( [0,2], [0,1])
     1
     """
     return max(0, min(a[1], b[1]) - max(a[0], b[0]))
@@ -634,8 +636,8 @@ def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
     """ Find good slopes to use in sensing dot
 
     Args:
-        x (array): independent variable data    
-        y (array): dependent variable data    
+        x (array): independent variable data
+        y (array): dependent variable data
         minimal_derivative (None or float): minimal derivative
 
     Returns:
@@ -797,18 +799,21 @@ def filterOverlappingPeaks(goodpeaks, threshold=.6, verbose=0):
     return pp
 
 
-def test_analysepeaks(fig=None):
-    x_data = np.arange(0, 100)
-    y_data = np.random.rand(x_data.size)
-    y_data += qtt.algorithms.functions.gaussian(x_data, 30, 6, 30)
-    y_data += qtt.algorithms.functions.gaussian(x_data, 70, 8, 70)
+class TestCoulomb(unittest.TestCase):
 
-    peaks = coulombPeaks(x_data, y_data, verbose=1, sampling_rate=1, fig=fig)
-    assert len(peaks) == 2
-    assert np.abs(peaks[0]['x'] - 70) < 2
-    assert np.abs(peaks[1]['x'] - 30) < 2
+    def test_analysepeaks(self, fig=None):
+        x_data = np.arange(0, 100)
+        y_data = np.random.rand(x_data.size)
+        y_data += qtt.algorithms.functions.gaussian(x_data, 30, 6, 30)
+        y_data += qtt.algorithms.functions.gaussian(x_data, 70, 8, 70)
+
+        peaks = coulombPeaks(x_data, y_data, verbose=1, sampling_rate=1, fig=fig)
+        self.assertTrue(len(peaks) == 2)
+        self.assertTrue(np.abs(peaks[0]['x'] - 70) < 2)
+        self.assertTrue(np.abs(peaks[1]['x'] - 30) < 2)
 
 
 if __name__ == '__main__':
     pass
-    test_analysepeaks(fig=100)
+    test = TestCoulomb()
+    test.test_analysepeaks(fig=100)
