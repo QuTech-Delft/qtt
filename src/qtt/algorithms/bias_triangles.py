@@ -6,6 +6,7 @@
 # %%
 
 import numpy as np
+import unittest
 import qcodes
 import qtt
 import qtt.pgeometry
@@ -195,9 +196,14 @@ def E_charging(lev_arm, results, fig=None):
     return E_c
 
 
-def test_lever_arm():
-    lever_arm_fit = {'clicked_points': np.array(
-        [[24., 38., 40.], [135., 128., 111.]]), 'distance': 15., 'intersection_point': np.array([[40.4], [127.]])}
+class TestLeverArm(unittest.TestCase):
 
-    r = lever_arm(-800, lever_arm_fit)
-    assert(np.abs(r - 53.3) < 1e-1)
+    def test_lever_arm(self):
+        lever_arm_fit = {
+            'clicked_points': np.array([[24., 38., 40.], [135., 128., 111.]]),
+            'distance': 15.0,
+            'intersection_point': np.array([[40.4], [127.]])
+        }
+
+        test_lever_arm = lever_arm(-800, lever_arm_fit)
+        self.assertTrue(np.abs(test_lever_arm - 53.3) < 1e-1)
