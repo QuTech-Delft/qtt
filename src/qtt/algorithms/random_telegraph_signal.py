@@ -273,7 +273,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             plt.clf()
             plt.plot(time_scaling * bincentres_dn, counts_dn, 'o', label='Counts down')
             plt.plot(time_scaling * bincentres_dn, exp_function(bincentres_dn, A_dn_fit, B_dn_fit, gamma_dn_fit),
-                     'r', label=r'Fitted exponential decay \n $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
+                     'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
             plt.xlabel('Lifetime (ms)')
             plt.ylabel('Counts per bin')
             plt.legend()
@@ -296,7 +296,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             plt.clf()
             plt.plot(time_scaling * bincentres_up, counts_up, 'o', label='Counts up')
             plt.plot(time_scaling * bincentres_up, exp_function(bincentres_up, A_up_fit, B_up_fit, gamma_up_fit),
-                     'r', label=r'Fitted exponential decay \n $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
+                     'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
             plt.xlabel('Lifetime (ms)')
             plt.ylabel('Data points per bin')
             plt.legend()
