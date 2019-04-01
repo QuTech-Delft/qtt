@@ -47,7 +47,7 @@ class ChoiceGenerator():
 
     def _generate_block(self):
         values = np.random.rand(self._block_size, )
-        counts, bins = np.histogram(values, [0] + list(self.cum_weights))
+        counts, _ = np.histogram(values, [0] + list(self.cum_weights))
         self._block = np.hstack(tuple([choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)]))
         np.random.shuffle(self._block)
 
@@ -89,11 +89,14 @@ class ContinuousTimeMarkovModel:
         self._validity_check()
 
     def _validity_check(self):
-        assert(len(self.states) == len(self.jump_chain))
-        if not (np.allclose(np.sum(self.jump_chain, axis=0), 1)):
-            raise Exception('jump chain matrix should represent probabilities')
+        if len(self.states) != len(self.jump_chain):
+            raise AssertionError('States do not equal jump chain!')
 
-        assert(np.all(self.holding_parameters > 0))
+        if not np.allclose(np.sum(self.jump_chain, axis=0), 1):
+            raise AssertionError('Jump chain matrix should represent probabilities!')
+
+        if np.all(self.holding_parameters <= 0):
+            raise AssertionError('Not all holding parameter are bigger than zero!')
 
     @staticmethod
     def _create_generator_matrix(holding_parameters, jump_chain):
@@ -289,6 +292,7 @@ class TestMarkovChain(unittest.TestCase):
         model_unit = 1e-6
         G = np.array([[-10., 2000., 2000.], [0., -12000., 0.], [10., 10000., -2000.]])
         holding_parameters = -np.diag(G).reshape((-1, 1))
+        self.assertTrue(np.all(holding_parameters > 0))
         jump_chain = (1. / holding_parameters.T) * G
         jump_chain[np.diag_indices(G.shape[0])] = 0
 

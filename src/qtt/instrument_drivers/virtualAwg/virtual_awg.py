@@ -1,4 +1,5 @@
 import logging
+import unittest
 import numpy as np
 
 from qcodes import Instrument
@@ -441,24 +442,24 @@ class VirtualAwg(Instrument):
         return sequence_data
 
 
-# UNITTESTS #
+class TestVirtualAwg(unittest.TestCase):
 
-def test_init_HasNoErrors():
-    from unittest.mock import Mock
-    awg_driver = Mock()
-    type(awg_driver).__name__ = 'Tektronix_AWG5014'
-    awgs = [awg_driver]
+    def test_init_HasNoErrors(self):
+        from unittest.mock import Mock
+        awg_driver = Mock()
+        type(awg_driver).__name__ = 'Tektronix_AWG5014'
+        awgs = [awg_driver]
 
-    class QuantumDeviceSettings(Instrument):
+        class QuantumDeviceSettings(Instrument):
 
-        def __init__(self):
-            super().__init__('settings')
-            self.awg_map = {
-                'P1': (0, 1),
-                'P2': (0, 2),
-                'dig_mk': (0, 1, 1)
-            }
+            def __init__(self):
+                super().__init__('settings')
+                self.awg_map = {
+                    'P1': (0, 1),
+                    'P2': (0, 2),
+                    'dig_mk': (0, 1, 1)
+                }
 
-    settings = QuantumDeviceSettings()
-    virtual_awg = VirtualAwg(awgs, settings)
-    assert awg_driver == virtual_awg.awgs[0].fetch_awg
+        settings = QuantumDeviceSettings()
+        virtual_awg = VirtualAwg(awgs, settings)
+        self.assertEqual(awg_driver, virtual_awg.awgs[0].fetch_awg)

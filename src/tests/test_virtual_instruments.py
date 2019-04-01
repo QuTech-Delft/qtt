@@ -48,4 +48,3 @@ class TestVirtualIVVI(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    pass

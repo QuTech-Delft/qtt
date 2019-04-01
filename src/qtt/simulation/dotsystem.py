@@ -18,7 +18,6 @@ except ImportError:
     pass
 
 try:
-    from pathos import multiprocessing as mp
     from pathos.multiprocessing import Pool
 
     _have_mp = True

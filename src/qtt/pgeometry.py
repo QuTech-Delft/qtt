@@ -35,6 +35,7 @@ import pkgutil
 import scipy.io
 import numpy
 import subprocess
+import unittest
 
 from functools import wraps
 
@@ -1160,14 +1161,6 @@ def polyintersect(x1, x2):
     x = x.reshape((-1, 2))
     return x
 
-
-def test_polyintersect():
-    x1 = np.array([(0, 0), (1, 1), (1, 0)])
-    x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-    x = polyintersect(x1, x2)
-    assert(len(x) == 3)
-    assert(np.abs(polyarea(x)) == 0.25)
-
 # %%
 
 
@@ -2290,34 +2283,38 @@ def checkmodule(module_name, verbose=1):
     return module_spec
 
 
-def test_geometry(verbose=1, fig=None):
-    im = np.zeros((200, 100, 3))
-    subim = np.ones((40, 30,))
-    im = setregion(im, subim, [0, 0])
-    im = np.zeros((200, 100, 3))
-    subim = np.ones((40, 30,))
-    im = setregion(im, subim, [95, 0], clip=True)
-    if fig:
-        plt.figure(fig)
-        plt.clf()
-        plt.imshow(im, interpolation='nearest')
+class TestPolygonGeometry(unittest.TestCase):
 
+    def test_polyintersect(self):
+        x1 = np.array([(0, 0), (1, 1), (1, 0)])
+        x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+        x = polyintersect(x1, x2)
+        self.assertEqual(3, len(x))
+        self.assertEqual(0.25, np.abs(polyarea(x)))
 
-def test_intersect2lines():
-    p1 = np.array([[0, 0]])
-    p2 = np.array([[1, 0]])
-    p3 = np.array([[1, 1]])
-    p4 = np.array([[2, 2]])
+    def test_geometry(self, verbose=1, fig=None):
+        im = np.zeros((200, 100, 3))
+        subim = np.ones((40, 30,))
+        im = setregion(im, subim, [0, 0])
+        im = np.zeros((200, 100, 3))
+        subim = np.ones((40, 30,))
+        im = setregion(im, subim, [95, 0], clip=True)
+        if fig:
+            plt.figure(fig)
+            plt.clf()
+            plt.imshow(im, interpolation='nearest')
+        self.assertIsInstance(im, np.ndarray)
 
-    line1 = fitPlane(np.vstack((p1, p2)))
-    line2 = fitPlane(np.vstack((p3, p4)))
+    def test_intersect2lines(self):
+        p1 = np.array([[0, 0]])
+        p2 = np.array([[1, 0]])
+        p3 = np.array([[1, 1]])
+        p4 = np.array([[2, 2]])
 
-    a = intersect2lines(line1, line2)
-    pt = dehom(a)
-    np.testing.assert_almost_equal(pt, 0)
+        line1 = fitPlane(np.vstack((p1, p2)))
+        line2 = fitPlane(np.vstack((p3, p4)))
 
-
-if __name__ == '__main__':
-    test_geometry()
-    test_intersect2lines()
-
+        a = intersect2lines(line1, line2)
+        pt = dehom(a)
+        self.assertIsNotNone(pt)
+        np.testing.assert_almost_equal(pt, 0)

@@ -49,14 +49,14 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError("Invalid channel numbers {}".format(channels))
-        [self.__awg.enable_channel(ch) for ch in channels]
+        _ = [self.__awg.enable_channel(ch) for ch in channels]
 
     def disable_outputs(self, channels=None):
         if channels is None:
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError("Invalid channel numbers {}".format(channels))
-        [self.__awg.disable_channel(ch) for ch in channels]
+        _ = [self.__awg.disable_channel(ch) for ch in channels]
 
     def change_setting(self, name, value):
         if name not in self.__settings:
@@ -87,7 +87,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         return ZurichInstrumentsHDAWG8.__sampling_rate_map[sampling_rate_key]
 
     def update_gain(self, gain):
-        [self.__awg.set('sigouts_{}_range'.format(ch), gain) for ch in self._channel_numbers]
+        _ = [self.__awg.set('sigouts_{}_range'.format(ch), gain) for ch in self._channel_numbers]
 
     def retrieve_gain(self):
         gains = [self.__awg.get('sigouts_{}_range'.format(ch)) for ch in self._channel_numbers]

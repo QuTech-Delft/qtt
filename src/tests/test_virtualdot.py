@@ -1,5 +1,4 @@
-from unittest import TestCase
-
+import unittest
 
 import qtt.data
 import qtt.measurements.scans
@@ -10,7 +9,7 @@ from qtt.simulation.virtual_dot_array import generate_configuration
 # %%
 
 
-class TestVirtualDot(TestCase):
+class TestVirtualDot(unittest.TestCase):
 
     def setUp(self):
         self.ds = TripleDot(maxelectrons=2)
@@ -19,7 +18,7 @@ class TestVirtualDot(TestCase):
         pass
 
     def test_virtualdot(self):
-        nr_ivvi, gate_map, gates, bottomgates = generate_configuration(6)
+        _, _, gates, _ = generate_configuration(6)
 
         station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
         _ = station.keithley1.amplitude()
@@ -34,6 +33,4 @@ class TestVirtualDot(TestCase):
 
 
 if __name__ == '__main__':
-    import unittest
     unittest.main()
-    pass

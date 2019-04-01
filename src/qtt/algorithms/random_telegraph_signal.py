@@ -8,6 +8,7 @@ Created on Wed Feb 28 10:20:46 2018
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
+import unittest
 import qcodes
 from qtt.utilities.tools import addPPTslide
 import warnings
@@ -65,7 +66,7 @@ class FittingException(Exception):
 
 
 def _plot_rts_histogram(data, num_bins, par_fit, split, figure_title):
-    counts, bins, _ = plt.hist(data, bins=num_bins)
+    _, bins, _ = plt.hist(data, bins=num_bins)
     bincentres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
 
     plt.plot(bincentres, double_gaussian(bincentres, par_fit), 'r', label='Fitted double gaussian')
@@ -77,7 +78,7 @@ def _plot_rts_histogram(data, num_bins, par_fit, split, figure_title):
 
 
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
-                    num_bins=None, plungers=[], fig=None, ppt=None, verbose=0):
+                    num_bins=None, plungers=None, fig=None, ppt=None, verbose=0):
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
     determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
@@ -107,6 +108,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
                 tunnelrate_up (float): tunnel rate up in Hz
 
     """
+    if plungers is None:
+        plungers = []
 
     if isinstance(data, qcodes.data.data_set.DataSet):
         try:
@@ -341,49 +344,44 @@ def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1,
     return data
 
 
-# %%
+class TestRandomTelegraphSignal(unittest.TestCase):
 
+    def test_RTS(self, fig=None):
+        data = np.random.rand(10000, )
+        try:
+            _ = tunnelrates_RTS(data)
+            raise Exception('no samplerate available')
+        except Exception as ex:
+            # exception is good, since no samplerate was provided
+            self.assertTrue('samplerate is None' in str(ex))
+        try:
+            _ = tunnelrates_RTS(data, samplerate=10e6)
+            raise Exception('data should not fit to RTS')
+        except FittingException as ex:
+            # fitting exception is good, since data is random
+            pass
 
-def test_RTS(fig=None):
-    data = np.random.rand(10000, )
-    try:
-        r = tunnelrates_RTS(data, plungers=[])
-        raise Exception('no samplerate available')
-    except Exception as ex:
-        # exception is good, since no samplerate was provided
-        assert('samplerate is None' in str(ex))
-    try:
-        r = tunnelrates_RTS(data, samplerate=10e6, plungers=[])
-        raise Exception('data should not fit to RTS')
-    except FittingException as ex:
-        # fitting exception is good, since data is random
-        pass
+        data = generate_RTS_signal(100, std_gaussian_noise=0, uniform_noise=.1)
+        data = generate_RTS_signal(100, std_gaussian_noise=0.1, uniform_noise=.1)
 
-    data = generate_RTS_signal(100, std_gaussian_noise=0, uniform_noise=.1)
-    data = generate_RTS_signal(100, std_gaussian_noise=0.1, uniform_noise=.1)
+        samplerate = 2e6
+        data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down=20e3, samplerate=samplerate)
 
-    samplerate = 2e6
-    data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down=20e3, samplerate=samplerate)
+        with warnings.catch_warnings():  # catch any warnings
+            warnings.simplefilter("ignore")
+            tunnelrate_dn, tunnelrate_up, parameters = tunnelrates_RTS(data, samplerate=samplerate, fig=fig)
 
-    with warnings.catch_warnings():  # catch any warnings
-        warnings.simplefilter("ignore")
-        tunnelrate_dn, tunnelrate_up, parameters = tunnelrates_RTS(data, plungers=[], samplerate=samplerate, fig=fig)
+            self.assertTrue(parameters['up_segments']['mean'] > 0)
+            self.assertTrue(parameters['down_segments']['mean'] > 0)
 
-        assert(parameters['up_segments']['mean'] > 0)
-        assert(parameters['down_segments']['mean'] > 0)
+        samplerate = 1e6
+        rate_up = 200e3
+        rate_down = 20e3
+        data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=rate_up,
+                                   rate_down=rate_down, samplerate=samplerate)
 
-    samplerate = 1e6
-    rate_up = 200e3
-    rate_down = 20e3
-    data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=rate_up,
-                               rate_down=rate_down, samplerate=samplerate)
+        tunnelrate_dn, tunnelrate_up, _ = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
+                                                                min_duration=1, num_bins=40, fig=fig, verbose=2)
 
-    tunnelrate_dn, tunnelrate_up, results = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
-                                                            min_duration=1, num_bins=40, plungers=[], fig=fig, verbose=2)
-
-    assert(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
-    assert(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)
-
-
-if __name__ == '__main__':
-    test_RTS(fig=100)
+        self.assertTrue(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
+        self.assertTrue(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)

@@ -107,7 +107,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
         fig (int or None): determines of the analysis staps and the result is plotted
 
     Returns:
-        result (dict): including to following entries: 
+        result (dict): including to following entries:
             angle (float): angle in radians
             angle_degrees (float): angle in degrees
             correction of awg_to_plunger (float): correction factor
@@ -116,7 +116,9 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
 
     """
     # getting the dataset from the result from the measure_awg_to_plunger function
-    assert(result.get('type') == 'awg_to_plunger')
+    if result.get('type') != 'awg_to_plunger':
+        raise AssertionError('not of type awg_to_plunger!')
+
     ds = get_dataset(result)
 
     # choosing a method;
@@ -132,7 +134,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
 
         imc = cleanSensingImage(im, sigma=0.93, dy=0)
 
-        imx, (fw, fh, mvx, mvy, _) = straightenImage(imc, imextent, mvx=istep, verbose=0)
+        imx, _ = straightenImage(imc, imextent, mvx=istep, verbose=0)
 
         imx = imx.astype(np.float64) * \
             (100. / np.percentile(imx, 99))  # scale image

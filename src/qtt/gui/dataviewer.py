@@ -19,7 +19,7 @@ from qcodes.plots.pyqtgraph import QtPlot
 class DataViewer(QtWidgets.QMainWindow):
 
     def __init__(self, data_directory=None, window_title='Data browser',
-                 default_parameter='amplitude', extensions=['dat', 'hdf5'], verbose=1):
+                 default_parameter='amplitude', extensions=None, verbose=1):
         """ Contstructs a simple viewer for Qcodes data.
 
         Args:
@@ -29,6 +29,9 @@ class DataViewer(QtWidgets.QMainWindow):
             verbose (int): The logging verbosity level.
         """
         super(DataViewer, self).__init__()
+        if extensions is None:
+            extensions = ['dat', 'hdf5']
+
         self.verbose = verbose
         self.default_parameter = default_parameter
         self.data_directories = [None] * 2
@@ -175,7 +178,8 @@ class DataViewer(QtWidgets.QMainWindow):
     def clipboard_callback(self):
         self.qplot.copyToClipboard()
 
-    def get_data_info(self, metadata):
+    @staticmethod
+    def get_data_info(metadata):
         params = []
         try:
             if 'loop' in metadata.keys():
@@ -231,7 +235,7 @@ class DataViewer(QtWidgets.QMainWindow):
                     loc = '\\'.join(filename.split('\\')[:-1])
                     tempdata = qcodes.DataSet(loc)
                     tempdata.read_metadata()
-                    infotxt = self.get_data_info(tempdata.metadata)
+                    infotxt = DataViewer.get_data_info(tempdata.metadata)
                     self._treemodel.setData(index.child(i, 1), infotxt)
                     if 'comment' in tempdata.metadata.keys():
                         self._treemodel.setData(index.child(
@@ -250,9 +254,10 @@ class DataViewer(QtWidgets.QMainWindow):
             self.update_logs()
 
     @staticmethod
-    def find_datafiles(datadir, extensions=[
-                       'dat', 'hdf5'], show_progress=True):
+    def find_datafiles(datadir, extensions=None, show_progress=True):
         """ Find all datasets in a directory with a given extension """
+        if extensions is None:
+            extensions=['dat', 'hdf5']
         dd = []
         for e in extensions:
             dd += qtt.pgeometry.findfilesR(datadir, '.*%s' %
@@ -409,14 +414,14 @@ class DataViewer(QtWidgets.QMainWindow):
                   (tag, filename))
         try:
             logging.debug('DataViewer: load tag %s' % tag)
-            data = self.load_data(filename, tag)
+            data = DataViewer.load_data(filename, tag)
             if not data:
                 raise ValueError('File invalid (%s) ...' % filename)
             self.dataset = data
             self.update_meta_tabs()
 
             data_keys = data.arrays.keys()
-            infotxt = self.get_data_info(data.metadata)
+            infotxt = DataViewer.get_data_info(data.metadata)
             q = pp.child(row, 1).model()
             q.setData(pp.child(row, 1), infotxt)
             if 'comment' in data.metadata.keys():
@@ -442,7 +447,8 @@ class DataViewer(QtWidgets.QMainWindow):
         self._update_plot_ = True
         return
 
-    def load_data(self, filename, tag):
+    @staticmethod
+    def load_data(filename, tag):
         location = os.path.split(filename)[0]
         data = qtt.data.load_dataset(location)
         return data

@@ -410,7 +410,9 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
         """ Helper function to store intermediate results """
         vv.append((plocal, pglobal))
     if cfig is not None:
-        def cb(x): return fmCallback(x, None)
+        def cb_funcion(x):
+            return fmCallback(x, None)
+        cb = cb_funcion
         #cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
         #cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
 

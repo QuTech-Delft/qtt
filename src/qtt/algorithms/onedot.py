@@ -41,13 +41,13 @@ def _onedotGetBlobs(fimg, fig=None):
     xx = detect_blobs_binary(bim)
 
     if int(cv2.__version__[0]) >= 4:
-        contours, tmp = cv2.findContours(
+        contours, _ = cv2.findContours(
             bim.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     elif int(cv2.__version__[0]) >= 3:
-        _, contours, tmp = cv2.findContours(
+        _, contours, _ = cv2.findContours(
             bim.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     else:
-        contours, tmp = cv2.findContours(
+        contours, _ = cv2.findContours(
             bim.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     qq = []
@@ -444,7 +444,7 @@ def test_onedot(fig=None):
 
     x = qtt.algorithms.onedot.onedotGetBalance(dataset=data, verbose=1, fig=fig)
     results = x[0]
-    ptfine, resultsfine = qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=fig)
+    _, _ = qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=fig)
     qtt.algorithms.onedot.plot_onedot(results, ds=data, fig=None, verbose=1)
 
 

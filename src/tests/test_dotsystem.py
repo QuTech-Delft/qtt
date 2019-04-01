@@ -31,7 +31,7 @@ class TestDotSystem(unittest.TestCase):
         dotsystem = TripleDot(maxelectrons=2)
 
         paramvalues2D = np.zeros((3, 4, 5))
-        r = dotsystem.simulate_honeycomb(paramvalues2D, multiprocess=False)
+        _ = dotsystem.simulate_honeycomb(paramvalues2D, multiprocess=False)
         self.assertEqual(dotsystem.honeycomb.shape, paramvalues2D.shape[1:])
 
 
@@ -40,7 +40,3 @@ if __name__ == '__main__':
     unittest.main()
     dotsystem = TripleDot(maxelectrons=2)
     self = dotsystem
-
-    #t = TestVirtualGates()
-    #t = TestVirtualDot()
-    pass
