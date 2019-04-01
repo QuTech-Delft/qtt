@@ -330,10 +330,14 @@ class VideoMode:
         if isrunning:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
+
+        setting_notes = 'moving averaging enabled: %d\n' % self._averaging_enabled
+        setting_notes += 'number of averages %d\n' % self.Naverage()
+
         qtt.utilities.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
                                         notes=self.station,
                                         extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
-                                            self.scanparams))
+                                            self.scanparams) + '\n\n' + setting_notes)
         if isrunning:
             self.startreadout()
 
