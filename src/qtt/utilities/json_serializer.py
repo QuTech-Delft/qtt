@@ -1,6 +1,5 @@
 import base64
 import json
-import unittest
 from json import JSONDecoder, JSONEncoder
 
 import numpy as np

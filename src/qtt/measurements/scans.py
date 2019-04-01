@@ -4,6 +4,7 @@ This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
 This is part of qtt. 
 """
 
+import unittest
 import numpy as np
 import os
 import re
@@ -245,18 +246,6 @@ def get_instrument(instr, station=None):
             return ref
     raise Exception('could not find instrument %s' % str(instr))
 
-
-def test_get_instrument_parameter():
-    instrument = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
-        qtt.measurements.scans.instrumentName('test'), None)
-    ix, p = get_instrument_parameter((instrument.name, 'dac2'))
-    assert (id(ix) == id(instrument))
-    assert (id(p) == id(instrument.dac2))
-    ix, p = get_instrument_parameter((instrument, 'dac2'))
-    assert (id(p) == id(instrument.dac2))
-    ix, p = get_instrument_parameter(instrument.name + '.dac2')
-    assert (id(p) == id(instrument.dac2))
-    instrument.close()
 
 
 def get_minstrument_channels(minstrument):
@@ -629,7 +618,6 @@ class sample_data_t(dict):
         gate_boundaries (dict): dictionary with gate boundaries
 
     """
-    pass
 
     def gate_boundaries(self, gate):
         bnds = self.get('gate_boundaries', {})
@@ -644,14 +632,6 @@ class sample_data_t(dict):
         if b[0] is not None:
             value = max(value, b[0])
         return value
-
-
-def test_sample_data():
-    s = sample_data_t()
-    s['gate_boundaries'] = {'D0': [-500, 100]}
-    v = s.restrict_boundaries('D0', 1000)
-    assert (v == 100)
-
 
 def _convert_vectorname_to_parametername(vector_name, extra_string=None):
     parameter_name = re.sub(r'\(.*?\)', '', vector_name)
@@ -1269,7 +1249,7 @@ def get_sampling_frequency(instrument_handle):
 
 
 def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, start_zero=True, fig=None):
-    """ Extract a 2D image from a double sawtooth signal 
+    """ Extract a 2D image from a double sawtooth signal
 
     Args:
         data (numpy array): measured trace
@@ -1313,8 +1293,6 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
             padding_x_time = 0
             padding_y_time = 0
             sawtooth_centre_pixels = .5 * width[1] * period * samplerate
-            start_forward_slope_pixels = 0
-            end_forward_slope_pixels = period * samplerate
         else:
             padding_x_time = 0
             padding_y_time = 0
@@ -1508,7 +1486,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
 
 
 def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0):
-    """ Record a trace from the digitizer 
+    """ Record a trace from the digitizer
 
     Args:
         digitizer (obj): handle to instrument
@@ -1531,7 +1509,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     # code for compensating for trigger delays in software
     signal_delay = getattr(digitizer, 'signal_delay', None)
 
-    memsize, pre_trigger, signal_start, signal_end = select_m4i_memsize(
+    memsize, _, signal_start, signal_end = select_m4i_memsize(
         digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
     post_trigger = digitizer.posttrigger_memory_size()
 
@@ -1617,17 +1595,17 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     start_zero = waveform.get('start_zero', False)
 
     if len(width) == 2:
-        data, results = process_2d_sawtooth(raw_data.T, period, samplerate,
+        data, _ = process_2d_sawtooth(raw_data.T, period, samplerate,
                                             resolution, width, start_zero=start_zero, fig=None)
         measuresegment_m4i._latest_data = data
         measuresegment_m4i._latest_rawdata = raw_data
     else:
 
-        data, (trace_start, trace_end) = process_1d_sawtooth(raw_data.T, width, period, samplerate,
+        data, _ = process_1d_sawtooth(raw_data.T, width, period, samplerate,
                                                              resolution=resolution, start_zero=start_zero,
                                                              verbose=verbose)
     if verbose:
-        print('measuresegment_m4i: processed_data: width %s, data shape %s, memsize %s' % (width, data.shape,))
+        print('measuresegment_m4i: processed_data: width %s, data shape %s' % (width, data.shape,))
 
     return data
 
@@ -1690,7 +1668,7 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
 
     scope_records = get_uhfli_scope_records(zi.device, zi.daq, zi.scope, 1)
     data = []
-    for channel_index, channel_number in enumerate(channels):
+    for channel_index, _ in enumerate(channels):
         for _, record in enumerate(scope_records):
             wave = record[0]['wave'][channel_index, :]
             data.append(wave)
@@ -1922,8 +1900,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                     sg.append(g)
             if len(sg) > 1:
                 raise(Exception('AWG pulses does not yet support virtual gates'))
-            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate': sg[0], 'sweeprange': sweepdata['range'],
-                                                                   'period': period}, scanjob['pulsedata'])
+            waveform, _ = station.awg.sweepandpulse_gate({'gate': sg[0], 'sweeprange': sweepdata['range'],
+                                                         'period': period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
                 sweep_range = sweepdata['range']
@@ -2085,7 +2063,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
                     if not station.awg.awg_gate(gate):
                         pp.pop(gate, None)
 
-            except Exception as ex:
+            except BaseException:
                 warnings.warn('error when removing slow gate from scan data')
     else:
         pp = {virtual_parameter.name: 1}
@@ -2453,84 +2431,6 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
     return od
 
 
-# %% Testing
-from qcodes import Parameter
-from qcodes.instrument_drivers.devices import VoltageDivider
-from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-from qtt.structures import MultiParameter
-
-
-def test_scan2D(verbose=0):
-    import qcodes
-    import qtt.measurements.scans
-    from qtt.measurements.scans import scanjob_t
-    p = Parameter('p', set_cmd=None)
-    q = Parameter('q', set_cmd=None)
-    R = VoltageDivider(p, 4)
-    mp = MultiParameter(instrumentName('multi_param'), [p, q])
-
-    gates = VirtualIVVI(
-        name=qtt.measurements.scans.instrumentName('gates'), model=None)
-    station = qcodes.Station(gates)
-    station.gates = gates
-
-    if verbose:
-        print('test_scan2D: running scan2D')
-    scanjob = scanjob_t({'sweepdata': dict(
-        {'param': p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
-    scanjob['stepdata'] = dict(
-        {'param': q, 'start': 24, 'end': 30, 'step': 1.})
-    data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
-    scanjob = scanjob_t({'sweepdata': dict({'param': {
-        'dac1': 1, 'dac2': .1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
-    scanjob['stepdata'] = dict(
-        {'param': {'dac2': 1}, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
-    data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
-    scanjob = scanjob_t({'sweepdata': dict(
-        {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
-    scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
-    scanjob['stepvalues'] = np.array([[2 * i, 3 * i] for i in range(10)])
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-    except Exception as ex:
-        print(ex)
-        warnings.warn('MultiParameter test failed!')
-    # not supported:
-    try:
-        scanjob = scanjob_t({'sweepdata': dict({'param': {
-            'dac1': 1}, 'start': 0, 'range': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
-        scanjob['stepdata'] = dict(
-            {'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
-        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-    except:
-        if verbose:
-            print('combination of Parameter and vector argument not supported')
-
-    if verbose:
-        print('test_scan2D: running scan1D')
-    scanjob = scanjob_t({'sweepdata': dict(
-        {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
-    data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-    scanjob = scanjob_t({'sweepdata': dict(
-        {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [q, R]})
-    data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-    scanjob = scanjob_t({'sweepdata': dict(
-        {'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
-    data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-    scanjob = scanjob_t({'sweepdata': dict(
-        {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
-    data = scan1D(station, scanjob, liveplotwindow=False, verbose=0, extra_metadata={'hi': 'world'})
-    assert('hi' in data.metadata)
-    gates.close()
-
-
 def enforce_boundaries(scanjob, sample_data, eps=1e-2):
     """ Make sure a scanjob does not go outside sample boundaries
 
@@ -2558,8 +2458,96 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             scanjob[param] = min(scanjob[param], bstep[1] - eps)
 
 
-# %% Unit testing
+class TestScans(unittest.TestCase):
 
-if __name__ == '__main__':
-    test_sample_data()
-    test_scan2D()
+    def test_get_instrument_parameter(self):
+        instrument = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
+            qtt.measurements.scans.instrumentName('test'), None)
+        ix, p = get_instrument_parameter((instrument.name, 'dac2'))
+        self.assertEqual(id(ix), id(instrument))
+        self.assertEqual(id(p), id(instrument.dac2))
+        ix, p = get_instrument_parameter((instrument, 'dac2'))
+        self.assertEqual(id(p), id(instrument.dac2))
+        ix, p = get_instrument_parameter(instrument.name + '.dac2')
+        self.assertEqual(id(p), id(instrument.dac2))
+        instrument.close()
+
+    def test_sample_data(self):
+        s = sample_data_t()
+        s['gate_boundaries'] = {'D0': [-500, 100]}
+        v = s.restrict_boundaries('D0', 1000)
+        self.assertEqual(100, v)
+
+    def test_scan2D(self, verbose=0):
+        import qcodes
+        from qcodes import Parameter
+        from qcodes.instrument_drivers.devices import VoltageDivider
+        from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+        from qtt.structures import MultiParameter
+        import qtt.measurements.scans
+        from qtt.measurements.scans import scanjob_t
+        p = Parameter('p', set_cmd=None)
+        q = Parameter('q', set_cmd=None)
+        R = VoltageDivider(p, 4)
+        mp = MultiParameter(instrumentName('multi_param'), [p, q])
+
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        if verbose:
+            print('test_scan2D: running scan2D')
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
+        scanjob['stepdata'] = dict(
+            {'param': q, 'start': 24, 'end': 30, 'step': 1.})
+        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict({'param': {
+            'dac1': 1, 'dac2': .1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
+        scanjob['stepdata'] = dict(
+            {'param': {'dac2': 1}, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
+        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
+        scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
+        scanjob['stepvalues'] = np.array([[2 * i, 3 * i] for i in range(10)])
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+        except Exception as ex:
+            print(ex)
+            warnings.warn('MultiParameter test failed!')
+        # not supported:
+        try:
+            scanjob = scanjob_t({'sweepdata': dict({'param': {
+                'dac1': 1}, 'start': 0, 'range': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
+            scanjob['stepdata'] = dict(
+                {'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
+            data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+        except:
+            if verbose:
+                print('combination of Parameter and vector argument not supported')
+
+        if verbose:
+            print('test_scan2D: running scan1D')
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [q, R]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0, extra_metadata={'hi': 'world'})
+        self.assertTrue('hi' in data.metadata)
+        gates.close()

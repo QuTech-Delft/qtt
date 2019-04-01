@@ -615,7 +615,6 @@ def guitest_videomode():
 
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize()
-    gates = station.gates
 
     digitizer = SimulationDigitizer(
         qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)

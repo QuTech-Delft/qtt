@@ -105,7 +105,7 @@ class Templates:
               <--------->
                          T
               <-------------------->
-        T is period and A is the amplitude. Negative amplitude will produce an inverted pulse. 
+        T is period and A is the amplitude. Negative amplitude will produce an inverted pulse.
 
         Args:
             name (str): The user defined name of the sequence.

@@ -1,6 +1,7 @@
 """ Mathematical functions and models """
 
 import numpy as np
+import unittest
 import scipy
 import scipy.constants
 import qtt.pgeometry
@@ -72,36 +73,13 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_p
     return par_fit, result_dict
 
 
-def test_fit_gaussian():
-    """ Tests if the function fit_gaussian is working
-
-    Args:
-        None
-
-    Returns:
-        Nothing
-    """
-    x_data = np.linspace(0, 10, 100)
-    gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
-    noise = np.random.rand(100)
-    [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise))
-    assert(3.5 < mean < 4.5)
-    assert(0.5 < s < 1.5)
-    assert(4.5 < amplitude < 5.5)
-    assert(0.0 < offset < 1.0)
-
-
-if __name__ == '__main__':
-    test_fit_gaussian()
-
-
 def double_gaussian(x_data, params):
-    """ A model for the sum of two Gaussian distributions. 
+    """ A model for the sum of two Gaussian distributions.
 
     Args:
         x_data (array): x values of the data
         params (array): parameters of the two gaussians, [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-            amplitude of first (second) gaussian = A_dn (A_up) 
+            amplitude of first (second) gaussian = A_dn (A_up)
             standard deviation of first (second) gaussian = sigma_dn (sigma_up)
             average value of the first (second) gaussian = mean_dn (mean_up)
 
@@ -109,20 +87,20 @@ def double_gaussian(x_data, params):
         double_gauss (np.array): model of a double gaussian
     """
     [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up] = params
-    gauss_dn = gaussian(x_data, params[4], params[2], params[0])
-    gauss_up = gaussian(x_data, params[5], params[3], params[1])
+    gauss_dn = gaussian(x_data, mean_dn, sigma_dn, A_dn)
+    gauss_up = gaussian(x_data, mean_up, sigma_up, A_up)
     double_gauss = gauss_dn + gauss_up
     return double_gauss
 
 
 def _cost_double_gaussian(x_data, y_data, params):
-    """ Cost function for fitting of double Gaussian. 
+    """ Cost function for fitting of double Gaussian.
 
     Args:
         x_data (array): x values of the data
         y_data (array): y values of the data
         params (array): parameters of the two gaussians, [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-            amplitude of first (second) gaussian = A_dn (A_up) 
+            amplitude of first (second) gaussian = A_dn (A_up)
             standard deviation of first (second) gaussian = sigma_dn (sigma_up)
             average value of the first (second) gaussian = mean_dn (mean_up)
 
@@ -135,7 +113,7 @@ def _cost_double_gaussian(x_data, y_data, params):
 
 
 def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
-    """ Estimate of double gaussian model parameters """
+    """ Estimate of double gaussian model parameters."""
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
 
@@ -163,7 +141,7 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
 def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     """ Fitting of double gaussian
 
-    Fitting the Gaussians and finding the split between the up and the down state, 
+    Fitting the Gaussians and finding the split between the up and the down state,
     separation between the max of the two gaussians measured in the sum of the std.
 
     Args:
@@ -172,7 +150,7 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
         maxiter (int): maximum number of iterations to perform
         maxfun (int): maximum number of function evaluations to make
         verbose (int): set to >0 to print convergence messages
-        initial_params (None or array): optional, initial guess for the fit parameters: 
+        initial_params (None or array): optional, initial guess for the fit parameters:
             [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
 
     Returns:
@@ -202,18 +180,6 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     result_dict['type'] = 'fitted double gaussian'
 
     return par_fit, result_dict
-
-
-def test_fit_double_gaussian():
-    x_data = np.arange(-4, 4, .05)
-    initial_parameters = [10, 20, 1, 1, -2, 2]
-    y_data = double_gaussian(x_data, initial_parameters)
-
-    fitted_parameters, results = fit_double_gaussian(x_data, y_data)
-
-    parameter_diff = np.abs(fitted_parameters - initial_parameters)
-    assert(np.all(parameter_diff < 1e-3))
-
 
 def exp_function(x, a, b, c):
     """ Model for exponential function
@@ -251,22 +217,9 @@ def cost_exp_decay(x_data, y_data, params, threshold=None):
     return cost
 
 
-def test_cost_exp_decay():
-    params = [0, 1, 1]
-    x_data = np.arange(0, 20)
-    y_data = exp_function(x_data, *params)
-    y_data[-1] += 10
-    c = cost_exp_decay(x_data, y_data, params)
-    assert(c == 10.0)
-    c = cost_exp_decay(x_data, y_data, params, threshold=None)
-    assert(c == 10.0)
-    c = cost_exp_decay(x_data, y_data, params, threshold='auto')
-    assert(c < 10.0)
-
-
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None, threshold=None,
                   offset_parameter=None):
-    """ Fit a exponential decay. 
+    """ Fit a exponential decay.
 
     Args:
         x_data (array): the data for the input variable
@@ -276,7 +229,7 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
         verbose (int): set to >0 to print convergence messages
         initial_params (None or array): optional, initial guess for the fit parameters: [A,B, gamma]
         threshold (float or None): threshold for the cost function.
-            If the difference between data and model is larger then the threshold, these data are not taken into account for the fit. 
+            If the difference between data and model is larger then the threshold, these data are not taken into account for the fit.
             If None use automatic detection (at 95th percentile)
         offset_parameter (None or float): if None, then estimate the offset, otherwise fix the offset to the specified value
     Returns:
@@ -319,8 +272,8 @@ def test_fit_exp_decay():
 
 
 def gauss_ramsey(x_data, params):
-    """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase of the second pulse 
-    is made dependent on the free evolution time. This results in a gaussian decay multiplied by a sinus. 
+    """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase of the second pulse
+    is made dependent on the free evolution time. This results in a gaussian decay multiplied by a sinus.
     Function as used by T.F. Watson et all., example in qtt/docs/notebooks/example_fit_ramsey.ipynb
 
     $$ gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B  $$
@@ -338,7 +291,7 @@ def gauss_ramsey(x_data, params):
 
 
 def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
-    """ Cost function for gauss_ramsey. 
+    """ Cost function for gauss_ramsey.
 
     Args:
         x_data (array): the data for the input variable
@@ -356,9 +309,9 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
 
 
 def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
-    """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey sequence while varying 
+    """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey sequence while varying
     the free evolution time, the phase of the second pulse is made dependent on the free evolution time.
-    This results in a gaussian decay multiplied by a sinus. Function as used by T.F. Watson et all., 
+    This results in a gaussian decay multiplied by a sinus. Function as used by T.F. Watson et all.,
     see function 'gauss_ramsey' and example in qtt/docs/notebooks/example_fit_ramsey.ipynb
 
     Args:
@@ -390,43 +343,6 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
         'description': 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B', 'parameters fit': par_fit, 'parameters initial guess': initial_params}
 
     return par_fit, result_dict
-
-
-def test_fit_gauss_ramsey(fig=None):
-    """ Tests if the function fit_gauss_ramsey is working
-
-    Args:
-        None
-
-    Returns:
-        Nothing
-    """
-    y_data = np.array([0.6019, 0.5242, 0.3619, 0.1888, 0.1969, 0.3461, 0.5276, 0.5361,
-                       0.4261, 0.28, 0.2323, 0.2992, 0.4373, 0.4803, 0.4438, 0.3392,
-                       0.3061, 0.3161, 0.3976, 0.4246, 0.398, 0.3757, 0.3615, 0.3723,
-                       0.3803, 0.3873, 0.3873, 0.3561, 0.37, 0.3819, 0.3834, 0.3838,
-                       0.37, 0.383, 0.3573, 0.3869, 0.3838, 0.3792, 0.3757, 0.3815])
-    x_data = np.array([i * 1.6 / 40 for i in range(40)])
-
-    par_fit_test, _ = fit_gauss_ramsey(x_data * 1e-6, y_data)
-
-    assert(np.abs(np.abs(par_fit_test[0]) - 0.21) < 0.1)
-    assert(np.abs(par_fit_test[-2] - 1.88) < 0.1)
-    assert(np.abs(par_fit_test[-1] - 0.38) < 0.1)
-
-    test_x = np.linspace(0, x_data.max() * 1e-6, 200)
-    test_y = gauss_ramsey(test_x, par_fit_test)
-
-    if fig is not None:
-        plt.figure(10)
-        plt.clf()
-        plt.plot(x_data, y_data, 'o', label='input data')
-        plt.plot(test_x * 1e6, test_y, label='fitted curve')
-        plt.legend(numpoints=1)
-
-
-if __name__ == '__main__':
-    test_fit_gauss_ramsey(fig=10)
 
 
 def linear_function(x, a, b):
@@ -469,7 +385,7 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
     The default value of the leverarm is
         (100 ueV/mV)/kb = (100*1e-6*scipy.constants.eV )/kb = 1.16.
 
-    For this value the input variable x should be in mV, the 
+    For this value the input variable x should be in mV, the
     temperature T in K. We input the leverarm divided by kb for numerical stability.
 
     Returns:
@@ -499,17 +415,69 @@ def logistic(x, x0=0, alpha=1):
     return f
 
 
-def test_logistic_and_linear_function():
-    x_data = np.arange(-10, 10, 0.1)
+class TestFunctions(unittest.TestCase):
 
-    _ = logistic(x_data, x0=0, alpha=1)
-    assert logistic(0, x0=0, alpha=1) == 0.5
+    def test_fit_gaussian(self):
+        x_data = np.linspace(0, 10, 100)
+        gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
+        noise = np.random.rand(100)
+        [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise))
+        self.assertTrue(3.5 < mean < 4.5)
+        self.assertTrue(0.5 < s < 1.5)
+        self.assertTrue(4.5 < amplitude < 5.5)
+        self.assertTrue(0.0 < offset < 1.0)
 
-    _ = linear_function(x_data, 1, 2)
-    assert linear_function(0, 1, 2) == 2
-    assert linear_function(3, 1, 2) == 5
+    def test_fit_double_gaussian(self):
+        x_data = np.arange(-4, 4, .05)
+        initial_parameters = [10, 20, 1, 1, -2, 2]
+        y_data = double_gaussian(x_data, initial_parameters)
 
+        fitted_parameters, _ = fit_double_gaussian(x_data, y_data)
+        parameter_diff = np.abs(fitted_parameters - initial_parameters)
+        self.assertTrue(np.all(parameter_diff < 1e-3))
 
-if __name__ == '__main__':
-    test_logistic_and_linear_function()
-    test_cost_exp_decay()
+    def test_cost_exp_decay(self):
+        params = [0, 1, 1]
+        x_data = np.arange(0, 20)
+        y_data = exp_function(x_data, *params)
+        y_data[-1] += 10
+        c = cost_exp_decay(x_data, y_data, params)
+        self.assertTrue(c == 10.0)
+        c = cost_exp_decay(x_data, y_data, params, threshold=None)
+        self.assertTrue(c == 10.0)
+        c = cost_exp_decay(x_data, y_data, params, threshold='auto')
+        self.assertTrue(c < 10.0)
+
+    def test_fit_gauss_ramsey(self, fig=None):
+        y_data = np.array([0.6019, 0.5242, 0.3619, 0.1888, 0.1969, 0.3461, 0.5276, 0.5361,
+                           0.4261, 0.28, 0.2323, 0.2992, 0.4373, 0.4803, 0.4438, 0.3392,
+                           0.3061, 0.3161, 0.3976, 0.4246, 0.398, 0.3757, 0.3615, 0.3723,
+                           0.3803, 0.3873, 0.3873, 0.3561, 0.37, 0.3819, 0.3834, 0.3838,
+                           0.37, 0.383, 0.3573, 0.3869, 0.3838, 0.3792, 0.3757, 0.3815])
+        x_data = np.array([i * 1.6 / 40 for i in range(40)])
+
+        par_fit_test, _ = fit_gauss_ramsey(x_data * 1e-6, y_data)
+
+        self.assertTrue(np.abs(np.abs(par_fit_test[0]) - 0.21) < 0.1)
+        self.assertTrue(np.abs(par_fit_test[-2] - 1.88) < 0.1)
+        self.assertTrue(np.abs(par_fit_test[-1] - 0.38) < 0.1)
+
+        test_x = np.linspace(0, x_data.max() * 1e-6, 200)
+        test_y = gauss_ramsey(test_x, par_fit_test)
+
+        if fig is not None:
+            plt.figure(10)
+            plt.clf()
+            plt.plot(x_data, y_data, 'o', label='input data')
+            plt.plot(test_x * 1e6, test_y, label='fitted curve')
+            plt.legend(numpoints=1)
+
+    def test_logistic_and_linear_function(self):
+        x_data = np.arange(-10, 10, 0.1)
+
+        _ = logistic(x_data, x0=0, alpha=1)
+        self.assertTrue(logistic(0, x0=0, alpha=1) == 0.5)
+
+        _ = linear_function(x_data, 1, 2)
+        self.assertTrue(linear_function(0, 1, 2) == 2)
+        self.assertTrue(linear_function(3, 1, 2) == 5)

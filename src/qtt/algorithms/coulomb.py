@@ -380,7 +380,7 @@ def fitPeaks(XX, YY, points, fig=None, verbose=0):
         plt.plot(XX, YY, '-b', label='data')
         for ii, point_index in enumerate(points):
             gaussian_parameters = fit_data[ii, :]
-            fit_mu, fit_stdev, fit_scale = gaussian_parameters
+            fit_mu, fit_stdev, _ = gaussian_parameters
 
             FWHM = 2 * np.sqrt(2 * np.log(2)) * fit_stdev
             plt.plot(XX, gauss(XX, gaussian_parameters), lw=3, alpha=.5, color='r', label='point %d' % ii)
@@ -570,8 +570,8 @@ def peakdataOrientation(x, y):
     """ For measured 1D scans order the data such that the independent variable is ordered
 
     Args:
-        x (array): independent variable data    
-        y (array): dependent variable data    
+        x (array): independent variable data
+        y (array): dependent variable data
     Returns:
         x,y (array): reordered data
     """

@@ -612,10 +612,8 @@ class ttrace_update:
         data_raw = self.read_function(self.station, self.ttrace_elements, self.channel,
                                       Naverage=self.Naverage, **self.read_args)
         clockbias = getattr(getattr(self.station, 'digitizer', {}), 'clockbias', 1.)
-        tt, datax, tx = parse_data(data_raw, self.ttrace_elements, self.ttrace,
+        _, _, ydata = parse_data(data_raw, self.ttrace_elements, self.ttrace,
                                    verbose=self.verbose >= 2, clockbias=clockbias)
-
-        ydata = tx
 
         nplots = len(ydata)
         xdata = [None] * nplots
@@ -802,7 +800,7 @@ def plot_ttraces(ttraces):
         plt.legend(numpoints=1)
 
 
-def read_FPGA_line(station, idx=[1, ], Naverage=26):
+def read_FPGA_line(station, idx=None, Naverage=26):
     """ Reads the raw data
 
     Args: 
@@ -812,6 +810,8 @@ def read_FPGA_line(station, idx=[1, ], Naverage=26):
     Returns: 
         data_raw: the raw readout data
     """
+    if idx == None:
+        idx = [1, ]
     ReadDevice = ['FPGA_ch%d' % c for c in idx]
     qq = station.fpga.readFPGA(ReadDevice=ReadDevice, Naverage=Naverage)
     data_raw = np.array([qq[i] for i in idx])

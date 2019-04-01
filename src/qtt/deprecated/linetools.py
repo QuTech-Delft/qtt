@@ -209,7 +209,7 @@ def findCrossTemplate(imx, ksize=31, fig=None, istep=2, verbose=1, widthmv=6, le
     samplesize = np.array([ksize, ksize + dy])
     param = [None, None, sepmv / istep, 3 * np.pi
              / 8, -7 * np.pi / 8, 11 * np.pi / 8, np.pi / 8]
-    modelpatch, cdata = createCross(param, samplesize, w=widthmv / istep,
+    modelpatch, _ = createCross(param, samplesize, w=widthmv / istep,
                                     l=lenmv / istep, lsegment=lenmv / istep, H=100)
 
     imtmp = pmatlab.setregion(scaleImage(imx), scaleImage(modelpatch), [0, 0])
@@ -272,9 +272,9 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
         """ Helper function to store intermediate results """
         vv.append((plocal, pglobal))
     if cfig is not None:
-        def cb(x): return fmCallback(x, None)
-        #cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
-        #cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
+        def cb_function(x):
+            return fmCallback(x, None)
+        cb = cb_function
 
     if 1:
         # simple brute force

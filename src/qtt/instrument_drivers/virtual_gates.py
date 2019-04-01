@@ -6,6 +6,7 @@ Created on Thu Dec  8 10:37:36 2016
 """
 
 # %% Load packages
+import unittest
 from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
@@ -591,103 +592,99 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
     return new_virt_gates, new_cc, {'old_cc': old_cc}
 
 
-def test_virtual_gates(verbose=0):
-    """ Test for virtual gates object """
-    from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-    from qtt.measurements.scans import instrumentName
-    import pickle
+class TestVirtualGates(unittest.TestCase):
 
-    gates = VirtualIVVI(name=instrumentName('testivvi'),
-                        model=None, gates=['P1', 'P2', 'P3', 'P4'])
+    def test_virtual_gates(self, verbose=0):
+        """ Test for virtual gates object """
+        from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+        from qtt.measurements.scans import instrumentName
+        import pickle
 
-    crosscap_map = OrderedDict((
-        ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-        ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
-        ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
-    ))
-    vgates = virtual_gates(instrumentName('testvgates'), gates, crosscap_map)
+        gates = VirtualIVVI(name=instrumentName('testivvi'),
+                            model=None, gates=['P1', 'P2', 'P3', 'P4'])
 
-    vp1 = vgates.VP1()
-    if verbose:
-        print('before set: VP1 {}'.format(vp1))
-    vgates.VP1.set(10)
-    vp1 = vgates.VP1()
-    if verbose:
-        print('after set: VP1 {}'.format(vp1))
-    vgates.VP1.set(10)
-    vp1 = vgates.VP1()
-    if verbose:
-        print('after second set: VP1 {}'.format(vp1))
+        crosscap_map = OrderedDict((
+            ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
+            ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
+            ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+        ))
+        vgates = virtual_gates(instrumentName('testvgates'), gates, crosscap_map)
 
-    vgates_matrix = vgates.convert_map_to_matrix(crosscap_map)
-    _ = vgates.convert_matrix_to_map(vgates_matrix)
+        vp1 = vgates.VP1()
+        if verbose:
+            print('before set: VP1 {}'.format(vp1))
+        vgates.VP1.set(10)
+        vp1 = vgates.VP1()
+        if verbose:
+            print('after set: VP1 {}'.format(vp1))
+        vgates.VP1.set(10)
+        vp1 = vgates.VP1()
+        if verbose:
+            print('after second set: VP1 {}'.format(vp1))
 
-    vgates.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
-    all_values = vgates.allvalues()
-    assert isinstance(all_values, dict)
+        vgates_matrix = vgates.convert_map_to_matrix(crosscap_map)
+        _ = vgates.convert_matrix_to_map(vgates_matrix)
 
-    crosscap_matrix = vgates.get_crosscap_matrix()
-    assert(crosscap_matrix[0][0] == 1.0)
-    assert(crosscap_matrix[0][1] == 0.6)
+        vgates.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
+        all_values = vgates.allvalues()
+        self.assertTrue(isinstance(all_values, dict))
 
-    vgates.set_distances(1.0 / np.arange(1, 5))
-    _ = vgates.to_dictionary()
-    pickled_virtual_gates = pickle.dumps(vgates)
-    extended_vgates = pickle.loads(pickled_virtual_gates)
+        crosscap_matrix = vgates.get_crosscap_matrix()
+        self.assertEqual(1.0, crosscap_matrix[0][0])
+        self.assertEqual(0.6, crosscap_matrix[0][1])
 
-    v_gates = vgates.vgates() + ['vP4']
-    p_gates = vgates.pgates() + ['P4']
-    extended_vgates = extend_virtual_gates(v_gates, p_gates, vgates, name='vgates')
-    if verbose:
-        extended_vgates.print_matrix()
+        vgates.set_distances(1.0 / np.arange(1, 5))
+        _ = vgates.to_dictionary()
+        pickled_virtual_gates = pickle.dumps(vgates)
+        extended_vgates = pickle.loads(pickled_virtual_gates)
 
-    _ = update_cc_matrix(vgates, update_cc=np.eye(3), verbose=0)
+        v_gates = vgates.vgates() + ['vP4']
+        p_gates = vgates.pgates() + ['P4']
+        extended_vgates = extend_virtual_gates(v_gates, p_gates, vgates, name='vgates')
+        if verbose:
+            extended_vgates.print_matrix()
 
-    update_matrix = 0.1 * np.random.rand(3, 3)
-    np.fill_diagonal(update_matrix, 1)
+        _ = update_cc_matrix(vgates, update_cc=np.eye(3), verbose=0)
 
-    # test normalization of virtual gate matrix
-    extended_vgates, _, _ = update_cc_matrix(vgates, update_cc=update_matrix, verbose=0)
-    np.testing.assert_almost_equal(extended_vgates.get_crosscap_matrix(),
-                                   update_matrix.dot(vgates.get_crosscap_matrix()))
+        update_matrix = 0.1 * np.random.rand(3, 3)
+        np.fill_diagonal(update_matrix, 1)
 
-    # test normalization of virtual gate matrix
-    serialized_matrix = extended_vgates.get_crosscap_matrix()
-    extended_vgates.normalize_matrix()
-    crosscap_matrix = extended_vgates.get_crosscap_matrix()
-    for row in range(serialized_matrix.shape[0]):
-        np.testing.assert_almost_equal(serialized_matrix[row] / serialized_matrix[row][row], crosscap_matrix[row])
-    cc_matrix_diagonal = crosscap_matrix.diagonal()
-    np.testing.assert_almost_equal(cc_matrix_diagonal, 1.)
+        # test normalization of virtual gate matrix
+        extended_vgates, _, _ = update_cc_matrix(vgates, update_cc=update_matrix, verbose=0)
+        np.testing.assert_almost_equal(extended_vgates.get_crosscap_matrix(),
+                                       update_matrix.dot(vgates.get_crosscap_matrix()))
 
-    vgates.close()
-    extended_vgates.close()
-    gates.close()
+        # test normalization of virtual gate matrix
+        serialized_matrix = extended_vgates.get_crosscap_matrix()
+        extended_vgates.normalize_matrix()
+        crosscap_matrix = extended_vgates.get_crosscap_matrix()
+        for row in range(serialized_matrix.shape[0]):
+            np.testing.assert_almost_equal(serialized_matrix[row] / serialized_matrix[row][row], crosscap_matrix[row])
+        cc_matrix_diagonal = crosscap_matrix.diagonal()
+        np.testing.assert_almost_equal(cc_matrix_diagonal, 1.)
 
+        vgates.close()
+        extended_vgates.close()
+        gates.close()
 
-def test_virtual_gates_serialization(verbose=0):
-    """ Test for virtual gates object """
-    import qtt.instrument_drivers.virtual_instruments
-    gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
-        name=qtt.measurements.scans.instrumentName('ivvi_dummy_serialization_test'), model=None, gates=['P1', 'P2', 'P3', 'P4'])
+    def test_virtual_gates_serialization(self, verbose=0):
+        """ Test for virtual gates object """
+        import qtt.instrument_drivers.virtual_instruments
+        gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('ivvi_dummy_serialization_test'), model=None, gates=['P1', 'P2', 'P3', 'P4'])
 
-    crosscap_map = OrderedDict((
-        ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-        ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
-        ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
-    ))
-    virts = virtual_gates(qtt.measurements.scans.instrumentName('testvgates'), gates, crosscap_map)
-    vgdict = virts.to_dictionary()
+        crosscap_map = OrderedDict((
+            ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
+            ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
+            ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+        ))
+        virts = virtual_gates(qtt.measurements.scans.instrumentName('testvgates'), gates, crosscap_map)
+        vgdict = virts.to_dictionary()
 
-    vx = virtual_gates.from_dictionary(vgdict, gates, name=qtt.measurements.scans.instrumentName('vgdummy'))
+        vx = virtual_gates.from_dictionary(vgdict, gates, name=qtt.measurements.scans.instrumentName('vgdummy'))
 
-    np.testing.assert_almost_equal(vx.get_crosscap_matrix_inv(), virts.get_crosscap_matrix_inv())
-    assert(vx.pgates() == ['P%d' % i for i in range(1, 4)])
+        np.testing.assert_almost_equal(vx.get_crosscap_matrix_inv(), virts.get_crosscap_matrix_inv())
+        self.assertTrue(vx.pgates() == ['P%d' % i for i in range(1, 4)])
 
-    gates.close()
-    virts.close()
-
-if __name__ == '__main__':
-    verbose = 1
-    test_virtual_gates(verbose=verbose)
-    test_virtual_gates_serialization(verbose=verbose)
+        gates.close()
+        virts.close()

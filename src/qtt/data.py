@@ -1,6 +1,7 @@
 """ Utilities to work with data and datasets """
 
 import numpy as np
+import unittest
 import scipy
 import os
 import sys
@@ -105,21 +106,6 @@ def dataset_to_dictionary(data_set, include_data=True, include_metadata=True):
         data_dictionary['metadata'] = data_set.metadata
 
     return data_dictionary
-
-
-def test_dataset_to_dictionary():
-    import qcodes.tests.data_mocks
-
-    input_dataset = qcodes.tests.data_mocks.DataSet2D()
-
-    data_dictionary = dataset_to_dictionary(input_dataset, include_data=False, include_metadata=False)
-    assert data_dictionary['metadata'] is None
-
-    data_dictionary = dataset_to_dictionary(input_dataset, include_data=True, include_metadata=True)
-    assert 'metadata' in data_dictionary
-
-    converted_dataset = dictionary_to_dataset(data_dictionary)
-    assert converted_dataset.default_parameter_name() == input_dataset.default_parameter_name()
 
 
 def get_dataset(dataset_handle):
@@ -1298,3 +1284,20 @@ if __name__ == '__main__':
     test_makeDataSet2D()
     test_makeDataSet1Dplain()
     test_compare()
+
+
+class TestData(unittest.TestCase):
+
+    def test_dataset_to_dictionary(self):
+        import qcodes.tests.data_mocks
+
+        input_dataset = qcodes.tests.data_mocks.DataSet2D()
+
+        data_dictionary = dataset_to_dictionary(input_dataset, include_data=False, include_metadata=False)
+        self.assertIsNone(data_dictionary['metadata'])
+
+        data_dictionary = dataset_to_dictionary(input_dataset, include_data=True, include_metadata=True)
+        self.assertTrue('metadata' in data_dictionary)
+
+        converted_dataset = dictionary_to_dataset(data_dictionary)
+        self.assertEqual(converted_dataset.default_parameter_name(), input_dataset.default_parameter_name())
