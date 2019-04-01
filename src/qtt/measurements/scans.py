@@ -1330,11 +1330,11 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
     res_horz = int(resolution[0])
     res_vert = int(resolution[1])
 
-    if resolution[0] % 16 != 0 or resolution[1] % 16 != 0:
+    if resolution[0] % 32 != 0 or resolution[1] % 32 != 0:
         # send out warning, due to rounding of the digitizer memory buffers
         # this is not supported
         raise Exception(
-            'resolution for digitizer is not a multiple of 16 (%s) ' % (resolution,))
+            'resolution for digitizer is not a multiple of 32 (%s) ' % (resolution,))
     if full_trace:
         npoints_forward_x = int(res_horz)
         npoints_forward_y = int(res_vert)
