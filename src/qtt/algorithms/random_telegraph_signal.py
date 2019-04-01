@@ -135,7 +135,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         Z, xedges, yedges = np.histogram2d(xdata, data, bins=[int(
             np.sqrt(len(xdata))) / 2, int(np.sqrt(len(data))) / 2])
         title = '2d histogram RTS'
-        plt.figure(title)
+        Fig = plt.figure(fig)
         plt.clf()
         plt.pcolormesh(xedges, yedges, Z.T)
         cb = plt.colorbar()
@@ -144,7 +144,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         plt.ylabel('Signal sensing dot (a.u.)')
         plt.title(title)
         if ppt:
-            addPPTslide(title=title, fig=plt.figure(title))
+            addPPTslide(title=title, fig=Fig)
 
     # binning the data and determining the bincentres
     if num_bins is None:
@@ -168,7 +168,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
         figure_title = 'Histogram of two levels RTS'
-        plt.figure(fig)
+        plt.figure(fig + 1)
         plt.clf()
         _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
         if ppt:
@@ -269,7 +269,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
         if fig:
             title = 'Fitted exponential decay, level down'
-            Fig = plt.figure(fig + 1)
+            Fig = plt.figure(fig + 2)
             plt.clf()
             plt.plot(time_scaling * bincentres_dn, counts_dn, 'o', label='Counts down')
             plt.plot(time_scaling * bincentres_dn, exp_function(bincentres_dn, A_dn_fit, B_dn_fit, gamma_dn_fit),
@@ -292,7 +292,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
         if fig:
             title = 'Fitted exponential decay, level up'
-            Fig = plt.figure(fig + 1)
+            Fig = plt.figure(fig + 3)
             plt.clf()
             plt.plot(time_scaling * bincentres_up, counts_up, 'o', label='Counts up')
             plt.plot(time_scaling * bincentres_up, exp_function(bincentres_up, A_up_fit, B_up_fit, gamma_up_fit),
