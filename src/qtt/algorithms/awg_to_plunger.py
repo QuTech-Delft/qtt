@@ -64,20 +64,20 @@ def click_line(fig=None):
 
 
 def measure_awg_to_plunger(station, gate, minstrument, scanrange=30, step=0.5):
-    """ Performing a scan2Dfast measurement, same gate on both axis, where the one axis is sweeped with the awg 
+    """ Performing a scan2Dfast measurement, same gate on both axis, where the one axis is sweeped with the awg
     and one axis is stepped with the DAC's. Measurement should be centred around an addition line. From the slope of the addition line
     the awg to plunger conversion factor can be checked with the function analyse_awg_to_plunger.
 
     Args:
         station (QCoDeS station): measurement setup
-        gate (str): gate for which the awg to plunger conversion 
+        gate (str): gate for which the awg to plunger conversion
         minstrument (str, int): list with the name of the measurement instrument (str), and the channel number (int)
         scanrange (float): sweep- and steprange (mV), making a square 2d measurement
         step (float): stepsize (mV)
 
     Returns:
-        result (dict): resultresult (dic): result dictionary of the function measure_awg_to_plunger, 
-            shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}  
+        result (dict): resultresult (dic): result dictionary of the function measure_awg_to_plunger,
+            shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}
 
     """
     gates = station.gates
@@ -96,15 +96,15 @@ def measure_awg_to_plunger(station, gate, minstrument, scanrange=30, step=0.5):
 
 
 def analyse_awg_to_plunger(result, method='hough', fig=None):
-    """ Determine the awg_to_plunger conversion factor from a 2D scan, two possible methods: 'hough' it fits the slope of the addition line and calculates the 
+    """ Determine the awg_to_plunger conversion factor from a 2D scan, two possible methods: 'hough' it fits the slope of the addition line and calculates the
         correction to the awg_to_plunger conversion factor from there. if this doesn't work for some reason, method 'click' can be used
         to find the addition lines by hand/eye
 
     Args:
-        result (dic): result dictionary of the function measure_awg_to_plunger, 
+        result (dic): result dictionary of the function measure_awg_to_plunger,
             shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}
         method (str): either 'hough' or 'click'
-        fig (int or None): determines of the analysis staps and the result is plotted 
+        fig (int or None): determines of the analysis staps and the result is plotted
 
     Returns:
         result (dict): including to following entries: 
@@ -126,13 +126,13 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
         im, tr = qtt.data.dataset2image(ds)
         imextent = tr.scan_image_extent()
         istep = tr.istep()
-        ims, r = qtt.algorithms.images.straightenImage(
+        _, r = qtt.algorithms.images.straightenImage(
             im, imextent, mvx=istep, mvy=None)
         H = r[4]
 
         imc = cleanSensingImage(im, sigma=0.93, dy=0)
 
-        imx, (fw, fh, mvx, mvy, Hstraight) = straightenImage(imc, imextent, mvx=istep, verbose=0)
+        imx, (fw, fh, mvx, mvy, _) = straightenImage(imc, imextent, mvx=istep, verbose=0)
 
         imx = imx.astype(np.float64) * \
             (100. / np.percentile(imx, 99))  # scale image
@@ -240,7 +240,7 @@ def plot_awg_to_plunger(result, fig=10):
     angle = result['angle']
 
     ds = get_dataset(result)
-    im, tr = qtt.data.dataset2image(ds)
+    _, tr = qtt.data.dataset2image(ds)
     xscan = tr.pixel2scan(np.array([[0], [0]]))
 
     plt.figure(fig)
@@ -259,34 +259,40 @@ def plot_awg_to_plunger(result, fig=10):
 
 
 # %% Test functions
-def test_awg_to_plunger(fig=None):
-    """ Plot results of awg_to_plunger calibration check?
+import unittest
 
-    Args:
-        fig (str, int or None): default None. Name of figure to plot in, if None not plotted
 
-    Returns:
-        Nothing
+class TestAwgToPlunger(unittest.TestCase):
 
-    """
-    x = np.arange(0, 80, 1.0).astype(np.float32)
-    y = np.arange(0, 60).astype(np.float32)
-    z = np.meshgrid(x, y)
-    z = 0.01 * z[0].astype(np.uint8)
-    input_angle = np.deg2rad(-35)
-    qtt.utilities.imagetools.semiLine(z, np.array([[0], [y.max()]]), input_angle, w=2.2, l=30, H=0.52)
-    ds = qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z)
-    result = {'dataset': ds, 'type': 'awg_to_plunger'}
-    r = analyse_awg_to_plunger(result, method='hough', fig=fig)
-    output_angle = r['angle']
+    def test_awg_to_plunger(self, fig=None):
+        """ Plot results of awg_to_plunger calibration check?
 
-    if fig:
-        print(r)
-        print('angle input %.3f: output angle %s' % (input_angle, str(output_angle)))
+        Args:
+            fig (str, int or None): default None. Name of figure to plot in, if None not plotted
 
-    d = qtt.pgeometry.angleDiff(input_angle, (-np.pi / 2 - output_angle))
-    assert(np.abs(d) < np.deg2rad(5))
+        Returns:
+            Nothing
+
+        """
+        x = np.arange(0, 80, 1.0).astype(np.float32)
+        y = np.arange(0, 60).astype(np.float32)
+        z = np.meshgrid(x, y)
+        z = 0.01 * z[0].astype(np.uint8)
+        input_angle = np.deg2rad(-35)
+        qtt.utilities.imagetools.semiLine(z, np.array([[0], [y.max()]]), input_angle, w=2.2, l=30, H=0.52)
+        ds = qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z)
+        result = {'dataset': ds, 'type': 'awg_to_plunger'}
+        r = analyse_awg_to_plunger(result, method='hough', fig=fig)
+        output_angle = r['angle']
+
+        if fig:
+            print(r)
+            print('angle input %.3f: output angle %s' % (input_angle, str(output_angle)))
+
+        d = qtt.pgeometry.angleDiff(input_angle, (-np.pi / 2 - output_angle))
+        self.assertTrue(np.abs(d) < np.deg2rad(5))
 
 
 if __name__ == '__main__':
-    test_awg_to_plunger(fig=10)
+    tester = TestAwgToPlunger()
+    tester.test_awg_to_plunger(fig=10)
