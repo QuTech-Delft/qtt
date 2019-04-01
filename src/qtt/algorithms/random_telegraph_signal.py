@@ -168,11 +168,11 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
         figure_title = 'Histogram of two levels RTS'
-        plt.figure(figure_title)
+        plt.figure(fig)
         plt.clf()
         _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
         if ppt:
-            addPPTslide(title=title, fig=plt.figure(title), notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
+            addPPTslide(title=title, fig=fig, notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
                         par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] + ', std up:%.3f counts' % par_fit[3] + '.Separation between peaks gaussians: %.3f std' % separation + '. Split between two levels: %.3f' % split)
 
     if separation < min_sep:
@@ -269,7 +269,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
         if fig:
             title = 'Fitted exponential decay, level down'
-            plt.figure(title)
+            Fig = plt.figure(fig + 1)
             plt.clf()
             plt.plot(time_scaling * bincentres_dn, counts_dn, 'o', label='Counts down')
             plt.plot(time_scaling * bincentres_dn, exp_function(bincentres_dn, A_dn_fit, B_dn_fit, gamma_dn_fit),
@@ -279,7 +279,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             plt.legend()
             plt.title(title)
             if ppt:
-                addPPTslide(title=title, fig=plt.figure(title))
+                addPPTslide(title=title, fig=Fig)
 
         bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
 
@@ -292,7 +292,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
         if fig:
             title = 'Fitted exponential decay, level up'
-            plt.figure(title)
+            Fig = plt.figure(fig + 1)
             plt.clf()
             plt.plot(time_scaling * bincentres_up, counts_up, 'o', label='Counts up')
             plt.plot(time_scaling * bincentres_up, exp_function(bincentres_up, A_up_fit, B_up_fit, gamma_up_fit),
@@ -302,7 +302,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             plt.legend()
             plt.title(title)
             if ppt:
-                addPPTslide(title=title, fig=plt.figure(title))
+                addPPTslide(title=title, fig=Fig)
 
         parameters['fit parameters exp. decay down'] = [A_dn_fit, B_dn_fit, gamma_dn_fit]
         parameters['fit parameters exp. decay up'] = [A_up_fit, B_up_fit, gamma_up_fit]
@@ -381,7 +381,7 @@ class TestRandomTelegraphSignal(unittest.TestCase):
                                    rate_down=rate_down, samplerate=samplerate)
 
         tunnelrate_dn, tunnelrate_up, _ = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
-                                                                min_duration=1, num_bins=40, fig=fig, verbose=2)
+                                                          min_duration=1, num_bins=40, fig=fig, verbose=2)
 
         self.assertTrue(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
         self.assertTrue(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)
