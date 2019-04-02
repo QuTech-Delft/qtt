@@ -1,6 +1,7 @@
 import unittest
 from unittest import TestCase
 
+import qcodes
 import qtt.data
 import qtt.measurements.scans
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
@@ -34,6 +35,8 @@ class TestVideomode(TestCase):
         vm.close()
 
         self.assertIsInstance(data, list)
+        self.assertIsInstance(data[0], qcodes.DataSet)
+        self.assertEqual(data[0].measured.shape, (12, 12))
 
         for name, instrument in station.components.items():
             instrument.close()
