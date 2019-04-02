@@ -330,10 +330,14 @@ class VideoMode:
         if isrunning:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
+
+        setting_notes = 'moving averaging enabled: %d\n' % self._averaging_enabled
+        setting_notes += 'number of averages %d\n' % self.Naverage()
+
         qtt.utilities.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
                                         notes=self.station,
                                         extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
-                                            self.scanparams))
+                                            self.scanparams) + '\n\n' + setting_notes)
         if isrunning:
             self.startreadout()
 
@@ -618,10 +622,10 @@ def guitest_videomode():
 
     digitizer = SimulationDigitizer(
         qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
-    station.components[digitizer.name] = digitizer
+    station.add_component(digitizer)
 
     station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
-    station.components[station.awg.name] = station.awg
+    station.add_component(station.awg)
 
     sweepparams = {'gates_horz': {'P1': 1}, 'gates_vert': {'P2': 1}}
     minstrument = (digitizer.name, [0])
@@ -633,6 +637,7 @@ def guitest_videomode():
 
     all = VideoMode.all_instances(verbose=0)
     assert(vm in all)
+
 
 # %% Testing
 
