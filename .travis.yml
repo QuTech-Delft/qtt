@@ -32,7 +32,7 @@ install:
 script:
     - ls
     - pytest --version
-    - xvfb-run -a -e /dev/stdout coverage run --source="./src"  -m pytest
+    - xvfb-run -a coverage run --source="./src"  -m pytest
     - mypy src --ignore-missing-imports
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         jupyter --version;
