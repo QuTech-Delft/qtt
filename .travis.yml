@@ -6,7 +6,8 @@ matrix:
     python: 3.6
     sudo: true
     dist: xenial
-
+    env: QT_QPA_PLATFORM=offscreen
+    
   - name: Full installation
     python: 3.6
     dist: xenial
@@ -22,7 +23,8 @@ install:
         pip install -r develop_requirements.txt;
       fi
     - pip install -e .
-
+    - export QT_QPA_PLATFORM=offscreen
+ 
 script:
     - ls
     - pytest --version
