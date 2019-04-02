@@ -638,7 +638,7 @@ def guitest_videomode():
     all = VideoMode.all_instances(verbose=0)
     assert(vm in all)
 
-    
+
 # %% Testing
 
 
