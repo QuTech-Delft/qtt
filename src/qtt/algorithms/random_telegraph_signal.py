@@ -135,7 +135,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         Z, xedges, yedges = np.histogram2d(xdata, data, bins=[int(
             np.sqrt(len(xdata))) / 2, int(np.sqrt(len(data))) / 2])
         title = '2d histogram RTS'
-        plt.figure(title)
+        Fig = plt.figure(fig)
         plt.clf()
         plt.pcolormesh(xedges, yedges, Z.T)
         cb = plt.colorbar()
@@ -144,7 +144,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         plt.ylabel('Signal sensing dot (a.u.)')
         plt.title(title)
         if ppt:
-            addPPTslide(title=title, fig=plt.figure(title))
+            addPPTslide(title=title, fig=Fig)
 
     # binning the data and determining the bincentres
     if num_bins is None:
@@ -168,11 +168,11 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
         figure_title = 'Histogram of two levels RTS'
-        plt.figure(figure_title)
+        Fig=plt.figure(fig + 1)
         plt.clf()
         _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
         if ppt:
-            addPPTslide(title=title, fig=plt.figure(title), notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
+            addPPTslide(title=title, fig=Fig, notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
                         par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] + ', std up:%.3f counts' % par_fit[3] + '.Separation between peaks gaussians: %.3f std' % separation + '. Split between two levels: %.3f' % split)
 
     if separation < min_sep:
@@ -198,7 +198,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if len(durations_dn) < 1:
         raise FittingException('All durations_dn are shorter than the minimal duration.')
 
-    def _create_histogram(durations, level, verbose=verbose):
+    def _create_histogram(durations, level, verbose=0):
         """ Calculate number of bins, bin edges and histogram for durations
 
         This method works if the data is sampled at integer durations.
@@ -209,14 +209,14 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         bins = np.arange(durations.min() - .5, durations.max() + bin_size, bin_size)
         counts, bins = np.histogram(durations, bins=bins)
         if verbose:
-            print(' _create_histogram level ' + level + ': nbins %d, %d' % (numbins, bin_size))
+            print(' _create_histogram level ' + level + ': number of bins %d, %d' % (numbins, bin_size))
         return counts, bins
 
     # calculating the number of bins and counts for down level
-    counts_dn, bins_dn = _create_histogram(durations_dn, level='down')
+    counts_dn, bins_dn = _create_histogram(durations_dn, level='down', verbose=verbose >= 2)
 
     # calculating the number of bins and counts for up level
-    counts_up, bins_up = _create_histogram(durations_up, level='up')
+    counts_up, bins_up = _create_histogram(durations_up, level='up', verbose=verbose >= 2)
 
     # calculating durations in seconds
     durations_dn = durations_dn / samplerate
@@ -269,17 +269,17 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
         if fig:
             title = 'Fitted exponential decay, level down'
-            plt.figure(title)
+            Fig = plt.figure(fig + 2)
             plt.clf()
             plt.plot(time_scaling * bincentres_dn, counts_dn, 'o', label='Counts down')
             plt.plot(time_scaling * bincentres_dn, exp_function(bincentres_dn, A_dn_fit, B_dn_fit, gamma_dn_fit),
-                     'r', label=r'Fitted exponential decay \n $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
+                     'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
             plt.xlabel('Lifetime (ms)')
             plt.ylabel('Counts per bin')
             plt.legend()
             plt.title(title)
             if ppt:
-                addPPTslide(title=title, fig=plt.figure(title))
+                addPPTslide(title=title, fig=Fig)
 
         bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
 
@@ -292,17 +292,17 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
         if fig:
             title = 'Fitted exponential decay, level up'
-            plt.figure(title)
+            Fig = plt.figure(fig + 3)
             plt.clf()
             plt.plot(time_scaling * bincentres_up, counts_up, 'o', label='Counts up')
             plt.plot(time_scaling * bincentres_up, exp_function(bincentres_up, A_up_fit, B_up_fit, gamma_up_fit),
-                     'r', label=r'Fitted exponential decay \n $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
+                     'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
             plt.xlabel('Lifetime (ms)')
             plt.ylabel('Data points per bin')
             plt.legend()
             plt.title(title)
             if ppt:
-                addPPTslide(title=title, fig=plt.figure(title))
+                addPPTslide(title=title, fig=Fig)
 
         parameters['fit parameters exp. decay down'] = [A_dn_fit, B_dn_fit, gamma_dn_fit]
         parameters['fit parameters exp. decay up'] = [A_up_fit, B_up_fit, gamma_up_fit]
@@ -381,7 +381,7 @@ class TestRandomTelegraphSignal(unittest.TestCase):
                                    rate_down=rate_down, samplerate=samplerate)
 
         tunnelrate_dn, tunnelrate_up, _ = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
-                                                                min_duration=1, num_bins=40, fig=fig, verbose=2)
+                                                          min_duration=1, num_bins=40, fig=fig, verbose=2)
 
         self.assertTrue(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
         self.assertTrue(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)
