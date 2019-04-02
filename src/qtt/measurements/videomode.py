@@ -622,10 +622,10 @@ def guitest_videomode():
 
     digitizer = SimulationDigitizer(
         qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
-    station.components[digitizer.name] = digitizer
+    station.add_component(digitizer)
 
     station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
-    station.components[station.awg.name] = station.awg
+    station.add_component(station.awg)
 
     sweepparams = {'gates_horz': {'P1': 1}, 'gates_vert': {'P2': 1}}
     minstrument = (digitizer.name, [0])
@@ -638,6 +638,7 @@ def guitest_videomode():
     all = VideoMode.all_instances(verbose=0)
     assert(vm in all)
 
+    
 # %% Testing
 
 
