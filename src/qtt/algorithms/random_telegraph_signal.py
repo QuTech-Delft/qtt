@@ -168,11 +168,11 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
         figure_title = 'Histogram of two levels RTS'
-        plt.figure(fig + 1)
+        Fig=plt.figure(fig + 1)
         plt.clf()
         _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
         if ppt:
-            addPPTslide(title=title, fig=fig, notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
+            addPPTslide(title=title, fig=Fig, notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
                         par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] + ', std up:%.3f counts' % par_fit[3] + '.Separation between peaks gaussians: %.3f std' % separation + '. Split between two levels: %.3f' % split)
 
     if separation < min_sep:
