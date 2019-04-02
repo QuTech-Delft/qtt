@@ -7,11 +7,15 @@ matrix:
     sudo: true
     dist: xenial
     env: QT_QPA_PLATFORM=offscreen
-    
+    services:
+      - xvfb
+  
   - name: Full installation
     python: 3.6
     dist: xenial
     env: FULL_INSTALL=1
+    services:
+      - xvfb
 
 install:
     - pip install qcodes
@@ -28,7 +32,7 @@ install:
 script:
     - ls
     - pytest --version
-    - coverage run --source="./src"  -m pytest
+    - xvfb-run coverage run --source="./src"  -m pytest
     - mypy src --ignore-missing-imports
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         jupyter --version;
