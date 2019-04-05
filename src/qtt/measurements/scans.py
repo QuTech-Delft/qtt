@@ -1769,16 +1769,11 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
-            #memsize = select_digitizer_memsize(minstrhandle, period,
-            #                                   nsegments=nsegments,
-            #                                   verbose=verbose)
-            memsize, pre_trigger, signal_start, signal_end = select_m4i_memsize(
+            memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
                     minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose)
                 
-            segment_size = int(memsize/nsegments) # minstrhandle.segment_size()
+            segment_size = int(memsize_total/nsegments)
             post_trigger = segment_size - pre_trigger
-            
-            memsize_total = memsize
             
             minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
             dataraw = minstrhandle.multiple_trigger_acquisition(
