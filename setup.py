@@ -48,11 +48,6 @@ extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
 print('packages: %s' % find_packages())
 
-try:
-    import qcodes
-except ImportError as ex:
-    raise Exception('please install qcodes before running setup.py')
-
 setup(name='qtt',
       version=get_version(),
       use_2to3=False,
@@ -73,7 +68,7 @@ setup(name='qtt',
           'Programming Language :: Python :: 3.7',
           'Topic :: Scientific/Engineering'
       ],
-      license='Private',
+      license='MIT',
       package_dir={'': 'src'},
       packages=find_packages(where='./src'),
       install_requires=[
