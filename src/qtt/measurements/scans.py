@@ -1479,7 +1479,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         print('select_m4i_memsize %s: trace %d points, selected memsize %d' %
               (digitizer.name, number_points_period, memsize))
         print('select_m4i_memsize %s: pre and post trigger: %d %d' % (digitizer.name,
-                                                                      digitizer.data_memory_size() - digitizer.posttrigger_memory_size(),
+                                                                      digitizer.pretrigger_memory_size(),
                                                                       digitizer.posttrigger_memory_size()))
         print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
     return memsize, pre_trigger, signal_start, signal_end
@@ -1513,7 +1513,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
     post_trigger = digitizer.posttrigger_memory_size()
 
-    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=1)
+    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 
@@ -1564,7 +1564,7 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
     return memsize
 
 
-def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0):
+def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig = None):
     """ Measure block data with M4i
 
     Args:
@@ -1603,7 +1603,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
         data, _ = process_1d_sawtooth(raw_data.T, width, period, samplerate,
                                                              resolution=resolution, start_zero=start_zero,
-                                                             verbose=verbose)
+                                                             verbose=verbose, fig = fig)
     if verbose:
         print('measuresegment_m4i: processed_data: width %s, data shape %s' % (width, data.shape,))
 
@@ -1769,16 +1769,24 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
-            memsize = select_digitizer_memsize(minstrhandle, period,
-                                               nsegments=nsegments,
-                                               verbose=verbose)
-            post_trigger = minstrhandle.posttrigger_memory_size()
-            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
+            #memsize = select_digitizer_memsize(minstrhandle, period,
+            #                                   nsegments=nsegments,
+            #                                   verbose=verbose)
+            memsize, pre_trigger, signal_start, signal_end = select_m4i_memsize(
+                    minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose)
+                
+            segment_size = int(memsize/nsegments) # minstrhandle.segment_size()
+            post_trigger = segment_size - pre_trigger
+            
+            memsize_total = memsize
+            
+            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
             dataraw = minstrhandle.multiple_trigger_acquisition(
-                mV_range, memsize, memsize // nsegments, post_trigger)
+                mV_range, memsize_total, seg_size = segment_size, posttrigger_size = post_trigger)
             if isinstance(dataraw, tuple):
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1))
+            data=data[:,:,signal_start:signal_end]
             segment_time = np.linspace(0., period, data.shape[2])
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
             alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num,

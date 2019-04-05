@@ -197,6 +197,8 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             plt.figure(fig)
             plt.clf()
             MatPlot(ds.default_parameter_array(), num=fig)
+            plt.draw()
+            plt.pause(1e-3)
 
         print("Please click two different points on the addition line")
         offset, slope = click_line(fig=fig)
