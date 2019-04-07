@@ -77,6 +77,7 @@ def dictionary_to_dataset(data_dictionary):
         data_array = _dictionary_to_data_array(array_dict)
         dataset.add_array(data_array)
 
+    for array_key, array_dict in data_dictionary['arrays'].items():
         set_arrays_names = array_dict['set_arrays']
         set_arrays = tuple([dataset.arrays[name] for name in set_arrays_names])
         dataset.arrays[array_key].set_arrays = set_arrays

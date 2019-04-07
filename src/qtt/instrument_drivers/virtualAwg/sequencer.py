@@ -151,7 +151,7 @@ class Sequencer:
         if not sequencer.has_finished():
             raise PlottingNotPossibleException(template)
         (_, voltages, _) = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
-        return voltages[next(iter(voltages))]
+        return np.array(voltages[next(iter(voltages))])
 
     @staticmethod
     def __raw_data_to_array(sequence, sampling_rate):

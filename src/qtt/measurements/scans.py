@@ -247,7 +247,6 @@ def get_instrument(instr, station=None):
     raise Exception('could not find instrument %s' % str(instr))
 
 
-
 def get_minstrument_channels(minstrument):
     if isinstance(minstrument, tuple):
         minstrument = minstrument[1]
@@ -633,6 +632,7 @@ class sample_data_t(dict):
             value = max(value, b[0])
         return value
 
+
 def _convert_vectorname_to_parametername(vector_name, extra_string=None):
     parameter_name = re.sub(r'\(.*?\)', '', vector_name)
     if extra_string is not None:
@@ -1006,7 +1006,6 @@ def fastScan(scanjob, station):
         f (int): 0: no fast scan possible, 1: scan2Dfast, 2: all axis
 
     """
-
 
     awg = getattr(station, 'awg', None)
     if awg is None:
@@ -1479,7 +1478,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         print('select_m4i_memsize %s: trace %d points, selected memsize %d' %
               (digitizer.name, number_points_period, memsize))
         print('select_m4i_memsize %s: pre and post trigger: %d %d' % (digitizer.name,
-                                                                      digitizer.data_memory_size() - digitizer.posttrigger_memory_size(),
+                                                                      digitizer.pretrigger_memory_size(),
                                                                       digitizer.posttrigger_memory_size()))
         print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
     return memsize, pre_trigger, signal_start, signal_end
@@ -1513,7 +1512,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
     post_trigger = digitizer.posttrigger_memory_size()
 
-    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=1)
+    digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
 
@@ -1564,7 +1563,7 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
     return memsize
 
 
-def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0):
+def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None):
     """ Measure block data with M4i
 
     Args:
@@ -1596,14 +1595,14 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
     if len(width) == 2:
         data, _ = process_2d_sawtooth(raw_data.T, period, samplerate,
-                                            resolution, width, start_zero=start_zero, fig=None)
+                                      resolution, width, start_zero=start_zero, fig=None)
         measuresegment_m4i._latest_data = data
         measuresegment_m4i._latest_rawdata = raw_data
     else:
 
         data, _ = process_1d_sawtooth(raw_data.T, width, period, samplerate,
-                                                             resolution=resolution, start_zero=start_zero,
-                                                             verbose=verbose)
+                                      resolution=resolution, start_zero=start_zero,
+                                      verbose=verbose, fig=fig)
     if verbose:
         print('measuresegment_m4i: processed_data: width %s, data shape %s' % (width, data.shape,))
 
@@ -1769,16 +1768,19 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
-            memsize = select_digitizer_memsize(minstrhandle, period,
-                                               nsegments=nsegments,
-                                               verbose=verbose)
-            post_trigger = minstrhandle.posttrigger_memory_size()
-            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize)
+            memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
+                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose)
+
+            segment_size = int(memsize_total / nsegments)
+            post_trigger = segment_size - pre_trigger
+
+            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
             dataraw = minstrhandle.multiple_trigger_acquisition(
-                mV_range, memsize, memsize // nsegments, post_trigger)
+                mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
             if isinstance(dataraw, tuple):
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1))
+            data = data[:, :, signal_start:signal_end]
             segment_time = np.linspace(0., period, data.shape[2])
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
             alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num,
@@ -1901,7 +1903,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             if len(sg) > 1:
                 raise(Exception('AWG pulses does not yet support virtual gates'))
             waveform, _ = station.awg.sweepandpulse_gate({'gate': sg[0], 'sweeprange': sweepdata['range'],
-                                                         'period': period}, scanjob['pulsedata'])
+                                                          'period': period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
                 sweep_range = sweepdata['range']
@@ -2349,7 +2351,16 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
     """Convert the data of a 2D sweep to a DataSet."""
 
     scantype = loc_record['label']
-    if 'vec' not in scantype and not isinstance(sweepgates, dict):
+
+    vector_scan = False
+    if 'vec' in scantype:
+        vector_scan = True
+    if isinstance(sweepgates, dict):
+        vector_scan = True
+    if isinstance(sweepgates, list) and isinstance(sweepgates[0], dict):
+        vector_scan = True
+
+    if not vector_scan:
         # simple gate type
         gate_horz = getattr(gates, sweepgates[0])
         gate_vert = getattr(gates, sweepgates[1])
@@ -2379,8 +2390,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
 
         sweep_horz = p1[xvals]
         sweep_vert = p2[yvals]
-        # sweep_horz=p1[0:data.shape[0]:1]
-        # sweep_vert=p2[0:data.shape[0]:1]
+
         assert (data.shape[0] == len(list(sweep_vert)))
         assert (data.shape[1] == len(list(sweep_horz)))
 
