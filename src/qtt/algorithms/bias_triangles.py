@@ -58,7 +58,7 @@ def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff
                     through clicked points 1 and 2
                     'clicked_points' = coordinates of the three clicked points
     """
-    
+
     if diff_dir is not None:
         diffDataset(ds, diff_dir='xy')
         array_name = 'diff_dir_xy'
@@ -96,7 +96,8 @@ def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff
         clicked_pts = points
     else:
         plt.title('Select three points')
-        plt.draw(); plt.pause(1e-3)
+        plt.draw()
+        plt.pause(1e-3)
         clicked_pts = qtt.pgeometry.ginput(3, '.c')
 
     qtt.pgeometry.plotPoints(clicked_pts, ':c')
@@ -130,6 +131,7 @@ def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff
     plotAnalysedLines(clicked_pts, linePoints1_2, line_vertical, line_horizontal, linePt3_ints, intersectPoint)
 
     return {'intersection_point': intersectPoint, 'distance': line_length, 'clicked_points': clicked_pts, 'array_names': [array.name for array in ds.default_parameter_array().set_arrays]}
+
 
 def lever_arm(bias, results, fig=None):
     """ Calculates the lever arm of a dot by using bias triangles in charge sensing. Uses currently active figure.
