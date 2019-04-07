@@ -40,7 +40,7 @@ def plotAnalysedLines(clicked_pts, linePoints1_2, linePt3_vert, linePt3_horz, li
     qtt.pgeometry.plotPoints(linePt3_ints_short, 'b')
 
 
-def perpLineIntersect(ds, description, vertical=True, points=None):
+def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff_dir='xy'):
     """ Takes three points in a graph and calculates the length of a linepiece 
         between a line through points 1,2 and a vertical/horizontal line
         through the third point. Uses the currently active figure.
@@ -48,8 +48,9 @@ def perpLineIntersect(ds, description, vertical=True, points=None):
         Args:
             ds (dataset): dataset with charge stability diagram and gate voltage in mV
             vertical (bool): find intersection of point with line vertically (True) 
-            or horizontally (False)
-            description: 
+                or horizontally (False)
+            points (None or array): if None, then let the user select points
+            diff_dir (None or 'xy'): specification of differentiation direction
 
         Returns:
             (dict): 'intersection_point' = intersetcion point
@@ -57,17 +58,18 @@ def perpLineIntersect(ds, description, vertical=True, points=None):
                     through clicked points 1 and 2
                     'clicked_points' = coordinates of the three clicked points
     """
-    diffDataset(ds, diff_dir='xy')
-    plt.figure(588)
+
+    if diff_dir is not None:
+        diffDataset(ds, diff_dir='xy')
+        array_name = 'diff_dir_xy'
+    else:
+        array_name = ds.default_parameter_name()
+    plt.figure(fig)
     plt.clf()
-    MatPlot(ds.diff_dir_xy, num=588)
+    MatPlot(ds.arrays[array_name], num=fig)
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    ax.set_xlabel(ax.get_xlabel()[:2])
-    ax.set_ylabel(ax.get_ylabel()[:2])
 
-#    ax = plt.gca()
-#    ax.set_autoscale_on(False)
     if description == 'lever_arm' and vertical == True:
         print('''Please click three points;
             Point 1: on the addition line for the dot represented on the vertical axis
@@ -87,12 +89,15 @@ def perpLineIntersect(ds, description, vertical=True, points=None):
             Point 3: on the (0, 0) - (0, 1) addition line ''')
     else:
         # Do something here such that no three points need to be clicked
-        print('''Please make sure that the descirption argument of this function
+        raise Exception('''Please make sure that the description argument of this function
               is either 'lever_arm' or 'E_charging' ''')
 
     if points is not None:
         clicked_pts = points
     else:
+        plt.title('Select three points')
+        plt.draw()
+        plt.pause(1e-3)
         clicked_pts = qtt.pgeometry.ginput(3, '.c')
 
     qtt.pgeometry.plotPoints(clicked_pts, ':c')
@@ -125,7 +130,8 @@ def perpLineIntersect(ds, description, vertical=True, points=None):
     # visualize
     plotAnalysedLines(clicked_pts, linePoints1_2, line_vertical, line_horizontal, linePt3_ints, intersectPoint)
 
-    return {'intersection_point': intersectPoint, 'distance': line_length, 'clicked_points': clicked_pts}
+    return {'intersection_point': intersectPoint, 'distance': line_length, 'clicked_points': clicked_pts, 'array_names': [array.name for array in ds.default_parameter_array().set_arrays]}
+
 
 def lever_arm(bias, results, fig=None):
     """ Calculates the lever arm of a dot by using bias triangles in charge sensing. Uses currently active figure.
@@ -150,9 +156,9 @@ def lever_arm(bias, results, fig=None):
         ax = plt.gca()
         ax.set_autoscale_on(False)
         if np.round(results['clicked_points'][0, 2], 2) == np.round(results['intersection_point'][0], 2):
-            gate = ax.get_ylabel()[:2]
+            gate = ax.get_ylabel()
         else:
-            gate = ax.get_xlabel()[:2]
+            gate = ax.get_xlabel()
         title = r'Lever arm %s:   %.2f $\mu$eV/mV' % (gate, lev_arm)
         plt.annotate('Length %s: %.2f mV' % (gate, line_length), xy=(0.05, 0.1), xycoords='axes fraction', color='k')
         plt.annotate(title, xy=(0.05, 0.05), xycoords='axes fraction', color='k')
