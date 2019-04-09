@@ -11,7 +11,6 @@ import numpy as np
 import warnings
 import logging
 from scipy import ndimage
-from colorama import Fore
 import pyqtgraph
 
 import qtt
@@ -450,7 +449,7 @@ class VideoMode:
     def run(self, start_readout=True):
         """ Programs the AWG, starts the read-out and the plotting. """
         if self.verbose:
-            print(Fore.BLUE + '%s: run ' % (self.__class__.__name__,) + Fore.RESET)
+            print('%s: run ' % (self.__class__.__name__,) )
         scan_dimensions = self.scan_dimension()
         virtual_awg = getattr(self.station, 'virtual_awg', None)
         awg = getattr(self.station, 'awg', None)
@@ -464,8 +463,7 @@ class VideoMode:
 
         if start_readout:
             if self.verbose:
-                print(Fore.BLUE + '%s: run: startreadout' %
-                      (self.__class__.__name__,) + Fore.RESET)
+                print('%s: run: startreadout' % (self.__class__.__name__,))
             self.startreadout()
 
     def __run_1d_scan(self, awg, virtual_awg, period=1e-3):
@@ -518,8 +516,7 @@ class VideoMode:
             else:
                 raise Exception('arguments not supported')
             if self.verbose:
-                print(Fore.BLUE + '%s: 2d scan, define callback ' %
-                      (self.__class__.__name__,) + Fore.RESET)
+                print('%s: 2d scan, define callback ' % (self.__class__.__name__,))
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels),
                                                resolution=self.resolution, diff_dir=self.diff_dir)
