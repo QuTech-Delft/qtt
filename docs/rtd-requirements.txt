@@ -1,7 +1,6 @@
 # to install qtt
 apscheduler
 attrs
-colorama
 coverage
 dulwich
 hickle
@@ -16,7 +15,6 @@ qcodes
 qtpy
 qupulse
 sympy
-slacker
 scikit-image
 scipy >= 0.18
 tables

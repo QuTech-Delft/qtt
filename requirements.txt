@@ -1,6 +1,5 @@
 apscheduler
 attrs>=18.2.0
-colorama
 coverage
 dulwich
 hickle>=3.1
@@ -15,7 +14,6 @@ qcodes
 qtpy
 qupulse
 sympy
-slacker
 scikit-image
 scipy>=0.18
 tables

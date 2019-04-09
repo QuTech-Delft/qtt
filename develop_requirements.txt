@@ -4,7 +4,6 @@ autopep8
 apscheduler
 coverage
 certifi
-colorama
 hickle>= 3.1
 jupyter
 numpy>=1.13
@@ -25,7 +24,6 @@ redis
 scipy>=0.18
 scikit-image
 scikit-learn
-slacker
 simplejson
 wrapt
 

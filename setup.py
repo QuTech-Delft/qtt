@@ -31,7 +31,6 @@ extras = {
     'pandas': ('pandas', '0.15', None),
     'attrs': ('attr', '16.2.0', 'attrs'),
     'h5py': ('h5py', '0.1', None),
-    'slacker': ('slacker', '0.1', None),
     'pyzmqrpc': ('zmqrpc', '1.5', None),
     'pytables': ('tables', '3.2', None),
     'apscheduler': ('apscheduler', '3.4', None),
@@ -71,8 +70,8 @@ setup(name='qtt',
       package_dir={'': 'src'},
       packages=find_packages(where='./src'),
       install_requires=[
-          'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
-          'numpy>=1.11', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.1.5', 'Polygon3', 'scipy'
+          'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
+          'numpy>=1.11', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.1.5', 'Polygon3', 'scipy', 'pyqtgraph'
       ],
       extras_require=extras_require,
       zip_safe=False,
