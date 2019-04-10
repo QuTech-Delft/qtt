@@ -19,15 +19,23 @@ from qcodes import MatPlot
 # %%
 
 
-def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2.5,
+def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=None,
                      diff_dir='dx', plot=False, verbose=1, param={}):
     """ Fits an anti-crossing model to a 2D scan
 
     The model fitted is without tunnel coupling.
 
     Args:
-        dataset: (qcodes dataset) the 2D scan measurement dataset
-
+        dataset (qcodes dataset): the 2D scan measurement dataset
+        width_guess (None or float): Initial estimate for width of anti-crossing in the same unit as the dataset axis.
+        angles_guess (None or float): Initial estimate for angles of anti-crossing in radians
+        psi (None or float): angle for cross section of anti-crossing
+        w (object): Not used any more
+        diff_dir (str): differentiation direction
+        plot (int): If non-zero, then plot into specified matplotlib window
+        verbose (int): verbosity level
+        param (dict): additional parameters
+        
     Returns:
         anticross_fit: (dict) the parameters describing the fitted anti-cross
                        optionally the cost for fitting and the figure number
@@ -42,8 +50,8 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
     """
     abs_val = True
 
-    a = dataset.default_parameter_array().set_arrays
-    labels = [x.name for x in a]
+    set_arrays = dataset.default_parameter_array().set_arrays
+    labels = [x.name for x in set_arrays]
 
     im, tr = qtt.data.dataset2image(dataset)
     imextent = tr.scan_image_extent()
@@ -78,14 +86,14 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
 
     # fit anti-crossing (twice)
     res = fitModel(param0e, imx, verbose=verbose, cfig=10, istep=istep,
-                   istepmodel=istepmodel, ksizemv=ksizemv, w=w, use_abs=abs_val)
+                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val)
     fitparam = res.x
     res = fitModel(fitparam, imx, verbose=verbose, cfig=10, istep=istep,
-                   istepmodel=istepmodel, ksizemv=ksizemv, w=w, use_abs=abs_val)
+                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val)
     fitparam = res.x
 
     cost, patch, cdata, _ = evaluateCross(
-        fitparam, imx, verbose=0, fig=None, istep=istep, istepmodel=istepmodel, w=w)
+        fitparam, imx, verbose=0, fig=None, istep=istep, istepmodel=istepmodel)
     ccpixel_straight = cdata[0]
     ccpixel = qtt.pgeometry.projectiveTransformation(np.linalg.inv(Hstraight), (istepmodel / istep) * ccpixel_straight)
 
