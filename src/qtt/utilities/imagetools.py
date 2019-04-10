@@ -387,7 +387,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
 
 
 def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
-             istepmodel=.5, cb=None, use_abs=False):
+             istepmodel=.5, cb=None, use_abs=False, model_line_width = 2.5):
     """ Fit model of an anti-crossing 
 
     This is a wrapper around evaluateCross and the scipy optimization routines.
@@ -400,7 +400,7 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
     """
 
     def costfun(param0): return evaluateCross(param0, imx, fig=None,
-                                              istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
+                                              istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs, linewidth = model_line_width)[0]
 
     vv = []
 

@@ -19,7 +19,7 @@ from qcodes import MatPlot
 # %%
 
 
-def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=None,
+def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2.5,
                      diff_dir='dx', plot=False, verbose=1, param={}):
     """ Fits an anti-crossing model to a 2D scan
 
@@ -30,7 +30,7 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=N
         width_guess (None or float): Initial estimate for width of anti-crossing in the same unit as the dataset axis.
         angles_guess (None or float): Initial estimate for angles of anti-crossing in radians
         psi (None or float): angle for cross section of anti-crossing
-        w (object): Not used any more
+        w (float): Width of lines in anti-crossing model
         diff_dir (str): differentiation direction
         plot (int): If non-zero, then plot into specified matplotlib window
         verbose (int): verbosity level
@@ -86,10 +86,10 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=N
 
     # fit anti-crossing (twice)
     res = fitModel(param0e, imx, verbose=verbose, cfig=10, istep=istep,
-                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val)
+                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val, model_line_width = w)
     fitparam = res.x
     res = fitModel(fitparam, imx, verbose=verbose, cfig=10, istep=istep,
-                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val)
+                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val, model_line_width = w)
     fitparam = res.x
 
     cost, patch, cdata, _ = evaluateCross(
