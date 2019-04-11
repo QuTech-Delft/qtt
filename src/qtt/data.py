@@ -765,7 +765,7 @@ class image_transform:
     def scan_resolution(self):
         """ Return the scan resulution in [units]/pixel """
         return self._istep
-    
+
     def scan_image_extent(self):
         """ Scan extent
 

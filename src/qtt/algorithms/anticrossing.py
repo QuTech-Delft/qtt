@@ -35,7 +35,7 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
         plot (int): If non-zero, then plot into specified matplotlib window
         verbose (int): verbosity level
         param (dict): additional parameters
-        
+
     Returns:
         anticross_fit: (dict) the parameters describing the fitted anti-cross
                        optionally the cost for fitting and the figure number
@@ -86,10 +86,10 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
 
     # fit anti-crossing (twice)
     res = fitModel(param0e, imx, verbose=verbose, cfig=10, istep=istep,
-                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val, model_line_width = w)
+                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val, model_line_width=w)
     fitparam = res.x
     res = fitModel(fitparam, imx, verbose=verbose, cfig=10, istep=istep,
-                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val, model_line_width = w)
+                   istepmodel=istepmodel, ksizemv=ksizemv, use_abs=abs_val, model_line_width=w)
     fitparam = res.x
 
     cost, patch, cdata, _ = evaluateCross(
