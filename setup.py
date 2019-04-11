@@ -71,7 +71,7 @@ setup(name='qtt',
       packages=find_packages(where='./src'),
       install_requires=[
           'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
-          'numpy>=1.11', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.1.5', 'Polygon3', 'scipy', 'pyqtgraph'
+          'numpy>=1.11', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.1.5', 'Polygon3', 'scipy', 'pyqtgraph', 'qupulse'
       ],
       extras_require=extras_require,
       zip_safe=False,
