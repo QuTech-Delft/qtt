@@ -1,12 +1,8 @@
-import unittest
 from unittest import TestCase
 from unittest.mock import patch
 
 import qtt.measurements.scans
 import qtt.instrument_drivers.TimeStamp
-
-# %%
-
 
 class TestTimeStampInstrument(TestCase):
 
@@ -20,7 +16,6 @@ class TestTimeStampInstrument(TestCase):
     @patch('time.time', return_value=0.124)
     def test_TimeStampInstrument(self, time_method):
         timestamp = self.timestamp_instrument.timestamp()
-        assert(isinstance(timestamp, float))
         self.assertEqual(timestamp, 0.124)
         time_method.assert_called_with()
 
@@ -31,11 +26,8 @@ class TestTimeStampInstrument(TestCase):
 
     def test_TimeStampInstrument_offset(self):
         timestamp = self.timestamp_instrument.timestamp()
+        self.assertIsInstance(timestamp, float)
         self.timestamp_instrument.timestamp_offset(timestamp)
         timestamp = self.timestamp_instrument.timestamp()
         self.assertTrue(timestamp >= 0)
         self.assertTrue(timestamp <= 1)
-
-
-if __name__ == '__main__':
-    unittest.main()
