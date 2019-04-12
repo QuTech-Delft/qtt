@@ -6,6 +6,7 @@ from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.data_set import DataArray, DataSet
 from qilib.utils import PythonJsonStructure
 from qtt.measurements.new.interfaces import AcquisitionScopeInterface
+from qcodes.instrument_drivers.ZI import ZIUHFLI
 
 
 class UhfliScopeReader(AcquisitionScopeInterface):
@@ -37,7 +38,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__uhfli.daq.sync()
         self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self.__address), 1)
 
-    def acquire(self, data_set: DataSet, number_of_records: Optional[int]=1, timeout: Optional[int]=30) -> None:
+    def acquire(self, data_set: DataSet, number_of_records: int=1, timeout: float=30) -> None:
         """ Collects traces from the UHFLI, where the readout data is added to the given dataset.
 
         Args:
@@ -75,36 +76,36 @@ class UhfliScopeReader(AcquisitionScopeInterface):
             data_set.add_array(data_array)
 
     @property
-    def number_of_averages(self):
+    def number_of_averages(self) -> int:
         return self.__uhfli.scope_average_weight.get()
 
     @number_of_averages.setter
-    def number_of_averages(self, value):
+    def number_of_averages(self, value: int) -> None:
         self.__uhfli.scope_segments.set('OFF' if value==1 else 'ON')
         self.__uhfli.scope_average_weight.set(value)
 
     @property
-    def input_range(self):
+    def input_range(self) -> List[float]:
         range_channel_1 = self.__uhfli.signal_input1_range.get()
         range_channel_2 = self.__uhfli.signal_input2_range.get()
         return [range_channel_1, range_channel_2]
 
     @input_range.setter
-    def input_range(self, value):
+    def input_range(self, value: List[float]) -> None:
         range_channel_1, range_channel_2 = value
         self.__uhfli.signal_input1_range.set(range_channel_1)
         self.__uhfli.signal_input2_range.set(range_channel_2)
 
     @property
-    def sample_rate(self):
+    def sample_rate(self) -> float:
         return self.__uhfli.scope_samplingrate_float.get()
 
     @sample_rate.setter
-    def sample_rate(self, value):
+    def sample_rate(self, value: float) -> None:
         self.__uhfli.scope_samplingrate_float.set(value)
 
     @property
-    def period(self):
+    def period(self) -> float:
         return self.__uhfli.scope_duration.get()
 
     @period.setter
@@ -124,7 +125,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
     def trigger_enabled(self, value: bool) -> None:
         self.__uhfli.scope_trig_enable.set('ON' if value else 'OFF')
 
-    def set_trigger_settings(self, channel: str, level: float, slope: str, delay: float) -> None:
+    def set_trigger_settings(self, channel: int, level: float, slope: str, delay: float) -> None:
         self.__uhfli.scope_trig_signal.set(channel)
         self.__uhfli.scope_trig_level.set(level)
         self.__uhfli.scope_trig_slope.set(slope)
@@ -132,14 +133,14 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__uhfli.scope_trig_reference.set(0)
 
     @property
-    def enabled_channels(self):
+    def enabled_channels(self) -> List[int]:
         enabled_channels = self.__uhfli.scope_channels.get()
         if enabled_channels == 3:
             return [1, 2]
         return [enabled_channels]
 
     @enabled_channels.setter
-    def enabled_channels(self, value):
+    def enabled_channels(self, value: List[int]):
         if not isinstance(value, list) or len(value) < 1 or len(value) > 2:
             raise ValueError('Invalid enabled channels specification {}!'.format(value))
         self.__uhfli.scope_channels.set(value[0] if value != [1, 2] else 3)
@@ -149,7 +150,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         channel_input.set(attribute)
 
     @staticmethod
-    def __get_uhfli_scope_records(address, uhfli, number_of_records, timeout):
+    def __get_uhfli_scope_records(address: str, uhfli: ZIUHFLI, number_of_records: int, timeout: float):
         uhfli.scope.execute()
 
         records = 0

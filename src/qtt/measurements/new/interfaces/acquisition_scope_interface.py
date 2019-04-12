@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import Any, List
 
 from qtt.measurements.new.interfaces import AcquisitionInterface
 
@@ -13,7 +13,7 @@ class AcquisitionScopeInterface(AcquisitionInterface):
 
     @property
     @abstractmethod
-    def input_range(self) -> float:
+    def input_range(self) -> List[float]:
         """ The input range of the channels."""
 
     @property

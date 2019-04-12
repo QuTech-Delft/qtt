@@ -34,7 +34,7 @@ class AcquisitionInterface(ABC):
         """
 
     @abstractmethod
-    def acquire(self, data_set: DataSet, number_of_records: Optional[int], timeout: Optional[int]):
+    def acquire(self, data_set: DataSet, number_of_records: int, timeout: float):
         """ Reads raw-data from the acquisition device.
 
         Args:
