@@ -663,7 +663,7 @@ class scanjob_t(dict):
 
     def add_sweep(self, param, start, end, step, **kwargs):
         """ Add sweep to scan job """
-        sweep = {'param': param, 'start': start, 'end': end, 'step': step, **kwargs}
+        sweep = {'param': param, 'start': float(start), 'end': float(end), 'step': step, **kwargs}
         if not 'sweepdata' in self:
             self['sweepdata'] = sweep
         elif 'stepdata' not in self:
