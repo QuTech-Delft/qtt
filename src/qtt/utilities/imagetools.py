@@ -387,7 +387,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
 
 
 def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
-             istepmodel=.5, cb=None, use_abs=False, w=2.5):
+             istepmodel=.5, cb=None, use_abs=False, model_line_width = 2.5):
     """ Fit model of an anti-crossing 
 
     This is a wrapper around evaluateCross and the scipy optimization routines.
@@ -399,10 +399,8 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
 
     """
 
-    samplesize = [int(ksizemv / istepmodel), int(ksizemv / istepmodel)]
-
     def costfun(param0): return evaluateCross(param0, imx, fig=None,
-                                              istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs)[0]
+                                              istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs, linewidth = model_line_width)[0]
 
     vv = []
 
@@ -428,7 +426,6 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
         paramy = param0
     res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead',
                                   options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
-    #res = scipy.optimize.minimize(costfun, res.x, method='Powell',  options={'maxiter': 3000, 'maxfev': 101400, 'xtol': 1e-8, 'disp': verbose>=2}, callback=cb)
 
     if verbose:
         print('fitModel: score %.2f -> %.2f' % (costfun(param0), res.fun))
