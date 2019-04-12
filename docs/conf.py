@@ -17,9 +17,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- General configuration ------------------------------------------------
@@ -34,7 +31,6 @@
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
-#    'nbsphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
     'sphinx.ext.autosummary',
@@ -130,7 +126,7 @@ language = None
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'untitled.*py',
-                'notebooks/.ipynb_checkpoints', '../qtt/loggingGUI.py', '../qtt/debug.py', '../qtt/legacy.py',  'qtt/scans.py', '../qtt/deprecated/*']
+                'notebooks/.ipynb_checkpoints', '../src/qtt/loggingGUI.py', '../src/qtt/debug.py', '../src/qtt/legacy.py',  'src/qtt/scans.py', '../src/qtt/deprecated/*']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -274,7 +270,7 @@ if 1:
             "-f",
             "-M",
             "-o", ".",
-            "../qtt"
+            "../src/qtt"
         ] + ignore_paths
     
         # Sphinx 1.7+
