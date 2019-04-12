@@ -1,3 +1,5 @@
+import time
+
 import matplotlib.pyplot as plt
 from itertools import cycle
 from qcodes import Station, Measure
@@ -57,10 +59,14 @@ scope_reader.initialize(configuration)
 scope_reader.number_of_averages = 1
 scope_reader.input_range = [0.5, 1.0]
 scope_reader.sample_rate = 450e6
-scope_reader.period = 1e-5
+scope_reader.period = 1e-3
 
 scope_reader.enabled_channels = [1]
 scope_reader.set_input_signal(1, 'Signal Input 1')
+
+scope_reader.trigger_enabled = False
+scope_reader.set_trigger_settings('Trig Input 1', 0.2, 'Fall', 0)
+scope_reader.prepare_acquisition()
 
 
 # READOUT
@@ -70,13 +76,14 @@ plt.figure()
 plt.ion()
 plt.show()
 
-scope_reader.trigger_enabled = False
-scope_reader.set_trigger_settings('Trig Input 1', 0.2, 'Fall', 0)
-scope_reader.prepare_acquisition()
+samples = 100
+start = time.time()
 
-for number in range(1, 100):
+for number in range(1, samples):
     scope_reader.acquire(data_set)
-    plot_1D_dataset(plt, data_set, 'ScopeTime', 'ScopeTrace_{:03d}'.format(number), 'Time [sec.]', 'Amplitude [V]')
+    # plot_1D_dataset(plt, data_set, 'ScopeTime', 'ScopeTrace_{:03d}'.format(number), 'Time [sec.]', 'Amplitude [V]')
+
+end = time.time()
+print(samples / (end - start))
 
 scope_reader.finalize_acquisition()
-print(data_set)
