@@ -1774,7 +1774,8 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             segment_size = int(memsize_total / nsegments)
             post_trigger = segment_size - pre_trigger
 
-            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
+            #minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
+            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize_total, termination=None)
             dataraw = minstrhandle.multiple_trigger_acquisition(
                 mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
             if isinstance(dataraw, tuple):
