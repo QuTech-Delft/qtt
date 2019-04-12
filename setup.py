@@ -4,11 +4,13 @@ from importlib import import_module
 import platform
 import re
 
+
 def readme():
     with open('README.md', encoding='utf-8') as f:
         return f.read()
 
-def get_version(verbose=1, filename='qtt/version.py'):
+
+def get_version(verbose=1, filename='src/qtt/version.py'):
     """ Extract version information from source code """
 
     with open(filename, 'r') as f:
@@ -19,6 +21,7 @@ def get_version(verbose=1, filename='qtt/version.py'):
         print('get_version: %s' % version)
     return version
 
+
 extras = {
     # name: (module_name, minversion, pip_name)
     'MatPlot': ('matplotlib', '1.5', None),
@@ -28,28 +31,21 @@ extras = {
     'pandas': ('pandas', '0.15', None),
     'attrs': ('attr', '16.2.0', 'attrs'),
     'h5py': ('h5py', '0.1', None),
-    'slacker': ('slacker', '0.1', None),
     'pyzmqrpc': ('zmqrpc', '1.5', None),
-    'pytables': ('tables', '3.2', None),    
-    'colorama': ('colorama', '0.1', None),    
-    'apscheduler': ('apscheduler', '3.4', None),    
-    'Polygon3': ('Polygon', '0.1', None),    
-    'pyqtgraph': ('pyqtgraph', '0.11', None),    
-    'pyqt5': ('PyQt5', '0.11', 'pyqt5'),    
+    'pytables': ('tables', '3.2', None),
+    'apscheduler': ('apscheduler', '3.4', None),
+    'Polygon3': ('Polygon', '0.1', None),
+    'pyqtgraph': ('pyqtgraph', '0.11', None),
+    'pyqt5': ('PyQt5', '0.11', 'pyqt5'),
 }
 
-if platform.system()=='Windows':
-    extras['pywin32'] =  ('win32', '0.1', None)
+if platform.system() == 'Windows':
+    extras['pywin32'] = ('win32', '0.1', None)
 
 extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
 
 print('packages: %s' % find_packages())
 
-try:
-	import qcodes
-except ImportError as ex:
-	raise Exception('please install qcodes before running setup.py')
-	
 setup(name='qtt',
       version=get_version(),
       use_2to3=False,
@@ -70,20 +66,12 @@ setup(name='qtt',
           'Programming Language :: Python :: 3.7',
           'Topic :: Scientific/Engineering'
       ],
-      license='Private',
-      # if we want to install without tests:
-      # packages=find_packages(exclude=["*.tests", "tests"]),
-      packages=find_packages(),
-      #requires=['numpy', 'matplotlib', 'scipy', 'qcodes', 'pandas', 'attrs', 'qtpy', 'slacker', 'nose', 'hickle'],
+      license='MIT',
+      package_dir={'': 'src'},
+      packages=find_packages(where='./src'),
       install_requires=[
-          'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'slacker', 'hickle', 'pyzmqrpc',
-          'numpy>=1.11', 'scikit-image',
-          'IPython>=0.1',
-          'qcodes>=0.1.5',
-          'Polygon3',
-          'scipy'
-          # nose is only for tests, but we'd like to encourage people to run tests!
-          #'nose>=1.3',
+          'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
+          'numpy>=1.11', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.1.5', 'Polygon3', 'scipy', 'pyqtgraph', 'qupulse'
       ],
       extras_require=extras_require,
       zip_safe=False,

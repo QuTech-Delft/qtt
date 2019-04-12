@@ -1,37 +1,47 @@
 language: python
-cache: pip
 
 matrix:
   include:
-  - name: "Minimal install"
-    python: "3.6"
-    env: DO_NOTEBOOKS=0 FULL_INSTALL=0
-  - name: "Full install"
-    python: "3.6"
-    env: DO_NOTEBOOKS=1 FULL_INSTALL=1
+  - name: Minimal installation
+    python: 3.6
+    sudo: true
+    dist: xenial
+    env: QT_QPA_PLATFORM=offscreen
+    services:
+      - xvfb
+  
+  - name: Full installation
+    python: 3.6
+    dist: xenial
+    env: FULL_INSTALL=1
+    services:
+      - xvfb
 
 install:
-    - if [ "$FULL_INSTALL" == "1" ]; then
-      echo "Full installation! DO_NOTEBOOKS=$DO_NOTEBOOKS";
-      fi
+    - pip install qcodes
     - pip install -r requirements.txt
-    - if [ "$FULL_INSTALL" == "1" ]; then
-      pip install -r develop_requirements.txt;
+    - pip install opencv-python coveralls
+    - pip install mypy
+    - if [[ "$FULL_INSTALL" == "1" ]]; then
+        echo "Full Installation";
+        pip install -r develop_requirements.txt;
       fi
-    # opencv is needed for most of the tests right now
-    - pip install opencv-python;
-    # doing a normal python setup.py install gives issues with pytest
-    - python setup.py develop
-
-# for xvfb details see https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui
-  
-script: 
+    - pip install -e .
+    - export QT_QPA_PLATFORM=offscreen
+ 
+script:
     - ls
     - pytest --version
-    - xvfb-run -a pytest 
-    # run notebooks
-    - if [ $FULL_INSTALL == "1" ]; then
-      jupyter --version;
-      source docs/notebooks/run_notebooks.sh;
+    - xvfb-run -a coverage run --source="./src"  -m pytest
+    - mypy src --ignore-missing-imports
+    - if [[ "$FULL_INSTALL" == "1" ]]; then
+        jupyter --version;
+        source docs/notebooks/run_notebooks.sh;
       fi
+
+after_success:
+  - coveralls
     
+
+# - xvfb-run -a pytest
+# https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui

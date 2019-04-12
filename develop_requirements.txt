@@ -4,11 +4,10 @@ autopep8
 apscheduler
 coverage
 certifi
-colorama
 hickle>= 3.1
 jupyter
-numpy >= 1.13
-matplotlib >= 2.1
+numpy>=1.13
+matplotlib>=2.1
 pandas
 qtpy
 h5py
@@ -20,12 +19,11 @@ pyzmqrpc
 pyqtgraph
 PyQt5
 qcodes
-git+https://github.com/qutech/qupulse#egg=qupulse
+qupulse
 redis
-scipy >= 0.18
+scipy>=0.18
 scikit-image
 scikit-learn
-slacker
 simplejson
 wrapt
 
@@ -38,3 +36,4 @@ sphinx-automodapi
 nbsphinx
 pypandoc>=1.3
 jupyter_contrib_nbextensions
+pandoc [conda]

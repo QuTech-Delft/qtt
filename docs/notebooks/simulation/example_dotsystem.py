@@ -37,8 +37,8 @@ class DoubleDot(DotSystem):
         self.varnames = ['det1', 'det2',
                          'osC1', 'osC2', 'isC1', 'isC2', 'tun1', 'tun2']
         self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
-        self.makevars()
-        self.makevarMs()
+        self.make_variables()
+        self._make_variable_matrices()
 
 ds = DoubleDot()
 self = ds
@@ -75,8 +75,8 @@ class FourDot(DotSystem):
         self.varnames += ['isC%d' % (i + 1) for i in range(self.ndots)]
         self.varnames += ['tun%d' % (i + 1) for i in range(self.ndots)]
         self.varnames += itertools.chain(* [['eps%d%d' % (d + 1, orb + 1) for d in range(self.ndots)] for orb in range(0, self.maxelectrons)])
-        self.makevars()
-        self.makevarMs()
+        self.make_variables()
+        self._make_variable_matrices()
 
 ds = FourDot()
 self = ds

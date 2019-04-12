@@ -12,7 +12,6 @@ dependencies:
 - chardet
 - certifi
 - dulwich
-- colorama
 - coverage
 - cycler
 - decorator
@@ -40,7 +39,7 @@ dependencies:
 - networkx
 - nose
 - notebook
-- numpy==1.13
+- numpy
 - numpydoc
 - olefile
 - openssl
@@ -80,7 +79,6 @@ dependencies:
 - sip
 - six
 - sympy
-- snowballstemmer
 - sphinx
 - sphinxcontrib
 - sphinxcontrib-websupport
@@ -107,7 +105,6 @@ dependencies:
   - redis
   - rope-py3k
   - spirack
-  - slacker
   - wrapt
 #  - "dulwich --global-option='--pure'"
 

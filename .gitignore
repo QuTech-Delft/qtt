@@ -42,7 +42,7 @@ htmlcov/
 .tox/
 .coverage
 .coverage.*
-.cache
+.*_cache
 nosetests.xml
 coverage.xml
 *,cover
@@ -89,6 +89,6 @@ test*.bin
 test*.pickle
 *.profile
 model.png
-test*py
 .pytest_cache
 .vscode
+docs/modules.rst
