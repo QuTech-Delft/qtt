@@ -114,11 +114,7 @@ def get_version(verbose=1, filename='qtt/version.py'):
 
 
 # The short X.Y version.
-if 0:    
-    import qtt
-    version = '{}'.format(qtt.__version__)
-else:
-    version = get_version(verbose=1, filename='../qtt/version.py')
+version = get_version(verbose=1, filename='../src/qtt/version.py')
     
 # The full version, including alpha/beta/rc tags.
 release = version
