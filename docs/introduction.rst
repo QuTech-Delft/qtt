@@ -26,7 +26,7 @@ QTT can be installed as a pip package:
 
 .. code-block:: console
 
-    $ pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+    $ pip install --upgrade qtt 
 
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 
@@ -34,18 +34,18 @@ For development we advice to install from source. First retrieve the source code
    
    $ python setup.py develop
 
-For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md <INSTALL-spinqubits.md>`_.
+For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md <https://github.com/VandersypenQutech/spin-projects/blob/master/INSTALL.md>`_ in the spin-projects repository.
 
 Updating QTT
 ------------
 
-If you registered qtt with Python via `python setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`.
+If you registered qtt with Python via ``python setup.py develop`` or ``pip install -e .``, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`.
 
 If you installed qtt via the pip package you can run the pip install comment again:
 
 .. code-block:: console
 
-    $ pip install --upgrade qtt --no-index --find-links file:////tudelft.net/staff-groups/tnw/ns/qt/spin-qubits/software/pip/qtt
+    $ pip install --upgrade qtt
 
 Usage
 -----
@@ -59,7 +59,7 @@ We advise to use the following settings when using QTT:
 
 * If you use `Spyder <https://github.com/spyder-ide/spyder>`_ then use the following settings:
 
-  - Use a ``IPython`` console and set the IPyhton backend graphics option to ``QT``. This ensures correctly displaying the ``ParameterViewer`` and ``DataBrowser``
+  - Use a ``IPython`` console and set the IPython backend graphics option to ``QT``. This ensures correctly displaying the ``ParameterViewer`` and ``DataBrowser``
   - In ``Tools->Preferences->Console->Advanced settings`` uncheck the box ``Enable UMR``
 
 For the usage of algorithms or calibrations we point you to the documentation of those subjects.
@@ -67,7 +67,7 @@ For the usage of algorithms or calibrations we point you to the documentation of
 Testing
 -------
 
-Tests for the qtt packages are contained in the subdirectory `tests` and as test functions (`test_*`) in
+Tests for the qtt packages are contained in the subdirectory ``tests`` and as test functions (``test_*``) in
 the code. To run the tests you can run one of the commands below.
 
 .. code-block:: console
