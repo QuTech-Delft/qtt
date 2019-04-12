@@ -1,19 +1,20 @@
-import time
+import os
+from itertools import cycle
 
 import matplotlib.pyplot as plt
-from itertools import cycle
-from qcodes import Station, Measure
+from qcodes import Measure, Station
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
 
 from qilib.data_set import DataSet
-
 from qtt.measurements.new import UhfliScopeReader
-from qtt.measurements.new.configuration_storage import load_configuration, save_configuration
-
-color_cycler = cycle('bgrcmk')
+from qtt.measurements.new.configuration_storage import (load_configuration,
+                                                        save_configuration)
 
 
 # PLOTTING
+
+color_cycler = cycle('bgrcmk')
+
 
 def plot_1D_dataset(plot, dataset, name_x, names_y, label_x, label_y):
     x_data = getattr(dataset, name_x)
@@ -47,7 +48,7 @@ station = Station(uhfli, update_snapshot=False)
 
 scope_reader = UhfliScopeReader(device_id)
 
-file_path = 'uhfli.dat'
+file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uhfli.dat')
 # save_configuration(file_path, scope_reader._adapter)
 
 configuration = load_configuration(file_path)
@@ -59,13 +60,12 @@ scope_reader.initialize(configuration)
 scope_reader.number_of_averages = 1
 scope_reader.input_range = [0.5, 1.0]
 scope_reader.sample_rate = 450e6
-scope_reader.period = 1e-3
+scope_reader.period = 1e-5
 
 scope_reader.enabled_channels = [1]
 scope_reader.set_input_signal(1, 'Signal Input 1')
-
 scope_reader.trigger_enabled = False
-scope_reader.set_trigger_settings('Trig Input 1', 0.2, 'Fall', 0)
+
 scope_reader.prepare_acquisition()
 
 
@@ -76,14 +76,9 @@ plt.figure()
 plt.ion()
 plt.show()
 
-samples = 100
-start = time.time()
-
+samples = 10
 for number in range(1, samples):
     scope_reader.acquire(data_set)
-    # plot_1D_dataset(plt, data_set, 'ScopeTime', 'ScopeTrace_{:03d}'.format(number), 'Time [sec.]', 'Amplitude [V]')
-
-end = time.time()
-print(samples / (end - start))
+    plot_1D_dataset(plt, data_set, 'ScopeTime', 'ScopeTrace_{:03d}'.format(number), 'Time [sec.]', 'Amplitude [V]')
 
 scope_reader.finalize_acquisition()
