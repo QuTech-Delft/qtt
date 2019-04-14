@@ -470,7 +470,7 @@ class VideoMode:
     def __run_1d_scan(self, awg, virtual_awg, period=1e-3):
         if virtual_awg:
             if not isinstance(self.sweepparams, (str, dict)):
-                raise Exception('arguments not supported')
+                raise Exception('argument sweepparams of type %s not supported' % type(self.sweepparams))
             sweep_range = self.sweepranges
             gates = self.sweepparams if isinstance(self.sweepparams, dict) else {self.sweepparams: 1}
             waveform = virtual_awg.sweep_gates(gates, sweep_range, period)
@@ -482,7 +482,7 @@ class VideoMode:
             elif type(self.sweepparams) is dict:
                 waveform, _ = awg.sweep_gate_virt(self.sweepparams, self.sweepranges, period=period)
             else:
-                raise Exception('arguments not supported')
+                raise Exception('argument sweepparams of type %s not supported' % type(self.sweepparams))
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels))
 
@@ -515,7 +515,7 @@ class VideoMode:
                 waveform, _ = awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams[
                     'gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
             else:
-                raise Exception('arguments not supported')
+                raise Exception('argument sweepparams of type %s not supported' % type(self.sweepparams))
             if self.verbose:
                 print('%s: 2d scan, define callback ' % (self.__class__.__name__,))
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),

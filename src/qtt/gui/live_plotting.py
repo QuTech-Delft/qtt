@@ -409,7 +409,7 @@ class livePlot(QtCore.QObject):
         win.setWindowTitle(self.window_title)
         vertLayout = QtWidgets.QVBoxLayout()
 
-        self._averaging_enabled = True
+        self._averaging_enabled = 2
         if show_controls:
             topLayout = QtWidgets.QHBoxLayout()
             win.start_button = QtWidgets.QPushButton('Start')
@@ -674,11 +674,14 @@ class livePlot(QtCore.QObject):
         self._averaging_enabled = value
         if self.verbose >= 1:
             if self._averaging_enabled == 2:
-                print('enable_averaging called, alpha = ' + str(self.alpha))
+                if self.verbose:
+                    print('enable_averaging called, alpha = ' + str(self.alpha))
             elif self._averaging_enabled == 0:
-                print('enable_averaging called, averaging turned off')
+                if self.verbose:
+                    print('enable_averaging called, averaging turned off')
             else:
-                print('enable_averaging called, undefined')
+                if self.verbose:
+                    print('enable_averaging called, undefined: value %s' % (self._averaging_enabled,))
 
     def enable_averaging_slot(self, *args, **kwargs):
         """ Update the averaging mode of the widget """
