@@ -46,7 +46,7 @@ class videomode_callback:
         self.channel = minstrument[1]
         self.channels = self.channel
         self.measuresegment_arguments = {'mV_range': 5000}
-        
+
         if not isinstance(self.channels, list):
             self.channels = [self.channels]
 
@@ -450,7 +450,7 @@ class VideoMode:
     def run(self, start_readout=True):
         """ Programs the AWG, starts the read-out and the plotting. """
         if self.verbose:
-            print('%s: run ' % (self.__class__.__name__,) )
+            print('%s: run ' % (self.__class__.__name__,))
         scan_dimensions = self.scan_dimension()
         virtual_awg = getattr(self.station, 'virtual_awg', None)
         awg = getattr(self.station, 'awg', None)

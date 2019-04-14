@@ -168,7 +168,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
         figure_title = 'Histogram of two levels RTS'
-        Fig=plt.figure(fig + 1)
+        Fig = plt.figure(fig + 1)
         plt.clf()
         _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
         if ppt:
@@ -232,7 +232,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     tunnelrate_up = None
 
     minimal_count_number = 50
-    
+
     if counts_dn[0] < minimal_count_number:
         tunnelrate_dn = None
         tunnelrate_up = None
