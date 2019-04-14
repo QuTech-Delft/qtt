@@ -45,6 +45,8 @@ class videomode_callback:
         self.minstrument = minstrument[0]
         self.channel = minstrument[1]
         self.channels = self.channel
+        self.measuresegment_arguments = {'mV_range': 5000}
+        
         if not isinstance(self.channels, list):
             self.channels = [self.channels]
 
@@ -68,10 +70,9 @@ class videomode_callback:
         minstrumenthandle = qtt.measurements.scans.get_instrument(self.minstrument)
 
         data = qtt.measurements.scans.measuresegment(
-            self.waveform, self.Naverage, minstrumenthandle, self.unique_channels)
+            self.waveform, self.Naverage, minstrumenthandle, self.unique_channels, **self.measuresegment_arguments)
 
         if np.all(data == 0):
-            # self.stopreadout()
             raise Exception('data returned contained only zeros, aborting')
 
         dd = []
