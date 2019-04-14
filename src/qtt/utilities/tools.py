@@ -1125,13 +1125,19 @@ except ImportError:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
                     activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
-        ''' Dummy implementation '''
+        """ Add slide to current active Powerpoint presentation
+
+        Dummy implementation
+        """
         warnings.warn('addPPTslide is not available on your system')
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
                        printformat='fancy', customfig=None, extranotes=None, **kwargs):
-        """ Dummy implementation """
+        """ Add slide based on dataset to current active Powerpoint presentation
+
+        Dummy implementation
+        """
         warnings.warn('addPPT_dataset is not available on your system')
 
 # %%
