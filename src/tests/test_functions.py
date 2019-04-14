@@ -1,12 +1,8 @@
 import unittest
 import numpy as np
 
-import qtt
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi
-
-
-# %%
 
 
 class TestFunctions(unittest.TestCase):
