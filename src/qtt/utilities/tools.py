@@ -825,7 +825,7 @@ def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925
     """
     plt.figure(fig)
     ax = plt.gca()
-    ppt_axis = plt.axes(position)
+    ppt_axis = plt.axes(position, label='figure_ppt_callback_axis')
     ppt_button = Button(ppt_axis, 'ppt')
     ppt_axis._button = ppt_button
     ppt_axis.set_alpha(.5)
