@@ -1127,7 +1127,7 @@ except ImportError:
                     activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
         """ Add slide to current active Powerpoint presentation
 
-        Dummy implementation 
+        Dummy implementation
         """
         warnings.warn('addPPTslide is not available on your system')
 
