@@ -188,19 +188,19 @@ def fitFermiLinear(x_data, y_data, verbose=1, fig=None, l=1.16, use_lmfit=0):
         params = gmodel.make_params(**param_init)
         lmfit_results = gmodel.fit(y_data, params, xdata=x_data)
         fitting_results = lmfit_results.fit_report()
-        p = np.array([lmfit_results.best_values[p] for p in gmodel.param_names])
+        fitted_parameters = np.array([lmfit_results.best_values[p] for p in gmodel.param_names])
     else:
         fitting_results = scipy.optimize.curve_fit(fermi_linear_fitting_function, xdata, ydata, p0=initial_parameters)
-        p = fitting_results[0]
+        fitted_parameters = fitting_results[0]
 
     if fig is not None:
-        y = FermiLinear(xdata, *list(p))
+        y = FermiLinear(xdata, *list(fitted_parameters))
         plt.figure(fig)
         plt.clf()
         plt.plot(xdata, ydata, '.b', label='data')
         plt.plot(xdata, y, 'm-', label='fitted FermiLinear')
         plt.legend(numpoints=1)
-    return p, dict({'pp': fitting_results, 'p0': initial_parameters, 'initial_parameters': initial_parameters, 'fitting_results': fitting_results})
+    return fitted_parameters, dict({'fitted_parameters': fitted_parameters, 'pp': fitting_results, 'centre': fitted_parameters[2], 'initial_parameters': initial_parameters, 'fitting_results': fitting_results})
 
 
 # %%
