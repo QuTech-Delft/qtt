@@ -32,7 +32,7 @@ install:
 script:
     - ls
     - pytest --version
-    - xvfb-run -a coverage run --source="./src"  --omit "./src/qtt/legacy.py" --omit "./src/qtt/tools.py" --omit "./src/qtt/live_plotting.py" -m pytest --ignore --omit "./src/qtt/live_plotting.py"
+    - xvfb-run -a coverage run --source="./src"  --omit "./src/qtt/legacy.py" --omit "./src/qtt/tools.py" --omit "./src/qtt/live_plotting.py" -m pytest --ignore "./src/qtt/live_plotting.py"
     - mypy src --ignore-missing-imports
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         jupyter --version;
