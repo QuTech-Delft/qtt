@@ -19,12 +19,12 @@ matrix:
 
 install:
     - pip install qcodes
-    - pip install -r requirements.txt
+    - pip install -r requirements.txt --upgrade
     - pip install opencv-python coveralls
     - pip install mypy
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         echo "Full Installation";
-        pip install -r develop_requirements.txt;
+        pip install -r develop_requirements.txt --upgrade;
       fi
     - pip install -e .
     - export QT_QPA_PLATFORM=offscreen
