@@ -24,7 +24,7 @@ class AcquisitionScopeInterface(AcquisitionInterface):
     @property
     @abstractmethod
     def period(self) -> float:
-        """ Sets the measuring period of the acquisition."""
+        """ The measuring period of the acquisition."""
 
     @property
     @abstractmethod

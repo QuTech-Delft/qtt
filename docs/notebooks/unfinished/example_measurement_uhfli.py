@@ -11,7 +11,7 @@ from qtt.measurements.new.configuration_storage import (load_configuration,
                                                         save_configuration)
 
 
-# PLOTTING
+# FUNCTIONS FOR PLOTTING
 
 color_cycler = cycle('bgrcmk')
 
@@ -37,14 +37,14 @@ def plot_1D_dataset(plot, dataset, name_x, names_y, label_x, label_y):
     plot.pause(0.001)
 
 
-# STATION
+# CREATE THE QCODES STATION
 
 device_id = 'dev2338'
 uhfli = ZIUHFLI('uhfli', device_id)
 station = Station(uhfli, update_snapshot=False)
 
 
-# SCOPE READER
+# CREATE THE SCOPE READER
 
 scope_reader = UhfliScopeReader(device_id)
 
@@ -55,7 +55,7 @@ configuration = load_configuration(file_path)
 scope_reader.initialize(configuration)
 
 
-# PREPARE
+# PREPARE THE SCOPE FOR READOUT
 
 scope_reader.number_of_averages = 1
 scope_reader.input_range = [0.5, 1.0]
@@ -69,7 +69,7 @@ scope_reader.trigger_enabled = False
 scope_reader.prepare_acquisition()
 
 
-# READOUT
+# READOUT THE SCOPE AND PLOT THE DATA
 
 data_set = DataSet()
 plt.figure()

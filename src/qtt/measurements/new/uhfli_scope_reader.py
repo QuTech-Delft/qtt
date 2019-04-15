@@ -42,7 +42,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """ Collects traces from the UHFLI, where the readout data is added to the given dataset.
 
         Args:
-            data_set: The object in which all the UHFLI traces are stored.
+            data_set: The object in which all the UHFLI traces are stored on.
             number_of_records: The number of traces which should be collected at once.
             timeout: The time the collecting of traces can maximally take before raising an error.
         """
@@ -77,43 +77,88 @@ class UhfliScopeReader(AcquisitionScopeInterface):
 
     @property
     def number_of_averages(self) -> int:
+        """ Gets the number of averages to take during a acquisition.
+
+        Returns:
+            The number of averages set value.
+        """
         return self.__uhfli.scope_average_weight.get()
 
     @number_of_averages.setter
     def number_of_averages(self, value: int) -> None:
+        """ Sets the number of averages to take during a acquisition.
+
+        Args:
+            value: The number of averages.
+        """
         self.__uhfli.scope_segments.set('OFF' if value==1 else 'ON')
         self.__uhfli.scope_average_weight.set(value)
 
     @property
     def input_range(self) -> List[float]:
+        """ Gets the amplitude input range of the channels.
+
+        Returns:
+            The amplitude input range of the channels set value.
+        """
         range_channel_1 = self.__uhfli.signal_input1_range.get()
         range_channel_2 = self.__uhfli.signal_input2_range.get()
         return [range_channel_1, range_channel_2]
 
     @input_range.setter
     def input_range(self, value: List[float]) -> None:
+        """ Gets the amplitude input range of the channels.
+
+        Args:
+            value: The input range amplitude in Volts.
+        """
         range_channel_1, range_channel_2 = value
         self.__uhfli.signal_input1_range.set(range_channel_1)
         self.__uhfli.signal_input2_range.set(range_channel_2)
 
     @property
     def sample_rate(self) -> float:
+        """ Gets the sample rate of the acquisition device.
+
+        Returns:
+            The input range amplitude in Volt for each channel.
+        """
         return self.__uhfli.scope_samplingrate_float.get()
 
     @sample_rate.setter
     def sample_rate(self, value: float) -> None:
+        """ Sets the sample rate of the acquisition device.
+
+        Args:
+            value: The sample rate in samples per second.
+        """
         self.__uhfli.scope_samplingrate_float.set(value)
 
     @property
     def period(self) -> float:
+        """ Gets the measuring period of the acquisition.
+
+        Returns:
+            The measuring period set value in seconds.
+        """
         return self.__uhfli.scope_duration.get()
 
     @period.setter
     def period(self, value: float) -> None:
+        """ Sets the measuring period of the acquisition.
+
+        Args:
+            value: The measuring period in seconds.
+        """
         self.__uhfli.scope_duration.set(value)
 
     @property
     def trigger_enabled(self) -> bool:
+        """ Gets the external triggering enabled status.
+
+        Returns:
+            The trigger enabled status set value.
+        """
         is_enabled = self.__uhfli.scope_trig_enable.get()
         if is_enabled == 'ON':
             return True
@@ -123,9 +168,22 @@ class UhfliScopeReader(AcquisitionScopeInterface):
 
     @trigger_enabled.setter
     def trigger_enabled(self, value: bool) -> None:
+        """ Turns the external triggering on or off.
+
+        Args:
+            value: The trigger on/off value.
+        """
         self.__uhfli.scope_trig_enable.set('ON' if value else 'OFF')
 
     def set_trigger_settings(self, channel: int, level: float, slope: str, delay: float) -> None:
+        """ Updates the input trigger settings.
+
+        Args:
+            channel: The channel to trigger the acquision on.
+            level: The trigger-level of the trigger.
+            slope: The slope of the trigger.
+            delay: The delay between getting a trigger and acquiring.
+        """
         self.__uhfli.scope_trig_signal.set(channel)
         self.__uhfli.scope_trig_level.set(level)
         self.__uhfli.scope_trig_slope.set(slope)
@@ -134,6 +192,11 @@ class UhfliScopeReader(AcquisitionScopeInterface):
 
     @property
     def enabled_channels(self) -> List[int]:
+        """ Gets the channel enabled states.
+
+        Returns:
+            The channels which are set to be enabled.
+        """
         enabled_channels = self.__uhfli.scope_channels.get()
         if enabled_channels == 3:
             return [1, 2]
@@ -141,11 +204,22 @@ class UhfliScopeReader(AcquisitionScopeInterface):
 
     @enabled_channels.setter
     def enabled_channels(self, value: List[int]):
+        """ Sets the given channels to enabled and turns off all others.
+
+        Args:
+            value: The channels which needs to be anabled.
+        """
         if not isinstance(value, list) or len(value) < 1 or len(value) > 2:
             raise ValueError('Invalid enabled channels specification {}!'.format(value))
         self.__uhfli.scope_channels.set(value[0] if value != [1, 2] else 3)
 
     def set_input_signal(self, channel: int, attribute: str) -> None:
+        """ Adds an input channel to the scope.
+
+        Args:
+            channel: The input channel number.
+            attrbutes: The input signal to acquire.
+        """
         channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
         channel_input.set(attribute)
 
