@@ -1,0 +1,26 @@
+import numpy as np
+from unittest import mock, TestCase
+from unittest.mock import patch, MagicMock, mock_open, call
+
+from qtt.measurements.new.configuration_storage import load_configuration, save_configuration
+from qilib.utils.serialization import serialize
+
+
+class TestConfigurationStorage(TestCase):
+
+    def test_load_configuration(self):
+        expected_configuration = {'sample_rate': 1000, 'period': 2}
+        with patch('builtins.open', mock_open(read_data=serialize(expected_configuration))):
+            actual_configuration = load_configuration('/dev/null')
+        self.assertEqual(expected_configuration, actual_configuration)
+
+    def test_save_configuration(self):
+        file_path = '/dev/null'
+
+        adapter = MagicMock()
+        adapter.read.return_value = {'sample_rate': 1000, 'period': 2}
+        with patch('builtins.open', new_callable=mock_open) as file_mock:
+            save_configuration(file_path, adapter)
+
+        adapter.assert_has_calls([call.read()])
+        file_mock.return_value.write.assert_called_once_with(serialize(adapter.read.return_value))
