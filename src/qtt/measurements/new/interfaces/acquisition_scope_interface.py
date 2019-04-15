@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import List
 
 from qtt.measurements.new.interfaces import AcquisitionInterface
 
-class AcquisitionScopeInterface(AcquisitionInterface):
+class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     """ An interface which contains the functionality for a acquisition device as a oscilloscope."""
 
     @property

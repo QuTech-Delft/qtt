@@ -1,6 +1,6 @@
 import numpy as np
 from unittest import TestCase
-from unittest.mock import PropertyMock, patch, call
+from unittest.mock import patch, call
 
 from qilib.data_set import DataSet
 from qilib.utils import PythonJsonStructure

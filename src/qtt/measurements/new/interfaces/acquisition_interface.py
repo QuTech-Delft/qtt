@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
 
 from qilib.data_set import DataSet
 from qilib.utils import PythonJsonStructure

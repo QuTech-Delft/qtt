@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import List
 import numpy as np
 import time
 
@@ -23,13 +23,13 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__acquisition_counter = 0
         self.__address = address
 
-    def initialize(self, config: PythonJsonStructure) -> None:
+    def initialize(self, configuration: PythonJsonStructure) -> None:
         """ Applies the configuration to the UHFLI.
 
         Args:
             config: The configuration with all the UHFLI settings.
         """
-        self.adapter.apply(config)
+        self.adapter.apply(configuration)
 
     def prepare_acquisition(self) -> None:
         """ Sets the UFHLI into scope mode such that the device can collect traces."""

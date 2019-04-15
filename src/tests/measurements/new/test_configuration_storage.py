@@ -1,5 +1,4 @@
-import numpy as np
-from unittest import mock, TestCase
+from unittest import TestCase
 from unittest.mock import patch, MagicMock, mock_open, call
 
 from qtt.measurements.new.configuration_storage import load_configuration, save_configuration
