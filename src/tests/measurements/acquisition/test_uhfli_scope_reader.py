@@ -1,17 +1,18 @@
 import numpy as np
 from unittest import TestCase
-from unittest.mock import patch, call
+from unittest.mock import patch
 
 from qilib.data_set import DataSet
 from qilib.utils import PythonJsonStructure
 
-from qtt.measurements.new import UhfliScopeReader
+from qtt.measurements.acquisition import UhfliScopeReader
+
 
 class TestUhfliScopeReader(TestCase):
 
     @staticmethod
     def __patch_scope_reader(address):
-        patch_object = 'qtt.measurements.new.uhfli_scope_reader.InstrumentAdapterFactory'
+        patch_object = 'qtt.measurements.acquisition.uhfli_scope_reader.InstrumentAdapterFactory'
         with patch(patch_object) as factory_mock:
             scope_mock = UhfliScopeReader(address)
         return scope_mock, factory_mock
@@ -57,16 +58,14 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.Scope.names = ['Test1', name]
         scope_mock.adapter.instrument.Scope.units = ['GigaVolt', unit]
 
-        data_set = DataSet()
-        scope_mock.acquire(data_set)
+        scope_time, scope_trace_001 = scope_mock.acquire()
+        self.assertEqual(len(scope_time), scope_length)
+        self.assertEqual(scope_time.label, 'Time')
+        self.assertEqual(scope_time.unit, 'seconds')
 
-        self.assertEqual(len(data_set.ScopeTime), scope_length)
-        self.assertEqual(data_set.ScopeTime.label, 'Time')
-        self.assertEqual(data_set.ScopeTime.unit, 'seconds')
-
-        np.testing.assert_array_equal(data_set.ScopeTrace_001, scope_data[1])
-        self.assertEqual(data_set.ScopeTrace_001.label, name)
-        self.assertEqual(data_set.ScopeTrace_001.unit, unit)
+        np.testing.assert_array_equal(scope_trace_001, scope_data[1])
+        self.assertEqual(scope_trace_001.label, name)
+        self.assertEqual(scope_trace_001.unit, unit)
 
     def test_acquire_raises_timeout(self):
         mock_address = 'dev2333a'
@@ -79,9 +78,8 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.scope.getInt.return_value = 0
         scope_mock.adapter.instrument.scope.progress.return_value = [0.5]
 
-        data_set = DataSet()
         with self.assertRaisesRegex(TimeoutError, 'Got 0 records after 0.0001 sec'):
-            scope_mock.acquire(data_set, timeout=1e-4)
+            scope_mock.acquire(timeout=1e-4)
 
     def test_finalize_acquisition_set_settings_correctly(self):
         mock_address = 'dev2334'
@@ -119,7 +117,7 @@ class TestUhfliScopeReader(TestCase):
         mock_address = 'dev2337'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
 
-        input_range = [1.25, 1.75]
+        input_range = (1.25, 1.75)
         scope_mock.adapter.instrument.signal_input1_range.get.return_value = input_range[0]
         scope_mock.adapter.instrument.signal_input2_range.get.return_value = input_range[1]
         self.assertEqual(input_range, scope_mock.input_range)
@@ -130,7 +128,7 @@ class TestUhfliScopeReader(TestCase):
         mock_address = 'dev2337'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
 
-        input_range = [0.75, 1.50]
+        input_range = (0.75, 1.50)
         scope_mock.input_range = input_range
         scope_mock.adapter.instrument.signal_input1_range.set.assert_called_once_with(input_range[0])
         scope_mock.adapter.instrument.signal_input2_range.set.assert_called_once_with(input_range[1])
@@ -217,33 +215,37 @@ class TestUhfliScopeReader(TestCase):
 
         enabled_channels = 3
         scope_mock.adapter.instrument.scope_channels.get.return_value = enabled_channels
-        self.assertEqual(scope_mock.enabled_channels, [1, 2])
+        self.assertEqual(scope_mock.enabled_channels, (1, 2))
 
         enabled_channels = 2
         scope_mock.adapter.instrument.scope_channels.get.return_value = enabled_channels
-        self.assertEqual(scope_mock.enabled_channels, [2])
+        self.assertEqual(scope_mock.enabled_channels, (2))
 
         enabled_channels = 1
         scope_mock.adapter.instrument.scope_channels.get.return_value = enabled_channels
-        self.assertEqual(scope_mock.enabled_channels, [1])
+        self.assertEqual(scope_mock.enabled_channels, (1))
 
     def test_enabled_channels_setter(self):
         mock_address = 'dev2345'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
 
-        enabled_channels = [1, 2]
+        enabled_channels = (1, 2)
         scope_mock.enabled_channels = enabled_channels
         scope_mock.adapter.instrument.scope_channels.set.assert_called_once_with(3)
 
-        enabled_channels = [1]
+        enabled_channels = (1, )
         scope_mock.enabled_channels = enabled_channels
         scope_mock.adapter.instrument.scope_channels.set.assert_called_with(1)
 
-        enabled_channels = [2]
+        enabled_channels = (2, )
         scope_mock.enabled_channels = enabled_channels
         scope_mock.adapter.instrument.scope_channels.set.assert_called_with(2)
 
-        enabled_channels = [1, 2, 3]
+        enabled_channels = (1, 2, 3)
+        with self.assertRaisesRegex(ValueError, 'Invalid enabled channels specification'):
+            scope_mock.enabled_channels = enabled_channels
+
+        enabled_channels = 1
         with self.assertRaisesRegex(ValueError, 'Invalid enabled channels specification'):
             scope_mock.enabled_channels = enabled_channels
 

@@ -1,11 +1,13 @@
-from typing import List
+""" Provides oscilloscope functionality for the Zurich Instruments UHFLI."""
+
+from typing import Tuple, List
 import numpy as np
 import time
 
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.data_set import DataArray, DataSet
 from qilib.utils import PythonJsonStructure
-from qtt.measurements.new.interfaces import AcquisitionScopeInterface
+from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 from qcodes.instrument_drivers.ZI import ZIUHFLI
 
 
@@ -18,10 +20,10 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         Args:
             address: The unique address of the UHFLI.
         """
+        super().__init__(address)
         self.adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIUHFLIInstrumentAdapter', address)
         self.__uhfli = self.adapter.instrument
         self.__acquisition_counter = 0
-        self.__address = address
 
     def initialize(self, configuration: PythonJsonStructure) -> None:
         """ Applies the configuration to the UHFLI.
@@ -32,48 +34,49 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.adapter.apply(configuration)
 
     def prepare_acquisition(self) -> None:
-        """ Sets the UFHLI into scope mode such that the device can collect traces."""
+        """ Sets the UFHLI into scope mode such that the device can collect records."""
         self.__uhfli.scope.set('scopeModule/mode', 1)
-        self.__uhfli.scope.subscribe('/{0}/scopes/0/wave'.format(self.__address))
+        self.__uhfli.scope.subscribe('/{0}/scopes/0/wave'.format(self._address))
         self.__uhfli.daq.sync()
-        self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self.__address), 1)
+        self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 1)
 
-    def acquire(self, data_set: DataSet, number_of_records: int=1, timeout: float=30) -> None:
-        """ Collects traces from the UHFLI, where the readout data is added to the given dataset.
+    def acquire(self, number_of_records: int=1, timeout: float=30) -> List[DataArray]:
+        """ Collects records from the UHFLI, where the readout data is added to the given dataset.
 
         Args:
-            data_set: The object in which all the UHFLI traces are stored on.
-            number_of_records: The number of traces which should be collected at once.
-            timeout: The time the collecting of traces can maximally take before raising an error.
+            number_of_records: The number of records which should be collected at once.
+            timeout: The time the collecting of records can maximally take before raising an error.
+
+        Returns:
+            A list with the recorded scope records.
         """
-        if not data_set.data_arrays:
-            self.__add_setpoint_data(data_set)
-        trace_data = UhfliScopeReader.__get_uhfli_scope_records(self.__address, self.__uhfli,
+        collected_records = [self.__create_setpoint_data()]
+        trace_data = UhfliScopeReader.__get_uhfli_scope_records(self._address, self.__uhfli,
                                                                 number_of_records, timeout)
-        self.__acquire_measurement_data(data_set, trace_data)
+        self.__acquire_measurement_data(collected_records, trace_data)
+        return collected_records
 
     def finalize_acquisition(self) -> None:
         """ Disables the acquisition mode of the scope in the UHFLI."""
-        self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self.__address), 0)
+        self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 0)
         self.__uhfli.scope.finish()
 
-    def __add_setpoint_data(self, data_set: DataSet) -> None:
+    def __create_setpoint_data(self) -> DataArray:
         self.__acquisition_counter = 0
         sample_count = self.__uhfli.scope_length()
         data_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True,
-                                         preset_data=np.linspace(0, self.period, sample_count))
-        data_set.add_array(data_array)
-        data_set.user_data = PythonJsonStructure(sample_rate=self.sample_rate, period=self.period)
+                               preset_data=np.linspace(0, self.period, sample_count))
+        return data_array
 
-    def __acquire_measurement_data(self, data_set: DataSet, trace_data: dict) -> None:
-        traces = zip(self.__uhfli.Scope.names, self.__uhfli.Scope.units, trace_data)
-        for (label, unit, trace) in traces:
+    def __acquire_measurement_data(self, collected_records: List[DataArray], trace_data: dict) -> None:
+        records = zip(self.__uhfli.Scope.names, self.__uhfli.Scope.units, trace_data)
+        for (label, unit, trace) in records:
             if not isinstance(trace, np.ndarray):
                 continue
             self.__acquisition_counter += 1
             identifier = 'ScopeTrace_{:03d}'.format(self.__acquisition_counter)
             data_array = DataArray(identifier, label, unit, preset_data=trace)
-            data_set.add_array(data_array)
+            collected_records.append(data_array)
 
     @property
     def number_of_averages(self) -> int:
@@ -95,7 +98,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__uhfli.scope_average_weight.set(value)
 
     @property
-    def input_range(self) -> List[float]:
+    def input_range(self) -> Tuple[float, float]:
         """ Gets the amplitude input range of the channels.
 
         Returns:
@@ -103,10 +106,10 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """
         range_channel_1 = self.__uhfli.signal_input1_range.get()
         range_channel_2 = self.__uhfli.signal_input2_range.get()
-        return [range_channel_1, range_channel_2]
+        return (range_channel_1, range_channel_2)
 
     @input_range.setter
-    def input_range(self, value: List[float]) -> None:
+    def input_range(self, value: Tuple[float, float]) -> None:
         """ Gets the amplitude input range of the channels.
 
         Args:
@@ -175,7 +178,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """
         self.__uhfli.scope_trig_enable.set('ON' if value else 'OFF')
 
-    def set_trigger_settings(self, channel: int, level: float, slope: str, delay: float) -> None:
+    def set_trigger_settings(self, channel: str, level: float, slope: str, delay: float) -> None:
         """ Updates the input trigger settings.
 
         Args:
@@ -191,7 +194,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__uhfli.scope_trig_reference.set(0)
 
     @property
-    def enabled_channels(self) -> List[int]:
+    def enabled_channels(self) -> Tuple[int, int]:
         """ Gets the channel enabled states.
 
         Returns:
@@ -199,26 +202,26 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """
         enabled_channels = self.__uhfli.scope_channels.get()
         if enabled_channels == 3:
-            return [1, 2]
-        return [enabled_channels]
+            return (1, 2)
+        return (enabled_channels)
 
     @enabled_channels.setter
-    def enabled_channels(self, value: List[int]):
+    def enabled_channels(self, value: Tuple[int, int]):
         """ Sets the given channels to enabled and turns off all others.
 
         Args:
             value: The channels which needs to be anabled.
         """
-        if not isinstance(value, list) or len(value) < 1 or len(value) > 2:
+        if not isinstance(value, tuple)  or len(value) < 1 or len(value) > 2:
             raise ValueError('Invalid enabled channels specification {}!'.format(value))
-        self.__uhfli.scope_channels.set(value[0] if value != [1, 2] else 3)
+        self.__uhfli.scope_channels.set(sum(value))
 
     def set_input_signal(self, channel: int, attribute: str) -> None:
         """ Adds an input channel to the scope.
 
         Args:
             channel: The input channel number.
-            attrbutes: The input signal to acquire.
+            attribute: The input signal to acquire.
         """
         channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
         channel_input.set(attribute)

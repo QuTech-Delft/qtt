@@ -1,7 +1,10 @@
-from abc import ABC, abstractmethod
-from typing import List
+""" Interface for oscilloscopes or equivalent devices to acquire data."""
 
-from qtt.measurements.new.interfaces import AcquisitionInterface
+from abc import ABC, abstractmethod
+from typing import Tuple
+
+from qtt.measurements.acquisition.interfaces import AcquisitionInterface
+
 
 class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     """ An interface which contains the functionality for a acquisition device as a oscilloscope."""
@@ -13,7 +16,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
 
     @property
     @abstractmethod
-    def input_range(self) -> List[float]:
+    def input_range(self) -> Tuple[float]:
         """ The input range of the channels."""
 
     @property
@@ -32,20 +35,20 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
         """ Turns the external triggering on or off."""
 
     @abstractmethod
-    def set_trigger_settings(self, channel: int, level: float, slope: str, delay: float) -> None:
+    def set_trigger_settings(self, attribute: str, level: float, slope: str, delay: float) -> None:
         """ Updates the input trigger settings.
 
         Args:
-            channel: The channel to trigger the acquision on.
+            attribute: The input signal to trigger the acquisition on.
             level: The trigger-level of the trigger.
-            slope: The slope of the trigger.
+            slope: Edge of the trigger signal to trigger on.
             delay: The delay between getting a trigger and acquiring.
         """
 
     @property
     @abstractmethod
-    def enabled_channels(self) -> List[int]:
-        """ Enables the provides channels and turns off all others."""
+    def enabled_channels(self) -> Tuple[int]:
+        """ Reports the enabled input channels."""
 
     @abstractmethod
     def set_input_signal(self, channel: int, attribute: str) -> None:
@@ -53,5 +56,5 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
 
         Args:
             channel: The input channel number.
-            attrbutes: The input signal to acquire.
+            attribute: The input signal to acquire.
         """

@@ -1,1 +1,0 @@
-from qtt.measurements.new.uhfli_scope_reader import UhfliScopeReader
