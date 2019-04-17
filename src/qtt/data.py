@@ -304,12 +304,6 @@ def test_add_comment():
 if __name__ == '__main__':
     test_add_comment()
 
-    # ds=qcodes.tests.data_mocks.DataSet2D()
-    # print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
-
-
-# %%
-
 
 def datasetCentre(ds, ndim=None):
     """ Return centre position for dataset
@@ -340,6 +334,9 @@ def test_dataset():
     cc = datasetCentre(ds)
     assert (cc[0] == 1.5)
     zz = dataset_labels(ds)
+    assert(zz=='Z')
+    zz = dataset_labels(ds, add_unit = True)
+    assert(zz=='Z [None]')
 
 
 def drawCrosshair(ds, ax=None, ndim=None):
