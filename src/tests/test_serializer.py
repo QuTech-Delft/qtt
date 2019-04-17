@@ -41,6 +41,13 @@ class TestJSON(unittest.TestCase):
         serialized_data = json.dumps(data, cls=QttJsonEncoder)
         loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
 
+    def test_numpy_array_writable(self):
+        data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}
+        serialized_data = json.dumps(data, cls=QttJsonEncoder)
+        loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
+        self.assertTrue(loaded_data['array'].flags['WRITEABLE'])
+        self.assertTrue(loaded_data['intarray'].flags['WRITEABLE'])
+
     def test_instrument_encoders(self):
         instrument = qcodes.Instrument('test_instrument_y')
         data = {'instrument': instrument}
