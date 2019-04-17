@@ -135,7 +135,7 @@ def get_dataset(dataset_handle):
 def load_dataset(location, io=None, verbose=0):
     """ Load a dataset from storage
 
-    An attempt is made to automatically detect the formatter. Supported are currently GNUPlotFormat and HDF5Format
+    An attempt is made to automatically detect the formatter. Supported are currently qcodes GNUPlotFormat, qcodes HDF5Format and json format.
 
     Args:
         location (str): either the relative or full location
@@ -159,36 +159,42 @@ def load_dataset(location, io=None, verbose=0):
     formatters += [GNUPlotFormat()]
 
     data = None
-    for ii, hformatter in enumerate(formatters):
-        try:
-            if verbose:
-                print('%d: %s' % (ii, hformatter))
-            data = qcodes.load_data(location, formatter=hformatter, io=io)
-            if len(data.arrays) == 0:
-                data = None
-                raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
-            logging.debug('load_data: loaded %s with %s' % (location, hformatter))
-        except Exception as ex:
-            logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
-            if verbose:
-                print(ex)
-            pass
-        finally:
-            if data is not None:
-                if isinstance(hformatter, GNUPlotFormat):
-                    # workaround for bug in GNUPlotFormat not saving the units
-                    if '__dataset_metadata' in data.metadata:
-                        dataset_meta = data.metadata['__dataset_metadata']
-                        for key, array_metadata in dataset_meta['arrays'].items():
-                            if key in data.arrays:
-                                if data.arrays[key].unit is None:
-                                    if verbose:
-                                        print('load_dataset: updating unit for %s' % key)
-                                    data.arrays[key].unit = array_metadata['unit']
 
+    if location.endswith('.json'):
+        dataset_dictionary = qtt.utilities.json_serializer.load_json(location)
+        data = qtt.data.dictionary_to_dataset(dataset_dictionary)
+    else:
+        # assume we have a QCoDeS dataset
+        for ii, hformatter in enumerate(formatters):
+            try:
                 if verbose:
-                    print('succes with formatter %s' % hformatter)
-                break
+                    print('%d: %s' % (ii, hformatter))
+                data = qcodes.load_data(location, formatter=hformatter, io=io)
+                if len(data.arrays) == 0:
+                    data = None
+                    raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
+                logging.debug('load_data: loaded %s with %s' % (location, hformatter))
+            except Exception as ex:
+                logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
+                if verbose:
+                    print(ex)
+                pass
+            finally:
+                if data is not None:
+                    if isinstance(hformatter, GNUPlotFormat):
+                        # workaround for bug in GNUPlotFormat not saving the units
+                        if '__dataset_metadata' in data.metadata:
+                            dataset_meta = data.metadata['__dataset_metadata']
+                            for key, array_metadata in dataset_meta['arrays'].items():
+                                if key in data.arrays:
+                                    if data.arrays[key].unit is None:
+                                        if verbose:
+                                            print('load_dataset: updating unit for %s' % key)
+                                        data.arrays[key].unit = array_metadata['unit']
+
+                    if verbose:
+                        print('succes with formatter %s' % hformatter)
+                    break
     if verbose:
         if data is None:
             print('could not load data from %s, returning None' % location)
@@ -220,6 +226,7 @@ def test_load_dataset(verbose=0):
         if verbose:
             print(r)
 
+
 # %%
 
 
@@ -244,6 +251,7 @@ def store_latest_decorator(function, obj):
         ds = function(*args, **kwargs)
         obj._latest = ds  # store the latest result
         return ds
+
     wrapper._special = 'yes'
     return wrapper
 
@@ -289,15 +297,16 @@ def test_add_comment():
         ds.metadata['comment'] = 'hello world'
         pass
     add_comment('hello world 0', ds0)
-    assert(ds.metadata['comment'] == 'hello world')
-    assert(ds0.metadata['comment'] == 'hello world 0')
+    assert (ds.metadata['comment'] == 'hello world')
+    assert (ds0.metadata['comment'] == 'hello world 0')
 
 
 if __name__ == '__main__':
     test_add_comment()
 
     # ds=qcodes.tests.data_mocks.DataSet2D()
-    #print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
+    # print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
+
 
 # %%
 
@@ -329,7 +338,7 @@ def test_dataset():
     import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet2D()
     cc = datasetCentre(ds)
-    assert(cc[0] == 1.5)
+    assert (cc[0] == 1.5)
     zz = dataset_labels(ds)
 
 
@@ -403,6 +412,7 @@ def dataset2image2(dataset, arrayname=None):
 
     return imraw, impixel, tr
 
+
 # %%
 
 
@@ -449,7 +459,7 @@ def dataset_labels(alldata, tag=None, add_unit=False):
     elif tag is None or tag == 'z':
         array = alldata.default_parameter_array()
     else:
-        raise Exception('invalid value %s for tag' % (tag, ))
+        raise Exception('invalid value %s for tag' % (tag,))
     label = array.label
 
     if add_unit:
@@ -716,6 +726,7 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
 if __name__ == '__main__' and 0:
     test_dataset()
 
+
 # %%
 
 
@@ -775,15 +786,15 @@ class image_transform:
             imextent = self.scan_image_extent()
             if self.verbose:
                 print('image_transform: unitsperpixel %s' %
-                      (self.unitsperpixel, ))
+                      (self.unitsperpixel,))
             ims, Hs, _ = qtt.algorithms.generic.rescaleImage(
                 self._imraw, imextent, mvx=unitsperpixel[0], mvy=unitsperpixel[1])
             self._im = ims
             self.H = Hs @ self.H
 
         if verbose:
-            print('image_transform: tr._imraw.shape %s' % (self._imraw.shape, ))
-            print('image_transform: tr._im.shape %s' % (self._im.shape, ))
+            print('image_transform: tr._imraw.shape %s' % (self._imraw.shape,))
+            print('image_transform: tr._im.shape %s' % (self._im.shape,))
         self._im = self._transform(self._imraw)
         self.Hi = np.linalg.inv(self.H)
 
@@ -950,6 +961,7 @@ def test_image_transform(verbose=0):
 
 if __name__ == '__main__':
     test_image_transform()
+
 
 # %%
 
@@ -1280,6 +1292,7 @@ def test_makeDataSet1Dplain():
     y = np.vstack((x - 1, x + 10))
     ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
 
+
 # %%
 
 
@@ -1313,6 +1326,7 @@ def test_compare():
     import qcodes.tests.data_mocks
     ds = qcodes.tests.data_mocks.DataSet2D()
     compare_dataset_metadata(ds, ds, verbose=0)
+
 
 # %%
 
