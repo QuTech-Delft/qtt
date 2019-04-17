@@ -13,6 +13,7 @@ import qcodes
 import qtt
 from qcodes.plots.pyqtgraph import QtPlot
 
+
 # %% Main class
 
 
@@ -188,8 +189,8 @@ class DataViewer(QtWidgets.QMainWindow):
                     '%s [%.2f to %.2f %s]' %
                     (sv['parameter']['label'],
                      sv['values'][0]['first'],
-                        sv['values'][0]['last'],
-                        sv['parameter']['unit']))
+                     sv['values'][0]['last'],
+                     sv['parameter']['unit']))
 
                 for act in metadata['loop']['actions']:
                     if 'sweep_values' in act.keys():
@@ -198,8 +199,8 @@ class DataViewer(QtWidgets.QMainWindow):
                             '%s [%.2f - %.2f %s]' %
                             (sv['parameter']['label'],
                              sv['values'][0]['first'],
-                                sv['values'][0]['last'],
-                                sv['parameter']['unit']))
+                             sv['values'][0]['last'],
+                             sv['parameter']['unit']))
                 infotxt = ' ,'.join(params)
                 infotxt = infotxt + '  |  ' + ', '.join([('%s' % (v['label'])) for (
                     k, v) in metadata['arrays'].items() if not v['is_setpoint']])
@@ -216,7 +217,7 @@ class DataViewer(QtWidgets.QMainWindow):
                         (sd['param'], sd['start'], sd['end']))
                 infotxt = ' ,'.join(params)
                 infotxt = infotxt + '  |  ' + \
-                    ', '.join(metadata['scanjob']['minstrument'])
+                          ', '.join(metadata['scanjob']['minstrument'])
             else:
                 infotxt = 'info about plot'
 
@@ -257,7 +258,7 @@ class DataViewer(QtWidgets.QMainWindow):
     def find_datafiles(datadir, extensions=None, show_progress=True):
         """ Find all datasets in a directory with a given extension """
         if extensions is None:
-            extensions=['dat', 'hdf5']
+            extensions = ['dat', 'hdf5']
         dd = []
         for e in extensions:
             dd += qtt.pgeometry.findfilesR(datadir, '.*%s' %
@@ -275,7 +276,7 @@ class DataViewer(QtWidgets.QMainWindow):
             # other formats, assumed to be in normal form
             datetag, logtag = filename.split(os.sep)[-3:-1]
         return datetag, logtag
-    
+
     def update_logs(self, filter_str=None):
         ''' Update the list of measurements '''
         model = self._treemodel
@@ -368,6 +369,7 @@ class DataViewer(QtWidgets.QMainWindow):
 
     def fill_item(self, item, value):
         ''' recursive population of tree structure with a dict '''
+
         def new_item(parent, text, val=None):
             child = QtGui.QStandardItem(text)
             self.fill_item(child, val)
@@ -476,11 +478,13 @@ class DataViewer(QtWidgets.QMainWindow):
             logging.info('using plotting parameter %s' % parameter)
             self.qplot.add(getattr(self.dataset, parameter))
 
+
 # %% Run the GUI as a standalone program
 
 
 if __name__ == '__main__':
     import sys
+
     if len(sys.argv) < 2:
         sys.argv += ['-d', os.path.join(os.path.expanduser('~'),
                                         'tmp', 'qdata')]
@@ -500,4 +504,3 @@ if __name__ == '__main__':
     dataviewer.setGeometry(1280, 60, 700, 900)
     dataviewer.logtree.setColumnWidth(0, 240)
     dataviewer.show()
-
