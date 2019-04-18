@@ -265,7 +265,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_dn = gamma_dn_fit / 1000
 
         if verbose:
-            print('Tunnel rate down: %.1f kHz' % tunnelrate_dn)
+            print('Tunnel rate down to up: %.1f kHz' % tunnelrate_dn)
 
         time_scaling = 1e3
 
@@ -290,7 +290,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_up = gamma_up_fit / 1000
 
         if verbose:
-            print('Tunnel rate up: %.1f kHz' % tunnelrate_up)
+            print('Tunnel rate up to down: %.1f kHz' % tunnelrate_up)
 
         if fig:
             title = 'Fitted exponential decay, level up'
