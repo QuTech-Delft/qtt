@@ -248,11 +248,13 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
             A = minsignal
             initial_params = np.array([A, B, gamma])
 
-            def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
         else:
             initial_params = np.array([B, gamma])
 
-            def func(params): return cost_exp_decay(x_data, y_data, np.hstack((offset_parameter, params)), threshold)
+    if offset_parameter is None:
+        def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
+    else:
+        def func(params): return cost_exp_decay(x_data, y_data, np.hstack((offset_parameter, params)), threshold)
 
     par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     if offset_parameter is not None:
