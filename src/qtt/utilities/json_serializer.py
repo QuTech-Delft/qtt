@@ -173,7 +173,7 @@ def decode_json(json_string: str) -> object:
         json_string: data to be decoded
     Returns
         Python object
-    
+
     """
     return json.loads(json_string, cls=QttJsonDecoder)
 

@@ -22,9 +22,9 @@ class TestJSON(unittest.TestCase):
         dataset=qcodes.tests.data_mocks.DataSet2D()
 
         json_data=encode_json(dataset)
-        print(json_data)
+        self.assertIsInstance(json_data, str)
         dataset2 = decode_json(json_data)
-        print(dataset2)
+        self.assertIsInstance(dataset2, qcodes.DataSet)
 
     def test_numpy_encoders(self):
         data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}
