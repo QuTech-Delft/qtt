@@ -5,7 +5,7 @@ from qilib.data_set import DataSet
 from qtt.measurements.new.interfaces.signal_processor_interface import SignalProcessorInterface
 
 
-class SignalProcessor:
+class SignalProcessorRunner:
     """ A class for post-processing measurement data. """
 
     def __init__(self) -> None:
@@ -20,7 +20,7 @@ class SignalProcessor:
 
         self._signal_processors.append(signal_processor)
 
-    def run_processes(self, signal_data: DataSet) -> DataSet:
+    def run(self, signal_data: DataSet) -> DataSet:
         """ Post-process measurement data using the known signal processors.
 
             Args:
