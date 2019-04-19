@@ -39,6 +39,15 @@ class TestSignalProcessorRunner(TestCase):
         self.assertEqual(len(signal_processor._signal_processors), 1)
         self.assertIsInstance(signal_processor._signal_processors[0], DummySignalProcessor)
 
+    def test_run_process_without_signal_processor(self):
+        data_set = DataSet(data_arrays=DataArray('x', 'x', preset_data=array([1, 2, 3, 4, 5])))
+
+        signal_processor_runner = SignalProcessorRunner()
+
+        new_data_set = signal_processor_runner.run(data_set)
+        self.assertIs(data_set.data_arrays['x'], new_data_set.data_arrays['x'])
+        self.assertTrue(array_equal(new_data_set.data_arrays['x'], array([1, 2, 3, 4, 5])))
+
     def test_run_process_single_signal_processor(self):
         data_set = DataSet(data_arrays=DataArray('x', 'x', preset_data=array([1, 2, 3, 4, 5])))
 
