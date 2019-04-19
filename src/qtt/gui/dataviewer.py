@@ -267,7 +267,8 @@ class DataViewer(QtWidgets.QMainWindow):
         datafiles = sorted(dd)
         return datafiles
 
-    def _filename2datetag(self, filename):
+    @staticmethod
+    def _filename2datetag(filename):
         """ Parse a filename to a date tag and base filename """
         if filename.endswith('.json'):
             datetag = filename.split(os.sep)[-1].split('_')[0]
@@ -295,7 +296,7 @@ class DataViewer(QtWidgets.QMainWindow):
             ['Log', 'Arrays', 'location', 'filename', 'Comments'])
 
         logs = dict()
-        for i, filename in enumerate(dd):
+        for _, filename in enumerate(dd):
             try:
                 datetag, logtag = self._filename2datetag(filename)
                 if datetag not in logs:
