@@ -5,6 +5,9 @@ from json import JSONDecoder, JSONEncoder
 import numpy as np
 import qcodes
 
+import qtt.data
+
+
 class JsonSerializeKey:
     """The custum value types for the JSON serializer."""
     OBJECT = '__object__'
@@ -39,7 +42,15 @@ class QttJsonDecoder(JSONDecoder):
     @staticmethod
     def __decode_numpy_array(item):
         obj = item[JsonSerializeKey.CONTENT]
-        return np.frombuffer(base64.b64decode(obj['__ndarray__']), dtype=np.dtype(obj['dtype'])).reshape(obj['shape'])
+        array = np.frombuffer(base64.b64decode(obj['__ndarray__']), dtype=np.dtype(obj['dtype'])).reshape(obj['shape'])
+        # make the array writable
+        array = np.array(array)
+        return array
+
+    @staticmethod
+    def __decode_qcodes_dataset(item):
+        obj = item[JsonSerializeKey.CONTENT]
+        return qtt.data.dictionary_to_dataset(obj['__dataset_dictionary__'])
 
     @staticmethod
     def __object_hook(obj):
@@ -49,6 +60,7 @@ class QttJsonDecoder(JSONDecoder):
             np.array.__name__: QttJsonDecoder.__decode_numpy_array,
             '__npnumber__': QttJsonDecoder.__decode_numpy_number,
             '__qcodes_instrument__': QttJsonDecoder.__decode_qcodes_instrument,
+            '__qcodes.DataSet__': QttJsonDecoder.__decode_qcodes_dataset,
         }
         if JsonSerializeKey.CONTENT in obj:
             decoder_function = decoders.get(obj[JsonSerializeKey.OBJECT])
@@ -70,7 +82,7 @@ class QttJsonEncoder(JSONEncoder):
     def __encode_qcodes_instrument(item):
         return {
             JsonSerializeKey.OBJECT: '__qcodes_instrument__',
-            JsonSerializeKey.CONTENT: {'name': item.name, 'qcodes_instrument': str(item) }
+            JsonSerializeKey.CONTENT: {'name': item.name, 'qcodes_instrument': str(item)}
         }
 
     @staticmethod
@@ -112,6 +124,15 @@ class QttJsonEncoder(JSONEncoder):
         }
 
     @staticmethod
+    def __encode_qcodes_dataset(item):
+        return {
+            JsonSerializeKey.OBJECT: '__qcodes.DataSet__',
+            JsonSerializeKey.CONTENT: {
+                '__dataset_dictionary__': QttJsonEncoder.__encoder(qtt.data.dataset_to_dictionary(item)),
+            }
+        }
+
+    @staticmethod
     def __encoder(item):
         encoders = {
             bytes: QttJsonEncoder.__encode_bytes,
@@ -124,6 +145,7 @@ class QttJsonEncoder(JSONEncoder):
             np.float32: QttJsonEncoder.__encode_numpy_number,
             np.float64: QttJsonEncoder.__encode_numpy_number,
             qcodes.Instrument: QttJsonEncoder.__encode_qcodes_instrument,
+            qcodes.DataSet: QttJsonEncoder.__encode_qcodes_dataset,
         }
         encoder_function = encoders.get(type(item), None)
         return encoder_function(item) if encoder_function else item
@@ -132,7 +154,31 @@ class QttJsonEncoder(JSONEncoder):
         return super().encode(QttJsonEncoder.__encoder(o))
 
 
-def save_json(data, filename):
+def encode_json(data: object) -> str:
+    """ Encode Python object to JSON
+
+    Args:
+        data: data to be encoded
+    Returns
+        String with formatted JSON
+
+    """
+    return json.dumps(data, cls=QttJsonEncoder, indent=2)
+
+
+def decode_json(json_string: str) -> object:
+    """ Decode Python object to JSON
+    
+    Args:
+        json_string: data to be decoded
+    Returns
+        Python object
+    
+    """
+    return json.loads(json_string, cls=QttJsonDecoder)
+
+
+def save_json(data: object, filename: str):
     """ Write a Python object to a JSON file
 
     Args:
@@ -140,10 +186,10 @@ def save_json(data, filename):
         filename (str): filename to write data to
     """
     with open(filename, 'wt') as fid:
-        fid.write(json.dumps(data, cls=QttJsonEncoder, indent=2))
+        fid.write(encode_json(data))
 
 
-def load_json(filename):
+def load_json(filename: str) -> object:
     """ Write a Python object from a JSON file
 
     Args:
@@ -153,6 +199,4 @@ def load_json(filename):
     """
     with open(filename, 'rt') as fid:
         data = fid.read()
-    return json.loads(data, cls=QttJsonDecoder)
-
-
+    return decode_json(data)
