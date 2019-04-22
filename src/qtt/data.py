@@ -1165,7 +1165,7 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     return dd
 
 
-def makeDataSet2D(p1, p2, measure_names=['measured'], location=None, loc_record=None,
+def makeDataSet2D(p1, p2, measure_names=('measured', ), location=None, loc_record=None,
                   preset_data=None, return_names=False):
     """ Make DataSet with one or multiple 2D array and two setpoint arrays.
 
@@ -1175,8 +1175,9 @@ def makeDataSet2D(p1, p2, measure_names=['measured'], location=None, loc_record=
     Args:
         p1 (array): first setpoint array of data
         p2 (array): second setpoint array of data
-        mname (str or list): name(s) of measured array(s)
+        measure_names (str or list): name(s) of measured array(s)
         location (str or None): location for the DataSet
+        loc_record (None or str): passed to new_data
         preset_data (array or None): optional array to fill the DataSet
         return_names (bool): if True return array names in output
     Returns:
