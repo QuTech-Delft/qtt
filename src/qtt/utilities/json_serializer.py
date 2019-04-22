@@ -168,7 +168,7 @@ def encode_json(data: object) -> str:
 
 def decode_json(json_string: str) -> object:
     """ Decode Python object to JSON
-    
+
     Args:
         json_string: data to be decoded
     Returns
