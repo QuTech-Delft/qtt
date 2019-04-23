@@ -18,6 +18,9 @@ class SignalProcessorRunner:
                 signal_processor: A signal processor
         """
 
+        if not isinstance(signal_processor, SignalProcessorInterface):
+            raise TypeError('signal_processor must be of type SignalProcesorInterface')
+
         self._signal_processors.append(signal_processor)
 
     def run(self, signal_data: DataSet) -> DataSet:

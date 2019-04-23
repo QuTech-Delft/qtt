@@ -12,7 +12,8 @@ from qtt.measurements.new.signal_processor_runner import SignalProcessorRunner
 class TestSignalProcessorRunner(TestCase):
     @staticmethod
     def test_run():
-        with patch('qtt.measurements.new.interfaces.signal_processor_interface.SignalProcessorInterface') as spi:
+        with patch('qtt.measurements.new.interfaces.signal_processor_interface.SignalProcessorInterface',
+                   spec=SignalProcessorInterface) as spi:
             class DummySignalProcessor(spi):
                 def __init__(self):
                     self._signal_data = None
