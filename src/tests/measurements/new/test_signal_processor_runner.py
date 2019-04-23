@@ -67,12 +67,20 @@ class TestSignalProcessorRunner(TestCase):
         data_set = DataSet(data_arrays=DataArray('x', 'x', preset_data=array([1, 2, 3, 4, 5])))
 
         class PlusOneSignalProcessor(SignalProcessorInterface):
+            def __init__(self):
+                self._signal_data = None
+
             def run_process(self, signal_data: DataSet) -> DataSet:
+                self._signal_data = signal_data
                 signal_data.data_arrays['x'] += 1
                 return signal_data
 
         class TimesTwoSignalProcessor(SignalProcessorInterface):
+            def __init__(self):
+                self._signal_data = None
+
             def run_process(self, signal_data: DataSet) -> DataSet:
+                self._signal_data = signal_data
                 signal_data.data_arrays['x'] *= 2
                 return signal_data
 
