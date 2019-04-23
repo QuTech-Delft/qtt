@@ -31,7 +31,11 @@ class TestSignalProcessorRunner(TestCase):
 
     def test_add_signal_processor(self):
         class DummySignalProcessor(SignalProcessorInterface):
+            def __init__(self):
+                self._signal_data = None
+
             def run_process(self, signal_data: DataSet) -> DataSet:
+                self._signal_data = signal_data
                 return signal_data
 
         signal_processor = SignalProcessorRunner()
