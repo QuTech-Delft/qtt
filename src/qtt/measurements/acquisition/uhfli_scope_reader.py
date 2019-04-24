@@ -178,20 +178,77 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """
         self.__uhfli.scope_trig_enable.set('ON' if value else 'OFF')
 
-    def set_trigger_settings(self, channel: str, level: float, slope: str, delay: float) -> None:
-        """ Updates the input trigger settings.
+    @property
+    def trigger_channel(self) -> str:
+        """ Gets the external triggering channel.
+
+        Returns:
+            The trigger channel value.
+        """
+        return self.__uhfli.scope_trig_signal.get()
+
+    @trigger_channel.setter
+    def trigger_channel(self, channel: str) -> None:
+        """ Sets the exernal triggering channel.
 
         Args:
-            channel: The channel to trigger the acquision on.
-            level: The trigger-level of the trigger.
-            slope: The slope of the trigger.
-            delay: The delay between getting a trigger and acquiring.
+            channel: The trigger channel value.
         """
         self.__uhfli.scope_trig_signal.set(channel)
+
+    @property
+    def trigger_level(self) -> float:
+        """ Gets the external triggering level in Volts.
+
+        Returns:
+            The trigger level in Volts.
+        """
+        return self.__uhfli.scope_trig_level.get()
+
+    @trigger_level.setter
+    def trigger_level(self, level: float) -> None:
+        """ Sets the exernal triggering level.
+
+        Args:
+            level: The external trigger level in Volts.
+        """
         self.__uhfli.scope_trig_level.set(level)
+
+    @property
+    def trigger_slope(self) -> str:
+        """ Gets the external triggering slope.
+
+        Returns:
+            The scope trigger slope (e.g. Rise, Fall, etc.).
+        """
+        return self.__uhfli.scope_trig_slope.get()
+
+    @trigger_slope.setter
+    def trigger_slope(self, slope: str) -> None:
+        """ Sets the exernal triggering slope.
+
+        Args:
+            slope: The external trigger slope (e.g. Rise, Fall, etc.).
+        """
         self.__uhfli.scope_trig_slope.set(slope)
+
+    @property
+    def trigger_delay(self) -> float:
+        """ Gets the delay in seconds between the external trigger and acquisition. 
+
+        Returns:
+            The scope trigger delay in seconds.
+        """
+        return self.__uhfli.scope_trig_delay.get()
+
+    @trigger_delay.setter
+    def trigger_delay(self, delay: float) -> None:
+        """ Sets the delay in seconds between the external trigger and acquisition.
+
+        Args:
+            delay: The scope trigger delay in seconds.
+        """
         self.__uhfli.scope_trig_delay.set(delay)
-        self.__uhfli.scope_trig_reference.set(0)
 
     @property
     def enabled_channels(self) -> Tuple[int, int]:

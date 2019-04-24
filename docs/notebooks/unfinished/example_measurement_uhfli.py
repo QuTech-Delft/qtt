@@ -48,13 +48,19 @@ scope_reader.initialize(configuration)
 scope_reader.number_of_averages = 1
 scope_reader.input_range = (0.5, 1.0)
 scope_reader.sample_rate = 450e6
-scope_reader.period = 1e-5
+scope_reader.period = 1e-4
 
 scope_reader.enabled_channels = (1, )
 scope_reader.set_input_signal(1, 'Signal Input 1')
+
 scope_reader.trigger_enabled = False
+scope_reader.trigger_channel = 'Trig Input 1'
+scope_reader.trigger_level = 100
+scope_reader.trigger_slope = 'Rise'
+scope_reader.trigger_delay = 0
 
 scope_reader.prepare_acquisition()
+
 
 
 # READOUT THE SCOPE AND PLOT THE DATA

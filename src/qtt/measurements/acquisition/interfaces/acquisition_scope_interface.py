@@ -34,16 +34,25 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def trigger_enabled(self) -> bool:
         """ Turns the external triggering on or off."""
 
+    @property
     @abstractmethod
-    def set_trigger_settings(self, attribute: str, level: float, slope: str, delay: float) -> None:
-        """ Updates the input trigger settings.
+    def trigger_channel(self) -> str:
+        """The input signal to trigger the acquisition on."""
 
-        Args:
-            attribute: The input signal to trigger the acquisition on.
-            level: The trigger-level of the trigger.
-            slope: Edge of the trigger signal to trigger on.
-            delay: The delay between getting a trigger and acquiring.
-        """
+    @property
+    @abstractmethod
+    def trigger_level(self) -> float:
+        """The trigger-level of the trigger in Volts."""
+
+    @property
+    @abstractmethod
+    def trigger_slope(self) -> str:
+        """The edge of the trigger signal to trigger on."""
+
+    @property
+    @abstractmethod
+    def trigger_delay(self) -> float:
+        """The delay between getting a trigger and acquiring in seconds."""
 
     @property
     @abstractmethod
