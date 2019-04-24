@@ -2,8 +2,7 @@ import os
 from itertools import cycle
 
 import matplotlib.pyplot as plt
-from qcodes import Measure, Station
-from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
+from qcodes import Station
 
 from qtt.measurements.acquisition import UhfliScopeReader, load_configuration
 

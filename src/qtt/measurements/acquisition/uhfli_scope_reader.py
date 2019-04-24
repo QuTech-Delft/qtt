@@ -1,14 +1,15 @@
 """ Provides oscilloscope functionality for the Zurich Instruments UHFLI."""
 
-from typing import Tuple, List
-import numpy as np
 import time
+from typing import List, Tuple
 
-from qilib.configuration_helper import InstrumentAdapterFactory
-from qilib.data_set import DataArray, DataSet
-from qilib.utils import PythonJsonStructure
-from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
+import numpy as np
 from qcodes.instrument_drivers.ZI import ZIUHFLI
+from qilib.configuration_helper import InstrumentAdapterFactory
+from qilib.data_set import DataArray
+from qilib.utils import PythonJsonStructure
+
+from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 
 
 class UhfliScopeReader(AcquisitionScopeInterface):
@@ -234,7 +235,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
 
     @property
     def trigger_delay(self) -> float:
-        """ Gets the delay in seconds between the external trigger and acquisition. 
+        """ Gets the delay in seconds between the external trigger and acquisition.
 
         Returns:
             The scope trigger delay in seconds.
