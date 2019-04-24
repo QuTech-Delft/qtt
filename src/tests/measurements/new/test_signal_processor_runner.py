@@ -44,6 +44,12 @@ class TestSignalProcessorRunner(TestCase):
         self.assertEqual(len(signal_processor._signal_processors), 1)
         self.assertIsInstance(signal_processor._signal_processors[0], DummySignalProcessor)
 
+    def test_add_signal_processor_with_wrong_type(self):
+        signal_processor = SignalProcessorRunner()
+        with self.assertRaises(TypeError):
+            signal_processor.add_signal_processor(None)
+        self.assertEqual(len(signal_processor._signal_processors), 0)
+
     def test_run_process_without_signal_processor(self):
         data_set = DataSet(data_arrays=DataArray('x', 'x', preset_data=array([1, 2, 3, 4, 5])))
 
