@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import patch, MagicMock, mock_open, call
+from unittest.mock import patch, mock_open
 
 from qtt.measurements.acquisition.configuration_storage import load_configuration, save_configuration
 from qilib.utils.serialization import serialize
@@ -21,3 +21,4 @@ class TestConfigurationStorage(TestCase):
             save_configuration(file_path, configuration)
 
         file_mock.return_value.write.assert_called_once_with(serialize(configuration))
+        self.assertNotEqual(0, len(file_mock.mock_calls))

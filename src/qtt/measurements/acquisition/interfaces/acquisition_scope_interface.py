@@ -16,7 +16,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
 
     @property
     @abstractmethod
-    def input_range(self) -> Tuple[float]:
+    def input_range(self) -> Tuple[float, float]:
         """ The input range of the channels."""
 
     @property
@@ -56,7 +56,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
 
     @property
     @abstractmethod
-    def enabled_channels(self) -> Tuple[int]:
+    def enabled_channels(self) -> Tuple[int, int]:
         """ Reports the enabled input channels."""
 
     @abstractmethod

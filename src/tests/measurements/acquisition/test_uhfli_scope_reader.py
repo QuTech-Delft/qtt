@@ -2,7 +2,6 @@ import numpy as np
 from unittest import TestCase
 from unittest.mock import patch
 
-from qilib.data_set import DataSet
 from qilib.utils import PythonJsonStructure
 
 from qtt.measurements.acquisition import UhfliScopeReader
@@ -198,7 +197,8 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.scope_trig_enable.get.return_value = 'MAYBE'
         error_text = "Unknown trigger value"
         with self.assertRaisesRegex(ValueError, error_text):
-            scope_mock.trigger_enabled
+            trigger_value = scope_mock.trigger_enabled
+            self.assertIsNone(trigger_value)
 
     def test_trigger_enabled_setter(self):
         mock_address = 'dev2345'
