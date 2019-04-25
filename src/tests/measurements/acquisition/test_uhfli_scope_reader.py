@@ -261,7 +261,7 @@ class TestUhfliScopeReader(TestCase):
 
         level = 0.2
         scope_mock.adapter.instrument.scope_trig_level.get.return_value = level
-        self.assertEqual(level * 1000, scope_mock.trigger_level)
+        self.assertEqual(level, scope_mock.trigger_level)
 
         slope = 'Rise'
         scope_mock.adapter.instrument.scope_trig_slope.get.return_value = slope

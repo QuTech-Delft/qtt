@@ -222,8 +222,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         Returns:
             The trigger level in Volts.
         """
-        millivolt_to_volt = 1e3
-        return self.__uhfli.scope_trig_level.get() * millivolt_to_volt
+        return self.__uhfli.scope_trig_level.get()
 
     @trigger_level.setter
     def trigger_level(self, level: float) -> None:
@@ -232,8 +231,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         Args:
             level: The external trigger level in Volts.
         """
-        volt_to_millivolt = 1e-3
-        self.__uhfli.scope_trig_level.set(level) * volt_to_millivolt
+        self.__uhfli.scope_trig_level.set(level)
 
     @property
     def trigger_slope(self) -> str:
