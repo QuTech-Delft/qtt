@@ -4,7 +4,6 @@ import time
 from typing import List, Tuple, Optional
 
 import numpy as np
-from qcodes.instrument_drivers.ZI import ZIUHFLI
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.data_set import DataArray
 from qilib.utils import PythonJsonStructure
