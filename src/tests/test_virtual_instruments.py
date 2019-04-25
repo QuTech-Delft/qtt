@@ -16,7 +16,7 @@ class TestVirtualMeter(TestCase):
     def tearDown(self):
         self.virtual_meter.close()
 
-    def test_amplitude_parmeter(self):
+    def test_amplitude_parameter(self):
         self.assertEqual(self.virtual_meter.amplitude.unit, 'a.u.')
 
         self.assertIsInstance(self.virtual_meter.amplitude(), float)
