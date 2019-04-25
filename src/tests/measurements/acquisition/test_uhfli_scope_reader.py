@@ -32,7 +32,7 @@ class TestUhfliScopeReader(TestCase):
         mock_address = 'dev2332'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
-        scope_mock.prepare_acquisition()
+        scope_mock.start_acquisition()
 
         scope_mock.adapter.instrument.scope.set.assert_called_once_with('scopeModule/mode', 1)
         scope_mock.adapter.instrument.scope.subscribe.assert_called_once_with('/{}/scopes/0/wave'.format(mock_address))
@@ -90,7 +90,7 @@ class TestUhfliScopeReader(TestCase):
         mock_address = 'dev2334'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
-        scope_mock.finalize_acquisition()
+        scope_mock.stop_acquisition()
 
         command_text = '/{}/scopes/0/enable'.format(mock_address)
         scope_mock.adapter.instrument.daq.setInt.assert_called_once_with(command_text, 0)
@@ -158,9 +158,27 @@ class TestUhfliScopeReader(TestCase):
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
 
+        period = 0.54321
+        scope_mock.adapter.instrument.scope_duration.get.return_value = period
+
         sample_rate = 113e7
         scope_mock.sample_rate = sample_rate
+        scope_mock.adapter.instrument.scope_duration.get.assert_called_once()
         scope_mock.adapter.instrument.scope_samplingrate_float.set.assert_called_once_with(sample_rate)
+        scope_mock.adapter.instrument.scope_duration.set.assert_called_once_with(period)
+
+    def test_get_nearest_sample_rate_gets_value_correctly(self):
+        mock_address = 'dev2341'
+        scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
+        self.assertEqual(mock_address, scope_mock.adapter.address)
+
+        actual_nearest_value = 149e3
+        scope_mock.adapter.instrument.round_to_nearest_sampling_frequency.return_value = actual_nearest_value
+
+        guess_value = 150e3
+        neasest_value = scope_mock.get_nearest_sample_rate(guess_value)
+        scope_mock.adapter.instrument.round_to_nearest_sampling_frequency.assert_called_once_with(guess_value)
+        self.assertEqual(actual_nearest_value, neasest_value)
 
     def test_period_getter(self):
         mock_address = 'dev2342'
@@ -243,7 +261,7 @@ class TestUhfliScopeReader(TestCase):
 
         level = 0.2
         scope_mock.adapter.instrument.scope_trig_level.get.return_value = level
-        self.assertEqual(level, scope_mock.trigger_level)
+        self.assertEqual(level * 1000, scope_mock.trigger_level)
 
         slope = 'Rise'
         scope_mock.adapter.instrument.scope_trig_slope.get.return_value = slope
@@ -286,14 +304,6 @@ class TestUhfliScopeReader(TestCase):
         enabled_channels = (2, )
         scope_mock.enabled_channels = enabled_channels
         scope_mock.adapter.instrument.scope_channels.set.assert_called_with(2)
-
-        enabled_channels = (1, 2, 3)
-        with self.assertRaisesRegex(ValueError, 'Invalid enabled channels specification'):
-            scope_mock.enabled_channels = enabled_channels
-
-        enabled_channels = 1
-        with self.assertRaisesRegex(ValueError, 'Invalid enabled channels specification'):
-            scope_mock.enabled_channels = enabled_channels
 
     def test_input_signal_is_correctly_set(self):
         mock_address = 'dev2350'

@@ -13,18 +13,18 @@ def load_configuration(file_path: str) -> PythonJsonStructure:
         The loaded configuration from disk.
     """
     with open(file_path, 'rb') as file_pointer:
-        string_data = file_pointer.readlines()
-    serialized_data = dict(serialization.unserialize(string_data[0]))
-    return PythonJsonStructure(serialized_data)
+        serialized_configuration = file_pointer.readlines()
+    unserialized_configuration = dict(serialization.unserialize(serialized_configuration[0]))
+    return PythonJsonStructure(unserialized_configuration)
 
 
 def save_configuration(file_path: str, configuration: PythonJsonStructure) -> None:
-    """ Saves the instrument configuration to disk given the instrument adapter.
+    """ Saves the instrument configuration to disk storage.
 
     Args:
         file_path: The store file location on disk.
         configuration: The instrument configuration that needs to be stored to disk.
     """
-    with open(file_path, 'wb+') as file_pointer:
-        serialized_data = serialization.serialize(configuration)
-        file_pointer.write(serialized_data)
+    with open(file_path, 'wb') as file_pointer:
+        serialized_configuration = serialization.serialize(configuration)
+        file_pointer.write(serialized_configuration)

@@ -1,7 +1,7 @@
 """ Interface for oscilloscopes or equivalent devices to acquire data."""
 
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Optional
 
 from qtt.measurements.acquisition.interfaces import AcquisitionInterface
 
@@ -32,7 +32,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     @property
     @abstractmethod
     def trigger_enabled(self) -> bool:
-        """ Turns the external triggering on or off."""
+        """ The setter sets the external triggering on or off. The getter returns the current trigger value."""
 
     @property
     @abstractmethod
@@ -60,7 +60,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
         """ Reports the enabled input channels."""
 
     @abstractmethod
-    def set_input_signal(self, channel: int, attribute: str) -> None:
+    def set_input_signal(self, channel: int, attribute: Optional[str]) -> None:
         """ Adds an input channel to the scope.
 
         Args:

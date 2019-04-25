@@ -28,8 +28,8 @@ class AcquisitionInterface(ABC):
         """
 
     @abstractmethod
-    def prepare_acquisition(self) -> None:
-        """ Updates the settings required for acquisition.
+    def start_acquisition(self) -> None:
+        """ Starts the acquisition readout mode.
 
             This method should be called after initializing the acquisition
             device and before reading out the device with acquire.
@@ -39,7 +39,7 @@ class AcquisitionInterface(ABC):
     def acquire(self, number_of_records: int, timeout: float) -> List[DataArray]:
         """ Reads raw-data from the acquisition device.
 
-            This method should be called after initialising and preparing the acquisition.
+            This method should be called after initialising and starting the acquisition.
 
         Args:
             number_of_records: The number of records collected.
@@ -50,8 +50,8 @@ class AcquisitionInterface(ABC):
         """
 
     @abstractmethod
-    def finalize_acquisition(self) -> None:
-        """ Restores the settings after acquiring records with the device.
+    def stop_acquisition(self) -> None:
+        """ Stops the acquisition readout mode.
 
             This function should be called after acquiring with the readout device.
         """

@@ -1,7 +1,7 @@
 """ Provides oscilloscope functionality for the Zurich Instruments UHFLI."""
 
 import time
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 from qcodes.instrument_drivers.ZI import ZIUHFLI
@@ -30,35 +30,34 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """ Applies the configuration to the UHFLI.
 
         Args:
-            config: The configuration with all the UHFLI settings.
+            configuration: The configuration with all the UHFLI settings.
         """
         self.adapter.apply(configuration)
 
-    def prepare_acquisition(self) -> None:
-        """ Sets the UFHLI into scope mode such that the device can collect records."""
+    def start_acquisition(self) -> None:
+        """ Starts the acquisition mode of the scope in the UHFLI."""
         self.__uhfli.scope.set('scopeModule/mode', 1)
         self.__uhfli.scope.subscribe('/{0}/scopes/0/wave'.format(self._address))
         self.__uhfli.daq.sync()
         self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 1)
 
     def acquire(self, number_of_records: int=1, timeout: float=30) -> List[DataArray]:
-        """ Collects records from the UHFLI, where the readout data is added to the given dataset.
+        """ Collects records from the UHFLI.
 
         Args:
             number_of_records: The number of records which should be collected at once.
             timeout: The time the collecting of records can maximally take before raising an error.
 
         Returns:
-            A list with the recorded scope records.
+            A list with the recorded scope records as data arrays.
         """
         collected_records = [self.__create_setpoint_data()]
-        trace_data = UhfliScopeReader.__get_uhfli_scope_records(self._address, self.__uhfli,
-                                                                number_of_records, timeout)
+        trace_data = self.__get_uhfli_scope_records(number_of_records, timeout)
         self.__acquire_measurement_data(collected_records, trace_data)
         return collected_records
 
-    def finalize_acquisition(self) -> None:
-        """ Disables the acquisition mode of the scope in the UHFLI."""
+    def stop_acquisition(self) -> None:
+        """ Stops the acquisition mode of the scope in the UHFLI."""
         self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 0)
         self.__uhfli.scope.finish()
 
@@ -95,7 +94,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         Args:
             value: The number of averages.
         """
-        self.__uhfli.scope_segments.set('OFF' if value==1 else 'ON')
+        self.__uhfli.scope_segments.set('OFF' if value == 1 else 'ON')
         self.__uhfli.scope_average_weight.set(value)
 
     @property
@@ -107,7 +106,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """
         range_channel_1 = self.__uhfli.signal_input1_range.get()
         range_channel_2 = self.__uhfli.signal_input2_range.get()
-        return (range_channel_1, range_channel_2)
+        return range_channel_1, range_channel_2
 
     @input_range.setter
     def input_range(self, value: Tuple[float, float]) -> None:
@@ -136,7 +135,20 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         Args:
             value: The sample rate in samples per second.
         """
+        current_period = self.period
         self.__uhfli.scope_samplingrate_float.set(value)
+        self.period = current_period
+
+    def get_nearest_sample_rate(self, sample_rate: float) -> float:
+        """ Gets the nearest sample rate corresponding to the given value.
+
+        Args:
+            sample_rate: A possible sample rate to check for a nearest actual settable sample rate value.
+
+        Returns:
+            The nearest settable sample rate value on the UHFLI.
+        """
+        return self.__uhfli.round_to_nearest_sampling_frequency(sample_rate)
 
     @property
     def period(self) -> float:
@@ -184,16 +196,22 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """ Gets the external triggering channel.
 
         Returns:
-            The trigger channel value.
+            The trigger channel value. The possible trigger channel values are:
+            Signal Input 1, Signal Input 2, Trig Input 1, Trig Input 2, Aux Output 1, Aux Output 2,
+            Aux Output 3, Aux Output 4, Aux In 1 Ch 1, Aux In 1 Ch 2, Osc phi Demod 4, Osc phi Demod 8,
+            AU Cartesian 1, AU Cartesian 2, AU Polar 1, AU Polar 2.
         """
         return self.__uhfli.scope_trig_signal.get()
 
     @trigger_channel.setter
     def trigger_channel(self, channel: str) -> None:
-        """ Sets the exernal triggering channel.
+        """ Sets the external triggering channel.
 
         Args:
-            channel: The trigger channel value.
+            channel: The trigger channel value. The possible trigger channel values are:
+                     Signal Input 1, Signal Input 2, Trig Input 1, Trig Input 2, Aux Output 1, Aux Output 2,
+                     Aux Output 3, Aux Output 4, Aux In 1 Ch 1, Aux In 1 Ch 2, Osc phi Demod 4, Osc phi Demod 8,
+                     AU Cartesian 1, AU Cartesian 2, AU Polar 1, AU Polar 2.
         """
         self.__uhfli.scope_trig_signal.set(channel)
 
@@ -204,32 +222,34 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         Returns:
             The trigger level in Volts.
         """
-        return self.__uhfli.scope_trig_level.get()
+        millivolt_to_volt = 1e3
+        return self.__uhfli.scope_trig_level.get() * millivolt_to_volt
 
     @trigger_level.setter
     def trigger_level(self, level: float) -> None:
-        """ Sets the exernal triggering level.
+        """ Sets the external triggering level.
 
         Args:
             level: The external trigger level in Volts.
         """
-        self.__uhfli.scope_trig_level.set(level)
+        volt_to_millivolt = 1e-3
+        self.__uhfli.scope_trig_level.set(level) * volt_to_millivolt
 
     @property
     def trigger_slope(self) -> str:
         """ Gets the external triggering slope.
 
         Returns:
-            The scope trigger slope (e.g. Rise, Fall, etc.).
+            The scope trigger slope (possible values are: Rise, Fall, Both or None).
         """
         return self.__uhfli.scope_trig_slope.get()
 
     @trigger_slope.setter
     def trigger_slope(self, slope: str) -> None:
-        """ Sets the exernal triggering slope.
+        """ Sets the external triggering slope.
 
         Args:
-            slope: The external trigger slope (e.g. Rise, Fall, etc.).
+            slope: The external trigger slope (possible values are: Rise, Fall, Both and None).
         """
         self.__uhfli.scope_trig_slope.set(slope)
 
@@ -260,21 +280,19 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         """
         enabled_channels = self.__uhfli.scope_channels.get()
         if enabled_channels == 3:
-            return (1, 2)
-        return (enabled_channels)
+            return 1, 2
+        return enabled_channels
 
     @enabled_channels.setter
     def enabled_channels(self, value: Tuple[int, int]):
         """ Sets the given channels to enabled and turns off all others.
 
         Args:
-            value: The channels which needs to be anabled.
+            value: The channels which needs to be enabled.
         """
-        if not isinstance(value, tuple)  or len(value) < 1 or len(value) > 2:
-            raise ValueError('Invalid enabled channels specification {}!'.format(value))
         self.__uhfli.scope_channels.set(sum(value))
 
-    def set_input_signal(self, channel: int, attribute: str) -> None:
+    def set_input_signal(self, channel: int, attribute: Optional[str]) -> None:
         """ Adds an input channel to the scope.
 
         Args:
@@ -284,20 +302,19 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
         channel_input.set(attribute)
 
-    @staticmethod
-    def __get_uhfli_scope_records(address: str, uhfli: ZIUHFLI, number_of_records: int, timeout: float):
-        uhfli.scope.execute()
+    def __get_uhfli_scope_records(self, number_of_records: int, timeout: float):
+        self.__uhfli.scope.execute()
 
         records = 0
         progress = 0
         start = time.time()
         while records < number_of_records and progress < 1.0:
-            records = uhfli.scope.getInt("scopeModule/records")
-            progress = uhfli.scope.progress()[0]
+            records = self.__uhfli.scope.getInt("scopeModule/records")
+            progress = self.__uhfli.scope.progress()[0]
             if time.time() - start > timeout:
                 error_text = "Got {} records after {} sec. - forcing stop.".format(records, timeout)
                 raise TimeoutError(error_text)
 
-        traces = uhfli.scope.read(True)
-        wave_nodepath = '/{0}/scopes/0/wave'.format(address)
+        traces = self.__uhfli.scope.read(True)
+        wave_nodepath = '/{0}/scopes/0/wave'.format(self._address)
         return traces[wave_nodepath][:number_of_records][0][0]['wave']
