@@ -58,7 +58,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 0)
         self.__uhfli.scope.finish()
 
-    def __create_setpoint_data(self) -> DataArray:
+    def __create_setpoint_data(self) -> None:
         sample_count = self.__uhfli.scope_length()
         data_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True,
                                preset_data=np.linspace(0, self.period, sample_count))
