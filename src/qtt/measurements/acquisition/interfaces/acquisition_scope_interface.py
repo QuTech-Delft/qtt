@@ -37,7 +37,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     @property
     @abstractmethod
     def trigger_channel(self) -> str:
-        """The input signal to trigger the acquisition on."""
+        """ The input signal to trigger the acquisition on."""
 
     @property
     @abstractmethod
