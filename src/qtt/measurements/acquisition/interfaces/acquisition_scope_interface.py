@@ -42,7 +42,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     @property
     @abstractmethod
     def trigger_level(self) -> float:
-        """The trigger-level of the trigger in Volts."""
+        """ The trigger-level of the trigger in Volts."""
 
     @property
     @abstractmethod
