@@ -10,7 +10,6 @@ Polygon3
 pyqtgraph
 pyzmqrpc
 PyQt5
-qcodes
 qtpy
 qupulse
 sympy
@@ -18,3 +17,4 @@ scikit-image
 scipy>=0.18
 tables
 git+https://github.com/QuTech-Delft/qilib.git#egg=qilib
+git+https://github.com/Qcodes/Qcodes#egg=qcodes

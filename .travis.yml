@@ -18,7 +18,6 @@ matrix:
       - xvfb
 
 install:
-    - pip install qcodes
     - pip install -r requirements.txt
     - pip install opencv-python coveralls
     - pip install mypy
