@@ -30,9 +30,9 @@ class TestData(unittest.TestCase):
         resolution = tr.scan_resolution()
         self.assertEqual(resolution, 1)
 
+    def test_dataset1Dmetadata(self):
+        dataset = qcodes.tests.data_mocks.DataSet1D(name='test1d')
 
-if __name__ == '__main__':
-    unittest.main()
+        _, _, _, _, arrayname = qtt.data.dataset1Dmetadata(dataset)
+        self.assertEqual(arrayname, 'y')
 
-    t1 = TestData()
-    t1.test_transform()

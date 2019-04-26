@@ -618,7 +618,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None,
 
 
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
-    """ Extract metadata from a 2D scan
+    """ Extract metadata from a 1D scan
 
     Returns:
 

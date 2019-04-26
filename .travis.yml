@@ -43,5 +43,4 @@ after_success:
   - coveralls
     
 
-# - xvfb-run -a pytest
 # https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui
