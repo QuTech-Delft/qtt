@@ -47,7 +47,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     @property
     @abstractmethod
     def trigger_slope(self) -> str:
-        """The edge of the trigger signal to trigger on."""
+        """ The edge of the trigger signal to trigger on."""
 
     @property
     @abstractmethod
