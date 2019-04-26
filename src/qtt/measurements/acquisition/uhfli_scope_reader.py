@@ -50,10 +50,8 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         Returns:
             A list with the recorded scope records as data arrays.
         """
-        collected_records = [self.__create_setpoint_data()]
-        trace_data = self.__get_uhfli_scope_records(number_of_records, timeout)
-        self.__acquire_measurement_data(collected_records, trace_data)
-        return collected_records
+        self.__create_setpoint_data()
+        return self.__get_uhfli_scope_records(number_of_records, timeout)
 
     def stop_acquisition(self) -> None:
         """ Stops the acquisition mode of the scope in the UHFLI."""
@@ -61,21 +59,10 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__uhfli.scope.finish()
 
     def __create_setpoint_data(self) -> DataArray:
-        self.__acquisition_counter = 0
         sample_count = self.__uhfli.scope_length()
         data_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True,
                                preset_data=np.linspace(0, self.period, sample_count))
-        return data_array
-
-    def __acquire_measurement_data(self, collected_records: List[DataArray], trace_data: dict) -> None:
-        records = zip(self.__uhfli.Scope.names, self.__uhfli.Scope.units, trace_data)
-        for (label, unit, trace) in records:
-            if not isinstance(trace, np.ndarray):
-                continue
-            self.__acquisition_counter += 1
-            identifier = 'ScopeTrace_{:03d}'.format(self.__acquisition_counter)
-            data_array = DataArray(identifier, label, unit, preset_data=trace)
-            collected_records.append(data_array)
+        self.__setpoint_array = data_array
 
     @property
     def number_of_averages(self) -> int:
@@ -269,7 +256,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         self.__uhfli.scope_trig_delay.set(delay)
 
     @property
-    def enabled_channels(self) -> Tuple[int, int]:
+    def enabled_channels(self) -> Tuple[int, ...]:
         """ Gets the channel enabled states.
 
         Returns:
@@ -278,10 +265,10 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         enabled_channels = self.__uhfli.scope_channels.get()
         if enabled_channels == 3:
             return 1, 2
-        return enabled_channels
+        return (enabled_channels, )
 
     @enabled_channels.setter
-    def enabled_channels(self, value: Tuple[int, int]):
+    def enabled_channels(self, value: Tuple[int, ...]):
         """ Sets the given channels to enabled and turns off all others.
 
         Args:
@@ -305,7 +292,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         records = 0
         progress = 0
         start = time.time()
-        while records < number_of_records and progress < 1.0:
+        while records < number_of_records or progress < 1.0:
             records = self.__uhfli.scope.getInt("scopeModule/records")
             progress = self.__uhfli.scope.progress()[0]
             if time.time() - start > timeout:
@@ -314,4 +301,22 @@ class UhfliScopeReader(AcquisitionScopeInterface):
 
         traces = self.__uhfli.scope.read(True)
         wave_nodepath = '/{0}/scopes/0/wave'.format(self._address)
-        return traces[wave_nodepath][:number_of_records][0][0]['wave']
+        scope_traces = traces[wave_nodepath][:number_of_records]
+        return self.__covert_scope_data(scope_traces)
+
+    def __covert_scope_data(self, scope_traces):
+        data = []
+        acquisition_counter = 0
+        for channel_index, _ in enumerate(self.enabled_channels):
+            for _, trace in enumerate(scope_traces):
+                wave = trace[0]['wave'][channel_index, :]
+                data_array = self.__convert_to_data_array(wave, channel_index, acquisition_counter)
+                data.append(data_array)
+                acquisition_counter += 1
+        return data
+
+    def __convert_to_data_array(self, scope_data: np.ndarray, channel_index: int, counter: int) -> DataArray:
+        identifier = 'ScopeTrace_{:03d}'.format(counter)
+        label = 'Channel_{}'.format(channel_index)
+        data_array = DataArray(identifier, label, preset_data=scope_data, set_arrays=[self.__setpoint_array])
+        return data_array

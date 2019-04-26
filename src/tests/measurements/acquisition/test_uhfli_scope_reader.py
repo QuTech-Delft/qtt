@@ -56,20 +56,16 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.scope.progress.return_value = [1]
 
         wave_nodepath = '/{0}/scopes/0/wave'.format(mock_address)
-        scope_data = [[1, 2, 3 ,4], np.ndarray([1, 2, 3, 4, 5])]
+        scope_data = np.array([np.random.rand(1000), np.random.rand(1000)])
         trace = [[{'wave': scope_data}], 0, 0]
         scope_mock.adapter.instrument.scope.read.return_value = {wave_nodepath: trace}
         scope_mock.adapter.instrument.Scope.names = ['Test1', name]
         scope_mock.adapter.instrument.Scope.units = ['GigaVolt', unit]
 
-        scope_time, scope_trace_001 = scope_mock.acquire()
-        self.assertEqual(len(scope_time), scope_length)
-        self.assertEqual(scope_time.label, 'Time')
-        self.assertEqual(scope_time.unit, 'seconds')
-
-        np.testing.assert_array_equal(scope_trace_001, scope_data[1])
-        self.assertEqual(scope_trace_001.label, name)
-        self.assertEqual(scope_trace_001.unit, unit)
+        scope_trace_001 = scope_mock.acquire()
+        self.assertEqual(len(scope_trace_001[0].set_arrays[0]), scope_length)
+        self.assertEqual(scope_trace_001[0].name, 'ScopeTrace_000')
+        self.assertEqual(scope_trace_001[0].label, 'Channel_0')
 
     def test_acquire_raises_timeout(self):
         mock_address = 'dev2333a'
@@ -282,11 +278,11 @@ class TestUhfliScopeReader(TestCase):
 
         enabled_channels = 2
         scope_mock.adapter.instrument.scope_channels.get.return_value = enabled_channels
-        self.assertEqual(scope_mock.enabled_channels, (2))
+        self.assertEqual(scope_mock.enabled_channels, (2, ))
 
         enabled_channels = 1
         scope_mock.adapter.instrument.scope_channels.get.return_value = enabled_channels
-        self.assertEqual(scope_mock.enabled_channels, (1))
+        self.assertEqual(scope_mock.enabled_channels, (1, ))
 
     def test_enabled_channels_setter(self):
         mock_address = 'dev2349'

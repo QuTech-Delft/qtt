@@ -56,7 +56,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
 
     @property
     @abstractmethod
-    def enabled_channels(self) -> Tuple[int, int]:
+    def enabled_channels(self) -> Tuple[int, ...]:
         """ Reports the enabled input channels."""
 
     @abstractmethod

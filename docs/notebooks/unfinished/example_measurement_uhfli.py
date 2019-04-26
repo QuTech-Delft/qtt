@@ -13,18 +13,14 @@ color_cycler = cycle('bgrcmk')
 
 
 def plot_1D_dataset(plot, records, label_x, label_y):
-    x_data = records[0]
-    y_data_list = records[1:]
-
     plot.clf()
-    for y_data in y_data_list:
-        plot.plot(x_data.flatten(), y_data.flatten(), color=next(color_cycler), label=y_data.name)
-
     plot.xlabel(label_x)
     plot.ylabel(label_y)
-    plot.legend(loc='upper right')
-    plot.draw()
-    plot.pause(0.001)
+    for record in records:
+        plot.plot(record.set_arrays[0].flatten(), record.flatten(), color=next(color_cycler), label=record.name)
+        plot.legend(loc='upper right')
+        plot.draw()
+        plot.pause(0.001)
 
 
 # CREATE THE SCOPE READER AND STATION
@@ -52,7 +48,7 @@ scope_reader.period = 1e-5
 scope_reader.enabled_channels = (1, )
 scope_reader.set_input_signal(1, 'Signal Input 1')
 
-scope_reader.trigger_enabled = True
+scope_reader.trigger_enabled = False
 scope_reader.trigger_channel = 'Trig Input 1'
 scope_reader.trigger_level = 0.100
 scope_reader.trigger_slope = 'Rise'
@@ -71,7 +67,7 @@ plt.show()
 samples = 10
 
 for number in range(1, samples):
-    records = scope_reader.acquire()
+    records = scope_reader.acquire(number_of_records=10)
     plot_1D_dataset(plt, records, 'Time [sec.]', 'Amplitude [V]')
 
 scope_reader.stop_acquisition()
