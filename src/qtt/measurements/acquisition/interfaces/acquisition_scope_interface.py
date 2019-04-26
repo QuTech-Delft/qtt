@@ -52,7 +52,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     @property
     @abstractmethod
     def trigger_delay(self) -> float:
-        """The delay between getting a trigger and acquiring in seconds."""
+        """ The delay between getting a trigger and acquiring in seconds."""
 
     @property
     @abstractmethod
