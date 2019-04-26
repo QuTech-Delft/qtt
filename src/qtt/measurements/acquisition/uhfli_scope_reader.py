@@ -302,9 +302,9 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         traces = self.__uhfli.scope.read(True)
         wave_nodepath = '/{0}/scopes/0/wave'.format(self._address)
         scope_traces = traces[wave_nodepath][:number_of_records]
-        return self.__covert_scope_data(scope_traces)
+        return self.__convert_scope_data(scope_traces)
 
-    def __covert_scope_data(self, scope_traces):
+    def __convert_scope_data(self, scope_traces):
         data = []
         acquisition_counter = 0
         for channel_index, _ in enumerate(self.enabled_channels):
