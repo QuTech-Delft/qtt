@@ -265,7 +265,7 @@ class UhfliScopeReader(AcquisitionScopeInterface):
         enabled_channels = self.__uhfli.scope_channels.get()
         if enabled_channels == 3:
             return 1, 2
-        return (enabled_channels, )
+        return enabled_channels, 
 
     @enabled_channels.setter
     def enabled_channels(self, value: Tuple[int, ...]):
