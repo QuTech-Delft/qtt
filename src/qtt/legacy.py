@@ -302,7 +302,7 @@ from qtt.utilities.imagetools import cleanSensingImage
 fitBackground = qtt.utilities.tools.deprecated(fitBackgroundTmp)
 
 
-@qtt.utilities.tools.deprecated
+@rdeprecated(expire='1 Sep 2018')
 def showIm(ims, fig=1, title='', showz=False):
     """ Show image with nearest neighbor interpolation and axis scaling """
     plt.figure(fig)

@@ -27,12 +27,12 @@ class TestData(unittest.TestCase):
     def test_transform(self):
         dataset = qcodes.tests.data_mocks.DataSet2D()
         tr = qtt.data.image_transform(dataset, arrayname='z')
-        istep = tr.istep()
-        self.assertEqual(istep, 1)
+        resolution = tr.scan_resolution()
+        self.assertEqual(resolution, 1)
 
+    def test_dataset1Dmetadata(self):
+        dataset = qcodes.tests.data_mocks.DataSet1D(name='test1d')
 
-if __name__ == '__main__':
-    unittest.main()
+        _, _, _, _, arrayname = qtt.data.dataset1Dmetadata(dataset)
+        self.assertEqual(arrayname, 'y')
 
-    t1 = TestData()
-    t1.test_transform()

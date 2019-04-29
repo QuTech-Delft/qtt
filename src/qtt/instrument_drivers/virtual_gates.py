@@ -644,7 +644,10 @@ class TestVirtualGates(unittest.TestCase):
         if verbose:
             extended_vgates.print_matrix()
 
-        _ = update_cc_matrix(vgates, update_cc=np.eye(3), verbose=0)
+        extended_vgates.close()
+
+        newvg,_,_ = update_cc_matrix(vgates, update_cc=np.eye(3), verbose=0)
+        newvg.close()
 
         update_matrix = 0.1 * np.random.rand(3, 3)
         np.fill_diagonal(update_matrix, 1)
@@ -686,5 +689,6 @@ class TestVirtualGates(unittest.TestCase):
         np.testing.assert_almost_equal(vx.get_crosscap_matrix_inv(), virts.get_crosscap_matrix_inv())
         self.assertTrue(vx.pgates() == ['P%d' % i for i in range(1, 4)])
 
+        vx.close()
         gates.close()
         virts.close()

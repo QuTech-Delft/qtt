@@ -1,4 +1,2 @@
-import warnings
-warnings.warn('use qtt.utilities.tools instead')
+raise Exception('use qtt.utilities.tools instead of qtt.tools')
 
-from qtt.utilities.tools import *

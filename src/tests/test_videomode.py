@@ -1,5 +1,7 @@
 import unittest
 from unittest import TestCase
+import unittest.mock as mock
+import io
 
 import qcodes
 import qtt.data
@@ -15,45 +17,49 @@ from qtt.measurements.videomode import VideoMode
 class TestVideomode(TestCase):
 
     def test_videomode_getdataset(self):
-        station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
+        with mock.patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
 
-        digitizer = SimulationDigitizer(
-            qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
-        station.add_component(digitizer)
+            digitizer = SimulationDigitizer(
+                qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
+            station.add_component(digitizer)
 
-        station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
-        station.add_component(station.awg)
+            station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
+            station.add_component(station.awg)
 
-        sweepparams = {'gates_horz': {'P1': 1}, 'gates_vert': {'P2': 1}}
-        minstrument = (digitizer.name, [0])
+            sweepparams = {'gates_horz': {'P1': 1}, 'gates_vert': {'P2': 1}}
+            minstrument = (digitizer.name, [0])
 
-        vm = VideoMode(station, sweepparams, sweepranges=[120] * 2,
-                       minstrument=minstrument, resolution=[12] * 2, Naverage=2)
-        vm.stop()
-        vm.updatebg()
-        data = vm.get_dataset()
-        vm.close()
+            vm = VideoMode(station, sweepparams, sweepranges=[120] * 2,
+                           minstrument=minstrument, resolution=[12] * 2, Naverage=2)
+            vm.stop()
+            vm.updatebg()
+            data = vm.get_dataset()
+            vm.close()
 
-        self.assertIsInstance(data, list)
-        self.assertIsInstance(data[0], qcodes.DataSet)
-        self.assertEqual(data[0].measured.shape, (12, 12))
+            self.assertIsInstance(data, list)
+            self.assertIsInstance(data[0], qcodes.DataSet)
+            self.assertEqual(data[0].measured.shape, (12, 12))
 
-        vm = VideoMode(station, ['P1', 'P2'], sweepranges=[20] * 2,
-                       minstrument=minstrument, resolution=[32] * 2, Naverage=2)
-        vm.stop()
-        vm.updatebg()
-        data = vm.get_dataset()
-        vm.close()
+            vm = VideoMode(station, ['P1', 'P2'], sweepranges=[20] * 2,
+                           minstrument=minstrument, resolution=[32] * 2, Naverage=2)
+            vm.stop()
+            vm.updatebg()
+            data = vm.get_dataset()
+            vm.close()
 
-        self.assertIsInstance(data, list)
-        self.assertIsInstance(data[0], qcodes.DataSet)
-        self.assertEqual(data[0].measured.shape, (32, 32))
+            self.assertIsInstance(data, list)
+            self.assertIsInstance(data[0], qcodes.DataSet)
+            self.assertEqual(data[0].measured.shape, (32, 32))
 
-        for name, instrument in station.components.items():
-            instrument.close()
+            for name, instrument in station.components.items():
+                instrument.close()
 
-        qtt.simulation.virtual_dot_array.close(verbose=0)
+            qtt.simulation.virtual_dot_array.close(verbose=0)
 
+            std_output = mock_stdout.getvalue()
+            print(std_output)
+            self.assertIn('VideoMode: start readout', std_output)
 
 if __name__ == '__main__':
     unittest.main()

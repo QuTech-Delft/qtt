@@ -410,15 +410,15 @@ def dataset2image2(dataset, arrayname=None):
 def dataset_get_istep(alldata, mode=None):
     """ Return number of mV per pixel in scan """
     try:
-        istep = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
+        resolution = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
     except BaseException:
         try:
             extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
                 alldata, verbose=0, arrayname=None)
-            istep = np.abs(np.nanmean(np.diff(vstep)))
+            resolution = np.abs(np.nanmean(np.diff(vstep)))
         except BaseException:
-            _, _, _, istep, _ = dataset1Dmetadata(alldata)
-    return istep
+            _, _, _, resolution, _ = dataset1Dmetadata(alldata)
+    return resolution
 
 
 def dataset1Ddata(alldata):
@@ -618,7 +618,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None,
 
 
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
-    """ Extract metadata from a 2D scan
+    """ Extract metadata from a 1D scan
 
     Returns:
 
@@ -760,10 +760,10 @@ class image_transform:
 
     @qtt.utilities.tools.deprecated
     def istep(self):
-        return self._istep
+        return self.scan_resolution()
 
     def scan_resolution(self):
-        """ Return the scan resulution in [units]/pixel """
+        """ Return the scan resolution in [units]/pixel """
         return self._istep
 
     def scan_image_extent(self):

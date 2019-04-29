@@ -430,7 +430,7 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
 
     logger.info('initialize: create station')
     station = qcodes.Station(gates, keithley1, keithley3, keithley4, *ivvis,
-                             vawg, digitizer, update_snapshot=False)
+                             vawg, digitizer, model, update_snapshot=False)
     station.awg = station.vawg
     station.metadata['sample'] = 'virtual_dot'
     station.model = model

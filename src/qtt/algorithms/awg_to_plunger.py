@@ -127,7 +127,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
         import cv2
         im, tr = qtt.data.dataset2image(ds)
         imextent = tr.scan_image_extent()
-        istep = tr.istep()
+        istep = tr.scan_resolution()
         _, r = qtt.algorithms.images.straightenImage(
             im, imextent, mvx=istep, mvy=None)
         H = r[4]
