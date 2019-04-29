@@ -5,14 +5,14 @@ from numpy import array_equal
 from numpy.ma import array
 from qilib.data_set import DataSet, DataArray
 
-from qtt.measurements.new.interfaces.signal_processor_interface import SignalProcessorInterface
-from qtt.measurements.new.signal_processor_runner import SignalProcessorRunner
+from qtt.measurements.post_processing import SignalProcessorInterface
+from qtt.measurements.post_processing import SignalProcessorRunner
 
 
 class TestSignalProcessorRunner(TestCase):
     @staticmethod
     def test_run():
-        with patch('qtt.measurements.new.interfaces.signal_processor_interface.SignalProcessorInterface',
+        with patch('qtt.measurements.post_processing.interfaces.signal_processor_interface.SignalProcessorInterface',
                    spec=SignalProcessorInterface) as spi:
             class DummySignalProcessor(spi):
                 def __init__(self):
