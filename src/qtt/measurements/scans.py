@@ -28,6 +28,7 @@ import qtt.utilities.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
+import qtt.instrument_drivers.virtualAwg.virtual_awg
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, loadDataset, writeDataset

@@ -147,11 +147,9 @@ def load_dataset(location, io=None, verbose=0):
         io = qcodes.DataSet.default_io
     formatters = [qcodes.DataSet.default_formatter]
 
-    try:
-        from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
-        formatters += [HDF5FormatHickle()]
-    except BaseException:
-        pass
+    from qcodes.data.hdf5_format import HDF5FormatMetadata
+    from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
+    formatters += [HDF5FormatHickle(), HDF5FormatMetadata()]
 
     from qcodes.data.hdf5_format import HDF5Format
     formatters += [HDF5Format()]
