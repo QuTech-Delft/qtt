@@ -319,6 +319,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
 
+    #dlg.close()
 
 # %% Send message to logger
 if 0:

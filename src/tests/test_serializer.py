@@ -3,7 +3,8 @@ import json
 import numpy as np
 
 import qcodes
-from qtt.utilities.json_serializer import QttJsonEncoder, QttJsonDecoder
+import qcodes.tests.data_mocks
+from qtt.utilities.json_serializer import QttJsonEncoder, QttJsonDecoder, encode_json, decode_json
 
 
 # %%
@@ -16,6 +17,14 @@ class TestJSON(unittest.TestCase):
 
         loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
         self.assertDictEqual(data, loaded_data)
+
+    def test_qcodes_dataset_encoding(self):
+        dataset=qcodes.tests.data_mocks.DataSet2D()
+
+        json_data=encode_json(dataset)
+        self.assertIsInstance(json_data, str)
+        dataset2 = decode_json(json_data)
+        self.assertIsInstance(dataset2, qcodes.DataSet)
 
     def test_numpy_encoders(self):
         data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}
