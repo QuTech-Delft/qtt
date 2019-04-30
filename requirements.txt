@@ -18,3 +18,4 @@ scipy>=0.18
 tables
 git+https://github.com/QuTech-Delft/qilib.git#egg=qilib
 git+https://github.com/Qcodes/Qcodes#egg=qcodes
+
