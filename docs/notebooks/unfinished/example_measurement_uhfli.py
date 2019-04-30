@@ -4,7 +4,7 @@ from itertools import cycle
 import matplotlib.pyplot as plt
 from qcodes import Station
 
-from qtt.measurements.acquisition import UhfliScopeReader, load_configuration
+from qtt.measurements.acquisition import UHFLIScopeReader, load_configuration
 
 
 # FUNCTIONS FOR PLOTTING
@@ -26,7 +26,7 @@ def plot_1D_dataset(plot, records, label_x, label_y):
 # CREATE THE SCOPE READER AND STATION
 
 device_id = 'dev2338'
-scope_reader = UhfliScopeReader(device_id)
+scope_reader = UHFLIScopeReader(device_id)
 uhfli = scope_reader.adapter.instrument
 station = Station(uhfli, update_snapshot=False)
 

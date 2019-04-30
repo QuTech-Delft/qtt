@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from qilib.utils import PythonJsonStructure
 
-from qtt.measurements.acquisition import UhfliScopeReader
+from qtt.measurements.acquisition import UHFLIScopeReader
 
 
 class TestUhfliScopeReader(TestCase):
@@ -13,7 +13,7 @@ class TestUhfliScopeReader(TestCase):
     def __patch_scope_reader(address):
         patch_object = 'qtt.measurements.acquisition.uhfli_scope_reader.InstrumentAdapterFactory'
         with patch(patch_object) as factory_mock:
-            scope_mock = UhfliScopeReader(address)
+            scope_mock = UHFLIScopeReader(address)
             scope_mock.adapter.address = address
         return scope_mock, factory_mock
 

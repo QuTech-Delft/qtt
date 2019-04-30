@@ -11,7 +11,7 @@ from qilib.utils import PythonJsonStructure
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 
 
-class UhfliScopeReader(AcquisitionScopeInterface):
+class UHFLIScopeReader(AcquisitionScopeInterface):
     """ Represents an acquisition wrapper for acquiring data with the Zurich Instruments UHFLI."""
 
     def __init__(self, address):
