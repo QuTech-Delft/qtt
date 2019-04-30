@@ -1,12 +1,13 @@
-""" Provides the LockInStimulus"""
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.utils import PythonJsonStructure
 
 
-class LockInStimulus:
+class UHFLIStimulus:
     """ A wrapper that provides methods to control Lock-in of Zurich instrument's UHF-LI devices."""
+
     def __init__(self, address: str) -> None:
-        """ Instantiate a LockInStimulus .
+        """ Instantiate a LockInStimulus.
+
         Args:
             address: A unique ID of a UHFLI device.
 
@@ -24,8 +25,7 @@ class LockInStimulus:
         self._adapter.apply(configuration)
 
     def set_demodulation_enabled(self, channel: int, is_enabled: bool) -> None:
-        """ Equivalent to enable data transfer in the demodulators section of the Lock-in tab
-            in the LabOne web interface.
+        """ Enable data transfer in the demodulators.
 
         Args:
              channel: The channel number to enable (1 - 8).

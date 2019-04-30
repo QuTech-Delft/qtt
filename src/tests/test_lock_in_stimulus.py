@@ -3,7 +3,7 @@ import unittest
 from mock import patch, MagicMock, call
 from qilib.utils import PythonJsonStructure
 
-from qtt.measurements.acquisition import LockInStimulus
+from qtt.measurements.acquisition import UHFLIStimulus
 
 
 class TestLockInStimulus(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestLockInStimulus(unittest.TestCase):
         self.adapter_mock.instrument = self.uhfli_mock
         with patch('qtt.measurements.acquisition.lock_in_stimulus.InstrumentAdapterFactory') as factory_mock:
             factory_mock.get_instrument_adapter.return_value = self.adapter_mock
-            self.lock_in_stimulus = LockInStimulus('mock42')
+            self.lock_in_stimulus = UHFLIStimulus('mock42')
 
     def test_initialize(self):
         config = PythonJsonStructure(bla='blu')

@@ -1,6 +1,6 @@
-from qtt.measurements.acquisition import LockInStimulus
+from qtt.measurements.acquisition import UHFLIStimulus
 
-lock_in_stimulus = LockInStimulus('dev2338')
+lock_in_stimulus = UHFLIStimulus('dev2338')
 
 
 channel = 2
