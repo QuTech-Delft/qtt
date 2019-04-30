@@ -1811,9 +1811,14 @@ def getWindowRectangle():
     return (x, y, w, h)
 
 
-def setWindowRectangle(x, y=None, w=None, h=None, mngr=None, be=None):
+def setWindowRectangle(x, y=None, w=None, h=None, fig=None, mngr=None):
     """ Position the current Matplotlib figure at the specified position
-    Usage: setWindowRectangle(x,y,w,h)
+
+    Args:
+        x: position in format (x,y,w,h)
+        fig (None or int): specification of figure window. Use None for the current active window
+
+    Usage: setWindowRectangle([x,y,w,h])
     """
     if y is None:
         y = x[1]
@@ -1835,7 +1840,6 @@ def setWindowRectangle(x, y=None, w=None, h=None, mngr=None, be=None):
         mngr.canvas.manager.window.move(x, y)
         mngr.canvas.manager.window.resize(w, h)
         mngr.canvas.manager.window.setGeometry(x, y, w, h)
-        # mngr.window.setGeometry(x,y,w,h)
 
 
 try:
@@ -2160,7 +2164,7 @@ def decomposeProjectiveTransformation(H, verbose=0):
         # primitive...
         sc = np.sign(np.diag(K))
         K = np.diag(sc).dot(K)
-        R = R.dot( np.diag(sc))
+        R = R.dot(np.diag(sc))
     br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
     Hs = np.array(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
     Ha = np.array(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))

@@ -168,7 +168,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
         figure_title = 'Histogram of two levels RTS'
-        Fig=plt.figure(fig + 1)
+        Fig = plt.figure(fig + 1)
         plt.clf()
         _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
         if ppt:
@@ -209,7 +209,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         bins = np.arange(durations.min() - .5, durations.max() + bin_size, bin_size)
         counts, bins = np.histogram(durations, bins=bins)
         if verbose:
-            print(' _create_histogram level ' + level + ': number of bins %d, %d' % (numbins, bin_size))
+            print(' _create_histogram level ' + level + ': number of bins %d, bin_size %d' % (numbins, bin_size))
         return counts, bins
 
     # calculating the number of bins and counts for down level
@@ -231,17 +231,19 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     tunnelrate_dn = None
     tunnelrate_up = None
 
-    if counts_dn[0] < 50:
-        tunnelrate_dn = None
-        tunnelrate_up = None
-        warnings.warn(
-            'Number of down datapoints %d is not be enough to make an acurate fit of the exponential decay for level down.' % counts_dn[0] + 'Look therefore at the mean value of the measurement segments')
+    minimal_count_number = 50
 
-    if counts_up[0] < 50:
+    if counts_dn[0] < minimal_count_number:
         tunnelrate_dn = None
         tunnelrate_up = None
         warnings.warn(
-            'Number of up datapoints %d is not be enough to make an acurate fit of the exponential decay for level up.' % counts_dn[0] + 'Look therefore at the mean value of the measurement segments')
+            f'Number of down datapoints {counts_dn[0]} is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level down. ' + 'Look therefore at the mean value of the measurement segments')
+
+    if counts_up[0] < minimal_count_number:
+        tunnelrate_dn = None
+        tunnelrate_up = None
+        warnings.warn(
+            f'Number of up datapoints %d is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level up. ' % counts_up[0] + 'Look therefore at the mean value of the measurement segments')
 
     parameters = {'plunger value': plungervalue, 'sampling rate': samplerate, 'fit parameters double gaussian': par_fit,
                   'separations between peaks gaussians': separation,
@@ -254,7 +256,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     parameters['tunnelrate_down_to_up'] = 1. / parameters['down_segments']['mean']
     parameters['tunnelrate_up_to_down'] = 1. / parameters['up_segments']['mean']
 
-    if (counts_dn[0] > 50) and (counts_up[0] > 50):
+    if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
         bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
 
@@ -263,7 +265,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_dn = gamma_dn_fit / 1000
 
         if verbose:
-            print('Tunnel rate down: %.1f kHz' % tunnelrate_dn)
+            print('Tunnel rate down to up: %.1f kHz' % tunnelrate_dn)
 
         time_scaling = 1e3
 
@@ -288,7 +290,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_up = gamma_up_fit / 1000
 
         if verbose:
-            print('Tunnel rate up: %.1f kHz' % tunnelrate_up)
+            print('Tunnel rate up to down: %.1f kHz' % tunnelrate_up)
 
         if fig:
             title = 'Fitted exponential decay, level up'

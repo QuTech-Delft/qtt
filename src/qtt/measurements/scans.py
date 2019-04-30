@@ -28,6 +28,7 @@ import qtt.utilities.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
+import qtt.instrument_drivers.virtualAwg.virtual_awg
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset, loadDataset, writeDataset
@@ -446,7 +447,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
@@ -573,7 +574,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob), dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
 
@@ -1199,8 +1200,6 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if scanjob['scantype'] == 'scan2Dvec':
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
-            # if type(stepvalues) is np.ndarray:
-            #    stepvalues = stepvalues_tmp
             if parameter.name in alldata.arrays.keys():
                 warnings.warn('parameter %s already in dataset, skipping!' % parameter.name)
                 continue
@@ -1216,7 +1215,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
@@ -2033,7 +2032,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, allgatevalues=gatevals,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob), allgatevalues=gatevals,
                       dt=dt, station=station.snapshot())
     _add_dataset_metadata(alldata)
 
@@ -2223,7 +2222,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot(), allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
 
@@ -2245,60 +2244,6 @@ def waitTime(gate, station=None, gate_settle=None, default=1e-3):
         if hasattr(station, 'gate_settle'):
             return station.gate_settle(gate)
     return default
-
-
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
-def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None,
-                   cache=False, verbose=1, fig=10, full=0, background=False):
-    """ Scan pinch-off value for a gate """
-    basename = pinchoffFilename(gate, od=None)
-    outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
-    outputfile = os.path.join(outputdir, 'one_dot', basename)
-
-    if cache and os.path.exists(outputfile):
-        if verbose:
-            print('  cached data: skipping pinch-off scans for gate %s' % (gate))
-            if verbose >= 2:
-                print(outputfile)
-        alldata = qcodes.load_data(outputfile)
-        return alldata
-
-    if stepdelay is None:
-        stepdelay = waitTime(gate, station=station)
-
-    if basevalues is None:
-        b = 0
-    else:
-        b = basevalues[gate]
-
-    minimum_gate_value = sample_data['gate_boundaries'].get(
-        gate, [-700, 100])[0]
-
-    sweepdata = dict(
-        {'param': gate, 'start': max(b, 0), 'end': minimum_gate_value, 'step': -2})
-    if full == 0:
-        sweepdata['step'] = -6
-
-    scanjob = scanjob_t(
-        {'sweepdata': sweepdata, 'minstrument': minstrument, 'wait_time': stepdelay})
-
-    station.gates.set(gate, sweepdata['start'])  # set gate to starting value
-    time.sleep(stepdelay)
-
-    alldata = scan1D(station, scanjob=scanjob)
-
-    station.gates.set(gate, basevalues[gate])  # reset gate to base value
-
-    # show results
-    if fig is not None:
-        plot1D(alldata, fig=fig)
-
-    adata = analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None)
-    alldata.metadata['adata'] = adata
-
-    alldata = qtt.utilities.tools.stripDataset(alldata)
-    writeDataset(outputfile, alldata)
-    return alldata
 
 
 # %%

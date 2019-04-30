@@ -125,10 +125,11 @@ class QttJsonEncoder(JSONEncoder):
 
     @staticmethod
     def __encode_qcodes_dataset(item):
+        dataset_dictionary = QttJsonEncoder.__encoder(qtt.data.dataset_to_dictionary(item))
         return {
             JsonSerializeKey.OBJECT: '__qcodes.DataSet__',
             JsonSerializeKey.CONTENT: {
-                '__dataset_dictionary__': QttJsonEncoder.__encoder(qtt.data.dataset_to_dictionary(item)),
+                '__dataset_dictionary__': dataset_dictionary,
             }
         }
 

@@ -147,11 +147,9 @@ def load_dataset(location, io=None, verbose=0):
         io = qcodes.DataSet.default_io
     formatters = [qcodes.DataSet.default_formatter]
 
-    try:
-        from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
-        formatters += [HDF5FormatHickle()]
-    except BaseException:
-        pass
+    from qcodes.data.hdf5_format import HDF5FormatMetadata
+    from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
+    formatters += [HDF5FormatHickle(), HDF5FormatMetadata()]
 
     from qcodes.data.hdf5_format import HDF5Format
     formatters += [HDF5Format()]
@@ -1165,7 +1163,7 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     return dd
 
 
-def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=None,
+def makeDataSet2D(p1, p2, measure_names=('measured', ), location=None, loc_record=None,
                   preset_data=None, return_names=False):
     """ Make DataSet with one or multiple 2D array and two setpoint arrays.
 
@@ -1175,8 +1173,9 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     Args:
         p1 (array): first setpoint array of data
         p2 (array): second setpoint array of data
-        mname (str or list): name(s) of measured array(s)
+        measure_names (str or list): name(s) of measured array(s)
         location (str or None): location for the DataSet
+        loc_record (None or str): passed to new_data
         preset_data (array or None): optional array to fill the DataSet
         return_names (bool): if True return array names in output
     Returns:
@@ -1198,15 +1197,18 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
             preset_data = [preset_data]
     mnamesx = measure_names
     measure_names = []
+    measure_units = []
     for p in mnamesx:
         if isinstance(p, str):
             measure_names += [p]
+            measure_units += [None]
         else:
             # assume p is a Parameter
             measure_names += [p.name]
+            measure_units += [p.unit]
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     for idm, mname in enumerate(measure_names):
-        z = DataArray(name=mname, array_id=mname, label=mname,
+        z = DataArray(name=mname, array_id=mname, label=mname, unit=measure_units[idm],
                       preset_data=np.copy(zz), set_arrays=(x, y))
         dd.add_array(z)
         if preset_data is not None:
