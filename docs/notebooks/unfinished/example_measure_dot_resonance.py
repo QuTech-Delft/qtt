@@ -22,7 +22,7 @@ stimulus = UHFLIStimulus(device_id)
 
 # Setup the UHFLIStimulus
 demodulator = 1
-demod_channel = 7
+demod_channel = 1
 output_amplitude = 0.3
 output_channel = 1
 demodulation_parameter = 'R'  # 'phi', 'x' or 'y' also possible

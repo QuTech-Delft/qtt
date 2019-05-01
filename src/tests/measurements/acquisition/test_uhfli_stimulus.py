@@ -52,6 +52,16 @@ class TestLockInStimulus(unittest.TestCase):
         expected_calls = [call('oscillator5_freq'), call()(42.0)]
         yamock.assert_has_calls(expected_calls)
 
+    def test_set_oscillator_frequency_partial(self):
+        yamock = MagicMock()
+        yamock.return_value = 'FakeParameter'
+        self.uhfli_mock.parameters.__getitem__ = yamock
+
+        parameter = self.uhfli_stimulus.set_oscillator_frequency(5)
+        expected_calls = [call('oscillator5_freq')]
+        yamock.assert_has_calls(expected_calls)
+        self.assertEqual(parameter, 'FakeParameter')
+
     def test_set_signal_output_enabled(self):
         yamock = MagicMock()
         self.uhfli_mock.parameters.__getitem__ = yamock

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, overload
 
 from qcodes import Parameter
 from qilib.configuration_helper import InstrumentAdapterFactory
@@ -51,7 +51,13 @@ class UHFLIStimulus:
         qcodes_parameter_name = 'signal_output{}_on'.format(output)
         self._uhfli.parameters[qcodes_parameter_name](enabled)
 
-    def set_oscillator_frequency(self, channel: int, frequency: Optional[float] = None) -> Union[None, Parameter]:
+    @overload
+    def set_oscillator_frequency(self, channel: int, frequency: float) -> None: ...
+
+    @overload
+    def set_oscillator_frequency(self, channel: int) -> Parameter: ...
+
+    def set_oscillator_frequency(self, channel: int, frequency: Optional[float] = None) -> Union[Parameter, None]:
         """ Set the oscillators frequencies.
 
         Args:
@@ -64,8 +70,7 @@ class UHFLIStimulus:
         qcodes_parameter = self._uhfli.parameters[qcodes_parameter_name]
         if frequency is None:
             return qcodes_parameter
-        else:
-            qcodes_parameter(frequency)
+        return qcodes_parameter(frequency)
 
     def set_signal_output_enabled(self, channel: int, demodulator: int, is_enabled: bool) -> None:
         """ Enable one of the 16 output amplitudes.
