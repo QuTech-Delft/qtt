@@ -5,8 +5,8 @@ from numpy import array_equal
 from numpy.ma import array
 from qilib.data_set import DataSet, DataArray
 
-from qtt.measurements.post_processing import SignalProcessorInterface
-from qtt.measurements.post_processing import SignalProcessorRunner
+from qtt.measurements.processing import SignalProcessorInterface
+from qtt.measurements.processing import SignalProcessorRunner
 
 
 class TestSignalProcessorRunner(TestCase):

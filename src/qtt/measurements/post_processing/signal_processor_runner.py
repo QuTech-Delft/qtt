@@ -2,7 +2,7 @@ from typing import List
 
 from qilib.data_set import DataSet
 
-from qtt.measurements.post_processing.interfaces.signal_processor_interface import SignalProcessorInterface
+from qtt.measurements.post_processing import SignalProcessorInterface
 
 
 class SignalProcessorRunner:
