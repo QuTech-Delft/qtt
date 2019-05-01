@@ -286,6 +286,21 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
         channel_input.set(attribute)
 
+    def acquire_single_sample(self, channel: int, parameter: str, partial: bool = False):
+        """ Collect a single point for each added measurement signal.
+
+        Args:
+            channel: Input channel that signal is acquired from.
+            parameter: Modulation parameter, 'x', 'y', 'phi' or 'R'
+            partial: If True return this method as partial, else acquire a sample and return it.
+
+        Returns:
+            This method as a partial method or single sample.
+
+        """
+        demod_parameter = self.__uhfli.parameters['demod{}_{}'.format(channel, parameter)]
+        return demod_parameter if partial else demod_parameter()
+
     def __get_uhfli_scope_records(self, number_of_records: int, timeout: float):
         self.__uhfli.scope.execute()
 
