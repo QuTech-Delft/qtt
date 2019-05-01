@@ -311,3 +311,21 @@ class TestUhfliScopeReader(TestCase):
 
         scope_mock.set_input_signal(channel, attribute)
         scope_mock.adapter.instrument.scope_channel1_input.set.assert_called_once_with(attribute)
+
+    def test_acquire_single_sample(self):
+        mock_address = 'dev2350'
+        scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
+        self.assertEqual(mock_address, scope_mock.adapter.address)
+
+        scope_mock.acquire_single_sample(2, 'x')
+
+        scope_mock.adapter.instrument.demod2_x.assert_called_once_with()
+
+    def test_acquire_single_sample_partial(self):
+        mock_address = 'dev2350'
+        scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
+        self.assertEqual(mock_address, scope_mock.adapter.address)
+
+        parameter = scope_mock.acquire_single_sample(2, 'x', partial=True)
+
+        self.assertIs(parameter, scope_mock.adapter.instrument.demod2_x)

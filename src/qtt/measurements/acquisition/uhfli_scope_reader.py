@@ -1,9 +1,10 @@
 """ Provides oscilloscope functionality for the Zurich Instruments UHFLI."""
 
 import time
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 import numpy as np
+from qcodes import Parameter
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.data_set import DataArray
 from qilib.utils import PythonJsonStructure
@@ -265,7 +266,7 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         enabled_channels = self.__uhfli.scope_channels.get()
         if enabled_channels == 3:
             return 1, 2
-        return enabled_channels, 
+        return enabled_channels,
 
     @enabled_channels.setter
     def enabled_channels(self, value: Tuple[int, ...]):
@@ -285,6 +286,21 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         """
         channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
         channel_input.set(attribute)
+
+    def acquire_single_sample(self, channel: int, parameter: str, partial: bool = False) -> Union[Parameter, float]:
+        """ Collect a single point for each added measurement signal.
+
+        Args:
+            channel: Input channel that signal is acquired from.
+            parameter: Modulation parameter, 'x', 'y', 'phi' or 'R'
+            partial: If True return this method as partial, else acquire a sample and return it.
+
+        Returns:
+            This method as a partial method or single sample.
+
+        """
+        demod_parameter = getattr(self.__uhfli, 'demod{}_{}'.format(channel, parameter))
+        return demod_parameter if partial else demod_parameter()
 
     def __get_uhfli_scope_records(self, number_of_records: int, timeout: float):
         self.__uhfli.scope.execute()
