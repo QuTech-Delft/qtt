@@ -1,4 +1,4 @@
-from typing import Optional, Union, overload
+from typing import Optional, Union
 
 from qcodes import Parameter
 from qilib.configuration_helper import InstrumentAdapterFactory
