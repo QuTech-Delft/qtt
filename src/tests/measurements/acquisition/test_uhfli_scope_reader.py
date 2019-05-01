@@ -326,6 +326,6 @@ class TestUhfliScopeReader(TestCase):
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
 
-        paramter = scope_mock.acquire_single_sample(2, 'x', partial=True)
+        parameter = scope_mock.acquire_single_sample(2, 'x', partial=True)
 
-        self.assertIs(paramter, scope_mock.adapter.instrument.demod2_x)
+        self.assertIs(parameter, scope_mock.adapter.instrument.demod2_x)
