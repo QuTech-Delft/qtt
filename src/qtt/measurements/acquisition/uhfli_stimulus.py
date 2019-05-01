@@ -51,12 +51,6 @@ class UHFLIStimulus:
         qcodes_parameter_name = 'signal_output{}_on'.format(output)
         self._uhfli.parameters[qcodes_parameter_name](enabled)
 
-    @overload
-    def set_oscillator_frequency(self, channel: int, frequency: float) -> None: ...
-
-    @overload
-    def set_oscillator_frequency(self, channel: int) -> Parameter: ...
-
     def set_oscillator_frequency(self, channel: int, frequency: Optional[float] = None) -> Union[Parameter, None]:
         """ Set the oscillators frequencies.
 

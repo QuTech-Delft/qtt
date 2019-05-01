@@ -287,12 +287,6 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
         channel_input.set(attribute)
 
-    @overload
-    def acquire_single_sample(self, channel: int, parameter: str) -> float: ...
-
-    @overload
-    def acquire_single_sample(self, channel: int, parameter: str, partial) -> Parameter: ...
-
     def acquire_single_sample(self, channel: int, parameter: str, partial: bool = False) -> Union[Parameter, float]:
         """ Collect a single point for each added measurement signal.
 
