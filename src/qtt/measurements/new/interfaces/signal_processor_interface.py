@@ -7,7 +7,7 @@ class SignalProcessorInterface(ABC):
     """ An interface for post-processing measurement data. """
 
     @abstractmethod
-    def run_process(self, signal_data: DataSet) -> None:
+    def run_process(self, signal_data: DataSet) -> DataSet:
         """ The post-processing function.
 
             Args:
