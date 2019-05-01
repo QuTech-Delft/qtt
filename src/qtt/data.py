@@ -328,17 +328,6 @@ def datasetCentre(ds, ndim=None):
     return cc
 
 
-def test_dataset():
-    import qcodes.tests.data_mocks
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    cc = datasetCentre(ds)
-    assert (cc[0] == 1.5)
-    zz = dataset_labels(ds)
-    assert(zz=='Z')
-    zz = dataset_labels(ds, add_unit = True)
-    assert(zz=='Z [None]')
-
-
 def drawCrosshair(ds, ax=None, ndim=None):
     """ Draw a crosshair on the centre of the dataset
 

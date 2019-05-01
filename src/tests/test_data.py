@@ -50,6 +50,17 @@ class TestData(unittest.TestCase):
 
     def test_dataset1Dmetadata(self):
         dataset = qcodes.tests.data_mocks.DataSet1D(name='test1d')
-
         _, _, _, _, arrayname = qtt.data.dataset1Dmetadata(dataset)
         self.assertEqual(arrayname, 'y')
+
+    def test_datasetCentre(self):
+        dataset = qcodes.tests.data_mocks.DataSet2D()
+        cc = qtt.data.datasetCentre(dataset)
+        assert (cc[0] == 1.5)
+
+    def test_dataset_labels(self):
+        dataset = qcodes.tests.data_mocks.DataSet2D()
+        zz = qtt.data.dataset_labels(dataset)
+        self.assertEqual(zz, 'Z')
+        zz = qtt.data.dataset_labels(dataset, add_unit=True)
+        self.assertEqual(zz, 'Z [None]')
