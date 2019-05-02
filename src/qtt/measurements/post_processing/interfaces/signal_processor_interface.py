@@ -12,4 +12,7 @@ class SignalProcessorInterface(ABC):
 
             Args:
                 signal_data: The measurement data
+
+            Returns:
+                The processed measurement data.
         """
