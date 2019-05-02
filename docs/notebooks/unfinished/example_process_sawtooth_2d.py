@@ -27,10 +27,10 @@ resolution = [pixels_x, pixels_y]
 
 
 def create_dummy_data_array(width: float, sawteeth_count: int, channel_index: int = 1, trace_number: int = 1):
-    idenifier = 'ScopeTrace_{:03d}'.format(trace_number)
+    identifier = 'ScopeTrace_{:03d}'.format(trace_number)
     label = 'Channel_{}'.format(channel_index)
     scope_data = sawtooth(2 * np.pi * sawteeth_count * time / period, width)
-    return DataArray(idenifier, label, preset_data=scope_data, set_arrays=[set_array])
+    return DataArray(identifier, label, preset_data=scope_data, set_arrays=[set_array])
 
 
 data_set = DataSet()
@@ -43,10 +43,16 @@ data_array_y = create_dummy_data_array(width=width[1], sawteeth_count=resolution
 data_set.add_array(data_array_y)
 
 
+## EXAMPLE PRCCESSING 2D SAWTOOTH
+
+signal_processor = SignalProcessorRunner()
+signal_processor.add_signal_processor(ProcessSawtooth2D())
+processed_data_set = signal_processor.run(data_set)
+
+
 ## PLOTTING
 
 color_cycler = cycle('bgrcmk')
-
 
 def plot_1D_dataset(data_set, label_x, label_y, figure_number=100):
     plt.figure(figure_number)
@@ -69,13 +75,5 @@ def plot_2d_result(processed_2d_data, figure_number=100):
     plt.show()
 
 
-## EXAMPLE EXECUTION
-
 plot_1D_dataset(data_set, 'Time', 'Dummy')
-
-signal_processor = SignalProcessorRunner()
-signal_processor.add_signal_processor(ProcessSawtooth2D())
-processed_data_set = signal_processor.run(data_set)
-
-plot_2d_result(processed_data_set[0])
-plot_2d_result(processed_data_set[1])
+[plot_2d_result(data_array) for data_array in processed_data_set.data_arrays.values()]
