@@ -5,16 +5,19 @@ from matplotlib import pyplot as plt
 # INITIALIZE THE SCOPE READER
 
 device_id = 'dev2338'
-time_period = 2
+time_period = 3
 trigger_enabled = True
 input_channel = 1
 input_channel_attribute = 'Demod 1 R'
+nearest_sample_rate = 27e3
+
 scope_reader = UHFLIScopeReader(address=device_id)
-sampling_rate = scope_reader.get_nearest_sample_rate(27e3)
 scope_reader.period = time_period
-scope_reader.trigger_enabled = trigger_enabled
+sampling_rate = scope_reader.get_nearest_sample_rate(nearest_sample_rate)
+scope_reader.sample_rate = sampling_rate
 scope_reader.enabled_channels = (input_channel, )
 scope_reader.set_input_signal(input_channel, input_channel_attribute)
+
 scope_reader.trigger_enabled = trigger_enabled
 scope_reader.trigger_channel = 'Trig Input 1'
 scope_reader.trigger_level = 0.100
@@ -42,7 +45,12 @@ stimulus.set_oscillator_frequency(demodulator_channel, oscillator_frequency)
 scope_reader.start_acquisition()
 records = scope_reader.acquire(number_of_records=1)
 scope_reader.stop_acquisition()
-plt.plot(records[0])
+
+times = records[0].set_arrays[0]
+amplitudes = records[0]
+plt.xlabel('Time [s]')
+plt.ylabel('Amplitude [V]')
+plt.plot(times, amplitudes)
 plt.show()
 print(records)
 
