@@ -8,7 +8,7 @@ from qtt.measurements.post_processing import ProcessSawtooth2D
 
 class  TestProcessSawtooth2D(TestCase):
 
-    def test_invalid_sample_count_slow_scan(self):
+    def test_invalid_sample_count_slow_sawtooth(self):
         sample_rate = 21e7
         width = [0.9, 0.9]
         resolution = [101, 50]
@@ -18,15 +18,15 @@ class  TestProcessSawtooth2D(TestCase):
         data_set = TestProcessSawtooth2D.__dummy_data_set(period, sample_rate, width, resolution)
         self.assertRaisesRegex(AssertionError, 'Invalid rising edge X *', sawtooth_2d_processor.run_process, data_set)
 
-    def test_invalid_sample_count_fast_scan(self):
+    def test_invalid_sample_count_fast_sawtooth(self):
         sample_rate = 21e7
-        width = [0.9, 0.9]
-        resolution = [100, 51]
-        period = resolution[0] * 50 / sample_rate
+        width = [0.9, 0.91234]
+        resolution = [100, 50]
+        period = resolution[0] * resolution[1] / sample_rate
 
         sawtooth_2d_processor = ProcessSawtooth2D()
         data_set = TestProcessSawtooth2D.__dummy_data_set(period, sample_rate, width, resolution)
-        self.assertRaisesRegex(AssertionError, 'Invalid rising edge Y*', sawtooth_2d_processor.run_process, data_set)
+        self.assertRaisesRegex(AssertionError, 'Invalid rising edge Y *', sawtooth_2d_processor.run_process, data_set)
 
     def test_check_matching_cuttoff(self):
         sample_rate = 21e7
