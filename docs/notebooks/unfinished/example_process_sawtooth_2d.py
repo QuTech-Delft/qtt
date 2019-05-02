@@ -8,16 +8,22 @@ from scipy.signal import sawtooth
 from qtt.measurements.post_processing import SignalProcessorRunner, ProcessSawtooth2D
 
 
-# DUMMY CREATION
+# DUMMY DATASET CREATION
 
-period = 64 * 32 / 14e6  # seconds
-sample_rate = 14e6  # samples per seconds.
+pixels_x = 100
+upwards_edge_pixels_x = 90
+
+pixels_y = 50
+upwards_edge_pixels_y = 45
+
+sample_rate = 21e7  # samples per seconds.
+period = pixels_x * pixels_y / sample_rate  # seconds
 
 time = np.linspace(0, period, np.rint(period * sample_rate))
 set_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True, preset_data=time)
 
-width = [62/64, 31/32]
-resolution = [64, 32]
+width = [upwards_edge_pixels_x/pixels_x, upwards_edge_pixels_y/pixels_y]
+resolution = [pixels_x, pixels_y]
 
 
 def create_dummy_data_array(width: float, sawteeth_count: int, channel_index: int = 1, trace_number: int = 1):
@@ -37,10 +43,14 @@ data_array_y = create_dummy_data_array(width=width[1], sawteeth_count=resolution
 data_set.add_array(data_array_y)
 
 
+## PLOTTING
+
 color_cycler = cycle('bgrcmk')
+
 
 def plot_1D_dataset(data_set, label_x, label_y, figure_number=100):
     plt.figure(figure_number)
+    plt.clf()
     plt.xlabel(label_x)
     plt.ylabel(label_y)
 
@@ -48,24 +58,24 @@ def plot_1D_dataset(data_set, label_x, label_y, figure_number=100):
         plt.plot(trace_data.set_arrays[0].flatten(), trace_data.flatten(),
                  color=next(color_cycler), label=name)
 
-    plt.legend(loc='upper right')
+    plt.legend(loc='upper left')
     plt.show()
 
+
+def plot_2d_result(processed_2d_data, figure_number=100):
+    plt.figure(figure_number)
+    plt.clf()
+    plt.imshow(processed_2d_data)
+    plt.show()
+
+
+## EXAMPLE EXECUTION
 
 plot_1D_dataset(data_set, 'Time', 'Dummy')
 
 signal_processor = SignalProcessorRunner()
 signal_processor.add_signal_processor(ProcessSawtooth2D())
-
-
 processed_data_set = signal_processor.run(data_set)
 
-plt.figure(100)
-plt.clf()
-plt.imshow(processed_data_set[0])
-plt.show()
-
-plt.figure(101)
-plt.clf()
-plt.imshow(processed_data_set[1])
-plt.show()
+plot_2d_result(processed_data_set[0])
+plot_2d_result(processed_data_set[1])

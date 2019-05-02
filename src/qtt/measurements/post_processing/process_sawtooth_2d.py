@@ -15,8 +15,9 @@ class ProcessSawtooth2D(SignalProcessorInterface):
 
         processed_data = []
         for _, data_array in data_set.data_arrays.items():
-            ProcessSawtooth2D._check_samples_sawtooth_x(data_array, width_x, resolution_y)
-            ProcessSawtooth2D._check_samples_sawtooth_y(data_array, width_y)
+            ProcessSawtooth2D._check_sample_count_slow_sawtooth(data_array, width_y)
+            ProcessSawtooth2D._check_sample_count_fast_sawtooth(data_array, width_x, resolution_x, resolution_y)
+            ProcessSawtooth2D._check_matching_cuttoff(width_x, width_y, resolution_x, resolution_y)
 
             sample_count = len(data_array)
             samples_sawtooth_x = int(sample_count / resolution_y)
@@ -31,20 +32,26 @@ class ProcessSawtooth2D(SignalProcessorInterface):
         return processed_data
 
     @staticmethod
-    def _check_samples_sawtooth_y(data_array, width_y):
+    def _check_sample_count_fast_sawtooth(data_array, width_x, resolution_x, resolution_y):
+        expected_pixels_x = resolution_x * width_x
+        samples_rising_edge = len(data_array) / resolution_y * width_x
+        if not ProcessSawtooth2D.__is_integer(samples_rising_edge) and expected_pixels_x == samples_rising_edge:
+            raise AssertionError('Invalid rising edge X (samples {} not an integer)!'.format(samples_rising_edge))
+
+    @staticmethod
+    def _check_sample_count_slow_sawtooth(data_array, width_y):
         samples_rising_edge = len(data_array) * width_y
         if not ProcessSawtooth2D.__is_integer(samples_rising_edge):
-            raise AssertionError('Invalid rising edge Y (samples {})'.format(samples_rising_edge))
+            raise AssertionError('Invalid rising edge Y (samples {} not an integer)!'.format(samples_rising_edge))
 
     @staticmethod
-    def _check_samples_sawtooth_x(data_array, width_x, resolution_y):
-        samples_rising_edge = len(data_array) / resolution_y * width_x
-        if not ProcessSawtooth2D.__is_integer(samples_rising_edge):
-            raise AssertionError('Invalid rising edge X (samples {})'.format(samples_rising_edge))
-
-    @staticmethod
-    def _check_resolution_sawtooth_x(data_array, width_x, resolution_x):
-        pass
+    def _check_matching_cuttoff(width_x, width_y, resolution_x, resolution_y):
+        pixels_x = resolution_x * width_x
+        pixels_y = resolution_y * width_y
+        if ProcessSawtooth2D.__is_integer(pixels_x / pixels_y) or ProcessSawtooth2D.__is_integer(pixels_y / pixels_x):
+            return
+        error_message = 'Pixel ratio is incompatible with cuttoff (x={}, y={})!'.format(pixels_x, pixels_y)
+        raise AssertionError(error_message)
 
     @staticmethod
     def __is_integer(value):
