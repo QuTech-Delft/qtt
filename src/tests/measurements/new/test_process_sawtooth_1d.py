@@ -14,9 +14,9 @@ class TestProcessSawtooth1D(TestCase):
         resolution = 64
         period = resolution / sample_rate
 
-        sawtooth_2d_processor = ProcessSawtooth1D()
+        sawtooth_1d_processor = ProcessSawtooth1D()
         data_set = self.__dummy_data_set(period, sample_rate, width, resolution)
-        output_result = sawtooth_2d_processor.run_process(data_set)
+        output_result = sawtooth_1d_processor.run_process(data_set)
 
         image_shape = np.multiply(resolution, width)
         data_array = next(iter(output_result.data_arrays.values()))
