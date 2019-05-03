@@ -1,4 +1,4 @@
-from qtt.measurements.new.interfaces.signal_processor_interface import SignalProcessorInterface
+from qtt.measurements.post_processing.interfaces import SignalProcessorInterface
 
 from qilib.data_set import DataSet, DataArray
 

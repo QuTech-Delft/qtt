@@ -3,7 +3,7 @@ import numpy as np
 from qilib.data_set import DataArray, DataSet
 from scipy.signal import sawtooth
 
-from qtt.measurements.new.process_sawtooth_1d import ProcessSawtooth1D
+from qtt.measurements.post_processing import ProcessSawtooth1D
 
 
 class TestProcessSawtooth1D(TestCase):
