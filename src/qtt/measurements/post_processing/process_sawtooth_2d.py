@@ -19,9 +19,8 @@ class ProcessSawtooth2D(SignalProcessorInterface):
         width_x, width_y = signal_data.user_data['width']
         resolution_x, resolution_y = signal_data.user_data['resolution']
 
-        output_signal_data = DataSet()
-        output_signal_data.user_data = signal_data.user_data
-        for _, data_array in signal_data.data_arrays.items():
+        output_signal_data = DataSet(user_data=signal_data.user_data)
+        for data_array in signal_data.data_arrays.values():
             ProcessSawtooth2D.__check_sample_count_slow_sawtooth(data_array, width_y)
             ProcessSawtooth2D.__check_sample_count_fast_sawtooth(data_array, width_x, resolution_x, resolution_y)
             ProcessSawtooth2D.__check_matching_cuttoff(width_x, width_y, resolution_x, resolution_y)
