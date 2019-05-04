@@ -67,14 +67,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         instrumentnames = [i.name for i in instruments]
         self._instruments = instruments
         self._instrumentnames = instrumentnames
-        self._itemsdict = dict()
+        self._itemsdict: dict = dict()
         for instrument_name in instrumentnames:
             self._itemsdict[instrument_name] = dict()
         self._timer = None
         self.init()
         self.show()
 
-        self.callbacklist = []
+        self.callbacklist: Sequence = []
 
         self.update_field.connect(self._set_field)
 
@@ -134,7 +134,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         else:
             return False
 
-    def setParamSingleStep(self, instr, param, value):
+    def setParamSingleStep(self, instr: str, param: str, value: Any):
         """ Set the default step size for a parameter in the viewer
 
         Args:
@@ -170,7 +170,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         logging.info('set %s.%s to %s' % (instrument_name, parameter_name, value))
         instrument.set(parameter_name, value)
 
-    def updatecallback(self, start=True, dt=3):
+    def updatecallback(self, start: bool = True, dt: float = 3):
         """ Update the data and start the restarts timer """
         if self._timer is not None:
             del self._timer
