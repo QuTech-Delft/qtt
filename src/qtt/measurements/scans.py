@@ -1746,8 +1746,6 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     nsegments = parameters['nsegments']
 
     t0 = time.time()
-    gates = station.gates
-    gatevals = gates.allvalues()
 
     waveform = {'period': period, 'width': 0}
     if isinstance(read_ch, int):
@@ -1792,7 +1790,12 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     dt = time.time() - t0
     update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals, nsegments=str(nsegments))
+        datetime.datetime.now()), nsegments=str(nsegments))
+
+    if hasattr(station, 'gates'):
+        gates = station.gates
+        gatevals = gates.allvalues()
+        update_dictionary(alldata.metadata, allgatevalues=gatevals)
 
     if save_to_disk:
         alldata = qtt.utilities.tools.stripDataset(alldata)
