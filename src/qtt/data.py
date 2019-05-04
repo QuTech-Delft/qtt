@@ -498,6 +498,45 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
 
     return alldata
 
+
+from typing import Optional
+
+
+def plot_dataset(dataset: qcodes.DataSet, parameter_names: Optional[list] = None, fig: int = 1) -> None:
+    """ Plot a dataset to matplotlib figure window 
+
+    Args:
+        dataset: DataSet to be plotted
+        parameter_names: List of arrays to be plotted
+        fig: Specification if Matplotlib figure window
+
+    """
+    if parameter_names is None:
+        parameter_names = [dataset.default_parameter_name()]
+
+    if parameter_names == 'all':
+        parameter_names = [name for name in dataset.arrays.keys() if not dataset.arrays[name].is_setpoint]
+
+    default_array = dataset.default_parameter_array()
+
+    if fig:
+        plt.figure(fig)
+        plt.clf()
+
+        if len(default_array.shape) >= 2:
+            if len(parameter_names) > 1:
+                arrays = [dataset.default_parameter_array(parameter_name) for parameter_name in parameter_names]
+                plot_handle = qcodes.MatPlot(*arrays, num=fig)
+
+            else:
+                plot_handle = qcodes.MatPlot(dataset.default_parameter_array(parameter_names[0]), num=fig)
+        else:
+            for idx, parameter_name in enumerate(parameter_names):
+                if idx == 0:
+                    plot_handle = qcodes.MatPlot(dataset.default_parameter_array(parameter_name), num=fig)
+                else:
+                    plot_handle.add(dataset.default_parameter_array(parameter_name,))
+
 # %%
 
 
