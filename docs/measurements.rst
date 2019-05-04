@@ -18,6 +18,23 @@ For basic scanning the following functions are available:
 For more advanced measurements, write your own data acquisition loop.
 
 
+Plotting data
+-------------
+
+For plotting a `qcodes.DataSet` one can use
+
+.. autosummary::
+
+    qtt.data.plot_dataset
+    
+
+To automatically copy a plotted figure to PowerPoint one can add a button:    
+
+.. autosummary::
+    
+    qtt.utilities.tools.create_figure_ppt_callback
+    
+
 Parameter viewer
 ----------------
 

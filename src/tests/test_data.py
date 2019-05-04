@@ -1,18 +1,36 @@
 import unittest
+import numpy as np
+import matplotlib.pyplot as plt
 
 import qcodes
 import qcodes.tests.data_mocks
 
 import qtt.data
 
+
 # %%
+
+class TestPlotting(unittest.TestCase):
+
+    def test_plot_dataset_1d(self):
+        dataset = qcodes.tests.data_mocks.DataSet1D()
+        qtt.data.plot_dataset(dataset, fig=1)
+        self.assertTrue(plt.fignum_exists(1))
+        plt.close(1)
+
+    def test_plot_dataset_2d(self):
+        dataset = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
+                                              np.arange(3 * 4).reshape((3, 4)), xunit='mV', yunit='Hz', zunit='A')
+        qtt.data.plot_dataset(dataset, fig=2)
+        self.assertTrue(plt.fignum_exists(2))
+        plt.close(1)
 
 
 class TestDataSetHelpers(unittest.TestCase):
 
     def test_dataset_labels(self):
         ds = qtt.data.makeDataSet2Dplain('horizontal', [0], 'vertical', [0], 'z', [
-                                         0], xunit='mV', yunit='Hz', zunit='A')
+            0], xunit='mV', yunit='Hz', zunit='A')
 
         self.assertEqual(qtt.data.dataset_labels(ds), 'z')
         self.assertEqual(qtt.data.dataset_labels(ds, 'x'), 'horizontal')
@@ -35,4 +53,3 @@ class TestData(unittest.TestCase):
 
         _, _, _, _, arrayname = qtt.data.dataset1Dmetadata(dataset)
         self.assertEqual(arrayname, 'y')
-
