@@ -503,7 +503,7 @@ from typing import Optional
 
 
 def plot_dataset(dataset: qcodes.DataSet, parameter_names: Optional[list] = None, fig: int = 1) -> None:
-    """ Plot a dataset to matplotlib figure window 
+    """ Plot a dataset to matplotlib figure window
 
     Args:
         dataset: DataSet to be plotted
