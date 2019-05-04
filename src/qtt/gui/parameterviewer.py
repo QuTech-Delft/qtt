@@ -11,9 +11,10 @@ import multiprocessing as mp
 from functools import partial
 
 from qtpy import QtWidgets
-from qtpy.QtCore import Signal, Slot
+from qtpy.QtCore import Signal, Slot, QSize
 import pyqtgraph
 from qtt import pgeometry
+
 
 # %%
 
@@ -33,7 +34,6 @@ class QCodesTimer(threading.Thread):
             logging.debug('QCodesTimer: start sleep')
             time.sleep(self.dt)
             logging.debug('QCodesTimer: execute callback function')
-            self.callback_function()
 
     def stop(self):
         self._run = False
@@ -42,7 +42,8 @@ class QCodesTimer(threading.Thread):
 class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
 
-    def __init__(self, instruments: list, name : str ='QuTech Parameter Viewer', fields : Sequence[str] =['Value', 'unit'], **kwargs):
+    def __init__(self, instruments: list, name: str = 'QuTech Parameter Viewer',
+                 fields: Sequence[str] = ['Value', 'unit'], **kwargs):
         """ Simple class to show qcodes parameters
 
         Args:
@@ -58,8 +59,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         window = self
         window.setGeometry(1700, 50, 300, 600)
-        window.setColumnCount(2+len(self._fields))
-        header = QtWidgets.QTreeWidgetItem(['Parameter'] + list(self._fields) )
+        window.setColumnCount(2 + len(self._fields))
+        header = QtWidgets.QTreeWidgetItem(['Parameter'] + list(self._fields))
         window.setHeaderItem(header)
         window.setWindowTitle(name)
 
@@ -79,7 +80,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         self.updatecallback()
 
-        
     def close(self):
         self.stop()
         super(ParameterViewer, self).close()
@@ -110,8 +110,11 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box.setMaximum(10000)
                 box.setSingleStep(5)
 
-                initial_values = [parameter_name]+[''] * len(self._fields)
+                initial_values = [parameter_name] + [''] * len(self._fields)
                 widget = QtWidgets.QTreeWidgetItem(gatesroot, initial_values)
+
+                # w.setSizeHint(0, QSize(1000, 100))
+
                 self._itemsdict[instrument_name][parameter_name] = {'widget': widget, 'double_box': None}
 
                 if hasattr(parameters[parameter_name], 'set'):
@@ -143,7 +146,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         if box is not None:
             box.setSingleStep(value)
 
-    def setSingleStep(self, value : float, instrument_name : Optional[str]=None):
+    def setSingleStep(self, value: float, instrument_name: Optional[str] = None):
         """ Set the default step size for all parameters in the viewer
 
         Args:
@@ -157,13 +160,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             lst = self._itemsdict[instrument_name]
             for parameter_name in lst:
                 box = lst[parameter_name]['double_box']
-                
+
                 if box is not None:
                     box.setSingleStep(value)
 
-    def _valueChanged(self, instrument_name: str, parameter_name : str, value : Any, *args, **kwargs):
+    def _valueChanged(self, instrument_name: str, parameter_name: str, value: Any, *args, **kwargs):
         """ Callback used to update values in an instrument """
-        instrument= self._instruments[self._instrumentnames.index(instrument_name)]
+        instrument = self._instruments[self._instrumentnames.index(instrument_name)]
         logging.info('set %s.%s to %s' % (instrument_name, parameter_name, value))
         instrument.set(parameter_name, value)
 
@@ -199,12 +202,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         double_box = self._itemsdict[instrument_name][parameter_name]['double_box']
 
         field_index = self._fields.index(field)
-        
+
         double_value = False
-        if field_index==0 and double_box is not None:
+        if field_index == 0 and double_box is not None:
             double_value = True
         if not double_value:
-            tree_widget.setText(field_index+1, str(value))
+            tree_widget.setText(field_index + 1, str(value))
         else:
             # update a float value
             try:
@@ -223,7 +226,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
     def updatedata(self, force_update=False):
         """ Update data in viewer using station.snapshow """
-        
+
         self._update_counter = self._update_counter + 1
         logging.debug('ParameterViewer: update values')
         for instrument_name in self._instrumentnames:
@@ -251,13 +254,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                         sys.setswitchinterval(si)
                         self.update_field.emit(instrument_name, parameter_name, field_name, value, force_update)
                     else:
-                        if  self._update_counter%20==1 or 1:
-                            print(f'parameter_name {parameter_name}, field_name {field_name}, value: {value}')
+                        if self._update_counter % 20 == 1 or 1:
+                            # print(f'parameter_name {parameter_name}, field_name {field_name}, value: {value}')
                             sys.setswitchinterval(100)
                             value = getattr(parameters[parameter_name], field_name, '')
                             sys.setswitchinterval(si)
                             self.update_field.emit(instrument_name, parameter_name, field_name, value, force_update)
-
 
         for callback_function in self.callbacklist:
             try:
@@ -292,12 +294,10 @@ def createParameterWidget(instruments, doexec=False, remote=False):
         p.start()
         return p
 
-    instrumentnames = [i.name for i in instruments]
     app = pyqtgraph.mkQApp()
 
     ms = pgeometry.monitorSizes()[-1]
-    p = ParameterViewer(instruments=instruments,
-                        instrumentnames=instrumentnames)
+    p = ParameterViewer(instruments=instruments)
     p.setGeometry(ms[0] + ms[2] - 320, 30, 300, 600)
     p.show()
     p.updatecallback()
@@ -307,6 +307,7 @@ def createParameterWidget(instruments, doexec=False, remote=False):
     if doexec:
         app.exec()
     return p
+
 
 # %%
 
@@ -320,28 +321,10 @@ def test_parameterviewer():
     p = ParameterViewer(instruments=[ivvi])
     p.show()
     p.updatecallback()
-    assert(p.is_running())
+    assert (p.is_running())
     p.setGeometry(10, 10, 360, 600)
 
     p.stop()
     p.close()
     qtapp.processEvents()
     ivvi.close()
-
-# %% Debugging code
-
-
-if __name__ == '__main__':
-    test_parameterviewer()
-
-    import pyqtgraph
-    qtapp = pyqtgraph.mkQApp()
-    import qtt.measurements.scans
-    from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-
-    ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
-    p = ParameterViewer(instruments=[ivvi])
-    p.show()
-    p.setGeometry(2010, 10, 360, 600)
-    self=p
-    instrument_name=ivvi.name
