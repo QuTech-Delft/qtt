@@ -35,6 +35,8 @@ class QCodesTimer(threading.Thread):
             time.sleep(self.dt)
             logging.debug('QCodesTimer: execute callback function')
 
+            self.callback_function()
+
     def stop(self):
         self._run = False
 
