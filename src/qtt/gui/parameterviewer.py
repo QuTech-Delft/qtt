@@ -211,7 +211,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             # update a float value
             try:
                 update_value = np.abs(tree_widget.value() - value) > 1e-9
-            except:
+            except Exception as ex:
                 update_value = True
             if update_value or force_update:
                 if not double_box.hasFocus():  # do not update when editing
