@@ -71,7 +71,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self._itemsdict: dict = dict()
         for instrument_name in instrumentnames:
             self._itemsdict[instrument_name] = dict()
-        self._timer = None
+        self._timer : Optional[QCodesTimer] = None
         self.init()
         self.show()
 
