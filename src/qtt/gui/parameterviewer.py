@@ -34,7 +34,6 @@ class QCodesTimer(threading.Thread):
             logging.debug('QCodesTimer: start sleep')
             time.sleep(self.dt)
             logging.debug('QCodesTimer: execute callback function')
-
             self.callback_function()
 
     def stop(self):
@@ -114,8 +113,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 initial_values = [parameter_name] + [''] * len(self._fields)
                 widget = QtWidgets.QTreeWidgetItem(gatesroot, initial_values)
-
-                # w.setSizeHint(0, QSize(1000, 100))
 
                 self._itemsdict[instrument_name][parameter_name] = {'widget': widget, 'double_box': None}
 
@@ -257,7 +254,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                         self.update_field.emit(instrument_name, parameter_name, field_name, value, force_update)
                     else:
                         if self._update_counter % 20 == 1 or 1:
-                            # print(f'parameter_name {parameter_name}, field_name {field_name}, value: {value}')
                             sys.setswitchinterval(100)
                             value = getattr(parameters[parameter_name], field_name, '')
                             sys.setswitchinterval(si)
