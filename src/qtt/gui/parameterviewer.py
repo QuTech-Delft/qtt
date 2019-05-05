@@ -11,7 +11,7 @@ import multiprocessing as mp
 from functools import partial
 
 from qtpy import QtWidgets
-from qtpy.QtCore import Signal, Slot, QSize
+from qtpy.QtCore import Signal, Slot
 import pyqtgraph
 from qtt import pgeometry
 
@@ -44,7 +44,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
 
     def __init__(self, instruments: list, name: str = 'QuTech Parameter Viewer',
-                 fields: Sequence[str] = ['Value', 'unit'], **kwargs):
+                 fields: Sequence[str] = ('Value', 'unit'), **kwargs):
         """ Simple class to show qcodes parameters
 
         Args:
