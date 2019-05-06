@@ -11,7 +11,7 @@ import multiprocessing as mp
 from functools import partial
 
 from qtpy import QtWidgets
-from qtpy.QtCore import Signal, Slot
+from qtpy.QtCore import Signal, Slot, QSize
 import pyqtgraph
 from qtt import pgeometry
 
@@ -61,9 +61,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         window = self
         window.setGeometry(1700, 50, 300, 600)
         window.setColumnCount(2 + len(self._fields))
-        header = QtWidgets.QTreeWidgetItem(['Parameter'] + list(self._fields))
-        window.setHeaderItem(header)
+        self._tree_header = QtWidgets.QTreeWidgetItem(['Parameter'] + list(self._fields))
+        window.setHeaderItem(self._tree_header)
         window.setWindowTitle(name)
+
+        #self._tree_header.setSizeHint(0, QSize(200, -1))
+        # for ii in range(1, len(self._fields)+1):
+        #    self._tree_header.setSizeHint(ii, QSize(200, -1))
 
         instrumentnames = [i.name for i in instruments]
         self._instruments = instruments
@@ -71,7 +75,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self._itemsdict: dict = dict()
         for instrument_name in instrumentnames:
             self._itemsdict[instrument_name] = dict()
-        self._timer : Optional[QCodesTimer] = None
+        self._timer: Optional[QCodesTimer] = None
         self.init()
         self.show()
 
@@ -80,6 +84,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.update_field.connect(self._set_field)
 
         self.updatecallback()
+
+        for column in [0, 1]:
+            self.resizeColumnToContents(column)
 
     def close(self):
         self.stop()
@@ -98,6 +105,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             parameter_names = [p for p in parameter_names if hasattr(
                 instr.parameters[p], 'get')]
             gatesroot = QtWidgets.QTreeWidgetItem(self, [instrument_name])
+            self._itemsdict[instrument_name]['_treewidgetitem'] = gatesroot
+
             for parameter_name in parameter_names:
                 # hack to make this semi thread-safe
                 si = min(sys.getswitchinterval(), 0.1)
@@ -113,6 +122,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 initial_values = [parameter_name] + [''] * len(self._fields)
                 widget = QtWidgets.QTreeWidgetItem(gatesroot, initial_values)
+                widget.setSizeHint(0, QSize(100, -1))
+                widget.setSizeHint(1, QSize(100, -1))
 
                 self._itemsdict[instrument_name][parameter_name] = {'widget': widget, 'double_box': None}
 
@@ -212,6 +223,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             try:
                 update_value = np.abs(tree_widget.value() - value) > 1e-9
             except Exception as ex:
+                logging.debug(ex)
                 update_value = True
             if update_value or force_update:
                 if not double_box.hasFocus():  # do not update when editing
@@ -220,8 +232,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                         oldstate = double_box.blockSignals(True)
                         double_box.setValue(value)
                         double_box.blockSignals(oldstate)
-                    except Exception as e:
-                        pass
+                    except Exception as ex:
+                        logging.debug(ex)
 
     def updatedata(self, force_update=False):
         """ Update data in viewer using station.snapshow """
