@@ -376,7 +376,7 @@ class sensingdot_t:
 
     def _process_scan(self, alldata, useslopes=True, fig=None, invert=False, verbose=0):
         """ Determine peaks in 1D scan """
-        istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
+        scan_sampling_rate = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = qtt.data.dataset1Ddata(alldata)
         x, y = peakdataOrientation(x, y)
 
@@ -385,11 +385,11 @@ class sensingdot_t:
 
         if useslopes:
             goodpeaks = findSensingDotPosition(
-                x, y, useslopes=useslopes, fig=fig, verbose=verbose, istep=istep)
+                x, y, useslopes=useslopes, fig=fig, verbose=verbose, sampling_rate=scan_sampling_rate)
         else:
 
             goodpeaks = coulombPeaks(
-                x, y, verbose=verbose, fig=fig, plothalf=True, sampling_rate=istep)
+                x, y, verbose=verbose, fig=fig, plothalf=True, sampling_rate=scan_sampling_rate)
         if fig is not None:
             plt.xlabel('%s' % (self.tunegate(), ))
             plt.ylabel('%s' % (self.minstrument, ))
