@@ -224,10 +224,10 @@ def get_instrument(instr, station=None):
     """ Return handle to instrument
 
     Args:
-        instr (str, Instrument, tuple): name of instrument or handle
+        instr (str, Instrument, tuple, list): name of instrument or handle or pair (handle, channel)
     """
 
-    if isinstance(instr, tuple):
+    if isinstance(instr, (tuple, list)):
         # assume the tuple is (instrument, channel)
         instr = instr[0]
 

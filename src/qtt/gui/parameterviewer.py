@@ -39,6 +39,12 @@ class QCodesTimer(threading.Thread):
     def stop(self):
         self._run = False
 
+def isfloat(value):
+  try:
+    float(value)
+    return True
+  except (ValueError, TypeError):
+    return False
 
 class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
@@ -64,10 +70,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self._tree_header = QtWidgets.QTreeWidgetItem(['Parameter'] + list(self._fields))
         window.setHeaderItem(self._tree_header)
         window.setWindowTitle(name)
-
-        #self._tree_header.setSizeHint(0, QSize(200, -1))
-        # for ii in range(1, len(self._fields)+1):
-        #    self._tree_header.setSizeHint(ii, QSize(200, -1))
 
         instrumentnames = [i.name for i in instruments]
         self._instruments = instruments
@@ -122,12 +124,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 initial_values = [parameter_name] + [''] * len(self._fields)
                 widget = QtWidgets.QTreeWidgetItem(gatesroot, initial_values)
-                widget.setSizeHint(0, QSize(100, -1))
-                widget.setSizeHint(1, QSize(100, -1))
+                widget.setSizeHint(0, QSize(180, -1))
+                widget.setSizeHint(1, QSize(300, -1))
 
                 self._itemsdict[instrument_name][parameter_name] = {'widget': widget, 'double_box': None}
 
-                if hasattr(parameters[parameter_name], 'set'):
+                px = parameters[parameter_name].get()
+                if hasattr(parameters[parameter_name], 'set') and isfloat(px):
                     self.setItemWidget(widget, 1, box)
                     self._itemsdict[instrument_name][parameter_name]['double_box'] = box
 
