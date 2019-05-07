@@ -709,10 +709,6 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
     return extent, g0, g1, vstep, vsweep, arrayname
 
 
-if __name__ == '__main__' and 0:
-    test_dataset()
-
-
 # %%
 
 
