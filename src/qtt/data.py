@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from qcodes import DataArray, new_data
 from qtt import pgeometry
 import qtt.algorithms.generic
+import qtt.utilities.json_serializer
 
 from qcodes import DataSet
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -1157,6 +1158,8 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
         if y is not None:
             getattr(dd, mname).ndarray = np.array(preset_data[idm])
     dd.add_array(x)
+
+    dd.metadata['default_parameter_name']=measure_names[0]
 
     if return_names:
         set_names = x.name
