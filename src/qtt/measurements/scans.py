@@ -543,7 +543,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         else:
             if virtual_awg:
                 sweep_range = sweeprange
-                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
+                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period, do_upload=delete)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
             else:
