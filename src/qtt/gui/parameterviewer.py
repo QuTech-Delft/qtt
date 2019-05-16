@@ -254,7 +254,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 logging.exception(ex)
                 self._timer.stop()
 
-            parameter_names = sorted(instr.parameters.keys())
+            parameter_names = sorted(parameters.keys())
 
             si = sys.getswitchinterval()
 

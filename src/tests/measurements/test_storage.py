@@ -17,7 +17,7 @@ class TestStorage(TestCase):
         before_crosscap_map = v_gates.get_crosscap_map()
         before_crosscap_map_inv = v_gates.get_crosscap_map_inv()
 
-        tmp_file = tempfile.mktemp()
+        tmp_file = tempfile.mkstemp()[1]
         tag = save_state(station, virtual_gates=v_gates, statefile=tmp_file)
         _, virtual_gates_loaded = load_state(station=station, tag=tag, verbose=1, statefile=tmp_file)
 

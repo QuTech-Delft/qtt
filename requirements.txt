@@ -12,6 +12,7 @@ pyzmqrpc
 PyQt5
 qtpy
 qupulse
+redis
 sympy
 scikit-image
 scipy>=0.18
