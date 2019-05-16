@@ -186,6 +186,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     def updatecallback(self, start: bool = True, dt: float = 3):
         """ Update the data and start the restarts timer """
         if self._timer is not None:
+            self._timer.stop()
             del self._timer
 
         self.updatedata()
@@ -321,24 +322,3 @@ def createParameterWidget(instruments, doexec=False, remote=False):
     if doexec:
         app.exec()
     return p
-
-
-# %%
-
-def test_parameterviewer():
-    import pyqtgraph
-    qtapp = pyqtgraph.mkQApp()
-    import qtt.measurements.scans
-    from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-
-    ivvi = VirtualIVVI(name=qtt.measurements.scans.instrumentName('dummyivvi'), model=None)
-    p = ParameterViewer(instruments=[ivvi])
-    p.show()
-    p.updatecallback()
-    assert (p.is_running())
-    p.setGeometry(10, 10, 360, 600)
-
-    p.stop()
-    p.close()
-    qtapp.processEvents()
-    ivvi.close()
