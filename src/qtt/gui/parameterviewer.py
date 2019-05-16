@@ -245,6 +245,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         logging.debug('ParameterViewer: update values')
         for instrument_name in self._instrumentnames:
             instr = self._instruments[self._instrumentnames.index(instrument_name)]
+            parameters = {}
 
             try:
                 parameters = instr.parameters
