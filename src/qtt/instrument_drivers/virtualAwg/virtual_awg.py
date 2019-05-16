@@ -1,5 +1,4 @@
 import logging
-import unittest
 import numpy as np
 
 from qcodes import Instrument
@@ -50,7 +49,7 @@ class VirtualAwg(Instrument):
         self._logger = logger
         self.__set_hardware(awgs)
         self.__set_parameters()
-
+        self._latest_sequence_data = {}
         self.enable_debug = False
 
     def _get_virtual_info(self):
@@ -190,9 +189,9 @@ class VirtualAwg(Instrument):
 
         Arguments:
             uptime (float): The marker up period in seconds.
-            offset (float): The marker delay in seconds.
+            delay (float): The marker delay in seconds.
         """
-        if not VirtualAwg.__digitizer_name in self._settings.awg_map:
+        if VirtualAwg.__digitizer_name not in self._settings.awg_map:
             raise ValueError('Digitizer marker not present in settings awg map!')
         self.digitizer_marker_uptime(uptime)
         self.digitizer_marker_delay(delay)
@@ -203,11 +202,10 @@ class VirtualAwg(Instrument):
             uploaded waveform.
 
         Arguments:
-            awg_number (int): The AWG number for the settings that will be changed.
             uptime (float): The marker up period in seconds.
-            offset (float): The marker delay in seconds.
+            delay (float): The marker delay in seconds.
         """
-        if not VirtualAwg.__awg_slave_name in self._settings.awg_map:
+        if VirtualAwg.__awg_slave_name not in self._settings.awg_map:
             raise ValueError('Slave AWG marker not present in settings awg map!')
         self.awg_marker_uptime(uptime)
         self.awg_marker_delay(delay)
@@ -228,9 +226,9 @@ class VirtualAwg(Instrument):
             the sweep ranges and the marker properties and period of the pulse waves.
 
         Example:
-            >>> gates_voltages = {'P4': [50, 0, -50], 'P7': [-25, 0, 25]}
-            >>> waiting_times = [1e-4, 1e-4, 1e-4]
-            >>> pulse_data = virtualawg.pulse_gates(gate_voltages, waiting_times)
+            >> gates_voltages = {'P4': [50, 0, -50], 'P7': [-25, 0, 25]}
+            >> waiting_times = [1e-4, 1e-4, 1e-4]
+            >> pulse_data = virtualawg.pulse_gates(gate_voltages, waiting_times)
         """
         sequences = dict()
         period = sum(waiting_times)
@@ -261,10 +259,10 @@ class VirtualAwg(Instrument):
             the sweep ranges and the marker properties and period of the sawtooth waves.
 
         Example:
-            >>> sec_period = 1e-6
-            >>> mV_sweep_range = 100
-            >>> gates = {'P4': 1, 'P7': 0.1}
-            >>> sweep_data = virtualawg.sweep_gates(gates, 100, 1e-3)
+            >> sec_period = 1e-6
+            >> mV_sweep_range = 100
+            >> gates = {'P4': 1, 'P7': 0.1}
+            >> sweep_data = virtualawg.sweep_gates(gates, 100, 1e-3)
         """
         sequences = dict()
         sequences.update(self.make_markers(period))
@@ -300,11 +298,11 @@ class VirtualAwg(Instrument):
             the sweep ranges, the marker properties and period of the sawtooth signals.
 
         Example:
-            >>> sec_period = 1e-6
-            >>> resolution = [10, 10]
-            >>> mV_sweep_ranges = [100, 100]
-            >>> gates = [{'P4': 1}, {'P7': 0.1}]
-            >>> sweep_data = virtualawg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
+            >> sec_period = 1e-6
+            >> resolution = [10, 10]
+            >> mV_sweep_ranges = [100, 100]
+            >> gates = [{'P4': 1}, {'P7': 0.1}]
+            >> sweep_data = virtualawg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
         total_period = period
@@ -347,9 +345,6 @@ class VirtualAwg(Instrument):
             period (float): The period of the square signals in seconds.
             resolution (list): Two integer values with the number of square signal (pixels) in the
                                x- and y-direction.
-            width (float): Width of the rising square ramp as a proportion of the total cycle.
-                           Needs a value between 0 and 1. The value 1 producing a rising ramp,
-                           while 0 produces a falling ramp.
             do_upload (bool, Optional): Does not upload the waves to the AWG's when set to False.
 
         Returns:
@@ -357,11 +352,11 @@ class VirtualAwg(Instrument):
             the sweep ranges, the marker properties and period of the square signals.
 
         Example:
-            >>> sec_period = 1e-6
-            >>> resolution = [10, 10]
-            >>> mV_sweep_ranges = [100, 100]
-            >>> gates = [{'P4': 1}, {'P7': 0.1}]
-            >>> sweep_data = virtualawg.pulse_gates_2d(gates, mV_sweep_ranges, period, resolution)
+            >> sec_period = 1e-6
+            >> resolution = [10, 10]
+            >> mV_sweep_ranges = [100, 100]
+            >> gates = [{'P4': 1}, {'P7': 0.1}]
+            >> sweep_data = virtualawg.pulse_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
         sequences.update(self.make_markers(period))
@@ -394,11 +389,11 @@ class VirtualAwg(Instrument):
             do_upload (bool, Optional): Does not upload the waves to the AWG's when set to False.
 
         Example:
-            >>> from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer.
-            >>> amplitude = 1.5
-            >>> period_in_seconds = 1e-6
-            >>> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude, period_in_seconds)
-            >>> virtual_awg.sequence_gates(sawtooth_signal)
+            >> from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer.
+            >> amplitude = 1.5
+            >> period_in_seconds = 1e-6
+            >> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude, period_in_seconds)
+            >> virtualawg.sequence_gates(sawtooth_signal)
         """
         upload_data = []
         settings_data = {}
@@ -440,26 +435,3 @@ class VirtualAwg(Instrument):
         if self.enable_debug:
             self._latest_sequence_data = sequence_data
         return sequence_data
-
-
-class TestVirtualAwg(unittest.TestCase):
-
-    def test_init_HasNoErrors(self):
-        from unittest.mock import Mock
-        awg_driver = Mock()
-        type(awg_driver).__name__ = 'Tektronix_AWG5014'
-        awgs = [awg_driver]
-
-        class QuantumDeviceSettings(Instrument):
-
-            def __init__(self):
-                super().__init__('settings')
-                self.awg_map = {
-                    'P1': (0, 1),
-                    'P2': (0, 2),
-                    'dig_mk': (0, 1, 1)
-                }
-
-        settings = QuantumDeviceSettings()
-        virtual_awg = VirtualAwg(awgs, settings)
-        self.assertEqual(awg_driver, virtual_awg.awgs[0].fetch_awg)

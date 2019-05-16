@@ -1,13 +1,10 @@
 import warnings
-import unittest
 import numpy as np
 from matplotlib import pyplot as plt
 
 from qupulse.pulses import SequencePT
-from qupulse.pulses.plotting import (PlottingNotPossibleException, plot, render)
-from qupulse.pulses.sequencing import Sequencer as Sequencing
-from qupulse.serialization import Serializer, DictBackend
-
+from qupulse.pulses.plotting import plot, render
+from qupulse.serialization import JSONSerializableEncoder, JSONSerializableDecoder
 from qtt.instrument_drivers.virtualAwg.templates import DataTypes, Templates
 
 
@@ -142,15 +139,15 @@ class Sequencer:
         Returns:
             voltages (np.array): The array with voltages generated from the template.
         """
-        sequencer = Sequencing()
         template = sequence['wave']
         channels = template.defined_channels
-        sequencer.push(template, dict(), channel_mapping={ch: ch for ch in channels},
-                       window_mapping={w: w for w in template.measurement_names})
-        instructions = sequencer.build()
-        if not sequencer.has_finished():
-            raise PlottingNotPossibleException(template)
-        (_, voltages, _) = render(instructions, sampling_rate / Sequencer.__sec_to_ns)
+        loop = template.create_program(parameters=dict(),
+                                       measurement_mapping={w: w for w in template.measurement_names},
+                                       channel_mapping={ch: ch for ch in channels},
+                                       global_transformation=None,
+                                       to_single_waveform=set())
+
+        (_, voltages, _) = render(loop, sampling_rate / Sequencer.__sec_to_ns)
         return np.array(voltages[next(iter(voltages))])
 
     @staticmethod
@@ -264,9 +261,10 @@ class Sequencer:
         Returns:
             Str: A JSON string with the sequence data.
         """
-        backend = DictBackend()
-        serializer = Serializer(backend)
-        return serializer.serialize(sequence, overwrite=True)
+        encoder = JSONSerializableEncoder({}, sort_keys=True, indent=4)
+        serialization_data = sequence.get_serialization_data()
+        serialized = encoder.encode(serialization_data)
+        return serialized
 
     @staticmethod
     def serialize(sequence):
@@ -289,60 +287,12 @@ class Sequencer:
         """ Convert a JSON string into a sequencer object.
 
         Args:
-            json_string: The JSON data containing the sequencer obect.
+            json_string: The JSON data containing the sequencer object.
 
         Returns:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
                   sequence data type and the actual qupulse sequencePT respectively.
         """
-        backend = DictBackend()
-        serializer = Serializer(backend)
-        return serializer.deserialize(json_string)
-
-
-class TestSequencer(unittest.TestCase):
-
-    def test_qupulse_sawtooth_HasCorrectProperties(self):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
-            epsilon = 1e-14
-            period = 1e-3
-            amplitude = 1.5
-            sampling_rate = 1e9
-            sequence = Sequencer.make_sawtooth_wave(amplitude, period)
-            raw_data = Sequencer.get_data(sequence, sampling_rate)
-            self.assertTrue(len(raw_data) == sampling_rate * period + 1)
-            self.assertTrue(np.abs(np.min(raw_data) + amplitude / 2) <= epsilon)
-            self.assertTrue(np.abs(np.max(raw_data) - amplitude / 2) <= epsilon)
-
-    def test_raw_wave_HasCorrectProperties(self):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
-            period = 1e-3
-            sampling_rate = 1e9
-            name = 'test_raw_data'
-            sequence = {'name': name, 'wave': [0] * int(period * sampling_rate + 1),
-                        'type': DataTypes.RAW_DATA}
-            raw_data = Sequencer.get_data(sequence, sampling_rate)
-            self.assertTrue(len(raw_data) == sampling_rate * period + 1)
-            self.assertTrue(np.min(raw_data) == 0)
-
-    def test_serializer(self):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
-            period = 1e-6
-            amplitude = 1.5
-            sawtooth = Sequencer.make_sawtooth_wave(amplitude, period)
-            serialized_data = Sequencer.serialize(sawtooth)
-            self.assertIsNone(serialized_data)
-
-    def test_make_pulse_table(self):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
-            amplitudes = [1, 2, 3]
-            waiting_times = [1e-4, 2e-5, 3e-3]
-            sampling_rate = 1e9
-            pulse_data = Sequencer.make_pulse_table(amplitudes, waiting_times)
-            raw_data = Sequencer.get_data(pulse_data, sampling_rate)
-            self.assertTrue(raw_data[0] == amplitudes[0])
-            self.assertTrue(raw_data[-1] == amplitudes[-1])
+        decoder = JSONSerializableDecoder(storage={})
+        decoded = decoder.decode(json_string)
+        return decoded

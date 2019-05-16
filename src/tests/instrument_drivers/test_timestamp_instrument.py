@@ -4,6 +4,7 @@ from unittest.mock import patch
 import qtt.measurements.scans
 import qtt.instrument_drivers.TimeStamp
 
+
 class TestTimeStampInstrument(TestCase):
 
     def setUp(self):

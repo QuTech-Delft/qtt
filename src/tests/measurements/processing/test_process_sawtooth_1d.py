@@ -25,7 +25,7 @@ class TestProcessSawtooth1D(TestCase):
 
     @staticmethod
     def __dummy_time_data(period, sample_rate):
-        return np.linspace(0, period, np.rint(period * sample_rate))
+        return np.linspace(0, period, int(np.rint(period * sample_rate)))
 
     @staticmethod
     def __dummy_scope_data(time_data, sawteeth_count, period, width):

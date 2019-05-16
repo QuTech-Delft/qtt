@@ -4,14 +4,13 @@ import os
 import h5py
 import logging
 import warnings
-#import numpy as np
 
 import qcodes
 import qtt.instrument_drivers.virtual_gates
 
 try:
     import hickle
-except:
+except ImportError:
     import qtt.exceptions
     warnings.warn('could not import hickle, not all functionality available',
                   qtt.exceptions.MissingOptionalPackageWarning)
@@ -36,7 +35,6 @@ def list_states(verbose=1):
         statefile = os.path.join(os.path.expanduser('~'), 'qtt_statefile.hdf5')
     if not os.path.exists(statefile):
         return []
-    tags = []
     with h5py.File(statefile, 'r') as h5group:
         tags = list(h5group.keys())
     if verbose:
@@ -62,6 +60,7 @@ def load_state(tag=None, station=None, verbose=1, statefile=None):
         tag (str): identifier of state to load
         station (None or qcodes station): If defined apply the gatevalues loaded from disk
         verbose (int): verbosity level
+        statefile (str): file with the state of the system
 
     Returns:
         state (dict): Dictionary with state of the system
@@ -73,7 +72,7 @@ def load_state(tag=None, station=None, verbose=1, statefile=None):
         print('load_state %s: reading from file %s' % (tag, statefile))
     obj = {}
     with h5py.File(statefile, 'r') as h5group:
-        if not tag in h5group:
+        if tag not in h5group:
             raise Exception('tag %s not in file' % tag)
         obj = hickle.load(h5group, path=tag)
     if station is not None:
@@ -104,10 +103,11 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
         overwrite (bool): If True overwrite existing data, otherwise raise error
         virtual_gates (None or virtual_gates): virtual gates object to store
         data (None or object): optional extra data
-        verbose (int)
+        verbose (int): verbosity level
+        statefile (str): file with the state of the system
 
     Example:
-        >>> save_state(station, tag='tripledot1')    
+        save_state(station, tag='tripledot1')
 
     The data is written to an HDF5 file. The default location is the user
     home directory with name qtt_statefile.hdf5.
@@ -119,24 +119,27 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
     snapshot = station.snapshot()
     gv = station.gates.allvalues()
 
-    datestring = "{:%Y%m%d-%H%M%S}".format(datetime.now())
+    date_string = "{:%Y%m%d-%H%M%S}".format(datetime.now())
 
     if verbose >= 2:
-        print(datestring)
+        print(date_string)
     if tag is None:
-        tag = datestring
+        tag = date_string
 
     obj = {'gatevalues': gv, 'snapshot': snapshot,
-           'datestring': datestring, 'data': data}
+           'datestring': date_string, 'data': data}
 
     if virtual_gates is not None:
         obj['virtual_gates'] = virtual_gates.to_dictionary()
+        # remove the redundant information that can't be serialized
+        obj['virtual_gates'].pop('_crosscap_map', None)
+        obj['virtual_gates'].pop('_crosscap_map_inv', None)
 
     if verbose:
         print('save_state: writing to file %s, tag %s' % (statefile, tag))
     with h5py.File(statefile, 'a') as h5group:
-            # implementation using dev branch of hickle
-        if (tag in h5group):
+        # implementation using dev branch of hickle
+        if tag in h5group:
             if overwrite:
                 del h5group[tag]
             else:
@@ -144,19 +147,3 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
                     'tag %s already exists in state file %s' % (tag, statefile))
         hickle.dump(obj, h5group, path=tag)
     return tag
-
-
-def test_load_save_state():
-    import qtt.simulation.virtual_dot_array
-    import tempfile
-    from qtt.instrument_drivers.virtual_gates import virtual_gates
-
-    station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=2, maxelectrons=2, verbose=0)
-    virts = virtual_gates('virtual_gates_load_save_state', station.gates, {'vP1': {'P1': 1, 'P2': .1}, 'vP2': {'P1': .2, 'P2': 1.}})
-
-    tmpfile = tempfile.mktemp()
-    tag = save_state(station, virtual_gates=virts, statefile=tmpfile)
-    _, virtual_gates_loaded = load_state(station=station, tag=tag, verbose=1, statefile=tmpfile)
-
-    virtual_gates_loaded.close()
-    virts.close()
