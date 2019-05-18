@@ -5,7 +5,6 @@ Contains code to do live plotting
 """
 # %%
 import numpy as np
-import unittest
 import logging
 import qcodes
 
@@ -56,10 +55,8 @@ class SimulationDigitizer(qcodes.Instrument):
     def myhoneycomb(self, multiprocess=False, verbose=0):
         """
         Args:
-            model (object):
-            Vmatrix (array): transformation from ordered scan gates to the sourcenames 
-            erange, drange (float):
-            nx, ny (integer):
+            multiprocess (bool): honeycomb simulation multiprocess
+            verbose (int): verbosity of the method (0 == none)
         """
         test_dot = self.model.ds
         waveform = self._waveform
@@ -159,8 +156,8 @@ class SimulationDigitizer(qcodes.Instrument):
         test_dot.simulate_honeycomb(
             test2Dparams, multiprocess=multiprocess, verbose=0)
 
-        sd1 = ((test_dot.hcgs) * (model.sensingdot1_distance.reshape((1, 1, -1)))).sum(axis=-1)
-        sd2 = ((test_dot.hcgs) * (model.sensingdot2_distance.reshape((1, 1, -1)))).sum(axis=-1)
+        sd1 = (test_dot.hcgs * (model.sensingdot1_distance.reshape((1, 1, -1)))).sum(axis=-1)
+        sd2 = (test_dot.hcgs * (model.sensingdot2_distance.reshape((1, 1, -1)))).sum(axis=-1)
         sd1 *= (1 / np.sum(model.sensingdot1_distance))
         sd2 *= (1 / np.sum(model.sensingdot2_distance))
 
@@ -176,7 +173,7 @@ class SimulationDigitizer(qcodes.Instrument):
         if ndim == 1:
             sd1 = sd1.reshape((-1,))
             sd2 = sd2.reshape((-1,))
-        #plt.figure(1000); plt.clf(); plt.plot(sd1, '.b'); plt.plot(sd2,'.r')
+        # plt.figure(1000); plt.clf(); plt.plot(sd1, '.b'); plt.plot(sd2,'.r')
         self.debug['sd'] = sd1, sd2
         return sd1, sd2
 
@@ -217,8 +214,9 @@ class SimulationAWG(qcodes.Instrument):
         return waveform, None
 
     def sweep_2D_virt(self, samp_freq, gates_horz, gates_vert, sweepranges, resolution):
-        self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates': [gates_horz, gates_vert], 'sweepranges': sweepranges,
-                              'type': 'sweep_2D_virt', 'samp_freq': samp_freq, 'resolution': resolution}
+        self.current_sweep = {'waveform': 'simulation_awg', 'sweepgates': [gates_horz, gates_vert],
+                              'sweepranges': sweepranges, 'type': 'sweep_2D_virt', 'samp_freq': samp_freq,
+                              'resolution': resolution}
         waveform = self.current_sweep
         self._waveform = waveform
         return waveform, None
@@ -232,35 +230,3 @@ class SimulationAWG(qcodes.Instrument):
 
     def stop(self):
         pass
-
-
-
-class TestSimulationInstruments(unittest.TestCase):
-
-    def test_simulated_digitizer(self, fig=None):
-        import qtt
-        import qtt.simulation.virtual_dot_array
-        import matplotlib.pyplot as plt
-        station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=3, maxelectrons=2, verbose=0)
-
-        station.model.sdnoise = .05
-
-        station.gates.B0(-300)
-        station.gates.B3(-300)
-        awg = SimulationAWG(qtt.measurements.scans.instrumentName('test_simulation_awg'))
-        waveform, _ = awg.sweep_gate('B3', 400, 1e-3)
-
-        digitizer = SimulationDigitizer(qtt.measurements.scans.instrumentName('test_digitizer'), model=station.model)
-        r = digitizer.measuresegment(waveform, channels=[1])
-
-        self.assertTrue(isinstance(r[0], np.ndarray))
-
-        if fig:
-            plt.figure(fig)
-            plt.clf()
-            plt.plot(r[0], label='signal from simulation digitizer')
-
-        awg.close()
-        digitizer.close()
-
-        qtt.simulation.virtual_dot_array.close(verbose=0)

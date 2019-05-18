@@ -5,8 +5,6 @@ import qtt.data
 import qtt.measurements.scans
 from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
 
-# %%
-
 
 class TestVirtualMeter(TestCase):
 
