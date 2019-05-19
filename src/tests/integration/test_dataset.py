@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock
 import io
 
 import qcodes
@@ -23,19 +23,18 @@ DataSet requirements:
 - Load legacy DataSet forms and convert to current DataSet
 - Incremental adding of data to the arrays
 - Serialization
-- Storage to disk
 - Utility functions:
-	* default parameter array()
-	* qcodes.MatPlot, qcodes.QtPlot
-	* Easy conversion to numpy: array = np.array(dataset.voltage). Even better: the DataArray's should support the __array_interface__ attribute
-
+    * default_parameter_array()
+    * qcodes.MatPlot, qcodes.QtPlot
+    * Easy conversion to numpy: array = np.array(dataset.voltage). Even better: the DataArray's should support the __array_interface__ attribute
 """
 
 
 class TestDataSet(unittest.TestCase):
     """ Integration tests for DataSet used by qtt """
 
-    def setUp(self, dataset_class=qcodes.DataSet):
+    def setUp(self):
+        dataset_class = qcodes.DataSet
         self.dataset_class = dataset_class
         self.dataset1d = qcodes.tests.data_mocks.DataSet1D()
         self.dataset1d.metadata['hello'] = 'world'
@@ -79,10 +78,6 @@ class TestDataSet(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.dataset1d.metadata['non_existing_metadata']
 
-    def test_live_plotting(self):
-        """ Live plotting can be attached to a DataSet """
-        pass
-
     def test_location_provider(self):
         """ The DataSet generated locations (or tags) for storage automatically. The format is user configurable """
 
@@ -98,10 +93,10 @@ class TestDataSet(unittest.TestCase):
 
     def test_dataset_storage(self):
         """ A DataSet (including metadata) can be stored to and loaded from disk
-        
+
         We need a binary format for efficiency
         Incremental storage is a nice-to-have (and currently implemented)
-        
+
         """
         self.dataset2d.write()
 
@@ -117,9 +112,6 @@ class TestDataSet(unittest.TestCase):
         lines = print_string.split('\n')
         self.assertEqual(lines[0], 'DataSet:')
         self.assertEqual(lines[3], '   Measured | y          | y            | (5,)')
-
-    def test_location_formatter(self):
-        pass
 
     def test_plot_matplotlib(self):
         """ We need to plot simple 1D and 2D datasets with proper units and labels """
