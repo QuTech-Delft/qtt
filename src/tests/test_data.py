@@ -56,7 +56,7 @@ class TestData(unittest.TestCase):
     def test_datasetCentre(self):
         dataset = qcodes.tests.data_mocks.DataSet2D()
         cc = qtt.data.datasetCentre(dataset)
-        assert (cc[0] == 1.5)
+        self.assertEqual(cc[0], 1.5)
 
     def test_dataset_labels(self):
         dataset = qcodes.tests.data_mocks.DataSet2D()
