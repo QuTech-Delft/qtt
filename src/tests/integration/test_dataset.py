@@ -1,6 +1,5 @@
 import os
 import unittest
-from unittest.mock import Mock
 import io
 
 import qcodes
@@ -10,28 +9,27 @@ import qtt.data
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # %%
 
-"""
-
-DataSet requirements:
-
-- Contains arrays with metadata such as units, label
-- Live plotting of data
-- Information about dependent and independent variables
-- Storage to disk working with a location formatter
-- Load legacy DataSet forms and convert to current DataSet
-- Incremental adding of data to the arrays
-- Serialization
-- Utility functions:
-    * default_parameter_array()
-    * qcodes.MatPlot, qcodes.QtPlot
-    * Easy conversion to numpy: array = np.array(dataset.voltage). Even better: the DataArray's should support the __array_interface__ attribute
-"""
-
-
 class TestDataSet(unittest.TestCase):
-    """ Integration tests for DataSet used by qtt """
+    """ Integration tests for DataSet used by qtt
+
+     DataSet requirements:
+
+        - Contains arrays with metadata such as units, label
+        - Live plotting of data
+        - Information about dependent and independent variables
+        - Storage to disk working with a location formatter
+        - Load legacy DataSet forms and convert to current DataSet
+        - Incremental adding of data to the arrays
+        - Serialization
+        - Utility functions:
+            * default_parameter_array()
+            * qcodes.MatPlot, qcodes.QtPlot
+            * Easy conversion to numpy: array = np.array(dataset.voltage). Even better: the DataArray's should support the __array_interface__ attribute
+
+     """
 
     def setUp(self):
         dataset_class = qcodes.DataSet
@@ -76,7 +74,7 @@ class TestDataSet(unittest.TestCase):
 
         self.assertDictEqual(self.dataset1d.metadata.get('new_metadata'), expected)
         with self.assertRaises(KeyError):
-            self.dataset1d.metadata['non_existing_metadata']
+            non_existing_metadata = self.dataset1d.metadata['non_existing_metadata']
 
     def test_location_provider(self):
         """ The DataSet generated locations (or tags) for storage automatically. The format is user configurable """
