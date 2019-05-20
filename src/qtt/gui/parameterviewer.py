@@ -65,6 +65,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.verbose = 1
         self._fields = fields
         self._update_counter = 0
+        self._timer: Optional[QCodesTimer] = None
+        self.update_field_signal.connect(self._set_field)
+        self._itemsdict: dict = dict()
 
         window = self
         window.setGeometry(1700, 50, 300, 600)
@@ -73,31 +76,50 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         window.setHeaderItem(self._tree_header)
         window.setWindowTitle(name)
 
+        self.callbacklist: Sequence = []
+
+        self.initialize_viewer(instruments)
+
+        self.set_column_sizehints([200, 140])
+        
+        self.updatecallback()
+        self.show()
+
+    def initialize_viewer(self, instruments):
+        self._clear_gui()
+        self._init(instruments)
+        self._init_gui()
+
+    def _init(self, instruments):
+        """ Initialize parameter viewer """
         instrumentnames = [i.name for i in instruments]
         self._instruments = instruments
         self._instrumentnames = instrumentnames
-        self._itemsdict: dict = dict()
         for instrument_name in instrumentnames:
             self._itemsdict[instrument_name] = dict()
-        self._timer: Optional[QCodesTimer] = None
-        self.init()
-        self.show()
-
-        self.callbacklist: Sequence = []
-
-        self.update_field.connect(self._set_field)
-
-        self.updatecallback()
-
-        for column in [0, 1]:
-            self.resizeColumnToContents(column)
-
+        
     def close(self):
         self.stop()
         super(ParameterViewer, self).close()
 
-    def init(self):
-        """ Initialize parameter viewer
+    def _clear_gui(self):
+        
+        instrument_names = list(self._itemsdict.keys())
+        for ii, instrument_name in enumerate(instrument_names):
+            lst = self._itemsdict[instrument_name]
+            gatesroot = self._itemsdict[instrument_name]['_treewidgetitem']
+
+            params = [param for param in lst if not param.startswith('_')]
+            for parameter_name in params:
+                widget = self._itemsdict[instrument_name][parameter_name]['widget']
+                gatesroot.removeChild(widget)
+
+            self.takeTopLevelItem(0)
+                    
+        self._itemsdict = {}
+        
+    def _init_gui(self):
+        """ Initialize parameter viewer GUI
 
         This function creates all the GUI elements.
         """
@@ -133,7 +155,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 box.valueChanged.connect(partial(self._valueChanged, instrument_name, parameter_name))
 
-        self.set_column_sizehints([200, 140])
         self.set_parameter_properties(step_size=5)
         self.setSortingEnabled(True)
         self.expandAll()
@@ -145,8 +166,11 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             params = [param for param in lst if not param.startswith('_')]
             for parameter_name in params:
                 widget = self._itemsdict[instrument_name][parameter_name]['widget']
-                for jj in range(len(size_hints)):
-                    widget.setSizeHint(jj, QSize(size_hints[jj], -1))
+                for column in range(len(size_hints)):
+                    widget.setSizeHint(column, QSize(size_hints[column], -1))
+
+        for column in range(len(size_hints)):
+            self.resizeColumnToContents(column)
 
     def set_parameter_properties(self, minimum_value=None, maximum_value=None, step_size=None):
         """ Set properties of the parameter viewer widget elements """
@@ -210,7 +234,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         instrument.set(parameter_name, value)
 
     def updatecallback(self, start: bool = True, dt: float = 3):
-        """ Update the data and start the restarts timer """
+        """ Update the data and restarts timer """
         if self._timer is not None:
             self._timer.stop()
             del self._timer
@@ -223,7 +247,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         else:
             self._timer = None
 
-    update_field = Signal(str, str, str, object, bool)
+    update_field_signal = Signal(str, str, str, object, bool)
 
     def stop(self):
         """ Stop readout of the parameters in the widget """
@@ -294,13 +318,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                         sys.setswitchinterval(100)
                         value = parameters[parameter_name].get_latest()
                         sys.setswitchinterval(si)
-                        self.update_field.emit(instrument_name, parameter_name, field_name, value, force_update)
+                        self.update_field_signal.emit(instrument_name, parameter_name, field_name, value, force_update)
                     else:
                         if self._update_counter % 20 == 1 or 1:
                             sys.setswitchinterval(100)
                             value = getattr(parameters[parameter_name], field_name, '')
                             sys.setswitchinterval(si)
-                            self.update_field.emit(instrument_name, parameter_name, field_name, value, force_update)
+                            self.update_field_signal.emit(instrument_name, parameter_name, field_name, value, force_update)
 
         for callback_function in self.callbacklist:
             try:
