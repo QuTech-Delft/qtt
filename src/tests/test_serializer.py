@@ -19,12 +19,19 @@ class TestJSON(unittest.TestCase):
         self.assertDictEqual(data, loaded_data)
 
     def test_qcodes_dataset_encoding(self):
-        dataset=qcodes.tests.data_mocks.DataSet2D()
+        dataset = qcodes.tests.data_mocks.DataSet2D()
 
-        json_data=encode_json(dataset)
+        json_data = encode_json(dataset)
         self.assertIsInstance(json_data, str)
         dataset2 = decode_json(json_data)
         self.assertIsInstance(dataset2, qcodes.DataSet)
+
+    def test_numpy_bool_type(self):
+        data = {'true': np.bool_(True), 'false': np.bool_(False)}
+        serialized_data = json.dumps(data, cls=QttJsonEncoder)
+        loaded_data = json.loads(serialized_data, cls=QttJsonDecoder)
+        self.assertIn('{"true": {"__object__": "__npnumber__", "__content__"', serialized_data)
+        self.assertEqual(loaded_data['true'], np.bool_(True))
 
     def test_numpy_encoders(self):
         data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}

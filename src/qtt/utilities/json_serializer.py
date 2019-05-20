@@ -145,7 +145,7 @@ class QttJsonEncoder(JSONEncoder):
             np.int64: QttJsonEncoder.__encode_numpy_number,
             np.float32: QttJsonEncoder.__encode_numpy_number,
             np.float64: QttJsonEncoder.__encode_numpy_number,
-            np.bool: QttJsonEncoder.__encode_numpy_number,
+            np.bool_: QttJsonEncoder.__encode_numpy_number,
             qcodes.Instrument: QttJsonEncoder.__encode_qcodes_instrument,
             qcodes.DataSet: QttJsonEncoder.__encode_qcodes_dataset,
         }
