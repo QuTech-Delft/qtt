@@ -17,6 +17,8 @@ class TestGUIParameterViewer(TestCase):
         assert (p.is_running())
         p.setGeometry(10, 10, 360, 600)
 
+        p.set_parameter_properties(minimum_value=0)
+
         p.stop()
         p.close()
         qtapp.processEvents()

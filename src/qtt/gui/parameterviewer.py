@@ -39,12 +39,14 @@ class QCodesTimer(threading.Thread):
     def stop(self):
         self._run = False
 
+
 def isfloat(value):
-  try:
-    float(value)
-    return True
-  except (ValueError, TypeError):
-    return False
+    try:
+        float(value)
+        return True
+    except (ValueError, TypeError):
+        return False
+
 
 class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
@@ -118,14 +120,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box = QtWidgets.QDoubleSpinBox()
                 # do not emit signals when still editing
                 box.setKeyboardTracking(False)
-                box.setMinimum(-10000)
-                box.setMaximum(10000)
-                box.setSingleStep(5)
 
                 initial_values = [parameter_name] + [''] * len(self._fields)
                 widget = QtWidgets.QTreeWidgetItem(gatesroot, initial_values)
-                widget.setSizeHint(0, QSize(180, -1))
-                widget.setSizeHint(1, QSize(300, -1))
 
                 self._itemsdict[instrument_name][parameter_name] = {'widget': widget, 'double_box': None}
 
@@ -136,8 +133,37 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 box.valueChanged.connect(partial(self._valueChanged, instrument_name, parameter_name))
 
+        self.set_column_sizehints([200, 140])
+        self.set_parameter_properties(step_size=5)
         self.setSortingEnabled(True)
         self.expandAll()
+
+    def set_column_sizehints(self, size_hints):
+        for ii, instrument_name in enumerate(self._instrumentnames):
+            lst = self._itemsdict[instrument_name]
+
+            params = [param for param in lst if not param.startswith('_')]
+            for parameter_name in params:
+                widget = self._itemsdict[instrument_name][parameter_name]['widget']
+                for jj in range(len(size_hints)):
+                    widget.setSizeHint(jj, QSize(size_hints[jj], -1))
+
+    def set_parameter_properties(self, minimum_value=None, maximum_value=None, step_size=None):
+        """ Set properties of the parameter viewer widget elements """
+        for ii, instrument_name in enumerate(self._instrumentnames):
+            lst = self._itemsdict[instrument_name]
+
+            params = [param for param in lst if not param.startswith('_')]
+            for parameter_name in params:
+                box = lst[parameter_name]['double_box']
+
+                if box is not None:
+                    if step_size is not None:
+                        box.setSingleStep(step_size)
+                    if minimum_value is not None:
+                        box.setMinimum(minimum_value)
+                    if maximum_value is not None:
+                        box.setMaximum(maximum_value)
 
     def is_running(self):
         if self._timer is None:
