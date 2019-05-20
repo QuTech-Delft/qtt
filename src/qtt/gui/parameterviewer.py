@@ -96,6 +96,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self._clear_gui()
         self._init(instruments)
         self._create_gui_signal.emit()
+        self.updatecallback()
 
     def _init(self, instruments):
         """ Initialize parameter viewer """
@@ -163,7 +164,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 box.valueChanged.connect(partial(self._valueChanged, instrument_name, parameter_name))
 
-        self.set_parameter_properties(step_size=5)
+        self.set_parameter_properties(step_size=5, minimum_value=-1e20, maximum_value=1e20)
         self.setSortingEnabled(True)
         self.expandAll()
 
