@@ -39,15 +39,20 @@ class QCodesTimer(threading.Thread):
     def stop(self):
         self._run = False
 
+
 def isfloat(value):
-  try:
-    float(value)
-    return True
-  except (ValueError, TypeError):
-    return False
+    try:
+        float(value)
+        return True
+    except (ValueError, TypeError):
+        return False
+
 
 class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
+
+    update_field_signal = Signal(str, str, str, object, bool)
+    _create_gui_signal = Signal()
 
     def __init__(self, instruments: list, name: str = 'QuTech Parameter Viewer',
                  fields: Sequence[str] = ('Value', 'unit'), **kwargs):
@@ -59,43 +64,71 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             fields: Names of Parameter fields to show
         """
         super().__init__(**kwargs)
-        self.name = name
         self.verbose = 1
         self._fields = fields
         self._update_counter = 0
+        self._timer: Optional[QCodesTimer] = None
+        self.update_field_signal.connect(self._set_field)
+        self._create_gui_signal.connect(self._create_gui)
+        self._itemsdict: dict = dict()
+        self._default_sizehints=[200,140]
 
         window = self
         window.setGeometry(1700, 50, 300, 600)
         window.setColumnCount(2 + len(self._fields))
         self._tree_header = QtWidgets.QTreeWidgetItem(['Parameter'] + list(self._fields))
         window.setHeaderItem(self._tree_header)
-        window.setWindowTitle(name)
-
-        instrumentnames = [i.name for i in instruments]
-        self._instruments = instruments
-        self._instrumentnames = instrumentnames
-        self._itemsdict: dict = dict()
-        for instrument_name in instrumentnames:
-            self._itemsdict[instrument_name] = dict()
-        self._timer: Optional[QCodesTimer] = None
-        self.init()
-        self.show()
+        self.set_window_name(name)
 
         self.callbacklist: Sequence = []
 
-        self.update_field.connect(self._set_field)
+        self.initialize_viewer(instruments)
+
 
         self.updatecallback()
+        self.show()
 
-        for column in [0, 1]:
-            self.resizeColumnToContents(column)
+    def set_window_name(self, name):
+        self.name = name
+        self.setWindowTitle(name)
+
+    def initialize_viewer(self, instruments):
+        self._clear_gui()
+        self._init(instruments)
+        self._create_gui_signal.emit()
+        self.updatecallback()
+
+    def _init(self, instruments):
+        """ Initialize parameter viewer """
+        instrumentnames = [i.name for i in instruments]
+        self._instruments = instruments
+        self._instrumentnames = instrumentnames
+        for instrument_name in instrumentnames:
+            self._itemsdict[instrument_name] = dict()
 
     def close(self):
         self.stop()
         super(ParameterViewer, self).close()
 
-    def init(self):
-        """ Initialize parameter viewer
+    def _clear_gui(self):
+
+        instrument_names = list(self._itemsdict.keys())
+        for _, instrument_name in enumerate(instrument_names):
+            lst = self._itemsdict[instrument_name]
+            gatesroot = self._itemsdict[instrument_name]['_treewidgetitem']
+
+            params = [param for param in lst if not param.startswith('_')]
+            for parameter_name in params:
+                widget = self._itemsdict[instrument_name][parameter_name]['widget']
+                gatesroot.removeChild(widget)
+
+            self.takeTopLevelItem(0)
+
+        self._itemsdict = {}
+
+    @Slot()
+    def _create_gui(self):
+        """ Initialize parameter viewer GUI
 
         This function creates all the GUI elements.
         """
@@ -118,14 +151,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 box = QtWidgets.QDoubleSpinBox()
                 # do not emit signals when still editing
                 box.setKeyboardTracking(False)
-                box.setMinimum(-10000)
-                box.setMaximum(10000)
-                box.setSingleStep(5)
 
                 initial_values = [parameter_name] + [''] * len(self._fields)
                 widget = QtWidgets.QTreeWidgetItem(gatesroot, initial_values)
-                widget.setSizeHint(0, QSize(180, -1))
-                widget.setSizeHint(1, QSize(300, -1))
 
                 self._itemsdict[instrument_name][parameter_name] = {'widget': widget, 'double_box': None}
 
@@ -136,8 +164,43 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 box.valueChanged.connect(partial(self._valueChanged, instrument_name, parameter_name))
 
+        self.set_column_sizehints(self._default_sizehints)
+        self.set_parameter_properties(step_size=5, minimum_value=-1e20, maximum_value=1e20)
         self.setSortingEnabled(True)
         self.expandAll()
+
+    def set_column_sizehints(self, size_hints):
+        for ii, instrument_name in enumerate(self._instrumentnames):
+            lst = self._itemsdict[instrument_name]
+
+            params = [param for param in lst if not param.startswith('_')]
+            for parameter_name in params:
+                widget = self._itemsdict[instrument_name][parameter_name]['widget']
+                double_box = self._itemsdict[instrument_name][parameter_name]['double_box']
+                for column, hint in enumerate(size_hints):
+                    if double_box is None:
+                        widget.setSizeHint(column, QSize(hint, 20))
+                    else:
+                        widget.setSizeHint(column, QSize(hint, -1))
+        for column in range(len(size_hints)):
+            self.resizeColumnToContents(column)
+
+    def set_parameter_properties(self, minimum_value=None, maximum_value=None, step_size=None):
+        """ Set properties of the parameter viewer widget elements """
+        for _, instrument_name in enumerate(self._instrumentnames):
+            lst = self._itemsdict[instrument_name]
+
+            params = [param for param in lst if not param.startswith('_')]
+            for parameter_name in params:
+                box = lst[parameter_name]['double_box']
+
+                if box is not None:
+                    if step_size is not None:
+                        box.setSingleStep(step_size)
+                    if minimum_value is not None:
+                        box.setMinimum(minimum_value)
+                    if maximum_value is not None:
+                        box.setMaximum(maximum_value)
 
     def is_running(self):
         if self._timer is None:
@@ -184,7 +247,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         instrument.set(parameter_name, value)
 
     def updatecallback(self, start: bool = True, dt: float = 3):
-        """ Update the data and start the restarts timer """
+        """ Update the data and restarts timer """
         if self._timer is not None:
             self._timer.stop()
             del self._timer
@@ -196,8 +259,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             self._timer.start()
         else:
             self._timer = None
-
-    update_field = Signal(str, str, str, object, bool)
 
     def stop(self):
         """ Stop readout of the parameters in the widget """
@@ -268,13 +329,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                         sys.setswitchinterval(100)
                         value = parameters[parameter_name].get_latest()
                         sys.setswitchinterval(si)
-                        self.update_field.emit(instrument_name, parameter_name, field_name, value, force_update)
+                        self.update_field_signal.emit(instrument_name, parameter_name, field_name, value, force_update)
                     else:
                         if self._update_counter % 20 == 1 or 1:
                             sys.setswitchinterval(100)
                             value = getattr(parameters[parameter_name], field_name, '')
                             sys.setswitchinterval(si)
-                            self.update_field.emit(instrument_name, parameter_name, field_name, value, force_update)
+                            self.update_field_signal.emit(instrument_name, parameter_name,
+                                                          field_name, value, force_update)
 
         for callback_function in self.callbacklist:
             try:
