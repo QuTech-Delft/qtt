@@ -71,6 +71,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.update_field_signal.connect(self._set_field)
         self._create_gui_signal.connect(self._create_gui)
         self._itemsdict: dict = dict()
+        self._default_sizehints=[200,140]
 
         window = self
         window.setGeometry(1700, 50, 300, 600)
@@ -83,7 +84,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         self.initialize_viewer(instruments)
 
-        self.set_column_sizehints([200, 140])
 
         self.updatecallback()
         self.show()
@@ -164,6 +164,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
                 box.valueChanged.connect(partial(self._valueChanged, instrument_name, parameter_name))
 
+        self.set_column_sizehints(self._default_sizehints)
         self.set_parameter_properties(step_size=5, minimum_value=-1e20, maximum_value=1e20)
         self.setSortingEnabled(True)
         self.expandAll()
@@ -175,9 +176,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             params = [param for param in lst if not param.startswith('_')]
             for parameter_name in params:
                 widget = self._itemsdict[instrument_name][parameter_name]['widget']
+                double_box = self._itemsdict[instrument_name][parameter_name]['double_box']
                 for column, hint in enumerate(size_hints):
-                    widget.setSizeHint(column, QSize(hint, -1))
-
+                    if double_box is None:
+                        widget.setSizeHint(column, QSize(hint, 20))
+                    else:
+                        widget.setSizeHint(column, QSize(hint, -1))
         for column in range(len(size_hints)):
             self.resizeColumnToContents(column)
 
