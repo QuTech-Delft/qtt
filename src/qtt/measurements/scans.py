@@ -1586,7 +1586,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         measuresegment_m4i.debug_data['raw_data'] = raw_data
         measuresegment_m4i.debug_data['waveform'] = waveform
         measuresegment_m4i.debug_data['timestamp'] = qtt.data.dateString()
-        
+
     if not process:
         return raw_data
 
@@ -1602,7 +1602,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     if len(width) == 2:
         data, _ = process_2d_sawtooth(raw_data.T, period, samplerate,
                                       resolution, width, start_zero=start_zero, fig=None)
-        
+
         if measuresegment_m4i.debug_enabled:
             measuresegment_m4i.debug_data['data'] = data
     else:
