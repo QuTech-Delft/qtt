@@ -81,7 +81,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.initialize_viewer(instruments)
 
         self.set_column_sizehints([200, 140])
-        
+
         self.updatecallback()
         self.show()
 
@@ -97,13 +97,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self._instrumentnames = instrumentnames
         for instrument_name in instrumentnames:
             self._itemsdict[instrument_name] = dict()
-        
+
     def close(self):
         self.stop()
         super(ParameterViewer, self).close()
 
     def _clear_gui(self):
-        
+
         instrument_names = list(self._itemsdict.keys())
         for ii, instrument_name in enumerate(instrument_names):
             lst = self._itemsdict[instrument_name]
@@ -115,9 +115,9 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                 gatesroot.removeChild(widget)
 
             self.takeTopLevelItem(0)
-                    
+
         self._itemsdict = {}
-        
+
     def _init_gui(self):
         """ Initialize parameter viewer GUI
 
@@ -324,7 +324,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
                             sys.setswitchinterval(100)
                             value = getattr(parameters[parameter_name], field_name, '')
                             sys.setswitchinterval(si)
-                            self.update_field_signal.emit(instrument_name, parameter_name, field_name, value, force_update)
+                            self.update_field_signal.emit(instrument_name, parameter_name,
+                                                          field_name, value, force_update)
 
         for callback_function in self.callbacklist:
             try:
