@@ -1562,6 +1562,8 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
     return memsize
 
 
+@qtt.pgeometry.static_var('debug_enabled', False)
+@qtt.pgeometry.static_var('debug_data', {})
 def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None):
     """ Measure block data with M4i
 
@@ -1580,6 +1582,11 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     period = waveform['period']
     raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range,
                                        Naverage=Naverage, verbose=verbose)
+    if measuresegment_m4i.debug_enabled:
+        measuresegment_m4i.debug_data['raw_data'] = raw_data
+        measuresegment_m4i.debug_data['waveform'] = waveform
+        measuresegment_m4i.debug_data['timestamp'] = qtt.data.dateString()
+        
     if not process:
         return raw_data
 
@@ -1595,8 +1602,9 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     if len(width) == 2:
         data, _ = process_2d_sawtooth(raw_data.T, period, samplerate,
                                       resolution, width, start_zero=start_zero, fig=None)
-        measuresegment_m4i._latest_data = data
-        measuresegment_m4i._latest_rawdata = raw_data
+        
+        if measuresegment_m4i.debug_enabled:
+            measuresegment_m4i.debug_data['data'] = data
     else:
 
         data, _ = process_1d_sawtooth(raw_data.T, width, period, samplerate,
