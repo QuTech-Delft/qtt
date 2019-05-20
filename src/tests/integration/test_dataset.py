@@ -74,8 +74,8 @@ class TestDataSet(unittest.TestCase):
 
         self.assertDictEqual(self.dataset1d.metadata.get('new_metadata'), expected)
         with self.assertRaises(KeyError):
-            non_existing_metadata = self.dataset1d.metadata['non_existing_metadata']
-
+            _ = self.dataset1d.metadata['non_existing_metadata']
+            
     def test_location_provider(self):
         """ The DataSet generated locations (or tags) for storage automatically. The format is user configurable """
 
