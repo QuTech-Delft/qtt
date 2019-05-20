@@ -91,7 +91,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     def set_window_name(self, name):
         self.name = name
         self.setWindowTitle(name)
-        
+
     def initialize_viewer(self, instruments):
         self._clear_gui()
         self._init(instruments)
@@ -113,7 +113,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     def _clear_gui(self):
 
         instrument_names = list(self._itemsdict.keys())
-        for ii, instrument_name in enumerate(instrument_names):
+        for _, instrument_name in enumerate(instrument_names):
             lst = self._itemsdict[instrument_name]
             gatesroot = self._itemsdict[instrument_name]['_treewidgetitem']
 
@@ -175,15 +175,15 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             params = [param for param in lst if not param.startswith('_')]
             for parameter_name in params:
                 widget = self._itemsdict[instrument_name][parameter_name]['widget']
-                for column in range(len(size_hints)):
-                    widget.setSizeHint(column, QSize(size_hints[column], -1))
+                for column, hint in enumerate(size_hints):
+                    widget.setSizeHint(column, QSize(hint, -1))
 
         for column in range(len(size_hints)):
             self.resizeColumnToContents(column)
 
     def set_parameter_properties(self, minimum_value=None, maximum_value=None, step_size=None):
         """ Set properties of the parameter viewer widget elements """
-        for ii, instrument_name in enumerate(self._instrumentnames):
+        for _, instrument_name in enumerate(self._instrumentnames):
             lst = self._itemsdict[instrument_name]
 
             params = [param for param in lst if not param.startswith('_')]
