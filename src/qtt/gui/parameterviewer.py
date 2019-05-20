@@ -51,6 +51,9 @@ def isfloat(value):
 class ParameterViewer(QtWidgets.QTreeWidget):
     """ Simple class to show qcodes parameters """
 
+    update_field_signal = Signal(str, str, str, object, bool)
+    _create_gui_signal = Signal()
+
     def __init__(self, instruments: list, name: str = 'QuTech Parameter Viewer',
                  fields: Sequence[str] = ('Value', 'unit'), **kwargs):
         """ Simple class to show qcodes parameters
@@ -61,12 +64,12 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             fields: Names of Parameter fields to show
         """
         super().__init__(**kwargs)
-        self.name = name
         self.verbose = 1
         self._fields = fields
         self._update_counter = 0
         self._timer: Optional[QCodesTimer] = None
         self.update_field_signal.connect(self._set_field)
+        self._create_gui_signal.connect(self._create_gui)
         self._itemsdict: dict = dict()
 
         window = self
@@ -74,7 +77,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         window.setColumnCount(2 + len(self._fields))
         self._tree_header = QtWidgets.QTreeWidgetItem(['Parameter'] + list(self._fields))
         window.setHeaderItem(self._tree_header)
-        window.setWindowTitle(name)
+        self.set_window_name(name)
 
         self.callbacklist: Sequence = []
 
@@ -85,10 +88,14 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.updatecallback()
         self.show()
 
+    def set_window_name(self, name):
+        self.name = name
+        self.setWindowTitle(name)
+        
     def initialize_viewer(self, instruments):
         self._clear_gui()
         self._init(instruments)
-        self._init_gui()
+        self._create_gui_signal.emit()
 
     def _init(self, instruments):
         """ Initialize parameter viewer """
@@ -118,7 +125,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
 
         self._itemsdict = {}
 
-    def _init_gui(self):
+    @Slot()
+    def _create_gui(self):
         """ Initialize parameter viewer GUI
 
         This function creates all the GUI elements.
@@ -246,8 +254,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             self._timer.start()
         else:
             self._timer = None
-
-    update_field_signal = Signal(str, str, str, object, bool)
 
     def stop(self):
         """ Stop readout of the parameters in the widget """
