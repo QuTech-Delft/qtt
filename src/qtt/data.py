@@ -1197,7 +1197,8 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     return dd
 
 
-def _determine_parameter_unit(parameter):
+def determine_parameter_unit(parameter):
+    """ Determine unit associated with a parameter """
     if isinstance(parameter, qcodes.Parameter):
         return parameter.unit
     else:
