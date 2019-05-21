@@ -1246,7 +1246,7 @@ def makeDataSet2D(p1, p2, measure_names=('measured', ), location=None, loc_recor
         else:
             # assume p is a Parameter
             measure_names += [p.name]
-    measure_units = [_determine_parameter_unit(p) for p in mnamesx]
+    measure_units = [determine_parameter_unit(p) for p in mnamesx]
 
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     for idm, mname in enumerate(measure_names):
