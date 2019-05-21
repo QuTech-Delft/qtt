@@ -389,6 +389,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.debug('wait_time: %s' % str(wait_time))
 
     alldata, (set_names, measure_names) = makeDataSet1D(sweepvalues, yname=mparams,
+                                                        xunit=qtt.data.determine_parameter_unit(sweepvalues.parameter),
                                                         location=location, loc_record={'label': scanjob['scantype']},
                                                         return_names=True)
 
@@ -559,6 +560,8 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
     alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data,
+                                 xunit=qtt.data.determine_parameter_unit(sweepvalues.parameter),
+                                 yunit=None,
                                  location=location, loc_record={'label': scanjob['scantype']})
     if virtual_awg:
         virtual_awg.stop()
@@ -1020,8 +1023,8 @@ def fastScan(scanjob, station):
         if isinstance(scanjob['sweepdata']['param'], dict):
             params = scanjob['sweepdata']['param'].keys()
         else:
-            params=[scanjob['sweepdata']['param']]
-        if not np.all([ (param in awg_map) for param in params]):
+            params = [scanjob['sweepdata']['param']]
+        if not np.all([(param in awg_map) for param in params]):
             # sweep gate is not fast, so no fast scan possible
             return 0
         if 'stepdata' in scanjob:

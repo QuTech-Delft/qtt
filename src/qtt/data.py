@@ -1,3 +1,5 @@
+from typing import Optional
+from functools import wraps
 """ Utilities to work with data and datasets """
 
 import numpy as np
@@ -237,7 +239,6 @@ def default_setpoint_array(dataset, measured_name='measured'):
 
 
 # %% Monkey patch qcodes to store latest dataset
-from functools import wraps
 
 
 @qtt.utilities.tools.deprecated
@@ -494,9 +495,6 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
         plot.fig.axes[1].autoscale(tight=True)
 
     return alldata
-
-
-from typing import Optional
 
 
 def plot_dataset(dataset: qcodes.DataSet, parameter_names: Optional[list] = None, fig: int = 1) -> None:
@@ -1153,7 +1151,7 @@ def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, r
             getattr(dd, mname).ndarray = np.array(preset_data[idm])
     dd.add_array(x)
 
-    dd.metadata['default_parameter_name']=measure_names[0]
+    dd.metadata['default_parameter_name'] = measure_names[0]
 
     if return_names:
         set_names = x.name
@@ -1199,6 +1197,13 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     return dd
 
 
+def _determine_parameter_unit(parameter):
+    if isinstance(parameter, qcodes.Parameter):
+        return parameter.unit
+    else:
+        return None
+
+
 def makeDataSet2D(p1, p2, measure_names=('measured', ), location=None, loc_record=None,
                   preset_data=None, return_names=False):
     """ Make DataSet with one or multiple 2D array and two setpoint arrays.
@@ -1237,11 +1242,11 @@ def makeDataSet2D(p1, p2, measure_names=('measured', ), location=None, loc_recor
     for p in mnamesx:
         if isinstance(p, str):
             measure_names += [p]
-            measure_units += [None]
         else:
             # assume p is a Parameter
             measure_names += [p.name]
-            measure_units += [p.unit]
+    measure_units = [_determine_parameter_unit(p) for p in mnamesx]
+
     dd = new_data(arrays=(), location=location, loc_record=loc_record)
     for idm, mname in enumerate(measure_names):
         z = DataArray(name=mname, array_id=mname, label=mname, unit=measure_units[idm],
