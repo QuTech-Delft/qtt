@@ -389,7 +389,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.debug('wait_time: %s' % str(wait_time))
 
     alldata, (set_names, measure_names) = makeDataSet1D(sweepvalues, yname=mparams,
-                                                        xunit=qtt.data.determine_parameter_unit(sweepvalues.parameter),
                                                         location=location, loc_record={'label': scanjob['scantype']},
                                                         return_names=True)
 
