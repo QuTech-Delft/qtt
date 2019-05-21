@@ -558,7 +558,7 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
     """ Create a new virtual gates object using an update matrix
 
     Args:
-        virt_gates (virtual_gates): virtual gates object
+        virt_gates (VirtualGates): virtual gates object
         update_cc (array): update to cc matrix
         old_cc (array or None): if None, then get the old cc matrix from the virt_gates
         verbose (int): verbosity level
