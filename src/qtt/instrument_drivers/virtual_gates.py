@@ -23,7 +23,7 @@ def set_distance_matrix(virt_gates, dists):
     """ Update the cross capacitance matrix for a virtual_gate matrix
 
     Args:
-        virt_gates (virtual_gates): virtual gates object
+        virt_gates (VirtualGates): virtual gates object
         dists (list): list of distances between dots
     """
     cc = virt_gates.get_crosscap_matrix()
@@ -148,7 +148,7 @@ class VirtualGates(Instrument):
         vgates = vgdict['_virts_list']
         virt_map = create_virtual_matrix_dict(vgates, pgates, c=vgdict['crosscap_matrix'], verbose=0)
 
-        return virtual_gates(name, gates, virt_map)
+        return VirtualGates(name, gates, virt_map)
 
     def _create_parameters(self):
         for g in self._virts_list:
@@ -550,7 +550,7 @@ def extend_virtual_gates(vgates, pgates, virts, name='vgates', verbose=0):
                 if verbose:
                     print('extend_virtual_gates: %s %s = %s' % (v, p, cc[i, j]))
     crosscap_map = create_virtual_matrix_dict(vgates, pgates, cc, verbose=0)
-    virts = virtual_gates(qtt.measurements.scans.instrumentName(name), virts.gates, crosscap_map)
+    virts = VirtualGates(qtt.measurements.scans.instrumentName(name), virts.gates, crosscap_map)
     return virts
 
 
@@ -583,7 +583,7 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
         print(new_cc)
 
     virt_map = create_virtual_matrix_dict(vgates, physical_gates, new_cc, verbose)
-    new_virt_gates = virtual_gates(qtt.measurements.scans.instrumentName('virt_gates'), virt_gates.gates, virt_map)
+    new_virt_gates = VirtualGates(qtt.measurements.scans.instrumentName('virt_gates'), virt_gates.gates, virt_map)
     if verbose >= 2:
         new_virt_gates.print_map(virt_map)
         print(virt_gates.get_crosscap_matrix_inv())

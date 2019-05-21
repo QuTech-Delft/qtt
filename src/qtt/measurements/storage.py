@@ -89,7 +89,7 @@ def load_state(tag=None, station=None, verbose=1, statefile=None):
         if verbose:
             print('load_state %s: creating virtual gate matrix' % tag)
 
-        virtual_gates = qtt.instrument_drivers.virtual_gates.virtual_gates.from_dictionary(
+        virtual_gates = qtt.instrument_drivers.virtual_gates.VirtualGates.from_dictionary(
             virtual_gates, station.gates)
     return obj, virtual_gates
 

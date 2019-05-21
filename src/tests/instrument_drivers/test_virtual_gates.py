@@ -1,12 +1,12 @@
 import unittest
 import numpy as np
 from collections import OrderedDict
-from qtt.instrument_drivers.virtual_gates import virtual_gates, extend_virtual_gates, update_cc_matrix
+from qtt.instrument_drivers.virtual_gates import VirtualGates, extend_virtual_gates, update_cc_matrix
 
 
 class TestVirtualGates(unittest.TestCase):
 
-    def test_virtual_gates(self, verbose=0):
+    def test_VirtualGates(self, verbose=0):
         """ Test for virtual gates object """
         from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
         from qtt.measurements.scans import instrumentName
@@ -20,7 +20,7 @@ class TestVirtualGates(unittest.TestCase):
             ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
             ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
         ))
-        vgates = virtual_gates(instrumentName('testvgates'), gates, crosscap_map)
+        vgates = VirtualGates(instrumentName('testvgates'), gates, crosscap_map)
 
         vp1 = vgates.VP1()
         if verbose:
@@ -82,7 +82,7 @@ class TestVirtualGates(unittest.TestCase):
         extended_vgates.close()
         gates.close()
 
-    def test_virtual_gates_serialization(self):
+    def test_VirtualGates_serialization(self):
         """ Test for virtual gates object """
         import qtt.instrument_drivers.virtual_instruments
         gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
@@ -94,10 +94,10 @@ class TestVirtualGates(unittest.TestCase):
             ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
             ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
         ))
-        virts = virtual_gates(qtt.measurements.scans.instrumentName('testvgates'), gates, crosscap_map)
+        virts = VirtualGates(qtt.measurements.scans.instrumentName('testvgates'), gates, crosscap_map)
         vgdict = virts.to_dictionary()
 
-        vx = virtual_gates.from_dictionary(vgdict, gates, name=qtt.measurements.scans.instrumentName('vgdummy'))
+        vx = VirtualGates.from_dictionary(vgdict, gates, name=qtt.measurements.scans.instrumentName('vgdummy'))
 
         np.testing.assert_almost_equal(vx.get_crosscap_matrix_inv(), virts.get_crosscap_matrix_inv())
         self.assertTrue(vx.pgates() == ['P%d' % i for i in range(1, 4)])

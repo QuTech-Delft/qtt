@@ -26,11 +26,11 @@ import qcodes
 from qcodes import Instrument
 
 import qtt
-from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
+from qtt.instrument_drivers.gates import VirtualDAC
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer, SimulationAWG
 from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
 from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
-from qtt.simulation.dotsystem import DotSystem, GateTransform
+from qtt.simulation.dotsystem import GateTransform
 from qtt.simulation.dotsystem import OneDot
 from qtt.structures import onedot_t
 
@@ -405,7 +405,7 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
     ivvis = []
     for ii in range(model.nr_ivvi):
         ivvis.append(VirtualIVVI(name='ivvi%d' % (ii + 1), model=model))
-    gates = virtual_gates(name='gates', gate_map=gate_map, instruments=ivvis)
+    gates = VirtualDAC(name='gates', gate_map=gate_map, instruments=ivvis)
     gates.set_boundaries(gate_boundaries(gate_map))
 
     logger.info('initialize: set values on gates')
