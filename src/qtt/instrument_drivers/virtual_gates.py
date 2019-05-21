@@ -10,7 +10,9 @@ from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
 import numpy as np
-from collections import OrderedDict
+#from collections import OrderedDict as ordered_dict
+ordered_dict = dict
+
 import warnings
 import matplotlib.pyplot as plt
 
@@ -42,7 +44,7 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     Returns: 
         virtual_matrix (dict): dictionary, mapping of the virtual gates
     """
-    virtual_matrix = OrderedDict()
+    virtual_matrix = ordered_dict()
     for ii, vname in enumerate(virt_basis):
         if verbose:
             print('create_virtual_matrix_dict: adding %s ' % (vname,))
@@ -51,12 +53,11 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
             v[ii] = 1
         else:
             v = c[ii, :]
-        tmp = OrderedDict(zip(physical_gates, v))
+        tmp = ordered_dict(zip(physical_gates, v))
         virtual_matrix[vname] = tmp
     return virtual_matrix
 
-
-class virtual_gates(Instrument):
+class VirtualGates(Instrument):
     """A virtual gate instrument to control linear combinations of gates.
 
     The virtual gates can be defined, such that when changing one of the
@@ -81,16 +82,16 @@ class virtual_gates(Instrument):
         Args:
             name (string): The name of the object (used for?)
             gates_instr (Instrument): The instrument of physical gates
-            crosscap_map (OrderedDict/dict): Full map of cross capacitance matrix defined
+            crosscap_map (ordered_dict/dict): Full map of cross capacitance matrix defined
                     as a dictionary labeled between dot parameters and gates.
                     Name of dot parameters are initially defined in this dict.
-                    Use OrderedDict form when the order is important.
+                    Use ordered_dict form when the order is important.
 
                     Example:
-                        crosscap_map = OrderedDict((
-                    ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-                    ('VP2', OrderedDict((('P1', 0.5), ('P2', 1), ('P3', 0)))),
-                    ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+                        crosscap_map = ordered_dict((
+                    ('VP1', ordered_dict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
+                    ('VP2', ordered_dict((('P1', 0.5), ('P2', 1), ('P3', 0)))),
+                    ('VP3', ordered_dict((('P1', 0), ('P2', 0), ('P3', 1))))
                     ))
 
                     Note: this matrix describes the influence of each physical
@@ -103,7 +104,7 @@ class virtual_gates(Instrument):
         self.name = name
         self.gates = gates_instr
         self._fast_readout = False
-        if isinstance(crosscap_map, OrderedDict):
+        if isinstance(crosscap_map, ordered_dict):
             self._crosscap_map = crosscap_map
             for vg in list(crosscap_map.keys()):
                 for g in list(crosscap_map[list(crosscap_map.keys())[0]].keys()):
@@ -112,9 +113,9 @@ class virtual_gates(Instrument):
                     except:
                         raise NameError('missing physical gate "%s" in virtual gate "%s"' % (g, vg))
         elif isinstance(crosscap_map, dict):
-            self._crosscap_map = OrderedDict()
+            self._crosscap_map = ordered_dict()
             for vg in sorted(list(crosscap_map.keys())):
-                self._crosscap_map[vg] = OrderedDict()
+                self._crosscap_map[vg] = ordered_dict()
                 for g in sorted(list(crosscap_map[list(crosscap_map.keys())[0]].keys())):
                     self._crosscap_map[vg][g] = crosscap_map[vg][g]
         else:
@@ -479,7 +480,7 @@ class virtual_gates(Instrument):
         """Convert map of the crosscap form to matrix
 
         Args:
-            base_map (OrderedDict): Crosscap map or its inverse.
+            base_map (ordered_dict): Crosscap map or its inverse.
              gates (list or None): list of gate names (columns of matrix)
              vgates (list or None): list of virtual gate names (rows of matrix)
         Return:
@@ -501,16 +502,16 @@ class virtual_gates(Instrument):
              vgates (list or None): list of virtual gate names (rows of matrix)
 
         Return:
-            converted_map (OrderedDict): Map after conversion.
+            converted_map (ordered_dict): Map after conversion.
 
         """
         if gates is None:
             gates = self._gates_list
         if vgates is None:
             vgates = self._virts_list
-        converted_map = OrderedDict()
+        converted_map = ordered_dict()
         for idvirt, virtg in enumerate(vgates):
-            converted_map[virtg] = OrderedDict()
+            converted_map[virtg] = ordered_dict()
             for idg, g in enumerate(gates):
                 converted_map[virtg][g] = base_matrix[idvirt][idg]
         return converted_map
@@ -588,3 +589,6 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
         print(virt_gates.get_crosscap_matrix_inv())
 
     return new_virt_gates, new_cc, {'old_cc': old_cc}
+
+
+virtual_gates=qtt.utilities.tools.deprecated(VirtualGates)

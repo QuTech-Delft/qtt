@@ -1017,7 +1017,11 @@ def fastScan(scanjob, station):
 
     if isinstance(awg, qtt.instrument_drivers.virtualAwg.virtual_awg.VirtualAwg):
         awg_map = awg._settings.awg_map
-        if not scanjob['sweepdata']['param'] in awg_map:
+        if isinstance(scanjob['sweepdata']['param'], dict):
+            params = scanjob['sweepdata']['param'].keys()
+        else:
+            params=[scanjob['sweepdata']['param']]
+        if not np.all([ (param in awg_map) for param in params]):
             # sweep gate is not fast, so no fast scan possible
             return 0
         if 'stepdata' in scanjob:

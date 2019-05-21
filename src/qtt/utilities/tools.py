@@ -823,6 +823,8 @@ def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925
         >>> create_figure_ppt_callback(10, 'test')
         >>> plt.show()
     """
+    if fig is None:
+        fig=plt.gcf().number
     plt.figure(fig)
     ax = plt.gca()
     ppt_axis = plt.axes(position, label='figure_ppt_callback_axis')
@@ -1034,6 +1036,10 @@ try:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
         if isinstance(notes, qcodes.DataSet):
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
+
+        if not isinstance(notes, str):
+            warnings.warn('type of notes argument is {type(notes)}, converting to string')
+            notes = str(notes)
 
         if notes is not None:
             if notes == '':
