@@ -11,13 +11,22 @@ class ProcessSawtooth2D(SignalProcessorInterface):
 
         Args:
             signal_data: The readout dot reponse data coming from the acquisition device. The data
-                         user data of the data set should contain the width and resolution settings.
+                         user data of the data set should contain the width (tuple[int, int]), 
+                         resolution(tuple[int, int]) and the processing ('left', 'right', 'center')
+                         settings.
 
         Returns:
             A data set which contains a 2D image with the charge stability diagram.
         """
         width_x, width_y = signal_data.user_data['width']
+        process_mode = signal_data.user_data['processing']
         resolution_x, resolution_y = signal_data.user_data['resolution']
+
+        process_modes = {
+            'left': ProcessSawtooth2D.__process_from_left_edge,
+            'center': ProcessSawtooth2D.__process_from_center,
+            'right': ProcessSawtooth2D.__process_from_right_edge
+        }
 
         output_signal_data = DataSet(user_data=signal_data.user_data)
         for data_array in signal_data.data_arrays.values():
@@ -25,15 +34,9 @@ class ProcessSawtooth2D(SignalProcessorInterface):
             ProcessSawtooth2D.__check_sample_count_fast_sawtooth(data_array, width_x, resolution_x, resolution_y)
             ProcessSawtooth2D.__check_matching_cuttoff(width_x, width_y, resolution_x, resolution_y)
 
-            sample_count = len(data_array)
-            samples_sawtooth_x = int(sample_count / resolution_y)
-            samples_edge_x = int(sample_count / resolution_y * width_x)
-
-            samples_egde_y = int(sample_count * width_y)
-            offsets = np.arange(0, samples_egde_y, samples_sawtooth_x, dtype=np.int)
-
+            process_function = process_modes.get(process_mode)
             identifier = f'{data_array.name}_SawtoothProcessed2D'
-            sliced_data = np.array([data_array[o:o + samples_edge_x] for o in offsets])
+            sliced_data = process_function(data_array, width_x, width_y, resolution_x, resolution_y)
             result_data = DataArray(identifier, data_array.label, preset_data=sliced_data)
             output_signal_data.add_array(result_data)
 
@@ -64,3 +67,37 @@ class ProcessSawtooth2D(SignalProcessorInterface):
     @staticmethod
     def __is_integer(value):
         return value % 1 == 0
+
+    @staticmethod
+    def __process_from_left_edge(data_array, width_x, width_y, resolution_x, resolution_y):
+        sample_count = len(data_array)
+        samples_sawtooth_x = int(sample_count / resolution_y)
+        start_downward_slope_y =int(sample_count * (1 - width_y))
+        samples_edge_x = int(sample_count / resolution_y * width_x)
+
+        offsets = np.arange(start_downward_slope_y, sample_count, samples_sawtooth_x, dtype=np.int)
+        return np.array([data_array[o:o + samples_edge_x] for o in offsets])
+
+    @staticmethod
+    def __process_from_right_edge(data_array, width_x, width_y, resolution_x, resolution_y):
+        sample_count = len(data_array)
+        samples_sawtooth_x = int(sample_count / resolution_y)
+        samples_edge_x = int(sample_count / resolution_y * width_x)
+        samples_egde_y = int(sample_count * width_y)
+
+        offsets = np.arange(0, samples_egde_y, samples_sawtooth_x, dtype=np.int)
+        return np.array([data_array[o:o + samples_edge_x] for o in offsets])
+
+    @staticmethod
+    def __process_from_center(data_array, width_x, width_y, resolution_x, resolution_y):
+        sample_count = len(data_array)
+        samples_sawtooth_x = int(sample_count / resolution_y)
+        samples_edge_x = int(sample_count / resolution_y * width_x)
+
+        start_downward_slope_y =int(np.rint(sample_count * width_y / 2))
+        end_downward_slope_y = int(np.rint(sample_count * (1 - width_y / 2)))
+
+        offsets_before = np.arange(0, start_downward_slope_y, samples_sawtooth_x, dtype=np.int)
+        offsets_after = np.arange(end_downward_slope_y, sample_count, samples_sawtooth_x, dtype=np.int)
+        offsets = np.append(offsets_after, offsets_before)
+        return np.array([data_array[o:o + samples_edge_x] for o in offsets])
