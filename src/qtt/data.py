@@ -996,7 +996,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
     pfile = os.path.join(outputdir, tag, basename + '.' + ext)
     return pfile
 
-
+@qtt.utilities.tools.rdeprecated(expire='1-1-2020')
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('loadExperimentdata %s' % path)
@@ -1006,6 +1006,7 @@ def loadExperimentData(outputdir, tag, dstr):
     return dataset
 
 
+@qtt.utilities.tools.rdeprecated(expire='1-1-2020')
 def saveExperimentData(outputdir, dataset, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('saveExperimentData %s' % path)
