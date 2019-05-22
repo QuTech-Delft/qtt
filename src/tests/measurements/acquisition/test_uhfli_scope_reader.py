@@ -92,30 +92,24 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.daq.setInt.assert_called_once_with(command_text, 0)
         scope_mock.adapter.instrument.scope.finish.assert_called()
 
-    def test_number_of_averages_getter(self):
+    def test_number_of_samples_getter(self):
         mock_address = 'dev2335'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
 
-        number_of_averages = 111
-        scope_mock.adapter.instrument.scope_average_weight.get.return_value = number_of_averages
-        self.assertEqual(number_of_averages, scope_mock.number_of_averages)
-        scope_mock.adapter.instrument.scope_average_weight.get.assert_called_once()
+        number_of_samples = 111
+        scope_mock.adapter.instrument.scope_length.get.return_value = number_of_samples
+        self.assertEqual(number_of_samples, scope_mock.number_of_samples)
+        scope_mock.adapter.instrument.scope_length.get.assert_called_once()
 
-    def test_number_of_averages_setter(self):
+    def test_number_of_samples_setter(self):
         mock_address = 'dev2336'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
 
-        number_of_averages = 222
-        scope_mock.number_of_averages = number_of_averages
-        scope_mock.adapter.instrument.scope_segments.set.assert_called_once_with('ON')
-        scope_mock.adapter.instrument.scope_average_weight.set.assert_called_once_with(number_of_averages)
-
-        number_of_averages = 1
-        scope_mock.number_of_averages = number_of_averages
-        scope_mock.adapter.instrument.scope_segments.set.assert_called_with('OFF')
-        scope_mock.adapter.instrument.scope_average_weight.set.assert_called_with(number_of_averages)
+        number_of_samples = 222
+        scope_mock.number_of_samples = number_of_samples
+        scope_mock.adapter.instrument.scope_length.set.assert_called_once_with(number_of_samples)
 
     def test_input_range_getter(self):
         mock_address = 'dev2337'

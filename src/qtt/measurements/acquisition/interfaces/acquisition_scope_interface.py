@@ -11,11 +11,6 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
 
     @property
     @abstractmethod
-    def number_of_averages(self) -> int:
-        """ The number of averages to take during a acquisition."""
-
-    @property
-    @abstractmethod
     def input_range(self) -> Tuple[float, float]:
         """ The input range of the channels."""
 
@@ -28,6 +23,11 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     @abstractmethod
     def period(self) -> float:
         """ The measuring period of the acquisition."""
+
+    @property
+    @abstractmethod
+    def number_of_samples(self) -> int:
+        """ The number of samples to take during a acquisition."""
 
     @property
     @abstractmethod

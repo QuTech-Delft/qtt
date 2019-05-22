@@ -41,7 +41,7 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         self.__uhfli.daq.sync()
         self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 1)
 
-    def acquire(self, number_of_records: int=1, timeout: float=30) -> List[DataArray]:
+    def acquire(self, number_of_averages: int=1, timeout: float=30) -> List[DataArray]:
         """ Collects records from the UHFLI.
 
         Args:
@@ -52,7 +52,7 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
             A list with the recorded scope records as data arrays.
         """
         self.__create_setpoint_data()
-        return self.__get_uhfli_scope_records(number_of_records, timeout)
+        return self.__get_uhfli_scope_records(number_of_averages, timeout)
 
     def stop_acquisition(self) -> None:
         """ Stops the acquisition mode of the scope in the UHFLI."""
@@ -64,25 +64,6 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         data_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True,
                                preset_data=np.linspace(0, self.period, sample_count))
         self.__setpoint_array = data_array
-
-    @property
-    def number_of_averages(self) -> int:
-        """ Gets the number of averages to take during a acquisition.
-
-        Returns:
-            The number of averages set value.
-        """
-        return self.__uhfli.scope_average_weight.get()
-
-    @number_of_averages.setter
-    def number_of_averages(self, value: int) -> None:
-        """ Sets the number of averages to take during a acquisition.
-
-        Args:
-            value: The number of averages.
-        """
-        self.__uhfli.scope_segments.set('OFF' if value == 1 else 'ON')
-        self.__uhfli.scope_average_weight.set(value)
 
     @property
     def input_range(self) -> Tuple[float, float]:
@@ -154,6 +135,26 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
             value: The measuring period in seconds.
         """
         self.__uhfli.scope_duration.set(value)
+
+
+    @property
+    def number_of_samples(self) -> int:
+        """ Gets the sample count to take during a acquisition.
+
+        Returns:
+            The number of samples set value.
+        """
+        return self.__uhfli.scope_length.get()
+
+    @number_of_samples.setter
+    def number_of_samples(self, value: int) -> None:
+        """ Sets the sample count to take during a acquisition.
+
+        Args:
+            value: The number of samples.
+        """
+        self.__uhfli.scope_length.set(value)
+
 
     @property
     def trigger_enabled(self) -> bool:
@@ -302,13 +303,13 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         demod_parameter = getattr(self.__uhfli, 'demod{}_{}'.format(channel, parameter))
         return demod_parameter if partial else demod_parameter()
 
-    def __get_uhfli_scope_records(self, number_of_records: int, timeout: float):
+    def __get_uhfli_scope_records(self, number_of_averages: int, timeout: float) -> List[DataArray]:
         self.__uhfli.scope.execute()
 
         records = 0
         progress = 0
         start = time.time()
-        while records < number_of_records or progress < 1.0:
+        while records < number_of_averages or progress < 1.0:
             records = self.__uhfli.scope.getInt("scopeModule/records")
             progress = self.__uhfli.scope.progress()[0]
             if time.time() - start > timeout:
@@ -317,18 +318,18 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
 
         traces = self.__uhfli.scope.read(True)
         wave_nodepath = '/{0}/scopes/0/wave'.format(self._address)
-        scope_traces = traces[wave_nodepath][:number_of_records]
-        return self.__convert_scope_data(scope_traces)
+        scope_traces = traces[wave_nodepath][:number_of_averages]
+        return self.__convert_scope_data(scope_traces, number_of_averages)
 
-    def __convert_scope_data(self, scope_traces):
+    def __convert_scope_data(self, scope_traces: np.ndarray, number_of_averages: int) -> List[DataArray]:
         data = []
         acquisition_counter = 0
         for channel_index, _ in enumerate(self.enabled_channels):
-            for _, trace in enumerate(scope_traces):
-                wave = trace[0]['wave'][channel_index, :]
-                data_array = self.__convert_to_data_array(wave, channel_index, acquisition_counter)
-                data.append(data_array)
-                acquisition_counter += 1
+            channel_data = np.array([trace[0]['wave'][channel_index] for trace in scope_traces])
+            averaged_data = np.average(channel_data, axis=0)
+            data_array = self.__convert_to_data_array(averaged_data, channel_index, acquisition_counter)
+            data.append(data_array)
+            acquisition_counter += 1
         return data
 
     def __convert_to_data_array(self, scope_data: np.ndarray, channel_index: int, counter: int) -> DataArray:
