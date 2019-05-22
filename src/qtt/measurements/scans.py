@@ -559,6 +559,8 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
     alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data,
+                                 xunit=qtt.data.determine_parameter_unit(sweepvalues.parameter),
+                                 yunit=None,
                                  location=location, loc_record={'label': scanjob['scantype']})
     if virtual_awg:
         virtual_awg.stop()
@@ -664,7 +666,8 @@ class scanjob_t(dict):
 
     def add_sweep(self, param, start, end, step, **kwargs):
         """ Add sweep to scan job """
-        sweep = {'param': param, 'start': float(start), 'end': float(end), 'step': step, **kwargs}
+        end_value =  float(end) if end is not None else end
+        sweep = {'param': param, 'start': float(start), 'end': end_value, 'step': step, **kwargs}
         if not 'sweepdata' in self:
             self['sweepdata'] = sweep
         elif 'stepdata' not in self:
@@ -1017,7 +1020,11 @@ def fastScan(scanjob, station):
 
     if isinstance(awg, qtt.instrument_drivers.virtualAwg.virtual_awg.VirtualAwg):
         awg_map = awg._settings.awg_map
-        if not scanjob['sweepdata']['param'] in awg_map:
+        if isinstance(scanjob['sweepdata']['param'], dict):
+            params = scanjob['sweepdata']['param'].keys()
+        else:
+            params = [scanjob['sweepdata']['param']]
+        if not np.all([(param in awg_map) for param in params]):
             # sweep gate is not fast, so no fast scan possible
             return 0
         if 'stepdata' in scanjob:
