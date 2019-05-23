@@ -1,6 +1,6 @@
 import numpy as np
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 from qilib.utils import PythonJsonStructure
 
@@ -305,6 +305,20 @@ class TestUhfliScopeReader(TestCase):
 
         scope_mock.set_input_signal(channel, attribute)
         scope_mock.adapter.instrument.scope_channel1_input.set.assert_called_once_with(attribute)
+
+    def test_set_channel_limits_has_correct_results(self):
+        mock_address = 'dev2360'
+        scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
+        self.assertEqual(mock_address, scope_mock.adapter.address)
+
+        channel = 1
+        upper_limit = 0.5
+        lower_limit = -0.5
+        scope_mock.set_channel_limits(channel, lower_limit, upper_limit)
+
+        calls= [call(f'/{mock_address}/scopes/0/channels/{channel - 1}/limitlower', lower_limit),
+                call(f'/{mock_address}/scopes/0/channels/{channel - 1}/limitupper', upper_limit)]
+        scope_mock.adapter.instrument.daq.setDouble.assert_has_calls(calls)
 
     def test_acquire_single_sample(self):
         mock_address = 'dev2350'

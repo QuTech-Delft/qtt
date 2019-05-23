@@ -288,6 +288,17 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
         channel_input.set(attribute)
 
+    def set_channel_limits(self, channel: int, lower_limit: float, upper_limit: float) -> None:
+        """ Sets the upper and lower limit of the scope full scale range.
+
+        Args:
+            channel: The input channel number.
+            lower_limit: The lower limit range.
+            upper_limit: The upper limit range.
+        """
+        self.__uhfli.daq.setDouble(f'/{self._address}/scopes/0/channels/{channel - 1}/limitlower', lower_limit)
+        self.__uhfli.daq.setDouble(f'/{self._address}/scopes/0/channels/{channel - 1}/limitupper', upper_limit)
+
     def acquire_single_sample(self, channel: int, parameter: str, partial: bool = False) -> Union[Parameter, float]:
         """ Collect a single point for each added measurement signal.
 
