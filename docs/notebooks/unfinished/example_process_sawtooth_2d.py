@@ -10,36 +10,39 @@ from qtt.measurements.post_processing import SignalProcessorRunner, ProcessSawto
 
 # DUMMY DATASET CREATION
 
-pixels_x = 100
-upwards_edge_pixels_x = 90
+pixels_x = 96
+upwards_edge_pixels_x = 94
 
-pixels_y = 50
-upwards_edge_pixels_y = 45
+pixels_y = 96
+upwards_edge_pixels_y = 94
 
-sample_rate = 21e7  # samples per seconds.
+sample_rate = 21e3  # samples per seconds.
 period = pixels_x * pixels_y / sample_rate  # seconds
 
 time = np.linspace(0, period, np.rint(period * sample_rate))
 set_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True, preset_data=time)
 
+processing = 'center'
 width = [upwards_edge_pixels_x/pixels_x, upwards_edge_pixels_y/pixels_y]
 resolution = [pixels_x, pixels_y]
 
-
-def create_dummy_data_array(width: float, sawteeth_count: int, channel_index: int = 1, trace_number: int = 1):
+def create_dummy_data_array(width: float, processing: str, sawteeth_count: int, channel_index: int = 1, trace_number: int = 1) -> DataArray:
     identifier = 'ScopeTrace_{:03d}'.format(trace_number)
     label = 'Channel_{}'.format(channel_index)
-    scope_data = sawtooth(2 * np.pi * sawteeth_count * time / period, width)
+    scope_data = sawtooth(2 * np.pi * (sawteeth_count * time / period), width)
+    offset = {'left': 1 - width, 'center': (1 - width /2), 'right': 0}
+    scope_data = np.roll(scope_data, int(offset[processing] * len(scope_data)))
+
     return DataArray(identifier, label, preset_data=scope_data, set_arrays=[set_array])
 
 
 data_set = DataSet()
-data_set.user_data = {'resolution': resolution, 'width': width}
+data_set.user_data = {'resolution': resolution, 'width': width, 'processing': processing}
 
-data_array_x = create_dummy_data_array(width=width[0], sawteeth_count=1, channel_index=1, trace_number=1)
+data_array_x = create_dummy_data_array(width=width[0], processing=processing, sawteeth_count=1, channel_index=1, trace_number=1)
 data_set.add_array(data_array_x)
 
-data_array_y = create_dummy_data_array(width=width[1], sawteeth_count=resolution[1], channel_index=2, trace_number=2)
+data_array_y = create_dummy_data_array(width=width[1], processing=processing, sawteeth_count=resolution[1], channel_index=2, trace_number=2)
 data_set.add_array(data_array_y)
 
 
