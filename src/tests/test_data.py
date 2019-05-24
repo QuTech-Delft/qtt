@@ -20,11 +20,13 @@ class TestPlotting(unittest.TestCase):
         plt.close(1)
 
     def test_plot_dataset_2d(self):
+        fig=2
         dataset = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
                                               np.arange(3 * 4).reshape((3, 4)), xunit='mV', yunit='Hz', zunit='A')
-        qtt.data.plot_dataset(dataset, fig=2)
-        self.assertTrue(plt.fignum_exists(2))
-        plt.close(1)
+        if fig is not None:
+            qtt.data.plot_dataset(dataset, fig=fig)
+            self.assertTrue(plt.fignum_exists(fig))
+            plt.close(fig)
 
 
 class TestData(unittest.TestCase):
