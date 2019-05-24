@@ -22,7 +22,6 @@ import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore
 from qtt.measurements.scans import makeDataset_sweep, makeDataset_sweep_2D
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
-from qilib.data_set import DataSet
 
 # %%
 

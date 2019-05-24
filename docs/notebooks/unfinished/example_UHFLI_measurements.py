@@ -139,7 +139,6 @@ plt.show()
 #%% 1D readout
 
 period = 1.0
-demod_channel = 1
 frequency = 154.8e6
 
 scope_settings(period)
@@ -156,7 +155,6 @@ plt.show()
 
 #%% 2D video mode
 
-demod_channel = 1
 sample_rate = 220e3
 
 scope_settings(sample_rate=sample_rate, trigger_enabled=True)
