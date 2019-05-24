@@ -1,6 +1,8 @@
 import unittest
+import warnings
 import time
 import numpy as np
+from matplotlib import MatplotlibDeprecationWarning
 import matplotlib.pyplot as plt
 import tempfile
 import qcodes
@@ -24,9 +26,12 @@ class TestPlotting(unittest.TestCase):
         dataset = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
                                               np.arange(3 * 4).reshape((3, 4)), xunit='mV', yunit='Hz', zunit='A')
         if fig is not None:
-            qtt.data.plot_dataset(dataset, fig=fig)
-            self.assertTrue(plt.fignum_exists(fig))
-            plt.close(fig)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning,
+                                        message="The set_clim function was deprecated")
+                qtt.data.plot_dataset(dataset, fig=fig)
+                self.assertTrue(plt.fignum_exists(fig))
+                plt.close(fig)
 
 
 class TestData(unittest.TestCase):
