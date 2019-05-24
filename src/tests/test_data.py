@@ -22,16 +22,13 @@ class TestPlotting(unittest.TestCase):
         plt.close(1)
 
     def test_plot_dataset_2d(self):
-        fig=2
+        fig=None
         dataset = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
                                               np.arange(3 * 4).reshape((3, 4)), xunit='mV', yunit='Hz', zunit='A')
         if fig is not None:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning,
-                                        message="The set_clim function was deprecated")
-                qtt.data.plot_dataset(dataset, fig=fig)
-                self.assertTrue(plt.fignum_exists(fig))
-                plt.close(fig)
+            qtt.data.plot_dataset(dataset, fig=fig)
+            self.assertTrue(plt.fignum_exists(fig))
+            plt.close(fig)
 
 
 class TestData(unittest.TestCase):

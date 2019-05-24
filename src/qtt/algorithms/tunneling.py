@@ -7,6 +7,7 @@
 import scipy.optimize
 import numpy as np
 import scipy.ndimage
+import matplotlib.pyplot as plt
 
 
 def polmod_all_2slopes(x_data, par, kT, model=None):
