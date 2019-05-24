@@ -434,36 +434,3 @@ def show_traces(x_data, z_data, fig=100, direction='h', title=None):
         plt.title(title)
     plt.xlabel('Detuning (mV)')
     plt.ylabel('Signal (a.u.)')
-
-
-def test_pat_fitting(fig=None):
-    pp0 = [0, 50, 5]
-    x_data = np.arange(-3, 3, 0.025)
-    y_data = np.arange(.5e9, 10e9, .5e9)
-    z_data = 1.2 * np.random.rand(y_data.size, x_data.size)
-    background = np.zeros(x_data.size)
-    for ii, x in enumerate(x_data):
-        y = one_ele_pat_model(x, pp0)
-        jj = np.argmin(np.abs(y_data - y))
-        z_data[jj, ii] += 2  # ((x>0)*2-1)
-    pp, pat_fit = fit_pat(x_data, y_data, z_data, background, verbose=0)
-    imx, imq, _ = pre_process_pat(x_data, y_data, background, z_data, fig=None)
-
-    if fig is not None:
-        pat_fit_fig = plt.figure(fig)
-        plt.clf()
-        plot_pat_fit(x_data, y_data, imq, pp, fig=pat_fit_fig.number, label='fitted model')
-        plot_pat_fit(x_data, y_data, None, pp0, fig=pat_fit_fig.number, label='initial model')
-
-        trans = 'one_ele'
-        period = 1e-3
-        xx, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=200)
-
-        from qtt.pgeometry import pcolormesh_centre
-        plt.figure(fig + 3)
-        plt.clf()
-        pcolormesh_centre(x_data, y_data, imq)
-
-
-if __name__ == '__main__':
-    test_pat_fitting(fig=10)

@@ -2,10 +2,11 @@
 
 import warnings
 import copy
-import unittest
 
 import numpy as np
 import scipy.optimize as opt
+import scipy.ndimage
+import scipy.ndimage.measurements
 
 import qtt.measurements.scans
 import qtt.data
@@ -83,7 +84,7 @@ def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling
     local_maxima, _ = nonmaxsuppts(y_data, d=int(12 / sampling_rate), minval=minval)
     fit_data = fitPeaks(x_data, y_data, local_maxima, verbose=verbose >= 2, fig=fig)
 
-    if lowvalue == None:
+    if lowvalue is None:
         lowvalue = np.percentile(y_data, 1)
     highvalue = np.percentile(y_data, 99)
     peaks = []
@@ -207,7 +208,7 @@ def filterPeaks(x, y, peaks, verbose=1, minheight=None):
             minheight = 0
 
     if verbose >= 2:
-        print('filterPeaks: minheight %.2f' % (minheight))
+        print('filterPeaks: minheight %.2f' % minheight)
 
     # filter on peak height
     for ii, peak in enumerate(goodpeaks):
@@ -289,7 +290,7 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
         w = left_of_peak * (dy > 0)  # we need to be rising
         # we need to be above 10% of absolute low value
-        w = w * ((ys) < ys[bidx] + .1 * (ys[peak['p']] - ys[bidx]))
+        w = w * (ys < ys[bidx] + .1 * (ys[peak['p']] - ys[bidx]))
         w = w * (r >= peak['pbottomlow'])
         ww = w.nonzero()[0]
         if ww.size == 0:
@@ -419,7 +420,7 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
     noise = np.std(ys - y)
     stn2 = np.log2((highvalue - lowvalue) / noise)
 
-    if not fig is None:
+    if fig is not None:
         plotPeaks(x, y, peaksx, plotLabels=True, fig=fig)
         plt.plot(x, ys, '-g')
 
@@ -449,7 +450,7 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
         peak['slope'] = (slope1 + slope2) / 2
 
         peak['heightscore'] = h / (highvalue - lowvalue)
-        peak['score'] = (h) * (2 / (1 + hw / hwtypical))
+        peak['score'] = h * (2 / (1 + hw / hwtypical))
         peak['scorerelative'] = (
                                         h / (highvalue - lowvalue)) * (2 / (1 + hw / hwtypical))
         peak['noisefactor'] = noisefac
@@ -622,8 +623,6 @@ def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_r
 
 
 # %% Find best slope
-import scipy.ndimage
-import scipy.ndimage.measurements
 
 
 def _intervalOverlap(a, b):
@@ -678,7 +677,7 @@ def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
                 p = p + 1
         pbottom = vv.min()
 
-        if (p - pbottom <= 1):
+        if p - pbottom <= 1:
             continue
         slope = dict({'pbottom': pbottom, 'xbottom': x[pbottom], 'xbottoml': x[pbottom], 'ybottoml': y[
             pbottom], 'x': x[p], 'y': y[p], 'p': p, 'lowvalue': lowvalue})
@@ -807,32 +806,3 @@ def filterOverlappingPeaks(goodpeaks, threshold=.6, verbose=0):
     pp = [pp[jj] for jj in gidx]
     pp = sorted(pp, key=lambda p: p['score'])
     return pp
-
-
-class TestCoulomb(unittest.TestCase):
-
-    def setUp(self):
-        x_data = np.arange(0, 100)
-        y_data = np.random.rand(x_data.size)
-        y_data += qtt.algorithms.functions.gaussian(x_data, 30, 6, 30)
-        y_data += qtt.algorithms.functions.gaussian(x_data, 70, 8, 70)
-        self.example_data = (x_data, y_data)
-
-    def test_analysepeaks(self, fig=None):
-        x_data, y_data = self.example_data
-
-        peaks = coulombPeaks(x_data, y_data, verbose=1, sampling_rate=1, fig=fig)
-        self.assertTrue(len(peaks) == 2)
-        self.assertTrue(np.abs(peaks[0]['x'] - 70) < 2)
-        self.assertTrue(np.abs(peaks[1]['x'] - 30) < 2)
-
-    def test_findSensingDotPosition(self):
-        x_data, y_data = self.example_data
-
-        result = findSensingDotPosition(x_data, y_data, verbose=0, sampling_rate=1)
-        self.assertIsInstance(result, list)
-        self.assertIsInstance(result[0], dict)
-
-
-if __name__ == '__main__':
-    unittest.main()

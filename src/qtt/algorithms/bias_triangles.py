@@ -6,8 +6,6 @@
 # %%
 
 import numpy as np
-import unittest
-import qcodes
 import qtt
 import qtt.pgeometry
 import matplotlib.pyplot as plt
@@ -47,9 +45,11 @@ def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff
 
         Args:
             ds (dataset): dataset with charge stability diagram and gate voltage in mV
+            description: TODO
             vertical (bool): find intersection of point with line vertically (True) 
                 or horizontally (False)
             points (None or array): if None, then let the user select points
+            fig (int): figure number
             diff_dir (None or 'xy'): specification of differentiation direction
 
         Returns:
@@ -70,13 +70,13 @@ def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff
     ax = plt.gca()
     ax.set_autoscale_on(False)
 
-    if description == 'lever_arm' and vertical == True:
+    if description == 'lever_arm' and vertical:
         print('''Please click three points;
             Point 1: on the addition line for the dot represented on the vertical axis
             Point 2: further on the addition line for the dot represented on the vertical axis
             Point 3: on the triple point at the addition line for the dot represented on the horizontal axis
             where both dot levels are aligned''')
-    elif description == 'lever_arm' and vertical == False:
+    elif description == 'lever_arm' and not vertical:
         print('''Please click three points;
             Point 1: on the addition line for the dot represented on the horizontal axis
             Point 2: further on the addition line for the dot represented on the horizontal axis
@@ -113,7 +113,7 @@ def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff
     xx[0, -1] += 1
     line_horizontal = qtt.pgeometry.fitPlane(xx.T)
 
-    if vertical == True:
+    if vertical:
         i = qtt.pgeometry.intersect2lines(linePoints1_2, line_vertical)
         intersectPoint = qtt.pgeometry.dehom(i)
         line = intersectPoint[:, [0, 0]]
@@ -130,7 +130,8 @@ def perpLineIntersect(ds, description, vertical=True, points=None, fig=588, diff
     # visualize
     plotAnalysedLines(clicked_pts, linePoints1_2, line_vertical, line_horizontal, linePt3_ints, intersectPoint)
 
-    return {'intersection_point': intersectPoint, 'distance': line_length, 'clicked_points': clicked_pts, 'array_names': [array.name for array in ds.default_parameter_array().set_arrays]}
+    return {'intersection_point': intersectPoint, 'distance': line_length, 'clicked_points': clicked_pts,
+            'array_names': [array.name for array in ds.default_parameter_array().set_arrays]}
 
 
 def lever_arm(bias, results, fig=None):
@@ -200,16 +201,3 @@ def E_charging(lev_arm, results, fig=None):
         ax.set_title(title)
 
     return E_c
-
-
-class TestLeverArm(unittest.TestCase):
-
-    def test_lever_arm(self):
-        lever_arm_fit = {
-            'clicked_points': np.array([[24., 38., 40.], [135., 128., 111.]]),
-            'distance': 15.0,
-            'intersection_point': np.array([[40.4], [127.]])
-        }
-
-        test_lever_arm = lever_arm(-800, lever_arm_fit)
-        self.assertTrue(np.abs(test_lever_arm - 53.3) < 1e-1)

@@ -117,6 +117,7 @@ class GateTransform:
 
         Args:
             vals2D (dict): keys are the gate names, values are matrices with the gate values
+            nn : TODO
         Returns:
             dict: tranformed gate values
         """
@@ -127,6 +128,7 @@ class GateTransform:
             xx = [vals2D.get(s, zz) for s in self.sourcenames]
             xx = [x.flatten() for x in xx]
             gate_values = np.vstack(xx).astype(np.float32)
+
         else:
             xx = vals2D
             gate_values = np.array(xx).astype(np.float32)
@@ -221,8 +223,8 @@ class BaseDotSystem:
         print('\nEnergies/states list for %s:' % self.name)
         print('-----------------------------------')
         for i in range(n):
-            print(str(i) + '       - energy: ' + str(np.around(self.energies[i], decimals=2)) + ' ,      state: ' + str(
-                np.around(self.stateoccs[i], decimals=2)) + ' ,      Ne = ' + str(self.nstates[i]))
+            print(str(i) + '       - energy: ' + str(np.around(self.energies[i], decimals=2)) + ' ,      state: ' +
+                  str(np.around(self.stateoccs[i], decimals=2)) + ' ,      Ne = ' + str(self.nstates[i]))
         print(' ')
 
     def makebasis(self, ndots, maxelectrons=2):
@@ -243,8 +245,8 @@ class BaseDotSystem:
         self.H = np.zeros((self.number_of_basis_states, self.number_of_basis_states), dtype=float)
         self.eigenstates = np.zeros((self.number_of_basis_states, self.number_of_basis_states), dtype=float)
 
-
 # %%
+
 
 class DotSystem(BaseDotSystem):
 
@@ -253,7 +255,8 @@ class DotSystem(BaseDotSystem):
     def __init__(self, name='dotsystem', ndots=3, **kwargs):
         """ Class to simulate a system of interacting quantum dots
 
-        For a full model see "Quantum simulation of a Fermi-Hubbard model using a semiconductor quantum dot array", https://arxiv.org/pdf/1702.07511.pdf
+        For a full model see "Quantum simulation of a Fermi-Hubbard model using a semiconductor quantum dot array",
+            https://arxiv.org/pdf/1702.07511.pdf
 
         Args:
             name (str): name of the system
@@ -382,7 +385,8 @@ class DotSystem(BaseDotSystem):
                         pn = p + 1
                         if (statediff == mkb(p, pn)).all() or (statediff == mkb(pn, p)).all():
                             getattr(self, self.tunneling_matrix(pn))[i, j] = -1  # tunneling term
-                        elif ring and ((statediff == mkb(0, self.ndots - 1)).all() or (statediff == mkb(self.ndots - 1, 0)).all()):
+                        elif ring and ((statediff == mkb(0, self.ndots - 1)).all() or
+                                       (statediff == mkb(self.ndots - 1, 0)).all()):
                             getattr(self, self.tunneling_matrix(self.ndots))[i, j] = -1  # tunneling term at boundary
                         pass
 
@@ -406,7 +410,7 @@ class DotSystem(BaseDotSystem):
             setattr(self, self._sparse_matrix_name(name), A.flat[ind])
 
     def makeH(self):
-        ''' Create a new Hamiltonian '''
+        """ Create a new Hamiltonian """
         self.H.fill(0)
         for name in self.varnames:
             val = getattr(self, name)
@@ -416,7 +420,7 @@ class DotSystem(BaseDotSystem):
         return self.H
 
     def makeHsparse(self, verbose=0):
-        ''' Create a new sparse Hamiltonian '''
+        """ Create a new sparse Hamiltonian """
         self.H.fill(0)
         for name in self.varnames:
             if verbose:
@@ -430,7 +434,11 @@ class DotSystem(BaseDotSystem):
         return self.H
 
     def solveH(self, usediag=False):
-        """ Solve the system by calculating the eigenvalues and eigenstates of the Hamiltonian """
+        """ Solve the system by calculating the eigenvalues and eigenstates of the Hamiltonian
+
+            Args:
+                usediag (bool) : TODO
+        """
         if usediag:
             self.energies = self.H.diagonal()
             idx = np.argsort(self.energies)
@@ -491,7 +499,8 @@ class DotSystem(BaseDotSystem):
 
     def simulatehoneycomb(self, verbose=1, usediag=False, multiprocess=False):
         """ Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
-        for each point, search for transitions and save in self.honeycomb"""
+            for each point, search for transitions and save in self.honeycomb
+        """
         t0 = time.time()
         paramnames = list(self.vals2D.keys())
         initparamvalues = self.getall('det')
@@ -527,8 +536,13 @@ class DotSystem(BaseDotSystem):
         sys.stdout.flush()
 
     def simulatehoneycomb_original(self, verbose=1, usediag=False):
-        '''Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
-        for each point, search for transitions and save in self.honeycomb'''
+        """ Loop over the 2D matrix of parameter values defined by makeparamvalues2D, calculate the ground state
+            for each point, search for transitions and save in self.honeycomb
+
+        Args:
+             verbose (int): verbosity (0 == silent)
+             usediag (bool): ToDo
+        """
         t0 = time.time()
         paramnames = list(self.vals2D.keys())
         npointsx = np.shape(self.vals2D[paramnames[0]])[0]
@@ -569,7 +583,7 @@ class DotSystem(BaseDotSystem):
         return self.stateoccs[0]
 
     def findcurrentoccupancy(self, exact=True):
-        if self.solved == True:
+        if self.solved:
             self.orderstatesbyE()
             if exact:
                 # almost exact...
@@ -584,8 +598,9 @@ class DotSystem(BaseDotSystem):
         return self.OCC
 
     def makeparamvalues1D(self, paramnames, startend, npoints):
-        '''Get a list of parameter names and [start end] values
-        to generate dictionary self.vals1D[name] = vector of values'''
+        """ Get a list of parameter names and [start end] values
+            to generate dictionary self.vals1D[name] = vector of values
+        """
         self.vals1D = {}
         for i in range(len(paramnames)):
             name = paramnames[i]
@@ -593,8 +608,10 @@ class DotSystem(BaseDotSystem):
                 startend[i][0], startend[i][1], num=npoints)
 
     def makeparamvalues2D(self, paramnames, cornervals, npointsx, npointsy):
-        '''Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
-        to generate dictionary self.vals2D[name] = matrix of values'''
+        """ Get a list of parameter names and [c1 c2 c3 c4] 'corner' values
+            to generate dictionary self.vals2D[name] = matrix of values
+
+        """
         self.vals2D = {}
         for i in range(len(paramnames)):
             name = paramnames[i]
@@ -612,7 +629,10 @@ class DotSystem(BaseDotSystem):
                 [np.linspace(i, j, num=npointsy) for i, j in zip(bottomrow, toprow)])
 
     def resetMu(self, value=0):
-        ''' Reset chemical potential '''
+        """ Reset chemical potential
+            Args:
+                value (int) : TODO
+        """
         for ii in range(self.ndots):
             setattr(self, self.chemical_potential_name(ii + 1), value)
 
@@ -638,7 +658,10 @@ class DotSystem(BaseDotSystem):
         return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]
 
     def visualize(self, fig=1):
-        ''' Create a graphical representation of the system (needs graphviz) '''
+        """ Create a graphical representation of the system (needs graphviz)
+            Args:
+                fig (int): figure number, None is silent
+        """
         if self.ndots is None:
             print('no number of dots defined...')
             return
@@ -752,25 +775,14 @@ class TwoXTwo(DotSystem):
         self.is2x2 = True
         super().__init__(name=name, ndots=4)
         self.makebasis(ndots=self.ndots, maxelectrons=2)
-        self.varnames = [self.chemical_potential_name(i + 1) for i in range(self.ndots)] \
-            + [self.on_site_charging_name(i + 1) for i in range(self.ndots)] \
-            + [self.inter_site_charging_name(dot1, dot2) for dot1, dot2 in [(1, 2), (2, 3), (3, 4), (4, 1), (1, 3), (2, 4)]] \
-            + [self.tunneling_name(dot + 1) for dot in range(self.ndots)]
+        self.varnames = [self.chemical_potential_name(i + 1) for i in range(self.ndots)] + \
+                        [self.on_site_charging_name(i + 1) for i in range(self.ndots)] + \
+                        [self.inter_site_charging_name(dot1, dot2)
+                         for dot1, dot2 in [(1, 2), (2, 3), (3, 4), (4, 1), (1, 3), (2, 4)]] + \
+                        [self.tunneling_name(dot + 1) for dot in range(self.ndots)]
         self.make_variables()
         self._make_variable_matrices(ring=True)
         # initial run
         self.makeH()
         self.solveH()
         self.findcurrentoccupancy()
-
-
-def test_twoxtwo():
-    m = TwoXTwo()
-    m.calculate_energies(np.random.rand(m.ndots))
-    m.solveH()
-    if __name__ == '__main__':
-        m.showstates(81)
-
-
-if __name__ == '__main__':
-    test_twoxtwo()

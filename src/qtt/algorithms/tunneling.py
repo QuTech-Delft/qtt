@@ -7,7 +7,6 @@
 import scipy.optimize
 import numpy as np
 import scipy.ndimage
-import matplotlib.pyplot as plt
 
 
 def polmod_all_2slopes(x_data, par, kT, model=None):
@@ -26,6 +25,7 @@ def polmod_all_2slopes(x_data, par, kT, model=None):
             - par[4]: slope of sensor signal on right side
             - par[5]: height of transition, i.e. sensitivity for electron transition
         kT (float): temperature in ueV
+        model (): Not used
 
     Returns:
         y_data (array): sensor data, e.g. from a sensing dot or QPC
@@ -82,8 +82,8 @@ def _polarization_fit_initial_guess(x_data, y_data, kT=0, padding_fraction=0.15,
     data_noslope_1der[:number_points_padding] = 0
     data_noslope_1der[number_points_padding:0] = 0
     transition_idx = np.abs(data_noslope_1der).argmax()
-    sensitivity_guess = np.sign(x_data[-1] - x_data[0]) * np.sign(data_noslope_1der[transition_idx]
-                                                                  ) * (np.percentile(data_noslope, 90) - np.percentile(data_noslope, 10))
+    sensitivity_guess = np.sign(x_data[-1] - x_data[0]) * np.sign(data_noslope_1der[transition_idx]) *\
+                        (np.percentile(data_noslope, 90) - np.percentile(data_noslope, 10))
     x_offset_guess = x_data[transition_idx]
     y_offset_guess = y_data[transition_idx] - sensitivity_guess / 2
     par_guess = np.array([t_guess, x_offset_guess, y_offset_guess, slope_guess, slope_guess, sensitivity_guess])
@@ -108,7 +108,8 @@ def _polarization_fit_initial_guess(x_data, y_data, kT=0, padding_fraction=0.15,
     return par_guess
 
 
-def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin'):
+def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None,
+                method='fmin'):
     """ Polarization line fitting. 
 
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
@@ -172,7 +173,8 @@ def plot_polarization_fit(detuning, signal, results, fig, verbose=1):
         plt.legend()
 
 
-def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None, method='fmin', returnextra=False):
+def fit_pol_all_2(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None,
+                  method='fmin', returnextra=False):
     raise Exception('please use fit_pol_all instead')
 
 
@@ -192,7 +194,7 @@ def pol_mod_two_ele_boltz(x_data, par, kT):
     part_func = np.exp(- E_Smin / kT) + 3 * np.exp(- E_T / kT) + np.exp(- E_Splus / kT)
 
     excess_charge = (np.exp(- E_Smin / kT) * 1 / 2 * (1 + (x_data - x_offset) / omega)
-                     + np.exp(- E_Splus / kT) * 1 / 2 * (1 - (x_data - x_offset) / omega )) / part_func
+                     + np.exp(- E_Splus / kT) * 1 / 2 * (1 - (x_data - x_offset) / omega)) / part_func
 
     signal = y_offset + dy * excess_charge + (dy_left + (dy_right - dy_left) * excess_charge) * (x_data - x_offset)
 
@@ -216,19 +218,6 @@ def data_to_exc_ch(x_data, y_data, pol_fit):
     return x_center, y_data_exc_ch
 
 
-def test_polFitting():
-    """ Test the polarization fitting. """
-    x_data = np.linspace(-100, 100, 1000)
-    kT = 6.5
-    par_init = np.array([20, 2, 100, -.5, -.45, 300])
-    y_data = polmod_all_2slopes(x_data, par_init, kT)
-    noise = np.random.normal(0, 3, y_data.shape)
-    par_fit, _, _ = fit_pol_all(x_data, y_data + noise, kT, par_guess=par_init)
-    assert np.all(np.isclose(par_fit[0], par_init[0], .1))
-
-# %% Example fitting
-
-
 if __name__ == '__main__':
     """  Testing of fitting code       
     """
@@ -240,10 +229,10 @@ if __name__ == '__main__':
 
     # generate data
     par = np.array([.2, 0, .1, -.0031, -.001, .21])
-    #xx0 = np.arange(-10, 10, .1)
+    # xx0 = np.arange(-10, 10, .1)
     xx0 = np.linspace(-10, 10, 200)
-    #xx0=4*np.linspace(-10, 10, 200)
-    xx = xx0
+    # xx0=4*np.linspace(-10, 10, 200)
+    # xx = xx0
     xx = 2 * xx0
     # xx=xx0
     yy0 = polmod_all_2slopes(xx0, par, kT=0.001)
@@ -344,7 +333,7 @@ if __name__ == '__main__':
         nstd = 2
         plt.fill_between(tb.index, tb - nstd * mstd, tb + nstd * mstd, color='b',
                          alpha=0.1, label='uncertainty (%d std)' % nstd)
-    #plt.plot(tb.index, ma, 'k', label='mean')
+    # plt.plot(tb.index, ma, 'k', label='mean')
 
     plt.plot(tb.index, tb, 'k', label='mean')
     pgeometry.plot2Dline([0, -1, par[0]], '--c', label='true value')
@@ -386,7 +375,7 @@ if __name__ == '__main__':
         nstd = 2
         plt.fill_between(tb.index, tb - nstd * mstd, tb + nstd * mstd, color='b',
                          alpha=0.1, label='uncertainty (%d std)' % nstd)
-    #plt.plot(tb.index, ma, 'k', label='mean')
+    # plt.plot(tb.index, ma, 'k', label='mean')
 
     plt.plot(tb.index, tb, 'k', label='mean')
     pgeometry.plot2Dline([0, -1, par[0]], '--c', label='true value')

@@ -1,11 +1,11 @@
-from unittest import TestCase
+import unittest
 from qtt.gui.parameterviewer import ParameterViewer
 import pyqtgraph
 import qtt.measurements.scans
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 
 
-class TestGUIParameterViewer(TestCase):
+class TestParameterViewer(unittest.TestCase):
 
     def test_parameterviewer(self):
         qtapp = pyqtgraph.mkQApp()

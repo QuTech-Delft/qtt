@@ -1,15 +1,11 @@
 import unittest
-
 import qtt.data
 import qtt.measurements.scans
 from qtt.simulation.dotsystem import TripleDot
-
 from qtt.simulation.virtual_dot_array import generate_configuration
 
-# %%
 
-
-class TestVirtualDot(unittest.TestCase):
+class TestVirtualDotArray(unittest.TestCase):
 
     def setUp(self):
         self.ds = TripleDot(maxelectrons=2)
@@ -31,6 +27,3 @@ class TestVirtualDot(unittest.TestCase):
     def test_dotmodel(self):
         self.ds.calculate_energies({})
 
-
-if __name__ == '__main__':
-    unittest.main()

@@ -8,7 +8,6 @@ Created on Wed Feb 28 10:20:46 2018
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
-import unittest
 import qcodes
 from qtt.utilities.tools import addPPTslide
 import warnings
@@ -20,7 +19,8 @@ from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 
 
 def transitions_durations(data, split):
-    """ For data of a two level system (up and down), this funtion determines which datapoints belong to which level and finds the transitions, in order to determines
+    """ For data of a two level system (up and down), this funtion determines which datapoints belong to which
+    level and finds the transitions, in order to determines
     how long the system stays in these levels.
 
     Args:
@@ -82,27 +82,33 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
     determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
-    which gives the tunneling frequency for both the levels. If the number of datapoints is too low to get enough points per bin
-    for the exponential fit (for either the up or the down level), this analysis step is passed over. tunnelrate_dn and tunnelrate_up
-    are returned as None, but similar information can be substracted from parameters['down_segments'] and parameters['up_segments'].
+    which gives the tunneling frequency for both the levels. If the number of datapoints is too low to get enough
+    points per bin for the exponential fit (for either the up or the down level), this analysis step is passed over.
+    tunnelrate_dn and tunnelrate_up are returned as None, but similar information can be substracted from
+    parameters['down_segments'] and parameters['up_segments'].
 
     Args:
         data (array): qcodes DataSet (or 1d data array) with the RTS data
         plungers ([str, str]): array of the two plungers used to perform the RTS measurement
         samplerate (int or float): sampling rate of the acquisition device, optional if given in the metadata
-                of the measured data
-        min_sep (float): if the separation found for the fit of the double gaussian is less then this value, the fit probably failed
-            and a FittingException is raised
-        max_sep (float): if the separation found for the fit of the double gaussian is more then this value, the fit probably failed
-            and a FittingException is raised
-        min_duration (int): minimal number of datapoints a duration should last to be taking into account for the analysis
+                                   of the measured data
+        min_sep (float): if the separation found for the fit of the double gaussian is less then this value, the
+                         fit probably failed and a FittingException is raised
+        max_sep (float): if the separation found for the fit of the double gaussian is more then this value, the
+                         fit probably failed and a FittingException is raised
+        min_duration (int): minimal number of datapoints a duration should last to be taking into account for the
+                            analysis
+        num_bins : TODO
+        plungers : TODO
         fig (None or int): shows figures and sends them to the ppt when is not None
         ppt (None or int): determines if the figures are send to a powerpoint presentation
         verbose (int): prints info to the console when > 0
 
     Returns:
-        tunnelrate_dn (numpy.float64): tunneling rate of the down level to the up level (kHz) or None in case of not enough datapoints
-        tunnelrate_up (numpy.float64): tunneling rate of the up level to the down level (kHz) or None in case of not enough datapoints
+        tunnelrate_dn (numpy.float64): tunneling rate of the down level to the up level (kHz) or None in case of
+                                       not enough datapoints
+        tunnelrate_up (numpy.float64): tunneling rate of the up level to the down level (kHz) or None in case of
+                                       not enough datapoints
         parameters (dict): dictionary with relevent (fit) parameters. this includes:
                 tunnelrate_down (float): tunnel rate in Hz
                 tunnelrate_up (float): tunnel rate up in Hz
@@ -161,7 +167,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
     if verbose:
         print('Fit parameters double gaussian:\n mean down: %.3f counts' %
-              par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] + ', std up:%.3f counts' % par_fit[3])
+              par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] +
+              ', std up:%.3f counts' % par_fit[3])
         print('Separation between peaks gaussians: %.3f std' % separation)
         print('Split between two levels: %.3f' % split)
 
@@ -237,13 +244,17 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_dn = None
         tunnelrate_up = None
         warnings.warn(
-            f'Number of down datapoints {counts_dn[0]} is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level down. ' + 'Look therefore at the mean value of the measurement segments')
+            f'Number of down datapoints {counts_dn[0]} is not enough (minimal_count_number {minimal_count_number})'
+            f' to make an accurate fit of the exponential decay for level down. ' +
+            'Look therefore at the mean value of the measurement segments')
 
     if counts_up[0] < minimal_count_number:
         tunnelrate_dn = None
         tunnelrate_up = None
         warnings.warn(
-            f'Number of up datapoints %d is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level up. ' % counts_up[0] + 'Look therefore at the mean value of the measurement segments')
+            f'Number of up datapoints %d is not enough (minimal_count_number {minimal_count_number}) to make an'
+            f' accurate fit of the exponential decay for level up. ' % counts_up[0] +
+            'Look therefore at the mean value of the measurement segments')
 
     parameters = {'plunger value': plungervalue, 'sampling rate': samplerate, 'fit parameters double gaussian': par_fit,
                   'separations between peaks gaussians': separation,
@@ -344,46 +355,3 @@ def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1,
     if std_gaussian_noise != 0:
         data = data + np.random.normal(0, std_gaussian_noise, data.size)
     return data
-
-
-class TestRandomTelegraphSignal(unittest.TestCase):
-
-    def test_RTS(self, fig=None):
-        data = np.random.rand(10000, )
-        try:
-            _ = tunnelrates_RTS(data)
-            raise Exception('no samplerate available')
-        except Exception as ex:
-            # exception is good, since no samplerate was provided
-            self.assertTrue('samplerate is None' in str(ex))
-        try:
-            _ = tunnelrates_RTS(data, samplerate=10e6)
-            raise Exception('data should not fit to RTS')
-        except FittingException as ex:
-            # fitting exception is good, since data is random
-            pass
-
-        data = generate_RTS_signal(100, std_gaussian_noise=0, uniform_noise=.1)
-        data = generate_RTS_signal(100, std_gaussian_noise=0.1, uniform_noise=.1)
-
-        samplerate = 2e6
-        data = generate_RTS_signal(100000, std_gaussian_noise=0.1, rate_up=10e3, rate_down=20e3, samplerate=samplerate)
-
-        with warnings.catch_warnings():  # catch any warnings
-            warnings.simplefilter("ignore")
-            tunnelrate_dn, tunnelrate_up, parameters = tunnelrates_RTS(data, samplerate=samplerate, fig=fig)
-
-            self.assertTrue(parameters['up_segments']['mean'] > 0)
-            self.assertTrue(parameters['down_segments']['mean'] > 0)
-
-        samplerate = 1e6
-        rate_up = 200e3
-        rate_down = 20e3
-        data = generate_RTS_signal(100000, std_gaussian_noise=0.01, rate_up=rate_up,
-                                   rate_down=rate_down, samplerate=samplerate)
-
-        tunnelrate_dn, tunnelrate_up, _ = tunnelrates_RTS(data, samplerate=samplerate, min_sep=1.0, max_sep=2222,
-                                                          min_duration=1, num_bins=40, fig=fig, verbose=2)
-
-        self.assertTrue(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
-        self.assertTrue(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)

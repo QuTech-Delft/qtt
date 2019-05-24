@@ -71,7 +71,7 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
         s2d = polyfit2d(xxf[gidx], yyf[gidx], imsf[gidx], order=order)
         vv = polyval2d(xx, yy, s2d)
 
-    if not fig is None:
+    if fig is not None:
         if kk == 1:
             plt.figure(fig)
             plt.clf()
@@ -104,7 +104,7 @@ def fitBackground(im, smooth=True, fig=None, order=3, verbose=1, removeoutliers=
             plt.axis('image')
             plt.title('fitBackground: difference')
 
-    if not returndict is None:
+    if returndict is not None:
         warnings.warn('please do not use this feature any more')
         returndict['xx'] = xx
         returndict['yy'] = yy
@@ -143,13 +143,6 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
     return ww
 
 
-def test_fitBackground():
-    im = np.random.rand(200, 100)
-    bg = fitBackground(im, verbose=0)
-    bg = fitBackground(im, verbose=0, removeoutliers=True)
-    c = cleanSensingImage(im)
-
-
 def _showIm(ims, fig=1, title=''):
     """ Show image with nearest neighbor interpolation and axis scaling """
     matplotlib.pyplot.figure(fig)
@@ -183,7 +176,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
     H[1, 1] = istep / istepmodel
 
     dsize = (samplesize[0], samplesize[1])
-    patch = cv2.warpPerspective(im.astype(np.float32), H, dsize, None, (cv2.INTER_LINEAR), cv2.BORDER_CONSTANT, -1)
+    patch = cv2.warpPerspective(im.astype(np.float32), H, dsize, None, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT, -1)
 
     if verbose:
         print('evaluateCross: patch shape %s' % (patch.shape,))
@@ -197,7 +190,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
     if usemask:
         # near model mask
-        #mask = (modelpatch>1).astype(int)
+        # mask = (modelpatch>1).astype(int)
 
         # distance centre mask
         imtmp = 10 + 0 * modelpatch.copy()
@@ -275,7 +268,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         if np.abs(pgeometry.angleDiff(param[7], np.pi / 4)) > np.deg2rad(30):
             cost += 10000
 
-    if not fig is None:
+    if fig is not None:
         _showIm(patch, fig=fig)
         plt.title('Image patch: cost %.1f: istep %.2f' % (cost, istepmodel))
         pgeometry.addfigurecopy(fig=fig)
@@ -300,7 +293,7 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
     if verbose:
         print('evaluateCross: cost %.4f' % cost)
-        #print('evaluateCross: param %s' % (str(param), ))
+        # print('evaluateCross: param %s' % (str(param), ))
     return cost, patch, cdata, (H, )
     pass
 
@@ -372,7 +365,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
                 lineSegment(modelpatch, x0=x0, x1=x1x, w=w / istep, l=None, H=H)
             else:
                 raise Exception('code not used any more?')
-                semiLine(modelpatch, x0=ip[ii], theta=aa[ii], w=w / istep, l=l / istep, H=H)
+                # semiLine(modelpatch, x0=ip[ii], theta=aa[ii], w=w / istep, l=l / istep, H=H)
         if addX:
             lx = np.linalg.norm(hp - lp, ord=2)
             lineSegment(modelpatch, x0=np.array(hp.reshape((2, 1))),
@@ -387,7 +380,7 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
 
 
 def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
-             istepmodel=.5, cb=None, use_abs=False, model_line_width = 2.5):
+             istepmodel=.5, cb=None, use_abs=False, model_line_width=2.5):
     """ Fit model of an anti-crossing 
 
     This is a wrapper around evaluateCross and the scipy optimization routines.
@@ -399,8 +392,8 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
 
     """
 
-    def costfun(param0): return evaluateCross(param0, imx, fig=None,
-                                              istepmodel=istepmodel, usemask=False, istep=istep, use_abs=use_abs, linewidth = model_line_width)[0]
+    def costfun(param0): return evaluateCross(param0, imx, fig=None, istepmodel=istepmodel, usemask=False,
+                                              istep=istep, use_abs=use_abs, linewidth=model_line_width)[0]
 
     vv = []
 
@@ -411,8 +404,8 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
         def cb_funcion(x):
             return fmCallback(x, None)
         cb = cb_funcion
-        #cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
-        #cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
+        # cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
+        # cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
 
     if 1:
         # simple brute force
@@ -425,7 +418,8 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
     else:
         paramy = param0
     res = scipy.optimize.minimize(costfun, paramy, method='nelder-mead',
-                                  options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2}, callback=cb)
+                                  options={'maxiter': 1200, 'maxfev': 101400, 'xatol': 1e-8, 'disp': verbose >= 2},
+                                  callback=cb)
 
     if verbose:
         print('fitModel: score %.2f -> %.2f' % (costfun(param0), res.fun))
@@ -532,13 +526,3 @@ def Vtrace(cdata, param, fig=None):
         plt.legend(numpoints=1, fontsize=14, loc=0)
     psi, slope = __calcSlope(pp)
     return pp, cc, slope
-
-
-def test_semiline():
-    im = np.zeros((300, 400))
-    semiLine(im, [100, 200], 10, w=12, l=300)
-    lineSegment(im, [5, 5], [50, 100])
-
-
-if __name__ == '__main__':
-    test_semiline()

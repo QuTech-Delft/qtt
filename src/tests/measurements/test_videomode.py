@@ -61,5 +61,3 @@ class TestVideomode(TestCase):
             print(std_output)
             self.assertIn('VideoMode: start readout', std_output)
 
-if __name__ == '__main__':
-    unittest.main()

@@ -87,9 +87,9 @@ class DataLinearizer:
         """ Evaluate a B-spline, see documentation scipy.interpolate.splev
 
         Args:
-            x (array): to be fitted curve
+            y (array): to be fitted curve
         Returns:
-            y (array): backward array representing the evaluated spline function
+            x (array): backward array representing the evaluated spline function
 
         """
         x = scipy.interpolate.splev(y, self.tck_inv, der=0)
@@ -144,14 +144,3 @@ def correctChargeSensor(xscan, yscan, xs, ys, fig=None):
 
     return dl, {'peaks': peaks}
 
-
-def test_datalinearizer():
-    x = np.arange(0, 10, .1)
-    y = x + .05 * x**2
-    dl = DataLinearizer(x, y)
-    _ = dl.forward([1])
-    _ = dl.forward_curve([1])
-
-
-if __name__ == '__main__':
-    test_datalinearizer()

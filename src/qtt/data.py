@@ -3,14 +3,10 @@ from functools import wraps
 """ Utilities to work with data and datasets """
 
 import numpy as np
-import unittest
 import scipy
 import os
-import sys
-import time
 import qcodes
 import datetime
-import warnings
 import pickle
 import logging
 import matplotlib.pyplot as plt
@@ -203,35 +199,6 @@ def load_dataset(location, io=None, verbose=0):
     return data
 
 
-def test_load_dataset(verbose=0):
-    import tempfile
-    h = qcodes.data.hdf5_format.HDF5Format()
-    g = qcodes.data.gnuplot_format.GNUPlotFormat()
-
-    io = qcodes.data.io.DiskIO(tempfile.mkdtemp())
-    dd = []
-    name = qcodes.DataSet.location_provider.base_record['name']
-    for jj, fmt in enumerate([g, h]):
-        ds = qcodes.tests.data_mocks.DataSet2D(name='format%d' % jj)
-        ds.formatter = fmt
-        ds.io = io
-        ds.add_metadata({'1': 1, '2': [2, 'x'], 'np': np.array([1, 2.])})
-        ds.write(write_metadata=True)
-        dd.append(ds.location)
-        time.sleep(.1)
-    qcodes.DataSet.location_provider.base_record['name'] = name
-
-    for ii, location in enumerate(dd):
-        if verbose:
-            print('load %s' % location)
-        r = load_dataset(location, io=io)
-        if verbose:
-            print(r)
-
-
-# %%
-
-
 def default_setpoint_array(dataset, measured_name='measured'):
     """ Return the default setpoint array for a dataset """
     setpoint_array = dataset.default_parameter_array(measured_name).set_arrays[0]
@@ -285,25 +252,6 @@ def add_comment(txt, dataset=None, verbose=0):
     dataset.add_metadata({'comment': txt})
     if verbose:
         print('added comments to DataSet %s' % dataset.location)
-
-
-def test_add_comment():
-    import qcodes.tests.data_mocks
-
-    ds0 = qcodes.tests.data_mocks.DataSet2D()
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    try:
-        add_comment('hello world')
-    except NotImplementedError as ex:
-        ds.metadata['comment'] = 'hello world'
-        pass
-    add_comment('hello world 0', ds0)
-    assert (ds.metadata['comment'] == 'hello world')
-    assert (ds0.metadata['comment'] == 'hello world 0')
-
-
-if __name__ == '__main__':
-    test_add_comment()
 
 
 def datasetCentre(ds, ndim=None):
@@ -926,26 +874,6 @@ class image_transform:
         return ptpixel
 
 
-def test_image_transform(verbose=0):
-    from qcodes.tests.data_mocks import DataSet2D
-    ds = DataSet2D()
-    tr = image_transform(ds)
-    im = tr.image()
-    if verbose:
-        print('transform: im.shape %s' % (str(im.shape),))
-    tr = image_transform(ds, unitsperpixel=[None, 2])
-    im = tr.image()
-    if verbose:
-        print('transform: im.shape %s' % (str(im.shape),))
-
-
-if __name__ == '__main__':
-    test_image_transform()
-
-
-# %%
-
-
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
     with open(pkl_file, 'rb') as output:
@@ -1266,24 +1194,6 @@ def makeDataSet2D(p1, p2, measure_names=('measured', ), location=None, loc_recor
         return dd
 
 
-def test_makeDataSet2D():
-    from qcodes import ManualParameter
-    p = ManualParameter('dummy')
-    p2 = ManualParameter('dummy2')
-    ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
-
-    _ = diffDataset(ds)
-
-
-def test_makeDataSet1Dplain():
-    x = np.arange(0, 10)
-    y = np.vstack((x - 1, x + 10))
-    ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
-
-
-# %%
-
-
 def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbose=1):
     """ Compare metadata from two different datasets.
 
@@ -1308,48 +1218,3 @@ def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbos
                 print('Gate %s not in second dataset' % (ikey))
     else:
         raise Exception('metadata key not yet supported')
-
-
-def test_compare():
-    import qcodes.tests.data_mocks
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    compare_dataset_metadata(ds, ds, verbose=0)
-
-
-# %%
-
-
-def test_numpy_on_dataset():
-    import qcodes.tests.data_mocks
-    alldata = qcodes.tests.data_mocks.DataSet2D()
-    X = alldata.z
-    _ = np.array(X)
-    s = np.linalg.svd(X)
-    # print(s)
-
-
-if __name__ == '__main__':
-    import numpy as np
-    import qcodes.tests.data_mocks
-
-    test_numpy_on_dataset()
-    test_makeDataSet2D()
-    test_makeDataSet1Dplain()
-    test_compare()
-
-
-class TestData(unittest.TestCase):
-
-    def test_dataset_to_dictionary(self):
-        import qcodes.tests.data_mocks
-
-        input_dataset = qcodes.tests.data_mocks.DataSet2D()
-
-        data_dictionary = dataset_to_dictionary(input_dataset, include_data=False, include_metadata=False)
-        self.assertIsNone(data_dictionary['metadata'])
-
-        data_dictionary = dataset_to_dictionary(input_dataset, include_data=True, include_metadata=True)
-        self.assertTrue('metadata' in data_dictionary)
-
-        converted_dataset = dictionary_to_dataset(data_dictionary)
-        self.assertEqual(converted_dataset.default_parameter_name(), input_dataset.default_parameter_name())

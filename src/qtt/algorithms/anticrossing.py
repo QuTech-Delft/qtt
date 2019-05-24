@@ -176,15 +176,3 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
         plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-',
                  linewidth=linewidth, color=[0, .7, 0], label=lbl)
         qtt.pgeometry.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
-
-
-def test_anticrossing():
-    nx = 30
-    ny = 40
-    dsx = qtt.data.makeDataSet2Dplain('x', .5 * np.arange(nx), 'y', .5 * np.arange(ny),
-                                      'z', np.random.rand(ny, nx,))
-    fitdata = fit_anticrossing(dsx, verbose=0)
-
-
-if __name__ == '__main__':
-    test_anticrossing()

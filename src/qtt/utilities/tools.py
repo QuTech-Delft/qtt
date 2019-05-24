@@ -14,7 +14,6 @@ from itertools import chain
 import scipy.ndimage as ndimage
 from functools import wraps
 import datetime
-import subprocess
 import time
 import importlib
 import platform
@@ -58,6 +57,7 @@ def get_module_versions(modules, verbose=0):
 
         Args:
             modules ([str]): a list with pip packages, e.g. ['numpy', 'scipy']
+            verbose (int): verbosity (0 == silent)
 
         Returns:
             r (dict): dictionary with package names and version number for each given module.
@@ -84,6 +84,7 @@ def get_git_versions(repos, get_dirty_status=False, verbose=0):
             repos ([str]): a list with repositories, e.g. ['qtt', 'qcodes']
             get_dirty_status (bool): selects whether to use the dulwich package and collect the local code
                                 changes for the repositories.
+            verbose (int): verbosity (0 == silent)
 
         Retuns:
             r (dict): dictionary with repo names, head guid and (optionally) dirty status for each given repository.
@@ -107,7 +108,7 @@ def get_git_versions(repos, get_dirty_status=False, verbose=0):
                 dirty_stats[repo] = 'none'
         if verbose:
             print('{0}: {1}'.format(repo, heads[repo]))
-    return (heads, dirty_stats)
+    return heads, dirty_stats
 
 
 def get_python_version(verbose=0):
@@ -152,17 +153,6 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
     return result
 
 
-def test_python_code_modules_and_versions():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
-        _ = get_python_version()
-        _ = get_module_versions(['numpy'])
-        _ = get_git_versions(['qtt'])
-        c = code_version()
-        assert('python' in c)
-        assert('timestamp' in c)
-        assert('system' in c)
-
 # %% Debugging
 
 
@@ -198,6 +188,7 @@ def rdeprecated(txt=None, expire=None):
 
     Args:
         txt (str): reason for deprecation
+        expire (str): e.g. date of expiration
     """
     import datetime
     from dateutil import parser
@@ -252,16 +243,6 @@ def rdeprecated(txt=None, expire=None):
     return deprecated_inner
 
 
-def test_rdeprecated():
-
-    @rdeprecated('hello')
-    def dummy():
-        pass
-
-    @rdeprecated('hello', expire='1-1-2400')
-    def dummy2():
-        pass
-
 # %%
 
 
@@ -288,7 +269,7 @@ def stripDataset(dataset):
     dataset.sync()
     dataset.data_manager = None
     dataset.background_functions = {}
-    #dataset.formatter = qcodes.DataSet.default_formatter
+    # dataset.formatter = qcodes.DataSet.default_formatter
     try:
         dataset.formatter.close_file(dataset)
     except:
@@ -305,7 +286,7 @@ def stripDataset(dataset):
 
 
 def negfloat(x):
-    ''' Helper function '''
+    """ Helper function """
     return -float(x)
 
 
@@ -314,6 +295,7 @@ def checkPickle(obj, verbose=0):
 
     Args:
         obj (object): object to be checked
+        verbose (int): verbosity (0 == silent)
     Returns:
         c (bool): True of the object can be pickled
     """
@@ -378,9 +360,11 @@ def resampleImage(im):
                               0][-facrem], im.shape[0])
             spx = np.tile(np.expand_dims(np.linspace(
                 setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
-            setpointy = qcodes.DataArray(name='Resampled_' + setpoints[0].array_id, array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
+            setpointy = qcodes.DataArray(name='Resampled_' + setpoints[0].array_id,
+                                         array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
                                          unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
-            setpointx = qcodes.DataArray(name='Resampled_' + setpoints[1].array_id, array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
+            setpointx = qcodes.DataArray(name='Resampled_' + setpoints[1].array_id,
+                                         array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
                                          unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpointy, setpointx]
         else:
@@ -411,6 +395,7 @@ def diffImage(im, dy, size=None):
     Args:
         im (numpy array): input image
         dy (integer or string): method of differentiation
+        size (str): describes the size e.g. 'same'
     """
     if dy == 0 or dy == 'x':
         im = np.diff(im, n=1, axis=1)
@@ -487,36 +472,6 @@ def diffImageSmooth(im, dy='x', sigma=2):
     return imx
 
 
-def test_array(location=None, name=None):
-    # DataSet with one 2D array with 4 x 6 points
-    yy, xx = np.meshgrid(np.arange(0, 10, .5), range(3))
-    zz = xx**2 + yy**2
-    # outer setpoint should be 1D
-    xx = xx[:, 0]
-    x = DataArray(name='x', label='X', preset_data=xx, is_setpoint=True)
-    y = DataArray(name='y', label='Y', preset_data=yy, set_arrays=(x,),
-                  is_setpoint=True)
-    z = DataArray(name='z', label='Z', preset_data=zz, set_arrays=(x, y))
-    return z
-
-
-def test_image_operations(verbose=0):
-    import qcodes.tests.data_mocks
-
-    if verbose:
-        print('testing resampleImage')
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    imx, setpoints = resampleImage(ds.z)
-
-    z = test_array()
-    imx, setpoints = resampleImage(z)
-    if verbose:
-        print('testing diffImage')
-    d = diffImage(ds.z, dy='x')
-
-# %%
-
-
 import dateutil
 
 
@@ -564,8 +519,9 @@ def showImage(im, extent=None, fig=None, title=None):
 
     Args:
         im (array)
-        extend (list): matplotlib style image extent
-        fig (None or int): figure window to show image        
+        extent (list): matplotlib style image extent
+        fig (None or int): figure window to show image
+        title (None or str): figure title
     """
     import matplotlib.pyplot as plt
     if fig is not None:
@@ -585,20 +541,17 @@ def showImage(im, extent=None, fig=None, title=None):
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values
 
-    Parameters
-    ----------
-    activegates : list or dict
-        list of gates to reset
-    basevalues: dict
-        new values for the gates
-    verbose : integer
-        output level
+    Args:
+        gates : list of gates
+        activegates (list or dict): list of gates to reset
+        basevalues (dict): new values for the gates
+        verbose (int): output level
 
     """
     if verbose:
         print('resetgates: setting gates to default values')
-    for g in (activegates):
-        if basevalues == None:
+    for g in activegates:
+        if basevalues is None:
             val = 0
         else:
             if g in basevalues.keys():
@@ -753,6 +706,7 @@ def set_ppt_slide_background(slide, color, verbose=0):
     Args:
         slide (object): PowerPoint COM object for slide.
         color (tuple): tuple with RGB color specification.
+        verbose (int): verbosity (0 == silent)
     """
     fore_color = slide.Background.Fill.ForeColor
     ppt_color = _convert_rgb_color_to_integer(color)
@@ -855,12 +809,16 @@ try:
             title (str): title added to slide
             fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
                 figure added to slide
-            subtitle (str): text added to slide as subtitle
-            maintext (str): text in textbox added to slide
+            txt (str) : Deprecated, use subtitle instead
             notes (str or QCoDeS station): notes added to slide
             figsize (list): size (width,height) of figurebox to add to powerpoint
+            subtitle (str): text added to slide as subtitle
+            maintext (str): text in textbox added to slide
             show (boolean): shows the powerpoint application
             verbose (int): print additional information
+            activate_slide (bool): activate the current slide
+            ppLayout (int): layout of PP-slide (TitleOnly = 11, Text = 2)
+            extranotes (str): notes for slide
             background_color (None or tuple): background color for the slide
         Returns:
             ppt: PowerPoint presentation
@@ -1151,7 +1109,7 @@ from collections import OrderedDict
 
 
 def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, verbose=0):
-    '''Reshape the metadata of a DataSet
+    """ Reshape the metadata of a DataSet
 
     Arguments:
         dataset (DataSet or qcodes.Station): a dataset of which the metadata 
@@ -1159,16 +1117,17 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         printformat (str): can be 'dict' or 'txt','fancy' (text format)
         add_scanjob (bool): If True, then add the scanjob at the beginning of the notes
         add_gates (bool): If True, then add the scanjob at the beginning of the notes
+        verbose (int): verbosity (0 == silent)
     Returns:
         metadata (string): the reshaped metadata
-    '''
+    """
 
     if isinstance(dataset, qcodes.Station):
         station = dataset
         all_md = station.snapshot(update=False)['instruments']
         header = None
     else:
-        if not 'station' in dataset.metadata:
+        if 'station' not in dataset.metadata:
             return 'dataset %s: no metadata available' % (str(dataset.location), )
 
         tmp = dataset.metadata.get('station', None)
@@ -1244,22 +1203,6 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
     return ss
 
 
-def test_reshape_metadata():
-    import qtt.measurements.scans
-    param = qcodes.ManualParameter('dummy')
-    try:
-        dataset = qcodes.Loop(param[0:1:10]).each(param).run()
-    except:
-        dataset = None
-        pass
-    if dataset is not None:
-        _ = reshape_metadata(dataset, printformat='dict')
-    instr = qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123'))
-    st = qcodes.Station(instr)
-    _ = reshape_metadata(st, printformat='dict')
-    instr.close()
-
-
 # %%
 
 def setupMeasurementWindows(*args, **kwargs):
@@ -1274,7 +1217,7 @@ def updatePlotTitle(qplot, basetxt='Live plot'):
 
 @rdeprecated(expire='1 Sep 2018')
 def timeProgress(data):
-    ''' Simpe progress meter, should be integrated with either loop or data object '''
+    """ Simple progress meter, should be integrated with either loop or data object """
     data.sync()
     tt = data.arrays['timestamp']
     vv = ~np.isnan(tt)
@@ -1292,7 +1235,7 @@ def timeProgress(data):
 
 
 def flatten(lst):
-    ''' Flatten a list
+    """ Flatten a list
 
     Args:
         lst (list): list to be flattened
@@ -1301,7 +1244,7 @@ def flatten(lst):
     Example:
         >>> flatten([ [1,2], [3,4], [10] ])
         [1, 2, 3, 4, 10]
-    '''
+    """
     return list(chain(*lst))
 
 # %%
@@ -1398,7 +1341,7 @@ import copy
 
 
 def slopeClick(drawmode='r--', **kwargs):
-    ''' Calculate slope for linepiece of two points clicked by user. Works 
+    """ Calculate slope for linepiece of two points clicked by user. Works
     with matplotlib but not with pyqtgraph. Uses the currently active 
     figure.
 
@@ -1408,7 +1351,7 @@ def slopeClick(drawmode='r--', **kwargs):
     Returns:
         coords (2 x 2 array): coordinates of the two clicked points
         signedslope (float): slope of linepiece connecting the two points
-    '''
+    """
     ax = plt.gca()
     ax.set_autoscale_on(False)
     coords = pgeometry.ginput(2, drawmode, **kwargs)
@@ -1419,7 +1362,7 @@ def slopeClick(drawmode='r--', **kwargs):
 
 
 def clickGatevals(plot, drawmode='ro'):
-    ''' Get gate values for all gates at clicked point in a heatmap.
+    """ Get gate values for all gates at clicked point in a heatmap.
 
     Arguments:
         plot (qcodes MatPlot object): plot of measurement data
@@ -1427,7 +1370,7 @@ def clickGatevals(plot, drawmode='ro'):
 
     Returns:    
         gatevals (dict): values of the gates at clicked point
-    '''
+    """
     # TODO: implement for virtual gates
     if type(plot) != qcodes.plots.qcmatplotlib.MatPlot:
         raise Exception(

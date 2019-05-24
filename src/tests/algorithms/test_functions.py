@@ -1,11 +1,25 @@
+""" Mathematical functions and models """
+
 import unittest
 import numpy as np
-
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
-    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi
+    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay
 
 
 class TestFunctions(unittest.TestCase):
+
+    def test_fit_exp_decay(self):
+        x_data = np.arange(0, 10., .1)
+        parameters = [0, 1, 1]
+        y_data = exp_function(x_data, *parameters)
+        fitted = fit_exp_decay(x_data, y_data)
+        np.testing.assert_array_almost_equal(fitted, parameters, decimal=3)
+        fitted = fit_exp_decay(x_data, y_data, offset_parameter=0.1)
+        np.testing.assert_array_almost_equal(fitted, [.1, .95, 1.4], decimal=1)
+
+    def test_logistic(self):
+        y = logistic(0.0, 1.0, alpha=1.0)
+        np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=10)
 
     def test_Fermi(self):
         values = Fermi(np.array([0, 1, 2]), 0, 1, 2, kb=1)
