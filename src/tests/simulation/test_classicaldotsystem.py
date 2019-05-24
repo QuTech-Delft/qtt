@@ -18,7 +18,7 @@ class TestClassicalDotSystem(unittest.TestCase):
 
         self.assertEqual(energies.size, 256)
         self.assertAlmostEqual(energies.min(), 0.0)
-        self.assertAlmostEqual(energies.max(), 1672.026261148515)
-        self.assertAlmostEqual(energies.sum(), 153915.72102190088)
+        self.assertAlmostEqual(energies.max(), 1672.026261148515, 6)
+        self.assertAlmostEqual(energies.sum(), 153915.72102190088, 3)
         m.solve()
         # m.showstates(8)

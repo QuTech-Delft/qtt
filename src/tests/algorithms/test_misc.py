@@ -17,9 +17,9 @@ class TestMis(unittest.TestCase):
         z = np.random.rand(10, 10)
         p = polyfit2d(x, y, z)
         self.assertEqual(p.size, 160)
-        self.assertAlmostEqual(p.min(), -271.1967198595069)
-        self.assertEqual(p.max(), 178.449535954755)
-        self.assertEqual(p.sum(), -542.5819643077925)
+        self.assertAlmostEqual(p.min(), -271.1967198595069, 6)
+        self.assertAlmostEqual(p.max(), 178.449535954755, 6)
+        self.assertAlmostEqual(p.sum(), -542.5819643077925, 3)
 
     def test_polyval2d(self):
         np.random.seed(2019)
@@ -29,8 +29,8 @@ class TestMis(unittest.TestCase):
         p = polyfit2d(x, y, z)
         q = polyval2d(x, y, p)
         self.assertEqual(q.size, 10)
-        self.assertEqual(q.min(), 0.04216012929100543)
-        self.assertEqual(q.max(), 0.9130578654339843)
+        self.assertAlmostEqual(q.min(), 0.04216012929100543, 6)
+        self.assertAlmostEqual(q.max(), 0.9130578654339843, 6)
 
     def test_point_in_poly(self):
         x = 1.0

@@ -19,14 +19,14 @@ class TestFunctions(unittest.TestCase):
 
     def test_logistic(self):
         y = logistic(0.0, 1.0, alpha=1.0)
-        np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=10)
+        np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=6)
 
     def test_Fermi(self):
         values = Fermi(np.array([0, 1, 2]), 0, 1, 2, kb=1)
         np.testing.assert_array_almost_equal(values, np.array([0.5, 0.37754067, 0.26894142]))
 
         value = Fermi(10., 0, 1, 2, kb=10)
-        self.assertAlmostEqual(value, 0.3775406687981454)
+        self.assertAlmostEqual(value, 0.3775406687981454, 6)
 
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)

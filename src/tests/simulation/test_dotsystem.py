@@ -42,7 +42,7 @@ class TestDotSystem(unittest.TestCase):
         m = TwoXTwo()
         energies = m.calculate_energies(list(np.random.rand(m.ndots)))
         self.assertEqual(energies.size, 81)
-        self.assertAlmostEqual(energies.min(), -5.116820166778993)
+        self.assertAlmostEqual(energies.min(), -5.116820166778993, 6)
         self.assertAlmostEqual(energies.max(), 0.0)
         energies, eigenstates = m.solveH()
         self.assertEqual(energies.size, 81)
