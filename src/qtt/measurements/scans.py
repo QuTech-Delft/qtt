@@ -1781,7 +1781,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
-                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose)
+                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose>=2)
 
             segment_size = int(memsize_total / nsegments)
             post_trigger = segment_size - pre_trigger
@@ -1807,6 +1807,8 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     update_dictionary(alldata.metadata, scantime=str(
         datetime.datetime.now()), nsegments=str(nsegments))
 
+    if verbose:
+        print(f'acquire_segments: acquired data of shape {data.shape}')
     if hasattr(station, 'gates'):
         gates = station.gates
         gatevals = gates.allvalues()
