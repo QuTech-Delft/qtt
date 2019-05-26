@@ -102,13 +102,15 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
 
 
 def plot_two_level_threshold(results, fig=100):
-    plt.figure(fig); plt.clf()
+    plt.figure(fig);
+    plt.clf()
     bin_centres = results['histogram']['bin_centres']
     counts = results['histogram']['counts']
-    bin_centres[1]-bin_centres[0]
-    plt.bar(bin_centres, counts, width=bin_centres[1]-bin_centres[0], label='histogram')
-    plt.ylabel('Counts'); plt.xlabel('Signal [a.u.]')
-    plot_vertical_line(results['signal_threshold'], label='threshold')    
+    bin_centres[1] - bin_centres[0]
+    plt.bar(bin_centres, counts, width=bin_centres[1] - bin_centres[0], label='histogram')
+    plt.ylabel('Counts');
+    plt.xlabel('Signal [a.u.]')
+    plot_vertical_line(results['signal_threshold'], label='threshold')
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
 
 
@@ -221,12 +223,12 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if separation < min_sep:
         raise FittingException(
             'Separation between the peaks of the gaussian %.1f is less then %.1f std, indicating that the fit was not succesfull.' % (
-            separation, min_sep))
+                separation, min_sep))
 
     if separation > max_sep:
         raise FittingException(
             'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (
-            separation, max_sep))
+                separation, max_sep))
 
     # count the number of transitions and their duration
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
