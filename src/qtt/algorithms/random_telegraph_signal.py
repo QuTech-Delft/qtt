@@ -81,13 +81,13 @@ def _plot_rts_histogram(data, num_bins, double_gaussian_fit, split, figure_title
 
 def two_level_threshold(data, number_of_bins=40) -> dict:
     """ Determine threshold for separation of two-level signal
-    
+
     Typical examples of such a signal are an RTS signal or Elzerman readout.
-    
+
     Args:
         traces: Two dimensional array with single traces
         number_of_bins: Number of bins to use for calculation of double histogram
-    
+
     Returns:
         Dictionary with results. The key readout_threshold contains the calculated threshold
     """
@@ -102,13 +102,12 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
 
 
 def plot_two_level_threshold(results, fig=100):
-    plt.figure(fig);
+    plt.figure(fig)
     plt.clf()
     bin_centres = results['histogram']['bin_centres']
     counts = results['histogram']['counts']
-    bin_centres[1] - bin_centres[0]
     plt.bar(bin_centres, counts, width=bin_centres[1] - bin_centres[0], label='histogram')
-    plt.ylabel('Counts');
+    plt.ylabel('Counts')
     plt.xlabel('Signal [a.u.]')
     plot_vertical_line(results['signal_threshold'], label='threshold')
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
