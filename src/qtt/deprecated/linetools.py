@@ -295,7 +295,7 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
     return res
 
 
-@qtt.utilities.tools.rdeprecated(expire='1-1-2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2018')
 def calcSlope(pp):
     q = -np.diff(pp, axis=1)
     psi = math.atan2(q[1], q[0])

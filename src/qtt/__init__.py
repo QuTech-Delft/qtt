@@ -88,7 +88,7 @@ check_version('3.0', 'Polygon', install_message="use command 'pip install Polygo
 from qtt.gui.live_plotting import start_measurement_control
 
 
-@qtt.utilities.tools.rdeprecated(expire='Aug 1 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='Aug 1 2018')
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()
