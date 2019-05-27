@@ -1,13 +1,10 @@
-""" Test functions to analyse anti-crossings in charge stability diagrams
-
-"""
+""" Test functions to analyse anti-crossings in charge stability diagrams."""
 
 # %%
 import unittest
 import numpy as np
 from qtt.algorithms.anticrossing import fit_anticrossing
 from qtt.data import makeDataSet2Dplain
-# %%
 
 
 class TestAntiCrossing(unittest.TestCase):

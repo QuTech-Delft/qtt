@@ -1,6 +1,4 @@
-""" Test functionality for analysing inter-dot tunnel frequencies
-
-"""
+""" Test functionality for analysing inter-dot tunnel frequencies."""
 
 from unittest import TestCase
 import numpy as np

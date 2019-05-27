@@ -1,6 +1,4 @@
-""" Functionality to test determine the awg_to_plunger ratio
-
-"""
+""" Functionality to test determine the awg_to_plunger ratio."""
 
 # %% Load packages
 import numpy as np
@@ -18,10 +16,7 @@ class TestAwgToPlunger(unittest.TestCase):
         """ Plot results of awg_to_plunger calibration check?
 
         Args:
-            fig (str, int or None): default None. Name of figure to plot in, if None not plotted
-
-        Returns:
-            Nothing
+            fig (str, int or None): default None. Name of figure to plot in, if None not plotted.
 
         """
         x = np.arange(0, 80, 1.0).astype(np.float32)

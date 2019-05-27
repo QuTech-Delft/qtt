@@ -1,6 +1,7 @@
-""" Mathematical functions and models """
+""" Mathematical functions and models."""
 
 import unittest
+import matplotlib.pyplot as plt
 import numpy as np
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay
@@ -8,7 +9,8 @@ from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian
 
 class TestFunctions(unittest.TestCase):
 
-    def test_fit_exp_decay(self):
+    @staticmethod
+    def test_fit_exp_decay():
         x_data = np.arange(0, 10., .1)
         parameters = [0, 1, 1]
         y_data = exp_function(x_data, *parameters)
@@ -17,7 +19,8 @@ class TestFunctions(unittest.TestCase):
         fitted = fit_exp_decay(x_data, y_data, offset_parameter=0.1)
         np.testing.assert_array_almost_equal(fitted, [.1, .95, 1.4], decimal=1)
 
-    def test_logistic(self):
+    @staticmethod
+    def test_logistic():
         y = logistic(0.0, 1.0, alpha=1.0)
         np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=6)
 

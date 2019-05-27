@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Functionality to test fit PAT models
+""" Functionality to test fit PAT models.
 
 For more details see: https://arxiv.org/abs/1803.10352
 
@@ -15,7 +15,9 @@ from qtt.algorithms.pat_fitting import one_ele_pat_model, fit_pat, pre_process_p
 
 
 class TestPatFitting(TestCase):
-    def test_pat_fitting(self):
+
+    @staticmethod
+    def test_pat_fitting():
         fig = None
         pp0 = [0, 50, 5]
         x_data = np.arange(-3, 3, 0.025)
@@ -26,7 +28,7 @@ class TestPatFitting(TestCase):
             y = one_ele_pat_model(x, pp0)
             jj = np.argmin(np.abs(y_data - y))
             z_data[jj, ii] += 2  # ((x>0)*2-1)
-        pp, pat_fit = fit_pat(x_data, y_data, z_data, background, verbose=0)
+        pp, _ = fit_pat(x_data, y_data, z_data, background, verbose=0)
         imx, imq, _ = pre_process_pat(x_data, y_data, background, z_data, fig=fig)
 
         if fig is not None:
@@ -37,7 +39,7 @@ class TestPatFitting(TestCase):
 
             trans = 'one_ele'
             period = 1e-3
-            xx, dpresults = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=200)
+            xx, _ = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=200)
 
             plt.figure(fig + 3)
             plt.clf()

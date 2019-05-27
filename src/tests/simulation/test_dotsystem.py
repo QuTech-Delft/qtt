@@ -1,6 +1,4 @@
-""" Test simulation of a coupled dot system
-
-"""
+""" Test simulation of a coupled dot system."""
 
 # %% Load packages
 

@@ -1,13 +1,14 @@
 import unittest
 import numpy as np
-
+import matplotlib.pyplot as plt
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import point_in_polygon, points_in_polygon
 
 
 class TestPGeometry(unittest.TestCase):
 
-    def test_robust_cost(self):
+    @staticmethod
+    def test_robust_cost():
         x = np.array([0, 1, 2, 3, 4, 5])
         _ = pgeometry.robustCost(x, 2)
         _ = pgeometry.robustCost(x, 'auto')
@@ -59,7 +60,6 @@ class TestPolygonGeometry(unittest.TestCase):
         self.assertEqual(0.25, np.abs(pgeometry.polyarea(x)))
 
     def test_geometry(self):
-        verbose = 0
         fig = None
         im = np.zeros((200, 100, 3))
         sub_im = np.ones((40, 30,))
@@ -89,9 +89,8 @@ class TestPolygonGeometry(unittest.TestCase):
 
     def test_polygon_functions(self):
         pp = np.array([[0, 0], [4, 0], [0, 4]])
-        assert(point_in_polygon([1, 1], pp) == 1)
-        assert(point_in_polygon([-1, 1], pp) == -1)
-
-        assert(np.all(points_in_polygon(np.array([[-1, 1], [1, 1], [.5, .5]]), pp) == np.array([-1, 1, 1])))
+        self.assertTrue(point_in_polygon([1, 1], pp) == 1)
+        self.assertTrue(point_in_polygon([-1, 1], pp) == -1)
+        self.assertTrue(np.all(points_in_polygon(np.array([[-1, 1], [1, 1], [.5, .5]]), pp) == np.array([-1, 1, 1])))
 
 

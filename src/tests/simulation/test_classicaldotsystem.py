@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Test classical Quantum Dot Simulator
-
-"""
+""" Test classical Quantum Dot Simulator."""
 
 import unittest
 import numpy as np

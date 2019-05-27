@@ -1,7 +1,8 @@
-""" Basic scan functions
+""" Basic scan functions.
 
 This module contains test functions for basic scans, e.g. scan1D, scan2D, etc.
 This is part of qtt.
+
 """
 
 import unittest
@@ -41,7 +42,7 @@ class TestScans(unittest.TestCase):
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)
         r = VoltageDivider(p, 4)
-        mp = MultiParameter(instrumentName('multi_param'), [p, q])
+        _ = MultiParameter(instrumentName('multi_param'), [p, q])
 
         gates = VirtualIVVI(
             name=qtt.measurements.scans.instrumentName('gates'), model=None)
@@ -80,7 +81,7 @@ class TestScans(unittest.TestCase):
             scanjob['stepdata'] = dict(
                 {'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
             data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-        except:
+        except Exception as ex:
             if verbose:
                 print('combination of Parameter and vector argument not supported')
 

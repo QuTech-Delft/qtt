@@ -1,6 +1,4 @@
-""" Testing misc algorithms
-
-"""
+""" Testing misc algorithms."""
 
 # %%
 import unittest

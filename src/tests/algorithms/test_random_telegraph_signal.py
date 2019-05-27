@@ -1,6 +1,4 @@
-""" Functionality to test analyse random telegraph signals
-
-"""
+""" Functionality to test analyse random telegraph signals."""
 
 import unittest
 import numpy as np

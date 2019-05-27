@@ -1,6 +1,4 @@
-""" Functionality to test fit scans of ohmic contacts
-
-"""
+""" Functionality to test fit scans of ohmic contacts."""
 
 import unittest
 import numpy as np

@@ -1,4 +1,4 @@
-""" Test functionality to analyse pinch-off scans """
+""" Test functionality to analyse pinch-off scans."""
 
 # %% Load packages
 
@@ -7,8 +7,6 @@ import numpy as np
 from qtt.data import makeDataSet1Dplain
 from qtt.algorithms.functions import logistic
 from qtt.algorithms.gatesweep import analyseGateSweep, plot_pinchoff
-
-# %%
 
 
 class TestGateSweep(unittest.TestCase):

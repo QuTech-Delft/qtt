@@ -1,4 +1,4 @@
-""" Test fitting of Fermi-Dirac distributions. """
+""" Test fitting of Fermi-Dirac distributions."""
 
 import unittest
 import numpy as np

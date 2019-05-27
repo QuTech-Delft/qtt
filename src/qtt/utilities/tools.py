@@ -55,12 +55,13 @@ except:
 def get_module_versions(modules, verbose=0):
     """ Returns the module version of the given pip packages.
 
-        Args:
-            modules ([str]): a list with pip packages, e.g. ['numpy', 'scipy']
-            verbose (int): verbosity (0 == silent)
+    Args:
+        modules ([str]): a list with pip packages, e.g. ['numpy', 'scipy'].
+        verbose (int): verbosity (0 == silent).
 
-        Returns:
-            r (dict): dictionary with package names and version number for each given module.
+    Returns:
+        r (dict): dictionary with package names and version number for each given module.
+
     """
     module_versions = dict()
     for module in modules:
@@ -80,14 +81,15 @@ def get_git_versions(repos, get_dirty_status=False, verbose=0):
         The version is only returned if the repo is installed as pip package without edit mode.
         NOTE: currently the dirty status is not working correctly due to a bug in dulwich...
 
-        Args:
-            repos ([str]): a list with repositories, e.g. ['qtt', 'qcodes']
-            get_dirty_status (bool): selects whether to use the dulwich package and collect the local code
-                                changes for the repositories.
-            verbose (int): verbosity (0 == silent)
+    Args:
+        repos ([str]): a list with repositories, e.g. ['qtt', 'qcodes'].
+        get_dirty_status (bool): selects whether to use the dulwich package and collect the local code
+                            changes for the repositories.
+        verbose (int): verbosity (0 == silent).
 
-        Retuns:
-            r (dict): dictionary with repo names, head guid and (optionally) dirty status for each given repository.
+    Retuns:
+        r (dict): dictionary with repo names, head guid and (optionally) dirty status for each given repository.
+
     """
     heads = dict()
     dirty_stats = dict()
@@ -129,10 +131,11 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
         repository_names ([str]): a list with repositories, e.g. ['qtt', 'qcodes'].
         package_names ([str]): a list with pip packages, e.g. ['numpy', 'scipy'].
         get_dirty_status (bool): selects whether the local code has changed for the repositories.
-        verbose (int): output level
+        verbose (int): output level.
 
     Returns:
         status (dict): python, modules and git repos status.
+
     """
     _default_git_versions = ['qcodes', 'qtt', 'projects', 'pycqed']
     _default_module_versions = ['numpy', 'scipy', 'qupulse', 'h5py', 'skimage']
@@ -157,9 +160,8 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
 
 
 def deprecated(func):
-    """ This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used. """
+    """ This is a decorator which can be used to mark functions as deprecated. It will result in a warning being
+    emitted when the function is used."""
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
@@ -182,13 +184,12 @@ def deprecated(func):
 
 
 def rdeprecated(txt=None, expire=None):
-    """ This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used. 
+    """ This is a decorator which can be used to mark functions as deprecated. It will result in a warning being
+    emitted when the function is used.
 
     Args:
-        txt (str): reason for deprecation
-        expire (str): e.g. date of expiration
+        txt (str): reason for deprecation.
+        expire (str): e.g. date of expiration.
     """
     import datetime
     from dateutil import parser
@@ -203,7 +204,7 @@ def rdeprecated(txt=None, expire=None):
     def deprecated_inner(func):
         """ This is a decorator which can be used to mark functions
         as deprecated. It will result in a warning being emitted
-        when the function is used. """
+        when the function is used."""
 
         @functools.wraps(func)
         def new_func(*args, **kwargs):
@@ -247,11 +248,11 @@ def rdeprecated(txt=None, expire=None):
 
 
 def update_dictionary(alldata, **kwargs):
-    """ Update elements of a dictionary
+    """ Update elements of a dictionary.
 
     Args:
-        alldata (dict): dictionary to be updated
-        kwargs (dict): keyword arguments
+        alldata (dict): dictionary to be updated.
+        kwargs (dict): keyword arguments.
 
     """
     for k in kwargs:
@@ -259,12 +260,14 @@ def update_dictionary(alldata, **kwargs):
 
 
 def stripDataset(dataset):
-    """ Make sure a dataset can be pickled 
+    """ Make sure a dataset can be pickled .
 
     Args: 
-        dataset (qcodes DataSet)
+        dataset (qcodes DataSet): TODO.
+
     Returns:
-        dataset (qcodes DataSet): the dataset from the function argument
+        dataset (qcodes DataSet): the dataset from the function argument.
+
     """
     dataset.sync()
     dataset.data_manager = None
@@ -291,13 +294,15 @@ def negfloat(x):
 
 
 def checkPickle(obj, verbose=0):
-    """ Check whether an object can be pickled
+    """ Check whether an object can be pickled.
 
     Args:
-        obj (object): object to be checked
-        verbose (int): verbosity (0 == silent)
+        obj (object): object to be checked.
+        verbose (int): verbosity (0 == silent).
+
     Returns:
-        c (bool): True of the object can be pickled
+        c (bool): True of the object can be pickled.
+
     """
     try:
         _ = pickle.dumps(obj)
@@ -309,7 +314,7 @@ def checkPickle(obj, verbose=0):
 
 
 def freezeclass(cls):
-    """ Decorator to freeze a class """
+    """ Decorator to freeze a class."""
     cls.__frozen = False
 
     def frozensetattr(self, key, value):
@@ -335,13 +340,13 @@ def freezeclass(cls):
 
 
 def resampleImage(im):
-    """ Resample the image so it has the similar sample rates (samples/mV) in both axis
+    """ Resample the image so it has the similar sample rates (samples/mV) in both axis.
 
     Args:
-        im (DataArray): input image
+        im (DataArray): input image.
     Returns:
-        imr (numpy array): resampled image
-        setpoints (list of 2 numpy arrays): setpoint arrays from resampled image
+        imr (numpy array): resampled image.
+        setpoints (list of 2 numpy arrays): setpoint arrays from resampled image.
     """
     setpoints = im.set_arrays
     mVrange = [abs(setpoints[0][-1] - setpoints[0][0]),
@@ -360,12 +365,12 @@ def resampleImage(im):
                               0][-facrem], im.shape[0])
             spx = np.tile(np.expand_dims(np.linspace(
                 setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
-            setpointy = qcodes.DataArray(name='Resampled_' + setpoints[0].array_id,
-                                         array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
-                                         unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
-            setpointx = qcodes.DataArray(name='Resampled_' + setpoints[1].array_id,
-                                         array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
-                                         unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            setpointy = DataArray(name='Resampled_' + setpoints[0].array_id,
+                                  array_id='Resampled_' + setpoints[0].array_id, label=setpoints[0].label,
+                                  unit=setpoints[0].unit, preset_data=spy, is_setpoint=True)
+            setpointx = DataArray(name='Resampled_' + setpoints[1].array_id,
+                                  array_id='Resampled_' + setpoints[1].array_id, label=setpoints[1].label,
+                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpointy, setpointx]
         else:
             facrem = im.shape[1] % factor
@@ -382,20 +387,21 @@ def resampleImage(im):
             idy = setpoints[1].array_id
             if idy is None:
                 idy = 'y'
-            setpointx = qcodes.DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
-                                         unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
+            setpointx = DataArray(name='Resampled_' + idx, array_id='Resampled_' + idy, label=setpoints[1].label,
+                                  unit=setpoints[1].unit, preset_data=spx, is_setpoint=True)
             setpoints = [setpoints[0], setpointx]
 
     return im, setpoints
 
 
 def diffImage(im, dy, size=None):
-    """ Simple differentiation of an image
+    """ Simple differentiation of an image.
 
     Args:
-        im (numpy array): input image
-        dy (integer or string): method of differentiation
-        size (str): describes the size e.g. 'same'
+        im (numpy array): input image.
+        dy (integer or string): method of differentiation.
+        size (str): describes the size e.g. 'same'.
+
     """
     if dy == 0 or dy == 'x':
         im = np.diff(im, n=1, axis=1)
@@ -421,17 +427,12 @@ def diffImage(im, dy, size=None):
 
 
 def diffImageSmooth(im, dy='x', sigma=2):
-    """ Simple differentiation of an image
+    """ Simple differentiation of an image.
 
-    Parameters
-    ----------
-    im : array
-        input image
-    dy : string or integer
-        direction of differentiation. can be 'x' (0) or 'y' (1) or 'xy' (2) or 'g' (3)
-        or 
-    sigma : float
-        parameter for gaussian filter kernel
+    Args:
+        im (array): input image.
+        dy (string or integer): direction of differentiation. can be 'x' (0) or 'y' (1) or 'xy' (2) or 'g' (3).
+        sigma (float): parameter for gaussian filter kernel.
 
     """
     if sigma is None:
@@ -476,7 +477,7 @@ import dateutil
 
 
 def scanTime(dd):
-    """ Return date a scan was performed """
+    """ Return date a scan was performed."""
     w = dd.metadata.get('scantime', None)
     if isinstance(w, str):
         w = dateutil.parser.parse(w)
@@ -485,7 +486,7 @@ def scanTime(dd):
 
 @deprecated
 def plot_parameter(data, default_parameter='amplitude'):
-    """ Return parameter to be plotted """
+    """ Return parameter to be plotted."""
     if 'main_parameter' in data.metadata.keys():
         return data.metadata['main_parameter']
     if default_parameter in data.arrays.keys():
@@ -499,8 +500,8 @@ def plot_parameter(data, default_parameter='amplitude'):
 
 @deprecated
 def plot1D(dataset, fig=1):
-    """ Simlpe plot function """
-    if isinstance(dataset, qcodes.DataArray):
+    """ Simple plot function."""
+    if isinstance(dataset, DataArray):
         array = dataset
         dataset = None
     else:
@@ -515,13 +516,14 @@ def plot1D(dataset, fig=1):
 # %%
 
 def showImage(im, extent=None, fig=None, title=None):
-    """ Show image in figure window
+    """ Show image in figure window.
 
     Args:
-        im (array)
-        extent (list): matplotlib style image extent
-        fig (None or int): figure window to show image
-        title (None or str): figure title
+        im (array): TODO.
+        extent (list): matplotlib style image extent.
+        fig (None or int): figure window to show image.
+        title (None or str): figure title.
+
     """
     import matplotlib.pyplot as plt
     if fig is not None:
@@ -539,13 +541,13 @@ def showImage(im, extent=None, fig=None, title=None):
 
 @deprecated  # part of the gates object
 def resetgates(gates, activegates, basevalues=None, verbose=2):
-    """ Reset a set of gates to default values
+    """ Reset a set of gates to default values.
 
     Args:
-        gates : list of gates
-        activegates (list or dict): list of gates to reset
-        basevalues (dict): new values for the gates
-        verbose (int): output level
+        gates : list of gates.
+        activegates (list or dict): list of gates to reset.
+        basevalues (dict): new values for the gates.
+        verbose (int): output level.
 
     """
     if verbose:
@@ -567,9 +569,10 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
 
 @deprecated
 def plot2Dline(line, *args, **kwargs):
-    """ Plot a 2D line in a matplotlib figure
+    """ Plot a 2D line in a matplotlib figure.
 
-    line: 3x1 array
+    Args:
+        line (array): 3x1 array.
 
     >>> plot2Dline([-1,1,0], 'b')
     """
@@ -585,9 +588,9 @@ def plot2Dline(line, *args, **kwargs):
 
 
 def cfigure(*args, **kwargs):
-    """ Create Matplotlib figure with copy to clipboard functionality
+    """ Create Matplotlib figure with copy to clipboard functionality.
 
-    By pressing the 'c' key figure is copied to the clipboard
+    By pressing the 'c' key figure is copied to the clipboard.
 
     """
     if 'facecolor' in kwargs:
@@ -601,7 +604,7 @@ def cfigure(*args, **kwargs):
 
 
 def static_var(varname, value):
-    """ Helper function to create a static variable """
+    """ Helper function to create a static variable."""
     def decorate(func):
         setattr(func, varname, value)
         return func
@@ -613,7 +616,7 @@ try:
     import qtpy.QtWidgets as QtWidgets
 
     def monitorSizes(verbose=0):
-        """ Return monitor sizes """
+        """ Return monitor sizes."""
         _qd = QtWidgets.QDesktopWidget()
         if sys.platform == 'win32' and _qd is None:
             import ctypes
@@ -639,7 +642,7 @@ try:
         return wa
 except:
     def monitorSizes(verbose=0):
-        """ Dummy function for monitor sizes """
+        """ Dummy function for monitor sizes."""
         return [[0, 0, 1600, 1200]]
     pass
 
@@ -706,7 +709,7 @@ def set_ppt_slide_background(slide, color, verbose=0):
     Args:
         slide (object): PowerPoint COM object for slide.
         color (tuple): tuple with RGB color specification.
-        verbose (int): verbosity (0 == silent)
+        verbose (int): verbosity (0 == silent).
     """
     fore_color = slide.Background.Fill.ForeColor
     ppt_color = _convert_rgb_color_to_integer(color)
@@ -803,26 +806,27 @@ try:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
                     activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
-        """ Add slide to current active Powerpoint presentation
+        """ Add slide to current active Powerpoint presentation.
 
         Arguments:
-            title (str): title added to slide
+            title (str): title added to slide.
             fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
-                figure added to slide
-            txt (str) : Deprecated, use subtitle instead
-            notes (str or QCoDeS station): notes added to slide
-            figsize (list): size (width,height) of figurebox to add to powerpoint
-            subtitle (str): text added to slide as subtitle
-            maintext (str): text in textbox added to slide
-            show (boolean): shows the powerpoint application
-            verbose (int): print additional information
-            activate_slide (bool): activate the current slide
-            ppLayout (int): layout of PP-slide (TitleOnly = 11, Text = 2)
-            extranotes (str): notes for slide
-            background_color (None or tuple): background color for the slide
+                figure added to slide.
+            txt (str) : Deprecated, use subtitle instead.
+            notes (str or QCoDeS station): notes added to slide.
+            figsize (list): size (width,height) of figurebox to add to powerpoint.
+            subtitle (str): text added to slide as subtitle.
+            maintext (str): text in textbox added to slide.
+            show (bool): shows the powerpoint application.
+            verbose (int): print additional information.
+            activate_slide (bool): activate the current slide.
+            ppLayout (int): layout of PP-slide (TitleOnly = 11, Text = 2).
+            extranotes (str): notes for slide.
+            background_color (None or tuple): background color for the slide.
+
         Returns:
-            ppt: PowerPoint presentation
-            slide: PowerPoint slide
+            ppt: PowerPoint presentation.
+            slide: PowerPoint slide.
 
         The interface to Powerpoint used is described here:
             https://msdn.microsoft.com/en-us/library/office/ff743968.aspx
@@ -1015,23 +1019,23 @@ try:
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
                        printformat='fancy', customfig=None, extranotes=None, **kwargs):
-        """ Add slide based on dataset to current active Powerpoint presentation
+        """ Add slide based on dataset to current active Powerpoint presentation.
 
         Args:
-            dataset (DataSet): data and metadata from DataSet added to slide
+            dataset (DataSet): data and metadata from DataSet added to slide.
             customfig (QtPlot): custom QtPlot object to be added to
-                                slide (for dataviewer)
-            notes (string): notes added to slide
-            show (boolean): shows the powerpoint application
-            verbose (int): print additional information
-            paramname (None or str): passed to dataset.default_parameter_array
+                                slide (for dataviewer).
+            notes (string): notes added to slide.
+            show (bool): shows the powerpoint application.
+            verbose (int): print additional information.
+            paramname (None or str): passed to dataset.default_parameter_array.
             printformat (string): 'fancy' for nice formatting or 'dict'
-                                  for easy copy to python
+                                  for easy copy to python.
         Returns:
-            ppt: PowerPoint presentation
-            slide: PowerPoint slide
+            ppt: PowerPoint presentation.
+            slide: PowerPoint slide.
 
-        Example
+        Example:
         -------
         >>> notes = 'some additional information'
         >>> addPPT_dataset(dataset,notes)
@@ -1089,18 +1093,18 @@ except ImportError:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
                     activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
-        """ Add slide to current active Powerpoint presentation
+        """ Add slide to current active Powerpoint presentation.
 
-        Dummy implementation
+        Dummy implementation.
         """
         warnings.warn('addPPTslide is not available on your system')
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
                        printformat='fancy', customfig=None, extranotes=None, **kwargs):
-        """ Add slide based on dataset to current active Powerpoint presentation
+        """ Add slide based on dataset to current active Powerpoint presentation.
 
-        Dummy implementation
+        Dummy implementation.
         """
         warnings.warn('addPPT_dataset is not available on your system')
 
@@ -1109,19 +1113,19 @@ from collections import OrderedDict
 
 
 def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, verbose=0):
-    """ Reshape the metadata of a DataSet
+    """ Reshape the metadata of a DataSet.
 
-    Arguments:
-        dataset (DataSet or qcodes.Station): a dataset of which the metadata 
-                                             will be reshaped.
-        printformat (str): can be 'dict' or 'txt','fancy' (text format)
-        add_scanjob (bool): If True, then add the scanjob at the beginning of the notes
-        add_gates (bool): If True, then add the scanjob at the beginning of the notes
-        verbose (int): verbosity (0 == silent)
+    Args:
+        dataset (DataSet or qcodes.Station): a dataset of which the metadata will be reshaped.
+        printformat (str): can be 'dict' or 'txt','fancy' (text format).
+        add_scanjob (bool): If True, then add the scanjob at the beginning of the notes.
+        add_gates (bool): If True, then add the scanjob at the beginning of the notes.
+        verbose (int): verbosity (0 == silent).
+
     Returns:
-        metadata (string): the reshaped metadata
-    """
+        str: the reshaped metadata.
 
+    """
     if isinstance(dataset, qcodes.Station):
         station = dataset
         all_md = station.snapshot(update=False)['instruments']
@@ -1210,14 +1214,14 @@ def setupMeasurementWindows(*args, **kwargs):
 
 
 def updatePlotTitle(qplot, basetxt='Live plot'):
-    """ Update the plot title of a QtPlot window """
+    """ Update the plot title of a QtPlot window."""
     txt = basetxt + ' (%s)' % time.asctime()
     qplot.win.setWindowTitle(txt)
 
 
 @rdeprecated(expire='1 Sep 2018')
 def timeProgress(data):
-    """ Simple progress meter, should be integrated with either loop or data object """
+    """ Simple progress meter, should be integrated with either loop or data object."""
     data.sync()
     tt = data.arrays['timestamp']
     vv = ~np.isnan(tt)
@@ -1235,12 +1239,14 @@ def timeProgress(data):
 
 
 def flatten(lst):
-    """ Flatten a list
+    """ Flatten a list.
 
     Args:
-        lst (list): list to be flattened
+        lst (list): list to be flattened.
+
     Returns:
-        lstout (list): flattened list
+        list: flattened list.
+
     Example:
         >>> flatten([ [1,2], [3,4], [10] ])
         [1, 2, 3, 4, 10]
@@ -1251,7 +1257,7 @@ def flatten(lst):
 
 
 def cutoffFilter(x, thr, omega):
-    """ Smooth cutoff filter
+    """ Smooth cutoff filter.
 
     Filter definition from: http://paulbourke.net/miscellaneous/imagefilter/
 
@@ -1271,7 +1277,7 @@ def cutoffFilter(x, thr, omega):
 
 
 def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
-    """ Create smooth ND filter for Fourier high or low-pass filtering
+    """ Create smooth ND filter for Fourier high or low-pass filtering.
 
     Example
     -------
@@ -1300,7 +1306,7 @@ F = smoothFourierFilter([36, 36])
 # %%
 
 def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
-    """ Implement simple high pass filter using the Fourier transform """
+    """ Implement simple high pass filter using the Fourier transform."""
     f = np.fft.fft2(imx, s=[fs, fs])  # do the fourier transform
 
     fx = np.fft.fftshift(f)
@@ -1341,16 +1347,16 @@ import copy
 
 
 def slopeClick(drawmode='r--', **kwargs):
-    """ Calculate slope for linepiece of two points clicked by user. Works
-    with matplotlib but not with pyqtgraph. Uses the currently active 
-    figure.
+    """ Calculate slope for line piece of two points clicked by user. Works
+    with matplotlib but not with pyqtgraph. Uses the currently active figure.
 
-    Arguments:
-        drawmode (string): plotting style
+    Args:
+        drawmode (string): plotting style.
 
     Returns:
-        coords (2 x 2 array): coordinates of the two clicked points
-        signedslope (float): slope of linepiece connecting the two points
+        coords (2 x 2 array): coordinates of the two clicked points.
+        signedslope (float): slope of linepiece connecting the two points.
+
     """
     ax = plt.gca()
     ax.set_autoscale_on(False)
@@ -1364,12 +1370,13 @@ def slopeClick(drawmode='r--', **kwargs):
 def clickGatevals(plot, drawmode='ro'):
     """ Get gate values for all gates at clicked point in a heatmap.
 
-    Arguments:
-        plot (qcodes MatPlot object): plot of measurement data
-        drawmode (string): plotting style
+    Args:
+        plot (qcodes MatPlot object): plot of measurement data.
+        drawmode (string): plotting style.
 
     Returns:    
-        gatevals (dict): values of the gates at clicked point
+        gatevals (dict): values of the gates at clicked point.
+
     """
     # TODO: implement for virtual gates
     if type(plot) != qcodes.plots.qcmatplotlib.MatPlot:
@@ -1398,7 +1405,7 @@ def clickGatevals(plot, drawmode='ro'):
 
 
 def connect_slot(target):
-    """ Create a slot by dropping signal arguments. """
+    """ Create a slot by dropping signal arguments."""
     def signal_drop_arguments(*args, **kwargs):
         target()
     return signal_drop_arguments

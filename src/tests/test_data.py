@@ -1,8 +1,6 @@
 import unittest
-import warnings
 import time
 import numpy as np
-from matplotlib import MatplotlibDeprecationWarning
 import matplotlib.pyplot as plt
 import tempfile
 import qcodes
@@ -68,7 +66,6 @@ class TestData(unittest.TestCase):
         self.assertEqual(qtt.data.dataset_labels(ds, 'y', add_unit='True'), 'vertical [Hz]')
 
     def test_dataset_to_dictionary(self):
-        import qcodes.tests.data_mocks
 
         input_dataset = qcodes.tests.data_mocks.DataSet2D()
 
@@ -81,32 +78,37 @@ class TestData(unittest.TestCase):
         converted_dataset = dictionary_to_dataset(data_dictionary)
         self.assertEqual(converted_dataset.default_parameter_name(), input_dataset.default_parameter_name())
 
-    def test_makeDataSet2D(self):
+    @staticmethod
+    def test_makeDataSet2D():
         from qcodes import ManualParameter
         p = ManualParameter('dummy')
         p2 = ManualParameter('dummy2')
         ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
         _ = diffDataset(ds)
 
-    def test_makeDataSet1Dplain(self):
+    @staticmethod
+    def test_makeDataSet1Dplain():
         x = np.arange(0, 10)
         y = np.vstack((x - 1, x + 10))
-        ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
+        _ = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
 
-    def test_numpy_on_dataset(self):
-        import qcodes.tests.data_mocks
-        alldata = qcodes.tests.data_mocks.DataSet2D()
-        X = alldata.z
+    @staticmethod
+    def test_numpy_on_dataset():
+        verbose = 0
+        all_data = qcodes.tests.data_mocks.DataSet2D()
+        X = all_data.z
         _ = np.array(X)
         s = np.linalg.svd(X)
-        # print(s)
+        if verbose:
+            print(s)
 
-    def test_compare(self):
-        import qcodes.tests.data_mocks
+    @staticmethod
+    def test_compare():
         ds = qcodes.tests.data_mocks.DataSet2D()
         compare_dataset_metadata(ds, ds, verbose=0)
 
-    def test_image_transform(self):
+    @staticmethod
+    def test_image_transform():
         verbose = 0
         ds = DataSet2D()
         tr = image_transform(ds)
@@ -119,20 +121,19 @@ class TestData(unittest.TestCase):
             print('transform: im.shape %s' % (str(im.shape),))
 
     def test_add_comment(self):
-        import qcodes.tests.data_mocks
-
         ds0 = qcodes.tests.data_mocks.DataSet2D()
         ds = qcodes.tests.data_mocks.DataSet2D()
         try:
             add_comment('hello world')
-        except NotImplementedError as ex:
+        except NotImplementedError:
             ds.metadata['comment'] = 'hello world'
-            pass
-        add_comment('hello world 0', ds0)
-        assert (ds.metadata['comment'] == 'hello world')
-        assert (ds0.metadata['comment'] == 'hello world 0')
 
-    def test_load_dataset(self):
+        add_comment('hello world 0', ds0)
+        self.assertTrue(ds.metadata['comment'] == 'hello world')
+        self.assertTrue(ds0.metadata['comment'] == 'hello world 0')
+
+    @staticmethod
+    def test_load_dataset():
         verbose = 0
         h = qcodes.data.hdf5_format.HDF5Format()
         g = qcodes.data.gnuplot_format.GNUPlotFormat()
@@ -150,7 +151,7 @@ class TestData(unittest.TestCase):
             time.sleep(.1)
         qcodes.DataSet.location_provider.base_record['name'] = name
 
-        for ii, location in enumerate(dd):
+        for _, location in enumerate(dd):
             if verbose:
                 print('load %s' % location)
             r = load_dataset(location, io=io)

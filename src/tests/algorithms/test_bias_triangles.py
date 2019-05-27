@@ -1,6 +1,4 @@
-""" Test functionality to analyse bias triangles
-
-"""
+""" Test functionality to analyse bias triangles."""
 
 import numpy as np
 import unittest

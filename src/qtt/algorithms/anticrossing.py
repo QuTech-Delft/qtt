@@ -1,4 +1,4 @@
-""" Functions to analyse anti-crossings in charge stability diagrams
+""" Functions to analyse anti-crossings in charge stability diagrams.
 
 Created on Wed Jul 12 08:08:57 2017
 
@@ -21,7 +21,7 @@ from qcodes import MatPlot
 
 def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2.5,
                      diff_dir='dx', plot=False, verbose=1, param={}):
-    """ Fits an anti-crossing model to a 2D scan
+    """ Fits an anti-crossing model to a 2D scan.
 
     The model fitted is without tunnel coupling.
 
@@ -140,7 +140,7 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
 
 
 def plot_anticrossing(ds, afit, fig=100, linewidth=2):
-    """ Plot fitted anti-crossing on dataset
+    """ Plot fitted anti-crossing on dataset.
 
     Args:
         afit (dict): fit data from fit_anticrossing

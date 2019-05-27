@@ -25,7 +25,8 @@ class TestTools(unittest.TestCase):
             self.assertTrue('timestamp' in c)
             self.assertTrue('system' in c)
 
-    def test_rdeprecated(self):
+    @staticmethod
+    def test_rdeprecated():
         @rdeprecated('hello')
         def dummy():
             pass
@@ -54,21 +55,22 @@ class TestTools(unittest.TestCase):
         if verbose:
             print('testing resampleImage')
         ds = DataSet2D()
-        imx, setpoints = resampleImage(ds.z)
+        _, _ = resampleImage(ds.z)
 
         z = self.test_array()
-        imx, setpoints = resampleImage(z)
+        _, _ = resampleImage(z)
         if verbose:
             print('testing diffImage')
-        d = diffImage(ds.z, dy='x')
+        _ = diffImage(ds.z, dy='x')
 
-    def test_reshape_metadata(self):
+    @staticmethod
+    def test_reshape_metadata():
         param = qcodes.ManualParameter('dummy')
         try:
             data_set = qcodes.Loop(param[0:1:10]).each(param).run()
         except (TypeError, ValueError):
             data_set = None
-            pass
+
         if data_set is not None:
             _ = reshape_metadata(data_set, printformat='dict')
         instr = qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123'))

@@ -8,7 +8,8 @@ from qtt.structures import onedot_t, MultiParameter, CombiParameter
 
 class TestStructures(unittest.TestCase):
 
-    def test_spin_structures(self):
+    @staticmethod
+    def test_spin_structures():
         verbose = 0
         o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)
         if verbose:
@@ -18,7 +19,8 @@ class TestStructures(unittest.TestCase):
         if verbose:
             print('test_spin_structures: %s' % (x,))
 
-    def test_sensingdot_t(self):
+    @staticmethod
+    def test_sensingdot_t():
         station = qtt.simulation.virtual_dot_array.initialize()
         sensing_dot = qtt.structures.sensingdot_t(
             ['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')

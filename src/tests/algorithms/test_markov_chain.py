@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Classes to test generate signals with continuous-time Markov chains
-
-"""
+""" Classes to test generate signals with continuous-time Markov chains."""
 
 import unittest
 import numbers

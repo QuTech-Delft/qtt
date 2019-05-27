@@ -1,4 +1,4 @@
-""" Test functions to fit and analyse Coulomb peaks """
+""" Test functions to fit and analyse Coulomb peaks."""
 
 import unittest
 import numpy as np
