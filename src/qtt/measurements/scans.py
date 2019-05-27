@@ -172,7 +172,7 @@ def get_param_name(gates, sweepgate):
 # %%
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt. Use qtt.data.plot_dataset', expire='1 Sep 2018')
 def plot1D(data, fig=100, mstyle='-b'):
     """ Show result of a 1D scan """
 
@@ -2374,7 +2374,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
 # %%
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='1 Sep 2018')
 def loadOneDotPinchvalues(od, outputdir, verbose=1):
     """ Load the pinch-off values for a one-dot
 

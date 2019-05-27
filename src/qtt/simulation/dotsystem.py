@@ -683,7 +683,7 @@ class DotSystem(BaseDotSystem):
         showGraph(dot, fig=fig)
 
 
-@qtt.utilities.tools.rdeprecated('Sep 1 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', 'Sep 1 2018')
 def setDotSystem(ds, gate_transform, gv):
     """ Set dot system values using gate transform."""
     tv = gate_transform.transformGateScan(gv)
@@ -691,7 +691,7 @@ def setDotSystem(ds, gate_transform, gv):
         setattr(ds, k, val)
 
 
-@qtt.utilities.tools.rdeprecated('Sep 1 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', 'Sep 1 2018')
 def defaultDotValues(ds):
     for ii in range(ds.ndots):
         setattr(ds, 'osC%d' % (ii + 1), 55)
