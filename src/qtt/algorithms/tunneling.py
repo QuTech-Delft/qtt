@@ -220,7 +220,7 @@ def data_to_exc_ch(x_data, y_data, pol_fit):
 
 
 if __name__ == '__main__':
-    """ Testing of fitting code."""
+    # Testing of fitting code.
     import time
     from qtt import pgeometry
     import pandas as pd
