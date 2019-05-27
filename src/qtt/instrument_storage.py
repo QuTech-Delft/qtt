@@ -6,7 +6,7 @@ import configparser
 import qtt.utilities.tools
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def save_instrument_json(instr, ifile, verbose=1):
     """ Save instrument configuration to json """
     jdict = dict()
@@ -22,7 +22,7 @@ def save_instrument_json(instr, ifile, verbose=1):
     json.dump(jdict, open(ifile, 'w'), sort_keys=True, indent=4)
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def load_instrument_json(instr, ifile, verbose=1):
     """ Load instrument configuration from json """
     with open(ifile, 'r') as fid:

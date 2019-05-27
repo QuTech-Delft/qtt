@@ -189,12 +189,14 @@ def deprecated(func):
 
 
 def rdeprecated(txt=None, expire=None):
-    """ This is a decorator which can be used to mark functions as deprecated. It will result in a warning being
-    emitted when the function is used.
+    """ This is a decorator which can be used to mark functions as deprecated.
+    
+    It will result in a warning being emitted when the function is used. After the expiration data the decorator 
+    will generate an Exception.
 
     Args:
         txt (str): reason for deprecation.
-        expire (str): e.g. date of expiration.
+        expire (str): date of expiration.
     """
     import datetime
     from dateutil import parser
@@ -1217,7 +1219,7 @@ def updatePlotTitle(qplot, basetxt='Live plot'):
     qplot.win.setWindowTitle(txt)
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt.', expire='1 Sep 2018')
 def timeProgress(data):
     """ Simple progress meter, should be integrated with either loop or data object."""
     data.sync()
