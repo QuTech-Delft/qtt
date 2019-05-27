@@ -1,18 +1,35 @@
-import unittest
-import numpy as np
+""" Mathematical functions and models."""
 
+import unittest
+import matplotlib.pyplot as plt
+import numpy as np
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
-    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi
+    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay
 
 
 class TestFunctions(unittest.TestCase):
+
+    @staticmethod
+    def test_fit_exp_decay():
+        x_data = np.arange(0, 10., .1)
+        parameters = [0, 1, 1]
+        y_data = exp_function(x_data, *parameters)
+        fitted = fit_exp_decay(x_data, y_data)
+        np.testing.assert_array_almost_equal(fitted, parameters, decimal=3)
+        fitted = fit_exp_decay(x_data, y_data, offset_parameter=0.1)
+        np.testing.assert_array_almost_equal(fitted, [.1, .95, 1.4], decimal=1)
+
+    @staticmethod
+    def test_logistic():
+        y = logistic(0.0, 1.0, alpha=1.0)
+        np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=6)
 
     def test_Fermi(self):
         values = Fermi(np.array([0, 1, 2]), 0, 1, 2, kb=1)
         np.testing.assert_array_almost_equal(values, np.array([0.5, 0.37754067, 0.26894142]))
 
         value = Fermi(10., 0, 1, 2, kb=10)
-        self.assertAlmostEqual(value, 0.3775406687981454)
+        self.assertAlmostEqual(value, 0.3775406687981454, 6)
 
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)

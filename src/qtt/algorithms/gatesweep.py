@@ -20,9 +20,11 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
 
     Args:
         dd (1D qcodes DataSet): structure containing the scan data
-        minthr, maxthr : float
-            parameters for the algorithm (default: None)
+        fig : TODO
+        minthr (float) : TODO (default: None)
+        maxthr (float) : TODO (default: None)
         verbose (int): Verbosity level
+        drawsmoothed (bool): plot the smoothed data
 
     Returns:
         result (dict): dictionary with analysis results
@@ -31,7 +33,6 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     goodgate = True
 
     data = dd
-    XX = None
 
     # should be made generic
     setpoint_name = [x for x in list(data.arrays.keys()) if not x.endswith(
@@ -118,7 +119,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     # fit a polynomial to the left side
     if goodgate and leftval.size > 5:
         fit = np.polyfit(xleft, leftval, 1)
-        pp = np.polyval(fit, xleft)
+        # pp = np.polyval(fit, xleft)
 
         p0 = np.polyval(fit, xleft[-1])
         pmid = np.polyval(fit, xleft[0])
@@ -199,7 +200,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         print('analyseGateSweep: gate status %d: pinchvalue %.1f' %
               (goodgate, adata['pinchoff_point']))
         adata['Xsmooth'] = smoothed_data
-        adata['XX'] = XX
+        adata['XX'] = None
         adata['X'] = value
         adata['x'] = x
         adata['smoothed_data'] = smoothed_data
@@ -236,17 +237,3 @@ def plot_pinchoff(result, ds=None, fig=10, verbose=1):
         if verbose >= 2:
             plt.plot(midpoint, midvalue, '.m', label='midpoint')
         plot2Dline([-1, 0, pinchoff_point], '--g', linewidth=1, alpha=0.5, label='pinchoff_point')
-
-
-def test_analyseGateSweep(fig=None):
-    x = np.arange(-800, 0, 1)  # mV
-    y = qtt.algorithms.functions.logistic(x, x0=-400, alpha=.05)
-    dataset = qtt.data.makeDataSet1Dplain('plunger', x, 'current', y)
-    result = analyseGateSweep(dataset)
-    if fig:
-        plot_pinchoff(result, ds=dataset, fig=fig)
-
-
-if __name__ == '__main__':
-    # test
-    test_analyseGateSweep(fig=100)

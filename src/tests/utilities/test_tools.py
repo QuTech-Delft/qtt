@@ -1,11 +1,82 @@
 import sys
 import unittest
 from unittest.mock import MagicMock
-
+import warnings
+import numpy as np
+import qcodes
+from qcodes import DataArray
+from qcodes.tests.data_mocks import DataSet2D
 from qtt.utilities import tools
+from qtt.utilities.tools import resampleImage, diffImage, reshape_metadata, get_python_version, get_module_versions,\
+    get_git_versions, code_version, rdeprecated
+import qtt.measurements.scans
 
 
-class TestMethods(unittest.TestCase):
+class TestTools(unittest.TestCase):
+
+    def test_python_code_modules_and_versions(self):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
+            _ = get_python_version()
+            _ = get_module_versions(['numpy'])
+            _ = get_git_versions(['qtt'])
+            c = code_version()
+            self.assertTrue('python' in c)
+            self.assertTrue('timestamp' in c)
+            self.assertTrue('system' in c)
+
+    @staticmethod
+    def test_rdeprecated():
+        @rdeprecated('hello')
+        def dummy():
+            pass
+
+        @rdeprecated('hello', expire='1-1-2400')
+        def dummy2():
+            pass
+
+    def test_array(self):
+        # DataSet with one 2D array with 4 x 6 points
+        yy, xx = np.meshgrid(np.arange(0, 10, .5), range(3))
+        zz = xx**2 + yy**2
+        # outer setpoint should be 1D
+        xx = xx[:, 0]
+        x = DataArray(name='x', label='X', preset_data=xx, is_setpoint=True)
+        y = DataArray(name='y', label='Y', preset_data=yy, set_arrays=(x,),
+                      is_setpoint=True)
+        z = DataArray(name='z', label='Z', preset_data=zz, set_arrays=(x, y))
+        self.assertTrue(z.size, 60)
+        self.assertTupleEqual(z.shape, (3, 20))
+        return z
+
+    def test_image_operations(self):
+        verbose = 0
+
+        if verbose:
+            print('testing resampleImage')
+        ds = DataSet2D()
+        _, _ = resampleImage(ds.z)
+
+        z = self.test_array()
+        _, _ = resampleImage(z)
+        if verbose:
+            print('testing diffImage')
+        _ = diffImage(ds.z, dy='x')
+
+    @staticmethod
+    def test_reshape_metadata():
+        param = qcodes.ManualParameter('dummy')
+        try:
+            data_set = qcodes.Loop(param[0:1:10]).each(param).run()
+        except (TypeError, ValueError):
+            data_set = None
+
+        if data_set is not None:
+            _ = reshape_metadata(data_set, printformat='dict')
+        instr = qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123'))
+        st = qcodes.Station(instr)
+        _ = reshape_metadata(st, printformat='dict')
+        instr.close()
 
     def test_get_python_version(self):
         result = tools.get_python_version()
@@ -79,6 +150,3 @@ class TestMethods(unittest.TestCase):
         tools.set_ppt_slide_background(slide, color)
         self.assertEqual(0, slide.FollowMasterBackground)
         self.assertEqual(255, slide.Background.Fill.ForeColor.RGB)
-
-if __name__ == '__main__':
-    unittest.main()

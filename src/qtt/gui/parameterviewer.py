@@ -314,7 +314,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
             except AttributeError as ex:
                 # instrument was removed
                 print('instrument was removed, stopping ParameterViewer')
-                logging.exception(ex)
+                # logging.exception(ex)
                 self._timer.stop()
 
             parameter_names = sorted(parameters.keys())

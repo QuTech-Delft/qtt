@@ -1,4 +1,4 @@
-""" Functions to analyse anti-crossings in charge stability diagrams
+""" Functions to analyse anti-crossings in charge stability diagrams.
 
 Created on Wed Jul 12 08:08:57 2017
 
@@ -21,7 +21,7 @@ from qcodes import MatPlot
 
 def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2.5,
                      diff_dir='dx', plot=False, verbose=1, param={}):
-    """ Fits an anti-crossing model to a 2D scan
+    """ Fits an anti-crossing model to a 2D scan.
 
     The model fitted is without tunnel coupling.
 
@@ -140,7 +140,7 @@ def fit_anticrossing(dataset, width_guess=None, angles_guess=None, psi=None, w=2
 
 
 def plot_anticrossing(ds, afit, fig=100, linewidth=2):
-    """ Plot fitted anti-crossing on dataset
+    """ Plot fitted anti-crossing on dataset.
 
     Args:
         afit (dict): fit data from fit_anticrossing
@@ -176,15 +176,3 @@ def plot_anticrossing(ds, afit, fig=100, linewidth=2):
         plt.plot([op[ii, 0], ip[ii, 0]], [op[ii, 1], ip[ii, 1]], '.-',
                  linewidth=linewidth, color=[0, .7, 0], label=lbl)
         qtt.pgeometry.plotLabels(np.array((op[ii, :] + ip[ii, :]) / 2).reshape((2, -1)), '%d' % ii)
-
-
-def test_anticrossing():
-    nx = 30
-    ny = 40
-    dsx = qtt.data.makeDataSet2Dplain('x', .5 * np.arange(nx), 'y', .5 * np.arange(ny),
-                                      'z', np.random.rand(ny, nx,))
-    fitdata = fit_anticrossing(dsx, verbose=0)
-
-
-if __name__ == '__main__':
-    test_anticrossing()

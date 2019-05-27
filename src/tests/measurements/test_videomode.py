@@ -1,4 +1,3 @@
-import unittest
 from unittest import TestCase
 import unittest.mock as mock
 import io
@@ -11,12 +10,10 @@ from qtt.instrument_drivers.simulation_instruments import SimulationAWG
 import qtt.simulation.virtual_dot_array
 from qtt.measurements.videomode import VideoMode
 
-# %%
-
 
 class TestVideomode(TestCase):
 
-    def test_videomode_getdataset(self):
+    def test_video_mode_get_data_set(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
 
@@ -52,7 +49,7 @@ class TestVideomode(TestCase):
             self.assertIsInstance(data[0], qcodes.DataSet)
             self.assertEqual(data[0].measured.shape, (32, 32))
 
-            for name, instrument in station.components.items():
+            for _, instrument in station.components.items():
                 instrument.close()
 
             qtt.simulation.virtual_dot_array.close(verbose=0)
@@ -61,5 +58,3 @@ class TestVideomode(TestCase):
             print(std_output)
             self.assertIn('VideoMode: start readout', std_output)
 
-if __name__ == '__main__':
-    unittest.main()

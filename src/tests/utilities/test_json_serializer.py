@@ -7,9 +7,7 @@ import qcodes.tests.data_mocks
 from qtt.utilities.json_serializer import QttJsonEncoder, QttJsonDecoder, encode_json, decode_json
 
 
-# %%
-
-class TestJSON(unittest.TestCase):
+class TestJSONSerializer(unittest.TestCase):
 
     def test_custom_encoders(self):
         data = {'float': 1.0, 'str': 'hello', 'tuple': (1, 2, 3)}
@@ -64,6 +62,3 @@ class TestJSON(unittest.TestCase):
         self.assertEqual(loaded_data['instrument']['__content__']['name'], instrument.name)
         instrument.close()
 
-
-if __name__ == '__main__':
-    unittest.main()

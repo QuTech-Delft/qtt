@@ -5,7 +5,6 @@ import numpy as np
 from functools import partial
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
-import scipy.ndimage as ndimage
 import pyqtgraph as pg
 import pyqtgraph
 import pyqtgraph.multiprocess as mp
@@ -54,7 +53,7 @@ class rda_t:
         try:
             self.set('dummy_rda_t', -3141592)
             v = self.get_float('dummy_rda_t')
-            if (not v == -3141592):
+            if not v == -3141592:
                 raise Exception('set not equal to get')
         except redis.exceptions.ConnectionError as e:
             print('rda_t: check whether redis is installed and the server is running')
@@ -730,15 +729,8 @@ class MockCallback_2d(qcodes.Instrument):
         return data_reshaped
 
 
-def test_mock2d():
-    mock_callback = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d'))
-    mock_callback()
-    mock_callback.close()
-
-
 # %% Example
 if __name__ == '__main__' and 0:
-    test_mock2d()
     lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
                   sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
     lp.win.setGeometry(1500, 10, 400, 400)

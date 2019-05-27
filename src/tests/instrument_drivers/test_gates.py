@@ -6,8 +6,6 @@ import qtt.measurements.scans
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.instrument_drivers.gates import VirtualDAC
 
-# %%
-
 
 class TestVirtualDAC(TestCase):
 

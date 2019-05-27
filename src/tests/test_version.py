@@ -2,9 +2,6 @@ import unittest
 import qtt
 
 
-# %%
-
-
 class TestVersion(unittest.TestCase):
 
     def test_version(self):
