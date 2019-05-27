@@ -316,7 +316,7 @@ def _add_dataset_metadata(dataset):
         dataset, include_data=False, include_metadata=False))
 
 
-def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=False):
+def _initialize_live_plotting(alldata, plotparam, liveplotwindow = None, subplots=False):
     """ Initialize live plotting
 
     Args:
