@@ -54,9 +54,9 @@ def plot_double_gaussian_fit(result_dict: dict, xdata: np.array) -> None:
     _ = plt.plot(xdata, qtt.algorithms.functions.gaussian(xdata, *result_dict['right']), 'r', label='right')
 
 
-def plot_single_traces(traces : np.ndarray, time : Optional[np.ndarray]= None, trace_color:Optional[np.ndarray]=None, offset : Union[None, bool, float] =None, fig : int =1, maximum_number_of_traces : int = 40):
+def plot_single_traces(traces: np.ndarray, time: Optional[np.ndarray] = None, trace_color: Optional[np.ndarray] = None, offset: Union[None, bool, float] = None, fig: int = 1, maximum_number_of_traces: int = 40):
     """ Plot single traces with offset for separation 
-    
+
     Args:
        traces: Array with single traces in the rows
        time: Option array for time axis
@@ -70,18 +70,19 @@ def plot_single_traces(traces : np.ndarray, time : Optional[np.ndarray]= None, t
     if trace_color is None:
         trace_color = np.zeros(traces.shape[0])
     if offset is False:
-        offset=0
+        offset = 0
     if offset is None:
-        offset=(np.percentile(traces,99)-np.percentile(traces,1) )*1.75
+        offset = (np.percentile(traces, 99) - np.percentile(traces, 1)) * 1.75
     maximum_number_of_traces = min(maximum_number_of_traces, traces.shape[0])
-    
-    color_map = {0: 'b', 1: 'r', 2:'m'}
-    plt.figure(1); plt.clf()
+
+    color_map = {0: 'b', 1: 'r', 2: 'm'}
+    plt.figure(1)
+    plt.clf()
     for ii in range(maximum_number_of_traces):
-        trace_offset=ii*offset
-        
-        color=color_map.get(trace_color[ii], 'c')
-        plt.plot(traces[ii]+trace_offset, color=color)
+        trace_offset = ii * offset
+
+        color = color_map.get(trace_color[ii], 'c')
+        plt.plot(traces[ii] + trace_offset, color=color)
     plt.xlabel('Time [us]')
     plt.ylabel('Signal [a.u.]')
-    _=plt.title('Elzerman traces (spin-down in blue, spin-up in red)')
+    _ = plt.title('Elzerman traces (spin-down in blue, spin-up in red)')

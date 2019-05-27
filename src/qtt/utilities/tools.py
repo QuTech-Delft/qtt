@@ -781,7 +781,7 @@ def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925
         >>> plt.show()
     """
     if fig is None:
-        fig=plt.gcf().number
+        fig = plt.gcf().number
     plt.figure(fig)
     ax = plt.gca()
     ppt_axis = plt.axes(position, label='figure_ppt_callback_axis')
@@ -1160,7 +1160,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
     metadata = OrderedDict()
     # make sure the gates instrument is in front
     all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
-                         'gate s',  reverse=True)
+                         'gate s', reverse=True)
     for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
