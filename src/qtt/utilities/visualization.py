@@ -72,17 +72,17 @@ def plot_single_traces(traces: np.ndarray, time: Optional[np.ndarray] = None, tr
     if offset is False:
         offset = 0
     if offset is None:
-        offset = (np.percentile(traces, 99) - np.percentile(traces, 1)) * 1.75
+        offset = (np.percentile(traces, 99) - np.percentile(traces, 1)) * 1.95
     maximum_number_of_traces = min(maximum_number_of_traces, traces.shape[0])
 
     color_map = {0: 'b', 1: 'r', 2: 'm'}
-    plt.figure(1)
+    plt.figure(fig)
     plt.clf()
     for ii in range(maximum_number_of_traces):
         trace_offset = ii * offset
 
         color = color_map.get(trace_color[ii], 'c')
-        plt.plot(traces[ii] + trace_offset, color=color)
+        plt.plot(time, traces[ii] + trace_offset, color=color)
     plt.xlabel('Time [us]')
     plt.ylabel('Signal [a.u.]')
     _ = plt.title('Elzerman traces (spin-down in blue, spin-up in red)')
