@@ -54,8 +54,9 @@ def plot_double_gaussian_fit(result_dict: dict, xdata: np.array) -> None:
     _ = plt.plot(xdata, qtt.algorithms.functions.gaussian(xdata, *result_dict['right']), 'r', label='right')
 
 
-def plot_single_traces(traces: np.ndarray, time: Optional[np.ndarray] = None, trace_color: Optional[np.ndarray] = None, offset: Union[None, bool, float] = None, fig: int = 1, maximum_number_of_traces: int = 40):
-    """ Plot single traces with offset for separation 
+def plot_single_traces(traces: np.ndarray, time: Optional[np.ndarray] = None, trace_color: Optional[np.ndarray]
+                       = None, offset: Union[None, bool, float] = None, fig: int = 1, maximum_number_of_traces: int = 40):
+    """ Plot single traces with offset for separation
 
     Args:
        traces: Array with single traces in the rows

@@ -13,13 +13,13 @@ class TestVerticalHorizontalLine(unittest.TestCase):
 
             mock_axvline.assert_called_once_with(3., label='hi')
 
-        self.assertIsEqual(vline, mock)
+        self.assertEqual(vline, mock)
 
     def test_plot_horizontal_line(self):
         mock = Mock()
         with patch('matplotlib.pyplot.axhline', return_value=mock) as mock_axhline:
-            vline = qtt.utilities.visualization.plot_horizonal_line(3., color='r', alpha=.1, label='hi')
+            vline = qtt.utilities.visualization.plot_horizontal_line(3., color='r', alpha=.1, label='hi')
 
             mock_axhline.assert_called_once_with(3., label='hi')
 
-        self.assertIsEqual(vline, mock)
+        self.assertEqual(vline, mock)
