@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pprint
 import matplotlib
+import uuid
 import logging
 import qcodes
 import warnings
@@ -36,7 +37,7 @@ except ModuleNotFoundError:
 from qcodes.plots.qcmatplotlib import MatPlot
 try:
     from qcodes.plots.pyqtgraph import QtPlot
-except:
+except BaseException:
     pass
 from qcodes import DataArray
 
@@ -49,7 +50,7 @@ try:
     import qtpy.QtGui as QtGui
     import qtpy.QtCore as QtCore
     import qtpy.QtWidgets as QtWidgets
-except:
+except BaseException:
     pass
 
 
@@ -171,11 +172,11 @@ def deprecated(func):
     def new_func(*args, **kwargs):
         try:
             filename = inspect.getfile(func)
-        except:
+        except BaseException:
             filename = '?'
         try:
             lineno = inspect.getlineno(func)
-        except:
+        except BaseException:
             lineno = -1
         warnings.warn_explicit(
             "Call to deprecated function {}.".format(func.__name__),
@@ -214,11 +215,11 @@ def rdeprecated(txt=None, expire=None):
         def new_func(*args, **kwargs):
             try:
                 filename = inspect.getfile(func)
-            except:
+            except BaseException:
                 filename = '?'
             try:
                 lineno = inspect.getlineno(func)
-            except:
+            except BaseException:
                 lineno = -1
             if txt is None:
                 etxt = ''
@@ -266,7 +267,7 @@ def update_dictionary(alldata, **kwargs):
 def stripDataset(dataset):
     """ Make sure a dataset can be pickled .
 
-    Args: 
+    Args:
         dataset (qcodes DataSet): TODO.
 
     Returns:
@@ -279,7 +280,7 @@ def stripDataset(dataset):
     # dataset.formatter = qcodes.DataSet.default_formatter
     try:
         dataset.formatter.close_file(dataset)
-    except:
+    except BaseException:
         pass
 
     if 'scanjob' in dataset.metadata:
@@ -495,7 +496,7 @@ def plot_parameter(data, default_parameter='amplitude'):
     try:
         key = next(iter(data.arrays.keys()))
         return key
-    except:
+    except BaseException:
         return None
 
 
@@ -641,7 +642,7 @@ try:
                 for ii, w in enumerate(wa):
                     print('monitor %d: %s' % (ii, str(w)))
         return wa
-except:
+except BaseException:
     def monitorSizes(verbose=0):
         """ Dummy function for monitor sizes."""
         return [[0, 0, 1600, 1200]]
@@ -665,7 +666,7 @@ def pythonVersion():
     try:
         import IPython
         ipversion = '.'.join('%s' % x for x in IPython.version_info[:-1])
-    except:
+    except BaseException:
         ipversion = 'None'
 
     pversion = '.'.join('%s' % x for x in sys.version_info[0:3])
@@ -739,7 +740,7 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
         try:
             import cv2
             imwh = cv2.imread(fname).shape[1], cv2.imread(fname).shape[0]
-        except:
+        except BaseException:
             imwh = None
         if imwh is not None:
             imratio = imwh[0] / imwh[1]
@@ -782,7 +783,7 @@ def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925
         fig = plt.gcf().number
     plt.figure(fig)
     ax = plt.gca()
-    ppt_axis = plt.axes(position, label='figure_ppt_callback_axis')
+    ppt_axis = plt.axes(position, label=f'figure_ppt_callback_axis {uuid.uuid1()}')
     ppt_button = Button(ppt_axis, 'ppt')
     ppt_axis._button = ppt_button
     ppt_axis.set_alpha(.5)
@@ -808,7 +809,7 @@ try:
 
         Arguments:
             title (str): title added to slide.
-            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer): 
+            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer):
                 figure added to slide.
             txt (str) : Deprecated, use subtitle instead.
             notes (str or QCoDeS station): notes added to slide.
@@ -833,7 +834,7 @@ try:
             >>> title = 'An example title'
             >>> fig = plt.figure(10)
             >>> txt = 'Some comments on the figure'
-            >>> notes = 'some additional information' 
+            >>> notes = 'some additional information'
             >>> addPPTslide(title,fig, subtitle = txt,notes = notes)
         """
         Application = win32com.client.Dispatch("PowerPoint.Application")
@@ -957,7 +958,7 @@ try:
             elif isinstance(fig, QtWidgets.QWidget):
                 try:
                     figtemp = QtGui.QPixmap.grabWidget(fig)
-                except:
+                except BaseException:
                     # new Qt style
                     figtemp = fig.grab()
                 figtemp.save(fname)
@@ -1370,12 +1371,12 @@ def clickGatevals(plot, drawmode='ro'):
         plot (qcodes MatPlot object): plot of measurement data.
         drawmode (string): plotting style.
 
-    Returns:    
+    Returns:
         gatevals (dict): values of the gates at clicked point.
 
     """
     # TODO: implement for virtual gates
-    if type(plot) != qcodes.plots.qcmatplotlib.MatPlot:
+    if not isinstance(plot, qcodes.plots.qcmatplotlib.MatPlot):
         raise Exception(
             'The plot object is not based on the MatPlot class from qcodes.')
 
