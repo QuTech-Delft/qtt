@@ -1,3 +1,7 @@
+import copy
+from collections import OrderedDict
+from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
+import dateutil
 import sys
 import os
 import numpy as np
@@ -473,9 +477,6 @@ def diffImageSmooth(im, dy='x', sigma=2):
     return imx
 
 
-import dateutil
-
-
 def scanTime(dd):
     """ Return date a scan was performed."""
     w = dd.metadata.get('scantime', None)
@@ -645,9 +646,6 @@ except:
         """ Dummy function for monitor sizes."""
         return [[0, 0, 1600, 1200]]
     pass
-
-
-from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 
 
 # %% Helper tools
@@ -1109,7 +1107,6 @@ except ImportError:
         warnings.warn('addPPT_dataset is not available on your system')
 
 # %%
-from collections import OrderedDict
 
 
 def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, verbose=0):
@@ -1343,7 +1340,6 @@ def fourierHighPass(imx, nc=40, omega=4, fs=1024, fig=None):
 
 
 # %%
-import copy
 
 
 def slopeClick(drawmode='r--', **kwargs):
