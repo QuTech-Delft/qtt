@@ -28,6 +28,21 @@ class Sequencer:
                 'type': DataTypes.QU_PULSE}
 
     @staticmethod
+    def make_wave_from_array(qupulse_template, name='pulse'):
+        """ Creates a waveform from a numpy array.
+
+        Args:
+            array (np.ndarray): Array with data
+            name (str): The name of the returned sequence.
+
+        Returns:
+            Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
+                  sequence data type and the actual qupulse sequencePT respectively.
+        """
+        return {'name': name, 'wave': qupulse_template,
+                'type': DataTypes.RAW_DATA}
+
+    @staticmethod
     def make_sawtooth_wave(amplitude, period, width=0.95, repetitions=1, name='sawtooth'):
         """ Creates a sawtooth waveform of the type qupulse template.
 

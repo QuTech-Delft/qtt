@@ -14,6 +14,8 @@ import warnings
 
 from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay
 from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
+from qtt.utilities.visualization import plot_vertical_line, plot_double_gaussian_fit
+
 
 # %% calculate durations of states
 
@@ -65,16 +67,50 @@ class FittingException(Exception):
     pass
 
 
-def _plot_rts_histogram(data, num_bins, par_fit, split, figure_title):
+def _plot_rts_histogram(data, num_bins, double_gaussian_fit, split, figure_title):
     _, bins, _ = plt.hist(data, bins=num_bins)
     bincentres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
 
-    plt.plot(bincentres, double_gaussian(bincentres, par_fit), 'r', label='Fitted double gaussian')
-    plt.plot(split, double_gaussian(split, par_fit), 'ro', markersize=8, label='split: %.3f' % split)
+    plt.plot(bincentres, double_gaussian(bincentres, double_gaussian_fit), 'r', label='Fitted double gaussian')
+    plt.plot(split, double_gaussian(split, double_gaussian_fit), 'ro', markersize=8, label='split: %.3f' % split)
     plt.xlabel('Measured value (a.u.)')
     plt.ylabel('Data points per bin')
     plt.legend()
     plt.title(figure_title)
+
+
+def two_level_threshold(data, number_of_bins=40) -> dict:
+    """ Determine threshold for separation of two-level signal
+
+    Typical examples of such a signal are an RTS signal or Elzerman readout.
+
+    Args:
+        traces: Two dimensional array with single traces
+        number_of_bins: Number of bins to use for calculation of double histogram
+
+    Returns:
+        Dictionary with results. The key readout_threshold contains the calculated threshold
+    """
+    counts, bins = np.histogram(data, bins=number_of_bins)
+    bin_centres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
+    _, result_dict = fit_double_gaussian(bin_centres, counts)
+
+    result = {'signal_threshold': result_dict['split'], 'double_gaussian_fit': result_dict,
+              'separation': result_dict['separation'],
+              'histogram': {'counts': counts, 'bins': bins, 'bin_centres': bin_centres}}
+    return result
+
+
+def plot_two_level_threshold(results, fig=100):
+    plt.figure(fig)
+    plt.clf()
+    bin_centres = results['histogram']['bin_centres']
+    counts = results['histogram']['counts']
+    plt.bar(bin_centres, counts, width=bin_centres[1] - bin_centres[0], label='histogram')
+    plt.ylabel('Counts')
+    plt.xlabel('Signal [a.u.]')
+    plot_vertical_line(results['signal_threshold'], label='threshold')
+    plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
 
 
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
@@ -155,20 +191,17 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # binning the data and determining the bincentres
     if num_bins is None:
         num_bins = int(np.sqrt(len(data)))
-    counts, bins = np.histogram(data, bins=num_bins)
-    bincentres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
 
-    # fitting the double gaussian and finding the split between the up and the
-    # down state, separation between the max of the two gaussians measured in
-    # the sum of the std
-    par_fit, result_dict = fit_double_gaussian(bincentres, counts)
-    separation = result_dict['separation']
-    split = result_dict['split']
+    fit_results = two_level_threshold(data, number_of_bins=num_bins)
+    separation = fit_results['separation']
+    split = fit_results['signal_threshold']
+    double_gaussian_fit_parameters = fit_results['double_gaussian_fit']['parameters']
 
     if verbose:
         print('Fit parameters double gaussian:\n mean down: %.3f counts' %
-              par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] +
-              ', std up:%.3f counts' % par_fit[3])
+              double_gaussian_fit_parameters[4] + ', mean up:%.3f counts' % double_gaussian_fit_parameters[
+                  5] + ', std down: %.3f counts' % double_gaussian_fit_parameters[2] + ', std up:%.3f counts' %
+              double_gaussian_fit_parameters[3])
         print('Separation between peaks gaussians: %.3f std' % separation)
         print('Split between two levels: %.3f' % split)
 
@@ -177,18 +210,24 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         figure_title = 'Histogram of two levels RTS'
         Fig = plt.figure(fig + 1)
         plt.clf()
-        _plot_rts_histogram(data, num_bins, par_fit, split, figure_title)
+        _plot_rts_histogram(data, num_bins, double_gaussian_fit_parameters, split, figure_title)
         if ppt:
             addPPTslide(title=title, fig=Fig, notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
-                        par_fit[4] + ', mean up:%.3f counts' % par_fit[5] + ', std down: %.3f counts' % par_fit[2] + ', std up:%.3f counts' % par_fit[3] + '.Separation between peaks gaussians: %.3f std' % separation + '. Split between two levels: %.3f' % split)
+                                                    double_gaussian_fit_parameters[4] + ', mean up:%.3f counts' %
+                                                    double_gaussian_fit_parameters[5] + ', std down: %.3f counts' %
+                                                    double_gaussian_fit_parameters[2] + ', std up:%.3f counts' %
+                                                    double_gaussian_fit_parameters[
+                                                        3] + '.Separation between peaks gaussians: %.3f std' % separation + '. Split between two levels: %.3f' % split)
 
     if separation < min_sep:
         raise FittingException(
-            'Separation between the peaks of the gaussian %.1f is less then %.1f std, indicating that the fit was not succesfull.' % (separation, min_sep))
+            'Separation between the peaks of the gaussian %.1f is less then %.1f std, indicating that the fit was not succesfull.' % (
+                separation, min_sep))
 
     if separation > max_sep:
         raise FittingException(
-            'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (separation, max_sep))
+            'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (
+                separation, max_sep))
 
     # count the number of transitions and their duration
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
@@ -252,11 +291,11 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         tunnelrate_dn = None
         tunnelrate_up = None
         warnings.warn(
-            f'Number of up datapoints %d is not enough (minimal_count_number {minimal_count_number}) to make an'
-            f' accurate fit of the exponential decay for level up. ' % counts_up[0] +
-            'Look therefore at the mean value of the measurement segments')
+            f'Number of up datapoints %d is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level up. ' %
+            counts_up[0] + 'Look therefore at the mean value of the measurement segments')
 
-    parameters = {'plunger value': plungervalue, 'sampling rate': samplerate, 'fit parameters double gaussian': par_fit,
+    parameters = {'plunger value': plungervalue, 'sampling rate': samplerate,
+                  'fit parameters double gaussian': double_gaussian_fit_parameters,
                   'separations between peaks gaussians': separation,
                   'split between the two levels': split}
 
