@@ -1159,8 +1159,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
 
     metadata = OrderedDict()
     # make sure the gates instrument is in front
-    all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
-                         'gate s', reverse=True)
+    all_md_keys = sorted(sorted(all_md), key=lambda x: x == 'gates', reverse=True)
     for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
