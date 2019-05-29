@@ -488,7 +488,7 @@ def scanTime(dd):
     return w
 
 
-@deprecated
+@rdeprecated(txt='Use dataset.default_parameter_array instead', expire='1 Sep 2019')
 def plot_parameter(data, default_parameter='amplitude'):
     """ Return parameter to be plotted."""
     if 'main_parameter' in data.metadata.keys():
@@ -502,7 +502,7 @@ def plot_parameter(data, default_parameter='amplitude'):
         return None
 
 
-@deprecated
+@rdeprecated(txt='Use plot_dataset instead', expire='1 Sep 2019')
 def plot1D(dataset, fig=1):
     """ Simple plot function."""
     if isinstance(dataset, DataArray):
@@ -543,7 +543,7 @@ def showImage(im, extent=None, fig=None, title=None):
 
 # %% Measurement tools
 
-@deprecated  # part of the gates object
+@rdeprecated(txt='Use gates.resetgates instead', expire='1 Sep 2019')
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values.
 
@@ -571,7 +571,7 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
 # %% Tools from pgeometry
 
 
-@deprecated
+@rdeprecated(txt='Use qtt.pgeometry.plot2Dline instead', expire='1 Sep 2019')
 def plot2Dline(line, *args, **kwargs):
     """ Plot a 2D line in a matplotlib figure.
 
