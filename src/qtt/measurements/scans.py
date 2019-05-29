@@ -1770,7 +1770,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
                               minstrhandle, read_ch, mV_range, process=False)
         segment_time = np.linspace(0, period, len(data[0]))
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
-                                     xunit='s', location=location, loc_record={'label': 'save_segments'})
+                                     xunit='s', location=location, loc_record={'label': 'acquire_segments'})
     else:
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
@@ -1793,7 +1793,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
             alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num,
                                          zname=measure_names, z=data, xunit='s', location=location,
-                                         loc_record={'label': 'save_segments'})
+                                         loc_record={'label': 'acquire_segments'})
         else:
             raise (Exception('Non-averaged acquisitions not supported for this measurement instrument'))
 
