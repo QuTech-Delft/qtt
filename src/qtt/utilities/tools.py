@@ -190,8 +190,8 @@ def deprecated(func):
 
 def rdeprecated(txt=None, expire=None):
     """ This is a decorator which can be used to mark functions as deprecated.
-    
-    It will result in a warning being emitted when the function is used. After the expiration data the decorator 
+
+    It will result in a warning being emitted when the function is used. After the expiration data the decorator
     will generate an Exception.
 
     Args:

@@ -1108,12 +1108,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if type(stepvalues) is np.ndarray:
         stepvalues = stepdata['param'][list(stepvalues[:, 0])]
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues, measure_names=mparams,
-                                                            location=location,
-                                                            loc_record={'label': scanjob['scantype']},
-                                                            return_names=True)
-    else:
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
+
+    alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
                                                             measure_names=mparams, location=location, loc_record={
                                                                 'label': scanjob['scantype']},
                                                             return_names=True)
@@ -1123,7 +1119,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
 
-    if plotparam is 'all':
+    if plotparam == 'all':
         liveplotwindow = _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots=True)
     else:
         liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
