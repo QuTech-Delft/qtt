@@ -1693,12 +1693,16 @@ class plotCallback:
 
         # pick data point
         idx = None
+        self._last_event = event
 
         try:
             if self.xdata is not None:
                 xdata = np.array(self.xdata)
+                
+                if isinstance(xdata[0], numpy.datetime64):
+                    xdata=matplotlib.dates.date2num(xdata)
+
                 ydata = np.array(self.ydata)
-                pt = np.array(event.xdata, event.ydata)
                 pt = np.array([event.xdata, event.ydata])
                 xx = np.vstack((xdata.flat, ydata.flat)).T
                 dd = xx - pt
@@ -1714,8 +1718,8 @@ class plotCallback:
 
             # call the function
             self.func(plotidx=idx, button=event.button)
-        except Exception as e:
-            print(e)
+        except Exception as ex:
+            print(ex)
         if self.verbose:
             print('plot callback complete')
 
