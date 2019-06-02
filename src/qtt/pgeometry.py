@@ -304,6 +304,7 @@ def tprint(string, dt=1, output=False, tag='default'):
 
 def partiala(method, **kwargs):
     """ Function to perform functools.partial on named arguments """
+    raise Exception('Use functools.partial instead')
     def t(x):
         return method(x, **kwargs)
     return t
@@ -330,7 +331,7 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
 
 
 def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
-    """
+    """ Plot a cost function on specified data points
 
     Example with variation of Booth's function:
 
@@ -1518,9 +1519,9 @@ def choose(n, k):
 # %%
 import warnings
 
-@qtt.tools.utilities.rdeprecated(txt='Method will be removed in a future release', expire = '1 Sep 2020')
 def deprecation(message):
     """ Issue a deprecation warning message """
+    raise Exception('Method has been removed from this module. Use the warnings package directly.')
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
@@ -1569,8 +1570,6 @@ try:
         _usegtk = 1
         pass
 
-    import cv2
-
     def mpl2clipboard(event=None, verbose=1, fig=None):
         """ Copy current Matplotlib figure to clipboard """
         if verbose:
@@ -1598,13 +1597,6 @@ try:
             cv2.imwrite(tmpfile, im)
             qim = QtGui.QPixmap(tmpfile)
             cb.setPixmap(qim)
-
-            if 0:
-                im = im[:, :, 0:3].copy()
-                qim = QtWidgets.QImage(
-                    im.data, im.shape[0], im.shape[1], QtWidgets.QImage.Format_RGB888)
-                cb.setImage(qim)
-
 
 except:
     def mpl2clipboard(event=None, verbose=1, fig=None):
@@ -1733,8 +1725,6 @@ try:
             wa = [
                 [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
         else:
-            # tmp=QtWidgets.QApplication.startingUp()
-            # logging.debug('starting QApplication: startingUp %d' % tmp)
             _applocalqt = QtWidgets.QApplication.instance()
 
             if _applocalqt is None:
@@ -1746,15 +1736,6 @@ try:
             nmon = _qd.screenCount()
             wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
             wa = [[w.x(), w.y(), w.width(), w.height()] for w in wa]
-
-        if 0:
-            # import gtk # issues with OpenCV...
-            window = gtk.Window()
-            screen = window.get_screen()
-
-            nmon = screen.get_n_monitors()
-            wa = [screen.get_monitor_geometry(ii) for ii in range(nmon)]
-            wa = [[w.x, w.y, w.width, w.height] for w in wa]
 
         if verbose:
             for ii, w in enumerate(wa):

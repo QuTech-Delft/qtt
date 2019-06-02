@@ -530,12 +530,8 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
             print('  peak %d: range to search for half width %d to %d' % (ii, zi[0], zi[1]))
         xl, yl = x[ind], y[ind]
 
-        if 0:
-            hminval0 = peak['halfvaluelow']
-            fv = peak['y'] - 1.8 * (peak['y'] - peak['halfvaluelow'])
-        else:
-            hminval0 = .5 * (peak['y'] + np.min(y[ind]))
-            fv = peak['y'] - 1.8 * (peak['y'] - hminval0)
+        hminval0 = .5 * (peak['y'] + np.min(y[ind]))
+        fv = peak['y'] - 1.8 * (peak['y'] - hminval0)
 
         xh = np.interp(hminval0, yl, xl)
         ph = np.interp(hminval0, yl, range(xl.size))
@@ -543,8 +539,6 @@ def analysePeaks(x, y, peaks, verbose=1, doplot=0, typicalhalfwidth=None, parame
         xf = np.interp(fv, yl, xl)
         peak['phalf0'] = ph0
         peak['phalfl'] = None
-
-        # peak['indlocal'] = list(ind)
 
         phalfvalue = np.interp(ph, range(xl.size), yl)
         yhalfl = np.interp(ph, range(xl.size), yl)

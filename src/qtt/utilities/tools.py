@@ -1,6 +1,5 @@
 import copy
 from collections import OrderedDict
-from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 import dateutil
 import sys
 import os
@@ -41,8 +40,13 @@ except BaseException:
     pass
 from qcodes import DataArray
 
-from qtt import pgeometry
+import qtt.pgeometry
 from qtt.pgeometry import mpl2clipboard
+
+from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
+
+#tilefigs = rdeprecated(qtt.pgeometry.tilefigs, txt='Use qtt.pgeometry.tilefigs')
+#mkdirc = rdeprecated(qtt.pgeometry.mkdirc, txt='Use qtt.pgeometry.tilefigs')
 
 # do NOT load any other qtt submodules here
 
@@ -1358,7 +1362,7 @@ def slopeClick(drawmode='r--', **kwargs):
     """
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    coords = pgeometry.ginput(2, drawmode, **kwargs)
+    coords = qtt.pgeometry.ginput(2, drawmode, **kwargs)
     plt.pause(1e-6)
     signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
 
@@ -1383,7 +1387,7 @@ def clickGatevals(plot, drawmode='ro'):
 
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    coords = pgeometry.ginput(drawmode=drawmode)
+    coords = qtt.pgeometry.ginput(drawmode=drawmode)
     data_array = plot.traces[0]['config']['z']
     dataset = data_array.data_set
 
