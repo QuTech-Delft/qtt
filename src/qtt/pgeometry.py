@@ -38,6 +38,8 @@ import subprocess
 
 from functools import wraps
 
+import qtt.utilities.tools
+
 __version__ = '0.7.0'
 
 # %% Load qt functionality
@@ -75,19 +77,6 @@ try:
     _pyside = len([_x for _x in _ll if _x.startswith('PySide.QtGui')]) > 0
     _pyqt4 = len([_x for _x in _ll if _x.startswith('PyQt4.QtGui')]) > 0
     _pyqt5 = len([_x for _x in _ll if _x.startswith('PyQt5.QtGui')]) > 0
-
-    if 0:
-        try:
-            # the normal creation of a Qt application instance can fail
-            # this is an additional mechanism
-            import pyqtgraph
-            _applocalqt = pyqtgraph.mkQApp()
-        except:
-            pass
-        _applocalqt = QtWidgets.QApplication.instance()
-        # print('pgeometry: _applocalqt %s' % _applocalqt )
-        if _applocalqt is None:
-            _applocalqt = QtWidgets.QApplication([])
 
     def slotTest(txt):
         """ Helper function for Qt slots """
@@ -140,24 +129,24 @@ try:
         from mpl_toolkits.mplot3d import Axes3D
     except:
         pass
-except Exception as inst:
+except ModuleNotFoundError as ex:
     warnings.warn(
-        'could not import matplotlib, not all functionality available...')
+        'could not find matplotlib, not all functionality available...')
     plt = None
     pass
 
 try:
     import skimage.filters
-except Exception as inst:
+except ModuleNotFoundError as ex:
     warnings.warn(
-        'could not load skimage.filters, not all functionality is available')
+        'could not find skimage.filters, not all functionality is available')
     pass
 
 
 try:
     import cv2
     _haveOpenCV = True
-except:
+except ModuleNotFoundError:
     _haveOpenCV = False
     warnings.warn('could not find OpenCV, not all functionality is available')
     pass
@@ -1526,19 +1515,10 @@ def choose(n, k):
     return ntok
 
 
-# def closefn():
-#    """ Destructor function for the module """
-#    return
-#
-#
-#import atexit
-# atexit.register(closefn)
-
-
 # %%
 import warnings
 
-
+@qtt.tools.utilities.rdeprecated(txt='Method will be removed in a future release', expire = '1 Sep 2020')
 def deprecation(message):
     """ Issue a deprecation warning message """
     warnings.warn(message, DeprecationWarning, stacklevel=2)
