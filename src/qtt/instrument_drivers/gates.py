@@ -95,7 +95,7 @@ class VirtualDAC(Instrument):
         """ A list of QCoDeS instruments."""
         return self._instrument_list
 
-    @gate_map.setter
+    @gate_map.setter  # type: ignore
     def gate_map(self, gate_map):
         self._remove_gates()
         self._gate_map = gate_map
