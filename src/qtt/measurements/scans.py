@@ -172,7 +172,7 @@ def get_param_name(gates, sweepgate):
 # %%
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt. Use qtt.data.plot_dataset', expire='1 Sep 2018')
 def plot1D(data, fig=100, mstyle='-b'):
     """ Show result of a 1D scan """
 
@@ -1108,12 +1108,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if type(stepvalues) is np.ndarray:
         stepvalues = stepdata['param'][list(stepvalues[:, 0])]
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues, measure_names=mparams,
-                                                            location=location,
-                                                            loc_record={'label': scanjob['scantype']},
-                                                            return_names=True)
-    else:
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
+
+    alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
                                                             measure_names=mparams, location=location, loc_record={
                                                                 'label': scanjob['scantype']},
                                                             return_names=True)
@@ -1123,7 +1119,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
 
-    if plotparam is 'all':
+    if plotparam == 'all':
         liveplotwindow = _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots=True)
     else:
         liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
@@ -1774,7 +1770,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
                               minstrhandle, read_ch, mV_range, process=False)
         segment_time = np.linspace(0, period, len(data[0]))
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
-                                     xunit='s', location=location, loc_record={'label': 'save_segments'})
+                                     xunit='s', location=location, loc_record={'label': 'acquire_segments'})
     else:
         ism4i = isinstance(
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
@@ -1797,7 +1793,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
             alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num,
                                          zname=measure_names, z=data, xunit='s', location=location,
-                                         loc_record={'label': 'save_segments'})
+                                         loc_record={'label': 'acquire_segments'})
         else:
             raise (Exception('Non-averaged acquisitions not supported for this measurement instrument'))
 
@@ -2374,7 +2370,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
 # %%
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='1 Sep 2018')
 def loadOneDotPinchvalues(od, outputdir, verbose=1):
     """ Load the pinch-off values for a one-dot
 

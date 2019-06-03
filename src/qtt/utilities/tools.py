@@ -1,6 +1,5 @@
 import copy
 from collections import OrderedDict
-from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 import dateutil
 import sys
 import os
@@ -41,8 +40,13 @@ except BaseException:
     pass
 from qcodes import DataArray
 
-from qtt import pgeometry
+import qtt.pgeometry
 from qtt.pgeometry import mpl2clipboard
+
+from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
+
+#tilefigs = rdeprecated(qtt.pgeometry.tilefigs, txt='Use qtt.pgeometry.tilefigs')
+#mkdirc = rdeprecated(qtt.pgeometry.mkdirc, txt='Use qtt.pgeometry.tilefigs')
 
 # do NOT load any other qtt submodules here
 
@@ -189,12 +193,14 @@ def deprecated(func):
 
 
 def rdeprecated(txt=None, expire=None):
-    """ This is a decorator which can be used to mark functions as deprecated. It will result in a warning being
-    emitted when the function is used.
+    """ This is a decorator which can be used to mark functions as deprecated.
+
+    It will result in a warning being emitted when the function is used. After the expiration data the decorator
+    will generate an Exception.
 
     Args:
         txt (str): reason for deprecation.
-        expire (str): e.g. date of expiration.
+        expire (str): date of expiration.
     """
     import datetime
     from dateutil import parser
@@ -486,7 +492,7 @@ def scanTime(dd):
     return w
 
 
-@deprecated
+@rdeprecated(txt='Use dataset.default_parameter_array instead', expire='1 Sep 2019')
 def plot_parameter(data, default_parameter='amplitude'):
     """ Return parameter to be plotted."""
     if 'main_parameter' in data.metadata.keys():
@@ -500,7 +506,7 @@ def plot_parameter(data, default_parameter='amplitude'):
         return None
 
 
-@deprecated
+@rdeprecated(txt='Use plot_dataset instead', expire='1 Sep 2019')
 def plot1D(dataset, fig=1):
     """ Simple plot function."""
     if isinstance(dataset, DataArray):
@@ -541,7 +547,7 @@ def showImage(im, extent=None, fig=None, title=None):
 
 # %% Measurement tools
 
-@deprecated  # part of the gates object
+@rdeprecated(txt='Use gates.resetgates instead', expire='1 Sep 2019')
 def resetgates(gates, activegates, basevalues=None, verbose=2):
     """ Reset a set of gates to default values.
 
@@ -569,7 +575,7 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
 # %% Tools from pgeometry
 
 
-@deprecated
+@rdeprecated(txt='Use qtt.pgeometry.plot2Dline instead', expire='1 Sep 2019')
 def plot2Dline(line, *args, **kwargs):
     """ Plot a 2D line in a matplotlib figure.
 
@@ -1157,8 +1163,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
 
     metadata = OrderedDict()
     # make sure the gates instrument is in front
-    all_md_keys = sorted(sorted(all_md), key=lambda x: x ==
-                         'gate s', reverse=True)
+    all_md_keys = sorted(sorted(all_md), key=lambda x: x == 'gates', reverse=True)
     for x in all_md_keys:
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
@@ -1217,7 +1222,7 @@ def updatePlotTitle(qplot, basetxt='Live plot'):
     qplot.win.setWindowTitle(txt)
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt.', expire='1 Sep 2018')
 def timeProgress(data):
     """ Simple progress meter, should be integrated with either loop or data object."""
     data.sync()
@@ -1357,7 +1362,7 @@ def slopeClick(drawmode='r--', **kwargs):
     """
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    coords = pgeometry.ginput(2, drawmode, **kwargs)
+    coords = qtt.pgeometry.ginput(2, drawmode, **kwargs)
     plt.pause(1e-6)
     signedslope = (coords[1, 0] - coords[1, 1]) / (coords[0, 0] - coords[0, 1])
 
@@ -1382,7 +1387,7 @@ def clickGatevals(plot, drawmode='ro'):
 
     ax = plt.gca()
     ax.set_autoscale_on(False)
-    coords = pgeometry.ginput(drawmode=drawmode)
+    coords = qtt.pgeometry.ginput(drawmode=drawmode)
     data_array = plot.traces[0]['config']['z']
     dataset = data_array.data_set
 

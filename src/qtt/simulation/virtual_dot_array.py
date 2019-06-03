@@ -262,12 +262,6 @@ class DotModel(Instrument):
                 setattr(ds, k, val)
         gatevalues = [float(tv[k]) for k in sorted(tv.keys())]
         ret = ds.calculate_ground_state(gatevalues)
-        if 0:
-            for k, val in tv.items():
-                setattr(ds, k, val)
-            ds.makeHsparse()
-            ds.solveH(usediag=usediag)
-            ret = ds.OCC
 
         sd1 = (1 / np.sum(self.sensingdot1_distance)) * (ret * self.sensingdot1_distance).sum()
         sd2 = (1 / np.sum(self.sensingdot2_distance)) * (ret * self.sensingdot2_distance).sum()
