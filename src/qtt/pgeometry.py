@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import scipy.ndimage.morphology as morphology
-import scipy.ndimage.filters as filters
-import Polygon as polygon3
 """
 
 pgeometry
@@ -28,16 +25,20 @@ import os
 import sys
 import tempfile
 import math
-import numpy as np
 import time
 import warnings
 import pickle
+import subprocess
 import re
 import logging
 import pkgutil
+
+import numpy as np
+import Polygon as polygon3
 import scipy.io
 import numpy
-import subprocess
+import scipy.ndimage.morphology as morphology
+import scipy.ndimage.filters as filters
 
 from functools import wraps
 
@@ -1664,9 +1665,9 @@ class plotCallback:
         try:
             if self.xdata is not None:
                 xdata = np.array(self.xdata)
-
+                
                 if isinstance(xdata[0], numpy.datetime64):
-                    xdata = matplotlib.dates.date2num(xdata)
+                    xdata=matplotlib.dates.date2num(xdata)
 
                 ydata = np.array(self.ydata)
                 pt = np.array([event.xdata, event.ydata])
