@@ -11,4 +11,4 @@ class TestExceptions(unittest.TestCase):
 
     def test_MissingOptionalPackageWarning(self):
         self.assertIsInstance(qtt.exceptions.MissingOptionalPackageWarning, UserWarning)
-    
+
