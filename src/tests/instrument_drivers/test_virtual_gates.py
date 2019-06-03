@@ -1,26 +1,30 @@
+import pickle
 import unittest
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
+
 from qtt.instrument_drivers.virtual_gates import VirtualGates, extend_virtual_gates, update_cc_matrix
+from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+from qtt.measurements.scans import instrumentName
 
 
 class TestVirtualGates(unittest.TestCase):
 
-    def test_VirtualGates(self, verbose=0):
-        """ Test for virtual gates object """
-        from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-        from qtt.measurements.scans import instrumentName
-        import pickle
-
-        gates = VirtualIVVI(name=instrumentName('testivvi'),
-                            model=None, gates=['P1', 'P2', 'P3', 'P4'])
-
-        crosscap_map = OrderedDict((
+    def setUp(self):
+        self.crosscap_map = OrderedDict((
             ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
             ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
             ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
         ))
-        vgates = VirtualGates(instrumentName('testvgates'), gates, crosscap_map)
+
+    def test_VirtualGates(self, verbose=0):
+        """ Test for virtual gates object """
+
+        gates = VirtualIVVI(name=instrumentName('testivvi'),
+                            model=None, gates=['P1', 'P2', 'P3', 'P4'])
+
+        vgates = VirtualGates(instrumentName('testvgates'), gates, self.crosscap_map)
 
         vp1 = vgates.VP1()
         if verbose:
@@ -34,7 +38,7 @@ class TestVirtualGates(unittest.TestCase):
         if verbose:
             print('after second set: VP1 {}'.format(vp1))
 
-        vgates_matrix = vgates.convert_map_to_matrix(crosscap_map)
+        vgates_matrix = vgates.convert_map_to_matrix(self.crosscap_map)
         _ = vgates.convert_matrix_to_map(vgates_matrix)
 
         vgates.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
@@ -84,20 +88,14 @@ class TestVirtualGates(unittest.TestCase):
 
     def test_VirtualGates_serialization(self):
         """ Test for virtual gates object """
-        import qtt.instrument_drivers.virtual_instruments
-        gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
-            name=qtt.measurements.scans.instrumentName('ivvi_dummy_serialization_test'), model=None,
+        gates = VirtualIVVI(
+            name=instrumentName('ivvi_dummy_serialization_test'), model=None,
             gates=['P1', 'P2', 'P3', 'P4'])
 
-        crosscap_map = OrderedDict((
-            ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-            ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
-            ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
-        ))
-        virts = VirtualGates(qtt.measurements.scans.instrumentName('testvgates'), gates, crosscap_map)
+        virts = VirtualGates(instrumentName('testvgates'), gates, self.crosscap_map)
         vgdict = virts.to_dictionary()
 
-        vx = VirtualGates.from_dictionary(vgdict, gates, name=qtt.measurements.scans.instrumentName('vgdummy'))
+        vx = VirtualGates.from_dictionary(vgdict, gates, name=instrumentName('vgdummy'))
 
         np.testing.assert_almost_equal(vx.get_crosscap_matrix_inv(), virts.get_crosscap_matrix_inv())
         self.assertTrue(vx.pgates() == ['P%d' % i for i in range(1, 4)])
