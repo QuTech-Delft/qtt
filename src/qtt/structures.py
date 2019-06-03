@@ -463,7 +463,7 @@ class sensingdot_t:
             self.sdval[1] = float(goodpeaks[0]['xhalfl'])
             self.targetvalue = float(goodpeaks[0]['yhalfl'])
         else:
-            print('autoTune: could not find good peak, may need to adjust mirror factor')
+            raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
 
         if self.verbose:
             print(
