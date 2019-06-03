@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import scipy.ndimage.morphology as morphology
+import scipy.ndimage.filters as filters
+import Polygon as polygon3
 """
 
 pgeometry
@@ -125,7 +128,7 @@ try:
     # needed for 3d plot points, do not remove!
     try:
         from mpl_toolkits.mplot3d import Axes3D
-    except:
+    except BaseException:
         pass
 except ModuleNotFoundError as ex:
     warnings.warn(
@@ -163,7 +166,7 @@ try:
         # http://chase-seibert.github.io/blog/2013/08/03/diagnosing-memory-leaks-python.html
         print('Memory usage: %s (mb)' %
               ((resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024., ))
-except:
+except BaseException:
     def memUsage():
         print('Memory usage: ? (mb)')
 
@@ -216,7 +219,7 @@ def package_versions(verbose=1):
     try:
         import cv2
         print('cv2.__version__ %s' % cv2.__version__)
-    except:
+    except BaseException:
         pass
     try:
         import qtpy
@@ -224,12 +227,12 @@ def package_versions(verbose=1):
         print('qtpy.API_NAME %s' % (qtpy.API_NAME))
         print('qtpy.QtCore %s' % (qtpy.QtCore))
         print('qtpy.QtCore.__version__ %s' % (qtpy.QtCore.__version__))
-    except:
+    except BaseException:
         pass
     try:
         import sip
         print('sip %s' % sip.SIP_VERSION_STR)
-    except:
+    except BaseException:
         pass
 
 
@@ -275,7 +278,7 @@ def static_var(varname, value):
 
 @static_var("time", {'default': 0})
 def tprint(string, dt=1, output=False, tag='default'):
-    """ Print progress of a loop every dt seconds 
+    """ Print progress of a loop every dt seconds
 
     Args:
         string (str): text to print
@@ -303,6 +306,7 @@ def tprint(string, dt=1, output=False, tag='default'):
 def partiala(method, **kwargs):
     """ Function to perform functools.partial on named arguments """
     raise Exception('Use functools.partial instead')
+
     def t(x):
         return method(x, **kwargs)
     return t
@@ -435,7 +439,7 @@ def mkdirc(d):
     """ Similar to mkdir, but no warnings if the directory already exists """
     try:
         os.mkdir(d)
-    except:
+    except BaseException:
         pass
     return d
 
@@ -792,7 +796,7 @@ def imshowz(im, *args, **kwargs):
                     return 'x=%1.4f, y=%1.4f, z=%1.4f' % (x, y, z)
                 else:
                     return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z))
-            except:
+            except BaseException:
                 return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z))
         else:
             return 'x=%1.4f, y=%1.4f' % (x, y)
@@ -889,7 +893,7 @@ def setregion(im, subim, pos, mask=None, clip=False):
 
 def region2poly(rr):
     """ Convert a region (bounding box xxyy) to polygon """
-    if type(rr) == tuple or type(rr) == list:
+    if isinstance(rr, tuple) or isinstance(rr, list):
         # x,y,x2,y2 format
         rr = np.array(rr).reshape((2, 2)).transpose()
         poly = np.array([rr[:, 0:1], np.array([[rr[0, 1]], [rr[1, 0]]]), rr[
@@ -921,9 +925,9 @@ def plotLabels(xx, *args, **kwargs):
         lbl = ['%d' % i for i in v]
     else:
         lbl = args[0]
-        if type(lbl) == int:
+        if isinstance(lbl, int):
             lbl = [str(lbl)]
-        elif type(lbl) == str:
+        elif isinstance(lbl, str):
             lbl = [str(lbl)]
     nn = xx.shape[1]
     ax = plt.gca()
@@ -990,7 +994,7 @@ def scaleImage(image, display_min=None, display_max=None):
     Example:
         >>> im=scaleImage(255*np.random.rand( 30,40), 40, 100)
 
-    Code modified from: https://stackoverflow.com/questions/14464449/using-numpy-to-efficiently-convert-16-bit-image-data-to-8-bit-for-display-with?noredirect=1&lq=1        
+    Code modified from: https://stackoverflow.com/questions/14464449/using-numpy-to-efficiently-convert-16-bit-image-data-to-8-bit-for-display-with?noredirect=1&lq=1
     """
     image = np.array(image, copy=True)
 
@@ -1125,9 +1129,6 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-import Polygon as polygon3
-
-
 def polyintersect(x1, x2):
     """ Intersection of two polygons
 
@@ -1233,7 +1234,7 @@ def findfilesR(p, patt, show_progress=False):
         patt (string): pattern to match
         show_progress (bool)
     Returns:
-        lst (list of str)               
+        lst (list of str)
     """
     lst = []
     rr = re.compile(patt)
@@ -1369,11 +1370,6 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
 # %%
 
 
-import numpy as np
-import scipy.ndimage.filters as filters
-import scipy.ndimage.morphology as morphology
-
-
 def detect_local_minima(arr, thr=None):
     """
     Takes an array and detects the troughs using the local maximum filter.
@@ -1471,7 +1467,7 @@ def load(pkl_file):
         output = open(pkl_file, 'rb')
         data2 = pickle.load(output)
         output.close()
-    except:
+    except BaseException:
         if sys.version_info.major >= 3:
             # if pickle file was saved in python2 we might fix issues with a different encoding
             output = open(pkl_file, 'rb')
@@ -1515,7 +1511,7 @@ def choose(n, k):
 
 
 # %%
-import warnings
+
 
 def deprecation(message):
     """ Issue a deprecation warning message """
@@ -1536,7 +1532,7 @@ try:
             try:
                 fonttype = r'c:\Windows\Fonts\Verdana.ttf'
                 font = ImageFont.truetype(fonttype, fontsize)
-            except:
+            except BaseException:
                 fonttype = '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
                 font = ImageFont.truetype(fonttype, fontsize)
         else:
@@ -1546,7 +1542,7 @@ try:
         draw = ImageDraw.Draw(im1)
         draw.text(pos, txt, fill=color, font=font)
         return np.array(im1)
-except:
+except BaseException:
     def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
         """ Dummy function """
         warnings.warn('writeTxt: could not find PIL')
@@ -1561,7 +1557,7 @@ try:
     try:
         import matplotlib.pyplot
         _usegtk = 0
-    except:
+    except BaseException:
         import pygtk
         pygtk.require('2.0')
         import gtk
@@ -1596,7 +1592,7 @@ try:
             qim = QtGui.QPixmap(tmpfile)
             cb.setPixmap(qim)
 
-except:
+except BaseException:
     def mpl2clipboard(event=None, verbose=1, fig=None):
         """ Copy current Matplotlib figure to clipboard
 
@@ -1668,9 +1664,9 @@ class plotCallback:
         try:
             if self.xdata is not None:
                 xdata = np.array(self.xdata)
-                
+
                 if isinstance(xdata[0], numpy.datetime64):
-                    xdata=matplotlib.dates.date2num(xdata)
+                    xdata = matplotlib.dates.date2num(xdata)
 
                 ydata = np.array(self.ydata)
                 pt = np.array([event.xdata, event.ydata])
@@ -1743,7 +1739,7 @@ try:
             for ii, w in enumerate(wa):
                 print('monitor %d: %s' % (ii, str(w)))
         return wa
-except:
+except BaseException:
     def monitorSizes(verbose=0):
         """ Dummy function for monitor sizes """
         return [[0, 0, 1600, 1200]]
@@ -1814,7 +1810,7 @@ try:
             k = msvcrt.getch()
             return k
         return None
-except:
+except BaseException:
     pass
 
 
@@ -1873,7 +1869,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
             # try
             try:
                 fignum = f.fig.number
-            except:
+            except BaseException:
                 fignum = -1
         if not plt.fignum_exists(fignum):
             if verbose >= 2:
