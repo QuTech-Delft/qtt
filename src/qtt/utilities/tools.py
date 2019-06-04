@@ -1102,7 +1102,7 @@ except ImportError:
 
         Dummy implementation.
         """
-        warnings.warn('addPPTslide is not available on your system')
+        warnings.warn('addPPTslide is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
@@ -1111,7 +1111,7 @@ except ImportError:
 
         Dummy implementation.
         """
-        warnings.warn('addPPT_dataset is not available on your system')
+        warnings.warn('addPPT_dataset is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
 
 # %%
 
