@@ -106,8 +106,7 @@ def _scanlabel(ds):
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None,
-                 virt_gates=None):
+    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, virt_gates=None):
         """ Class representing a sensing dot 
 
         We assume the sensing dot can be controlled by two barrier gates and a single plunger gate.
@@ -130,6 +129,7 @@ class sensingdot_t:
         self.sdval = gate_values
         self.targetvalue = np.NaN
 
+        self._selected_peak =  None
         self._detune_axis = np.array([1, -1])
         self._detune_axis = self._detune_axis / np.linalg.norm(self._detune_axis)
         self._debug = {}  # store debug data
@@ -144,16 +144,13 @@ class sensingdot_t:
 
         self.data = {}
 
-        if fpga_ch is None:
-            self.fpga_ch = None
-        else:
-            raise Exception('do not use fpga_ch argument, use minstrument instead')
-
         # values for measurement
         if index is not None:
             self.valuefunc = station.components[
                 'keithley%d' % index].amplitude.get
-
+        else:
+            self.valuefunc=None
+            
     def __repr__(self):
         return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
 
@@ -462,7 +459,9 @@ class sensingdot_t:
         if len(goodpeaks) > 0:
             self.sdval[1] = float(goodpeaks[0]['xhalfl'])
             self.targetvalue = float(goodpeaks[0]['yhalfl'])
+            self._selected_peak = goodpeaks[0]
         else:
+            self._selected_peak = None
             raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
 
         if self.verbose:
