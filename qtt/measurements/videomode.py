@@ -157,6 +157,7 @@ class VideoMode:
         self.datalock = threading.Lock()
         self.datafunction_result = None
         self.update_sleep = 1e-5
+        self.paused = False
 
         if name is None:
             name = 'VideoMode %d' % self.videomode_index
@@ -330,9 +331,10 @@ class VideoMode:
             self.stopreadout()  # prevent multi-threading issues
             time.sleep(0.2)
         qtt.utilities.tools.addPPTslide(fig=self, title='VideoMode %s' % self.name,
-                              notes=self.station,
-                              extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
-                                  self.scanparams))
+#                              notes=self.station,
+#                              extranotes='date: %s' % (qtt.data.dateString(),) + '\n' + 'scanjob: ' + str(
+#                                  self.scanparams)
+                              )
         if isrunning:
             self.startreadout()
 
@@ -465,6 +467,7 @@ class VideoMode:
                 print(Fore.BLUE + '%s: run: startreadout' %
                       (self.__class__.__name__,) + Fore.RESET)
             self.startreadout()
+        self.paused = False
 
     def __run_1d_scan(self, awg, virtual_awg, period=1e-3):
         if virtual_awg:
@@ -472,14 +475,14 @@ class VideoMode:
                 raise Exception('arguments not supported')
             sweep_range = self.sweepranges
             gates = self.sweepparams if isinstance(self.sweepparams, dict) else {self.sweepparams: 1}
-            waveform = virtual_awg.sweep_gates(gates, sweep_range, period)
+            waveform = virtual_awg.sweep_gates(gates, sweep_range, period, delete=not self.paused)
             virtual_awg.enable_outputs(list(gates.keys()))
             virtual_awg.run()
         else:
             if type(self.sweepparams) is str:
-                waveform, _ = awg.sweep_gate(self.sweepparams, self.sweepranges, period=period)
+                waveform, _ = awg.sweep_gate(self.sweepparams, self.sweepranges, period=period, delete=not self.paused)
             elif type(self.sweepparams) is dict:
-                waveform, _ = awg.sweep_gate_virt(self.sweepparams, self.sweepranges, period=period)
+                waveform, _ = awg.sweep_gate_virt(self.sweepparams, self.sweepranges, period=period, delete=not self.paused)
             else:
                 raise Exception('arguments not supported')
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
@@ -493,17 +496,17 @@ class VideoMode:
             elif isinstance(self.sweepparams, list):
                 gates = self.sweepparams
 
-            waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, period, self.resolution)
+            waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, period, self.resolution, delete=not self.paused)
             keys = [list(item.keys())[0] for item in gates]
             virtual_awg.enable_outputs(keys)
             virtual_awg.run()
         else:
             if isinstance(self.sweepparams, list):
                 waveform, _ = awg.sweep_2D(self.sampling_frequency.get(), self.sweepparams,
-                                           self.sweepranges, self.resolution)
+                                           self.sweepranges, self.resolution, delete=not self.paused)
             elif isinstance(self.sweepparams, dict):
                 waveform, _ = awg.sweep_2D_virt(self.sampling_frequency.get(), self.sweepparams[
-                    'gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution)
+                    'gates_horz'], self.sweepparams['gates_vert'], self.sweepranges, self.resolution, delete=not self.paused)
             else:
                 raise Exception('arguments not supported')
             if self.verbose:
@@ -512,6 +515,17 @@ class VideoMode:
         self.datafunction = videomode_callback(self.station, waveform, self.Naverage.get(),
                                                minstrument=(self.minstrumenthandle, self.channels),
                                                resolution=self.resolution, diff_dir=self.diff_dir)
+
+    def pause(self):
+        """ Pauses the videomode. """
+        #TODO: what happens if we pause a videomodes, start another videmode, stop that, and then start the paused videomode?
+        self.stopreadout()
+        if self.station is not None:
+            if hasattr(self.station, 'awg'):
+                self.station.awg.stop()
+            if hasattr(self.station, 'virtual_awg'):
+                self.station.virtual_awg.stop()
+        self.paused = True
 
     def stop(self):
         """ Stops the plotting, AWG(s) and if available RF. """
