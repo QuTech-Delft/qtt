@@ -56,7 +56,9 @@ class VirtualDAC(Instrument):
 
         """
         super().__init__(name, **kwargs)
-        self._instrument_list = instruments
+        self._instrument_list = []
+        self._instrument_names = []
+        self.add_instruments(instruments)
         self._gate_map = gate_map
         self._direct_gate_map = {}  # fast access to parameters
         self._fast_readout = True
@@ -68,9 +70,11 @@ class VirtualDAC(Instrument):
         self.add_parameter('rc_times', get_cmd=partial(
             self._get_variable, '_rc_times'), set_cmd=False)
 
-        # Create all functions for the gates as defined in self._gate_map
+        self._populate_direct_gate_map()
+        self.get_all()
 
-        self._instrument_names = [instrument.name for instrument in self._instrument_list]
+    def _populate_direct_gate_map(self):
+        """ Create all functions for the gates as defined in self._gate_map. """
         for gate in self._gate_map.keys():
             logging.debug('gates: make gate %s' % gate)
             self._make_gate(gate)
@@ -80,7 +84,22 @@ class VirtualDAC(Instrument):
             i = self._instrument_list[instrument_index]
             igate = 'dac%d' % gatemap[1]
             self._direct_gate_map[gate] = getattr(i, igate)
-        self.get_all()
+
+    @property
+    def gate_map(self):
+        """ A map between IVVI dac and gate."""
+        return self._gate_map
+
+    @property
+    def instruments(self):
+        """ A list of QCoDeS instruments."""
+        return self._instrument_list
+
+    @gate_map.setter  # type: ignore
+    def gate_map(self, gate_map):
+        self._remove_gates()
+        self._gate_map = gate_map
+        self._populate_direct_gate_map()
 
     def _instrument_index(self, instrument):
         """ From an instrument name or index return the index """
@@ -150,6 +169,22 @@ class VirtualDAC(Instrument):
         self.add_function('set_{}'.format(gate), call_cmd=partial(
             self._set_wrap, gate=gate), args=[Numbers()])
 
+    def _remove_gates(self):
+        for gate in self.gate_map.keys():
+            self.parameters.pop(gate)
+            self.functions.pop(f'get_{gate}')
+            self.functions.pop(f'set_{gate}')
+
+    def add_instruments(self, instruments):
+        """ Add instruments to the virtual dac.
+
+        Args:
+            instruments (list): a list of qcodes instruments
+
+        """
+        self._instrument_list += instruments
+        self._instrument_names = [instrument.name for instrument in self._instrument_list]
+
     def get_instrument_parameter(self, g):
         """ Returns the dac parameter mapped to this gate. """
         gatemap = self._gate_map[g]
@@ -176,6 +211,18 @@ class VirtualDAC(Instrument):
             param.vals = Numbers(bnds[0], max_value=bnds[1])
             if hasattr(instrument, 'adjust_parameter_validator'):
                 instrument.adjust_parameter_validator(param)
+
+    def get_boundaries(self):
+        """ Get boundaries on the values that can be set on the gates.
+
+        Returns:
+            dict: A range of allowed values per parameter.
+        """
+        boundaries = {}
+        for gate in self.gate_map.keys():
+            param = self.get_instrument_parameter(gate)
+            boundaries[gate] = param.vals.valid_values
+        return boundaries
 
     def __repr__(self):
         gm = getattr(self, '_gate_map', [])
