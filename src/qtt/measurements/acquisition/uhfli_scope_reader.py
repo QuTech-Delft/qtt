@@ -61,7 +61,7 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
 
     def __create_setpoint_data(self) -> None:
         sample_count = self.__uhfli.scope_length()
-        data_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True,
+        data_array = DataArray('ScopeTime', 'Time', unit='s', is_setpoint=True,
                                preset_data=np.linspace(0, self.period, sample_count))
         self.__setpoint_array = data_array
 

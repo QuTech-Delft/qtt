@@ -29,7 +29,7 @@ import qtt.utilities.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.data import (diffDataset, loadDataset, makeDataSet1D,
                       makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain,
-                      uniqueArrayName, writeDataset)
+                      uniqueArrayName)
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 from qtt.structures import VectorParameter
