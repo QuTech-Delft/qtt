@@ -150,7 +150,7 @@ class sensingdot_t:
                 'keithley%d' % index].amplitude.get
         else:
             self.valuefunc=None
-            
+
     def __repr__(self):
         return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
 
