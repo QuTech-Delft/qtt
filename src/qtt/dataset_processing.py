@@ -90,7 +90,8 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0, verb
     is_1d_dataset = len(set_arrays) == 1
 
     if is_1d_dataset:
-        assert(axis == 0)
+        if not axis==0:
+            raise AssertionError('for a 1D dataset axis should be 0')
     else:
         xarray = set_arrays[1]
 
