@@ -4,38 +4,36 @@ This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
 This is part of qtt. 
 """
 
-import numpy as np
+import datetime
+import logging
 import os
 import re
-import logging
 import time
-import datetime
 import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pyqtgraph
+import qcodes
 import skimage
 import skimage.filters
-import matplotlib.pyplot as plt
-
-import qcodes
-from qcodes.utils.helpers import tprint
+from qcodes import DataArray, Instrument
 from qcodes.instrument.parameter import Parameter, StandardParameter
-from qcodes import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
-from qcodes import Instrument
+from qcodes.utils.helpers import tprint
 
-import qtt.utilities.tools
-from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.instrument_drivers.virtualAwg.virtual_awg
-
-from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset, loadDataset, writeDataset
-from qtt.data import uniqueArrayName
-
-from qtt.utilities.tools import update_dictionary
-from qtt.structures import VectorParameter
+import qtt.utilities.tools
+from qtt.algorithms.gatesweep import analyseGateSweep
+from qtt.data import (diffDataset, loadDataset, makeDataSet1D,
+                      makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain,
+                      uniqueArrayName, writeDataset)
+from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
+from qtt.structures import VectorParameter
+from qtt.utilities.tools import update_dictionary
 
 # %%
 
@@ -234,7 +232,6 @@ def get_instrument(instr, station=None):
         return instr
 
     if isinstance(instr, AcquisitionScopeInterface):
-        instr.name = 'scope_reader'
         return instr
 
     if not isinstance(instr, str):
@@ -1755,7 +1752,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
         is_scope_reader = False
 
     minstrument = get_instrument(minstrhandle)
-    is_simulation = minstrument.name.startswith('sdigitizer')
+    is_simulation = isinstance(minstrhandle, SimulationDigitizer)
 
     if is_m4i:
         data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
