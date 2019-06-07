@@ -16,9 +16,15 @@ from qtt import pgeometry
 import qtt.algorithms.generic
 import qtt.utilities.json_serializer
 
-from qcodes import DataSet
+from qcodes.data.data_set import DataSet
+from qcodes.data.data_array import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
 
+def load_example_dataset(filename):
+    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
+    
+    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename))
+    return dataset
 
 def _data_array_to_dictionary(data_array, include_data=True):
     """ Convert DataArray to a dictionary.
