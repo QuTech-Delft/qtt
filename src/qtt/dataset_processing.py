@@ -1,15 +1,15 @@
-from typing import Sequence
-import matplotlib.pyplot as plt
+from typing import Seqeuence, Callable, Optional
 import numpy as np
-from functools import partial
+import copy
 
 import qcodes
 import qtt.data
+from qtt.data import DataSet
 
-#%%
+# %%
 
 
-def process_dataarray(dataset, input_array_name, output_array_name, processing_function, label=None, unit=None, ):
+def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name: str, processing_function: Callable, label: Optional[str] = None, unit: Optional[str] = None, ) -> DataSet:
     """ Apply a function to a DataArray in a DataSet  """
     array = dataset.default_parameter_array(input_array_name)
     data = processing_function(np.array(array))
@@ -20,29 +20,31 @@ def process_dataarray(dataset, input_array_name, output_array_name, processing_f
     data_array = qcodes.DataArray(array_id=output_array_name, name=output_array_name, label=label,
                                   set_arrays=array.set_arrays, preset_data=data, unit=unit)
     dataset.add_array(data_array)
-    return
+    return dataset
+
 
 def dataset_dimension(dataset) -> int:
     """ Return dimension of DataSet """
     return len(dataset.default_parameter_array().set_arrays)
 
-def average_dataset(dataset : qtt.data.DataSet, axis='vertical') -> qtt.data.DataSet:
+
+def average_dataset(dataset: qtt.data.DataSet, axis='vertical') -> qtt.data.DataSet:
     """ Calculate the mean signal of a 2D dataset over the specified axis
-    
+
     Args:
         dataset: DataSet to be processed
         axis: Specification of the axis
-        
+
     """
-    
-    if dataset_dimension(dataset)!=2:
+
+    if dataset_dimension(dataset) != 2:
         raise Exception('average_dataset only implemented for 2D datasets')
-    
-    if axis=='vertical':
-        axis=0
-    if axis==1 or axis=='horizontal':
+
+    if axis == 'vertical':
+        axis = 0
+    if axis == 1 or axis == 'horizontal':
         raise Exception('average_dataset not implemented for horizontal axis')
-        
+
     zarray = dataset.default_parameter_array()
     set_arrays = zarray.set_arrays
     xarray = set_arrays[1]
@@ -56,7 +58,7 @@ def average_dataset(dataset : qtt.data.DataSet, axis='vertical') -> qtt.data.Dat
     return dataset_averaged
 
 
-def calculate_averaged_dataset(dataset, number_repetitions):
+def calculate_averaged_dataset(dataset: DataSet, number_repetitions: int) -> DataSet:
     """ Calculate the averaged signal from a 2D dataset with repeated rows """
     zarray = dataset.default_parameter_array()
     set_arrays = zarray.set_arrays
@@ -74,13 +76,10 @@ def calculate_averaged_dataset(dataset, number_repetitions):
     return dataset_averaged
 
 
-
-
 # %%
 
-import copy
 
-def slice_dataset(dataset, window, axis=0, verbose=0, copy_metadata=False):
+def slice_dataset(dataset: DataSet, window: Seqeuence[float], axis: int = 0, verbose: int = 0, copy_metadata: bool = False) -> DataSet:
     """ Given a dataset and a window for the horizontal axis return the dataset with selected window """
     zarray = dataset.default_parameter_array()
 
@@ -121,10 +120,8 @@ def slice_dataset(dataset, window, axis=0, verbose=0, copy_metadata=False):
         signal_window = zarray[:, start_idx:end_idx]
         dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][start_idx:end_idx], yarray.name, yarray, zname='signal',
                                                      z=signal_window, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
-        
+
     if copy_metadata:
-        dataset_window.metadata =copy.deepcopy(dataset.metadata)
-        
+        dataset_window.metadata = copy.deepcopy(dataset.metadata)
+
     return dataset_window
-
-
