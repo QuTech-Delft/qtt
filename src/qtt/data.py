@@ -11,7 +11,7 @@ import pickle
 import logging
 import matplotlib.pyplot as plt
 
-from qcodes import DataArray, new_data
+from qcodes import new_data
 from qtt import pgeometry
 import qtt.algorithms.generic
 import qtt.utilities.json_serializer
@@ -20,18 +20,20 @@ from qcodes.data.data_set import DataSet
 from qcodes.data.data_array import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
 
+
 def load_example_dataset(filename):
     """ Return an example dataset from qtt 
-    
+
     Args:
         filename: Name of the dataset
     Returns:
         Example dataset or None of no dataset can be found
     """
     exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
-    
+
     dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename))
     return dataset
+
 
 def _data_array_to_dictionary(data_array, include_data=True):
     """ Convert DataArray to a dictionary.
@@ -1008,6 +1010,7 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
         qtt.utilities.tools.mkdirc(os.path.join(outputdir, tag))
     pfile = os.path.join(outputdir, tag, basename + '.' + ext)
     return pfile
+
 
 @qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2020')
 def loadExperimentData(outputdir, tag, dstr):
