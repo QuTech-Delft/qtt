@@ -586,6 +586,15 @@ def peakdataOrientation(x, y):
     return x, y
 
 
+def sort_peaks_inplace(peaks):
+    """ Sort a list of peaks according to the score field """
+    peaks.sort(key=lambda x: -x['score'])
+
+def sort_peaks(peaks):
+    """ Sort a list of peaks according to the score field """
+    peaks_sorted = sorted(peaks, key=lambda p: -p['score'])
+    return peaks_sorted
+
 def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_rate=None, parameters=None):
     """ Detects the Coulumb peaks in a 1D scan.
 
@@ -609,7 +618,7 @@ def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_r
     goodpeaks = filterPeaks(x, y, peaks, verbose=verbose)
 
     peakScores(goodpeaks, x, y, verbose=verbose)
-    goodpeaks.sort(key=lambda x: -x['score'])
+    sort_peaks_inplace(goodpeaks)
 
     if fig:
         plotPeaks(x, y, goodpeaks, fig=fig, plotLabels=True, plothalf=plothalf)
@@ -696,7 +705,7 @@ def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
         slope['phalfl'] = phl
         slope['phalf0'] = int(phl)
 
-        slope['length'] = x - x[pbottom]
+        #slope['length'] = x - x[pbottom]
         slope['height'] = y[p] - y[pbottom]
         slope['valid'] = (slope['height'] / H) > .2
         slope['type'] = 'slope'
@@ -798,5 +807,5 @@ def filterOverlappingPeaks(goodpeaks, threshold=.6, verbose=0):
     if verbose:
         print('filterOverlappingPeaks: %d -> %d peaks' % (len(pp), len(gidx)))
     pp = [pp[jj] for jj in gidx]
-    pp = sorted(pp, key=lambda p: p['score'])
+    pp = sort_peaks(pp)
     return pp
