@@ -1,4 +1,4 @@
-from typing import Seqeuence, Callable, Optional
+from typing import Sequence, Callable, Optional
 import numpy as np
 import copy
 
@@ -58,7 +58,7 @@ def average_dataset(dataset: qtt.data.DataSet, axis='vertical') -> qtt.data.Data
     return dataset_averaged
 
 
-def calculate_averaged_dataset(dataset: DataSet, number_repetitions: int) -> DataSet:
+def calculate_averaged_dataset(dataset: DataSet, number_of_repetitions: int) -> DataSet:
     """ Calculate the averaged signal from a 2D dataset with repeated rows """
     zarray = dataset.default_parameter_array()
     set_arrays = zarray.set_arrays
@@ -68,7 +68,7 @@ def calculate_averaged_dataset(dataset: DataSet, number_repetitions: int) -> Dat
     unique_detunings = np.array(dataset.metadata['detunings'])
     data = zarray
     ncolumns = data.shape[1]
-    averaged_signal = data.transpose().reshape(-1, number_repetitions).mean(1).reshape(ncolumns, -1).transpose()
+    averaged_signal = data.transpose().reshape(-1, number_of_repetitions).mean(1).reshape(ncolumns, -1).transpose()
 
     dataset_averaged = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0], yarray.name, unique_detunings, zname='signal',
                                                    z=averaged_signal, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
@@ -79,7 +79,7 @@ def calculate_averaged_dataset(dataset: DataSet, number_repetitions: int) -> Dat
 # %%
 
 
-def slice_dataset(dataset: DataSet, window: Seqeuence[float], axis: int = 0, verbose: int = 0, copy_metadata: bool = False) -> DataSet:
+def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0, verbose: int = 0, copy_metadata: bool = False) -> DataSet:
     """ Given a dataset and a window for the horizontal axis return the dataset with selected window """
     zarray = dataset.default_parameter_array()
 
