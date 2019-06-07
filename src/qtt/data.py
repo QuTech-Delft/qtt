@@ -21,6 +21,13 @@ from qcodes.data.data_array import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
 
 def load_example_dataset(filename):
+    """ Return an example dataset from qtt 
+    
+    Args:
+        filename: Name of the dataset
+    Returns:
+        Example dataset or None of no dataset can be found
+    """
     exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
     
     dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename))
