@@ -22,7 +22,7 @@ from qcodes.plots.qcmatplotlib import MatPlot
 
 
 def load_example_dataset(filename):
-    """ Return an example dataset from qtt 
+    """ Return an example dataset from qtt
 
     Args:
         filename: Name of the dataset
