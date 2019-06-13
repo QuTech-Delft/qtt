@@ -32,7 +32,7 @@ class VirtualAwg(Instrument):
     __awg_slave_name = 'awg_mk'
     __volt_to_millivolt = 1e3
 
-    def __init__(self, awgs, settings, name='virtual_awg', logger=logging, **kwargs):
+    def __init__(self, awgs=None, settings=None, name='virtual_awg', logger=logging, **kwargs):
         """ Creates and initializes an virtual AWG object and sets the relation between the quantum gates,
             markers and the AWG channels. The default settings (marker delays) are constructed at startup.
 
@@ -47,8 +47,12 @@ class VirtualAwg(Instrument):
         super().__init__(name, **kwargs)
         self._settings = settings
         self._logger = logger
-        self.__set_hardware(awgs)
-        self.__set_parameters()
+        if awgs is None:
+            awgs = []
+        self._awgs = []
+        self.settings = settings
+        self._instruments = []
+        self.add_instruments(awgs)
         self._latest_sequence_data = {}
         self.enable_debug = False
 
@@ -63,7 +67,7 @@ class VirtualAwg(Instrument):
         Arguments:
             awgs (list): A list with the QCoDeS driver instances.
         """
-        self.awgs = list()
+        self._awgs = list()
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
                 self.awgs.append(Tektronix5014C_AWG(awg))
@@ -86,6 +90,28 @@ class VirtualAwg(Instrument):
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             self.add_parameter('digitizer_marker_delay', initial_value=0, set_cmd=None, unit='s')
             self.add_parameter('digitizer_marker_uptime', initial_value=1e-8, set_cmd=None, unit='s')
+
+    @property
+    def settings(self) -> Instrument:
+        return self._settings
+
+    @settings.setter
+    def settings(self, value: Instrument) -> None:
+        self._settings = value
+        if value is not None:
+            self.__set_parameters()
+
+    @property
+    def awgs(self):
+        return self._awgs
+
+    @property
+    def instruments(self):
+        return self._instruments
+
+    def add_instruments(self, instruments):
+        self._instruments.extend(instruments)
+        self.__set_hardware(self._instruments)
 
     def run(self):
         """ Enables the main output of the AWG's."""
