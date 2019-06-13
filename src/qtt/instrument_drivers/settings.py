@@ -3,6 +3,7 @@ from qcodes.utils.validators import Numbers
 
 
 class SettingsInstrument(Instrument):
+    """ Instrument that holds settings """
 
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
@@ -36,6 +37,8 @@ class SettingsInstrument(Instrument):
         self._awg_markers = value
 
     def create_map(self):
+        """ Adds default parameters based on known gates and markers """
+
         self._awg_map = {**self._awg_gates, **self._awg_markers}
 
         for awg_gate in self._awg_map:
