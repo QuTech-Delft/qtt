@@ -50,15 +50,15 @@ class UHFLIStimulus:
         qcodes_parameter_name = 'signal_output{}_on'.format(output)
         self._uhfli.parameters[qcodes_parameter_name](enabled)
 
-    def set_oscillator_frequency(self, channel: int, frequency: Optional[float] = None) -> Union[Parameter, None]:
+    def set_oscillator_frequency(self, oscillator: int, frequency: Optional[float] = None) -> Union[Parameter, None]:
         """ Set the oscillators frequencies.
 
         Args:
-            channel: Output channel the the oscillator belongs to (1 - 8) with MF enabled.
+            oscillator: Output channel the the oscillator belongs to (1 - 8) with MF enabled.
             frequency: Optional parameter that if not provided, this method returns a QCoDeS parameter that can be
                     used to set the oscillator frequency. Allowed frequencies are 0 - 600 MHz.
         """
-        qcodes_parameter_name = 'oscillator{}_freq'.format(channel)
+        qcodes_parameter_name = 'oscillator{}_freq'.format(oscillator)
         qcodes_parameter = self._uhfli.parameters[qcodes_parameter_name]
         if frequency is None:
             return qcodes_parameter

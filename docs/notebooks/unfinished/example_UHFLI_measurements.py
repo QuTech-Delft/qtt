@@ -15,7 +15,8 @@ from qtt.measurements.scans import scan1D, scanjob_t
 from qtt.measurements.videomode import VideoMode
 
 
-def update_stimulus(is_enabled: bool, signal_output: int = 1, amplitude: float = 0.1, oscillator: int = 1) -> None:
+def update_stimulus(is_enabled: bool, signal_output: int = 1, signal_input: Optional[int] = None,
+                    amplitude: float = 0.1, oscillator: int = 1) -> None:
     """ Sets the enabled status of a demodulator and connects an oscillator to a demodulator.
         After that sets for a signal output, the amplitude and enabled status and finally to  of the UHFLI.
 
@@ -25,11 +26,13 @@ def update_stimulus(is_enabled: bool, signal_output: int = 1, amplitude: float =
     Args:
         is_enabled: True to enable and False to disable.
         signal_output: One of the two outputs on the device.
+        signal_intput: One of the two inputs on the device.
         amplitude: Amplitude in volts, allowed values are 0.0 - 1.5 V.
         demodulator: Which demodulator used to connect to the signal output to.
     """
     demodulator = oscillator
-    signal_input = signal_output
+    if not signal_input:
+        signal_input = signal_output
 
     stimulus.connect_oscillator_to_demodulator(oscillator, demodulator)
     stimulus.set_demodulator_signal_input(demodulator, signal_input)
