@@ -1,10 +1,11 @@
 #%% Importing the modules and defining functions
 import os
+from typing import Optional, Tuple, Dict
 
 from matplotlib import pyplot as plt
-from qcodes.utils.validators import Numbers
-from qcodes import Station, Instrument, ManualParameter
+from qcodes import Instrument, ManualParameter, Station
 from qcodes.instrument_drivers.ZI.ZIHDAWG8 import WARNING_ANY
+from qcodes.utils.validators import Numbers
 from qilib.configuration_helper import InstrumentAdapterFactory
 
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
@@ -14,24 +15,68 @@ from qtt.measurements.scans import scan1D, scanjob_t
 from qtt.measurements.videomode import VideoMode
 
 
-def stimulus_enabled(enabled_state, demod_number=1, demod_channel=1, output_amplitude=0.1, output_channel=1):
-    stimulus.set_signal_output_amplitude(demod_channel, demod_number, output_amplitude)
-    stimulus.set_demodulation_enabled(demod_channel, enabled_state)
-    stimulus.set_signal_output_enabled(demod_channel, demod_number, enabled_state)
-    stimulus.set_output_enabled(output_channel, enabled_state)
+def update_stimulus(is_enabled: bool, signal_output: int = 1, amplitude: float = 0.1, oscillator: int = 1) -> None:
+    """ Sets the enabled status of a demodulator and connects an oscillator to a demodulator.
+        After that sets for a signal output, the amplitude and enabled status and finally to  of the UHFLI.
 
-def stimulus_frequency(frequency, demod_channel=1):
-    stimulus.set_oscillator_frequency(demod_channel, frequency)
+        Note that each oscillator and demodulator is connected one-to-one in this function.
+        Also the output signal and demodulator input signal is connected one-to-one.
 
-def scope_settings(period=None, sample_rate=27e3, input_channel=1, input_channel_attribute='Demod 1 R',
-                   input_range=1, limits=(0.0, 1.0), trigger_enabled=False, trigger_level=0.5):
+    Args:
+        is_enabled: True to enable and False to disable.
+        signal_output: One of the two outputs on the device.
+        amplitude: Amplitude in volts, allowed values are 0.0 - 1.5 V.
+        demodulator: Which demodulator used to connect to the signal output to.
+    """
+    demodulator = oscillator
+    signal_input = signal_output
+
+    stimulus.connect_oscillator_to_demodulator(oscillator, demodulator)
+    stimulus.set_demodulator_signal_input(demodulator, signal_input)
+    stimulus.set_demodulation_enabled(demodulator, is_enabled)
+
+    stimulus.set_signal_output_amplitude(signal_output, demodulator, amplitude)
+    stimulus.set_signal_output_enabled(signal_output, demodulator, is_enabled)
+    stimulus.set_output_enabled(signal_output, is_enabled)
+
+
+def set_stimulus_oscillator_frequency(frequency: float, oscillator: int = 1) -> None:
+    """ Sets the frequency of an oscillator in the UHFLI.
+
+        Note this function only works with the UHFLI multifrequency option enabled (MF option).
+
+    Args:
+        frequency: The set frequency of the oscillator in Hz.
+        oscillator: The oscillator (1 - 8) to set the frequency on.
+    """
+    stimulus.set_oscillator_frequency(oscillator, frequency)
+
+
+def update_scope(period: Optional[float] = None, sample_rate: Optional[float] = 27e3,
+                 input_channels : Optional[Dict[int, str]] = {'Demod 1 R': 1},
+                 input_ranges: Optional[Tuple[float, float]] = (1.0, 1.0),
+                 limits: Optional[Tuple[float, float]] = (0.0, 1.0),
+                 trigger_enabled: Optional[bool] = False, trigger_level: Optional[float] = 0.5):
+    """ Updates the settings of the UHFLI scope module needed for readout.
+
+    Args:
+        period: The measuring period of the acquisition in seconds.
+        sample_rate: The sample rate of the acquisition device in samples per second.
+        input_channels: A dictionary containing the signal names and input channels, e.g. {'Demod 1 R': 1}.
+        input_ranges: The gain in Volt of the analog input amplifier for both input channels.
+        limits: The limits in Volt of the scope full scale range.
+        trigger_enabled: Will enable the external triggering on 'Trigger input 1' if True.
+        trigger_level: The level of the trigger in Volt.
+    """
     nearest_sample_rate = scope_reader.get_nearest_sample_rate(sample_rate)
     scope_reader.sample_rate = nearest_sample_rate
 
-    scope_reader.enabled_channels = (input_channel, )
-    scope_reader.input_range = tuple([input_range] * 2)
-    scope_reader.set_channel_limits(input_channel, *limits)
-    scope_reader.set_input_signal(input_channel, input_channel_attribute)
+    scope_reader.input_range = input_ranges
+    unique_channels = set(input_channels.values())
+    scope_reader.enabled_channels = unique_channels
+
+    [scope_reader.set_channel_limits(channel, *limits) for channel in unique_channels]
+    [scope_reader.set_input_signal(channel, attribute) for (attribute, channel) in input_channels.items()]
     if period:
         scope_reader.period = period
 
@@ -40,7 +85,6 @@ def scope_settings(period=None, sample_rate=27e3, input_channel=1, input_channel
     scope_reader.trigger_level = trigger_level
     scope_reader.trigger_slope = 'Rise'
     scope_reader.trigger_delay = 0
-
 
 
 ## Settings
@@ -60,7 +104,7 @@ class HardwareSettings(Instrument):
                                initial_value=1000, label=parameter_label, vals=Numbers(1, 1000))
 
 
-working_directory = "<clone_dir>\\qtt\\docs\\notebooks\\unfinished"
+working_directory = "D:\\Workspace\\TNO\\git\\DEM-943\\qtt\\docs\\notebooks\\unfinished"
 
 ## Lock-in Amplifier
 
@@ -116,23 +160,28 @@ station = Station(virtual_awg, scope_reader.adapter.instrument, awg_adapter.inst
 
 #%% Enable the stimulus
 
-demod_channel = 1
-stimulus_enabled(True, demod_channel=demod_channel)
+demodulator = 1
+signal_output = 1
+oscillator = demodulator
 
+update_stimulus(is_enabled=True, signal_output=signal_output, amplitude=0.1, oscillator=oscillator)
 
 #%% Sensing a resonance
 
-demod_parameter = 'R'
+signal_input = signal_output
 
 scanjob = scanjob_t()
-scanjob.add_sweep(param=stimulus.set_oscillator_frequency(demod_channel), start=140e6, end=180e6, step=0.2e6)
-scanjob.add_minstrument(scope_reader.acquire_single_sample(demod_channel, demod_parameter, partial=True))
+scanjob.add_sweep(param=stimulus.set_oscillator_frequency(oscillator), start=140e6, end=180e6, step=0.2e6)
+scanjob.add_minstrument([scope_reader.acquire_single_sample(demodulator, 'R', partial=True),
+                         scope_reader.acquire_single_sample(demodulator, 'x', partial=True),
+                         scope_reader.acquire_single_sample(demodulator, 'y', partial=True)])
 
 data_set = scan1D(station, scanjob)
 
 plt.clf()
-plt.plot(data_set.arrays[f'oscillator{demod_channel}_freq'],
-         data_set.arrays[f'demod{demod_channel}_{demod_parameter}'])
+plt.plot(data_set.arrays[f'oscillator{demodulator}_freq'], data_set.arrays[f'demod{demodulator}_R'])
+plt.plot(data_set.arrays[f'oscillator{demodulator}_freq'], data_set.arrays[f'demod{demodulator}_x'])
+plt.plot(data_set.arrays[f'oscillator{demodulator}_freq'], data_set.arrays[f'demod{demodulator}_y'])
 plt.show()
 
 
@@ -141,8 +190,8 @@ plt.show()
 period = 1.0
 frequency = 154.8e6
 
-scope_settings(period)
-stimulus_frequency(frequency)
+update_scope(period)
+set_stimulus_oscillator_frequency(frequency)
 
 scope_reader.start_acquisition()
 data_arrays = scope_reader.acquire(number_of_averages=1)
@@ -157,7 +206,7 @@ plt.show()
 
 sample_rate = 220e3
 
-scope_settings(sample_rate=sample_rate, trigger_enabled=True)
+update_scope(sample_rate = sample_rate, trigger_enabled = True)
 
 resolution = [96, 96]
 sweep_gates = [{'P1': 1}, {'P2': 1}]
@@ -170,4 +219,4 @@ vm.updatebg()
 
 #%% Disable the stimulus
 
-stimulus_enabled(False, demod_channel=demod_channel)
+update_stimulus(is_enabled=False, signal_output=signal_output, oscillator=oscillator)

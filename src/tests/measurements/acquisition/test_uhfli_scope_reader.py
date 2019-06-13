@@ -59,13 +59,14 @@ class TestUhfliScopeReader(TestCase):
         scope_data = np.array([np.random.rand(1000), np.random.rand(1000)])
         trace = [[{'wave': scope_data}], 0, 0]
         scope_mock.adapter.instrument.scope.read.return_value = {wave_nodepath: trace}
+        scope_mock.adapter.instrument.scope_channel1_input.return_value = 'Demod 1 R'
         scope_mock.adapter.instrument.Scope.names = ['Test1', name]
         scope_mock.adapter.instrument.Scope.units = ['GigaVolt', unit]
 
         scope_trace_001 = scope_mock.acquire()
         self.assertEqual(len(scope_trace_001[0].set_arrays[0]), scope_length)
-        self.assertEqual(scope_trace_001[0].name, 'ScopeTrace_000')
-        self.assertEqual(scope_trace_001[0].label, 'Channel_0')
+        self.assertEqual(scope_trace_001[0].name, 'ScopeTrace000_Channel1')
+        self.assertEqual(scope_trace_001[0].label, 'Demod_1_R')
 
     def test_acquire_raises_timeout(self):
         mock_address = 'dev2333a'
