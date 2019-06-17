@@ -7,7 +7,7 @@ The output is a dictionary with the main results as keys of the dictionary.
 Example algorithms in notebooks
 -------------------------------
 
-Most of the algorithms are documented in the `Example notebooks`_ section.
+Most of the algorithms are documented in the `Example notebooks` section.
 
 
 Source code
