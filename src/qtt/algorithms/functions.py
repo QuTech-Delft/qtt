@@ -218,6 +218,30 @@ def cost_exp_decay(x_data, y_data, params, threshold=None):
     return cost
 
 
+def _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter):
+    """ Estimate parameters for exponential decay function
+
+    Args:
+        x_data (array): Independent data
+        y_data (array): Dependent data
+        offset_parameter (None or float): If None, then estimate the offset, otherwise fix the offset to the
+        specified value
+    Returns:
+        Array with initial parameters
+    """
+    maxsignal = np.percentile(y_data, 98)
+    minsignal = np.percentile(y_data, 2)
+    gamma = 1 / (x_data[int(len(x_data) / 2)])
+    B = maxsignal
+    if offset_parameter is None:
+        A = minsignal
+        initial_params = np.array([A, B, gamma])
+
+    else:
+        initial_params = np.array([B, gamma])
+    return initial_params
+
+
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None, threshold=None,
                   offset_parameter=None):
     """ Fit a exponential decay.
@@ -236,34 +260,27 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
         offset_parameter (None or float): if None, then estimate the offset, otherwise fix the offset to the
             specified value
     Returns:
-        par_fit (array): fit parameters of the exponential decay, [A, B, gamma]
+        fitted_parameters (array): fit parameters of the exponential decay, [A, B, gamma]
 
     See: :func:`exp_function`
 
     """
 
     if initial_params is None:
-        maxsignal = np.percentile(y_data, 98)
-        minsignal = np.percentile(y_data, 2)
-        gamma = 1 / (x_data[int(len(x_data) / 2)])
-        B = maxsignal
-        if offset_parameter is None:
-            A = minsignal
-            initial_params = np.array([A, B, gamma])
-
-        else:
-            initial_params = np.array([B, gamma])
+        initial_params = _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter)
 
     if offset_parameter is None:
-        def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
+        def cost_function(params): return cost_exp_decay(x_data, y_data, params, threshold)
     else:
-        def func(params): return cost_exp_decay(x_data, y_data, np.hstack((offset_parameter, params)), threshold)
+        def cost_function(params): return cost_exp_decay(
+            x_data, y_data, np.hstack((offset_parameter, params)), threshold)
 
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    fitted_parameters = scipy.optimize.fmin(cost_function, initial_params,
+                                            maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     if offset_parameter is not None:
-        par_fit = np.hstack(([offset_parameter], par_fit))
+        fitted_parameters = np.hstack(([offset_parameter], fitted_parameters))
 
-    return par_fit
+    return fitted_parameters
 
 
 def gauss_ramsey(x_data, params):
@@ -299,8 +316,6 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
         cost (float): value which indicates the difference between the data and the fit
     """
     model = gauss_ramsey(x_data, params)
-    # cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2*(np.array(x_data)[1:] -
-    #                                                                 np.array(x_data)[:-1])**weight_power])
     cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2 * (np.diff(x_data))**weight_power])
     return cost
 
@@ -404,10 +419,16 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
 def logistic(x, x0=0, alpha=1):
     """ Logistic function
 
+    Defines the logistic function
+
+    .. math::
+
+        y = 1 / (1 + \exp(-2 * alpha * (x - x0)))
+
     Args:
-        x (array): TODO
-        x0 (float): TODO
-        alpha (float): TODO
+        x (array): Independent data
+        x0 (float): Midpoint of the logistic function
+        alpha (float): Growth rate
 
     Example:
         y = logistic(0, 1, alpha=1)
