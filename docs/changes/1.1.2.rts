@@ -1,0 +1,18 @@
+Changelog for QTT 1.1.2
+==========================
+
+This release changes the folder structure and starts seperating the unittests from the source code.
+
+
+New & Improved
+______________
+
+- Last version before adding a changelog.
+- Source code is now located in the ./qtt/src/ folder 
+- Most of the unittests are now located in the ./qtt/src/tests/ folder.
+
+
+Breaking Changes
+________________
+
+- Not yet determined (initial version with changelog).
