@@ -2081,7 +2081,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
                         pp.pop(gate, None)
 
             except BaseException:
-                warnings.warn('error when removing slow gate from scan data')
+                warnings.warn(f'error when removing slow gate {gate} from scan data')
     else:
         pp = {virtual_parameter.name: 1}
     sweeporstepdata = {'start': start, 'range': g_range,

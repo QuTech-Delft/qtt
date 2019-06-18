@@ -134,7 +134,7 @@ class VirtualGates(Instrument):
         """ Convert a virtual gates object to a dictionary for storage """
         def without_keys(d, keys):
             return {x: d[x] for x in d if x not in keys}
-        d = without_keys(self.__dict__, ['parameters', 'log'])
+        d = without_keys(self.__dict__, ['parameters', 'log','_crosscap_map', '_crosscap_map_inv'])
         d['gates'] = str(d['gates'])
         d['crosscap_matrix'] = self.get_crosscap_matrix()
         return d
