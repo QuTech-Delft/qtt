@@ -74,7 +74,7 @@ class ContinuousTimeMarkovModel:
             holding_parameters(float[]): List with the holding parameters. The holding parameters determine the average
                 time before the system will make a jump to a new state
             jump_chain (array): The jump chain or transition matrix. This matrix gives the probability for the system
-                        to jump from a state to one of the other states. The sum of the probabilities in each row must
+                        to jump from a state to one of the other states. The sum of the probabilities in each column must
                         equal one.
 
         For an introduction to Markov chains see https://www.probabilitycourse.com/chapter11/11_3_1_introduction.php
@@ -83,11 +83,11 @@ class ContinuousTimeMarkovModel:
 
         """
         self.states = states
-        self.jump_chain = jump_chain
         self.update_model(holding_parameters, jump_chain)
 
     def update_model(self, holding_parameters, jump_chain):
         self.holding_parameters = np.array(holding_parameters).flatten().reshape((-1, 1))
+        self.jump_chain = jump_chain
         self.generator_matrix = self._create_generator_matrix(self.holding_parameters, self.jump_chain)
         self._validity_check()
 

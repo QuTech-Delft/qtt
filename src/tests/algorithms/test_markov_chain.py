@@ -32,6 +32,14 @@ class TestMarkovChain(unittest.TestCase):
     def test_number_of_states(self):
         self.assertEqual(self.rts_model.number_of_states(), 2)
 
+    def test_update_model(self):
+        holding_parameters=[1,1]
+        jump_chain=np.array([[0., 1], [1, 0]])
+        self.rts_model.update_model(holding_parameters, jump_chain)
+        self.assertEqual(self.rts_model.jump_chain, jump_chain)
+        self.assertEqual(self.rts_model.holding_parameters, holding_parameters)
+        np.testing.assert_array_almost_equal(self.rts_model.generator_matrix, np.array([[-1.,  1.],[ 1., -1.]]))
+
     def test_generate_sequence(self):
         length = 30
         sequence = self.rts_model.generate_sequence(length, delta_time=1)
