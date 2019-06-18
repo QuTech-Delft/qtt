@@ -4,7 +4,7 @@ attrs
 coverage
 dulwich
 hickle
-numpy == 1.13
+numpy
 matplotlib >= 2.1
 pandas
 Polygon3
