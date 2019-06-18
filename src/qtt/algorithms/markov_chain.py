@@ -84,6 +84,9 @@ class ContinuousTimeMarkovModel:
         """
         self.states = states
         self.jump_chain = jump_chain
+        self.update_model(holding_parameters, jump_chain)
+
+    def update_model(self, holding_parameters, jump_chain):
         self.holding_parameters = np.array(holding_parameters).flatten().reshape((-1, 1))
         self.generator_matrix = self._create_generator_matrix(self.holding_parameters, self.jump_chain)
         self._validity_check()
