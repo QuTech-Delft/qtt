@@ -36,8 +36,8 @@ class TestMarkovChain(unittest.TestCase):
         holding_parameters=[1,1]
         jump_chain=np.array([[0., 1], [1, 0]])
         self.rts_model.update_model(holding_parameters, jump_chain)
-        self.assertEqual(self.rts_model.jump_chain, jump_chain)
-        self.assertEqual(self.rts_model.holding_parameters, holding_parameters)
+        np.testing.assert_array_almost_equal(self.rts_model.jump_chain, jump_chain)
+        np.testing.assert_array_almost_equal(self.rts_model.holding_parameters, holding_parameters)
         np.testing.assert_array_almost_equal(self.rts_model.generator_matrix, np.array([[-1.,  1.],[ 1., -1.]]))
 
     def test_generate_sequence(self):
