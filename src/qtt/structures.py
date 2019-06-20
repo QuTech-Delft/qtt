@@ -144,6 +144,8 @@ class sensingdot_t:
 
         self.data = {}
 
+        self.plunger = qcodes.Parameter('plunger', get_cmd= self.plungervalue, set_cmd=self._set_plunger)
+        
         # values for measurement
         if index is not None:
             self.valuefunc = station.components[
@@ -199,6 +201,10 @@ class sensingdot_t:
         gates = self.station.gates
         return gates.get(self.tunegate())
 
+    def _set_plunger(self, value):
+        gates = self.station.gates
+        gates.set(self.tunegate(), value)
+        
     def value(self):
         """Return current through sensing dot """
         if self.valuefunc is not None:
