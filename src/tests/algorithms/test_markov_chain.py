@@ -33,7 +33,7 @@ class TestMarkovChain(unittest.TestCase):
         self.assertEqual(self.rts_model.number_of_states(), 2)
 
     def test_update_model(self):
-        holding_parameters=[1,1]
+        holding_parameters=np.array([[1],[1.]])
         jump_chain=np.array([[0., 1], [1, 0]])
         self.rts_model.update_model(holding_parameters, jump_chain)
         np.testing.assert_array_almost_equal(self.rts_model.jump_chain, jump_chain)

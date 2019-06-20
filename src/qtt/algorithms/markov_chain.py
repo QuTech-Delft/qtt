@@ -91,8 +91,8 @@ class ContinuousTimeMarkovModel:
         Args:
             holding_parameters: List with the holding parameters
             jump_chain: The jump chain or transition matrix
-            
-        For a detailed description see the class documentation
+
+        For a detailed description of the parameters see the class documentation.
         """
         self.holding_parameters = np.array(holding_parameters).flatten().reshape((-1, 1))
         self.jump_chain = jump_chain
