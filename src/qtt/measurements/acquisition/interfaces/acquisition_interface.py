@@ -1,7 +1,7 @@
 """ Interface for devices to acquire data."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from qilib.data_set import DataArray
 from qilib.utils import PythonJsonStructure
@@ -36,7 +36,7 @@ class AcquisitionInterface(ABC):
         """
 
     @abstractmethod
-    def acquire(self, number_of_averages: int, timeout: float) -> List[DataArray]:
+    def acquire(self, number_of_averages: int, timeout: Optional[float] = 30) -> List[DataArray]:
         """ Reads raw-data from the acquisition device.
 
             This method should be called after initialising and starting the acquisition.

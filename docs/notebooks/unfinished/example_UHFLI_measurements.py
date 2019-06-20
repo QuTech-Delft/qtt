@@ -26,7 +26,7 @@ def update_stimulus(is_enabled: bool, signal_output: int = 1, signal_input: Opti
     Args:
         is_enabled: True to enable and False to disable.
         signal_output: One of the two outputs on the device.
-        signal_intput: One of the two inputs on the device.
+        signal_input: One of the two inputs on the device.
         amplitude: Amplitude in volts, allowed values are 0.0 - 1.5 V.
         demodulator: Which demodulator used to connect to the signal output to.
     """
@@ -56,7 +56,7 @@ def set_stimulus_oscillator_frequency(frequency: float, oscillator: int = 1) -> 
 
 
 def update_scope(period: Optional[float] = None, sample_rate: Optional[float] = 27e3,
-                 input_channels : Optional[Dict[int, str]] = {'Demod 1 R': 1},
+                 input_channels : Optional[Dict[str, int]] = None,
                  input_ranges: Optional[Tuple[float, float]] = (1.0, 1.0),
                  limits: Optional[Tuple[float, float]] = (0.0, 1.0),
                  trigger_enabled: Optional[bool] = False, trigger_level: Optional[float] = 0.5):
@@ -71,6 +71,12 @@ def update_scope(period: Optional[float] = None, sample_rate: Optional[float] = 
         trigger_enabled: Will enable the external triggering on 'Trigger input 1' if True.
         trigger_level: The level of the trigger in Volt.
     """
+    if period is not None:
+        scope_reader.period = period
+
+    if input_channels is None:
+        input_channels = {'Demod 1 R': 1}
+
     nearest_sample_rate = scope_reader.get_nearest_sample_rate(sample_rate)
     scope_reader.sample_rate = nearest_sample_rate
 
@@ -80,8 +86,6 @@ def update_scope(period: Optional[float] = None, sample_rate: Optional[float] = 
 
     [scope_reader.set_channel_limits(channel, *limits) for channel in unique_channels]
     [scope_reader.set_input_signal(channel, attribute) for (attribute, channel) in input_channels.items()]
-    if period:
-        scope_reader.period = period
 
     scope_reader.trigger_enabled = trigger_enabled
     scope_reader.trigger_channel = 'Trig Input 1'
@@ -90,7 +94,7 @@ def update_scope(period: Optional[float] = None, sample_rate: Optional[float] = 
     scope_reader.trigger_delay = 0
 
 
-## Settings
+#  Settings
 
 class HardwareSettings(Instrument):
 
@@ -109,25 +113,25 @@ class HardwareSettings(Instrument):
 
 working_directory = "D:\\Workspace\\TNO\\git\\DEM-943\\qtt\\docs\\notebooks\\unfinished"
 
-## Lock-in Amplifier
+#  Lock-in Amplifier
 
-UHFLI_id = 'dev2338'
-file_path_UHFLI = os.path.join(working_directory, f'UHFLI_{UHFLI_id}.dat')
-UHFLI_configuration = load_configuration(file_path_UHFLI)
+uhfli_id = 'dev2338'
+file_path_UHFLI = os.path.join(working_directory, f'UHFLI_{uhfli_id}.dat')
+uhfli_configuration = load_configuration(file_path_UHFLI)
 
-stimulus = UHFLIStimulus(UHFLI_id)
-stimulus.initialize(UHFLI_configuration)
-scope_reader = UHFLIScopeReader(UHFLI_id)
+stimulus = UHFLIStimulus(uhfli_id)
+stimulus.initialize(uhfli_configuration)
+scope_reader = UHFLIScopeReader(uhfli_id)
 
 
-## AWG
+#  AWG
 
-HDAWG8_id = 'dev8048'
-file_path_HDAWG8 = os.path.join(working_directory, f'HDAWG8_{HDAWG8_id}.dat')
-HDAWG8_configuration = load_configuration(file_path_HDAWG8)
+hdawg8_id = 'dev8048'
+file_path_HDAWG8 = os.path.join(working_directory, f'HDAWG8_{hdawg8_id}.dat')
+hdawg8_configuration = load_configuration(file_path_HDAWG8)
 
-awg_adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIHDAWG8InstrumentAdapter', HDAWG8_id)
-awg_adapter.apply(HDAWG8_configuration)
+awg_adapter = InstrumentAdapterFactory.get_instrument_adapter('ZIHDAWG8InstrumentAdapter', hdawg8_id)
+awg_adapter.apply(hdawg8_configuration)
 
 awg_adapter.instrument.warnings_as_errors.append(WARNING_ANY)
 
@@ -144,7 +148,7 @@ awg_sampling_rate_586KHz = 12
 awg_adapter.instrument.awgs_0_time(awg_sampling_rate_586KHz)
 
 
-## Virtual AWG
+#  Virtual AWG
 
 settings = HardwareSettings()
 virtual_awg = VirtualAwg([awg_adapter.instrument], settings)
@@ -156,7 +160,7 @@ marker_uptime = 1e-2
 virtual_awg.digitizer_marker_uptime(marker_uptime)
 
 
-## Station
+#  Station
 
 gates = VirtualIVVI('gates', gates=['P1', 'P2'], model=None)
 station = Station(virtual_awg, scope_reader.adapter.instrument, awg_adapter.instrument, gates)

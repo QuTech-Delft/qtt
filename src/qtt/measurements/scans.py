@@ -1687,18 +1687,20 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
     return [avarage]
 
 
-def measure_segment_scope_reader(minstrhandle, waveform, Naverage, process=True):
+def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, process=True):
     """ Measure block data with scope reader.
 
     Args:
-        minstrhandle (AcquisitionScopeInterface): Instance of scope reader.
+        scope_reader (AcquisitionScopeInterface): Instance of scope reader.
         waveform (dict): Information about the waveform that is to be collected.
         number_of_averages (int) : Number of times the sample is collected.
+        process (bool): If True, cut off the downward sawtooth slopes from the data.
+
     Returns:
         data (numpy array): An array of arrays, one array per input channel.
 
     """
-    data_arrays = minstrhandle.acquire(number_of_averages=Naverage)
+    data_arrays = scope_reader.acquire(number_of_averages)
     raw_data = np.array(data_arrays)
     if not process:
         return raw_data
@@ -1710,7 +1712,7 @@ def measure_segment_scope_reader(minstrhandle, waveform, Naverage, process=True)
 
     resolution = waveform.get('resolution', None)
     start_zero = waveform.get('start_zero', False)
-    sample_rate = minstrhandle.sample_rate
+    sample_rate = scope_reader.sample_rate
     period = waveform['period']
 
     if len(width) == 2:

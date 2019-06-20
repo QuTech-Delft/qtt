@@ -136,7 +136,6 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         """
         self.__uhfli.scope_duration.set(value)
 
-
     @property
     def number_of_samples(self) -> int:
         """ Gets the sample count to take during a acquisition.
@@ -330,9 +329,9 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         traces = self.__uhfli.scope.read(True)
         wave_nodepath = f'/{self._address}/scopes/0/wave'
         scope_traces = traces[wave_nodepath][:number_of_averages]
-        return self.__convert_scope_data(scope_traces, number_of_averages)
+        return self.__convert_scope_data(scope_traces)
 
-    def __convert_scope_data(self, scope_traces: np.ndarray, number_of_averages: int) -> List[DataArray]:
+    def __convert_scope_data(self, scope_traces: np.ndarray) -> List[DataArray]:
         data = []
         acquisition_counter = 0
         for channel_index, _ in enumerate(self.enabled_channels):

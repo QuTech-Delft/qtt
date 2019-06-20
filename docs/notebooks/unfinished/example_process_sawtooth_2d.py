@@ -32,9 +32,7 @@ def create_dummy_data_array(width: float, processing: str, sawteeth_count: int, 
     scope_data = sawtooth(2 * np.pi * (sawteeth_count * time / period), width)
     offset = {'left': 1 - width, 'center': (1 - width /2), 'right': 0}
     scope_data = np.roll(scope_data, int(offset[processing] * len(scope_data)))
-
     return DataArray(identifier, label, preset_data=scope_data, set_arrays=[set_array])
-
 
 data_set = DataSet()
 data_set.user_data = {'resolution': resolution, 'width': width, 'processing': processing}
@@ -46,14 +44,14 @@ data_array_y = create_dummy_data_array(width=width[1], processing=processing, sa
 data_set.add_array(data_array_y)
 
 
-## EXAMPLE PRCCESSING 2D SAWTOOTH
+# EXAMPLE PRCCESSING 2D SAWTOOTH
 
 signal_processor = SignalProcessorRunner()
 signal_processor.add_signal_processor(ProcessSawtooth2D())
 processed_data_set = signal_processor.run(data_set)
 
 
-## PLOTTING
+# PLOTTING
 
 color_cycler = cycle('bgrcmk')
 

@@ -131,7 +131,7 @@ class TestScans(TestCase):
                 result_data = measure_segment_scope_reader(mock_scope, waveform, average_count)
 
                 array_mock.assert_called_once_with(mock_data_arrays)
-                mock_scope.acquire.assert_called_once_with(number_of_averages=average_count)
+                mock_scope.acquire.assert_called_once_with(average_count)
                 process_mock.assert_called_with(raw_data_mock, period, sample_rate,
                                                 resolution, width, fig=None, start_zero=False)
                 self.assertEqual(data_mock, result_data)
@@ -156,7 +156,7 @@ class TestScans(TestCase):
                 result_data = measure_segment_scope_reader(mock_scope, waveform, average_count)
 
                 array_mock.assert_called_once_with(mock_data_arrays)
-                mock_scope.acquire.assert_called_once_with(number_of_averages=average_count)
+                mock_scope.acquire.assert_called_once_with(average_count)
                 process_mock.assert_called_with(raw_data_mock, [width], period, sample_rate,
                                                 resolution=None, start_zero=False, fig=None)
                 self.assertEqual(data_mock, result_data)
@@ -169,5 +169,5 @@ class TestScans(TestCase):
         numpy_array_mock = MagicMock()
         with patch('numpy.array', return_value=numpy_array_mock):
             result_data = measure_segment_scope_reader(mock_scope, None, average_count, process=False)
-            mock_scope.acquire.assert_called_once_with(number_of_averages=average_count)
+            mock_scope.acquire.assert_called_once_with(average_count)
             self.assertEqual(numpy_array_mock, result_data)

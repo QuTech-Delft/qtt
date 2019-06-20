@@ -477,8 +477,7 @@ class VideoMode:
                 scan_channels = self.scanparams['minstrument'][1]
                 channel_attributes = self.scanparams['minstrument'][2]
                 self.minstrumenthandle.enabled_channels = tuple(scan_channels)
-                for item in zip(scan_channels, channel_attributes):
-                    self.minstrumenthandle.set_input_signal(item[0], item[1])
+                map(self.minstrumenthandle.set_input_signal, scan_channels, channel_attributes)
                 self.minstrumenthandle.start_acquisition()
             self.startreadout()
 
