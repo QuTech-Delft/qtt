@@ -101,7 +101,7 @@ class HardwareSettings(Instrument):
     def __init__(self, name='settings'):
         super().__init__(name)
         awg_gates = {'P1': (0, 0), 'P2': (0, 1)}
-        awg_markers = {'m4i_mk': (0, 4, 0)}
+        awg_markers = {'m4i_mk': (0, 0, 0)}
         self.awg_map = {**awg_gates, **awg_markers}
 
         for awg_gate in self.awg_map:
@@ -111,7 +111,7 @@ class HardwareSettings(Instrument):
                                initial_value=1000, label=parameter_label, vals=Numbers(1, 1000))
 
 
-working_directory = "D:\\Workspace\\TNO\\git\\DEM-943\\qtt\\docs\\notebooks\\unfinished"
+working_directory = "<work_directory>\\qtt\\docs\\notebooks\\unfinished"
 
 #  Lock-in Amplifier
 
@@ -141,8 +141,8 @@ awg_adapter.instrument.system_clocks_referenceclock_source(external_clock)
 grouping_1x8 = 2
 awg_adapter.instrument.set_channel_grouping(grouping_1x8)
 
-output4_marker1 = 4
-awg_adapter.instrument.triggers_out_4_source(output4_marker1)
+output1_marker1 = 4
+awg_adapter.instrument.triggers_out_0_source(output1_marker1)
 
 awg_sampling_rate_586KHz = 12
 awg_adapter.instrument.awgs_0_time(awg_sampling_rate_586KHz)
@@ -177,7 +177,7 @@ update_stimulus(is_enabled=True, signal_output=signal_output, amplitude=0.1, osc
 
 signal_input = signal_output
 
-scanjob = scanjob_t()
+scanjob = scanjob_t(wait_time_startscan=1)
 scanjob.add_sweep(param=stimulus.set_oscillator_frequency(oscillator), start=140e6, end=180e6, step=0.2e6)
 scanjob.add_minstrument([scope_reader.acquire_single_sample(demodulator, 'R', partial=True),
                          scope_reader.acquire_single_sample(demodulator, 'x', partial=True),
