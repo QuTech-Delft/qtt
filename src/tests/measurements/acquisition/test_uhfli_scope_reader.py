@@ -63,7 +63,7 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.Scope.names = ['Test1', name]
         scope_mock.adapter.instrument.Scope.units = ['GigaVolt', unit]
 
-        scope_trace_001 = scope_mock.acquire()
+        scope_trace_001 = scope_mock.acquire(number_of_averages=1)
         self.assertEqual(len(scope_trace_001[0].set_arrays[0]), scope_length)
         self.assertEqual(scope_trace_001[0].name, 'ScopeTrace000_Channel1')
         self.assertEqual(scope_trace_001[0].label, 'Demod_1_R')
@@ -81,7 +81,7 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.scope.progress.return_value = [0.5]
 
         with self.assertRaisesRegex(TimeoutError, 'Got 0 records after 0.0001 sec'):
-            scope_mock.acquire(timeout=1e-4)
+            scope_mock.acquire(number_of_averages=1, timeout=1e-4)
 
     def test_finalize_acquisition_set_settings_correctly(self):
         mock_address = 'dev2334'
