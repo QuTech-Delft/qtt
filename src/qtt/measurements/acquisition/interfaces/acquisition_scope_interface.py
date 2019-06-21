@@ -9,12 +9,12 @@ from qtt.measurements.acquisition.interfaces import AcquisitionInterface
 class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     """ An interface which contains the functionality for a acquisition device as a oscilloscope."""
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def input_range(self) -> Tuple[float, float]:
         """ The input range of the channels."""
 
-    @input_range.setter
+    @input_range.setter # type: ignore
     @abstractmethod
     def input_range(self, value: Tuple[float, float]) -> None:
         """ Gets the amplitude input range of the channels.
@@ -23,12 +23,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The input range amplitude in Volts.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def sample_rate(self) -> float:
         """ The sample rate of the acquisition device."""
 
-    @sample_rate.setter
+    @sample_rate.setter # type: ignore
     @abstractmethod
     def sample_rate(self, value: float) -> None:
         """ Sets the sample rate of the acquisition device.
@@ -37,12 +37,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The sample rate in samples per second.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def period(self) -> float:
         """ The measuring period of the acquisition."""
 
-    @period.setter
+    @period.setter # type: ignore
     @abstractmethod
     def period(self, value: float) -> None:
         """ Sets the measuring period of the acquisition.
@@ -51,12 +51,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The measuring period in seconds.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def number_of_samples(self) -> int:
         """ The number of samples to take during a acquisition."""
 
-    @number_of_samples.setter
+    @number_of_samples.setter # type: ignore
     @abstractmethod
     def number_of_samples(self, value: int) -> None:
         """ Sets the sample count to take during a acquisition.
@@ -65,12 +65,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The number of samples.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def trigger_enabled(self) -> bool:
         """ The setter sets the external triggering on or off. The getter returns the current trigger value."""
 
-    @trigger_enabled.setter
+    @trigger_enabled.setter # type: ignore
     @abstractmethod
     def trigger_enabled(self, value: bool) -> None:
         """ Turns the external triggering on or off.
@@ -79,12 +79,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The trigger on/off value.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def trigger_channel(self) -> str:
         """ The input signal to trigger the acquisition on."""
 
-    @trigger_channel.setter
+    @trigger_channel.setter # type: ignore
     @abstractmethod
     def trigger_channel(self, channel: str) -> None:
         """ Sets the external triggering channel.
@@ -93,12 +93,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             channel: The trigger channel value.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def trigger_level(self) -> float:
         """ The trigger-level of the trigger in Volts."""
 
-    @trigger_level.setter
+    @trigger_level.setter # type: ignore
     @abstractmethod
     def trigger_level(self, level: float) -> None:
         """ Sets the external triggering level.
@@ -107,12 +107,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             level: The external trigger level in Volts.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def trigger_slope(self) -> str:
         """ The edge of the trigger signal to trigger on."""
 
-    @trigger_slope.setter
+    @trigger_slope.setter # type: ignore
     @abstractmethod
     def trigger_slope(self, slope: str) -> None:
         """ Sets the external triggering slope.
@@ -121,12 +121,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             slope: The external trigger slope.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def trigger_delay(self) -> float:
         """ The delay between getting a trigger and acquiring in seconds."""
 
-    @trigger_delay.setter
+    @trigger_delay.setter # type: ignore
     @abstractmethod
     def trigger_delay(self, delay: float) -> None:
         """ Sets the delay in seconds between the external trigger and acquisition.
@@ -135,12 +135,12 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             delay: The scope trigger delay in seconds.
         """
 
-    @property
+    @property # type: ignore
     @abstractmethod
     def enabled_channels(self) -> Tuple[int, ...]:
         """ Reports the enabled input channels."""
 
-    @enabled_channels.setter
+    @enabled_channels.setter # type: ignore
     @abstractmethod
     def enabled_channels(self, value: Tuple[int, ...]):
         """ Sets the given channels to enabled and turns off all others.
