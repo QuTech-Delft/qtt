@@ -41,7 +41,7 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         self.__uhfli.daq.sync()
         self.__uhfli.daq.setInt(f'/{self._address}/scopes/0/enable', 1)
 
-    def acquire(self, number_of_averages: int=1, timeout: float=30) -> List[DataArray]:
+    def acquire(self, number_of_averages: int, timeout: float = 30) -> List[DataArray]:
         """ Collects records from the UHFLI.
 
         Args:
