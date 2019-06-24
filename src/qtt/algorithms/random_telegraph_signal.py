@@ -111,7 +111,7 @@ def plot_two_level_threshold(results, fig=100):
     plt.xlabel('Signal [a.u.]')
     plot_vertical_line(results['signal_threshold'], label='threshold')
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
-
+    plt.title('Result of two level threshold processing')
 
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
                     num_bins=None, plungers=None, fig=None, ppt=None, verbose=0):
