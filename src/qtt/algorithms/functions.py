@@ -55,7 +55,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_p
         par_fit (array): fit parameters of the gaussian: [mean, s, amplitude, offset]
         result_dict (dict): result dictonary containging the fitparameters and the initial guess parameters
     """
-    def func(params): return _cost_gaussian(x_data, y_data, params)
+    def cost_function(params): return _cost_gaussian(x_data, y_data, params)
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
     if initial_params is None:
@@ -64,7 +64,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_p
         mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
         offset = np.min(y_data)
         initial_params = np.array([mean, s, amplitude, offset])
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    par_fit = scipy.optimize.fmin(cost_function, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     result_dict = {'parameters fitted gaussian': par_fit, 'parameters initial guess': initial_params}
 
@@ -110,38 +110,30 @@ def _cost_double_gaussian(x_data, y_data, params):
     return cost
 
 
-def _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter):
-    """ Estimate parameters for exponential decay function
+def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
+    """ Estimate of double gaussian model parameters."""
+    maxsignal = np.percentile(x_data, 98)
+    minsignal = np.percentile(x_data, 2)
 
-    Args:
-        x_data (array): Independent data
-        y_data (array): Dependent data
-        offset_parameter (None or float): If None, then estimate the offset, otherwise fix the offset to the
-        specified value
-    Returns:
-        Array with initial parameters
-    """
-    maxsignal = np.percentile(y_data, 98)
-    minsignal = np.percentile(y_data, 2)
-    midpoint = int(len(x_data) / 2)
-    gamma = 1 / (x_data[midpoint] - x_data[0])
-    if offset_parameter is None:
-        mean_left = np.mean(y_data[:midpoint])
-        mean_right = np.mean(y_data[midpoint:])
+    data_left = y_data[:int((len(y_data) / 2))]
+    data_right = y_data[int((len(y_data) / 2)):]
 
-        alpha = np.exp(gamma * x_data[0])
-        increasing_exponential = mean_left < mean_right
-        if increasing_exponential:
-            A = maxsignal
-            B = -(maxsignal - minsignal) * alpha
-        else:
-            A = minsignal
-            B = (maxsignal - minsignal) * alpha
-        initial_params = np.array([A, B, gamma])
+    amplitude_left = np.max(data_left)
+    amplitude_right = np.max(data_right)
+    sigma_left = (maxsignal - minsignal) * 1 / 20
+    sigma_right = (maxsignal - minsignal) * 1 / 20
+
+    if fast_estimate:
+        alpha = .1
+        mean_left = minsignal + (alpha) * (maxsignal - minsignal)
+        mean_right = minsignal + (1 - alpha) * (maxsignal - minsignal)
     else:
-        initial_params = np.array([B, gamma])
+        x_data_left = x_data[:int((len(y_data) / 2))]
+        x_data_right = x_data[int((len(y_data) / 2)):]
+        mean_left = np.sum(x_data_left * data_left) / np.sum(data_left)
+        mean_right = np.sum(x_data_right * data_right) / np.sum(data_right)
+    initial_params = np.array([amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
     return initial_params
-
 
 def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     """ Fitting of double gaussian
@@ -239,22 +231,24 @@ def _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter):
     maxsignal = np.percentile(y_data, 98)
     minsignal = np.percentile(y_data, 2)
     midpoint = int(len(x_data) / 2)
-    gamma = 1 / (x_data[midpoint])
+    gamma = 1 / (x_data[midpoint] - x_data[0])
     if offset_parameter is None:
         mean_left = np.mean(y_data[:midpoint])
         mean_right = np.mean(y_data[midpoint:])
 
-        if mean_left < mean_right:
-            A = -(maxsignal - minsignal)
-            B = maxsignal
+        alpha = np.exp(gamma * x_data[0])
+        increasing_exponential = mean_left < mean_right
+        if increasing_exponential:
+            A = maxsignal
+            B = -(maxsignal - minsignal) * alpha
         else:
-            A = maxsignal - minsignal
-            B = minsignal
+            A = minsignal
+            B = (maxsignal - minsignal) * alpha
         initial_params = np.array([A, B, gamma])
-
     else:
         initial_params = np.array([B, gamma])
     return initial_params
+
 
 
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None, threshold=None,
