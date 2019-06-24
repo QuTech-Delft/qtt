@@ -4,20 +4,47 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
-    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay
+    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, _estimate_exp_decay_initial_parameters
 
 
 class TestFunctions(unittest.TestCase):
 
     @staticmethod
     def test_fit_exp_decay():
-        x_data = np.arange(0, 10., .1)
         parameters = [0, 1, 1]
+        x_data = np.arange(0, 10., .1)
         y_data = exp_function(x_data, *parameters)
         fitted = fit_exp_decay(x_data, y_data)
         np.testing.assert_array_almost_equal(fitted, parameters, decimal=3)
         fitted = fit_exp_decay(x_data, y_data, offset_parameter=0.1)
         np.testing.assert_array_almost_equal(fitted, [.1, .95, 1.4], decimal=1)
+
+    @staticmethod
+    def test_fit_exp_decay_upward():
+        parameters = [0, -1, 1]
+        x_data = np.arange(0, 10., .1)
+        y_data = exp_function(x_data, *parameters)
+        fitted = fit_exp_decay(x_data, y_data)
+        np.testing.assert_array_almost_equal(fitted, array(
+            [-1.05021017e-01, -7.18301596e-05, 2.99039968e-01]), decimal=3)
+
+    @staticmethod
+    def test_fit_exp_decay_shifted_xdata():
+        x_data = np.array([0.0e+00, 1.0e-05, 2.0e-05, 3.0e-05, 4.0e-05, 5.0e-05, 6.0e-05,
+                           7.0e-05, 8.0e-05, 9.0e-05, 1.0e-04, 1.1e-04, 1.2e-04, 1.3e-04,
+                           1.4e-04, 1.5e-04, 1.6e-04, 1.7e-04, 1.8e-04, 1.9e-04, 2.0e-04,
+                           2.1e-04, 2.2e-04, 2.3e-04, 2.4e-04])
+        y_data = np.array([-1.01326172, -0.80266628, -0.68311867, -0.55951015, -0.43239706,
+                           -0.37280919, -0.30871727, -0.25232649, -0.21540011, -0.1532993,
+                           -0.15151554, -0.09949812, -0.07043394, -0.07213127, -0.07627919,
+                           -0.0440114, -0.05251701, -0.06129484, -0.04697476, -0.03194123,
+                           -0.02915847, -0.02098205, -0.01857533, 0.00326683, -0.0185229])
+        initial_parameters0 = _estimate_exp_decay_initial_parameters(x_data, y_data, None)
+        initial_parameters = _estimate_exp_decay_initial_parameters(x_data - .1, y_data, None)
+        np.testing.assert_array_almost_equal(initial_parameters0, np.array(
+            [-7.19224040e-03, -9.04983668e-01, 8.33333333e+03]), 3)
+        np.testing.assert_array_almost_equal(initial_parameters, np.array(
+            [-7.19224040e-03, -0.00000000e+00, 8.33333333e+03]), 3)
 
     @staticmethod
     def test_logistic():
