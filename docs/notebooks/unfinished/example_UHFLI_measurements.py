@@ -123,6 +123,7 @@ stimulus = UHFLIStimulus(uhfli_id)
 stimulus.initialize(uhfli_configuration)
 scope_reader = UHFLIScopeReader(uhfli_id)
 
+scope_reader.adapter.instrument.external_clock_enabled('ON')
 
 #  AWG
 
