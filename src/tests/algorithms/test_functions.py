@@ -25,8 +25,8 @@ class TestFunctions(unittest.TestCase):
         x_data = np.arange(0, 10., .1)
         y_data = exp_function(x_data, *parameters)
         fitted = fit_exp_decay(x_data, y_data)
-        np.testing.assert_array_almost_equal(fitted, array(
-            [-1.05021017e-01, -7.18301596e-05, 2.99039968e-01]), decimal=3)
+        np.testing.assert_array_almost_equal(fitted, np.array(
+            [ 5.38675880e-05, -9.99998574e-01,  9.99760970e-01]), decimal=3)
 
     @staticmethod
     def test_fit_exp_decay_shifted_xdata():

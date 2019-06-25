@@ -87,7 +87,7 @@ class ContinuousTimeMarkovModel:
 
     def update_model(self, holding_parameters, jump_chain):
         """ Update the model of the markov chain
-        
+
         Args:
             holding_parameters: List with the holding parameters
             jump_chain: The jump chain or transition matrix
