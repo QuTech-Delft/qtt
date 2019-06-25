@@ -417,6 +417,7 @@ class VirtualAwg(Instrument):
                     continue
 
                 sequence_data = Sequencer.get_data(sequence, sampling_rate)
+                sequence_data = sequence_data[:-1]
                 if not marker_number:
                     awg_to_gate = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
                     scaling_ratio = 1 / (awg_to_gate * gain_factor)
