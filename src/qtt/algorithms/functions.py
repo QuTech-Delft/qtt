@@ -55,7 +55,9 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_p
         par_fit (array): fit parameters of the gaussian: [mean, s, amplitude, offset]
         result_dict (dict): result dictonary containging the fitparameters and the initial guess parameters
     """
-    def func(params): return _cost_gaussian(x_data, y_data, params)
+
+    def cost_function(params): return _cost_gaussian(x_data, y_data, params)
+
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
     if initial_params is None:
@@ -64,7 +66,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_p
         mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
         offset = np.min(y_data)
         initial_params = np.array([mean, s, amplitude, offset])
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    par_fit = scipy.optimize.fmin(cost_function, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     result_dict = {'parameters fitted gaussian': par_fit, 'parameters initial guess': initial_params}
 
@@ -160,7 +162,10 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
             split (float): value that seperates the up and the down level
 
     """
-    def func(params): return _cost_double_gaussian(x_data, y_data, params)
+
+    def func(params):
+        return _cost_double_gaussian(x_data, y_data, params)
+
     if initial_params is None:
         initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
     par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
@@ -218,6 +223,44 @@ def cost_exp_decay(x_data, y_data, params, threshold=None):
     return cost
 
 
+def _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter):
+    """ Estimate parameters for exponential decay function
+
+    Args:
+        x_data (array): Independent data
+        y_data (array): Dependent data
+        offset_parameter (None or float): If None, then estimate the offset, otherwise fix the offset to the
+        specified value
+    Returns:
+        Array with initial parameters
+    """
+    maxsignal = np.percentile(y_data, 98)
+    minsignal = np.percentile(y_data, 2)
+    midpoint = int(len(x_data) / 2)
+    gamma = 1 / (x_data[midpoint] - x_data[0])
+
+    mean_left = np.mean(y_data[:midpoint])
+    mean_right = np.mean(y_data[midpoint:])
+    increasing_exponential = mean_left < mean_right
+    alpha = np.exp(gamma * x_data[0])
+
+    if offset_parameter is None:
+        if increasing_exponential:
+            A = maxsignal
+            B = -(maxsignal - minsignal) * alpha
+        else:
+            A = minsignal
+            B = (maxsignal - minsignal) * alpha
+        initial_params = np.array([A, B, gamma])
+    else:
+        if increasing_exponential:
+            B = -(offset_parameter - minsignal) * alpha
+        else:
+            B = (maxsignal - offset_parameter) * alpha
+        initial_params = np.array([B, gamma])
+    return initial_params
+
+
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None, threshold=None,
                   offset_parameter=None):
     """ Fit a exponential decay.
@@ -236,34 +279,29 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
         offset_parameter (None or float): if None, then estimate the offset, otherwise fix the offset to the
             specified value
     Returns:
-        par_fit (array): fit parameters of the exponential decay, [A, B, gamma]
+        fitted_parameters (array): fit parameters of the exponential decay, [A, B, gamma]
 
     See: :func:`exp_function`
 
     """
 
     if initial_params is None:
-        maxsignal = np.percentile(y_data, 98)
-        minsignal = np.percentile(y_data, 2)
-        gamma = 1 / (x_data[int(len(x_data) / 2)])
-        B = maxsignal
-        if offset_parameter is None:
-            A = minsignal
-            initial_params = np.array([A, B, gamma])
-
-        else:
-            initial_params = np.array([B, gamma])
+        initial_params = _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter)
 
     if offset_parameter is None:
-        def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
+        def cost_function(params):
+            return cost_exp_decay(x_data, y_data, params, threshold)
     else:
-        def func(params): return cost_exp_decay(x_data, y_data, np.hstack((offset_parameter, params)), threshold)
+        def cost_function(params):
+            return cost_exp_decay(
+                x_data, y_data, np.hstack((offset_parameter, params)), threshold)
 
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    fitted_parameters = scipy.optimize.fmin(cost_function, initial_params,
+                                            maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     if offset_parameter is not None:
-        par_fit = np.hstack(([offset_parameter], par_fit))
+        fitted_parameters = np.hstack(([offset_parameter], fitted_parameters))
 
-    return par_fit
+    return fitted_parameters
 
 
 def gauss_ramsey(x_data, params):
@@ -282,7 +320,7 @@ def gauss_ramsey(x_data, params):
         gauss_ramsey (array): model for the gauss_ramsey
     """
     [A, t2s, ramseyfreq, angle, B] = params
-    gauss_ramsey = A * np.exp(-(x_data / t2s)**2) * np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
+    gauss_ramsey = A * np.exp(-(x_data / t2s) ** 2) * np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
     return gauss_ramsey
 
 
@@ -299,9 +337,7 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
         cost (float): value which indicates the difference between the data and the fit
     """
     model = gauss_ramsey(x_data, params)
-    # cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2*(np.array(x_data)[1:] -
-    #                                                                 np.array(x_data)[:-1])**weight_power])
-    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2 * (np.diff(x_data))**weight_power])
+    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:]) ** 2 * (np.diff(x_data)) ** weight_power])
     return cost
 
 
@@ -326,7 +362,9 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
         result_dict (dict): dictionary containing a description, the par_fit and initial_params
 
     """
+
     def func(params): return cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
+
     if initial_params is None:
         A = (np.max(y_data) - np.min(y_data)) / 2
         t2s = 1e-6
@@ -404,10 +442,16 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
 def logistic(x, x0=0, alpha=1):
     """ Logistic function
 
+    Defines the logistic function
+
+    .. math::
+
+        y = 1 / (1 + \exp(-2 * alpha * (x - x0)))
+
     Args:
-        x (array): TODO
-        x0 (float): TODO
-        alpha (float): TODO
+        x (array): Independent data
+        x0 (float): Midpoint of the logistic function
+        alpha (float): Growth rate
 
     Example:
         y = logistic(0, 1, alpha=1)
