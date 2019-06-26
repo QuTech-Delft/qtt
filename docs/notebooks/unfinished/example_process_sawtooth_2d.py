@@ -26,7 +26,9 @@ processing = 'center'
 width = [upwards_edge_pixels_x/pixels_x, upwards_edge_pixels_y/pixels_y]
 resolution = [pixels_x, pixels_y]
 
-def create_dummy_data_array(width: float, processing: str, sawteeth_count: int, channel_index: int = 1, trace_number: int = 1) -> DataArray:
+
+def create_dummy_data_array(width: float, processing: str, sawteeth_count: int, channel_index: int = 1,
+                            trace_number: int = 1) -> DataArray:
     identifier = 'ScopeTrace_{:03d}'.format(trace_number)
     label = 'Channel_{}'.format(channel_index)
     scope_data = sawtooth(2 * np.pi * (sawteeth_count * time / period), width)
