@@ -9,7 +9,7 @@ from qtt.measurements.acquisition.interfaces import AcquisitionInterface
 class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     """ An interface which contains the functionality for a acquisition device as a oscilloscope."""
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def input_range(self) -> Tuple[float, float]:
         """ The input range of the channels."""
