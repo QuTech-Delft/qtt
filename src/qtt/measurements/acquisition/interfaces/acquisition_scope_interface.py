@@ -14,7 +14,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def input_range(self) -> Tuple[float, float]:
         """ The input range of the channels."""
 
-    @input_range.setter # type: ignore
+    @input_range.setter  # type: ignore
     @abstractmethod
     def input_range(self, value: Tuple[float, float]) -> None:
         """ Gets the amplitude input range of the channels.
