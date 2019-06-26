@@ -84,7 +84,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def trigger_channel(self) -> str:
         """ The input signal to trigger the acquisition on."""
 
-    @trigger_channel.setter # type: ignore
+    @trigger_channel.setter  # type: ignore
     @abstractmethod
     def trigger_channel(self, channel: str) -> None:
         """ Sets the external triggering channel.
