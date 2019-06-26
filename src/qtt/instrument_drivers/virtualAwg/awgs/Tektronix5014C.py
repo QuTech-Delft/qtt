@@ -2,8 +2,7 @@ import numpy as np
 
 from qcodes import Parameter
 from qcodes.utils.validators import Numbers
-from qtt.instrument_drivers.virtualAwg.awgs.common import (AwgCommon,
-                                                           AwgCommonError)
+from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
 
 
 class Tektronix5014C_AWG(AwgCommon):
@@ -69,7 +68,7 @@ class Tektronix5014C_AWG(AwgCommon):
         self.__awg.set('run_mode', mode)
 
     def retrieve_running_mode(self):
-        self.__awg.get('run_mode')
+        return self.__awg.get('run_mode')
 
     def update_sampling_rate(self, sampling_rate):
         self.__awg.set('clock_freq', sampling_rate)
@@ -87,20 +86,35 @@ class Tektronix5014C_AWG(AwgCommon):
         return gains[0]
 
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
-        channel_data = dict()
-        waveform_data = dict()
-        self._waveform_data = zip(sequence_channels, sequence_names, sequence_items)
-        for ((channel_nr, *marker_nr), name, data_array) in self._waveform_data:
-            if name not in waveform_data:
-                data_count = len(data_array)
-                waveform_data[name] = [np.zeros(data_count), np.zeros(data_count), np.zeros(data_count)]
-                channel_data.setdefault(channel_nr, []).append(name)
-            index = marker_nr[-1] if len(marker_nr) >= 1 else 0
-            waveform_data[name][index] = data_array
+        sequences = (sequence_names, sequence_channels, sequence_items)
+        channel_data, waveform_data = Tektronix5014C_AWG.create_waveform_data(*sequences)
         if reload:
             self._upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))
         self._channel_data = channel_data
         self._set_sequence(list(channel_data.keys()), list(channel_data.values()))
+
+    @staticmethod
+    def create_waveform_data(names, channels, items):
+        channel_data = dict()
+        waveform_data = dict()
+
+        unique_channels = set([channel for (channel, *_) in channels])
+        for unique_channel in unique_channels:
+            indices = [channels.index(item) for item in channels if item[0] == unique_channel]
+            data_count = len(items[indices[0]])
+            data_name = names[indices[0]]
+
+            data = [np.zeros(data_count), np.zeros(data_count), np.zeros(data_count)]
+            for index in indices:
+                (_, *marker) = channels[index]
+                data[marker[0] if marker else 0] = items[index]
+                if not marker:
+                    data_name = names[index]
+
+            waveform_data[data_name] = data
+            channel_data.setdefault(unique_channel, []).append(data_name)
+
+        return channel_data,waveform_data
 
     def retrieve_waveforms(self):
         return self._waveform_data if self._waveform_data else None
