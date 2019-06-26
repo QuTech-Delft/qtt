@@ -79,7 +79,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The trigger on/off value.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def trigger_channel(self) -> str:
         """ The input signal to trigger the acquisition on."""
