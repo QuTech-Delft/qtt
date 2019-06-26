@@ -45,7 +45,7 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         """ Collects records from the UHFLI.
 
         Args:
-            number_of_records: The number of records which should be collected at once.
+            number_of_averages: The number of averages taken during acquiring.
             timeout: The time the collecting of records can maximally take before raising an error.
 
         Returns:

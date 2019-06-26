@@ -57,6 +57,7 @@ processed_data_set = signal_processor.run(data_set)
 
 color_cycler = cycle('bgrcmk')
 
+
 def plot_1D_dataset(data_set, label_x, label_y, figure_number=100):
     plt.figure(figure_number)
     plt.clf()
