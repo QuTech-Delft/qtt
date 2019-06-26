@@ -121,7 +121,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             slope: The external trigger slope.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def trigger_delay(self) -> float:
         """ The delay between getting a trigger and acquiring in seconds."""
