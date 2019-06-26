@@ -37,7 +37,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The sample rate in samples per second.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def period(self) -> float:
         """ The measuring period of the acquisition."""
