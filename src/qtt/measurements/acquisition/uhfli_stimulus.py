@@ -31,7 +31,7 @@ class UHFLIStimulus:
         """ Enable data transfer in the demodulators.
 
         Args:
-             channel: The channel number to enable (1 - 8).
+             channel: The output channel number to enable (1 - 8).
              is_enabled: True to enable and False to disable.
 
         """
@@ -45,22 +45,20 @@ class UHFLIStimulus:
         Args:
             output: One of the two outputs on the device.
             is_enabled: True to enable and False to disable.
-
         """
         enabled = 'ON' if is_enabled else 'OFF'
         qcodes_parameter_name = 'signal_output{}_on'.format(output)
         self._uhfli.parameters[qcodes_parameter_name](enabled)
 
-    def set_oscillator_frequency(self, channel: int, frequency: Optional[float] = None) -> Union[Parameter, None]:
+    def set_oscillator_frequency(self, oscillator: int, frequency: Optional[float] = None) -> Union[Parameter, None]:
         """ Set the oscillators frequencies.
 
         Args:
-            channel: Channel the the oscillator belongs to (1 - 8) with MF enabled.
+            oscillator: Output channel the the oscillator belongs to (1 - 8) with MF enabled.
             frequency: Optional parameter that if not provided, this method returns a QCoDeS parameter that can be
                     used to set the oscillator frequency. Allowed frequencies are 0 - 600 MHz.
-
         """
-        qcodes_parameter_name = 'oscillator{}_freq'.format(channel)
+        qcodes_parameter_name = 'oscillator{}_freq'.format(oscillator)
         qcodes_parameter = self._uhfli.parameters[qcodes_parameter_name]
         if frequency is None:
             return qcodes_parameter
@@ -70,22 +68,42 @@ class UHFLIStimulus:
         """ Enable one of the 16 output amplitudes.
 
         Args:
-            channel: The channel to enable (1 - 8).
+            channel: The output channel to enable (1 - 8).
             demodulator: Which demodulator the channel belongs to.
             is_enabled: True to enable and False to disable.
-
         """
-        qcodes_parameter_name = 'signal_output{}_enable{}'.format(demodulator, channel)
+        qcodes_parameter_name = 'signal_output{}_enable{}'.format(channel, demodulator)
         self._uhfli.parameters[qcodes_parameter_name](is_enabled)
 
     def set_signal_output_amplitude(self, channel: int, demodulator: int, amplitude: float) -> None:
         """ Set the amplitude of the output signal.
 
         Args:
-            channel: The channel to set the amplitude on (1 - 8).
+            channel: The output channel to set the amplitude on (1 - 8).
             demodulator: Which demodulator the channel belongs to.
             amplitude: Amplitude in volts, allowed values are 0.0 - 1.5 V.
-
         """
-        qcodes_parameter_name = 'signal_output{}_amplitude{}'.format(demodulator, channel)
+        qcodes_parameter_name = 'signal_output{}_amplitude{}'.format(channel, demodulator)
         self._uhfli.parameters[qcodes_parameter_name](amplitude)
+
+    def set_demodulator_signal_input(self, demodulator: int, input_channel: int) -> None:
+        """ Set the signal demodulator input channel.
+
+        Args:
+            demodulator: Which demodulator the channel belongs to.
+            input_channel: The input channel (1 or 2).
+        """
+        qcodes_parameter_name = 'demod{}_signalin'.format(demodulator)
+        if input_channel not in (1, 2):
+            raise NotImplementedError('The input channel can currently only be set to Sig In 1, or Sig In 2!')
+        self._uhfli.parameters[qcodes_parameter_name]('Sig In {}'.format(input_channel))
+
+    def connect_oscillator_to_demodulator(self, oscillator: int, demodulator: int) -> None:
+        """ Connects an oscillator (1 - 8) to the given demodulator.
+
+        Args:
+            oscillator: The oscillator number to connect to (1 - 8).
+            demodulator: Which demodulator the oscillator belongs to.
+        """
+        qcodes_parameter_name = 'demod{}_oscillator'.format(demodulator)
+        self._uhfli.parameters[qcodes_parameter_name](oscillator)

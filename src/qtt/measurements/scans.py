@@ -4,38 +4,36 @@ This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
 This is part of qtt. 
 """
 
-import numpy as np
+import datetime
+import logging
 import os
 import re
-import logging
 import time
-import datetime
 import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pyqtgraph
+import qcodes
 import skimage
 import skimage.filters
-import matplotlib.pyplot as plt
-
-import qcodes
-from qcodes.utils.helpers import tprint
+from qcodes import DataArray, Instrument
 from qcodes.instrument.parameter import Parameter, StandardParameter
-from qcodes import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
-from qcodes import Instrument
+from qcodes.utils.helpers import tprint
 
-import qtt.utilities.tools
-from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.instrument_drivers.virtualAwg.virtual_awg
-
-from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset, loadDataset, writeDataset
-from qtt.data import uniqueArrayName
-
-from qtt.utilities.tools import update_dictionary
+import qtt.utilities.tools
+from qtt.algorithms.gatesweep import analyseGateSweep
+from qtt.data import (diffDataset, loadDataset, makeDataSet1D,
+                      makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain,
+                      uniqueArrayName)
+from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
+from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 from qtt.structures import VectorParameter
-
+from qtt.utilities.tools import update_dictionary
 
 # %%
 
@@ -231,6 +229,9 @@ def get_instrument(instr, station=None):
         instr = instr[0]
 
     if isinstance(instr, Instrument):
+        return instr
+
+    if isinstance(instr, AcquisitionScopeInterface):
         return instr
 
     if not isinstance(instr, str):
@@ -1239,7 +1240,9 @@ def get_sampling_frequency(instrument_handle):
     """
     instrument_handle = get_instrument(instrument_handle)
 
-    if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+    if isinstance(instrument_handle, AcquisitionScopeInterface):
+        return instrument_handle.sample_rate
+    elif isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
         return instrument_handle.sample_rate()
     elif isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
         return Exception('not implemented yet')
@@ -1684,6 +1687,44 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
     return [avarage]
 
 
+def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, process=True):
+    """ Measure block data with scope reader.
+
+    Args:
+        scope_reader (AcquisitionScopeInterface): Instance of scope reader.
+        waveform (dict): Information about the waveform that is to be collected.
+        number_of_averages (int) : Number of times the sample is collected.
+        process (bool): If True, cut off the downward sawtooth slopes from the data.
+
+    Returns:
+        data (numpy array): An array of arrays, one array per input channel.
+
+    """
+    data_arrays = scope_reader.acquire(number_of_averages)
+    raw_data = np.array(data_arrays)
+    if not process:
+        return raw_data
+
+    if 'width' in waveform:
+        width = [waveform['width']]
+    else:
+        width = [waveform['width_horz'], waveform['width_vert']]
+
+    resolution = waveform.get('resolution', None)
+    start_zero = waveform.get('start_zero', False)
+    sample_rate = scope_reader.sample_rate
+    period = waveform['period']
+
+    if len(width) == 2:
+        data, _ = process_2d_sawtooth(raw_data.T, period, sample_rate, resolution,
+                                      width, start_zero=start_zero, fig=None)
+    else:
+        data, _ = process_1d_sawtooth(raw_data.T, width, period, sample_rate,
+                                      resolution=resolution, start_zero=start_zero, fig=None)
+
+    return data
+
+
 def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
     Supported instruments: m4i digitizer, ZI UHF-LI
@@ -1700,32 +1741,34 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
 
     """
     try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+        is_m4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
     except:
-        ism4i = False
+        is_m4i = False
     try:
-        uhfli = isinstance(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
+        is_uhfli = isinstance(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
     except:
-        uhfli = False
+        is_uhfli = False
+    try:
+        is_scope_reader = isinstance(minstrhandle, AcquisitionScopeInterface)
+    except:
+        is_scope_reader = False
 
     minstrument = get_instrument(minstrhandle)
-    is_simulation = minstrument.name.startswith('sdigitizer')
+    is_simulation = isinstance(minstrhandle, SimulationDigitizer)
 
-    if ism4i:
-        data = measuresegment_m4i(
-            minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
-    elif uhfli:
-        data = measure_segment_uhfli(
-            minstrhandle, waveform, read_ch, Naverage)
+    if is_m4i:
+        data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
+    elif is_uhfli:
+        data = measure_segment_uhfli(minstrhandle, waveform, read_ch, Naverage)
+    elif is_scope_reader:
+        data = measure_segment_scope_reader(minstrhandle, waveform, Naverage, process=process)
     elif minstrhandle == 'dummy':
         # for testing purposes
         data = np.random.rand(100, )
     elif is_simulation:
         data = minstrument.measuresegment(waveform, channels=read_ch)
     else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % minstrhandle)
+        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
     if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
     return data

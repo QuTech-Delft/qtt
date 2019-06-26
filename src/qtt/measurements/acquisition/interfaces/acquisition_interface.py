@@ -36,13 +36,13 @@ class AcquisitionInterface(ABC):
         """
 
     @abstractmethod
-    def acquire(self, number_of_records: int, timeout: float) -> List[DataArray]:
+    def acquire(self, number_of_averages: int, timeout: float = 30) -> List[DataArray]:
         """ Reads raw-data from the acquisition device.
 
             This method should be called after initialising and starting the acquisition.
 
         Args:
-            number_of_records: The number of records collected.
+            number_of_averages: The number of averages taken during acquiring.
             timeout: The maximum period in seconds to acquire records.
 
         Returns:

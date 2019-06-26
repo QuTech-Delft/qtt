@@ -37,52 +37,33 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
     def start_acquisition(self) -> None:
         """ Starts the acquisition mode of the scope in the UHFLI."""
         self.__uhfli.scope.set('scopeModule/mode', 1)
-        self.__uhfli.scope.subscribe('/{0}/scopes/0/wave'.format(self._address))
+        self.__uhfli.scope.subscribe(f'/{self._address}/scopes/0/wave')
         self.__uhfli.daq.sync()
-        self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 1)
+        self.__uhfli.daq.setInt(f'/{self._address}/scopes/0/enable', 1)
 
-    def acquire(self, number_of_records: int=1, timeout: float=30) -> List[DataArray]:
+    def acquire(self, number_of_averages: int, timeout: float = 30) -> List[DataArray]:
         """ Collects records from the UHFLI.
 
         Args:
-            number_of_records: The number of records which should be collected at once.
+            number_of_averages: The number of averages taken during acquiring.
             timeout: The time the collecting of records can maximally take before raising an error.
 
         Returns:
             A list with the recorded scope records as data arrays.
         """
         self.__create_setpoint_data()
-        return self.__get_uhfli_scope_records(number_of_records, timeout)
+        return self.__get_uhfli_scope_records(number_of_averages, timeout)
 
     def stop_acquisition(self) -> None:
         """ Stops the acquisition mode of the scope in the UHFLI."""
-        self.__uhfli.daq.setInt('/{0}/scopes/0/enable'.format(self._address), 0)
+        self.__uhfli.daq.setInt(f'/{self._address}/scopes/0/enable', 0)
         self.__uhfli.scope.finish()
 
     def __create_setpoint_data(self) -> None:
         sample_count = self.__uhfli.scope_length()
-        data_array = DataArray('ScopeTime', 'Time', unit='seconds', is_setpoint=True,
+        data_array = DataArray('ScopeTime', 'Time', unit='s', is_setpoint=True,
                                preset_data=np.linspace(0, self.period, sample_count))
         self.__setpoint_array = data_array
-
-    @property
-    def number_of_averages(self) -> int:
-        """ Gets the number of averages to take during a acquisition.
-
-        Returns:
-            The number of averages set value.
-        """
-        return self.__uhfli.scope_average_weight.get()
-
-    @number_of_averages.setter
-    def number_of_averages(self, value: int) -> None:
-        """ Sets the number of averages to take during a acquisition.
-
-        Args:
-            value: The number of averages.
-        """
-        self.__uhfli.scope_segments.set('OFF' if value == 1 else 'ON')
-        self.__uhfli.scope_average_weight.set(value)
 
     @property
     def input_range(self) -> Tuple[float, float]:
@@ -156,6 +137,24 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         self.__uhfli.scope_duration.set(value)
 
     @property
+    def number_of_samples(self) -> int:
+        """ Gets the sample count to take during a acquisition.
+
+        Returns:
+            The number of samples set value.
+        """
+        return self.__uhfli.scope_length.get()
+
+    @number_of_samples.setter
+    def number_of_samples(self, value: int) -> None:
+        """ Sets the sample count to take during a acquisition.
+
+        Args:
+            value: The number of samples.
+        """
+        self.__uhfli.scope_length.set(value)
+
+    @property
     def trigger_enabled(self) -> bool:
         """ Gets the external triggering enabled status.
 
@@ -167,7 +166,7 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
             return True
         if is_enabled == 'OFF':
             return False
-        raise ValueError('Unknown trigger value ({})!'.format(is_enabled))
+        raise ValueError(f'Unknown trigger value ({is_enabled})!')
 
     @trigger_enabled.setter
     def trigger_enabled(self, value: bool) -> None:
@@ -284,8 +283,19 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
             channel: The input channel number.
             attribute: The input signal to acquire.
         """
-        channel_input = getattr(self.__uhfli, 'scope_channel{}_input'.format(channel))
+        channel_input = getattr(self.__uhfli, f'scope_channel{channel}_input')
         channel_input.set(attribute)
+
+    def set_channel_limits(self, channel: int, lower_limit: float, upper_limit: float) -> None:
+        """ Sets the upper and lower limit of the scope full scale range.
+
+        Args:
+            channel: The input channel number.
+            lower_limit: The lower limit range.
+            upper_limit: The upper limit range.
+        """
+        self.__uhfli.daq.setDouble(f'/{self._address}/scopes/0/channels/{channel - 1}/limitlower', lower_limit)
+        self.__uhfli.daq.setDouble(f'/{self._address}/scopes/0/channels/{channel - 1}/limitupper', upper_limit)
 
     def acquire_single_sample(self, channel: int, parameter: str, partial: bool = False) -> Union[Parameter, float]:
         """ Collect a single point for each added measurement signal.
@@ -299,40 +309,41 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
             This method as a partial method or single sample.
 
         """
-        demod_parameter = getattr(self.__uhfli, 'demod{}_{}'.format(channel, parameter))
+        demod_parameter = getattr(self.__uhfli, f'demod{channel}_{parameter}')
         return demod_parameter if partial else demod_parameter()
 
-    def __get_uhfli_scope_records(self, number_of_records: int, timeout: float):
+    def __get_uhfli_scope_records(self, number_of_averages: int, timeout: float) -> List[DataArray]:
         self.__uhfli.scope.execute()
 
         records = 0
         progress = 0
         start = time.time()
-        while records < number_of_records or progress < 1.0:
-            records = self.__uhfli.scope.getInt("scopeModule/records")
+        while records < number_of_averages or progress < 1.0:
+            records = self.__uhfli.scope.getInt('scopeModule/records')
             progress = self.__uhfli.scope.progress()[0]
             if time.time() - start > timeout:
-                error_text = "Got {} records after {} sec. - forcing stop.".format(records, timeout)
+                error_text = f'Got {records} records after {timeout} sec. - forcing stop.'
                 raise TimeoutError(error_text)
 
         traces = self.__uhfli.scope.read(True)
-        wave_nodepath = '/{0}/scopes/0/wave'.format(self._address)
-        scope_traces = traces[wave_nodepath][:number_of_records]
+        wave_nodepath = f'/{self._address}/scopes/0/wave'
+        scope_traces = traces[wave_nodepath][:number_of_averages]
         return self.__convert_scope_data(scope_traces)
 
-    def __convert_scope_data(self, scope_traces):
+    def __convert_scope_data(self, scope_traces: np.ndarray) -> List[DataArray]:
         data = []
         acquisition_counter = 0
         for channel_index, _ in enumerate(self.enabled_channels):
-            for _, trace in enumerate(scope_traces):
-                wave = trace[0]['wave'][channel_index, :]
-                data_array = self.__convert_to_data_array(wave, channel_index, acquisition_counter)
-                data.append(data_array)
-                acquisition_counter += 1
+            channel_data = np.array([trace[0]['wave'][channel_index] for trace in scope_traces])
+            averaged_data = np.average(channel_data, axis=0)
+            data_array = self.__convert_to_data_array(averaged_data, channel_index, acquisition_counter)
+            data.append(data_array)
+            acquisition_counter += 1
         return data
 
     def __convert_to_data_array(self, scope_data: np.ndarray, channel_index: int, counter: int) -> DataArray:
-        identifier = 'ScopeTrace_{:03d}'.format(counter)
-        label = 'Channel_{}'.format(channel_index)
-        data_array = DataArray(identifier, label, preset_data=scope_data, set_arrays=[self.__setpoint_array])
-        return data_array
+        channel_number = channel_index + 1
+        identifier = f'ScopeTrace{counter:03d}_Channel{channel_number}'
+        input_parameter = getattr(self.__uhfli, f'scope_channel{channel_number}_input')
+        label = input_parameter().replace(' ', '_')
+        return DataArray(identifier, label, unit='V', preset_data=scope_data, set_arrays=[self.__setpoint_array])

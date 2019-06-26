@@ -66,7 +66,7 @@ class TestLockInStimulus(unittest.TestCase):
         getitem_mock = MagicMock()
         self.uhfli_mock.parameters.__getitem__ = getitem_mock
 
-        self.uhfli_stimulus.set_signal_output_enabled(3, 2, True)
+        self.uhfli_stimulus.set_signal_output_enabled(2, 3, True)
         expected_calls = [call('signal_output2_enable3'), call()(True)]
         getitem_mock.assert_has_calls(expected_calls)
 
@@ -74,6 +74,25 @@ class TestLockInStimulus(unittest.TestCase):
         getitem_mock = MagicMock()
         self.uhfli_mock.parameters.__getitem__ = getitem_mock
 
-        self.uhfli_stimulus.set_signal_output_amplitude(7, 1, 0.42)
+        self.uhfli_stimulus.set_signal_output_amplitude(1, 7, 0.42)
         expected_calls = [call('signal_output1_amplitude7'), call()(0.42)]
+        getitem_mock.assert_has_calls(expected_calls)
+
+    def test_demodulator_signal_input(self):
+        getitem_mock = MagicMock()
+        self.uhfli_mock.parameters.__getitem__ = getitem_mock
+
+        self.uhfli_stimulus.set_demodulator_signal_input(8, 1)
+        expected_calls = [call('demod8_signalin'), call()('Sig In 1')]
+        getitem_mock.assert_has_calls(expected_calls)
+
+        self.assertRaisesRegex(NotImplementedError, 'The input channel can *',
+                               self.uhfli_stimulus.set_demodulator_signal_input, 8, 3)
+
+    def test_connect_oscillator_to_demodulator(self):
+        getitem_mock = MagicMock()
+        self.uhfli_mock.parameters.__getitem__ = getitem_mock
+        self.uhfli_stimulus.connect_oscillator_to_demodulator(3, 8)
+
+        expected_calls = [call('demod8_oscillator'), call()(3)]
         getitem_mock.assert_has_calls(expected_calls)

@@ -1,6 +1,6 @@
 import numpy as np
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 from qilib.utils import PythonJsonStructure
 
@@ -59,13 +59,14 @@ class TestUhfliScopeReader(TestCase):
         scope_data = np.array([np.random.rand(1000), np.random.rand(1000)])
         trace = [[{'wave': scope_data}], 0, 0]
         scope_mock.adapter.instrument.scope.read.return_value = {wave_nodepath: trace}
+        scope_mock.adapter.instrument.scope_channel1_input.return_value = 'Demod 1 R'
         scope_mock.adapter.instrument.Scope.names = ['Test1', name]
         scope_mock.adapter.instrument.Scope.units = ['GigaVolt', unit]
 
-        scope_trace_001 = scope_mock.acquire()
+        scope_trace_001 = scope_mock.acquire(number_of_averages=1)
         self.assertEqual(len(scope_trace_001[0].set_arrays[0]), scope_length)
-        self.assertEqual(scope_trace_001[0].name, 'ScopeTrace_000')
-        self.assertEqual(scope_trace_001[0].label, 'Channel_0')
+        self.assertEqual(scope_trace_001[0].name, 'ScopeTrace000_Channel1')
+        self.assertEqual(scope_trace_001[0].label, 'Demod_1_R')
 
     def test_acquire_raises_timeout(self):
         mock_address = 'dev2333a'
@@ -80,7 +81,7 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.scope.progress.return_value = [0.5]
 
         with self.assertRaisesRegex(TimeoutError, 'Got 0 records after 0.0001 sec'):
-            scope_mock.acquire(timeout=1e-4)
+            scope_mock.acquire(number_of_averages=1, timeout=1e-4)
 
     def test_finalize_acquisition_set_settings_correctly(self):
         mock_address = 'dev2334'
@@ -92,30 +93,24 @@ class TestUhfliScopeReader(TestCase):
         scope_mock.adapter.instrument.daq.setInt.assert_called_once_with(command_text, 0)
         scope_mock.adapter.instrument.scope.finish.assert_called()
 
-    def test_number_of_averages_getter(self):
+    def test_number_of_samples_getter(self):
         mock_address = 'dev2335'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
 
-        number_of_averages = 111
-        scope_mock.adapter.instrument.scope_average_weight.get.return_value = number_of_averages
-        self.assertEqual(number_of_averages, scope_mock.number_of_averages)
-        scope_mock.adapter.instrument.scope_average_weight.get.assert_called_once()
+        number_of_samples = 111
+        scope_mock.adapter.instrument.scope_length.get.return_value = number_of_samples
+        self.assertEqual(number_of_samples, scope_mock.number_of_samples)
+        scope_mock.adapter.instrument.scope_length.get.assert_called_once()
 
-    def test_number_of_averages_setter(self):
+    def test_number_of_samples_setter(self):
         mock_address = 'dev2336'
         scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
         self.assertEqual(mock_address, scope_mock.adapter.address)
 
-        number_of_averages = 222
-        scope_mock.number_of_averages = number_of_averages
-        scope_mock.adapter.instrument.scope_segments.set.assert_called_once_with('ON')
-        scope_mock.adapter.instrument.scope_average_weight.set.assert_called_once_with(number_of_averages)
-
-        number_of_averages = 1
-        scope_mock.number_of_averages = number_of_averages
-        scope_mock.adapter.instrument.scope_segments.set.assert_called_with('OFF')
-        scope_mock.adapter.instrument.scope_average_weight.set.assert_called_with(number_of_averages)
+        number_of_samples = 222
+        scope_mock.number_of_samples = number_of_samples
+        scope_mock.adapter.instrument.scope_length.set.assert_called_once_with(number_of_samples)
 
     def test_input_range_getter(self):
         mock_address = 'dev2337'
@@ -311,6 +306,20 @@ class TestUhfliScopeReader(TestCase):
 
         scope_mock.set_input_signal(channel, attribute)
         scope_mock.adapter.instrument.scope_channel1_input.set.assert_called_once_with(attribute)
+
+    def test_set_channel_limits_has_correct_results(self):
+        mock_address = 'dev2360'
+        scope_mock, _ = TestUhfliScopeReader.__patch_scope_reader(mock_address)
+        self.assertEqual(mock_address, scope_mock.adapter.address)
+
+        channel = 1
+        upper_limit = 0.5
+        lower_limit = -0.5
+        scope_mock.set_channel_limits(channel, lower_limit, upper_limit)
+
+        calls= [call(f'/{mock_address}/scopes/0/channels/{channel - 1}/limitlower', lower_limit),
+                call(f'/{mock_address}/scopes/0/channels/{channel - 1}/limitupper', upper_limit)]
+        scope_mock.adapter.instrument.daq.setDouble.assert_has_calls(calls)
 
     def test_acquire_single_sample(self):
         mock_address = 'dev2350'

@@ -21,7 +21,7 @@ from qtt.utilities.tools import connect_slot
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore
 from qtt.measurements.scans import makeDataset_sweep, makeDataset_sweep_2D
-
+from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 
 # %%
 
@@ -169,7 +169,11 @@ class VideoMode:
         # parse instrument
         minstrumenthandle = qtt.measurements.scans.get_instrument(self.minstrumenthandle, station)
 
-        if minstrumenthandle.name in ['digitizer', 'm4i']:
+        if isinstance(minstrumenthandle, AcquisitionScopeInterface):
+            if sample_rate != 'default':
+                minstrumenthandle.sample_rate = sample_rate
+            self.sampling_frequency = lambda: minstrumenthandle.sample_rate
+        elif minstrumenthandle.name in ['digitizer', 'm4i']:
             if sample_rate == 'default':
                 self.sampling_frequency = minstrumenthandle.sample_rate
             else:
@@ -465,6 +469,17 @@ class VideoMode:
         if start_readout:
             if self.verbose:
                 print('%s: run: startreadout' % (self.__class__.__name__,))
+            if isinstance(self.minstrumenthandle, AcquisitionScopeInterface):
+                if scan_dimensions == 1:
+                    self.minstrumenthandle.period = 1e-3
+                elif scan_dimensions == 2:
+                    self.minstrumenthandle.number_of_samples = np.prod(self.resolution)
+                scan_channels = self.scanparams['minstrument'][1]
+                channel_attributes = self.scanparams['minstrument'][2]
+                self.minstrumenthandle.enabled_channels = tuple(scan_channels)
+                for channel, attribute in zip(scan_channels, channel_attributes):
+                    self.minstrumenthandle.set_input_signal(channel, attribute)
+                self.minstrumenthandle.start_acquisition()
             self.startreadout()
 
     def __run_1d_scan(self, awg, virtual_awg, period=1e-3):
@@ -532,6 +547,15 @@ class VideoMode:
                 self.station.RF.off()
             if hasattr(self.station, 'virtual_awg'):
                 self.station.virtual_awg.stop()
+                if isinstance(self.sweepparams[0], dict):
+                    keys = [list(item.keys())[0] for item in self.sweepparams]
+                    self.station.virtual_awg.disable_outputs(keys)
+                elif isinstance(self.sweepparams, str):
+                    self.station.virtual_awg.disable_outputs([self.sweepparams])
+
+        if isinstance(self.minstrumenthandle, AcquisitionScopeInterface):
+            self.minstrumenthandle.stop_acquisition()
+
 
     def single(self):
         """Do a single scan with a lot averaging.
