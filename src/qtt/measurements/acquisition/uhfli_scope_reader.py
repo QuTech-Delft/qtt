@@ -154,7 +154,6 @@ class UHFLIScopeReader(AcquisitionScopeInterface):
         """
         self.__uhfli.scope_length.set(value)
 
-
     @property
     def trigger_enabled(self) -> bool:
         """ Gets the external triggering enabled status.
