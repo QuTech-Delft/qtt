@@ -98,7 +98,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def trigger_level(self) -> float:
         """ The trigger-level of the trigger in Volts."""
 
-    @trigger_level.setter # type: ignore
+    @trigger_level.setter  # type: ignore
     @abstractmethod
     def trigger_level(self, level: float) -> None:
         """ Sets the external triggering level.
