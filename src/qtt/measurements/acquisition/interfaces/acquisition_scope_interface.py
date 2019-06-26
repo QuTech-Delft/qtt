@@ -56,7 +56,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def number_of_samples(self) -> int:
         """ The number of samples to take during a acquisition."""
 
-    @number_of_samples.setter # type: ignore
+    @number_of_samples.setter  # type: ignore
     @abstractmethod
     def number_of_samples(self, value: int) -> None:
         """ Sets the sample count to take during a acquisition.
