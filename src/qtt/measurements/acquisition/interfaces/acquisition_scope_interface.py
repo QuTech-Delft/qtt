@@ -112,7 +112,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def trigger_slope(self) -> str:
         """ The edge of the trigger signal to trigger on."""
 
-    @trigger_slope.setter # type: ignore
+    @trigger_slope.setter  # type: ignore
     @abstractmethod
     def trigger_slope(self, slope: str) -> None:
         """ Sets the external triggering slope.
