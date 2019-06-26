@@ -51,7 +51,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The measuring period in seconds.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def number_of_samples(self) -> int:
         """ The number of samples to take during a acquisition."""
