@@ -23,7 +23,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The input range amplitude in Volts.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def sample_rate(self) -> float:
         """ The sample rate of the acquisition device."""
