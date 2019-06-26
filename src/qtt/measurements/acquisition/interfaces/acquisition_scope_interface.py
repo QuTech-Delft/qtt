@@ -42,7 +42,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def period(self) -> float:
         """ The measuring period of the acquisition."""
 
-    @period.setter # type: ignore
+    @period.setter  # type: ignore
     @abstractmethod
     def period(self, value: float) -> None:
         """ Sets the measuring period of the acquisition.
