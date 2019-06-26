@@ -70,7 +70,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def trigger_enabled(self) -> bool:
         """ The setter sets the external triggering on or off. The getter returns the current trigger value."""
 
-    @trigger_enabled.setter # type: ignore
+    @trigger_enabled.setter  # type: ignore
     @abstractmethod
     def trigger_enabled(self, value: bool) -> None:
         """ Turns the external triggering on or off.
