@@ -28,7 +28,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def sample_rate(self) -> float:
         """ The sample rate of the acquisition device."""
 
-    @sample_rate.setter # type: ignore
+    @sample_rate.setter  # type: ignore
     @abstractmethod
     def sample_rate(self, value: float) -> None:
         """ Sets the sample rate of the acquisition device.
