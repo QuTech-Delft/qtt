@@ -107,7 +107,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             level: The external trigger level in Volts.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def trigger_slope(self) -> str:
         """ The edge of the trigger signal to trigger on."""
