@@ -3,7 +3,7 @@ from qcodes.utils.validators import Numbers
 
 
 class SettingsInstrument(Instrument):
-    """ Instrument that holds settings """
+    """ Instrument that holds settings for the Virtual AWG """
 
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
