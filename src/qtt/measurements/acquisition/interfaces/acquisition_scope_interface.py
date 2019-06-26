@@ -126,7 +126,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def trigger_delay(self) -> float:
         """ The delay between getting a trigger and acquiring in seconds."""
 
-    @trigger_delay.setter # type: ignore
+    @trigger_delay.setter  # type: ignore
     @abstractmethod
     def trigger_delay(self, delay: float) -> None:
         """ Sets the delay in seconds between the external trigger and acquisition.
