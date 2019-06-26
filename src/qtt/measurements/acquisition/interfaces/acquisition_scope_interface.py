@@ -135,7 +135,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             delay: The scope trigger delay in seconds.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def enabled_channels(self) -> Tuple[int, ...]:
         """ Reports the enabled input channels."""
