@@ -65,7 +65,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
             value: The number of samples.
         """
 
-    @property # type: ignore
+    @property  # type: ignore
     @abstractmethod
     def trigger_enabled(self) -> bool:
         """ The setter sets the external triggering on or off. The getter returns the current trigger value."""
