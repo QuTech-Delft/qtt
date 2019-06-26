@@ -140,7 +140,7 @@ class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     def enabled_channels(self) -> Tuple[int, ...]:
         """ Reports the enabled input channels."""
 
-    @enabled_channels.setter # type: ignore
+    @enabled_channels.setter  # type: ignore
     @abstractmethod
     def enabled_channels(self, value: Tuple[int, ...]):
         """ Sets the given channels to enabled and turns off all others.
