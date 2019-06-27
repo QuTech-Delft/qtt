@@ -1,4 +1,4 @@
-import unittest 
+import unittest
 import unittest.mock as mock
 import io
 
@@ -101,7 +101,3 @@ class TestVideomode(unittest.TestCase):
             std_output = mock_stdout.getvalue()
             print(std_output)
             self.assertIn('VideoMode: start readout', std_output)
-
-if __name__=='__main__':
-    unittest.main()
-    

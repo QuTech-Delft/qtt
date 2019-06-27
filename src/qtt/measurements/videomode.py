@@ -47,7 +47,7 @@ class VideoModeProcessor(ABC):
 
     @abstractmethod
     def scan_dimension(self):
-        """ Method must return the dimension of the data to be shown (1 or 2) """
+        """ Return the dimension of the data to be shown (1 or 2) """
 
     @abstractmethod
     def process(self, measurement_data, videomode):
@@ -109,8 +109,7 @@ class VideoModeProcessor(ABC):
                     xname='x', x=xdata,
                     yname='y', y=ydata,
                     zname='signal', z=data_block,
-                    loc_record={
-                        'label': 'videomode_1d_single'})
+                    loc_record={'label': 'videomode_1d_single'})
             alldatax.metadata = copy.copy(metadata)
             alldata[jj] = alldatax
         return alldata
@@ -129,18 +128,38 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
         plot_title = str(self.minstrumenthandle) + ' ' + str(self.channels[index])
         return plot_title
 
-    def set_properties(self, waveform, minstrument, resolution=None):
+    def create_dataset(self, processed_data, metadata):
+        alldata = [None] * len(processed_data)
+        if processed_data.ndim == 2:
+            for jj in range(len(processed_data)):
+                dataset, _ = makeDataset_sweep(processed_data[jj], self.sweepparams, self.sweepranges[0],
+                                               gates=self.station.gates, loc_record={'label': 'videomode_1d'})
+                dataset.metadata = copy.copy(metadata)
+                alldata[jj] = dataset
+        elif processed_data.ndim == 3:
+            for jj in range(len(processed_data)):
+                dataset, _ = makeDataset_sweep_2D(processed_data[jj], self.station.gates, self.sweepparams,
+                                                  self.sweepranges,
+                                                  loc_record={'label': 'videomode_2d'})
+                dataset.metadata = copy.copy(metadata)
+                alldata[jj] = dataset
+        else:
+            raise Exception('makeDataset: data.ndim %d' % processed_data.ndim)
+
+        return alldata
+
+    def set_properties(self, waveform, measurement_instrument, resolution=None):
         """ Create callback object for videmode data
 
         Args:
             station (QCoDeS station)
             waveform
-            minstrument (tuple): instrumentname, channel
+            measurement_instrument (tuple): instrumentname, channel
             diff_dir (list or (int, str)): differentiation modes for the data
         """
         self.waveform = waveform
-        self.minstrument = minstrument[0]
-        self.channels = minstrument[1]
+        self.minstrument = measurement_instrument[0]
+        self.channels = measurement_instrument[1]
         self.measuresegment_arguments = {'mV_range': 5000}
 
         if not isinstance(self.channels, list):
@@ -172,11 +191,11 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 if isinstance(parameter, str):
                     if parameter == 'gates_horz' or parameter == 'gates_vert':
                         d = self.scan_parameters['sweepparams'][parameter]
-                        for g, f in d.items():
+                        for gate, factor in d.items():
                             if verbose >= 2:
-                                print('  %s: increment %s with %s' % (parameter, g, f * delta))
-                            param = getattr(station.gates, g)
-                            param.increment(f * delta)
+                                print('  %s: increment %s with %s' % (parameter, gate, factor * delta))
+                            param = getattr(station.gates, gate)
+                            param.increment(factor * delta)
                     else:
                         if verbose > 2:
                             print('  set %s to %s' % (parameter, delta))
@@ -229,12 +248,11 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                     self.station.virtual_awg.disable_outputs([self.sweepparams])
         if isinstance(self.minstrumenthandle, AcquisitionScopeInterface):
             self.minstrumenthandle.stop_acquisition()
-            
+
     def measure(self, videomode):
-        minstrumenthandle = self.minstrumenthandle
 
         data = qtt.measurements.scans.measuresegment(
-            self.waveform, videomode.Naverage(), minstrumenthandle, self.unique_channels,
+            self.waveform, videomode.Naverage(), self.minstrumenthandle, self.unique_channels,
             **self.measuresegment_arguments)
         if np.all(data == 0):
             raise Exception('data returned contained only zeros, aborting')
@@ -244,36 +262,38 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
     def process(self, measurement_data, videomode):
         measurement_data_selected = []
         for ii, channel in enumerate(self.channels):
-            uchannelidx = self.unique_channels.index(channel)
-            data_processed = np.array(measurement_data[uchannelidx])
+            unique_channel_idx = self.unique_channels.index(channel)
+            data_processed = np.array(measurement_data[unique_channel_idx])
             measurement_data_selected.append(data_processed)
 
         dd = self.default_processing(measurement_data_selected, videomode)
         return dd
 
-    def parse_instrument(self, minstrumenthandle, sample_rate):
-        minstrumenthandle = qtt.measurements.scans.get_instrument(minstrumenthandle, self.station)
-        self.minstrumenthandle = minstrumenthandle
+    def parse_instrument(self, measurement_instrument_handle, sample_rate):
+        measurement_instrument_handle = qtt.measurements.scans.get_instrument(measurement_instrument_handle,
+                                                                              self.station)
+        self.minstrumenthandle = measurement_instrument_handle
 
-        if isinstance(minstrumenthandle, AcquisitionScopeInterface):
+        if isinstance(measurement_instrument_handle, AcquisitionScopeInterface):
             if sample_rate != 'default':
-                minstrumenthandle.sample_rate = sample_rate
-            self.sampling_frequency = lambda: minstrumenthandle.sample_rate
-        elif minstrumenthandle.name in ['digitizer', 'm4i']:
+                measurement_instrument_handle.sample_rate = sample_rate
+            self.sampling_frequency = lambda: measurement_instrument_handle.sample_rate
+        elif measurement_instrument_handle.name in ['digitizer', 'm4i']:
             if sample_rate == 'default':
-                self.sampling_frequency = minstrumenthandle.sample_rate
+                self.sampling_frequency = measurement_instrument_handle.sample_rate
             else:
-                minstrumenthandle.sample_rate(sample_rate)
+                measurement_instrument_handle.sample_rate(sample_rate)
                 self.sampling_frequency = station.digitizer.sample_rate
-        elif minstrumenthandle.name in ['ZIUHFLI', 'ziuhfli']:
-            self.sampling_frequency = minstrumenthandle.scope_samplingrate
+        elif measurement_instrument_handle.name in ['ZIUHFLI', 'ziuhfli']:
+            self.sampling_frequency = measurement_instrument_handle.scope_samplingrate
         else:
             try:
-                minstrumenthandle = qtt.measurements.scans.get_instrument(
-                    minstrumenthandle, self.station)
-                self.sampling_frequency = minstrumenthandle.sample_rate
+                measurement_instrument_handle = qtt.measurements.scans.get_instrument(
+                    measurement_instrument_handle, self.station)
+                self.sampling_frequency = measurement_instrument_handle.sample_rate
             except Exception as ex:
-                raise Exception(f'no fpga or digitizer found minstrumenthandle is {minstrumenthandle}') from ex
+                raise Exception(
+                    f'no fpga or digitizer found minstrumenthandle is {measurement_instrument_handle}') from ex
         return self.sampling_frequency
 
     def _run_1d_scan(self, awg, virtual_awg, period=1e-3):
@@ -292,7 +312,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 waveform, _ = awg.sweep_gate_virt(self.sweepparams, self.sweepranges[0], period=period)
             else:
                 raise Exception('argument sweepparams of type %s not supported' % type(self.sweepparams))
-        self.set_properties(waveform, minstrument=(self.minstrumenthandle, self.scan_parameters['channels']))
+        self.set_properties(waveform, measurement_instrument=(self.minstrumenthandle, self.scan_parameters['channels']))
 
     def _run_2d_scan(self, awg, virtual_awg, period=None):
         if virtual_awg:
@@ -327,7 +347,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
             if self.verbose:
                 print('%s: 2d scan, define callback ' % (self.__class__.__name__,))
 
-        self.set_properties(waveform, minstrument=(self.minstrumenthandle, self.scan_parameters['channels']),
+        self.set_properties(waveform, measurement_instrument=(self.minstrumenthandle, self.scan_parameters['channels']),
                             resolution=self.resolution)
 
     def set_scan_parameters(self, scan_parameters):
@@ -359,7 +379,8 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 name += ': %s' % str(self.sweepparams)
         return name
 
-def add_sawtooth_videomode_processor(self, resolution, sample_rate, minstrument):
+
+def add_sawtooth_videomode_processor(self, sweepparams, sweepranges, resolution, sample_rate, minstrument):
     """ Add all required variables to the VideoMode for the VideomodeSawtoothMeasurement """
     self.resolution = resolution
     self.sample_rate = sample_rate
@@ -376,6 +397,7 @@ def add_sawtooth_videomode_processor(self, resolution, sample_rate, minstrument)
     self.videomode_processor.set_scan_parameters(
         {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument,
          'resolution': self.resolution, 'sampling_frequency': sampling_frequency, 'channels': channels})
+
 
 # %%
 
@@ -457,15 +479,15 @@ class VideoMode:
         if VideoMode.videomode_class_index == 0:
             # create instance of QApplication
             _ = pyqtgraph.mkQApp()
-        VideoMode.videomode_class_index = VideoMode.videomode_class_index + 1  # increment index of VideoMode objects
+        VideoMode.videomode_class_index = VideoMode.videomode_class_index + 1
         self.videomode_index = VideoMode.videomode_class_index
 
         self.station = station
         self.verbose = verbose
-        #self.sweepparams = sweepparams
+        self.sweepparams = sweepparams
+        if isinstance(sweepranges, float):
+            sweepranges = [sweepranges]
         self.sweepranges = sweepranges
-        if isinstance(self.sweepranges, float):
-            self.sweepranges = [self.sweepranges]
 
         self.virtual_awg = getattr(station, ' virtual_awg', None)
 
@@ -485,7 +507,7 @@ class VideoMode:
         self.fps = qtt.pgeometry.fps_t(nn=6)
 
         if videomode_processor is None:
-            add_sawtooth_videomode_processor(self, resolution, sample_rate, minstrument)
+            add_sawtooth_videomode_processor(self, sweepparams, sweepranges, resolution, sample_rate, minstrument)
             # Setup the GUI
             if nplots is None:
                 nplots = len(self.channels)
@@ -756,30 +778,7 @@ class VideoMode:
         )), 'station': self.station.snapshot(), 'allgatevalues': self.station.gates.allvalues()}
         metadata['Naverage'] = Naverage
 
-        if isinstance(self.videomode_processor, VideomodeSawtoothMeasurement):
-            if data.ndim == 2:
-                alldata = [None] * len(data)
-                for jj in range(len(data)):
-                    data = data[jj]
-                    alldatax, _ = makeDataset_sweep(data, self.sweepparams, self.sweepranges[0],
-                                                    gates=self.station.gates,
-                                                    loc_record={'label': 'videomode_1d_single'})
-                    alldatax.metadata = copy.copy(metadata)
-                    alldata[jj] = alldatax
-            elif data.ndim == 3:
-
-                alldata = [None] * len(data)
-                for jj in range(len(data)):
-                    datax = data[jj]
-                    alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges[0],
-                                                       loc_record={
-                                                           'label': 'videomode_2d_single'})
-                    alldatax.metadata = copy.copy(metadata)
-                    alldata[jj] = alldatax
-            else:
-                raise Exception('makeDataset: data.ndim %d' % data.ndim)
-        else:
-            alldata = self.videomode_processor.create_dataset(data, metadata)
+        alldata = self.videomode_processor.create_dataset(data, metadata)
         return alldata
 
     def _get_Naverage(self):

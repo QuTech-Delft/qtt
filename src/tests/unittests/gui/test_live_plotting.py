@@ -1,5 +1,9 @@
 import unittest
 import numpy as np
+import pyqtgraph
+import unittest.mock as mock
+import io
+
 import qtt
 from qtt.measurements.scans import instrumentName
 from qtt.gui.live_plotting import MockCallback_2d, livePlot, MeasurementControl
@@ -19,6 +23,8 @@ class TestLivePlotting(unittest.TestCase):
         self.assertAlmostEqual(data_reshaped.sum(), 3440.344282085355, 3)
 
     def test_livePlot(self):
+        _ = pyqtgraph.mkQApp()
+
         lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
                       sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=True)
         lp.win.setGeometry(1500, 10, 400, 400)
@@ -29,12 +35,15 @@ class TestLivePlotting(unittest.TestCase):
         lp.close()
         self.assertIsInstance(lp.datafunction_result, np.ndarray)
 
-class TestMeasurementcontrol(unittest.TestCase):
 
-    def test_measurementcontrol():
-        import pyqtgraph
+class TestMeasurementControl(unittest.TestCase):
+
+    def test_measurementcontrol(self):
         _ = pyqtgraph.mkQApp()
         mc = MeasurementControl()
         mc.verbose = 1
-        mc.enable_measurements()
+        with mock.patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            mc.enable_measurements()
+        std_output = mock_stdout.getvalue()
+        self.assertIn('setting qtt_abort_running_measurement to 0', std_output)
         mc.setGeometry(1700, 50, 300, 400)
