@@ -32,7 +32,6 @@ class TestVideomode(TestCase):
             self.assertEqual(station.gates.P1(), new_position)
 
     def test_DummyVideoModeProcessor(self):
-
         station = qtt.simulation.virtual_dot_array.initialize()
         dummy_processor = DummyVideoModeProcessor(station)
         vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=1,
@@ -55,7 +54,7 @@ class TestVideomode(TestCase):
             sweepparams = ['P1', 'P2']
             minstrument = (digitizer.name, [0])
             videomode = VideoMode(station, sweepparams, sweepranges=[120] * 2,
-                           minstrument=minstrument, resolution=[12] * 2, Naverage=2)
+                                  minstrument=minstrument, resolution=[12] * 2, Naverage=2)
             self.assertEqual(videomode.videomode_processor.scan_dimension(), 2)
 
     def test_video_mode_get_data_set(self, verbose=0):

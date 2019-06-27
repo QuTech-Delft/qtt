@@ -216,7 +216,8 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
         minstrumenthandle = self.minstrumenthandle
 
         data = qtt.measurements.scans.measuresegment(
-            self.waveform, videomode.Naverage(), minstrumenthandle, self.unique_channels, **self.measuresegment_arguments)
+            self.waveform, videomode.Naverage(), minstrumenthandle, self.unique_channels,
+            **self.measuresegment_arguments)
         if np.all(data == 0):
             raise Exception('data returned contained only zeros, aborting')
 
@@ -342,6 +343,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
 
 videomode_callback = qtt.utilities.tools.deprecated(VideomodeSawtoothMeasurement)  # for backwards compatibility
+
 
 # %%
 
@@ -759,7 +761,8 @@ class VideoMode:
                 for jj in range(len(data)):
                     data = data[jj]
                     alldatax, _ = makeDataset_sweep(data, self.sweepparams, self.sweepranges[0],
-                                                    gates=self.station.gates, loc_record={'label': 'videomode_1d_single'})
+                                                    gates=self.station.gates,
+                                                    loc_record={'label': 'videomode_1d_single'})
                     alldatax.metadata = copy.copy(metadata)
                     alldata[jj] = alldatax
             elif data.ndim == 3:
@@ -775,7 +778,7 @@ class VideoMode:
             else:
                 raise Exception('makeDataset: data.ndim %d' % data.ndim)
         else:
-            self.videomode_processor.create_dataset(data, metadata)
+            alldata = self.videomode_processor.create_dataset(data, metadata)
         return alldata
 
     def _get_Naverage(self):
@@ -843,6 +846,7 @@ def guitest_videomode():
                      minstrument=minstrument, resolution=[12], Naverage=2)
     vm1d.stop()
 
+
 # %% Testing
 
 
@@ -852,6 +856,7 @@ if __name__ == '__main__':
     import qtt.simulation.virtual_dot_array
     import qtt.instrument_drivers.simulation_instruments
     from importlib import reload
+
     reload(qtt.instrument_drivers.simulation_instruments)
     reload(qtt.measurements.scans)
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
@@ -859,7 +864,6 @@ if __name__ == '__main__':
 
     station = qtt.simulation.virtual_dot_array.initialize()
     gates = station.gates
-
 
     pv = qtt.createParameterWidget([gates])  # type: ignore
 
