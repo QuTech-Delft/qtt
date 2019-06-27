@@ -41,3 +41,35 @@ class TestGeneric(unittest.TestCase):
         plt.close('all')
 
 
+class TestBoxcarFilter(unittest.TestCase):
+
+    def test_float_inputs(self):
+        pass
+
+    def test_int_inputs(self):
+        pass
+
+    def test_empty_signal(self):
+        pass
+
+    def test_wrong_kernel_dimensions(self):
+        """
+        If the number of dimensions in the kernel is not equal to the number of dimensions
+        in the signal, an exception should be raised
+        Test kernels: int, 1D, 2D, 3D
+        """
+        pass
+
+    def test_zero_kernel_size(self):
+        """
+        If any of the dimensions of the kernel has size 0, an exception should be raised
+        """
+        pass
+
+    def test_filter_larger_than_array(self):
+        """
+        If the filter size is larger than the signal, it should still work.
+        Interpretation of the result is left up to the caller.
+        """
+        pass
+
