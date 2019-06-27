@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import pyqtgraph
 import unittest.mock as mock
+from unittest.mock import call
 import io
 
 import qtt
@@ -40,10 +41,13 @@ class TestMeasurementControl(unittest.TestCase):
 
     def test_measurementcontrol(self):
         _ = pyqtgraph.mkQApp()
-        mc = MeasurementControl()
-        mc.verbose = 1
-        with mock.patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
-            mc.enable_measurements()
-        std_output = mock_stdout.getvalue()
-        self.assertIn('setting qtt_abort_running_measurement to 0', std_output)
-        mc.setGeometry(1700, 50, 300, 400)
+        with mock.patch('qtt.gui.live_plotting.rda_t'):
+            with mock.patch('qtt.gui.live_plotting.rda_t.set') as mock_rda_set:
+                mc = MeasurementControl()
+                mc.verbose = 1
+                with mock.patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+                    mc.enable_measurements()
+                std_output = mock_stdout.getvalue()
+                self.assertIn('setting qtt_abort_running_measurement to 0', std_output)
+                mc.setGeometry(1700, 50, 300, 400)
+                self.assertIn(call('qtt_abort_running_measurement', 0), mock_rda_set.call_args)

@@ -131,14 +131,14 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
     def create_dataset(self, processed_data, metadata):
         alldata = [None] * len(processed_data)
         if processed_data.ndim == 2:
-            for jj in range(len(processed_data)):
-                dataset, _ = makeDataset_sweep(processed_data[jj], self.sweepparams, self.sweepranges[0],
+            for jj, data_block in enumerate(processed_data):
+                dataset, _ = makeDataset_sweep(data_block, self.sweepparams, self.sweepranges[0],
                                                gates=self.station.gates, loc_record={'label': 'videomode_1d'})
                 dataset.metadata = copy.copy(metadata)
                 alldata[jj] = dataset
         elif processed_data.ndim == 3:
-            for jj in range(len(processed_data)):
-                dataset, _ = makeDataset_sweep_2D(processed_data[jj], self.station.gates, self.sweepparams,
+            for jj, data_block in enumerate(processed_data):
+                dataset, _ = makeDataset_sweep_2D(data_block, self.station.gates, self.sweepparams,
                                                   self.sweepranges,
                                                   loc_record={'label': 'videomode_2d'})
                 dataset.metadata = copy.copy(metadata)
