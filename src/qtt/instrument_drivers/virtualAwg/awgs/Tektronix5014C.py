@@ -4,7 +4,7 @@ from qcodes.instrument_drivers.tektronix.AWG5014 import Tektronix_AWG5014
 from qcodes.utils.validators import Numbers
 
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
-from typings import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 class Tektronix5014C_AWG(AwgCommon):
@@ -18,9 +18,7 @@ class Tektronix5014C_AWG(AwgCommon):
         super().__init__('Tektronix_AWG5014', channel_numbers=[1, 2, 3, 4], marker_numbers=[1, 2])
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError(f'The AWG does not correspond with {self._awg_name}')
-        self.__settings = [Parameter(name='sampling_rate', unit='GS/s', initial_value=1.0e9,
-                                     vals=Numbers(1.0e7, 1.2e9), set_cmd=None),
-                           Parameter(name='marker_delay', unit='ns', initial_value=0.0,
+        self.__settings = [Parameter(name='marker_delay', unit='ns', initial_value=0.0,
                                      vals=Numbers(0.0, 1.0), set_cmd=None),
                            Parameter(name='marker_low', unit='V', initial_value=0.0,
                                      vals=Numbers(-1.0, 2.6), set_cmd=None),
@@ -30,7 +28,6 @@ class Tektronix5014C_AWG(AwgCommon):
                                      vals=Numbers(0.02, 4.5), set_cmd=None),
                            Parameter(name='offset', unit='V', initial_value=0,
                                      vals=Numbers(-2.25, 2.25), set_cmd=None)]
-        self._waveform_data = None
         self.__awg = awg
 
     @property
@@ -64,7 +61,7 @@ class Tektronix5014C_AWG(AwgCommon):
         Args:
             channels: A list with the channel numbers. All channels are enabled, if no value is given.
         """
-        if not channels:
+        if channels is None:
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError(f'Invalid channel numbers {channels}')
@@ -78,14 +75,14 @@ class Tektronix5014C_AWG(AwgCommon):
         Args:
             channels: A list with the channel numbers. All channels are enabled, if no value is given.
         """
-        if not channels:
+        if channels is None:
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError(f'Invalid channel numbers {channels}')
         [self.__awg.set(f'ch{ch}_state', 0) for ch in channels]
 
     def change_setting(self, name: str, value: float) -> None:
-        """ Sets a setting on the AWG. The changeable settings are: sample_rate,
+        """ Sets a setting on the AWG. The changeable settings are:
             marker_delay, marker_low, marker_high, amplitudes and offset.
 
         Args:
@@ -99,7 +96,7 @@ class Tektronix5014C_AWG(AwgCommon):
         self.__settings[index].set(value)
 
     def retrieve_setting(self, name: str) -> float:
-        """ Gets a setting from the AWG. The gettable are: sample_rate,
+        """ Gets a setting from the AWG. The gettable are:
             marker_delay, marker_low, marker_high, amplitudes and offset.
 
         Args:
@@ -128,6 +125,14 @@ class Tektronix5014C_AWG(AwgCommon):
             'CONT' or 'SEQ'.
         """
         return self.__awg.get('run_mode')
+
+    def update_sampling_rate(self, sampling_rate):
+        """ Sets the sampling rate of the AWG.
+
+        Args:
+            sampling_rate (int): The number of samples the AWG outputs per second.
+        """
+        return self.__awg.set('clock_freq', sampling_rate)
 
     def retrieve_sampling_rate(self) -> float:
         """ Gets the sample rate of the AWG.
@@ -168,18 +173,20 @@ class Tektronix5014C_AWG(AwgCommon):
                                E.g. [(1,), (1, 2)]. The second tuple element corresponds to the marker number.
             sequence_items: A list containing the data for each waveform.
         """
-        sequences = (sequence_names, sequence_channels, sequence_items)
-        channel_data, waveform_data = Tektronix5014C_AWG.create_waveform_data(*sequences)
-        self._waveform_data = waveform_data
-        self._channel_data = channel_data
+        sequence_input = (sequence_names, sequence_channels, sequence_items)
+        channel_data, waveform_data = Tektronix5014C_AWG.create_waveform_data(*sequence_input)
         if reload:
-            self._upload_waveforms(list(waveform_data.keys()), list(waveform_data.values()))
+            names = list(waveform_data.keys())
+            waveforms = list(waveform_data.values())
+            self._upload_waveforms(names, waveforms)
 
-        self._set_sequence(list(channel_data.keys()), list(channel_data.values()))
+        channels = list(channel_data.keys())
+        sequences = list(channel_data.values())
+        self._set_sequence(channels, sequences)
 
     @staticmethod
     def create_waveform_data(names: List[str], channels: List[Tuple[int, ...]],
-                             items: List[np.ndarray]) -> Tuple[Dict[str, int], Dict[int, List[np.ndarray]]]:
+                             items: List[np.ndarray]) -> Tuple[Dict[int, List[str]], Dict[str, List[np.ndarray]]]:
         """ Transforms the data into the correct waveform data.
 
             A marker waveform will be merged with the channel waveform if the channels list contain both
@@ -188,7 +195,7 @@ class Tektronix5014C_AWG(AwgCommon):
         Args:
             names: The waveform names.
             channels: A list containing the channel numbers to which each waveform belongs.
-                               E.g. [(1,), (1, 2)]. The second tuple element corresponds to the marker number.
+                      E.g. [(1,), (1, 2)]. The second tuple element corresponds to the marker number.
             items: A list containing the data for each waveform.
 
         Returns:
@@ -196,8 +203,8 @@ class Tektronix5014C_AWG(AwgCommon):
             The channel data contains for each waveform the name and to which channel it belongs.
             The waveform data contains for each waveform the name and the actual waveform.
         """
-        channel_data: Dict[str, int] = {}
-        waveform_data: Dict[int, List[np.ndarray]] = {}
+        channel_data: Dict[int, List[str]] = {}
+        waveform_data: Dict[str, List[np.ndarray]] = {}
 
         unique_channels = set([channel for (channel, *_) in channels])
         for unique_channel in unique_channels:
@@ -216,14 +223,6 @@ class Tektronix5014C_AWG(AwgCommon):
             channel_data.setdefault(unique_channel, []).append(data_name)
 
         return channel_data, waveform_data
-
-    def retrieve_waveforms(self) -> Dict[str, List[np.ndarray]]:
-        """ Gets the waveform data.
-
-        Returns:
-            A dictionary containing the name as keys and the actual waveform as values.
-        """
-        return self._waveform_data if self._waveform_data else None
 
     def _set_sequence(self, channels: List[int], sequence: List[List[str]]) -> None:
         """ Sets the sequence on the AWG using the user defined waveforms.
@@ -298,7 +297,6 @@ class Tektronix5014C_AWG(AwgCommon):
     def delete_waveforms(self) -> None:
         """ Clears the user defined waveform list from the AWG."""
         self.__awg.delete_all_waveforms_from_list()
-        self._waveform_data = None
 
     def delete_sequence(self) -> None:
         """ Clears the sequence from the AWG."""

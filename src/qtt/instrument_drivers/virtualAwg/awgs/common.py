@@ -160,15 +160,6 @@ class AwgCommon(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def retrieve_waveforms(self):
-        """ Gets the last uploaded sequences to the AWG.
-
-        Returns:
-            (list, list, list): A tuple with the uploaded channels, sequence names, and sequences.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def delete_waveforms(self):
         """ Deletes and removes all the upload waveforms."""
         raise NotImplementedError
