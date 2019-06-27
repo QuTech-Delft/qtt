@@ -11,7 +11,7 @@ import qtt.simulation.virtual_dot_array
 from qtt.measurements.videomode import VideoMode, DummyVideoModeProcessor
 
 
-class TestVideomode(unittest.TestCase):
+class TestVideoMode(unittest.TestCase):
 
     def test_video_mode_update_position(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
@@ -31,6 +31,15 @@ class TestVideomode(unittest.TestCase):
             vm._update_position((new_position, 0))
             self.assertEqual(station.gates.P1(), new_position)
 
+    def test_VideoMode_all_instances(self):
+        self.assertIsInstance(VideoMode.all_instances(), list)
+        station = qtt.simulation.virtual_dot_array.initialize()
+        dummy_processor = DummyVideoModeProcessor(station)
+        videomode = VideoMode(station, dorun=False, nplots=1, videomode_processor=dummy_processor)
+        self.assertIn(videomode, VideoMode.all_instances())
+
+        VideoMode.stop_all_instances()
+
     def test_DummyVideoModeProcessor(self):
         station = qtt.simulation.virtual_dot_array.initialize()
         dummy_processor = DummyVideoModeProcessor(station)
@@ -40,6 +49,21 @@ class TestVideomode(unittest.TestCase):
         datasets = vm.get_dataset()
 
         self.assertIsInstance(datasets[0], qcodes.DataSet)
+
+    def test_video_1d(self):
+        with mock.patch('sys.stdout', new_callable=io.StringIO):
+            station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
+
+            digitizer = SimulationDigitizer(
+                qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
+            station.add_component(digitizer)
+            station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
+            station.add_component(station.awg)
+
+            minstrument = (digitizer.name, [0])
+            videomode = VideoMode(station, 'P1', sweepranges=[120],
+                                  minstrument=minstrument, Naverage=2)
+            self.assertEqual(videomode.videomode_processor.scan_dimension(), 1)
 
     def test_video_2d(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
