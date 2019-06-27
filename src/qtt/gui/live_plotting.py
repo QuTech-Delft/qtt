@@ -227,14 +227,6 @@ class MeasurementControl(QtWidgets.QMainWindow):
             self.getVal(tv)
 
 
-def guitest_measurementcontrol():
-    import pyqtgraph
-    app = pyqtgraph.mkQApp()
-    mc = MeasurementControl()
-    mc.verbose = 1
-    mc.setGeometry(1700, 50, 300, 400)
-
-
 def start_measurement_control(doexec=False):
     """ Start measurement control GUI
 

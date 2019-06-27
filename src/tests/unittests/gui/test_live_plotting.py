@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import qtt
 from qtt.measurements.scans import instrumentName
-from qtt.gui.live_plotting import MockCallback_2d, livePlot
+from qtt.gui.live_plotting import MockCallback_2d, livePlot, MeasurementControl
 
 
 class TestLivePlotting(unittest.TestCase):
@@ -28,3 +28,13 @@ class TestLivePlotting(unittest.TestCase):
         lp.updatebg()
         lp.close()
         self.assertIsInstance(lp.datafunction_result, np.ndarray)
+
+class TestMeasurementcontrol(unittest.TestCase):
+
+    def test_measurementcontrol():
+        import pyqtgraph
+        _ = pyqtgraph.mkQApp()
+        mc = MeasurementControl()
+        mc.verbose = 1
+        mc.enable_measurements()
+        mc.setGeometry(1700, 50, 300, 400)
