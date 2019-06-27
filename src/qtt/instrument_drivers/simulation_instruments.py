@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Contains code to do live plotting 
+Contains simulated instruments
 
 """
 # %%
@@ -230,3 +230,4 @@ class SimulationAWG(qcodes.Instrument):
 
     def stop(self):
         pass
+

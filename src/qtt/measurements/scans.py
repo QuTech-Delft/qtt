@@ -32,6 +32,13 @@ from qtt.data import (diffDataset, loadDataset, makeDataSet1D,
                       uniqueArrayName)
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
+import qtt.instrument_drivers.simulation_instruments
+
+from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
+from qtt.data import diffDataset, loadDataset, writeDataset
+from qtt.data import uniqueArrayName
+
+from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
 from qtt.utilities.tools import update_dictionary
 
@@ -1242,13 +1249,23 @@ def get_sampling_frequency(instrument_handle):
 
     if isinstance(instrument_handle, AcquisitionScopeInterface):
         return instrument_handle.sample_rate
-    elif isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+    try:
+        import qcodes.instrument_drivers.Spectrum.M4i
+        if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+            return instrument_handle.sample_rate()
+    except ImportError:
+        pass
+    try:
+        import qcodes.instrument_drivers.ZI.ZIUHFLI
+        if isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
+             return NotImplementedError('not implemented yet')
+    except ImportError:
+        pass
+
+    if isinstance(instrument_handle, qtt.instrument_drivers.simulation_instruments.SimulationDigitizer):
         return instrument_handle.sample_rate()
-    elif isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
-        return Exception('not implemented yet')
-    else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % instrument_handle)
+
+    raise Exception('Unrecognized fast readout instrument %s' % instrument_handle)
 
 
 def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, start_zero=True, fig=None):

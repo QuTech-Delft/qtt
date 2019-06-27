@@ -8,10 +8,55 @@ import qtt.measurements.scans
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.instrument_drivers.simulation_instruments import SimulationAWG
 import qtt.simulation.virtual_dot_array
-from qtt.measurements.videomode import VideoMode
+from qtt.measurements.videomode import VideoMode, DummyVideoModeProcessor
 
 
 class TestVideomode(TestCase):
+
+    def test_video_mode_update_position(self):
+        with mock.patch('sys.stdout', new_callable=io.StringIO):
+            station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
+
+            digitizer = SimulationDigitizer(
+                qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
+            station.add_component(digitizer)
+            minstrument = (digitizer.name, [0])
+
+            station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
+            station.add_component(station.awg)
+
+            vm = VideoMode(station, 'P1', sweepranges=[10.],
+                           minstrument=minstrument, resolution=[12], Naverage=2)
+            new_position = 2
+            vm._update_position((new_position, 0))
+            self.assertEqual(station.gates.P1(), new_position)
+
+    def test_DummyVideoModeProcessor(self):
+
+        station = qtt.simulation.virtual_dot_array.initialize()
+        dummy_processor = DummyVideoModeProcessor(station)
+        vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=1,
+                       nplots=1, dorun=False, videomode_processor=dummy_processor)
+        vm.updatebg()
+        datasets = vm.get_dataset()
+
+        self.assertIsInstance(datasets[0], qcodes.DataSet)
+
+    def test_video_2d(self):
+        with mock.patch('sys.stdout', new_callable=io.StringIO):
+            station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
+
+            digitizer = SimulationDigitizer(
+                qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
+            station.add_component(digitizer)
+            station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
+            station.add_component(station.awg)
+
+            sweepparams = ['P1', 'P2']
+            minstrument = (digitizer.name, [0])
+            videomode = VideoMode(station, sweepparams, sweepranges=[120] * 2,
+                           minstrument=minstrument, resolution=[12] * 2, Naverage=2)
+            self.assertEqual(videomode.videomode_processor.scan_dimension(), 2)
 
     def test_video_mode_get_data_set(self, verbose=0):
         with mock.patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
