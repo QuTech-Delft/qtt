@@ -1,15 +1,20 @@
-from typings import Any, Dict, List, Optional, Tuple
 import numpy as np
-
 from qcodes import Parameter
-from qcodes.utils.validators import Numbers
 from qcodes.instrument_drivers.tektronix.AWG5014 import Tektronix_AWG5014
+from qcodes.utils.validators import Numbers
+
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
+from typings import Any, Dict, List, Optional, Tuple
 
 
 class Tektronix5014C_AWG(AwgCommon):
 
     def __init__(self, awg: Tektronix_AWG5014) -> None:
+        """ The VirtualAWG backend for the Tektronix 5014C AWG.
+
+        Args:
+            awg: The Tektronix 5014C AWG instance.
+        """
         super().__init__('Tektronix_AWG5014', channel_numbers=[1, 2, 3, 4], marker_numbers=[1, 2])
         if type(awg).__name__ is not self._awg_name:
             raise AwgCommonError(f'The AWG does not correspond with {self._awg_name}')
@@ -30,18 +35,35 @@ class Tektronix5014C_AWG(AwgCommon):
 
     @property
     def fetch_awg(self) -> Tektronix_AWG5014:
+        """ Return the AWG instance."""
         return self.__awg
 
     def run(self) -> None:
+        """ Enable the AWG outputs.
+
+        This function equals enabling Run button on the AWG.
+        """
         self.__awg.run()
 
     def stop(self) -> None:
+        """ Disables the AWG outputs.
+
+        This function equals disabling the Run button on the AWG.
+        """
         self.__awg.stop()
 
     def reset(self) -> None:
+        """ Resets the AWG to it's default settings."""
         self.__awg.reset()
 
     def enable_outputs(self, channels: Optional[List[int]] = None) -> None:
+        """ Enables the outputs for the given channels.
+
+        This function equals enabling the CH1, .. CH4 buttons on the AWG.
+
+        Args:
+            channels: A list with the channel numbers. All channels are enabled, if no value is given.
+        """
         if not channels:
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
@@ -49,43 +71,103 @@ class Tektronix5014C_AWG(AwgCommon):
         [self.__awg.set(f'ch{ch}_state', 1) for ch in channels]
 
     def disable_outputs(self, channels: Optional[List[int]] = None) -> None:
+        """ Disables the outputs for the given channels.
+
+        This function equals disabling the CH1, .. CH4 buttons on the AWG.
+
+        Args:
+            channels: A list with the channel numbers. All channels are enabled, if no value is given.
+        """
         if not channels:
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError(f'Invalid channel numbers {channels}')
         [self.__awg.set(f'ch{ch}_state', 0) for ch in channels]
 
-    def change_setting(self, name: str, value: Any) -> None:
+    def change_setting(self, name: str, value: float) -> None:
+        """ Sets a setting on the AWG. The changeable settings are: sample_rate,
+            marker_delay, marker_low, marker_high, amplitudes and offset.
+
+        Args:
+            name: The name of the setting.
+            value: The value the setting should get.
+
+        Returns:
+            The value of the setting.
+        """
         index = next(i for i, p in enumerate(self.__settings) if p.name == name)
         self.__settings[index].set(value)
 
-    def retrieve_setting(self, name: str) -> Any:
+    def retrieve_setting(self, name: str) -> float:
+        """ Gets a setting from the AWG. The gettable are: sample_rate,
+            marker_delay, marker_low, marker_high, amplitudes and offset.
+
+        Args:
+            name: The name of the setting.
+        """
         index = next(i for i, p in enumerate(self.__settings) if p.name == name)
         return self.__settings[index].get()
 
     def update_running_mode(self, mode: str) -> None:
+        """ Sets the running mode. The possible modes are the
+            continues (CONT) and sequential (SEQ).
+
+        Args:
+            mode: Either 'CONT' (continues) or 'SEQ' (sequential).
+        """
         modes = ['CONT', 'SEQ']
         if mode not in modes:
             raise AwgCommonError(f'Invalid AWG mode ({mode})')
         self.__awg.set('run_mode', mode)
 
     def retrieve_running_mode(self) -> float:
+        """ Sets the running mode. The possible modes are the
+            continues (CONT) and sequential (SEQ).
+
+        Returns:
+            'CONT' or 'SEQ'.
+        """
         return self.__awg.get('run_mode')
 
     def retrieve_sampling_rate(self) -> float:
+        """ Gets the sample rate of the AWG.
+
+        Returns:
+            The sample rate of the AWG in Samples/second.
+        """
         return self.__awg.get('clock_freq')
 
     def update_gain(self, gain: float) -> None:
+        """ Sets the amplitude of the channel outputs.
+
+        The amplitude for all channels are set to the same value using this function.
+
+        Args:
+            gain: The amplitude of the output channels.
+        """
         [self.__awg.set(f'ch{ch}_amp', gain) for ch in self._channel_numbers]
 
     def retrieve_gain(self) -> float:
+        """ Gets the amplitude for all the output channels.
+
+        Returns:
+            The amplitude for all output channels.
+        """
         gains = [self.__awg.get(f'ch{ch}_amp') for ch in self._channel_numbers]
-        if not all(g == gains[0] for g in gains):
+        if not all([g == gains[0] for g in gains]):
             raise ValueError('Not all channel amplitudes are equal. Please reset!')
         return gains[0]
 
     def upload_waveforms(self, sequence_names: List[str], sequence_channels: List[Tuple[int, ...]],
                          sequence_items: List[np.ndarray], reload: bool = True) -> None:
+        """ Uploads the sequence with waveforms to the user defined waveform list.
+
+        Args:
+            sequences_names: The names of the waveforms.
+            sequence_channels: A list containing the channel numbers to which each waveform belongs.
+                               E.g. [(1,), (1, 2)]. The second tuple element corresponds to the marker number.
+            sequence_items: A list containing the data for each waveform.
+        """
         sequences = (sequence_names, sequence_channels, sequence_items)
         channel_data, waveform_data = Tektronix5014C_AWG.create_waveform_data(*sequences)
         self._waveform_data = waveform_data
@@ -97,9 +179,25 @@ class Tektronix5014C_AWG(AwgCommon):
 
     @staticmethod
     def create_waveform_data(names: List[str], channels: List[Tuple[int, ...]],
-                             items: List[np.ndarray]) -> Tuple[Dict[str, int], Dict[int, List[np.ndarry]]]:
+                             items: List[np.ndarray]) -> Tuple[Dict[str, int], Dict[int, List[np.ndarray]]]:
+        """ Transforms the data into the correct waveform data.
+
+            A marker waveform will be merged with the channel waveform if the channels list contain both
+            the marker waveform and the output waveform on the same channel.
+
+        Args:
+            names: The waveform names.
+            channels: A list containing the channel numbers to which each waveform belongs.
+                               E.g. [(1,), (1, 2)]. The second tuple element corresponds to the marker number.
+            items: A list containing the data for each waveform.
+
+        Returns:
+            A tuple with the channel data and the waveform data.
+            The channel data contains for each waveform the name and to which channel it belongs.
+            The waveform data contains for each waveform the name and the actual waveform.
+        """
         channel_data: Dict[str, int] = {}
-        waveform_data: Dict[int, List[np.ndarry]] = {}
+        waveform_data: Dict[int, List[np.ndarray]] = {}
 
         unique_channels = set([channel for (channel, *_) in channels])
         for unique_channel in unique_channels:
@@ -120,17 +218,29 @@ class Tektronix5014C_AWG(AwgCommon):
         return channel_data, waveform_data
 
     def retrieve_waveforms(self) -> Dict[str, List[np.ndarray]]:
+        """ Gets the waveform data.
+
+        Returns:
+            A dictionary containing the name as keys and the actual waveform as values.
+        """
         return self._waveform_data if self._waveform_data else None
 
-    def _set_sequence(self, channels: List[int], sequence: List[str]) -> None:
+    def _set_sequence(self, channels: List[int], sequence: List[List[str]]) -> None:
+        """ Sets the sequence on the AWG using the user defined waveforms.
+
+        Args:
+            channels: A list with channel numbers that should output the waveform on the AWG.
+            sequence: A list containing lists with the waveform names for each channel.
+                      The outer list determines the number of rows the sequences has.
+        """
         if not sequence or len(sequence) != len(channels):
             raise AwgCommonError('Invalid sequence and channel count!')
         if not all(len(idx) == len(sequence[0]) for idx in sequence):
-            raise AwgCommonError('Invalid sequence list lengthts!')
+            raise AwgCommonError('Invalid sequence list lengths!')
         request_rows = len(sequence[0])
-        current_rows = self.__get_sequence_length()
+        current_rows = self.get_sequence_length()
         if request_rows != current_rows:
-            self.__set_sequence_length(request_rows)
+            self.set_sequence_length(request_rows)
         for row_index in range(request_rows):
             for channel in self._channel_numbers:
                 if channel in channels:
@@ -142,7 +252,14 @@ class Tektronix5014C_AWG(AwgCommon):
         self.__awg.set_sqel_goto_state(request_rows, 1)
 
     def _upload_waveforms(self, names: List[str], waveforms: List[np.ndarray],
-                          file_name: str = 'default.awg') -> None:
+                          file_name: Optional[str] = 'default.awg') -> None:
+        """ Upload the waveforms to the AWG. Creates an AWG file and then uploads it to the AWG.
+
+        Args:
+            names: A list with the waveform names.
+            waveforms: A list containing the waveform data.
+            file_name: The name of the AWG file.
+        """
         pack_count = len(names)
         packed_waveforms = dict()
         [wfs, m1s, m2s] = list(map(list, zip(*waveforms)))
@@ -179,15 +296,27 @@ class Tektronix5014C_AWG(AwgCommon):
         self.__awg.load_awg_file(f'{current_dir}{file_name}')
 
     def delete_waveforms(self) -> None:
+        """ Clears the user defined waveform list from the AWG."""
         self.__awg.delete_all_waveforms_from_list()
         self._waveform_data = None
 
-    def __set_sequence_length(self, count: int) -> None:
-        self.__awg.write(f'SEQuence:LENGth {count}')
+    def delete_sequence(self) -> None:
+        """ Clears the sequence from the AWG."""
+        self.set_sequence_length(0)
 
-    def __delete_sequence(self) -> None:
-        self.__set_sequence_length(0)
+    def set_sequence_length(self, row_count: int) -> None:
+        """ Sets the number of rows in the sequence.
 
-    def __get_sequence_length(self) -> int:
+        Args:
+            row_count: The number of rows in the sequence.
+        """
+        self.__awg.write(f'SEQuence:LENGth {row_count}')
+
+    def get_sequence_length(self) -> int:
+        """ Gets the number of rows in the sequence.
+
+        Returns:
+            The number of rows in the sequence.
+        """
         row_count = self.__awg.ask('SEQuence:LENGth?')
         return int(row_count)
