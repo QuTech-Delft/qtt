@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 import pyqtgraph
 import unittest.mock as mock
-from unittest.mock import call
 import io
 
 import qtt
