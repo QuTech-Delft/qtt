@@ -120,6 +120,7 @@ class TestScans(TestCase):
         except Exception as ex:
             if verbose:
                 print('combination of Parameter and vector argument not supported')
+        gates.close()
 
     def test_measure_segment_scope_reader_2D(self):
         period = 1e-3
