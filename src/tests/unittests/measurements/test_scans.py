@@ -55,7 +55,7 @@ class TestScans(TestCase):
         station.gates = gates
 
         if verbose:
-            print('test_scan2D: running scan1D')
+            print('test_scan1D: running scan1D')
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
         data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
