@@ -148,7 +148,6 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
         self.unique_channels = list(np.unique(self.channels))
 
-        # for 2D scans
         self.resolution = resolution
 
     def update_position(self, position, verbose=1):
@@ -196,6 +195,18 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
         virtual_awg = getattr(self.station, 'virtual_awg', None)
         awg = getattr(self.station, 'awg', None)
 
+        if isinstance(self.minstrumenthandle, AcquisitionScopeInterface):
+            if scan_dimensions == 1:
+                self.minstrumenthandle.period = self.period_1d()
+            elif scan_dimensions == 2:
+                self.minstrumenthandle.number_of_samples = np.prod(self.resolution)
+            scan_channels = self.scanparams['minstrument'][1]
+            channel_attributes = self.scanparams['minstrument'][2]
+            self.minstrumenthandle.enabled_channels = tuple(scan_channels)
+            for channel, attribute in zip(scan_channels, channel_attributes):
+                self.minstrumenthandle.set_input_signal(channel, attribute)
+            self.minstrumenthandle.start_acquisition()
+
         if scan_dimensions == 1:
             self._run_1d_scan(awg, virtual_awg, period=self.period_1d())
         elif scan_dimensions == 2:
@@ -211,7 +222,14 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 self.station.RF.off()
             if hasattr(self.station, 'virtual_awg'):
                 self.station.virtual_awg.stop()
-
+                if isinstance(self.sweepparams[0], dict):
+                    keys = [list(item.keys())[0] for item in self.sweepparams]
+                    self.station.virtual_awg.disable_outputs(keys)
+                elif isinstance(self.sweepparams, str):
+                    self.station.virtual_awg.disable_outputs([self.sweepparams])
+        if isinstance(self.minstrumenthandle, AcquisitionScopeInterface):
+            self.minstrumenthandle.stop_acquisition()
+            
     def measure(self, videomode):
         minstrumenthandle = self.minstrumenthandle
 
@@ -341,9 +359,23 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 name += ': %s' % str(self.sweepparams)
         return name
 
+def add_sawtooth_videomode_processor(self, resolution, sample_rate, minstrument):
+    """ Add all required variables to the VideoMode for the VideomodeSawtoothMeasurement """
+    self.resolution = resolution
+    self.sample_rate = sample_rate
+    self.minstrumenthandle = minstrument[0]
+    channels = minstrument[1]
+    if isinstance(channels, int):
+        channels = [channels]
+    self.channels = channels
 
-videomode_callback = qtt.utilities.tools.deprecated(VideomodeSawtoothMeasurement)  # for backwards compatibility
+    self.videomode_processor = VideomodeSawtoothMeasurement(self.station)
 
+    sampling_frequency = self.videomode_processor.parse_instrument(self.minstrumenthandle, sample_rate)
+
+    self.videomode_processor.set_scan_parameters(
+        {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument,
+         'resolution': self.resolution, 'sampling_frequency': sampling_frequency, 'channels': channels})
 
 # %%
 
@@ -396,14 +428,8 @@ class VideoMode:
 
     Attributes:
         station (qcodes station): contains all the information about the set-up
-        sweepparams (string, 1 x 2 list or dict): the parameter(s) to be swept
-        sweepranges (int or 1 x 2 list): the range(s) to be swept over (peak-to-peak range)
-        minstrument (tuple): A pair of the measurement instrument and a specification of the channels to read out. For example (m4i, [0,1])
-        Naverage (int): the number of times the raw measurement data should be averaged
-        resolution (1 x 2 list): for 2D the resolution
-        nplots (int or None): number of plots to show. must be equal to the number of channels in the minstrument argument
-        sample_rate (float): sample rate for acquisition device
-        crosshair (bool): enable crosshair
+        videomode_processor (VideoModeProcessor): class performing the measurements and post-processing
+        Naverage (Parameter): the number of times the raw measurement data should be averaged
     """
 
     videomode_class_index = 0
@@ -436,7 +462,7 @@ class VideoMode:
 
         self.station = station
         self.verbose = verbose
-        self.sweepparams = sweepparams
+        #self.sweepparams = sweepparams
         self.sweepranges = sweepranges
         if isinstance(self.sweepranges, float):
             self.sweepranges = [self.sweepranges]
@@ -459,29 +485,15 @@ class VideoMode:
         self.fps = qtt.pgeometry.fps_t(nn=6)
 
         if videomode_processor is None:
-            self.resolution = resolution
-            self.sample_rate = sample_rate
-            self.minstrumenthandle = minstrument[0]
-            channels = minstrument[1]
-            if isinstance(channels, int):
-                channels = [channels]
-            self.channels = channels
-
-            self.videomode_processor = VideomodeSawtoothMeasurement(station)
-
-            sampling_frequency = self.videomode_processor.parse_instrument(self.minstrumenthandle, sample_rate)
-
-            self.videomode_processor.set_scan_parameters(
-                {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument,
-                 'resolution': self.resolution, 'sampling_frequency': sampling_frequency, 'channels': channels})
+            add_sawtooth_videomode_processor(self, resolution, sample_rate, minstrument)
+            # Setup the GUI
+            if nplots is None:
+                nplots = len(self.channels)
         else:
             self.videomode_processor = videomode_processor
 
         self.set_videomode_name(name)
 
-        # Setup the GUI
-        if nplots is None:
-            nplots = len(channels)
         self.nplots = nplots
         self.window_title = "%s: nplots %d" % (
             self.name, self.nplots)
@@ -713,17 +725,6 @@ class VideoMode:
         if start_readout:
             if self.verbose:
                 print('%s: run: startreadout' % (self.__class__.__name__,))
-            if isinstance(self.minstrumenthandle, AcquisitionScopeInterface):
-                if scan_dimensions == 1:
-                    self.minstrumenthandle.period = 1e-3
-                elif scan_dimensions == 2:
-                    self.minstrumenthandle.number_of_samples = np.prod(self.resolution)
-                scan_channels = self.scanparams['minstrument'][1]
-                channel_attributes = self.scanparams['minstrument'][2]
-                self.minstrumenthandle.enabled_channels = tuple(scan_channels)
-                for channel, attribute in zip(scan_channels, channel_attributes):
-                    self.minstrumenthandle.set_input_signal(channel, attribute)
-                self.minstrumenthandle.start_acquisition()
             self.startreadout()
 
     def stop(self):

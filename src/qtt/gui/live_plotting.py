@@ -727,11 +727,4 @@ class MockCallback_2d(qcodes.Instrument):
         return data_reshaped
 
 
-# %% Example
-if __name__ == '__main__' and 0:
-    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
-                  sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
-    lp.win.setGeometry(1500, 10, 400, 400)
-    lp.startreadout()
-    self = lp
-    pv = qtt.createParameterWidget([lp.datafunction])
+

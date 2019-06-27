@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
+import qtt
 from qtt.measurements.scans import instrumentName
-from qtt.gui.live_plotting import MockCallback_2d
+from qtt.gui.live_plotting import MockCallback_2d, livePlot
 
 
 class TestLivePlotting(unittest.TestCase):
@@ -16,3 +17,14 @@ class TestLivePlotting(unittest.TestCase):
         self.assertAlmostEqual(data_reshaped.min(), 2.996900483446681e-05, 6)
         self.assertAlmostEqual(data_reshaped.max(), 4.122574793363507, 6)
         self.assertAlmostEqual(data_reshaped.sum(), 3440.344282085355, 3)
+
+    def test_livePlot(self):
+        lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
+                      sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=True)
+        lp.win.setGeometry(1500, 10, 400, 400)
+        lp.startreadout()
+        lp.crosshair(True)
+        lp.stopreadout()
+        lp.updatebg()
+        lp.close()
+        self.assertIsInstance(lp.datafunction_result, np.ndarray)

@@ -1,4 +1,4 @@
-from unittest import TestCase
+import unittest 
 import unittest.mock as mock
 import io
 
@@ -11,7 +11,7 @@ import qtt.simulation.virtual_dot_array
 from qtt.measurements.videomode import VideoMode, DummyVideoModeProcessor
 
 
-class TestVideomode(TestCase):
+class TestVideomode(unittest.TestCase):
 
     def test_video_mode_update_position(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
@@ -101,3 +101,7 @@ class TestVideomode(TestCase):
             std_output = mock_stdout.getvalue()
             print(std_output)
             self.assertIn('VideoMode: start readout', std_output)
+
+if __name__=='__main__':
+    unittest.main()
+    

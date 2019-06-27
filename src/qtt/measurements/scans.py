@@ -27,20 +27,16 @@ import qtt.gui.live_plotting
 import qtt.instrument_drivers.virtualAwg.virtual_awg
 import qtt.utilities.tools
 from qtt.algorithms.gatesweep import analyseGateSweep
-from qtt.data import (diffDataset, loadDataset, makeDataSet1D,
-                      makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain,
-                      uniqueArrayName)
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 import qtt.instrument_drivers.simulation_instruments
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset, loadDataset, writeDataset
+from qtt.data import diffDataset, loadDataset
 from qtt.data import uniqueArrayName
 
 from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
-from qtt.utilities.tools import update_dictionary
 
 # %%
 
