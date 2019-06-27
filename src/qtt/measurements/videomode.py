@@ -811,48 +811,11 @@ class VideoMode:
             v.stopreadout()
 
 
-def guitest_videomode():
-    import pyqtgraph
-    _ = pyqtgraph.mkQApp()
-    from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
-    from qtt.instrument_drivers.simulation_instruments import SimulationAWG
-
-    assert (VideoMode.get_instance(-1) is None)
-
-    import qtt.simulation.virtual_dot_array
-    station = qtt.simulation.virtual_dot_array.initialize()
-
-    digitizer = SimulationDigitizer(
-        qtt.measurements.scans.instrumentName('sdigitizer'), model=station.model)
-    station.add_component(digitizer)
-
-    station.awg = SimulationAWG(qtt.measurements.scans.instrumentName('vawg'))
-    station.add_component(station.awg)
-
-    sweepparams = ['P1', 'P2']
-    minstrument = (digitizer.name, [0])
-
-    vm = VideoMode(station, sweepparams, sweepranges=[120] * 2,
-                   minstrument=minstrument, resolution=[12] * 2, Naverage=2)
-    vm.stop()
-    vm.updatebg()
-    vm.get_dataset()
-    vm.close()
-
-    all = VideoMode.all_instances(verbose=0)
-    assert (vm in all)
-
-    vm1d = VideoMode(station, 'P1', sweepranges=[120],
-                     minstrument=minstrument, resolution=[12], Naverage=2)
-    vm1d.stop()
-
 
 # %% Testing
 
 
 if __name__ == '__main__':
-    guitest_videomode()
-
     import qtt.simulation.virtual_dot_array
     import qtt.instrument_drivers.simulation_instruments
     from importlib import reload
