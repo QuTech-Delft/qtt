@@ -43,6 +43,37 @@ class TestScans(TestCase):
         v = s.restrict_boundaries('D0', 1000)
         self.assertEqual(100, v)
 
+    def test_scan1D(self, verbose=0):
+        p = Parameter('p', set_cmd=None)
+        q = Parameter('q', set_cmd=None)
+        r = VoltageDivider(p, 4)
+        _ = MultiParameter(instrumentName('multi_param'), [p, q])
+
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        if verbose:
+            print('test_scan2D: running scan1D')
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [q, r]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [r]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [r]})
+        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0, extra_metadata={'hi': 'world'})
+        self.assertTrue('hi' in data.metadata)
+        gates.close()
+
     def test_scan2D(self, verbose=0):
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)
@@ -89,26 +120,6 @@ class TestScans(TestCase):
         except Exception as ex:
             if verbose:
                 print('combination of Parameter and vector argument not supported')
-
-        if verbose:
-            print('test_scan2D: running scan1D')
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [q, r]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [r]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [r]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0, extra_metadata={'hi': 'world'})
-        self.assertTrue('hi' in data.metadata)
-        gates.close()
 
     def test_measure_segment_scope_reader_2D(self):
         period = 1e-3
