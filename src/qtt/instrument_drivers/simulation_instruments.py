@@ -6,7 +6,10 @@ Contains simulated instruments
 # %%
 import numpy as np
 import logging
+import time
+
 import qcodes
+
 
 # %%
 
@@ -29,7 +32,6 @@ class SimulationDigitizer(qcodes.Instrument):
             waveform (object): waveform currently on AWG
             channels (list): channels to measure
         """
-        import time
         if self.verbose:
             print('{}: measuresegment: channels {}'.format(self.name, channels))
             print(waveform)
@@ -94,7 +96,7 @@ class SimulationDigitizer(qcodes.Instrument):
             if wtype == 'sweep_2D_virt':
                 sweepgatesx = sweepgates
             else:
-                sweepgatesx = [{sweepgates[0]:1}, {sweepgates[1]:1}]
+                sweepgatesx = [{sweepgates[0]: 1}, {sweepgates[1]: 1}]
 
             iih = [v.index(s) for s in sweepgatesx[0]]
             iiv = [v.index(s) for s in sweepgatesx[1]]
@@ -167,9 +169,9 @@ class SimulationDigitizer(qcodes.Instrument):
 
         if model.sdnoise > 0:
             sd1 += model.sdnoise * \
-                (np.random.rand(*test_dot.honeycomb.shape) - .5)
+                   (np.random.rand(*test_dot.honeycomb.shape) - .5)
             sd2 += model.sdnoise * \
-                (np.random.rand(*test_dot.honeycomb.shape) - .5)
+                   (np.random.rand(*test_dot.honeycomb.shape) - .5)
         if ndim == 1:
             sd1 = sd1.reshape((-1,))
             sd2 = sd2.reshape((-1,))
@@ -230,4 +232,3 @@ class SimulationAWG(qcodes.Instrument):
 
     def stop(self):
         pass
-
