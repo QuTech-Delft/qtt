@@ -770,7 +770,7 @@ class VideoMode:
                 alldata = [None] * len(data)
                 for jj in range(len(data)):
                     datax = data[jj]
-                    alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges,
+                    alldatax, _ = makeDataset_sweep_2D(datax, self.station.gates, self.sweepparams, self.sweepranges[0],
                                                        loc_record={
                                                            'label': 'videomode_2d_single'})
                     alldatax.metadata = copy.copy(metadata)
