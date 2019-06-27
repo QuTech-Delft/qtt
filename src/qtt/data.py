@@ -1076,11 +1076,8 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
 
     if len(setpoints) > 1:
         set_arrays = (setpoints[0], setpoints[1])
-        dd.add_array(setpoints[0])
-        dd.add_array(setpoints[1])
     else:
         set_arrays = (setpoints[0], )
-        dd.add_array(setpoints[0])
 
     if measured_data_list is not None:
         if len(measurement_list) != len(measured_data_list):
@@ -1112,6 +1109,12 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
                                  measured_array.shape, preset_data.shape)
 
             getattr(dd, mname).ndarray = measured_array
+
+    if len(setpoints) > 1:
+        dd.add_array(setpoints[1])
+        dd.add_array(setpoints[0])
+    else:
+        dd.add_array(setpoints[0])
 
     return dd, measure_names
 
