@@ -1066,7 +1066,7 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
     """ Generic code to make the data set for makeDataSet1D, makeDataSet1DPlain, makeDataSet2D, makeDataSet2DPlain
 
     Raises:
-        ValueError: When the number of measurements names in the measurement_list doesn not match the number
+        ValueError: When the number of measurements names in the measurement_list does not match the number
                     of measurements.
 
         ValueError: When the shape of the measured data is not matching the shape of the setpoint array. When the
@@ -1220,8 +1220,8 @@ def makeDataSet1D(p, yname='measured', y=None, location=None, loc_record=None, r
     else:
         measurement_list = yname
 
-    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
-                                             preset_data, [setpoint])
+    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location,
+                                             loc_record, preset_data, [setpoint])
 
     data_set.metadata['default_parameter_name'] = measure_names[0]
     if return_names:
@@ -1349,8 +1349,8 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     else:
         measured_data_list = z
 
-    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
-                                             preset_data, [setpointy, setpointx])
+    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location,
+                                             loc_record, preset_data, [setpointy, setpointx])
 
     data_set.last_write = -1
 
