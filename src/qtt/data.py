@@ -1075,7 +1075,7 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
         TypeError: When a measurement name in the measurement list has an invalid type.
 
     Returns:
-        The resulting data set and the measure names list
+        The resulting data set and the measure names list.
     """
     data_set = new_data(arrays=(), location=location, loc_record=loc_record)
 
