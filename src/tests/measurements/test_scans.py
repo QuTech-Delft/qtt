@@ -58,15 +58,15 @@ class TestScans(TestCase):
             print('test_scan1D: running scan1D')
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+        _ = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
 
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [q, r]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+        _ = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
 
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [r]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+        _ = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
 
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [r]})
@@ -74,7 +74,8 @@ class TestScans(TestCase):
         self.assertTrue('hi' in data.metadata)
         gates.close()
 
-    def test_scan2D(self, verbose=0):
+    @staticmethod
+    def test_scan2D(verbose=0):
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)
         r = VoltageDivider(p, 4)
@@ -91,13 +92,13 @@ class TestScans(TestCase):
             {'param': p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [r]})
         scanjob['stepdata'] = dict(
             {'param': q, 'start': 24, 'end': 30, 'step': 1.})
-        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+        _ = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
         scanjob = scanjob_t({'sweepdata': dict({'param': {
             'dac1': 1, 'dac2': .1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [r]})
         scanjob['stepdata'] = dict(
             {'param': {'dac2': 1}, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
-        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+        _ = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
 
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [r]})
@@ -116,7 +117,7 @@ class TestScans(TestCase):
                 'dac1': 1}, 'start': 0, 'range': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
             scanjob['stepdata'] = dict(
                 {'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
-            data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
+            _ = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
         except Exception as ex:
             if verbose:
                 print('combination of Parameter and vector argument not supported')
