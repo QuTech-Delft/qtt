@@ -4,7 +4,7 @@ from qcodes.instrument_drivers.tektronix.AWG5014 import Tektronix_AWG5014
 from qcodes.utils.validators import Numbers
 
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 
 class Tektronix5014C_AWG(AwgCommon):
@@ -65,7 +65,7 @@ class Tektronix5014C_AWG(AwgCommon):
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError(f'Invalid channel numbers {channels}')
-        [self.__awg.set(f'ch{ch}_state', 1) for ch in channels]
+        _ = [self.__awg.set(f'ch{ch}_state', 1) for ch in channels]
 
     def disable_outputs(self, channels: Optional[List[int]] = None) -> None:
         """ Disables the outputs for the given channels.
@@ -79,7 +79,7 @@ class Tektronix5014C_AWG(AwgCommon):
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise AwgCommonError(f'Invalid channel numbers {channels}')
-        [self.__awg.set(f'ch{ch}_state', 0) for ch in channels]
+        _ = [self.__awg.set(f'ch{ch}_state', 0) for ch in channels]
 
     def change_setting(self, name: str, value: float) -> None:
         """ Sets a setting on the AWG. The changeable settings are:
@@ -150,7 +150,7 @@ class Tektronix5014C_AWG(AwgCommon):
         Args:
             gain: The amplitude of the output channels.
         """
-        [self.__awg.set(f'ch{ch}_amp', gain) for ch in self._channel_numbers]
+        _ = [self.__awg.set(f'ch{ch}_amp', gain) for ch in self._channel_numbers]
 
     def retrieve_gain(self) -> float:
         """ Gets the amplitude for all the output channels.
