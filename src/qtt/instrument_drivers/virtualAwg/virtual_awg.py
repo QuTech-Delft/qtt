@@ -1,7 +1,10 @@
 import logging
 import numpy as np
 
+from typing import List
+
 from qcodes import Instrument
+from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
 
@@ -84,6 +87,12 @@ class VirtualAwg(Instrument):
         """ Constructs the parameters needed for setting the marker output settings for
             triggering the digitizer readout and starting slave AWG's when running a sequence.
         """
+
+        self.parameters.pop('awg_marker_delay', None)
+        self.parameters.pop('awg_marker_uptime', None)
+        self.parameters.pop('digitizer_marker_delay', None)
+        self.parameters.pop('digitizer_marker_uptime', None)
+
         if VirtualAwg.__awg_slave_name in self._settings.awg_map:
             self.add_parameter('awg_marker_delay', initial_value=0, set_cmd=None)
             self.add_parameter('awg_marker_uptime', initial_value=1e-8, set_cmd=None)
@@ -92,11 +101,11 @@ class VirtualAwg(Instrument):
             self.add_parameter('digitizer_marker_uptime', initial_value=1e-8, set_cmd=None, unit='s')
 
     @property
-    def settings(self) -> Instrument:
+    def settings(self) -> SettingsInstrument:
         return self._settings
 
     @settings.setter
-    def settings(self, value: Instrument) -> None:
+    def settings(self, value: SettingsInstrument) -> None:
         self._settings = value
         if value is not None:
             self.__set_parameters()
@@ -106,8 +115,13 @@ class VirtualAwg(Instrument):
         return self._awgs
 
     @property
-    def instruments(self):
+    def instruments(self) -> List[Instrument]:
         return self._instruments
+
+    @instruments.setter
+    def instruments(self, value: List[Instrument]) -> None:
+        self._instruments = value
+        self.__set_hardware(value)
 
     def add_instruments(self, instruments):
         self._instruments.extend(instruments)

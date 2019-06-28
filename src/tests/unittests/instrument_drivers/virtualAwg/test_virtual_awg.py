@@ -1,19 +1,7 @@
 import unittest
-from qcodes import Instrument
 
 from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg
-
-
-class QuantumDeviceSettings(Instrument):
-
-    def __init__(self):
-        super().__init__('settings')
-        self.awg_map = {
-            'P1': (0, 1),
-            'P2': (0, 2),
-            'dig_mk': (0, 1, 1)
-        }
 
 
 class TestVirtualAwg(unittest.TestCase):
