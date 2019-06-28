@@ -48,7 +48,7 @@ class SettingsInstrument(Instrument):
                                initial_value=1000, label=parameter_label, vals=Numbers(1, 1000))
 
     def write_raw(self, cmd: str) -> None:
-        pass
+        raise NotImplementedError()
 
     def ask_raw(self, cmd: str) -> str:
-        pass
+        raise NotImplementedError()
