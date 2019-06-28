@@ -5,8 +5,11 @@ import matplotlib.pyplot as plt
 import tempfile
 import qcodes
 from qcodes import ManualParameter
-import qcodes.tests.data_mocks
+from qcodes.data.hdf5_format import HDF5Format
+from qcodes.data.gnuplot_format import GNUPlotFormat
+from qcodes.data.io import DiskIO
 from qcodes.tests.data_mocks import DataSet2D
+
 import qtt.data
 from qtt.data import image_transform, dataset_to_dictionary, dictionary_to_dataset,\
      compare_dataset_metadata, diffDataset, add_comment, load_dataset
@@ -190,7 +193,6 @@ class TestMakeDataSet(unittest.TestCase):
                                qtt.data.makeDataSet1Dplain, 'x', x, 'y1', [y, y])
 
     def test_makedataset1dplain_type_yname_parameter(self):
-        from qcodes import ManualParameter
         x = np.arange(0, 10)
         yname = ManualParameter('dummy')
         data_set = qtt.data.makeDataSet1Dplain('x', x, yname)
@@ -361,7 +363,8 @@ class TestMakeDataSet(unittest.TestCase):
         self.assertTrue(data_set.measured.shape == np.ones((len(v), len(h))).shape)
         self.assertTrue(data_set.arrays['measured'].shape == np.ones((len(v), len(h))).shape)
 
-    def test_makedataset2d_diffdataset(self):
+    @staticmethod
+    def test_makedataset2d_diffdataset():
         p1 = ManualParameter('dummy1')
         p2 = ManualParameter('dummy2')
         ds = qtt.data.makeDataSet2D(p1[0:10:1], p2[0:4:1], ['m1', 'm2'])
