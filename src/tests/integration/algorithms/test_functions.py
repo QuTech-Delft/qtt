@@ -3,8 +3,7 @@
 import unittest
 import matplotlib.pyplot as plt
 import numpy as np
-from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
-    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, _estimate_exp_decay_initial_parameters
+from qtt.algorithms.functions import fit_gauss_ramsey, gauss_ramsey
 
 
 class TestFunctions(unittest.TestCase):

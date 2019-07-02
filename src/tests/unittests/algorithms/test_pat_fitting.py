@@ -16,8 +16,8 @@ from qtt.algorithms.pat_fitting import one_ele_pat_model, fit_pat, pre_process_p
 
 class TestPatFitting(TestCase):
 
-    @staticmethod
-    def test_pat_fitting(fig=None):
+    def test_pat_fitting(self, fig=None):
+        np.random.seed(2019)
         pp0 = [0, 50, 5]
         x_data = np.arange(-3, 3, 0.025)
         y_data = np.arange(.5e9, 10e9, .5e9)
@@ -38,7 +38,10 @@ class TestPatFitting(TestCase):
 
             trans = 'one_ele'
             period = 1e-3
-            xx, _ = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=fig+100)
+            peaks, _ = detect_peaks(x_data, y_data, imx, model=trans, period=period, sigmamv=.05, fig=fig+100)
+
+            self.assertAlmostEqual(peaks.min(), -2.400000000000002, 6)
+            self.assertAlmostEqual(peaks.max(), 9500000000.0, 6)
 
             plt.figure(fig + 3)
             plt.clf()

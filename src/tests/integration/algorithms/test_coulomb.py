@@ -3,7 +3,7 @@
 import unittest
 import numpy as np
 from qtt.algorithms.functions import gaussian
-from qtt.algorithms.coulomb import coulombPeaks, findSensingDotPosition
+from qtt.algorithms.coulomb import coulombPeaks
 
 
 class TestCoulomb(unittest.TestCase):
