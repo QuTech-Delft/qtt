@@ -589,27 +589,35 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
 def boxcar_filter(signal, kernel_size):
     """ Perform boxcar filtering on an array.
     At the edges, the edge value is replicated beyond the edge as needed by the size of the kernel.
+    This is the 'nearest' mode of scipy.ndimage.convolve. For details, see
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.convolve.html?highlight=mode
+
 
     Args:
-        signal (array): an array containing the signal to be filtered
-        kernel_size: size of the filter box (tuple). Must have the same number of dimensions as the signal.
+        signal (sequence): a sequence containing the signal to be filtered.
+        kernel_size (tuple): Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
 
     Returns:
         a numpy array containing the filtered signal.
     """
 
-    signal = np.array(signal)
+    if not type(signal) == np.ndarray:
+        signal = np.array(signal)
 
     if len(kernel_size) != len(signal.shape):
-        raise RuntimeError('Number of dimension of input signal should be equal to number of dimensions of kernel')
+        raise RuntimeError('Number of dimensions of kernel (%d) not equal to number of dimension of input signal (%d)' %
+                           (len(kernel_size), len(signal.shape)))
 
-    boxcar_kernel = np.ones(kernel_size, dtype=np.float_) / np.prod(kernel_size, dtype=np.float_)
+    for siz in kernel_size:
+        if siz <= 0:
+            raise RuntimeError('Kernel sizes must be > 0')
 
-    if isinstance(signal.dtype, (int, np.int32, np.int64)):
-        filtered_signal = np.array(signal, np.float64)
+    if signal.dtype.kind in ('i', 'u'):
+        filtered_signal = signal.astype(np.float64)
     else:
         filtered_signal = signal
 
+    boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.prod(kernel_size, dtype=np.float64)
     filtered_signal = scipy.ndimage.filters.convolve(filtered_signal, boxcar_kernel, mode='nearest')
 
     return filtered_signal
