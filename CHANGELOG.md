@@ -6,15 +6,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
-# TODO...
 
 ### Added
-### Changed
-### Deprecated
-### Removed
-### Fixed
-### Security
+- Added a changelog to QTT (#591).
+- Added load example dataset method (#586).
+- Added chirp signal to QuPulse templates (#582).
+- Made QTT python 3.7 compatible and Travis now runs a python 3.7 build (#578).
+- Allow json files in the DataBrowser (#557).
+- Added plot_dataset from spin-projects repo (#565).
+- New post processing functionality is added (#563, #564).
+- Added a lock-in amplifier interface for the Zurich instruments UHFLI (#560).
+- A JSON encoding for qcodes.DataSet is added to the serialized (#558).
+- Added scope reader for the Zurich Instruments UHFLI. (#554, #980).
 
+### Changed
+- Allow plotCallback to operate on datetime axis (#584).
+- VirtualDAC now has an option to set gate_map and instruments on VirtualDAC (#583).
+- All unittests are moved to a tests folder (#574).
+- Legacy code now throws exceptions (#551).
+
+### Deprecated
+- loadExperimentData and saveExperimentData are now deprecated functions (#581).
+
+### Removed
+...
+
+### Fixed
+- Fixed the readthedocs build (#590).
+- Fixed issue with HDAWG8 sampling rate (#589).
+- Fixed travis warnings and tests instrument_drivers (#569).
+
+### Security
+...
 
 ## [1.1.2] - 2018-04-12
 
