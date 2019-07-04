@@ -266,10 +266,10 @@ class Tektronix5014C_AWG(AwgCommon):
             name = names[i]
             package = self.__awg.pack_waveform(wfs[i], m1s[i], m2s[i])
             packed_waveforms[name] = package
-        offset = self.__settings[5].get()
-        amplitude = self.__settings[4].get()
-        marker_low = self.__settings[2].get()
-        marker_high = self.__settings[3].get()
+        offset = self.__settings[4].get()
+        amplitude = self.__settings[3].get()
+        marker_low = self.__settings[1].get()
+        marker_high = self.__settings[2].get()
         channel_cfg = {'ANALOG_METHOD_1': 1, 'CHANNEL_STATE_1': 1, 'ANALOG_AMPLITUDE_1': amplitude,
                        'MARKER1_METHOD_1': 2, 'MARKER1_LOW_1': marker_low, 'MARKER1_HIGH_1': marker_high,
                        'MARKER2_METHOD_1': 2, 'MARKER2_LOW_1': marker_low, 'MARKER2_HIGH_1': marker_high,
