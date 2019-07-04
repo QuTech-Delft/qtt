@@ -43,7 +43,7 @@ class TestGeneric(unittest.TestCase):
 
 class TestBoxcarFilter(unittest.TestCase):
 
-    _kernel_size_0D = tuple()
+    _kernel_size_0D: tuple = ()
     _kernel_size_1D = (3,)
     _kernel_size_2D = (3, 3)
     _kernel_size_3D = (3, 3, 5)

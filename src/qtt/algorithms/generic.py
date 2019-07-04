@@ -601,7 +601,7 @@ def boxcar_filter(signal, kernel_size):
         a numpy array containing the filtered signal.
     """
 
-    if not type(signal) == np.ndarray:
+    if not isinstance(signal, np.ndarray):
         signal = np.array(signal)
 
     if len(kernel_size) != len(signal.shape):
