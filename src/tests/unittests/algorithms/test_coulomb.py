@@ -2,6 +2,7 @@
 
 import unittest
 import numpy as np
+import matplotlib.pyplot as plt
 from qtt.algorithms.functions import gaussian
 from qtt.algorithms.coulomb import coulombPeaks, findSensingDotPosition
 
@@ -22,6 +23,7 @@ class TestCoulomb(unittest.TestCase):
         self.assertTrue(len(peaks) == 2)
         self.assertTrue(np.abs(peaks[0]['x'] - 70) < 2)
         self.assertTrue(np.abs(peaks[1]['x'] - 30) < 2)
+        plt.close('all')
 
     def test_find_sensing_dot_position(self, verbose=0):
         x_data, y_data = self.example_data

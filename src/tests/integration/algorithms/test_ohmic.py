@@ -9,7 +9,7 @@ from qtt.data import makeDataSet1Dplain
 
 class TestOhmic(unittest.TestCase):
 
-    def test_fitohmic(self, fig=None):
+    def test_fitohmic(self, fig=100):
         np.random.seed(2019)
         x = np.arange(-200, 200)
         y = 1e-10 * (x + 50 + 20 * np.random.rand(x.size))

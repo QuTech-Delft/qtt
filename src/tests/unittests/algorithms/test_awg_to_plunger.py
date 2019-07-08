@@ -1,13 +1,13 @@
 """ Functionality to test determine the awg_to_plunger ratio."""
 
 # %% Load packages
+import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 import qtt.pgeometry
 from qtt.utilities.imagetools import semiLine
 from qtt.data import makeDataSet2Dplain
 from qtt.algorithms.awg_to_plunger import analyse_awg_to_plunger
-import unittest
 
 
 class TestAwgToPlunger(unittest.TestCase):

@@ -2,8 +2,10 @@
 
 import unittest
 import numpy as np
+import matplotlib.pyplot as plt
 from qtt.algorithms.functions import gaussian
 from qtt.algorithms.coulomb import coulombPeaks
+
 
 
 class TestCoulomb(unittest.TestCase):
@@ -22,3 +24,4 @@ class TestCoulomb(unittest.TestCase):
         self.assertTrue(len(peaks) == 2)
         self.assertTrue(np.abs(peaks[0]['x'] - 70) < 2)
         self.assertTrue(np.abs(peaks[1]['x'] - 30) < 2)
+        plt.close('all')

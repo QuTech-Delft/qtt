@@ -2,6 +2,7 @@
 
 import unittest
 import numpy as np
+import matplotlib.pyplot as plt
 from qtt.algorithms.random_telegraph_signal import tunnelrates_RTS, FittingException, generate_RTS_signal
 import warnings
 
@@ -48,3 +49,4 @@ class TestRandomTelegraphSignal(unittest.TestCase):
 
         self.assertTrue(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
         self.assertTrue(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)
+        plt.close('all')

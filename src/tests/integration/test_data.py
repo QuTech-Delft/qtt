@@ -135,3 +135,4 @@ class TestDataSet(unittest.TestCase):
         plt.figure(fig)
         ax = plt.gca()
         self.assertEqual(ax.xaxis.label.get_text(), xarray.label + ' (' + str(xarray.unit) + ')')
+        plt.close(fig)

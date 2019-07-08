@@ -38,5 +38,6 @@ class TestGeneric(unittest.TestCase):
                                       im.shape[0] - 1], mvx=4, verbose=0, fig=fig)
         self.assertTrue(rescaled.size, 45000)
         self.assertSequenceEqual(s, (4, 1.0, 0.25, 1.0))
+        plt.close('all')
 
 

@@ -32,8 +32,8 @@ class TestOneDot(unittest.TestCase):
 
         x = onedotGetBalance(dataset=data, verbose=verbose, fig=fig)
         results = x[0]
-        _, _ = onedotGetBalanceFine(impixel=None, dd=data, fig=fig+100)
-        plot_onedot(results, ds=data, fig=fig+200, verbose=verbose)
+        _, _ = onedotGetBalanceFine(impixel=None, dd=data, fig=fig)
+        plot_onedot(results, ds=data, fig=fig, verbose=verbose)
 
     def test_one_dot(self, fig=100):
         plt.interactive(True)

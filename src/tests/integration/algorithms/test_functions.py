@@ -26,7 +26,7 @@ class TestFunctions(unittest.TestCase):
         test_y = gauss_ramsey(test_x, par_fit_test)
 
         if fig is not None:
-            plt.figure(10)
+            plt.figure(fig)
             plt.clf()
             plt.plot(x_data, y_data, 'o', label='input data')
             plt.plot(test_x * 1e6, test_y, label='fitted curve')

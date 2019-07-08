@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-
+import matplotlib.pyplot as plt
 from qtt.algorithms.functions import FermiLinear, linear_function
 from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear
 
@@ -24,6 +24,7 @@ class TestFitting(unittest.TestCase):
         np.testing.assert_almost_equal(cc, expected_parameters[2], decimal=1)
         np.testing.assert_almost_equal(A, expected_parameters[3], decimal=1)
         self.assertTrue(fermi_part is not None)
+        plt.close('all')
 
     def test_fit_fermi_linear(self, fig=100, verbose=1):
         expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
@@ -84,3 +85,4 @@ class TestFitting(unittest.TestCase):
         linear_part, fermi_part = initFermiLinear(x_data, y_data, fig=figx)
         np.testing.assert_almost_equal(linear_part, [0, 0], decimal=1)
         np.testing.assert_almost_equal(fermi_part, [-16.7, 0.02755, 0.01731], decimal=2)
+        plt.close('all')

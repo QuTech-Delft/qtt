@@ -46,4 +46,4 @@ class TestPatFitting(TestCase):
             plt.figure(fig + 3)
             plt.clf()
             pcolormesh_centre(x_data, y_data, imq)
-            plt.close('all')
+        plt.close('all')

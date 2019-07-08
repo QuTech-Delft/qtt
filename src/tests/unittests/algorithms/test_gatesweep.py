@@ -4,6 +4,7 @@
 
 import unittest
 import numpy as np
+import matplotlib.pyplot as plt
 from qtt.data import makeDataSet1Dplain
 from qtt.algorithms.functions import logistic
 from qtt.algorithms.gatesweep import analyseGateSweep, plot_pinchoff
@@ -23,3 +24,4 @@ class TestGateSweep(unittest.TestCase):
         self.assertEqual(result['type'], 'gatesweep')
         if fig:
             plot_pinchoff(result, ds=data_set, fig=fig)
+        plt.close('all')
