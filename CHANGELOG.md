@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 ...
 
-## [1.1.2] - 2018-04-12
+## [1.1.2] - 2019-04-12
 
 ### Added
 - Added normalization function to virtual gate matrix (#465).
