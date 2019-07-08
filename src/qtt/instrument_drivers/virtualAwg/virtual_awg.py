@@ -4,6 +4,8 @@ import numpy as np
 from typing import List
 
 from qcodes import Instrument
+
+from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon
 from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
@@ -102,28 +104,46 @@ class VirtualAwg(Instrument):
 
     @property
     def settings(self) -> SettingsInstrument:
+        """ The device's settings. """
         return self._settings
 
     @settings.setter
     def settings(self, value: SettingsInstrument) -> None:
+        """ Change the device's settings and update its parameters. """
         self._settings = value
         if value is not None:
             self.__set_parameters()
 
     @property
-    def awgs(self):
+    def awgs(self) -> List[AwgCommon]:
+        """ The device's awgs. """
         return self._awgs
 
     @property
     def instruments(self) -> List[Instrument]:
+        """ The device's instruments. """
         return self._instruments
 
     @instruments.setter
     def instruments(self, value: List[Instrument]) -> None:
+        """
+        Updates the devices instruments
+
+        Args:
+            value: The list of instruments to update
+        """
+
         self._instruments = value
         self.__set_hardware(value)
 
-    def add_instruments(self, instruments):
+    def add_instruments(self, instruments: List[Instrument]):
+        """
+        Adds a list of instruments and updates its hardware parameters.
+
+        Args:
+            instruments: The list of instruments to add
+        """
+
         self._instruments.extend(instruments)
         self.__set_hardware(self._instruments)
 
