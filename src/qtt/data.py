@@ -261,8 +261,6 @@ def add_comment(txt, dataset=None, verbose=0):
                 pass
         else:
             raise NotImplementedError('dataset not specified and _latest_datasets not available')
-            # unreachable code
-            # dataset = qcodes.DataSet._latest
     if dataset is None:
         raise Exception('no DataSet to add comments to')
 
@@ -1032,28 +1030,35 @@ def saveExperimentData(outputdir, dataset, tag, dstr):
 
 
 def determine_parameter_unit(parameter):
-    """ Determine unit associated with a qcodes.parameter, otherwise None """
+    """ Determine unit associated with a parameter
+
+    Arguments:
+        parameter (Any): the parameter to get the unit from
+
+    Returns:
+        The unit associated with the parameter when the parameter is a qcodes parameter, otherwise None
+    """
     if isinstance(parameter, qcodes.Parameter):
         return parameter.unit
     else:
         return None
 
 
-def _check_parameter(p):
-    """ Check p to be of correct type - used in MakeDataSet1D and MakeDataSet2D.
+def _check_parameter(parameter):
+    """ Check parameter to be of correct type - used in MakeDataSet1D and MakeDataSet2D.
 
     Arguments:
-        p (qcodes.SweepFixedValues): the parameter to check
+        parameter (qcodes.SweepFixedValues): the parameter to check
 
     Raises:
-        TypeError: When p does not have attribute 'parameter'
-        TypeError: When attribute p.parameter is not an instance of qcodes.parameter.
+        TypeError: When parameter does not have attribute 'parameter'
+        TypeError: When attribute parameter.parameter is not an instance of qcodes.parameter.
     """
-    if hasattr(p, 'parameter'):
-        if not isinstance(p.parameter, qcodes.Parameter):
-            raise TypeError('Type of p.parameter must be qcodes.Parameter')
+    if hasattr(parameter, 'parameter'):
+        if not isinstance(parameter.parameter, qcodes.Parameter):
+            raise TypeError('Type of parameter.parameter must be qcodes.Parameter')
     else:
-        raise TypeError('Type of p must be qcodes.SweepFixedValues')
+        raise TypeError('Type of parameter must be qcodes.SweepFixedValues')
 
 
 def _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record, preset_data,
@@ -1072,7 +1077,7 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
     Returns:
         The resulting data set and the measure names list
     """
-    dd = new_data(arrays=(), location=location, loc_record=loc_record)
+    data_set = new_data(arrays=(), location=location, loc_record=loc_record)
 
     if len(setpoints) > 1:
         set_arrays = (setpoints[0], setpoints[1])
@@ -1101,22 +1106,22 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
     for idm, mname in enumerate(measure_names):
         preset_data_array = DataArray(name=mname, array_id=mname, label=mname, unit=measure_units[idm],
                                       preset_data=np.copy(preset_data), set_arrays=set_arrays)
-        dd.add_array(preset_data_array)
+        data_set.add_array(preset_data_array)
         if measured_data_list is not None:
             measured_array = np.array(measured_data_list[idm])
             if measured_array.shape != preset_data.shape:
                 raise ValueError('Measured data must be a sequence with shape matching the setpoint arrays shape',
                                  measured_array.shape, preset_data.shape)
 
-            getattr(dd, mname).ndarray = measured_array
+            getattr(data_set, mname).ndarray = measured_array
 
     if len(setpoints) > 1:
-        dd.add_array(setpoints[1])
-        dd.add_array(setpoints[0])
+        data_set.add_array(setpoints[1])
+        data_set.add_array(setpoints[0])
     else:
-        dd.add_array(setpoints[0])
+        data_set.add_array(setpoints[0])
 
-    return dd, measure_names
+    return data_set, measure_names
 
 
 def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location=None, loc_record=None):
@@ -1161,10 +1166,10 @@ def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location
     else:
         measurement_list = yname
 
-    dd, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
-                           preset_data, [setpoint])
+    data_set, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
+                                 preset_data, [setpoint])
 
-    return dd
+    return data_set
 
 
 def makeDataSet1D(p, yname='measured', y=None, location=None, loc_record=None, return_names=False):
@@ -1215,15 +1220,15 @@ def makeDataSet1D(p, yname='measured', y=None, location=None, loc_record=None, r
     else:
         measurement_list = yname
 
-    dd, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
-                                       preset_data, [setpoint])
+    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
+                                             preset_data, [setpoint])
 
-    dd.metadata['default_parameter_name'] = measure_names[0]
+    data_set.metadata['default_parameter_name'] = measure_names[0]
     if return_names:
         set_names = setpoint.name
-        return dd, (set_names, measure_names)
+        return data_set, (set_names, measure_names)
     else:
-        return dd
+        return data_set
 
 
 def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
@@ -1277,12 +1282,12 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     else:
         measurement_list = zname
 
-    dd, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
-                           preset_data, [setpointy, setpointx])
+    data_set, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
+                                 preset_data, [setpointy, setpointx])
 
-    dd.last_write = -1
+    data_set.last_write = -1
 
-    return dd
+    return data_set
 
 
 def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=None,
@@ -1344,16 +1349,16 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     else:
         measured_data_list = z
 
-    dd, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
-                                       preset_data, [setpointy, setpointx])
+    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
+                                             preset_data, [setpointy, setpointx])
 
-    dd.last_write = -1
+    data_set.last_write = -1
 
     if return_names:
         set_names = [y.name, x.name]
-        return dd, (set_names, measure_names)
+        return data_set, (set_names, measure_names)
     else:
-        return dd
+        return data_set
 
 
 def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbose=1):

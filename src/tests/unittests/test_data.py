@@ -11,7 +11,7 @@ from qcodes.data.io import DiskIO
 from qcodes.tests.data_mocks import DataSet2D
 import qtt.data
 from qtt.data import image_transform, dataset_to_dictionary, dictionary_to_dataset,\
-     compare_dataset_metadata, diffDataset, add_comment, load_dataset
+     compare_dataset_metadata, diffDataset, add_comment, load_dataset, determine_parameter_unit
 
 
 class TestPlotting(unittest.TestCase):
@@ -147,6 +147,16 @@ class TestData(unittest.TestCase):
             if verbose:
                 print(r)
 
+    def test_determine_parameter_unit_ok(self):
+        p = ManualParameter('dummy')
+        unit = determine_parameter_unit(p)
+        self.assertTrue(unit == '')
+
+    def test_determine_parameter_unit_nok(self):
+        p = 'p is a string'
+        unit = determine_parameter_unit(p)
+        self.assertTrue(unit is None)
+
 
 class TestMakeDataSet(unittest.TestCase):
 
@@ -232,12 +242,12 @@ class TestMakeDataSet(unittest.TestCase):
         p = ManualParameter('dummy')
         x = p[0:10:1]
         x.parameter = 4
-        self.assertRaisesRegex(TypeError, 'Type of p.parameter must be qcodes.Parameter',
+        self.assertRaisesRegex(TypeError, 'Type of parameter.parameter must be qcodes.Parameter',
                                qtt.data.makeDataSet1D, x, [1, 2], None)
 
     def test_makedataset1d_type_parameter_nok2(self):
         p = 4
-        self.assertRaisesRegex(TypeError, 'Type of p must be qcodes.SweepFixedValues',
+        self.assertRaisesRegex(TypeError, 'Type of parameter must be qcodes.SweepFixedValues',
                                qtt.data.makeDataSet1D, p, [1, 2], None)
 
     def test_makedataset1d_type_measurement_names_nok(self):
@@ -427,7 +437,7 @@ class TestMakeDataSet(unittest.TestCase):
         y = p2[0:4:1]
         x.parameter = 4
         measure_names = 'measured'
-        self.assertRaisesRegex(TypeError, 'Type of p.parameter must be qcodes.Parameter',
+        self.assertRaisesRegex(TypeError, 'Type of parameter.parameter must be qcodes.Parameter',
                                qtt.data.makeDataSet2D, x, y, measure_names, return_names=False)
 
     def test_makedataset2d_type_parameter_nok2(self):
@@ -435,7 +445,7 @@ class TestMakeDataSet(unittest.TestCase):
         x = p1[0:10:1]
         y = 'wrong type'
         measure_names = 'measured'
-        self.assertRaisesRegex(TypeError, 'Type of p must be qcodes.SweepFixedValues',
+        self.assertRaisesRegex(TypeError, 'Type of parameter must be qcodes.SweepFixedValues',
                                qtt.data.makeDataSet2D, x, y, measure_names, return_names=False)
 
     def test_makedataset2d_type_measurement_names_nok(self):
