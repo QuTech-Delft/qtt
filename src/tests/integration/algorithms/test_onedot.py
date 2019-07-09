@@ -28,15 +28,15 @@ class TestOneDot(unittest.TestCase):
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': 'B0', 'start': start, 'end': start + 200, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley3.amplitude']})
         scanjob['stepdata'] = dict({'param': 'B1', 'start': start, 'end': start + 200, 'step': 5.})
-        data = scan2D(station, scanjob)
+        data = scan2D(station, scanjob, verbose=verbose)
 
         x = onedotGetBalance(dataset=data, verbose=verbose, fig=fig)
         results = x[0]
-        _, _ = onedotGetBalanceFine(impixel=None, dd=data, fig=fig)
-        plot_onedot(results, ds=data, fig=fig, verbose=verbose)
+        _, _ = onedotGetBalanceFine(impixel=None, dd=data, verbose=verbose, fig=fig+100)
+        plot_onedot(results, ds=data, fig=fig+200, verbose=verbose)
 
-    def test_one_dot(self, fig=100):
+    def test_one_dot(self, fig=100, verbose=1):
         plt.interactive(True)
-        self.one_dot(fig)
+        self.one_dot(fig, verbose)
         plt.show()
         plt.close('all')
