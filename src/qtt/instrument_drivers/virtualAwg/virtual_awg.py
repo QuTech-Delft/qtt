@@ -1,7 +1,12 @@
 import logging
 import numpy as np
 
+from typing import List
+
 from qcodes import Instrument
+
+from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon
+from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
 
@@ -32,7 +37,7 @@ class VirtualAwg(Instrument):
     __awg_slave_name = 'awg_mk'
     __volt_to_millivolt = 1e3
 
-    def __init__(self, awgs, settings, name='virtual_awg', logger=logging, **kwargs):
+    def __init__(self, awgs=None, settings=None, name='virtual_awg', logger=logging, **kwargs):
         """ Creates and initializes an virtual AWG object and sets the relation between the quantum gates,
             markers and the AWG channels. The default settings (marker delays) are constructed at startup.
 
@@ -47,8 +52,12 @@ class VirtualAwg(Instrument):
         super().__init__(name, **kwargs)
         self._settings = settings
         self._logger = logger
-        self.__set_hardware(awgs)
-        self.__set_parameters()
+        if awgs is None:
+            awgs = []
+        self._awgs = []
+        self.settings = settings
+        self._instruments = []
+        self.add_instruments(awgs)
         self._latest_sequence_data = {}
         self.enable_debug = False
 
@@ -63,7 +72,7 @@ class VirtualAwg(Instrument):
         Arguments:
             awgs (list): A list with the QCoDeS driver instances.
         """
-        self.awgs = list()
+        self._awgs = list()
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
                 self.awgs.append(Tektronix5014C_AWG(awg))
@@ -80,12 +89,63 @@ class VirtualAwg(Instrument):
         """ Constructs the parameters needed for setting the marker output settings for
             triggering the digitizer readout and starting slave AWG's when running a sequence.
         """
+
+        self.parameters.pop('awg_marker_delay', None)
+        self.parameters.pop('awg_marker_uptime', None)
+        self.parameters.pop('digitizer_marker_delay', None)
+        self.parameters.pop('digitizer_marker_uptime', None)
+
         if VirtualAwg.__awg_slave_name in self._settings.awg_map:
             self.add_parameter('awg_marker_delay', initial_value=0, set_cmd=None)
             self.add_parameter('awg_marker_uptime', initial_value=1e-8, set_cmd=None)
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             self.add_parameter('digitizer_marker_delay', initial_value=0, set_cmd=None, unit='s')
             self.add_parameter('digitizer_marker_uptime', initial_value=1e-8, set_cmd=None, unit='s')
+
+    @property
+    def settings(self) -> SettingsInstrument:
+        """ The device's settings. """
+        return self._settings
+
+    @settings.setter
+    def settings(self, value: SettingsInstrument) -> None:
+        """ Change the device's settings and update its parameters. """
+        self._settings = value
+        if value is not None:
+            self.__set_parameters()
+
+    @property
+    def awgs(self) -> List[AwgCommon]:
+        """ The device's awgs. """
+        return self._awgs
+
+    @property
+    def instruments(self) -> List[Instrument]:
+        """ The device's instruments. """
+        return self._instruments
+
+    @instruments.setter
+    def instruments(self, value: List[Instrument]) -> None:
+        """
+        Updates the devices instruments
+
+        Args:
+            value: The list of instruments to update
+        """
+
+        self._instruments = value
+        self.__set_hardware(value)
+
+    def add_instruments(self, instruments: List[Instrument]):
+        """
+        Adds a list of instruments and updates its hardware parameters.
+
+        Args:
+            instruments: The list of instruments to add
+        """
+
+        self._instruments.extend(instruments)
+        self.__set_hardware(self._instruments)
 
     def run(self):
         """ Enables the main output of the AWG's."""
