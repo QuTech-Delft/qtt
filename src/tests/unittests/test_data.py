@@ -71,20 +71,6 @@ class TestData(unittest.TestCase):
         self.assertEqual(converted_dataset.default_parameter_name(), input_dataset.default_parameter_name())
 
     @staticmethod
-    def test_makeDataSet2D():
-        from qcodes import ManualParameter
-        p = ManualParameter('dummy')
-        p2 = ManualParameter('dummy2')
-        ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
-        _ = diffDataset(ds)
-
-    @staticmethod
-    def test_makeDataSet1Dplain():
-        x = np.arange(0, 10)
-        y = np.vstack((x - 1, x + 10))
-        _ = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
-
-    @staticmethod
     def test_numpy_on_dataset(verbose=0):
         all_data = qcodes.tests.data_mocks.DataSet2D()
         x = all_data.z
