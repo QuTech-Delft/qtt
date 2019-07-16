@@ -2,7 +2,7 @@ import unittest
 import qcodes.tests.data_mocks
 import numpy as np
 
-from qtt.dataset_processing import slice_dataset, process_dataarray, average_dataset
+from qtt.dataset_processing import slice_dataset, process_dataarray, average_dataset, dataset_dimension, calculate_averaged_dataset
 
 
 class TestDataProcessing(unittest.TestCase):
@@ -31,3 +31,17 @@ class TestDataProcessing(unittest.TestCase):
 
         d = average_dataset(dataset2d, axis=1)
         self.assertEqual(d.z.shape, (6, ))
+
+    def test_dataset_dimension(self):
+        dataset1d = qcodes.tests.data_mocks.DataSet1D()
+        self.assertEqual(dataset_dimension(dataset1d), 1)
+        dataset2d = qcodes.tests.data_mocks.DataSet2D()
+        self.assertEqual(dataset_dimension(dataset2d), 2)
+
+    def test_calculate_averaged_dataset(self):
+        dataset2d = qcodes.tests.data_mocks.DataSet2D()
+
+        averaged_dataset = calculate_averaged_dataset(dataset2d, 2)
+        self.assertEqual(averaged_dataset.signal.shape, (3, 4))
+        np.testing.assert_array_equal(averaged_dataset.signal, np.array(
+            [[0.5, 1.5, 4.5, 9.5], [6.5, 7.5, 10.5, 15.5], [20.5, 21.5, 24.5, 29.5]]))
