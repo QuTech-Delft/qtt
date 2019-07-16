@@ -1,4 +1,4 @@
-from typing import Sequence, Callable, Optional
+from typing import Sequence, Callable, Optional, Union
 import numpy as np
 import copy
 
@@ -11,7 +11,16 @@ from qtt.data import DataSet
 
 def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name: str,
                       processing_function: Callable, label: Optional[str] = None, unit: Optional[str] = None, ) -> DataSet:
-    """ Apply a function to a DataArray in a DataSet  """
+    """ Apply a function to a DataArray in a DataSet 
+    
+    Args:
+        dataset: Input dataset containing the data array
+        input_array_name: Name of the data array to be processed
+        output_array_nane: Name of the output array
+        processing_function: Method to apply to the data array
+        label: Label for the output array
+        unit: Unit for the output array
+    """
     array = dataset.default_parameter_array(input_array_name)
     data = processing_function(np.array(array))
     if label is None:
@@ -29,13 +38,15 @@ def dataset_dimension(dataset) -> int:
     return len(dataset.default_parameter_array().set_arrays)
 
 
-def average_dataset(dataset: qtt.data.DataSet, axis='vertical') -> qtt.data.DataSet:
+def average_dataset(dataset: qtt.data.DataSet, axis : Union[str, int] ='vertical') -> qtt.data.DataSet:
     """ Calculate the mean signal of a 2D dataset over the specified axis
 
     Args:
         dataset: DataSet to be processed
         axis: Specification of the axis
 
+    Returns:
+        Dataset with averaged signal
     """
 
     if dataset_dimension(dataset) != 2:
@@ -65,7 +76,18 @@ def average_dataset(dataset: qtt.data.DataSet, axis='vertical') -> qtt.data.Data
 
 def calculate_averaged_dataset(dataset: DataSet, number_of_repetitions: int, new_values=None,
                                parameter_name: str = 'signal', output_parameter_name: str = 'signal') -> DataSet:
-    """ Calculate the averaged signal from a 2D dataset with repeated rows """
+    """ Calculate the averaged signal from a 2D dataset with repeated rows
+    
+    Args:
+        dataset: Dataset containing the data to be averaged
+        number_of_repetitions: Number of rows over which to average
+        new_values: Optional new values for the averaged axis
+        parameter_name: Name of data array to process
+        output_parameter_name: Name of output array
+        
+    Returns:
+        Averaged dataset
+    """
     zarray = dataset.default_parameter_array(parameter_name)
     set_arrays = zarray.set_arrays
     xarray = set_arrays[1]
@@ -88,10 +110,22 @@ def calculate_averaged_dataset(dataset: DataSet, number_of_repetitions: int, new
 
 
 def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
-                  verbose: int = 0, copy_metadata: bool = False, output_paramater_name=None) -> DataSet:
-    """ Given a dataset and a window for the horizontal axis return the dataset with selected window """
+                  verbose: int = 0, copy_metadata: bool = False, output_parameter_name=None) -> DataSet:
+    """ Given a dataset and a window for the horizontal axis return the dataset with selected window
+    
+    Args:
+        dataset: Dataset to be slice
+        window: Specification of the window to be selected
+        axis: Axis
+        verbose: Verbosity level
+        copy_metadata: If True then copy the metadata of the input dataset
+        output_parameter_name: Name of the output array
+    Returns:
+        Dataset with sliced data
+    
+    """
     zarray = dataset.default_parameter_array()
-    if output_paramater_name is None:
+    if output_parameter_name is None:
         output_parameter_name = zarray.name
 
     set_arrays = zarray.set_arrays
