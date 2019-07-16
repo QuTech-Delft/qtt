@@ -13,9 +13,18 @@ class TestTektronix5014C(TestCase):
         class Tektronix5014C(MagicMock):
             pass
 
+        class Tektronix5014C_AWG_non_protected(Tektronix5014C_AWG):
+
+            def set_sequence(self, channels, sequence):
+                return self._set_sequence(channels, sequence)
+
         self.awg = Tektronix5014C()
         type(self.awg).__name__ = 'Tektronix_AWG5014'
-        self.awg_backend = Tektronix5014C_AWG(self.awg)
+        self.awg_backend = Tektronix5014C_AWG_non_protected(self.awg)
+
+    def test_initialize_raises_awg_error(self):
+        awg = MagicMock(name='fake')
+        self.assertRaises(AwgCommonError, Tektronix5014C_AWG, awg)
 
     def test_fetch_awg(self):
         self.assertEqual(self.awg, self.awg_backend.fetch_awg)
@@ -43,6 +52,7 @@ class TestTektronix5014C(TestCase):
         calls = [call(f'ch{channel}_state', 1) for channel in range(1, 2)]
         self.awg.set.assert_has_calls(calls)
 
+    def test_enable_outputs_raises_error(self):
         invalid_channel = [666]
         with self.assertRaisesRegex(AwgCommonError, 'Invalid channel numbers'):
             self.awg_backend.enable_outputs(invalid_channel)
@@ -58,9 +68,10 @@ class TestTektronix5014C(TestCase):
         calls = [call(f'ch{channel}_state', 0) for channel in range(1, 2)]
         self.awg.set.assert_has_calls(calls)
 
+    def test_disable_outputs_raises_error(self):
         invalid_channel = [666]
         with self.assertRaisesRegex(AwgCommonError, 'Invalid channel numbers'):
-            self.awg_backend.enable_outputs(invalid_channel)
+            self.awg_backend.disable_outputs(invalid_channel)
 
     def test_change_setting_getter_and_setter(self):
         settings = {
@@ -80,6 +91,11 @@ class TestTektronix5014C(TestCase):
         mode = 'SEQ'
         self.awg_backend.update_running_mode(mode)
         self.awg.set.assert_called_once_with('run_mode', mode)
+
+    def test_update_running_mode_raises_error(self):
+        mode = 'WRONG'
+        with self.assertRaisesRegex(AwgCommonError, 'Invalid AWG mode'):
+            self.awg_backend.update_running_mode(mode)
 
     def test_retrieve_running_mode(self):
         mode = 'CONT'
@@ -109,6 +125,13 @@ class TestTektronix5014C(TestCase):
         self.awg.get.return_value = gain
         actual_gain = self.awg_backend.retrieve_gain()
         self.assertEqual(gain, actual_gain)
+
+    def test_retrieve_gain_raises_error(self):
+        def gain_side_effect(value):
+            return 1.0 if value == 'ch1_amp' else 2.0
+
+        self.awg.get = gain_side_effect
+        self.assertRaises(ValueError, self.awg_backend.retrieve_gain)
 
     def test_upload_waveforms(self):
         data_seq1 = np.array(range(10, 20), dtype=np.float)
@@ -174,3 +197,23 @@ class TestTektronix5014C(TestCase):
         self.awg.ask.return_value = row_count
         actual_row_count = self.awg_backend.get_sequence_length()
         self.assertEqual(row_count, actual_row_count)
+
+    def test_set_sequence_invalid_channel_length(self):
+        channels = [1, 2, 3]
+        sequence = [['fake']]
+        self.assertRaisesRegex(AwgCommonError, 'Invalid sequence and channel count!',
+                               self.awg_backend.set_sequence, channels, sequence)
+
+    def test_set_sequence_invalid_sequence_waveform_items(self):
+        channels = [1, 2]
+        sequence = [['waveform_1', 'waveform_2'], ['waveform_3']]
+        self.assertRaisesRegex(AwgCommonError, 'Invalid sequence list lengths!',
+                               self.awg_backend.set_sequence, channels, sequence)
+
+    def test_set_sequence_set_sequence_length_called(self):
+        row_count = 42
+        channels = [1, 2]
+        sequence = [['waveform_1', 'waveform_2'], ['waveform_2', 'waveform_1']]
+        self.awg.ask.return_value = row_count
+        self.awg_backend.set_sequence(channels, sequence)
+        self.awg.write.assert_called_once_with(f'SEQuence:LENGth {len(sequence)}')

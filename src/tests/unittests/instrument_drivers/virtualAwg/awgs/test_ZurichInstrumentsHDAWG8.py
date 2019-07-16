@@ -16,29 +16,33 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
         self.awg = ZIHDAWG8()
         self.zi_hdawg8 = ZurichInstrumentsHDAWG8(self.awg, 0)
 
+    def test_initialize_raises_awg_error(self):
+        awg = MagicMock(name='fake')
+        self.assertRaises(AwgCommonError, ZurichInstrumentsHDAWG8, awg, 0)
+
     def test_enable_outputs(self):
         self.zi_hdawg8.enable_outputs()
         calls = [call.enable_channel(ch) for ch in range(0, 8)]
         self.awg.assert_has_calls(calls)
 
-        with self.assertRaises(AwgCommonError):
-            self.zi_hdawg8.enable_outputs([0, 1, 2, 3, 8])
-
         self.zi_hdawg8.enable_outputs([6, 7])
         calls = [call.enable_channel(ch) for ch in range(6, 7)]
         self.awg.assert_has_calls(calls)
+
+    def test_enable_outputs_raises_error(self):
+        self.assertRaises(AwgCommonError, self.zi_hdawg8.enable_outputs, [0, 1, 2, 3, 8])
 
     def test_disable_outputs(self):
         self.zi_hdawg8.disable_outputs()
         calls = [call.disable_channel(ch) for ch in range(0, 8)]
         self.awg.assert_has_calls(calls)
 
-        with self.assertRaises(AwgCommonError):
-            self.zi_hdawg8.disable_outputs([0, 1, 2, 3, 8])
-
         self.zi_hdawg8.disable_outputs([6, 7])
         calls = [call.disable_channel(ch) for ch in range(6, 7)]
         self.awg.assert_has_calls(calls)
+
+    def test_disable_outputs_raises_error(self):
+        self.assertRaises(AwgCommonError, self.zi_hdawg8.disable_outputs, [0, 1, 2, 3, 8])
 
     def test_change_setting(self):
         self.awg.get.return_value = 0
