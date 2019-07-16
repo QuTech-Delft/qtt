@@ -151,28 +151,31 @@ class TestMakeDataSet(unittest.TestCase):
         y = np.vstack((x - 1, x + 10))
         data_set = qtt.data.makeDataSet1Dplain('x', x, ['y1', 'y2'], [y[0], y[1]])
 
-        self.assertTrue(data_set.x.shape == np.ones(len(x)).shape)
-        self.assertTrue(data_set.y1.shape == np.ones(len(y[0])).shape)
-        self.assertTrue(data_set.y2.shape == np.ones(len(y[1])).shape)
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.x, x))
+        self.assertTrue(np.array_equal(data_set.y1, y[0]))
+        self.assertTrue(np.array_equal(data_set.y2, y[1]))
         # check array
-        self.assertTrue(data_set.arrays['y1'].shape == np.ones(len(y[0])).shape)
-        self.assertTrue(data_set.arrays['y2'].shape == np.ones(len(y[1])).shape)
+        self.assertTrue(np.array_equal(data_set.arrays['y1'], y[0]))
+        self.assertTrue(np.array_equal(data_set.arrays['y2'], y[1]))
 
     def test_makedataset1dplain_single_measurement(self):
         x = np.arange(0, 10)
         y = np.arange(1, 11)
         data_set = qtt.data.makeDataSet1Dplain('x', x, 'y', y)
 
-        self.assertTrue(data_set.x.shape == np.ones(len(x)).shape)
-        self.assertTrue(data_set.y.shape == np.ones(len(y)).shape)
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.x, x))
+        self.assertTrue(np.array_equal(data_set.y, y))
         # check array
-        self.assertTrue(data_set.arrays['y'].shape == np.ones(len(y)).shape)
+        self.assertTrue(np.array_equal(data_set.arrays['y'], y))
 
     def test_makedataset1dplain_no_measurement(self):
         x = np.arange(0, 8)
         data_set = qtt.data.makeDataSet1Dplain('x', x, 'y')
 
-        self.assertTrue(data_set.x.shape == np.ones(len(x)).shape)
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.x, x))
         self.assertTrue(data_set.y.shape == np.ones(len(x)).shape)
 
     def test_makedataset1dplain_shape_measuredata_list_nok1(self):
@@ -191,8 +194,12 @@ class TestMakeDataSet(unittest.TestCase):
         x = np.arange(0, 10)
         yname = ManualParameter('dummy')
         data_set = qtt.data.makeDataSet1Dplain('x', x, yname)
-        self.assertTrue(data_set.x.shape == np.ones(len(x)).shape)
+
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.x, x))
         self.assertTrue(data_set.dummy.shape == np.ones(len(x)).shape)
+        # check array
+        self.assertTrue(data_set.arrays['dummy'].shape == np.ones(len(x)).shape)
 
     def test_makedataset1dplain_type_measurement_names_nok(self):
         x = np.arange(0, 10)
@@ -220,9 +227,9 @@ class TestMakeDataSet(unittest.TestCase):
         y = np.arange(len(x)).reshape((len(x)))
         data_set = qtt.data.makeDataSet1D(x, yname, y, return_names=False)
         # check attribute
-        self.assertTrue(data_set.measured.shape == np.ones(len(y)).shape)
+        self.assertTrue(np.array_equal(data_set.measured, y))
         # check array
-        self.assertTrue(data_set.arrays['measured'].shape == np.ones(len(y)).shape)
+        self.assertTrue(np.array_equal(data_set.arrays['measured'], y))
 
     def test_makedataset1d_type_parameter_nok1(self):
         p = ManualParameter('dummy')
@@ -285,6 +292,7 @@ class TestMakeDataSet(unittest.TestCase):
         ds = qtt.data.makeDataSet2Dplain('horizontal', h, 'vertical', v, 'z', measurement,
                                          xunit='mV', yunit='Hz', zunit='A')
 
+        # check labels
         self.assertEqual(qtt.data.dataset_labels(ds), 'z')
         self.assertEqual(qtt.data.dataset_labels(ds, 'x'), 'horizontal')
         self.assertEqual(qtt.data.dataset_labels(ds, 1), 'horizontal')
@@ -307,10 +315,13 @@ class TestMakeDataSet(unittest.TestCase):
         z = [measurement, measurement]
         data_set = qtt.data.makeDataSet2Dplain('horizontal', h, 'vertical', v, ['z1', 'z2'],
                                                z, xunit='mV', yunit='Hz', zunit='A')
-        self.assertTrue(data_set.z1.shape == np.ones((len(v), len(h))).shape)
-        self.assertTrue(data_set.z2.shape == np.ones((len(v), len(h))).shape)
-        self.assertTrue(data_set.arrays['z1'].shape == np.ones((len(v), len(h))).shape)
-        self.assertTrue(data_set.arrays['z2'].shape == np.ones((len(v), len(h))).shape)
+
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.z1, z[0]))
+        self.assertTrue(np.array_equal(data_set.z2, z[1]))
+        # check array
+        self.assertTrue(np.array_equal(data_set.arrays['z1'], z[0]))
+        self.assertTrue(np.array_equal(data_set.arrays['z2'], z[1]))
 
     def test_dataset2dplain_shape_measuredata_list_nok1(self):
         v = [0, 1, 2.]
@@ -336,8 +347,10 @@ class TestMakeDataSet(unittest.TestCase):
         z = np.arange(len(v) * len(h)).reshape((len(v), len(h)))
         data_set = qtt.data.makeDataSet2Dplain('horizontal', h, 'vertical', v, 'z',
                                                z, xunit='mV', yunit='Hz', zunit='A')
-        self.assertTrue(data_set.z.shape == np.ones((len(v), len(h))).shape)
-        self.assertTrue(data_set.arrays['z'].shape == np.ones((len(v), len(h))).shape)
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.z, z))
+        # check array
+        self.assertTrue(np.array_equal(data_set.arrays['z'], z))
 
     def test_dataset2dplain_shape_measuredata_nok(self):
         self.assertRaisesRegex(ValueError, 'Measured data must be a sequence with shape matching the setpoint arrays',
@@ -355,7 +368,9 @@ class TestMakeDataSet(unittest.TestCase):
         h = [0., 1, 2, 3, 4]
         data_set = qtt.data.makeDataSet2Dplain('horizontal', h, 'vertical', v,
                                                xunit='mV', yunit='Hz', zunit='A')
+        # check attribute
         self.assertTrue(data_set.measured.shape == np.ones((len(v), len(h))).shape)
+        # check array
         self.assertTrue(data_set.arrays['measured'].shape == np.ones((len(v), len(h))).shape)
 
     @staticmethod
@@ -374,6 +389,8 @@ class TestMakeDataSet(unittest.TestCase):
         # preset_data = np.ones((len(x), len(y)))
         data_set = qtt.data.makeDataSet2D(x, y, measure_names, return_names=False)
         # check attribute
+        self.assertTrue(np.array_equal(data_set.dummy1, x))
+        self.assertTrue(data_set.dummy2.shape, data_set.measured.shape)
         self.assertTrue(data_set.measured.shape == np.ones((len(x), len(y))).shape)
         # check array
         self.assertTrue(data_set.arrays['measured'].shape == np.ones((len(x), len(y))).shape)
@@ -385,8 +402,14 @@ class TestMakeDataSet(unittest.TestCase):
         y = p2[0:4:1]
         measure_names = 'measured'
         data_set, tuple_names = qtt.data.makeDataSet2D(x, y, measure_names, return_names=True)
+
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.dummy1, x))
+        self.assertTrue(data_set.dummy2.shape, data_set.measured.shape)
         self.assertTrue(data_set.measured.shape == np.ones((len(x), len(y))).shape)
+        # check array
         self.assertTrue(data_set.arrays['measured'].shape == np.ones((len(x), len(y))).shape)
+        # check return names
         self.assertTrue(tuple_names[0][0] == 'dummy1')
         self.assertTrue(tuple_names[0][1] == 'dummy2')
         self.assertTrue(tuple_names[1][0] == 'measured')
@@ -400,8 +423,12 @@ class TestMakeDataSet(unittest.TestCase):
         measure_names = [m1]
         preset_data = np.ones((len(x), len(y)))
         data_set = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
-        self.assertTrue(data_set.measurement1.shape == np.ones((len(x), len(y))).shape)
-        self.assertTrue(data_set.arrays['measurement1'].shape == np.ones((len(x), len(y))).shape)
+
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.dummy1, x))
+        self.assertTrue(np.array_equal(data_set.measurement1, preset_data))
+        # check array
+        self.assertTrue(np.array_equal(data_set.arrays['measurement1'], preset_data))
 
     def test_makedataset2d_shape_measure_names_parameters(self):
         p1 = ManualParameter('dummy1')
@@ -413,8 +440,14 @@ class TestMakeDataSet(unittest.TestCase):
         measure_names = [m1, m2]
         preset_data = [np.ones((len(x), len(y))), np.ones((len(x), len(y)))]
         data_set = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
-        self.assertTrue(data_set.measurement1.shape == np.ones((len(x), len(y))).shape)
-        self.assertTrue(data_set.arrays['measurement2'].shape == np.ones((len(x), len(y))).shape)
+
+        # check attribute
+        self.assertTrue(np.array_equal(data_set.dummy1, x))
+        self.assertTrue(np.array_equal(data_set.measurement1, preset_data[0]))
+        self.assertTrue(np.array_equal(data_set.measurement2, preset_data[1]))
+        # check array
+        self.assertTrue(np.array_equal(data_set.arrays['measurement1'], preset_data[0]))
+        self.assertTrue(np.array_equal(data_set.arrays['measurement2'], preset_data[1]))
 
     def test_makedataset2d_type_parameter_nok1(self):
         p1 = ManualParameter('dummy1')
