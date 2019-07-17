@@ -2,7 +2,7 @@ import unittest
 import qcodes.tests.data_mocks
 import numpy as np
 
-from qtt.dataset_processing import slice_dataset, process_dataarray, average_dataset, dataset_dimension, calculate_averaged_dataset
+from qtt.dataset_processing import slice_dataset, process_dataarray, average_dataset, dataset_dimension, average_multirow_dataset
 
 
 class TestDataProcessing(unittest.TestCase):
@@ -13,7 +13,12 @@ class TestDataProcessing(unittest.TestCase):
         self.assertEqual(dataset_sliced.default_parameter_array().shape, (3,))
 
         dataset = qcodes.tests.data_mocks.DataSet2D()
-        dataset_sliced = slice_dataset(dataset, [1, 5], axis=0)
+        dataset_sliced = slice_dataset(dataset, [3, 5], axis=0)
+        np.testing.assert_array_equal(dataset_sliced.z, np.array([[9, 10, 13, 18], [16, 17, 20, 25]]))
+
+        dataset_sliced = slice_dataset(dataset, [1, 5], axis=1)
+        np.testing.assert_array_equal(dataset_sliced.z, np.array(
+            [[1,  4],  [2,  5],       [5,  8],       [10, 13],       [17, 20],       [26, 29]]))
 
     def test_process_dataarray(self):
         dataset = qcodes.tests.data_mocks.DataSet1D()
@@ -38,10 +43,19 @@ class TestDataProcessing(unittest.TestCase):
         dataset2d = qcodes.tests.data_mocks.DataSet2D()
         self.assertEqual(dataset_dimension(dataset2d), 2)
 
-    def test_calculate_averaged_dataset(self):
+    def test_average_multirow_dataset(self):
         dataset2d = qcodes.tests.data_mocks.DataSet2D()
 
-        averaged_dataset = calculate_averaged_dataset(dataset2d, 2)
+        averaged_dataset = average_multirow_dataset(dataset2d, 2)
         self.assertEqual(averaged_dataset.signal.shape, (3, 4))
         np.testing.assert_array_equal(averaged_dataset.signal, np.array(
             [[0.5, 1.5, 4.5, 9.5], [6.5, 7.5, 10.5, 15.5], [20.5, 21.5, 24.5, 29.5]]))
+
+    def test_slice_dataset_copy_metadata(self):
+        dataset = qcodes.tests.data_mocks.DataSet2D()
+        dataset.metadata['a'] = 1
+        dataset_sliced = slice_dataset(dataset, [2, 5])
+        self.assertDictEqual(dataset_sliced.metadata, {})
+
+        dataset_sliced = slice_dataset(dataset, [2, 5], copy_metadata=True)
+        self.assertDictEqual(dataset_sliced.metadata, dataset.metadata)
