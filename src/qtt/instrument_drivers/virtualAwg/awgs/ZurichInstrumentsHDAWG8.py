@@ -91,7 +91,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
     def retrieve_gain(self):
         gains = [self.__awg.get('sigouts_{}_range'.format(ch)) for ch in self._channel_numbers]
         if not all(g == gains[0] for g in gains):
-            raise ValueError('Not all channel gains are equal. Please reset!')
+            raise ValueError(f'Not all channel gains {gains} are equal. Please reset!')
         return gains[0]
 
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
