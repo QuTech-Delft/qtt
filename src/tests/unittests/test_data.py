@@ -1,4 +1,8 @@
+import io
+import sys
 import unittest
+from unittest.mock import patch
+import logging
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -184,8 +188,18 @@ class TestMakeDataSet(unittest.TestCase):
     def test_makedataset1dplain_shape_measuredata_list_nok2(self):
         x = np.arange(0, 10)
         y = np.arange(1, 11)
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
-                               qtt.data.makeDataSet1Dplain, 'x', x, 'y1', [y, y])
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet1Dplain('x', x, 'y1', [y, y])
+            self.assertTrue(np.array_equal(data_set.x, x))
+            self.assertTrue(np.array_equal(data_set.y1, [y, y]))
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
 
     def test_makedataset1dplain_type_yname_parameter(self):
         x = np.arange(0, 10)
@@ -207,15 +221,74 @@ class TestMakeDataSet(unittest.TestCase):
     def test_dataset1dplain_shape_measuredata_nok(self):
         x = np.arange(0, 8)
         y = np.arange(1, 11)
-        self.assertRaisesRegex(ValueError, 'Measured data must be a sequence with shape matching the setpoint arrays',
-                               qtt.data.makeDataSet1Dplain, 'x', x, ['y1', 'y2'], [y, y])
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet1Dplain('x', x, ['y1', 'y2'], [y, y])
+            self.assertTrue(np.array_equal(data_set.x, x))
+            self.assertTrue(np.array_equal(data_set.y1, y))
+            self.assertTrue(np.array_equal(data_set.y2, y))
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
 
     def test_dataset1dplain_shape_measuredata_second_nok(self):
         x = np.arange(0, 8)
         y1 = np.arange(1, 9)
         y2 = np.arange(1, 10)
-        self.assertRaisesRegex(ValueError, 'Measured data must be a sequence with shape matching the setpoint arrays',
-                               qtt.data.makeDataSet1Dplain, 'x', x, ['y1', 'y2'], [y1, y2])
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet1Dplain('x', x, ['y1', 'y2'], [y1, y2])
+            self.assertTrue(np.array_equal(data_set.x, x))
+            self.assertTrue(np.array_equal(data_set.y1, y1))
+            self.assertTrue(np.array_equal(data_set.y2, y2))
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
+
+    def test_dataset1dplain_right_shape(self):
+        x = [1, 2, 3]
+        y = np.array([1, 2, 3]).reshape((3,))
+        data_set = qtt.data.makeDataSet1Dplain('x', x, 'y', y)
+        self.assertTrue(np.array_equal(data_set.x, x))
+        self.assertTrue(np.array_equal(data_set.y, y))
+
+    def test_dataset1dplain_other_shape(self):
+        x = [1, 2, 3]
+        y = np.array([1, 2, 3]).reshape((3, 1))
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet1Dplain('x', x, 'y', y)
+            self.assertTrue(np.array_equal(data_set.x, x))
+            self.assertTrue(np.array_equal(data_set.y, y))
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
+
+    def test_dataset1dplain_no_data(self):
+        x = [1, 2, 3]
+        y = None
+        data_set = qtt.data.makeDataSet1Dplain('x', x, 'y', y)
+        self.assertTrue(np.array_equal(data_set.x, x))
+
+    def test_dataset1dplain_split_2D_input(self):
+        x = [1, 2, 3]
+        y = np.random.rand(2, 3)
+        data_set = qtt.data.makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
+        self.assertTrue(np.array_equal(data_set.y1, y[0]))
+        self.assertTrue(np.array_equal(data_set.y2, y[1]))
+        self.assertTrue(np.array_equal(data_set.x, x))
 
     def test_makedataset1d_not_return_names(self):
         p = ManualParameter('dummy')
@@ -259,27 +332,73 @@ class TestMakeDataSet(unittest.TestCase):
         x = p[0:10:1]
         yname = 'measured'
         y = [np.arange(len(x)).reshape((len(x))), np.arange(len(x)).reshape((len(x)))]
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
-                               qtt.data.makeDataSet1D, x, yname, y, return_names=False)
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet1D(x, yname, y, return_names=False)
+            self.assertTrue(np.array_equal(data_set.dummy, x))
+            self.assertTrue(np.array_equal(data_set.measured, y))
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
 
     def test_makedataset1d_shape_measuredata_nok(self):
         p = ManualParameter('dummy')
         x = p[0:10:1]
         y = [np.arange(len(x)+1)]
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
 
-        self.assertRaisesRegex(ValueError,
-                               'Measured data must be a sequence with shape matching the setpoint arrays shape',
-                               qtt.data.makeDataSet1D, x, 'y', y, return_names=False)
+            data_set = qtt.data.makeDataSet1D(x, 'y', y, return_names=False)
+            self.assertTrue(np.array_equal(data_set.dummy, x))
+            self.assertTrue(np.array_equal(data_set.y, y))
 
-    def test_makedataset1d_shape_measuredata_second_nok(self):
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
+
+    def test_makedataset1d_shape_second_item_measuredata_nok(self):
         p = ManualParameter('dummy')
         x = p[0:10:1]
         y = [np.arange(len(x)), np.arange(len(x)+1)]
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
 
-        self.assertRaisesRegex(ValueError,
-                               'Measured data must be a sequence with shape matching the setpoint arrays shape',
-                               qtt.data.makeDataSet1D, x,
-                               ['y1', 'y2'], y, return_names=False)
+            data_set = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=False)
+            self.assertTrue(np.array_equal(data_set.dummy, x))
+            self.assertTrue(np.array_equal(data_set.y1, y[0]))
+            self.assertTrue(np.array_equal(data_set.y2, y[1]))
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
+
+    def test_makedataset1d_no_data(self):
+        p = ManualParameter('dummy')
+        x = p[0:10:1]
+        y = None
+        data_set, tuple_names = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=True)
+        self.assertTrue(np.array_equal(data_set.dummy, x))
+        self.assertTrue(data_set.y1.shape == (10,))
+        self.assertTrue(data_set.y2.shape == (10,))
+
+    def test_makedataset1d_return_names(self):
+        p = ManualParameter('dummy')
+        x = p[0:10:1]
+        y = None
+        data_set, tuple_names = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=True)
+        self.assertTrue(np.array_equal(data_set.dummy, x))
+        # check return names
+        self.assertTrue(tuple_names[0] == 'dummy')
+        self.assertTrue(tuple_names[1][0] == 'y1')
+        self.assertTrue(tuple_names[1][1] == 'y2')
 
     def test_dataset_labels_dataset2dplain(self):
         v = [0]
@@ -350,15 +469,31 @@ class TestMakeDataSet(unittest.TestCase):
         self.assertTrue(np.array_equal(data_set.arrays['z'], z))
 
     def test_dataset2dplain_shape_measuredata_nok(self):
-        self.assertRaisesRegex(ValueError, 'Measured data must be a sequence with shape matching the setpoint arrays',
-                               qtt.data.makeDataSet2Dplain, 'horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
-                               np.arange(3 * 5).reshape((3, 5)), xunit='mV', yunit='Hz', zunit='A')
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
+                                                   np.arange(3 * 5).reshape((3, 5)), xunit='mV', yunit='Hz', zunit='A')
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
 
     def test_dataset2dplain_shape_measuredata_second_nok(self):
-        self.assertRaisesRegex(ValueError, 'Measured data must be a sequence with shape matching the setpoint arrays',
-                               qtt.data.makeDataSet2Dplain, 'horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.],
-                               ['z1', 'z2'], [np.arange(3 * 4).reshape((3, 4)), np.arange(3 * 5).reshape((3, 5))],
-                               xunit='mV', yunit='Hz', zunit='A')
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], ['z1', 'z2'],
+                                                   [np.arange(3 * 4).reshape((3, 4)), np.arange(3 * 5).reshape((3, 5))],
+                                                   xunit='mV', yunit='Hz', zunit='A')
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
 
     def test_dataset2dplain_no_measuredata(self):
         v = [0, 1, 2.]
@@ -411,7 +546,7 @@ class TestMakeDataSet(unittest.TestCase):
         self.assertTrue(tuple_names[0][1] == 'dummy2')
         self.assertTrue(tuple_names[1][0] == 'measured')
 
-    def test_makedataset2d_preset_data_is_arry(self):
+    def test_makedataset2d_preset_data_no_list(self):
         p1 = ManualParameter('dummy1')
         p2 = ManualParameter('dummy2')
         x = p1[0:10:1]
@@ -419,13 +554,8 @@ class TestMakeDataSet(unittest.TestCase):
         m1 = ManualParameter('measurement1')
         measure_names = [m1]
         preset_data = np.ones((len(x), len(y)))
-        data_set = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
-
-        # check attribute
-        self.assertTrue(np.array_equal(data_set.dummy1, x))
-        self.assertTrue(np.array_equal(data_set.measurement1, preset_data))
-        # check array
-        self.assertTrue(np.array_equal(data_set.arrays['measurement1'], preset_data))
+        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+                               qtt.data.makeDataSet2D, x, y, measure_names, preset_data=preset_data, return_names=False)
 
     def test_makedataset2d_shape_measure_names_parameters(self):
         p1 = ManualParameter('dummy1')
@@ -500,9 +630,16 @@ class TestMakeDataSet(unittest.TestCase):
         y = p2[0:4:1]
         measure_names = ['measured1', 'measured2']
         preset_data = [np.ones((len(x) + 1, len(y))), np.ones((len(x), len(y)))]
-        self.assertRaisesRegex(ValueError,
-                               'Measured data must be a sequence with shape matching the setpoint arrays shape',
-                               qtt.data.makeDataSet2D, x, y, measure_names, preset_data=preset_data, return_names=False)
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)
 
     def test_makedataset2d_shape_measuredata_second_nok(self):
         p1 = ManualParameter('dummy1')
@@ -511,6 +648,13 @@ class TestMakeDataSet(unittest.TestCase):
         y = p2[0:4:1]
         measure_names = ['measured1', 'measured2']
         preset_data = [np.ones((len(x), len(y))), np.ones((len(x) + 1, len(y)))]
-        self.assertRaisesRegex(ValueError,
-                               'Measured data must be a sequence with shape matching the setpoint arrays shape',
-                               qtt.data.makeDataSet2D, x, y, measure_names, preset_data=preset_data, return_names=False)
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logging.getLogger().addHandler(stream_handler)
+
+            data_set = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            logging.getLogger().removeHandler(stream_handler)

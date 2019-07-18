@@ -19,6 +19,7 @@ import qtt.utilities.json_serializer
 from qcodes.data.data_set import DataSet
 from qcodes.data.data_array import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
+logger = logging.getLogger(__name__)
 
 
 def load_example_dataset(filename):
@@ -1065,12 +1066,16 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
                    setpoints):
     """ Generic code to make the data set for makeDataSet1D, makeDataSet1DPlain, makeDataSet2D, makeDataSet2DPlain
 
-    Raises:
-        ValueError: When the number of measurements names in the measurement_list does not match the number
-                    of measurements.
+        Warnings logged:
+        1. When the shape of the measured data is not matching the shape of the setpoint array. When the
+           measured data is a list, each list item must match the shape of the setpoint array.
 
-        ValueError: When the shape of the measured data is not matching the shape of the setpoint array. When the
-                    measured data is a list, each list item must match the shape of the setpoint array.
+    Raises:
+        ValueError: When the number of measurements names in the measurement_list does not match the number of
+                    measurements.
+                    If len(measurement_list) > len(measured_data_list) we would otherwise get an
+                    IndexError later on. When len(measurement_list) < len(measured_data_list) now a ValueError is
+                    raised because a part of the measure data is not stored silently otherwise.
 
         TypeError: When a measurement name in the measurement list has an invalid type.
 
@@ -1107,11 +1112,10 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
         preset_data_array = DataArray(name=mname, array_id=mname, label=mname, unit=measure_units[idm],
                                       preset_data=np.copy(preset_data), set_arrays=set_arrays)
         data_set.add_array(preset_data_array)
-        if measured_data_list is not None:
+        if measured_data_list is not None and measured_data_list[idm] is not None:
             measured_array = np.array(measured_data_list[idm])
             if measured_array.shape != preset_data.shape:
-                raise ValueError('Measured data must be a sequence with shape matching the setpoint arrays shape',
-                                 measured_array.shape, preset_data.shape)
+                logger.warning('Shape of measured data does not match setpoint shape')
 
             getattr(data_set, mname).ndarray = measured_array
 
@@ -1152,19 +1156,19 @@ def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location
     """
     setpoint_data = np.array(x)
     preset_data = np.NaN * np.ones(setpoint_data.size)
+    if y is not None:
+        y = np.array(y)
 
     setpoint = DataArray(name=xname, array_id=xname, preset_data=setpoint_data, unit=xunit, is_setpoint=True)
 
-    measurement_unit = yunit
-    if isinstance(y, np.ndarray):
-        measured_data_list = [y]
-    else:
-        measured_data_list = y
-
     if isinstance(yname, (str, qcodes.Parameter)):
+        measured_data_list = [y]
         measurement_list = [yname]
     else:
+        measured_data_list = y
         measurement_list = yname
+
+    measurement_unit = yunit
 
     data_set, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
                                  preset_data, [setpoint])
@@ -1209,16 +1213,14 @@ def makeDataSet1D(p, yname='measured', y=None, location=None, loc_record=None, r
     setpoint = DataArray(name=p.name, array_id=p.name, label=p.parameter.label,
                          unit=p.parameter.unit, preset_data=setpoint_data, is_setpoint=True)
 
-    measurement_unit = None
-    if isinstance(y, np.ndarray):
-        measured_data_list = [y]
-    else:
-        measured_data_list = y
-
     if isinstance(yname, (str, qcodes.Parameter)):
+        measured_data_list = [y]
         measurement_list = [yname]
     else:
+        measured_data_list = y
         measurement_list = yname
+
+    measurement_unit = None
 
     data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location,
                                              loc_record, preset_data, [setpoint])
@@ -1271,16 +1273,17 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
     setpointx = DataArray(name=xname, array_id=xname, preset_data=setpoint_dataxy,
                           unit=xunit, set_arrays=(setpointy,), is_setpoint=True)
 
-    measurement_unit = zunit
-    if isinstance(z, np.ndarray):
-        measured_data_list = [z]
-    else:
-        measured_data_list = z
-
     if isinstance(zname, (str, qcodes.Parameter)):
+        if isinstance(z, np.ndarray):
+            measured_data_list = [z]
+        else:
+            measured_data_list = z
         measurement_list = [zname]
     else:
+        measured_data_list = z
         measurement_list = zname
+
+    measurement_unit = zunit
 
     data_set, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
                                  preset_data, [setpointy, setpointx])
@@ -1338,16 +1341,14 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     setpointx = DataArray(name=x.name, array_id=x.name, preset_data=setpoint_dataxy,
                           unit=x.parameter.unit, set_arrays=(setpointy,), is_setpoint=True)
 
-    measurement_unit = None
     if isinstance(measure_names, (str, qcodes.Parameter)):
+        measured_data_list = [z]
         measurement_list = [measure_names]
     else:
+        measured_data_list = z
         measurement_list = measure_names
 
-    if isinstance(z, np.ndarray):
-        measured_data_list = [z]
-    else:
-        measured_data_list = z
+    measurement_unit = None
 
     data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location,
                                              loc_record, preset_data, [setpointy, setpointx])
