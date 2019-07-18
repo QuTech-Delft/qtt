@@ -14,13 +14,14 @@ class Tektronix5014C_AWG(AwgCommon):
 
         Args:
             awg: The Tektronix 5014C AWG instance.
+
+        Raises:
+            ValueError: The provided AWG is not of type Tektronix_AWG5014.
         """
         super().__init__('Tektronix_AWG5014', channel_numbers=[1, 2, 3, 4], marker_numbers=[1, 2])
         if type(awg).__name__ is not self._awg_name:
-            raise AwgCommonError(f'The AWG does not correspond with {self._awg_name}')
-        self.__settings = [Parameter(name='marker_delay', unit='ns', initial_value=0.0,
-                                     vals=Numbers(0.0, 1.0), set_cmd=None),
-                           Parameter(name='marker_low', unit='V', initial_value=0.0,
+            raise ValueError(f'The AWG type does not correspond with {self._awg_name}')
+        self.__settings = [Parameter(name='marker_low', unit='V', initial_value=0.0,
                                      vals=Numbers(-1.0, 2.6), set_cmd=None),
                            Parameter(name='marker_high', unit='V', initial_value=1.0,
                                      vals=Numbers(-0.9, 2.7), set_cmd=None),
@@ -60,11 +61,14 @@ class Tektronix5014C_AWG(AwgCommon):
 
         Args:
             channels: A list with the channel numbers. All channels are enabled, if no value is given.
+
+        Raises:
+            ValueError: If channels contains an invalid channel number.
         """
         if channels is None:
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
-            raise AwgCommonError(f'Invalid channel numbers {channels}')
+            raise ValueError(f'Invalid channel numbers {channels}')
         _ = [self.__awg.set(f'ch{ch}_state', 1) for ch in channels]
 
     def disable_outputs(self, channels: Optional[List[int]] = None) -> None:
@@ -74,30 +78,30 @@ class Tektronix5014C_AWG(AwgCommon):
 
         Args:
             channels: A list with the channel numbers. All channels are enabled, if no value is given.
+
+        Raises:
+            ValueError: If channels contains an invalid channel number.
         """
         if channels is None:
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
-            raise AwgCommonError(f'Invalid channel numbers {channels}')
+            raise ValueError(f'Invalid channel numbers {channels}')
         _ = [self.__awg.set(f'ch{ch}_state', 0) for ch in channels]
 
     def change_setting(self, name: str, value: float) -> None:
         """ Sets a setting on the AWG. The changeable settings are:
-            marker_delay, marker_low, marker_high, amplitudes and offset.
+            marker_low, marker_high, amplitudes and offset.
 
         Args:
             name: The name of the setting.
             value: The value the setting should get.
-
-        Returns:
-            The value of the setting.
         """
         index = next(i for i, p in enumerate(self.__settings) if p.name == name)
         self.__settings[index].set(value)
 
     def retrieve_setting(self, name: str) -> float:
         """ Gets a setting from the AWG. The gettable are:
-            marker_delay, marker_low, marker_high, amplitudes and offset.
+            marker_low, marker_high, amplitudes and offset.
 
         Args:
             name: The name of the setting.
@@ -111,10 +115,13 @@ class Tektronix5014C_AWG(AwgCommon):
 
         Args:
             mode: Either 'CONT' (continues) or 'SEQ' (sequential).
+
+        Raises:
+            ValueError: If the given mode is not 'CONT' (continues) or 'SEQ' (sequential).
         """
         modes = ['CONT', 'SEQ']
         if mode not in modes:
-            raise AwgCommonError(f'Invalid AWG mode ({mode})')
+            raise ValueError(f'Invalid AWG mode ({mode})')
         self.__awg.set('run_mode', mode)
 
     def retrieve_running_mode(self) -> float:
@@ -126,15 +133,15 @@ class Tektronix5014C_AWG(AwgCommon):
         """
         return self.__awg.get('run_mode')
 
-    def update_sampling_rate(self, sampling_rate):
+    def update_sampling_rate(self, sampling_rate: int) -> None:
         """ Sets the sampling rate of the AWG.
 
         Args:
-            sampling_rate (int): The number of samples the AWG outputs per second.
+            sampling_rate: The number of samples the AWG outputs per second.
         """
         return self.__awg.set('clock_freq', sampling_rate)
 
-    def retrieve_sampling_rate(self) -> float:
+    def retrieve_sampling_rate(self) -> int:
         """ Gets the sample rate of the AWG.
 
         Returns:
@@ -157,10 +164,14 @@ class Tektronix5014C_AWG(AwgCommon):
 
         Returns:
             The amplitude for all output channels.
+
+        Raises:
+            AwgCommonError: If not all channel amplitudes have the same value. Then the settings in
+                            the AWG are off and needs to be reset first.
         """
         gains = [self.__awg.get(f'ch{ch}_amp') for ch in self._channel_numbers]
         if not all([g == gains[0] for g in gains]):
-            raise ValueError('Not all channel amplitudes are equal. Please reset!')
+            raise AwgCommonError('Not all channel amplitudes are equal. Please reset!')
         return gains[0]
 
     def upload_waveforms(self, sequence_names: List[str], sequence_channels: List[Tuple[int, ...]],
@@ -202,9 +213,17 @@ class Tektronix5014C_AWG(AwgCommon):
             A tuple with the channel data and the waveform data.
             The channel data contains for each waveform the name and to which channel it belongs.
             The waveform data contains for each waveform the name and the actual waveform.
+
+        Raises:
+            ValueError: If the number of elements in names, channels and items do not match.
         """
         channel_data: Dict[int, List[str]] = {}
         waveform_data: Dict[str, List[np.ndarray]] = {}
+
+        if len(names) != len(channels) or len(names) != len(items):
+            error_text = 'The waveform input data is not correct!' \
+                         f'Length of (names, channels, items) are ({len(names)}, {len(channels)}, {len(items)}.'
+            raise ValueError(error_text)
 
         unique_channels = set([channel for (channel, *_) in channels])
         for unique_channel in unique_channels:
@@ -231,11 +250,15 @@ class Tektronix5014C_AWG(AwgCommon):
             channels: A list with channel numbers that should output the waveform on the AWG.
             sequence: A list containing lists with the waveform names for each channel.
                       The outer list determines the number of rows the sequences has.
+
+        Raises:
+            ValueError: If the number of channels does not match the element count in the sequence or
+                        when the number of waveforms for each channel do not match.
         """
-        if not sequence or len(sequence) != len(channels):
-            raise AwgCommonError('Invalid sequence and channel count!')
+        if len(sequence) != len(channels):
+            raise ValueError('Invalid sequence and channel count!')
         if not all(len(idx) == len(sequence[0]) for idx in sequence):
-            raise AwgCommonError('Invalid sequence list lengths!')
+            raise ValueError('Invalid sequence list lengths!')
         request_rows = len(sequence[0])
         current_rows = self.get_sequence_length()
         if request_rows != current_rows:
@@ -266,10 +289,10 @@ class Tektronix5014C_AWG(AwgCommon):
             name = names[i]
             package = self.__awg.pack_waveform(wfs[i], m1s[i], m2s[i])
             packed_waveforms[name] = package
-        offset = self.__settings[4].get()
-        amplitude = self.__settings[3].get()
-        marker_low = self.__settings[1].get()
-        marker_high = self.__settings[2].get()
+        offset = self.retrieve_setting('offset')
+        amplitude = self.retrieve_setting('amplitudes')
+        marker_low = self.retrieve_setting('marker_low')
+        marker_high = self.retrieve_setting('marker_high')
         channel_cfg = {'ANALOG_METHOD_1': 1, 'CHANNEL_STATE_1': 1, 'ANALOG_AMPLITUDE_1': amplitude,
                        'MARKER1_METHOD_1': 2, 'MARKER1_LOW_1': marker_low, 'MARKER1_HIGH_1': marker_high,
                        'MARKER2_METHOD_1': 2, 'MARKER2_LOW_1': marker_low, 'MARKER2_HIGH_1': marker_high,
