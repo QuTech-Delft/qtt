@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added scope reader for the Zurich Instruments UHFLI. (#554, #980).
 
 ### Changed
+- makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
 - Allow plotCallback to operate on datetime axis (#584).
 - VirtualDAC now has an option to set gate_map and instruments on VirtualDAC (#583).
 - All unittests are moved to a tests folder (#574).
