@@ -114,13 +114,13 @@ class TestData(unittest.TestCase):
         h = qcodes.data.hdf5_format.HDF5Format()
         g = qcodes.data.gnuplot_format.GNUPlotFormat()
 
-        io = qcodes.data.io.DiskIO(tempfile.mkdtemp())
+        disk_io = qcodes.data.io.DiskIO(tempfile.mkdtemp())
         dd = []
         name = qcodes.DataSet.location_provider.base_record['name']
         for jj, fmt in enumerate([g, h]):
             ds = qcodes.tests.data_mocks.DataSet2D(name='format%d' % jj)
             ds.formatter = fmt
-            ds.io = io
+            ds.io = disk_io
             ds.add_metadata({'1': 1, '2': [2, 'x'], 'np': np.array([1, 2.])})
             ds.write(write_metadata=True)
             dd.append(ds.location)
@@ -130,7 +130,7 @@ class TestData(unittest.TestCase):
         for _, location in enumerate(dd):
             if verbose:
                 print('load %s' % location)
-            r = load_dataset(location, io=io)
+            r = load_dataset(location, io=disk_io)
             if verbose:
                 print(r)
 
@@ -384,7 +384,7 @@ class TestMakeDataSet(unittest.TestCase):
         p = ManualParameter('dummy')
         x = p[0:10:1]
         y = None
-        data_set, tuple_names = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=True)
+        data_set = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=False)
         self.assertTrue(np.array_equal(data_set.dummy, x))
         self.assertTrue(data_set.y1.shape == (10,))
         self.assertTrue(data_set.y2.shape == (10,))
@@ -473,8 +473,8 @@ class TestMakeDataSet(unittest.TestCase):
             stream_handler = logging.StreamHandler(sys.stdout)
             logging.getLogger().addHandler(stream_handler)
 
-            data_set = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
-                                                   np.arange(3 * 5).reshape((3, 5)), xunit='mV', yunit='Hz', zunit='A')
+            _ = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
+                                            np.arange(3 * 5).reshape((3, 5)), xunit='mV', yunit='Hz', zunit='A')
 
             # Verify warning
             print_string = mock_stdout.getvalue()
@@ -486,9 +486,9 @@ class TestMakeDataSet(unittest.TestCase):
             stream_handler = logging.StreamHandler(sys.stdout)
             logging.getLogger().addHandler(stream_handler)
 
-            data_set = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], ['z1', 'z2'],
-                                                   [np.arange(3 * 4).reshape((3, 4)), np.arange(3 * 5).reshape((3, 5))],
-                                                   xunit='mV', yunit='Hz', zunit='A')
+            _ = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], ['z1', 'z2'],
+                                            [np.arange(3 * 4).reshape((3, 4)), np.arange(3 * 5).reshape((3, 5))],
+                                            xunit='mV', yunit='Hz', zunit='A')
 
             # Verify warning
             print_string = mock_stdout.getvalue()
@@ -634,7 +634,7 @@ class TestMakeDataSet(unittest.TestCase):
             stream_handler = logging.StreamHandler(sys.stdout)
             logging.getLogger().addHandler(stream_handler)
 
-            data_set = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
+            _ = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
 
             # Verify warning
             print_string = mock_stdout.getvalue()
@@ -652,7 +652,7 @@ class TestMakeDataSet(unittest.TestCase):
             stream_handler = logging.StreamHandler(sys.stdout)
             logging.getLogger().addHandler(stream_handler)
 
-            data_set = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
+            _ = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
 
             # Verify warning
             print_string = mock_stdout.getvalue()

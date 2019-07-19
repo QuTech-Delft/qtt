@@ -1,6 +1,7 @@
+""" Utilities to work with data and datasets """
+
 from typing import Optional
 from functools import wraps
-""" Utilities to work with data and datasets """
 
 import numpy as np
 import scipy
@@ -193,7 +194,6 @@ def load_dataset(location, io=None, verbose=0):
                 logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
                 if verbose:
                     print(ex)
-                pass
             finally:
                 if data is not None:
                     if isinstance(hformatter, GNUPlotFormat):
