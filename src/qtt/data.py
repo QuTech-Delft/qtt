@@ -1374,15 +1374,18 @@ def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbos
         metakey (str): key in the DataSet metadata to compare
     """
     if (metakey not in dataset1.metadata) or (metakey not in dataset2.metadata):
-        print('key %s not in dataset metadata' % metakey)
+        if verbose:
+            print('key %s not in dataset metadata' % metakey)
         return
     if metakey == 'allgatevalues':
         for ikey, value1 in dataset1.metadata[metakey].items():
             if ikey in dataset2.metadata[metakey]:
                 value2 = dataset2.metadata[metakey][ikey]
                 if value1 != value2:
-                    print('Gate %s from %.1f to %.1f' % (ikey, value1, value2))
+                    if verbose:
+                        print('Gate %s from %.1f to %.1f' % (ikey, value1, value2))
             else:
-                print('Gate %s not in second dataset' % ikey)
+                if verbose:
+                    print('Gate %s not in second dataset' % ikey)
     else:
         raise Exception('metadata key not yet supported')

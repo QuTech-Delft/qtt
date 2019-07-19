@@ -13,6 +13,7 @@ from qcodes.tests.data_mocks import DataSet2D
 import qtt.data
 from qtt.data import image_transform, dataset_to_dictionary, dictionary_to_dataset,\
      compare_dataset_metadata, diffDataset, add_comment, load_dataset, determine_parameter_unit
+from qtt.data import logger
 
 
 class TestPlotting(unittest.TestCase):
@@ -135,17 +136,23 @@ class TestData(unittest.TestCase):
                 print(r)
 
     def test_determine_parameter_unit_ok(self):
-        p = ManualParameter('dummy')
-        unit = determine_parameter_unit(p)
+        dummy_parameter = ManualParameter('dummy')
+        unit = determine_parameter_unit(dummy_parameter)
         self.assertTrue(unit == '')
 
     def test_determine_parameter_unit_nok(self):
-        p = 'p is a string'
-        unit = determine_parameter_unit(p)
+        not_a_parameter = 'This is a string'
+        unit = determine_parameter_unit(not_a_parameter)
         self.assertTrue(unit is None)
 
 
 class TestMakeDataSet(unittest.TestCase):
+
+    def setUp(self):
+        logger.propagate = False
+
+    def tearDown(self):
+        logger.propagate = True
 
     def test_makedataset1dplain_double_measurement(self):
         x = np.arange(0, 10)
@@ -190,7 +197,7 @@ class TestMakeDataSet(unittest.TestCase):
         y = np.arange(1, 11)
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             data_set = qtt.data.makeDataSet1Dplain('x', x, 'y1', [y, y])
             self.assertTrue(np.array_equal(data_set.x, x))
@@ -199,7 +206,7 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_makedataset1dplain_type_yname_parameter(self):
         x = np.arange(0, 10)
@@ -223,7 +230,7 @@ class TestMakeDataSet(unittest.TestCase):
         y = np.arange(1, 11)
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             data_set = qtt.data.makeDataSet1Dplain('x', x, ['y1', 'y2'], [y, y])
             self.assertTrue(np.array_equal(data_set.x, x))
@@ -233,7 +240,7 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_shape_measuredata_second_nok(self):
         x = np.arange(0, 8)
@@ -241,7 +248,7 @@ class TestMakeDataSet(unittest.TestCase):
         y2 = np.arange(1, 10)
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             data_set = qtt.data.makeDataSet1Dplain('x', x, ['y1', 'y2'], [y1, y2])
             self.assertTrue(np.array_equal(data_set.x, x))
@@ -251,7 +258,7 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_right_shape(self):
         x = [1, 2, 3]
@@ -265,7 +272,7 @@ class TestMakeDataSet(unittest.TestCase):
         y = np.array([1, 2, 3]).reshape((3, 1))
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             data_set = qtt.data.makeDataSet1Dplain('x', x, 'y', y)
             self.assertTrue(np.array_equal(data_set.x, x))
@@ -274,7 +281,7 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_no_data(self):
         x = [1, 2, 3]
@@ -291,8 +298,8 @@ class TestMakeDataSet(unittest.TestCase):
         self.assertTrue(np.array_equal(data_set.x, x))
 
     def test_makedataset1d_not_return_names(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         yname = 'measured'
         y = np.arange(len(x)).reshape((len(x)))
         data_set = qtt.data.makeDataSet1D(x, yname, y, return_names=False)
@@ -302,39 +309,39 @@ class TestMakeDataSet(unittest.TestCase):
         self.assertTrue(np.array_equal(data_set.arrays['measured'], y))
 
     def test_makedataset1d_type_parameter_nok1(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         x.parameter = 4
         self.assertRaisesRegex(TypeError, 'Type of parameter.parameter must be qcodes.Parameter',
                                qtt.data.makeDataSet1D, x, [1, 2], None)
 
     def test_makedataset1d_type_parameter_nok2(self):
-        p = 4
+        not_of_type_parameter = 4
         self.assertRaisesRegex(TypeError, 'Type of parameter must be qcodes.SweepFixedValues',
-                               qtt.data.makeDataSet1D, p, [1, 2], None)
+                               qtt.data.makeDataSet1D, not_of_type_parameter, [1, 2], None)
 
     def test_makedataset1d_type_measurement_names_nok(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         self.assertRaisesRegex(TypeError, 'Type of measurement names must be str or qcodes.Parameter',
                                qtt.data.makeDataSet1D, x, [1, 2], None)
 
     def test_makedataset1d_shape_measuredata_list_nok1(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         yname = ['measured1', 'measured2']
         y = np.arange(len(x)).reshape((len(x)))
         self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
                                qtt.data.makeDataSet1D, x, yname, y, return_names=False)
 
     def test_makedataset1d_shape_measuredata_list_nok2(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         yname = 'measured'
         y = [np.arange(len(x)).reshape((len(x))), np.arange(len(x)).reshape((len(x)))]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             data_set = qtt.data.makeDataSet1D(x, yname, y, return_names=False)
             self.assertTrue(np.array_equal(data_set.dummy, x))
@@ -343,15 +350,15 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_makedataset1d_shape_measuredata_nok(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         y = [np.arange(len(x)+1)]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             data_set = qtt.data.makeDataSet1D(x, 'y', y, return_names=False)
             self.assertTrue(np.array_equal(data_set.dummy, x))
@@ -360,15 +367,15 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_makedataset1d_shape_second_item_measuredata_nok(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         y = [np.arange(len(x)), np.arange(len(x)+1)]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             data_set = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=False)
             self.assertTrue(np.array_equal(data_set.dummy, x))
@@ -378,11 +385,11 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_makedataset1d_no_data(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         y = None
         data_set = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=False)
         self.assertTrue(np.array_equal(data_set.dummy, x))
@@ -390,8 +397,8 @@ class TestMakeDataSet(unittest.TestCase):
         self.assertTrue(data_set.y2.shape == (10,))
 
     def test_makedataset1d_return_names(self):
-        p = ManualParameter('dummy')
-        x = p[0:10:1]
+        dummy_parameter = ManualParameter('dummy')
+        x = dummy_parameter[0:10:1]
         y = None
         data_set, tuple_names = qtt.data.makeDataSet1D(x, ['y1', 'y2'], y, return_names=True)
         self.assertTrue(np.array_equal(data_set.dummy, x))
@@ -471,7 +478,7 @@ class TestMakeDataSet(unittest.TestCase):
     def test_dataset2dplain_shape_measuredata_nok(self):
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             _ = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], 'z',
                                             np.arange(3 * 5).reshape((3, 5)), xunit='mV', yunit='Hz', zunit='A')
@@ -479,12 +486,12 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_dataset2dplain_shape_measuredata_second_nok(self):
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             _ = qtt.data.makeDataSet2Dplain('horizontal', [0., 1, 2, 3], 'vertical', [0, 1, 2.], ['z1', 'z2'],
                                             [np.arange(3 * 4).reshape((3, 4)), np.arange(3 * 5).reshape((3, 5))],
@@ -493,7 +500,7 @@ class TestMakeDataSet(unittest.TestCase):
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_dataset2dplain_no_measuredata(self):
         v = [0, 1, 2.]
@@ -632,14 +639,14 @@ class TestMakeDataSet(unittest.TestCase):
         preset_data = [np.ones((len(x) + 1, len(y))), np.ones((len(x), len(y)))]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             _ = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
 
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
 
     def test_makedataset2d_shape_measuredata_second_nok(self):
         p1 = ManualParameter('dummy1')
@@ -650,11 +657,11 @@ class TestMakeDataSet(unittest.TestCase):
         preset_data = [np.ones((len(x), len(y))), np.ones((len(x) + 1, len(y)))]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
-            logging.getLogger().addHandler(stream_handler)
+            logger.addHandler(stream_handler)
 
             _ = qtt.data.makeDataSet2D(x, y, measure_names, preset_data=preset_data, return_names=False)
 
             # Verify warning
             print_string = mock_stdout.getvalue()
             self.assertIn('Shape of measured data does not match setpoint shape', print_string)
-            logging.getLogger().removeHandler(stream_handler)
+            logger.removeHandler(stream_handler)
