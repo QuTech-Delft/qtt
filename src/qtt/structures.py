@@ -129,7 +129,7 @@ class sensingdot_t:
         self.sdval = gate_values
         self.targetvalue = np.NaN
 
-        self._selected_peak =  None
+        self._selected_peak = None
         self._detune_axis = np.array([1, -1])
         self._detune_axis = self._detune_axis / np.linalg.norm(self._detune_axis)
         self._debug = {}  # store debug data
@@ -149,14 +149,15 @@ class sensingdot_t:
             self.valuefunc = station.components[
                 'keithley%d' % index].amplitude.get
         else:
-            self.valuefunc=None
+            self.valuefunc = None
 
     def __repr__(self):
         return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
 
     def __getstate__(self):
         """ Override to make the object pickable."""
-        print('sensingdot_t: __getstate__')
+        if self.verbose:
+            print('sensingdot_t: __getstate__')
         import copy
         d = copy.copy(self.__dict__)
         for name in ['station', 'valuefunc']:
@@ -207,7 +208,8 @@ class sensingdot_t:
 
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
         """ Make 1D-scan of the sensing dot."""
-        print('### sensing dot scan')
+        if sd.verbose:
+            print('### sensing dot scan')
         minstrument = sd.minstrument
         if sd.index is not None:
             minstrument = [sd.index]
@@ -235,8 +237,9 @@ class sensingdot_t:
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
-        print('sensingdot_t: scan1D: gate %s, wait_time %.3f' % (sd.gg[1], wait_time))
-        alldata = qtt.measurements.scans.scan1D(sd.station, scanjob=scanjob1)
+        if sd.verbose:
+            print('sensingdot_t: scan1D: gate %s, wait_time %.3f' % (sd.gg[1], wait_time))
+        alldata = qtt.measurements.scans.scan1D(sd.station, scanjob=scanjob1, verbose=sd.verbose)
         return alldata
 
     def detuning_scan(sd, stepsize=2, nsteps=5, verbose=1, fig=None):
@@ -353,8 +356,7 @@ class sensingdot_t:
             print('autoTune: could not find good peak')
 
         if sd.verbose:
-            print(
-                'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
+            print('sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
         return sd.sdval[1], alldata
 
     def _process_scan(self, alldata, useslopes=True, fig=None, invert=False, verbose=0):
@@ -465,8 +467,7 @@ class sensingdot_t:
             raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
 
         if self.verbose:
-            print(
-                'sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
+            print('sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
 
         return self.sdval[1], alldata
 
