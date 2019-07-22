@@ -1861,6 +1861,8 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         
             dataraw = minstrhandle.multiple_trigger_acquisition(
                 mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
+            if np.all(dataraw==0):
+                warnings.warn('multiple_trigger_acquisition returned zero data! did a timeout occur?')
             if isinstance(dataraw, tuple):
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1))
