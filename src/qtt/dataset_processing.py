@@ -16,7 +16,7 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
     Args:
         dataset: Input dataset containing the data array
         input_array_name: Name of the data array to be processed
-        output_array_nane: Name of the output array
+        output_array_nane: Name of the output array or None to operate in place
         processing_function: Method to apply to the data array
         label: Label for the output array
         unit: Unit for the output array
@@ -27,9 +27,12 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
         label = array.label
     if unit is None:
         unit = array.unit
-    data_array = qcodes.DataArray(array_id=output_array_name, name=output_array_name, label=label,
+    if output_array_name is None:
+        array.ndarray[:] = data
+    else:
+            data_array = qcodes.DataArray(array_id=output_array_name, name=output_array_name, label=label,
                                   set_arrays=array.set_arrays, preset_data=data, unit=unit)
-    dataset.add_array(data_array)
+            dataset.add_array(data_array)
     return dataset
 
 

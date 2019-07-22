@@ -1800,6 +1800,9 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
                      save_to_disk=True, location=None, verbose=True):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
+    Note that if the requested period is equal or longer than the period on the AWG, then not all trigger events might
+    be used by the M4i.
+    
     The saving to disk can take minutes or even longer.
 
     Args:
@@ -1854,11 +1857,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
                 mV_range = minstrhandle.range_channel_0()
                 
             minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=minstrhandle._channel_memsize, termination=None)
-        
-            import pyspcm
-            #minstrhandle.external_trigger_mode(pyspcm.SPC_TM_POS)
-            #minstrhandle.trigger_or_mask(pyspcm.SPC_TMASK_EXT0)
-        
+               
             dataraw = minstrhandle.multiple_trigger_acquisition(
                 mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
             if np.all(dataraw==0):
