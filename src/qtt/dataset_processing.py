@@ -130,8 +130,6 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
 
     set_arrays = zarray.set_arrays
     yarray = set_arrays[0]
-
-    scan_dimension = len(set_arrays)
     is_1d_dataset = len(set_arrays) == 1
 
     if is_1d_dataset:
@@ -140,34 +138,72 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
     else:
         xarray = set_arrays[1]
 
+    slice_objects = [slice(0, size) for jj, size in enumerate(zarray.shape) ]
+
     if axis == 0:
         slice_array = yarray
         start_idx = int(np.floor(np.interp(window[0], slice_array.ndarray, np.arange(slice_array.ndarray.size))))
         end_idx = int(np.interp(window[1], slice_array.ndarray, np.arange(slice_array.ndarray.size)))
+        slice_objects[0] = slice(start_idx, end_idx) 
     else:
         slice_array = xarray
 
         start_idx = int(np.floor(np.interp(window[0], slice_array.ndarray[0], np.arange(slice_array.ndarray[0].size))))
         end_idx = int(np.interp(window[1], slice_array.ndarray[0], np.arange(slice_array.ndarray[0].size)))
 
-    if verbose:
-        print(f'slice_dataset: dimension {scan_dimension} start_idx {start_idx}, end_idx {end_idx}')
+        slice_objects[1] = slice(start_idx, end_idx) 
 
-    if axis == 0:
-        if is_1d_dataset:
-            signal_window = zarray[start_idx:end_idx]
-            dataset_window = qtt.data.makeDataSet1Dplain(yarray.name, yarray[start_idx:end_idx], yname=output_parameter_name,
+    slice_objects = tuple(slice_objects)
+    
+    return _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata = copy_metadata, verbose = 0)
+
+
+def _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata, verbose = 0):
+    zarray = dataset.default_parameter_array()
+    if output_parameter_name is None:
+        output_parameter_name = zarray.name
+
+    set_arrays = zarray.set_arrays
+    yarray = set_arrays[0]
+
+    scan_dimension = len(set_arrays)
+    is_1d_dataset = len(set_arrays) == 1
+
+    if verbose:
+        print(f'slice_dataset: dimension {scan_dimension} slice_objects {slice_objects}')
+    
+    if is_1d_dataset:
+            signal_window = zarray[slice_objects]
+            dataset_window = qtt.data.makeDataSet1Dplain(yarray.name, yarray[slice_objects[0]], yname=output_parameter_name,
                                                          y=signal_window, xunit=yarray.unit, yunit=zarray.unit)
-        else:
-            signal_window = zarray[start_idx:end_idx, :]
-            dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0], yarray.name, yarray[start_idx:end_idx], zname=output_parameter_name,
-                                                         z=signal_window, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
     else:
-        signal_window = zarray[:, start_idx:end_idx]
-        dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][start_idx:end_idx], yarray.name, yarray, zname=output_parameter_name,
-                                                     z=signal_window, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
+            xarray = set_arrays[1]
+            signal_window = zarray[slice_objects]
+            dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][slice_objects[1]], yarray.name, yarray[slice_objects[0]], zname=output_parameter_name,
+                                                         z=signal_window, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
 
     if copy_metadata:
         dataset_window.metadata = copy.deepcopy(dataset.metadata)
-
     return dataset_window
+
+def resample_dataset(dataset: DataSet, sample_rate, verbose: int = 0, copy_metadata: bool = False, output_parameter_name=None) -> DataSet:
+    """ Given a dataset and a window for the horizontal axis return the dataset with selected window
+
+    Args:
+        dataset: Dataset to be slice
+        window: Specification of the window to be selected
+        axis: Axis used for slicing
+        verbose: Verbosity level
+        copy_metadata: If True then copy the metadata of the input dataset
+        output_parameter_name: Name of the output array
+    Returns:
+        Dataset with sliced data
+
+    """
+    zarray = dataset.default_parameter_array()
+    if output_parameter_name is None:
+        output_parameter_name = zarray.name
+
+    slice_objects = tuple([slice(0, size, sample_rate[jj]) for jj, size in enumerate(zarray.shape) ])
+    
+    return _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata = copy_metadata, verbose = 0)

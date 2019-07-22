@@ -1830,6 +1830,10 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     else:
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
+    if verbose:
+        exepected_measurement_time=nsegments*period
+        print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
+
     if average:
         data = measuresegment(waveform, nsegments,
                               minstrhandle, read_ch, mV_range, process=False)
@@ -1846,8 +1850,15 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             segment_size = int(memsize_total / nsegments)
             post_trigger = segment_size - pre_trigger
 
-            #minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
-            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize_total, termination=None)
+            if mV_range is None:
+                mV_range = minstrhandle.range_channel_0()
+                
+            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=minstrhandle._channel_memsize, termination=None)
+        
+            import pyspcm
+            #minstrhandle.external_trigger_mode(pyspcm.SPC_TM_POS)
+            #minstrhandle.trigger_or_mask(pyspcm.SPC_TMASK_EXT0)
+        
             dataraw = minstrhandle.multiple_trigger_acquisition(
                 mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
             if isinstance(dataraw, tuple):
