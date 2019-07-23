@@ -1531,6 +1531,9 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose, trigger_re_arm_compensation = trigger_re_arm_compensation)
     post_trigger = digitizer.posttrigger_memory_size()
 
+    if mV_range is None:
+        mV_range = digitizer.range_channel_0()
+
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
