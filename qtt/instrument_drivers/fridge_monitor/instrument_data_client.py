@@ -34,26 +34,30 @@ class InstrumentDataClient(Instrument):
         """Connects the client to the server using the settings."""
         self.__create_rpc_server_client()
 
-    def __invoke_getter(self, function_name, default_return_value):
+    def __invoke_getter(self, function_name, default_return_value, timeout=None):
         if self.__client is None:
             raise AttributeError('Client not connected! Run connect first.')
         try:
-            return self.__client.invoke(function_name, None, self.timeout)
+            if timeout==None:
+                timeout = self.timeout
+            return self.__client.invoke(function_name, None, timeout)
         except Exception:
             return default_return_value
 
-    def __invoke_setter(self, function_name, value, parameter_name='argument'):
+    def __invoke_setter(self, function_name, value, parameter_name='argument', timeout=None):
         function_parameters = {parameter_name: value}
         if self.__client is None:
             raise AttributeError('Client not connected! Run connect first.')
-        return self.__client.invoke(function_name, function_parameters, self.timeout)
+        if timeout==None:
+            timeout = self.timeout
+        return self.__client.invoke(function_name, function_parameters, timeout)
 
-    def add_get_set_parameter(self, name: str, default_return_value: Any = None, **kwargs) -> None:
-        get_command = partial(self.__invoke_getter, name, default_return_value=default_return_value)
-        set_command = partial(self.__invoke_setter, name)
+    def add_get_set_parameter(self, name: str, default_return_value: Any = None, timeout: Any = None, **kwargs) -> None:
+        get_command = partial(self.__invoke_getter, name, default_return_value=default_return_value, timeout=timeout)
+        set_command = partial(self.__invoke_setter, name, timeout=timeout)
         self.add_parameter(name, get_cmd=get_command, set_cmd=set_command, **kwargs)
 
-    def add_get_parameter(self, function_name: str, default_return_value: Any = None, **kwargs) -> None:
+    def add_get_parameter(self, function_name: str, default_return_value: Any = None, timeout: Any = None, **kwargs) -> None:
         """ Creates a new get parameter for the instrument client.
 
         Args:
@@ -62,5 +66,5 @@ class InstrumentDataClient(Instrument):
             default_value: The initial value and on error return value for the get parameter.
             docstring: The get parameter documentation.
         """
-        get_command = partial(self.__invoke_getter, function_name, default_return_value)
+        get_command = partial(self.__invoke_getter, function_name, default_return_value, timeout=timeout)
         self.add_parameter(function_name, get_cmd=get_command, **kwargs)
