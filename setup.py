@@ -3,7 +3,7 @@ import re
 from importlib import import_module
 
 from setuptools import find_packages, setup
-from setuptools._vendor.packaging.version import Version
+from setuptools._vendor.packaging.version import Version, InvalidVersion
 
 
 def readme():
@@ -92,14 +92,27 @@ missing_template = '''
 *****
 '''
 
+invalid_version_template = '''
+*****
+***** package {0} has an invalid version: {1}
+*****
+'''
+
 # now test the versions of extras
 for extra, (module_name, min_version, pip_name) in extras.items():
     try:
         module = import_module(module_name)
-        if Version(module.__version__) < Version(min_version):
-            print(version_template.format(module_name, min_version, extra))
+    except ImportError:
+        print(missing_template.format(module_name, extra))
+        continue
+
+    try:
+        fnd_version = Version(module.__version__)
     except AttributeError:
         # probably a package not providing the __version__ attribute
         pass
-    except ImportError:
-        print(missing_template.format(module_name, extra))
+    except InvalidVersion:
+        print(invalid_version_template.format(module_name, module.__version__))
+    else:
+        if fnd_version < Version(min_version):
+            print(version_template.format(module_name, min_version, extra))
