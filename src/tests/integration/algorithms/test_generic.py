@@ -155,24 +155,14 @@ class TestBoxcarFilter(unittest.TestCase):
         kernel_1D = TestBoxcarFilter._kernel_size_1D
         for signal, out_exp in TestBoxcarFilter._known_inputs_outputs_1D:
             int_signal = np.array(signal, dtype=int)
-            try:
-                np.testing.assert_allclose(int_signal, signal)
-            except AssertionError:
-                continue
-
-            self.assertFilterOutput(int_signal, kernel_1D, out_exp)
+            if np.allclose(int_signal, signal):
+                self.assertFilterOutput(int_signal, kernel_1D, out_exp)
 
         kernel_2D = TestBoxcarFilter._kernel_size_2D
         for signal, out_exp in TestBoxcarFilter._known_inputs_outputs_2D:
             int_signal = np.array(signal, dtype=int)
-            try:
-                np.testing.assert_allclose(int_signal, signal)
-            except AssertionError:
-                continue
-
-            self.assertFilterOutput(int_signal, kernel_2D, out_exp)
-
-
+            if np.allclose(int_signal, signal):
+                self.assertFilterOutput(int_signal, kernel_2D, out_exp)
 
 
     def test_wrong_kernel_dimensions(self):

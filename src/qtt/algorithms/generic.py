@@ -594,7 +594,7 @@ def boxcar_filter(signal, kernel_size):
 
 
     Args:
-        signal (sequence): a sequence containing the signal to be filtered.
+        signal (array): An array containing the signal to be filtered.
         kernel_size (tuple): Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
 
     Returns:
@@ -603,29 +603,21 @@ def boxcar_filter(signal, kernel_size):
 
     if not isinstance(signal, np.ndarray):
         signal = np.array(signal)
+    if not isinstance(kernel_size, np.ndarray):
+        kernel_size = np.array(kernel_size, dtype=np.int_)
 
     if len(kernel_size) != len(signal.shape):
         raise RuntimeError('Number of dimensions of kernel (%d) not equal to number of dimension of input signal (%d)' %
                            (len(kernel_size), len(signal.shape)))
-
-    for siz in kernel_size:
-        if siz <= 0:
-            raise RuntimeError('Kernel sizes must be > 0')
+    if np.any(kernel_size <= 0):
+        raise RuntimeError('Kernel sizes must be > 0')
 
     if signal.dtype.kind in ('i', 'u'):
         filtered_signal = signal.astype(np.float64)
     else:
         filtered_signal = signal
 
-    boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.prod(kernel_size, dtype=np.float64)
+    boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
     filtered_signal = scipy.ndimage.filters.convolve(filtered_signal, boxcar_kernel, mode='nearest')
 
     return filtered_signal
-
-
-# %%
-
-
-if __name__ == '__main__':
-    pass
-    # show2Dimage(im, alldata)
