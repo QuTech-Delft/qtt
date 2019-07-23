@@ -10,6 +10,8 @@ import warnings
 import time
 import logging
 from functools import partial
+from typing import List
+
 import numpy as np
 
 from qcodes import Instrument
@@ -21,6 +23,7 @@ try:
 except:
     pass
 
+
 # %%
 
 
@@ -28,7 +31,7 @@ class VirtualDAC(Instrument):
     """ This class maps the dacs of IVVI('s) to named gates.
 
     The main functionality is the renaming of numbered dacs of one or multiple
-    DAC instruments (for example an IVVI or SPI D5a module) to gates, which in 
+    DAC instruments (for example an IVVI or SPI D5a module) to gates, which in
     general have names describing their main purpose or position on the sample.
 
     Attributes:
@@ -51,7 +54,7 @@ class VirtualDAC(Instrument):
         'B0' to dac3 of the second instrument is: `{'P1': (0, 4), 'B0': (0, 3)}`.
 
         If the DAC gates are connected to the sample with a bias-T then there is a typical RC time
-        for a voltage change to arrive at the sample. These RC times can be provides to the instument 
+        for a voltage change to arrive at the sample. These RC times can be provides to the instument
         with the `rc_times` argument.
 
         """
@@ -94,6 +97,18 @@ class VirtualDAC(Instrument):
     def instruments(self):
         """ A list of QCoDeS instruments."""
         return self._instrument_list
+
+    @instruments.setter
+    def instruments(self, value: List[Instrument]):
+        """
+        Updates the devices instruments
+
+        Args:
+            value: The list of instruments to update
+        """
+
+        self._instrument_list = value
+        self._update_instruments_names()
 
     @gate_map.setter  # type: ignore
     def gate_map(self, gate_map):
@@ -175,14 +190,18 @@ class VirtualDAC(Instrument):
             self.functions.pop(f'get_{gate}')
             self.functions.pop(f'set_{gate}')
 
-    def add_instruments(self, instruments):
+    def add_instruments(self, instruments: List[Instrument]):
         """ Add instruments to the virtual dac.
 
         Args:
             instruments (list): a list of qcodes instruments
 
         """
-        self._instrument_list += instruments
+
+        self._instrument_list.extend(instruments)
+        self._update_instruments_names()
+
+    def _update_instruments_names(self):
         self._instrument_names = [instrument.name for instrument in self._instrument_list]
 
     def get_instrument_parameter(self, g):
@@ -192,7 +211,7 @@ class VirtualDAC(Instrument):
         return getattr(self._instrument_list[instrument_index], 'dac%d' % gatemap[1])
 
     def set_boundaries(self, gate_boundaries):
-        """ Set boundaries on the values that can be set on the gates. 
+        """ Set boundaries on the values that can be set on the gates.
 
         Assigns a range of values to the validator of a parameter.
 
@@ -242,7 +261,7 @@ class VirtualDAC(Instrument):
     def allvalues_string(self, fmt='%.3f'):
         """ Return all gate values in string format. """
         vals = self.allvalues()
-        s = '{' + ','.join(['\'%s\': ' % (x,) + fmt % (vals[x], )
+        s = '{' + ','.join(['\'%s\': ' % (x,) + fmt % (vals[x],)
                             for x in vals]) + '}'
         return s
 
