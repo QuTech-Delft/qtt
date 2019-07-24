@@ -59,8 +59,8 @@ class VirtualDAC(Instrument):
 
         """
         super().__init__(name, **kwargs)
-        self._instrument_list = []
-        self._instrument_names = []
+        self._instruments = []
+        self._instruments_names = []
         self.add_instruments(instruments)
         self._gate_map = gate_map
         self._direct_gate_map = {}  # fast access to parameters
@@ -84,7 +84,7 @@ class VirtualDAC(Instrument):
 
             gatemap = self._gate_map[gate]
             instrument_index = self._instrument_index(gatemap[0])
-            i = self._instrument_list[instrument_index]
+            i = self._instruments[instrument_index]
             igate = 'dac%d' % gatemap[1]
             self._direct_gate_map[gate] = getattr(i, igate)
 
@@ -96,7 +96,7 @@ class VirtualDAC(Instrument):
     @property
     def instruments(self):
         """ A list of QCoDeS instruments."""
-        return self._instrument_list
+        return self._instruments
 
     @instruments.setter
     def instruments(self, value: List[Instrument]):
@@ -107,7 +107,7 @@ class VirtualDAC(Instrument):
             value: The list of instruments to update
         """
 
-        self._instrument_list = value
+        self._instruments = value
         self._update_instruments_names()
 
     @gate_map.setter  # type: ignore
@@ -119,7 +119,7 @@ class VirtualDAC(Instrument):
     def _instrument_index(self, instrument):
         """ From an instrument name or index return the index """
         if isinstance(instrument, str):
-            instrument_index = self._instrument_names.index(instrument)
+            instrument_index = self._instruments_names.index(instrument)
         else:
             instrument_index = instrument
         return instrument_index
@@ -152,9 +152,9 @@ class VirtualDAC(Instrument):
         instrument_index = self._instrument_index(gatemap[0])
         gate = 'dac%d' % gatemap[1]
         if fast_readout:
-            return self._instrument_list[instrument_index].get_latest(gate)
+            return self._instruments[instrument_index].get_latest(gate)
         else:
-            return self._instrument_list[instrument_index].get(gate)
+            return self._instruments[instrument_index].get(gate)
 
     def _set(self, value, gate):
         value = float(value)
@@ -166,7 +166,7 @@ class VirtualDAC(Instrument):
 
         gatemap = self._gate_map[gate]
         instrument_index = self._instrument_index(gatemap[0])
-        i = self._instrument_list[instrument_index]
+        i = self._instruments[instrument_index]
         gate = 'dac%d' % gatemap[1]
         i.set(gate, value)
 
@@ -198,17 +198,20 @@ class VirtualDAC(Instrument):
 
         """
 
-        self._instrument_list.extend(instruments)
+        for instrument in instruments:
+            if instrument not in self._instruments:
+                self._instruments.append(instrument)
+
         self._update_instruments_names()
 
     def _update_instruments_names(self):
-        self._instrument_names = [instrument.name for instrument in self._instrument_list]
+        self._instruments_names = [instrument.name for instrument in self._instruments]
 
     def get_instrument_parameter(self, g):
         """ Returns the dac parameter mapped to this gate. """
         gatemap = self._gate_map[g]
         instrument_index = self._instrument_index(gatemap[0])
-        return getattr(self._instrument_list[instrument_index], 'dac%d' % gatemap[1])
+        return getattr(self._instruments[instrument_index], 'dac%d' % gatemap[1])
 
     def set_boundaries(self, gate_boundaries):
         """ Set boundaries on the values that can be set on the gates.
@@ -225,7 +228,7 @@ class VirtualDAC(Instrument):
             if gx is None:
                 # gate is not connected
                 continue
-            instrument = self._instrument_list[self._instrument_index(gx[0])]
+            instrument = self._instruments[self._instrument_index(gx[0])]
             param = self.get_instrument_parameter(g)
             param.vals = Numbers(bnds[0], max_value=bnds[1])
             if hasattr(instrument, 'adjust_parameter_validator'):
@@ -345,7 +348,7 @@ class VirtualDAC(Instrument):
         gates = self
         dot = graphviz.Digraph(name=self.name)
 
-        inames = [instrument.name for instrument in gates._instrument_list]
+        inames = [instrument.name for instrument in gates._instruments]
 
         cgates = graphviz.Digraph('cluster_gates')
         cgates.body.append('color=lightgrey')

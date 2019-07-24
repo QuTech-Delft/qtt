@@ -144,7 +144,10 @@ class VirtualAwg(Instrument):
             instruments: The list of instruments to add
         """
 
-        self._instruments.extend(instruments)
+        for instrument in instruments:
+            if instrument not in self._instruments:
+                self._instruments.append(instrument)
+
         self.__set_hardware(self._instruments)
 
     def run(self):
