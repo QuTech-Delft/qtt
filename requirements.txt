@@ -3,8 +3,8 @@ attrs>=18.2.0
 coverage
 dulwich
 hickle>=3.1
-numpy>=1.13
-matplotlib>=2.1
+numpy>=1.15
+matplotlib>=3.0
 pandas
 Polygon3
 pyqtgraph
@@ -19,4 +19,3 @@ scipy>=0.18
 tables
 git+https://github.com/QuTech-Delft/qilib.git#egg=qilib
 git+https://github.com/Qcodes/Qcodes#egg=qcodes
-

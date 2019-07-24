@@ -1,8 +1,9 @@
-from setuptools import setup, find_packages
-from distutils.version import StrictVersion
-from importlib import import_module
 import platform
 import re
+from importlib import import_module
+
+from setuptools import find_packages, setup
+from setuptools._vendor.packaging.version import Version
 
 
 def readme():
@@ -24,9 +25,9 @@ def get_version(verbose=1, filename='src/qtt/version.py'):
 
 extras = {
     # name: (module_name, minversion, pip_name)
-    'MatPlot': ('matplotlib', '1.5', None),
-    'SciPi': ('scipy', '0.19', None),
-    'qcodes': ('qcodes', '0.1.5', None),
+    'MatPlot': ('matplotlib', '3.0', None),
+    'SciPi': ('scipy', '1.1', None),
+    'qcodes': ('qcodes', '0.4', None),
     'scikit-image': ('skimage', '0.11', 'scikit-image'),
     'pandas': ('pandas', '0.15', None),
     'attrs': ('attr', '16.2.0', 'attrs'),
@@ -61,7 +62,6 @@ setup(name='qtt',
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Topic :: Scientific/Engineering'
@@ -71,7 +71,8 @@ setup(name='qtt',
       packages=find_packages(where='./src'),
       install_requires=[
           'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
-          'numpy>=1.11', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.1.5', 'Polygon3', 'scipy', 'pyqtgraph', 'qupulse'
+          'numpy>=1.15', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.4', 'Polygon3',
+          'scipy', 'pyqtgraph', 'qupulse'
       ],
       extras_require=extras_require,
       zip_safe=False,
@@ -95,7 +96,7 @@ missing_template = '''
 for extra, (module_name, min_version, pip_name) in extras.items():
     try:
         module = import_module(module_name)
-        if StrictVersion(module.__version__) < StrictVersion(min_version):
+        if Version(module.__version__) < Version(min_version):
             print(version_template.format(module_name, min_version, extra))
     except AttributeError:
         # probably a package not providing the __version__ attribute
