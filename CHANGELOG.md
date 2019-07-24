@@ -35,7 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed the readthedocs build (#590).
 - Fixed issue with HDAWG8 sampling rate (#589).
-- Fixed travis warnings and tests instrument_drivers (#569).
+- Fixed Travis warnings and tests instrument_drivers (#569).
+- Fixed Travis build related to Qcodes version numbering (#604, #606).
 
 ### Security
 ...
