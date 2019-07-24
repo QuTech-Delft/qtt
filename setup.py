@@ -1,8 +1,9 @@
-from setuptools import setup, find_packages
-from distutils.version import StrictVersion
-from importlib import import_module
 import platform
 import re
+from importlib import import_module
+
+from setuptools import find_packages, setup
+from setuptools._vendor.packaging.version import Version
 
 
 def readme():
@@ -95,7 +96,7 @@ missing_template = '''
 for extra, (module_name, min_version, pip_name) in extras.items():
     try:
         module = import_module(module_name)
-        if StrictVersion(module.__version__) < StrictVersion(min_version):
+        if Version(module.__version__) < Version(min_version):
             print(version_template.format(module_name, min_version, extra))
     except AttributeError:
         # probably a package not providing the __version__ attribute
