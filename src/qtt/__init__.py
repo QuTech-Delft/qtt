@@ -182,10 +182,10 @@ for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str  # type: ignore
 
 # make a qcodes instrument pickable
-qcodes.Instrument.__getstate__ = lambda self: str(self)
-qcodes.Parameter.__getstate__ = lambda self: str(self)
-qcodes.Instrument.__setstate__ = _setstate
-qcodes.Parameter.__setstate__ = _setstate
+qcodes.Instrument.__getstate__ = lambda self: str(self)  # type: ignore
+qcodes.Parameter.__getstate__ = lambda self: str(self)  # type: ignore
+qcodes.Instrument.__setstate__ = _setstate  # type: ignore
+qcodes.Parameter.__setstate__ = _setstate  # type: ignore
 
 
 # %% Enhance the qcodes functionality
@@ -203,7 +203,7 @@ try:
         super(QtPlot, self).keyPressEvent(e)
 
     # update the keypress callback function
-    QtPlot.keyPressEvent = _qtt_keyPressEvent
+    QtPlot.keyPressEvent = _qtt_keyPressEvent  # type: ignore
 except BaseException:
     pass
 
@@ -218,6 +218,6 @@ try:
         clipboard = app.clipboard()
         clipboard.setPixmap(self.win.grab())
 
-    QtPlot.copyToClipboard = _copyToClipboard
+    QtPlot.copyToClipboard = _copyToClipboard  # type: ignore
 except BaseException:
     pass
