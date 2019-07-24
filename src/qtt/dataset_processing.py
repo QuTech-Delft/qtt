@@ -156,9 +156,7 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
 
         slice_objects[1] = slice(start_idx, end_idx)
 
-    slice_objects = tuple(slice_objects)
-
-    return _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata=copy_metadata, verbose=0)
+    return _slice_dataset(dataset, tuple(slice_objects), output_parameter_name, copy_metadata=copy_metadata, verbose=0)
 
 
 def _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata, verbose=0):
