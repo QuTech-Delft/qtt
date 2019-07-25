@@ -11,6 +11,7 @@ import numpy as np
 import warnings
 import logging
 import copy
+import numbers
 
 from scipy import ndimage
 import pyqtgraph
@@ -353,7 +354,8 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
     def set_scan_parameters(self, scan_parameters):
         self.scan_parameters = scan_parameters
         self.sweepranges = scan_parameters['sweepranges']
-        if isinstance(self.sweepranges, float):
+
+        if isinstance(self.sweepranges, numbers.Number):
             self.sweepranges = [self.sweepranges]
         self.sweepparams = scan_parameters['sweepparams']
         self.resolution = scan_parameters['resolution']
@@ -485,7 +487,7 @@ class VideoMode:
         self.station = station
         self.verbose = verbose
         self.sweepparams = sweepparams
-        if isinstance(sweepranges, float):
+        if isinstance(sweepranges, numbers.Number):
             sweepranges = [sweepranges]
         self.sweepranges = sweepranges
 

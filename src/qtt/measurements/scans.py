@@ -1467,7 +1467,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         memsize (int): total memory size selected
         pre_trigger (int): size of pretrigger selected
         signal_start (int): starting position of signal in pixels
-        signal_start (int): end position of signal in pixels
+        signal_end (int): end position of signal in pixels
 
     """
     sample_rate = digitizer.sample_rate()
@@ -1475,10 +1475,10 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         raise Exception('digitizer samplerate is zero, please reset digitizer')
     number_points_period = int(period * sample_rate)
 
-    if trigger_delay is None:
+    if trigger_delay is None or trigger_delay == 0:
         trigger_delay = 0
     else:
-        warnings.warn('untested')
+        warnings.warn('non-zero trigger_delay is untested')
     trigger_delay_points = 16 * trigger_delay
 
     basic_pretrigger_size = 16
