@@ -5,18 +5,16 @@ Created on Wed Feb  8 13:36:01 2017
 @author: diepencjv
 """
 
+import logging
+import time
 # %%
 import warnings
-import time
-import logging
 from functools import partial
-from typing import List
 
 import numpy as np
-
 from qcodes import Instrument
-from qcodes.utils.validators import Numbers
 from qcodes.data.data_set import load_data
+from qcodes.utils.validators import Numbers
 
 try:
     import graphviz
