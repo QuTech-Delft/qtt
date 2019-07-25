@@ -99,7 +99,7 @@ class VirtualDAC(Instrument):
         return self._instruments
 
     @instruments.setter
-    def instruments(self, value: List[Instrument]):
+    def instruments(self, value):
         """
         Updates the devices instruments
 
@@ -190,7 +190,7 @@ class VirtualDAC(Instrument):
             self.functions.pop(f'get_{gate}')
             self.functions.pop(f'set_{gate}')
 
-    def add_instruments(self, instruments: List[Instrument]):
+    def add_instruments(self, instruments):
         """ Add instruments to the virtual dac.
 
         Args:
