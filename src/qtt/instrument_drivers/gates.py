@@ -57,9 +57,9 @@ class VirtualDAC(Instrument):
 
         """
         super().__init__(name, **kwargs)
-        self._instruments = []
+        self._instruments = instruments
         self._instruments_names = []
-        self.add_instruments(instruments)
+        self._update_instruments_names()
         self._gate_map = gate_map
         self._direct_gate_map = {}  # fast access to parameters
         self._fast_readout = True
