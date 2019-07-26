@@ -116,8 +116,8 @@ class VideoModeProcessor(ABC):
         return alldata
 
     def acquisition_device_type(self):
-        """ Return type of acquisition device 
-        
+        """ Return type of acquisition device
+
         Returns:
             Device type as a string. Can be
         """
