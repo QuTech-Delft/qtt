@@ -120,18 +120,19 @@ class VideoModeProcessor(ABC):
         
         Returns:
             Device type as a string. Can be
-        """ 
-        measurement_instrument_handle=self.minstrumenthandle
-        
+        """
+        measurement_instrument_handle = self.minstrumenthandle
+
         if isinstance(measurement_instrument_handle, AcquisitionScopeInterface):
-           return 'AcquisitionScopeInterface'
+            return 'AcquisitionScopeInterface'
         elif measurement_instrument_handle.name in ['digitizer', 'm4i']:
             return 'm4i'
         elif measurement_instrument_handle.name in ['ZIUHFLI', 'ziuhfli']:
             return 'ziuhfli'
         else:
             return 'other'
-            
+
+
 class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
     def __init__(self, station, verbose=1):
@@ -268,22 +269,22 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
     def measure(self, videomode):
 
-        if self.acquisition_device_type()=='m4i':
-            if self.scan_dimension()==1:
-                if self.sampling_frequency()*self.period_1d()>56:
+        if self.acquisition_device_type() == 'm4i':
+            if self.scan_dimension() == 1:
+                if self.sampling_frequency() * self.period_1d() > 56:
                     trigger_re_arm_compensation = True
                 else:
-                    trigger_re_arm_compensation=False
+                    trigger_re_arm_compensation = False
             else:
-                    trigger_re_arm_compensation=True
-                
-            trigger_re_arm_compensation=getattr(self,'trigger_re_arm_compensation', trigger_re_arm_compensation)
-            device_parameters={'trigger_re_arm_compensation':trigger_re_arm_compensation}
+                trigger_re_arm_compensation = True
+
+            trigger_re_arm_compensation = getattr(self, 'trigger_re_arm_compensation', trigger_re_arm_compensation)
+            device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation}
         else:
             device_parameters = {}
         data = qtt.measurements.scans.measuresegment(
             self.waveform, videomode.Naverage(), self.minstrumenthandle, self.unique_channels,
-            **self.measuresegment_arguments, device_parameters = device_parameters)
+            **self.measuresegment_arguments, device_parameters=device_parameters)
         if np.all(data == 0):
             raise Exception('data returned contained only zeros, aborting')
 
@@ -303,20 +304,20 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
         measurement_instrument_handle = qtt.measurements.scans.get_instrument(measurement_instrument_handle,
                                                                               self.station)
         self.minstrumenthandle = measurement_instrument_handle
-        
+
         device_type = self.acquisition_device_type()
-        
-        if device_type=='AcquisitionScopeInterface':
+
+        if device_type == 'AcquisitionScopeInterface':
             if sample_rate != 'default':
                 measurement_instrument_handle.sample_rate = sample_rate
             self.sampling_frequency = lambda: measurement_instrument_handle.sample_rate
-        elif device_type=='m4i':
+        elif device_type == 'm4i':
             if sample_rate == 'default':
                 self.sampling_frequency = measurement_instrument_handle.sample_rate
             else:
                 measurement_instrument_handle.sample_rate(sample_rate)
                 self.sampling_frequency = station.digitizer.sample_rate
-        elif device_type=='ziuhfli':
+        elif device_type == 'ziuhfli':
             self.sampling_frequency = measurement_instrument_handle.scope_samplingrate
         else:
             try:
@@ -843,7 +844,6 @@ class VideoMode:
         lst = qtt.pgeometry.list_objects(VideoMode)
         for v in lst:
             v.stopreadout()
-
 
 
 # %% Testing
