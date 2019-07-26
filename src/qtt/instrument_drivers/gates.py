@@ -107,6 +107,7 @@ class VirtualDAC(Instrument):
 
         self._instruments = value
         self._update_instruments_names()
+        self.gate_map = {}  # invalidate gate_map
 
     @gate_map.setter  # type: ignore
     def gate_map(self, gate_map):
@@ -201,6 +202,7 @@ class VirtualDAC(Instrument):
                 self._instruments.append(instrument)
 
         self._update_instruments_names()
+        self.gate_map = {}  # invalidate gate_map
 
     def _update_instruments_names(self):
         self._instruments_names = [instrument.name for instrument in self._instruments]
