@@ -407,6 +407,7 @@ def add_sawtooth_videomode_processor(self, sweepparams, sweepranges, resolution,
 class DummyVideoModeProcessor(VideoModeProcessor):
 
     def __init__(self, station, verbose=1):
+        """ Dummy implementation of the VideoModeProcessor """
         self.station = station
 
     def ppt_notes(self):
