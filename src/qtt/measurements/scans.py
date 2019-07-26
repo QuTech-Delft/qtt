@@ -1431,8 +1431,12 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
 
     return processed_data, (trace_start, trace_end)
 
+def ceilN(x, n):
+    return int(n*np.ceil(x/n))
+def floorN(x, n):
+    return int(n*np.floor(x//n))
 
-def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
+def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1, trigger_re_arm_compensation = False):
     """ Select suitable memory size for a given period
 
     The selected memory size is the period times the sample rate, but rounded above to a multiple of 16.
@@ -1443,6 +1447,9 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         period (float): period of signal to measure
         trigger_delay (float): delay in seconds between ingoing signal and returning signal
         nsegments (int): number of segments of period length to fit in memory
+        trigger_arm_compensation (bool): In block average mode the M4i needs a time of 40 samples + pretrigger to 
+            re-arm the triggering. With this option the segment size is reduced. The signal_end can be larger then
+            the segment size.
     Returns:
         memsize (int): total memory size selected
         pre_trigger (int): size of pretrigger selected
@@ -1468,8 +1475,15 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
     if memsize > digitizer.memory():
         raise Exception('Trying to acquire too many points. Reduce sampling rate, period or number segments')
 
-    pre_trigger = int(np.ceil((trigger_delay * sample_rate) // 16) * 16) + basic_pretrigger_size
-    post_trigger = int(np.ceil((base_segment_size - pre_trigger) // 16) * 16)
+    pre_trigger = ceilN(trigger_delay * sample_rate, 16) + basic_pretrigger_size
+    post_trigger = ceilN(base_segment_size - pre_trigger, 16)
+
+    if trigger_re_arm_compensation:
+        max_segment_size_re_arm = floorN(number_points_period - pre_trigger - 40, 16)
+        if verbose:
+            print(f'select_m4i_memsize: post_trigger {post_trigger}, max_segment_size_rearm {max_segment_size_re_arm}')
+        post_trigger = min(post_trigger, max_segment_size_re_arm)
+        memsize = pre_trigger + post_trigger
 
     signal_start = basic_pretrigger_size + int(trigger_delay_points)
     signal_end = signal_start + number_points_period
@@ -1487,8 +1501,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
     return memsize, pre_trigger, signal_start, signal_end
 
-
-def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0):
+def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0, trigger_re_arm_compensation = False):
     """ Record a trace from the digitizer
 
     Args:
@@ -1498,6 +1511,8 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         mV_range (float): range for input
         Naverage (int): number of averages to perform
         verbose (int): verbosity level
+        trigger_arm_compensation (bool): In block average mode the M4i needs a time of 40 samples + pretrigger to 
+            re-arm the triggering. With this option this is compensated for by measuring less samples and padding with zeros.
 
     """
     sample_rate = digitizer.sample_rate()
@@ -1513,7 +1528,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     signal_delay = getattr(digitizer, 'signal_delay', None)
 
     memsize, _, signal_start, signal_end = select_m4i_memsize(
-        digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
+        digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose, trigger_re_arm_compensation = trigger_re_arm_compensation)
     post_trigger = digitizer.posttrigger_memory_size()
 
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
@@ -1524,9 +1539,12 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         dataraw = dataraw[0]
     data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
     data = data[:, signal_start:signal_end]
-
+    if trigger_re_arm_compensation:
+        re_arm_padding = (signal_end-signal_start)-data.shape[1]
+        data = np.hstack( (data, np.zeros( (data.shape[0], re_arm_padding))) )
+        if verbose:
+            print(f'measure_raw_segment_m4i: re-arm padding: {re_arm_padding}')        
     return data
-
 
 @qtt.utilities.tools.deprecated
 def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
@@ -1569,7 +1587,7 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
 
 @qtt.pgeometry.static_var('debug_enabled', False)
 @qtt.pgeometry.static_var('debug_data', {})
-def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None):
+def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None, trigger_re_arm_compensation = False):
     """ Measure block data with M4i
 
     Args:
@@ -1586,7 +1604,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
     period = waveform['period']
     raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range,
-                                       Naverage=Naverage, verbose=verbose)
+                                       Naverage=Naverage, verbose=verbose, trigger_re_arm_compensation=trigger_re_arm_compensation)
     if measuresegment_m4i.debug_enabled:
         measuresegment_m4i.debug_data['raw_data'] = raw_data
         measuresegment_m4i.debug_data['waveform'] = waveform
@@ -1606,15 +1624,15 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
     if len(width) == 2:
         data, _ = process_2d_sawtooth(raw_data.T, period, samplerate,
-                                      resolution, width, start_zero=start_zero, fig=None)
-
-        if measuresegment_m4i.debug_enabled:
-            measuresegment_m4i.debug_data['data'] = data
+                                      resolution, width, start_zero=start_zero, fig=fig)
     else:
 
         data, _ = process_1d_sawtooth(raw_data.T, width, period, samplerate,
                                       resolution=resolution, start_zero=start_zero,
                                       verbose=verbose, fig=fig)
+    if measuresegment_m4i.debug_enabled:
+        measuresegment_m4i.debug_data['data'] = data
+        
     if verbose:
         print('measuresegment_m4i: processed_data: width %s, data shape %s' % (width, data.shape,))
 
@@ -1653,7 +1671,7 @@ def get_uhfli_scope_records(device, daq, scopeModule, number_of_records=1, timeo
     return data[wave_nodepath][:number_of_records]
 
 
-def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
+def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100, **kwargs):
     """ Measure block data with Zurich Instruments UHFLI
 
     Args:
@@ -1687,7 +1705,7 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
     return [avarage]
 
 
-def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, process=True):
+def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, process=True, **kwargs):
     """ Measure block data with scope reader.
 
     Args:
@@ -1725,7 +1743,7 @@ def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, pro
     return data
 
 
-def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
+def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True, device_parameters = None):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
     Supported instruments: m4i digitizer, ZI UHF-LI
 
@@ -1736,10 +1754,14 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
         read_ch (list): channels to read from the instrument
         mV_range (float): range for input
         verbose (int): verbosity level
+        device_parameters (dict): dictionary passed as keyword parameters to the measurement methods
     Returns:
         data (numpy array): recorded and processed data
 
     """
+    if device_parameters is None:
+        device_parameters = {}
+        
     try:
         is_m4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
     except:
@@ -1757,11 +1779,11 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     is_simulation = isinstance(minstrhandle, SimulationDigitizer)
 
     if is_m4i:
-        data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
+        data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process, **device_parameters)
     elif is_uhfli:
-        data = measure_segment_uhfli(minstrhandle, waveform, read_ch, Naverage)
+        data = measure_segment_uhfli(minstrhandle, waveform, read_ch, Naverage, **device_parameters)
     elif is_scope_reader:
-        data = measure_segment_scope_reader(minstrhandle, waveform, Naverage, process=process)
+        data = g(minstrhandle, waveform, Naverage, process=process, **device_parameters)
     elif minstrhandle == 'dummy':
         # for testing purposes
         data = np.random.rand(100, )
