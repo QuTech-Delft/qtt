@@ -34,7 +34,7 @@ class TestDataProcessing(unittest.TestCase):
         output_name = None
         processed_dataset = process_dataarray(dataset, input_name, output_name, lambda x: x + 5)
         self.assertEqual(set(processed_dataset.arrays.keys()), {'x_set', 'y'})
-        np.testing.assert_array_equal(np.array(getattr(dataset, input_name)) + 5, np.array([8., 9., 10., 11., 12.]))
+        np.testing.assert_array_equal(np.array(getattr(dataset, input_name)), np.array([8., 9., 10., 11., 12.]))
 
     def test_average_dataset(self):
         dataset2d = qcodes.tests.data_mocks.DataSet2D()
