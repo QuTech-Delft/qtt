@@ -1783,7 +1783,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     elif is_uhfli:
         data = measure_segment_uhfli(minstrhandle, waveform, read_ch, Naverage, **device_parameters)
     elif is_scope_reader:
-        data = g(minstrhandle, waveform, Naverage, process=process, **device_parameters)
+        data = measure_segment_scope_reader(minstrhandle, waveform, Naverage, process=process, **device_parameters)
     elif minstrhandle == 'dummy':
         # for testing purposes
         data = np.random.rand(100, )
