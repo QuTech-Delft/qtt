@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a lock-in amplifier interface for the Zurich instruments UHFLI (#560).
 - A JSON encoding for qcodes.DataSet is added to the serialized (#558).
 - Added scope reader for the Zurich Instruments UHFLI. (#554, #980).
+- Add option to compensate for re-arm time of M4i trigger.
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
