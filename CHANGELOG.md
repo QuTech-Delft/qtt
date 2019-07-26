@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added boxcar filter to algorithms (#597).
 - Added a changelog to QTT (#591).
 - Added load example dataset method (#586).
 - Added chirp signal to QuPulse templates (#582).

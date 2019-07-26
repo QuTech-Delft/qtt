@@ -9,6 +9,7 @@ try:
     import cv2
 except:
     import qtt.exceptions
+
     warnings.warn('could not find opencv, not all functionality available',
                   qtt.exceptions.MissingOptionalPackageWarning)
 
@@ -45,7 +46,7 @@ def disk(radius):
     radius = int(radius)
     nn = 2 * radius + 1
     x, y = np.meshgrid(range(nn), range(nn))
-    d = ((x - radius)**2 + (y - radius)**2 < 0.01 + radius**2).astype(int)
+    d = ((x - radius) ** 2 + (y - radius) ** 2 < 0.01 + radius ** 2).astype(int)
     return d
 
 
@@ -98,7 +99,7 @@ def subpixelmax(A, mpos, verbose=0):
         print('subpixelmax: mp %d, pp %d\n', mp, pp)
         print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n', ay, by, cy)
 
-    shift[ay == 0] = 0   # fix for flat areas
+    shift[ay == 0] = 0  # fix for flat areas
     subpos = mpos + shift
 
     subval = ay * shift * shift + by * shift + cy
@@ -135,7 +136,7 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
 
     dx = im.shape[1]
     dy = im.shape[0]
-    mvx0 = dxmv / float(dx - 1)     # current unit/pixel
+    mvx0 = dxmv / float(dx - 1)  # current unit/pixel
     mvy0 = dymv / float(dy - 1)
 
     if mvy is None:
@@ -250,6 +251,8 @@ def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
         cv2.imshow('input', im8)
         cv2.imshow('flow', vis)
     return flow, ll
+
+
 # %%
 
 
@@ -308,6 +311,7 @@ def showFlowField(im, flow, ll=None, ff=None, d=12, fig=-1):
         cv2.imshow('flow', vis)
     return flow, ll
 
+
 # %%
 
 
@@ -340,7 +344,7 @@ def showCoulombDirection(ptx, ww, im=None, dd=None, fig=100):
     if fig is not None:
         plt.figure(fig)
         hh = pylab.arrow(pp[0, 0], pp[0, 1], ww[0], ww[
-                         1], linewidth=4, fc="k", ec="k", head_width=sigma / 2, head_length=sigma / 2)
+            1], linewidth=4, fc="k", ec="k", head_width=sigma / 2, head_length=sigma / 2)
         hh.set_alpha(0.8)
 
         plt.axis('image')
@@ -364,7 +368,7 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
     # improve estimate by taking a local average
     valr = pgeometry.rot2D(np.pi / 2).dot(val.reshape((2, 1)))
     sidesteps = np.arange(-6, 6.01, 3).reshape((-1, 1)) * \
-        np.matrix(valr.reshape((1, 2)))
+                np.matrix(valr.reshape((1, 2)))
     pts = ptx + .5 * np.array(sidesteps)
     ptsf = ptxf + resizefactor * sidesteps
     valx = np.array([getValuePixel(flow, p) for p in ptsf])
@@ -486,7 +490,7 @@ def smoothImage(im, k=3):
         ims = smoothImage(np.random.rand( 30,40))
     """
     ndim = len(im.shape)
-    kernel = np.ones((k,) * ndim) / k**ndim
+    kernel = np.ones((k,) * ndim) / k ** ndim
     ims = scipy.ndimage.filters.convolve(im, kernel, mode='nearest')
     return ims
 
@@ -581,10 +585,39 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
         plt.plot(xyw[0], xyw[1], '.g', markersize=17)
     return xyw
 
-# %%
+
+def boxcar_filter(signal, kernel_size):
+    """ Perform boxcar filtering on an array.
+    At the edges, the edge value is replicated beyond the edge as needed by the size of the kernel.
+    This is the 'nearest' mode of scipy.ndimage.convolve. For details, see
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.convolve.html?highlight=mode
 
 
-if __name__ == '__main__':
-    pass
-    # show2Dimage(im, alldata)
+    Args:
+        signal (array): An array containing the signal to be filtered.
+        kernel_size (tuple): Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
 
+    Returns:
+        a numpy array containing the filtered signal.
+    """
+
+    if not isinstance(signal, np.ndarray):
+        signal = np.array(signal)
+    if not isinstance(kernel_size, np.ndarray):
+        kernel_size = np.array(kernel_size, dtype=np.int_)
+
+    if len(kernel_size) != len(signal.shape):
+        raise RuntimeError('Number of dimensions of kernel (%d) not equal to number of dimension of input signal (%d)' %
+                           (len(kernel_size), len(signal.shape)))
+    if np.any(kernel_size <= 0):
+        raise RuntimeError('Kernel sizes must be > 0')
+
+    if signal.dtype.kind in ('i', 'u'):
+        filtered_signal = signal.astype(np.float64)
+    else:
+        filtered_signal = signal
+
+    boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
+    filtered_signal = scipy.ndimage.filters.convolve(filtered_signal, boxcar_kernel, mode='nearest')
+
+    return filtered_signal
