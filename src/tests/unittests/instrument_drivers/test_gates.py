@@ -88,3 +88,5 @@ class TestVirtualDAC(TestCase):
         self.assertEqual(instruments, virtual_dac.instruments)
 
         virtual_dac.close()
+        ivvi1.close()
+        ivvi2.close()
