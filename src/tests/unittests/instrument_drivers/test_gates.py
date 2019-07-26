@@ -72,3 +72,21 @@ class TestVirtualDAC(TestCase):
         self.assertIs(self.ivvi, virtual_dac.instruments[0])
 
         virtual_dac.close()
+
+    def test_add_instruments(self):
+        ivvi1 = VirtualIVVI(instrumentName('ivvi'), model=None)
+        ivvi2 = VirtualIVVI(instrumentName('ivv2'), model=None)
+        instruments = [ivvi1, ivvi2]
+        virtual_dac = VirtualDAC(instrumentName('gates'), instruments=[], gate_map={})
+
+        virtual_dac.add_instruments(instruments)
+        self.assertEqual(2, len(virtual_dac.instruments))
+        self.assertEqual(instruments, virtual_dac.instruments)
+
+        virtual_dac.add_instruments(instruments)
+        self.assertEqual(2, len(virtual_dac.instruments))
+        self.assertEqual(instruments, virtual_dac.instruments)
+
+        virtual_dac.close()
+        ivvi1.close()
+        ivvi2.close()
