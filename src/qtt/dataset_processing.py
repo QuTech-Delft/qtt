@@ -1,4 +1,4 @@
-from typing import Sequence, Callable, Optional, Union
+from typing import Sequence, Callable, Optional, Union, Tuple, List
 import numpy as np
 import copy
 
@@ -36,7 +36,7 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
     return dataset
 
 
-def dataset_dimension(dataset) -> int:
+def dataset_dimension(dataset : DataSet) -> int:
     """ Return dimension of DataSet """
     return len(dataset.default_parameter_array().set_arrays)
 
@@ -159,7 +159,7 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
     return _slice_dataset(dataset, tuple(slice_objects), output_parameter_name, copy_metadata=copy_metadata, verbose=0)
 
 
-def _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata, verbose=0):
+def _slice_dataset(dataset : DataSet, slice_objects: List[slice], output_parameter_name: Optional[str], copy_metadata: bool, verbose : int =0):
     zarray = dataset.default_parameter_array()
     if output_parameter_name is None:
         output_parameter_name = zarray.name
@@ -188,14 +188,12 @@ def _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata,
     return dataset_window
 
 
-def resample_dataset(dataset: DataSet, sample_rate, verbose: int = 0, copy_metadata: bool = False, output_parameter_name=None) -> DataSet:
-    """ Given a dataset and a window for the horizontal axis return the dataset with selected window
+def resample_dataset(dataset: DataSet, sample_rate: Tuple[int], copy_metadata: bool = False, output_parameter_name : Optional[str] = None) -> DataSet:
+    """ Given a dataset resample the measurement array 
 
     Args:
         dataset: Dataset to be slice
-        window: Specification of the window to be selected
-        axis: Axis used for slicing
-        verbose: Verbosity level
+        sample_rate: Tuple with for each axis the sample rate. Must be a postive integer
         copy_metadata: If True then copy the metadata of the input dataset
         output_parameter_name: Name of the output array
     Returns:
