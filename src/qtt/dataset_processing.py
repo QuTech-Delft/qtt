@@ -159,7 +159,7 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
     return _slice_dataset(dataset, tuple(slice_objects), output_parameter_name, copy_metadata=copy_metadata, verbose=0)
 
 
-def _slice_dataset(dataset : DataSet, slice_objects: List[slice], output_parameter_name: Optional[str], copy_metadata: bool, verbose : int =0):
+def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_parameter_name: Optional[str], copy_metadata: bool, verbose : int =0):
     zarray = dataset.default_parameter_array()
     if output_parameter_name is None:
         output_parameter_name = zarray.name
