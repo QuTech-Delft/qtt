@@ -189,7 +189,7 @@ def _slice_dataset(dataset : DataSet, slice_objects: List[slice], output_paramet
 
 
 def resample_dataset(dataset: DataSet, sample_rate: Tuple[int], copy_metadata: bool = False, output_parameter_name : Optional[str] = None) -> DataSet:
-    """ Given a dataset resample the measurement array 
+    """ Given a dataset resample the measurement array
 
     Args:
         dataset: Dataset to be slice

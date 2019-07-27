@@ -2,7 +2,8 @@ import unittest
 import qcodes.tests.data_mocks
 import numpy as np
 
-from qtt.dataset_processing import slice_dataset, process_dataarray, average_dataset, dataset_dimension, average_multirow_dataset, resample_dataset
+from qtt.dataset_processing import slice_dataset, process_dataarray, average_dataset, dataset_dimension, \
+    average_multirow_dataset, resample_dataset
 
 
 class TestDataProcessing(unittest.TestCase):
@@ -40,10 +41,10 @@ class TestDataProcessing(unittest.TestCase):
         dataset2d = qcodes.tests.data_mocks.DataSet2D()
 
         d = average_dataset(dataset2d, axis=0)
-        self.assertEqual(d.z.shape, (4, ))
+        self.assertEqual(d.z.shape, (4,))
 
         d = average_dataset(dataset2d, axis=1)
-        self.assertEqual(d.z.shape, (6, ))
+        self.assertEqual(d.z.shape, (6,))
 
     def test_dataset_dimension(self):
         dataset1d = qcodes.tests.data_mocks.DataSet1D()
@@ -80,10 +81,10 @@ class TestDataProcessing(unittest.TestCase):
         with self.assertRaises(ValueError):
             d = resample_dataset(dataset1d, (0, 1))
         d = resample_dataset(dataset1d, (4,))
-        self.assertEqual(d.y.shape, (2, ))
+        self.assertEqual(d.y.shape, (2,))
 
         d = resample_dataset(dataset2d, (2, 1))
         np.testing.assert_array_equal(d.z, np.array([[0, 1, 4, 9], [4, 5, 8, 13], [16, 17, 20, 25]]))
 
         d = average_dataset(dataset2d, axis=1)
-        self.assertEqual(d.z.shape, (6, ))
+        self.assertEqual(d.z.shape, (6,))
