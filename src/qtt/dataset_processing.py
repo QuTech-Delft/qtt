@@ -1,4 +1,4 @@
-from typing import Sequence, Callable, Optional, Union, Tuple, List
+from typing import Sequence, Callable, Optional, Union, Tuple
 import numpy as np
 import copy
 
