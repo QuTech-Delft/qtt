@@ -271,7 +271,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
         if self.acquisition_device_type() == 'm4i':
             if self.scan_dimension() == 1:
-                if self.sampling_frequency() * self.period_1d() > 56:
+                if (self.sampling_frequency() * self.period_1d())*(1-self.waveform['width'])/2 > 56:
                     trigger_re_arm_compensation = True
                 else:
                     trigger_re_arm_compensation = False
