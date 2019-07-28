@@ -57,4 +57,3 @@ class TestVideomode(TestCase):
             std_output = mock_stdout.getvalue()
             print(std_output)
             self.assertIn('VideoMode: start readout', std_output)
-

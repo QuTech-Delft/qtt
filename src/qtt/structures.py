@@ -107,7 +107,7 @@ def _scanlabel(ds):
 class sensingdot_t:
 
     def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, virt_gates=None):
-        """ Class representing a sensing dot 
+        """ Class representing a sensing dot
 
         We assume the sensing dot can be controlled by two barrier gates and a single plunger gate.
         An instrument to measure the current through the dot is provided by the minstrument argument.
@@ -143,6 +143,8 @@ class sensingdot_t:
         self.virt_gates = virt_gates
 
         self.data = {}
+
+        self.plunger = qcodes.Parameter('plunger', get_cmd=self.plungervalue, set_cmd=self._set_plunger)
 
         # values for measurement
         if index is not None:
@@ -199,6 +201,10 @@ class sensingdot_t:
         gates = self.station.gates
         return gates.get(self.tunegate())
 
+    def _set_plunger(self, value):
+        gates = self.station.gates
+        gates.set(self.tunegate(), value)
+
     def value(self):
         """Return current through sensing dot """
         if self.valuefunc is not None:
@@ -225,7 +231,7 @@ class sensingdot_t:
         wait_time = 0.8
         try:
             wait_time = sd.station.gate_settle(gg[1])
-        except:
+        except BaseException:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
 
@@ -497,7 +503,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         return value
 
     def set_raw(self, value):
-        """Set the parameter to value. 
+        """Set the parameter to value.
 
         Note: the set is not unique, i.e. the result of this method depends on
         the previous value of this parameter.

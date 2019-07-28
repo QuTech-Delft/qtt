@@ -317,7 +317,7 @@ def _add_dataset_metadata(dataset):
         dataset, include_data=False, include_metadata=False))
 
 
-def _initialize_live_plotting(alldata, plotparam, liveplotwindow = None, subplots=False):
+def _initialize_live_plotting(alldata, plotparam, liveplotwindow=None, subplots=False):
     """ Initialize live plotting
 
     Args:
@@ -666,7 +666,7 @@ class scanjob_t(dict):
 
     def add_sweep(self, param, start, end, step, **kwargs):
         """ Add sweep to scan job """
-        end_value =  float(end) if end is not None else end
+        end_value = float(end) if end is not None else end
         sweep = {'param': param, 'start': float(start), 'end': end_value, 'step': step, **kwargs}
         if not 'sweepdata' in self:
             self['sweepdata'] = sweep
@@ -1111,9 +1111,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         stepvalues = stepdata['param'][list(stepvalues[:, 0])]
 
     alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
-                                                            measure_names=mparams, location=location, loc_record={
-                                                                'label': scanjob['scantype']},
-                                                            return_names=True)
+                                                        measure_names=mparams, location=location, loc_record={
+                                                            'label': scanjob['scantype']},
+                                                        return_names=True)
 
     if verbose >= 2:
         print('scan2D: created dataset')
@@ -1531,6 +1531,9 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose, trigger_re_arm_compensation = trigger_re_arm_compensation)
     post_trigger = digitizer.posttrigger_memory_size()
 
+    if mV_range is None:
+        mV_range = digitizer.range_channel_0()
+
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
         mV_range=mV_range, nr_averages=Naverage, post_trigger=post_trigger)
@@ -1800,6 +1803,9 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
                      save_to_disk=True, location=None, verbose=True):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
+    Note that if the requested period is equal or longer than the period on the AWG, then not all trigger events might
+    be used by the M4i.
+
     The saving to disk can take minutes or even longer.
 
     Args:
@@ -1830,6 +1836,10 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     else:
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
+    if verbose:
+        exepected_measurement_time = nsegments*period
+        print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
+
     if average:
         data = measuresegment(waveform, nsegments,
                               minstrhandle, read_ch, mV_range, process=False)
@@ -1841,15 +1851,21 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
-                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose>=2)
+                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2)
 
             segment_size = int(memsize_total / nsegments)
             post_trigger = segment_size - pre_trigger
 
-            #minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
-            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize_total, termination=None)
+            if mV_range is None:
+                mV_range = minstrhandle.range_channel_0()
+
+            minstrhandle.initialize_channels(read_ch, mV_range=mV_range,
+                                             memsize=minstrhandle._channel_memsize, termination=None)
+
             dataraw = minstrhandle.multiple_trigger_acquisition(
                 mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
+            if np.all(dataraw == 0):
+                warnings.warn('multiple_trigger_acquisition returned zero data! did a timeout occur?')
             if isinstance(dataraw, tuple):
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1))

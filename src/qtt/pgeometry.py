@@ -1651,7 +1651,8 @@ class plotCallback:
             # automatically determine scale
             scale = [1 / (1e-8 + np.ptp(xdata)), 1 / (1e-8 + np.ptp(ydata))]
         self.scale = scale
-
+        self.connection_ids = []
+        
     def __call__(self, event):
         if self.verbose:
             print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
@@ -1694,7 +1695,8 @@ class plotCallback:
         if isinstance(fig, int):
             fig = plt.figure(fig)
         cid = fig.canvas.mpl_connect('button_press_event', self)
-
+        self.connection_ids.append(cid)
+        return cid
 
 def cfigure(*args, **kwargs):
     """ Create Matplotlib figure with copy to clipboard functionality
