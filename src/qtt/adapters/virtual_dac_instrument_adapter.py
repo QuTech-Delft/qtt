@@ -1,3 +1,5 @@
+from typing import Dict
+
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
 from qilib.configuration_helper.adapters.constants import CONFIG, BOUNDARIES, GATE_MAP, INSTRUMENTS, ADDRESS, \
@@ -13,7 +15,7 @@ class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
     def __init__(self, address: str) -> None:
         super().__init__(address)
         self._instrument = VirtualDAC(self._name, instruments=[], gate_map={})
-        self._dac_adapters = {}
+        self._dac_adapters: Dict[str, VirtualDAC] = {}
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         return parameters
