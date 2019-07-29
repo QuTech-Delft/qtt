@@ -417,7 +417,7 @@ def diffImage(im, dy, size=None):
     Args:
         im (numpy array): input image.
         dy (integer or string): method of differentiation. For an integer it is the axis of differentiation.
-            Allowed strings are 'x', 'y', 'g' (gradient), 'xy'.
+            Allowed strings are 'x', 'y', 'xy'.
         size (str): describes the size e.g. 'same'.
 
     """
