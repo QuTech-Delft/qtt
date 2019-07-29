@@ -31,9 +31,9 @@ except ModuleNotFoundError:
     warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
     NotGitRepository = Exception
 
-
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
+
 try:
     from qcodes.plots.pyqtgraph import QtPlot
 except BaseException:
@@ -45,8 +45,8 @@ from qtt.pgeometry import mpl2clipboard
 
 from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 
-#tilefigs = rdeprecated(qtt.pgeometry.tilefigs, txt='Use qtt.pgeometry.tilefigs')
-#mkdirc = rdeprecated(qtt.pgeometry.mkdirc, txt='Use qtt.pgeometry.tilefigs')
+# tilefigs = rdeprecated(qtt.pgeometry.tilefigs, txt='Use qtt.pgeometry.tilefigs')
+# mkdirc = rdeprecated(qtt.pgeometry.mkdirc, txt='Use qtt.pgeometry.tilefigs')
 
 # do NOT load any other qtt submodules here
 
@@ -189,6 +189,7 @@ def deprecated(func):
             lineno=lineno,
         )
         return func(*args, **kwargs)
+
     return new_func
 
 
@@ -251,7 +252,9 @@ def rdeprecated(txt=None, expire=None):
                     lineno=lineno,
                 )
             return func(*args, **kwargs)
+
         return new_func
+
     return deprecated_inner
 
 
@@ -295,6 +298,7 @@ def stripDataset(dataset):
                 dataset.metadata['scanjob']['minstrumenthandle'])
 
     return dataset
+
 
 # %%
 
@@ -340,12 +344,14 @@ def freezeclass(cls):
         def wrapper(self, *args, **kwargs):
             func(self, *args, **kwargs)
             self.__frozen = True
+
         return wrapper
 
     cls.__setattr__ = frozensetattr
     cls.__init__ = init_decorator(cls.__init__)
 
     return cls
+
 
 # %%
 
@@ -373,7 +379,7 @@ def resampleImage(im):
             facrem = facrem + 1
             im = im.reshape(im.shape[0] // factor, factor, im.shape[1]).mean(1)
             spy = np.linspace(setpoints[0][0], setpoints[
-                              0][-facrem], im.shape[0])
+                0][-facrem], im.shape[0])
             spx = np.tile(np.expand_dims(np.linspace(
                 setpoints[1][0, 0], setpoints[1][0, -1], im.shape[1]), 0), im.shape[0])
             setpointy = DataArray(name='Resampled_' + setpoints[0].array_id,
@@ -391,7 +397,7 @@ def resampleImage(im):
             im = im.reshape(im.shape[0], im.shape[1] //
                             factor, factor).mean(-1)
             spx = np.tile(np.expand_dims(np.linspace(setpoints[1][0, 0], setpoints[
-                          1][0, -facrem], im.shape[1]), 0), [im.shape[0], 1])
+                1][0, -facrem], im.shape[1]), 0), [im.shape[0], 1])
             idx = setpoints[1].array_id
             if idx is None:
                 idx = 'x'
@@ -410,7 +416,8 @@ def diffImage(im, dy, size=None):
 
     Args:
         im (numpy array): input image.
-        dy (integer or string): method of differentiation.
+        dy (integer or string): method of differentiation. For an integer it is the axis of differentiation.
+            Allowed strings are 'x', 'y', 'g' (gradient), 'xy'.
         size (str): describes the size e.g. 'same'.
 
     """
@@ -462,6 +469,8 @@ def diffImageSmooth(im, dy='x', sigma=2):
         imx = -ndimage.gaussian_filter1d(im, axis=0,
                                          sigma=sigma, order=1, mode='nearest')
     elif dy == 2 or dy == 3 or dy == 'xy' or dy == 'xmy' or dy == 'xmy2' or dy == 'g' or dy == 'x2my2' or dy == 'x2y2':
+        if len(np.array(im).shape) != 2:
+            raise Exception(f'differentiation mode {dy} cannot be combined with input shape {np.array(im).shape}')
         imx0 = ndimage.gaussian_filter1d(
             im, axis=1, sigma=sigma, order=1, mode='nearest')
         imx1 = ndimage.gaussian_filter1d(
@@ -471,14 +480,14 @@ def diffImageSmooth(im, dy='x', sigma=2):
         if dy == 'xmy':
             imx = imx0 - imx1
         if dy == 3 or dy == 'g':
-            imx = np.sqrt(imx0**2 + imx1**2)
+            imx = np.sqrt(imx0 ** 2 + imx1 ** 2)
         if dy == 'xmy2':
             warnings.warn('please do not use this option')
-            imx = np.sqrt(imx0**2 + imx1**2)
+            imx = np.sqrt(imx0 ** 2 + imx1 ** 2)
         if dy == 'x2y2':
-            imx = imx0**2 + imx1**2
+            imx = imx0 ** 2 + imx1 ** 2
         if dy == 'x2my2':
-            imx = imx0**2 - imx1**2
+            imx = imx0 ** 2 - imx1 ** 2
     else:
         raise Exception('differentiation method %s not supported' % dy)
     return imx
@@ -572,6 +581,7 @@ def resetgates(gates, activegates, basevalues=None, verbose=2):
             print('  setting gate %s to %.1f [mV]' % (g, val))
         gates.set(g, val)
 
+
 # %% Tools from pgeometry
 
 
@@ -606,22 +616,27 @@ def cfigure(*args, **kwargs):
     else:
         fig = plt.figure(*args, facecolor='w', **kwargs)
 
-    def ff(xx, figx=fig): return mpl2clipboard(fig=figx)
+    def ff(xx, figx=fig):
+        return mpl2clipboard(fig=figx)
+
     fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
     return fig
 
 
 def static_var(varname, value):
     """ Helper function to create a static variable."""
+
     def decorate(func):
         setattr(func, varname, value)
         return func
+
     return decorate
 
 
 try:
     import qtpy.QtGui as QtGui
     import qtpy.QtWidgets as QtWidgets
+
 
     def monitorSizes(verbose=0):
         """ Return monitor sizes."""
@@ -652,6 +667,8 @@ except BaseException:
     def monitorSizes(verbose=0):
         """ Dummy function for monitor sizes."""
         return [[0, 0, 1600, 1200]]
+
+
     pass
 
 
@@ -683,7 +700,7 @@ def pythonVersion():
 # %%
 
 def _covert_integer_to_rgb_color(integer_value):
-    if integer_value < 0 or integer_value > 256**3:
+    if integer_value < 0 or integer_value > 256 ** 3:
         raise ValueError('Integer value cannot be converted to RGB!')
 
     red = integer_value & 0xFF
@@ -725,6 +742,7 @@ def set_ppt_slide_background(slide, color, verbose=0):
 
     slide.FollowMasterBackground = 0
     fore_color.RGB = ppt_color
+
 
 # %%
 
@@ -807,6 +825,7 @@ def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925
 try:
     import win32com
     import win32com.client
+
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
@@ -972,7 +991,7 @@ try:
                 fig.save(fname)
             else:
                 if verbose:
-                    raise TypeError('figure is of an unknown type %s' % (type(fig), ))
+                    raise TypeError('figure is of an unknown type %s' % (type(fig),))
             top = 120
 
             left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=1)
@@ -1020,6 +1039,7 @@ try:
                 print('addPPTslide: goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
+
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
@@ -1102,7 +1122,9 @@ except ImportError:
 
         Dummy implementation.
         """
-        warnings.warn('addPPTslide is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
+        warnings.warn(
+            'addPPTslide is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
+
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
@@ -1111,7 +1133,9 @@ except ImportError:
 
         Dummy implementation.
         """
-        warnings.warn('addPPT_dataset is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
+        warnings.warn(
+            'addPPT_dataset is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
+
 
 # %%
 
@@ -1136,7 +1160,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         header = None
     else:
         if 'station' not in dataset.metadata:
-            return 'dataset %s: no metadata available' % (str(dataset.location), )
+            return 'dataset %s: no metadata available' % (str(dataset.location),)
 
         tmp = dataset.metadata.get('station', None)
         if tmp is None:
@@ -1168,7 +1192,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         metadata[x] = OrderedDict()
         if 'IDN' in all_md[x]['parameters']:
             metadata[x]['IDN'] = dict({'name': 'IDN', 'value': all_md[
-                                      x]['parameters']['IDN']['value']})
+                x]['parameters']['IDN']['value']})
             metadata[x]['IDN']['unit'] = ''
         for y in sorted(all_md[x]['parameters'].keys()):
             try:
@@ -1238,6 +1262,7 @@ def timeProgress(data):
     remaining = (t1 - t0) * (1 - fraction) / fraction
     return fraction, remaining
 
+
 # %%
 
 
@@ -1255,6 +1280,7 @@ def flatten(lst):
         [1, 2, 3, 4, 10]
     """
     return list(chain(*lst))
+
 
 # %%
 
@@ -1275,6 +1301,7 @@ def cutoffFilter(x, thr, omega):
     y[x < thr - omega] = 1
     y[x > thr + omega] = 0
     return y
+
 
 # %%
 
@@ -1403,11 +1430,14 @@ def clickGatevals(plot, drawmode='ro'):
 
     return gatevals
 
+
 # %%
 
 
 def connect_slot(target):
     """ Create a slot by dropping signal arguments."""
+
     def signal_drop_arguments(*args, **kwargs):
         target()
+
     return signal_drop_arguments
