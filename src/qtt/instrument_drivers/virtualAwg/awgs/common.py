@@ -12,8 +12,8 @@ class AwgCommon(ABC):
 
         Args:
             name (str): The name of the AWG class e.g. Tektronix_AWG5014.
-            channel_numbers (str): The channel numbers or identifiers of the AWG.
-            marker_numbers (str): The markers numbers or identifiers of the AWG.
+            channel_numbers (List[int]): The channel numbers or identifiers of the AWG.
+            marker_numbers (List[int]): The markers numbers or identifiers of the AWG.
         """
         self._awg_name = name
         self._channel_numbers = channel_numbers

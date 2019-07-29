@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ...
 
 ### Fixed
+- Fixed virtual AWG marker on the same channel (#599).
 - Fixed the readthedocs build (#590).
 - Fixed issue with HDAWG8 sampling rate (#589).
 - Fixed Travis warnings and tests instrument_drivers (#569).

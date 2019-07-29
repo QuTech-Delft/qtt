@@ -69,7 +69,7 @@ class Tektronix5014C_AWG(AwgCommon):
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise ValueError(f'Invalid channel numbers {channels}')
-        [self.__awg.set(f'ch{ch}_state', 1) for ch in channels]
+        list(map(lambda channel: self.__awg.set(f'ch{channel}_state', 1), channels))  # type: ignore
 
     def disable_outputs(self, channels: Optional[List[int]] = None) -> None:
         """ Disables the outputs for the given channels.
@@ -86,7 +86,7 @@ class Tektronix5014C_AWG(AwgCommon):
             channels = self._channel_numbers
         if not all([ch in self._channel_numbers for ch in channels]):
             raise ValueError(f'Invalid channel numbers {channels}')
-        [self.__awg.set(f'ch{ch}_state', 0) for ch in channels]
+        list(map(lambda channel: self.__awg.set(f'ch{channel}_state', 0), channels))  # type: ignore
 
     def change_setting(self, name: str, value: float) -> None:
         """ Sets a setting on the AWG. The changeable settings are:
@@ -157,7 +157,7 @@ class Tektronix5014C_AWG(AwgCommon):
         Args:
             gain: The amplitude of the output channels.
         """
-        [self.__awg.set(f'ch{ch}_amp', gain) for ch in self._channel_numbers]
+        list(map(lambda channel: self.__awg.set(f'ch{channel}_amp', gain), self._channel_numbers))  # type: ignore
 
     def retrieve_gain(self) -> float:
         """ Gets the amplitude for all the output channels.
