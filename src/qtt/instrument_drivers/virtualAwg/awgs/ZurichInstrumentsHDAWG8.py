@@ -113,8 +113,5 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         sequence_program = self.__awg.generate_csv_sequence_program(wave_infos)
         self.__awg.upload_sequence_program(self.__awg_number, sequence_program)
 
-    def retrieve_waveforms(self):
-        raise NotImplementedError
-
     def delete_waveforms(self):
         pass
