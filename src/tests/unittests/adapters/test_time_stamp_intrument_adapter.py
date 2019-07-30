@@ -7,3 +7,4 @@ class TestTimeStampInstrumentAdapter(unittest.TestCase):
         adapter = TimeStampInstrumentAdapter('some_address')
         config = adapter.read()
         self.assertDictEqual({}, config)
+        adapter.close_instrument()
