@@ -1522,7 +1522,7 @@ def _trigger_re_arm_padding(data, number_of_samples, verbose=0):
         print(f'measure_raw_segment_m4i: re-arm padding: {re_arm_padding}')        
     return data
 
-def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0, trigger_re_arm_compensation = False):
+def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0, trigger_re_arm_compensation = False, trigger_re_arm_padding = True):
     """ Record a trace from the digitizer
 
     Args:
@@ -1534,6 +1534,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         verbose (int): verbosity level
         trigger_arm_compensation (bool): In block average mode the M4i needs a time of 40 samples + pretrigger to 
             re-arm the triggering. With this option this is compensated for by measuring less samples and padding with zeros.
+        trigger_re_arm_padding (bool): If True then remove any samples from the trigger re-arm compensation with zeros.
 
     """
     sample_rate = digitizer.sample_rate()
@@ -1563,7 +1564,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         dataraw = dataraw[0]
     data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
     data = data[:, signal_start:signal_end]
-    if trigger_re_arm_compensation:
+    if trigger_re_arm_compensation and trigger_re_arm_padding:
         data = _trigger_re_arm_padding(data, signal_end-signal_start, verbose)
     return data
 
@@ -1608,7 +1609,7 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
 
 @qtt.pgeometry.static_var('debug_enabled', False)
 @qtt.pgeometry.static_var('debug_data', {})
-def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None, trigger_re_arm_compensation = False):
+def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None, trigger_re_arm_compensation = False, trigger_re_arm_padding = True):
     """ Measure block data with M4i
 
     Args:
@@ -1618,6 +1619,8 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         mV_range (float): range for input
         Naverage (int): number of averages to perform
         verbose (int): verbosity level
+        trigger_re_arm_compensation (bool): Passed to raw measurement function
+        trigger_re_arm_padding (bool):  Passed to raw measurement function
     Returns:
         data (numpy array): recorded and processed data
 
@@ -1625,7 +1628,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
     period = waveform['period']
     raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range,
-                                       Naverage=Naverage, verbose=verbose, trigger_re_arm_compensation=trigger_re_arm_compensation)
+                                       Naverage=Naverage, verbose=verbose, trigger_re_arm_compensation=trigger_re_arm_compensation, trigger_re_arm_padding = trigger_re_arm_padding)
     if measuresegment_m4i.debug_enabled:
         measuresegment_m4i.debug_data['raw_data'] = raw_data
         measuresegment_m4i.debug_data['waveform'] = waveform
@@ -1818,7 +1821,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
 
 
 def acquire_segments(station, parameters, average=True, mV_range=2000,
-                     save_to_disk=True, location=None, verbose=True, trigger_re_arm_compensation=False):
+                     save_to_disk=True, location=None, verbose=True, trigger_re_arm_compensation=False, trigger_re_arm_padding = True):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
     Note that if the requested period is equal or longer than the period on the AWG, then not all trigger events might
@@ -1860,7 +1863,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
 
     if average:
         data = measuresegment(waveform, nsegments,
-                              minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation})
+                              minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation, 'trigger_re_arm_padding': trigger_re_arm_padding})
         segment_time = np.linspace(0, period, len(data[0]))
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
                                      xunit='s', location=location, loc_record={'label': 'acquire_segments'})
@@ -1869,7 +1872,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
-                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2, trigger_arm_compensation = trigger_re_arm_compensation)
+                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2, trigger_re_arm_compensation = trigger_re_arm_compensation)
 
             segment_size = int(memsize_total / nsegments)
             post_trigger = segment_size - pre_trigger
@@ -1888,7 +1891,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1))
             data = data[:, :, signal_start:signal_end]
-            if trigger_re_arm_compensation:
+            if trigger_re_arm_compensation and trigger_re_arm_padding:
                 data = _trigger_re_arm_padding(data, signal_end-signal_start)
             segment_time = np.linspace(0., period, data.shape[2])
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
