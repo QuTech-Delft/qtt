@@ -8,7 +8,7 @@ import qtt.measurements.scans
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.instrument_drivers.simulation_instruments import SimulationAWG
 import qtt.simulation.virtual_dot_array
-from qtt.measurements.videomode import VideoMode, DummyVideoModeProcessor
+from qtt.measurements.videomode import VideoMode
 
 
 class TestVideoMode(unittest.TestCase):
@@ -39,17 +39,7 @@ class TestVideoMode(unittest.TestCase):
         self.assertIn(videomode, VideoMode.all_instances())
 
         VideoMode.stop_all_instances()
-
-    def test_DummyVideoModeProcessor(self):
-        station = qtt.simulation.virtual_dot_array.initialize()
-        dummy_processor = DummyVideoModeProcessor(station)
-        vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=1,
-                       nplots=1, dorun=False, videomode_processor=dummy_processor)
-        vm.updatebg()
-        datasets = vm.get_dataset()
-
-        self.assertIsInstance(datasets[0], qcodes.DataSet)
-
+    
     def test_video_1d(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
             station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
