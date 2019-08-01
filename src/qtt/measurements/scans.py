@@ -2245,7 +2245,9 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     scanjob.parse_param('stepdata', station, paramtype='fast')
 
     minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'digitizer'))
+    virtual_awg = getattr(station, 'virtual_awg', None)
     read_ch = get_minstrument_channels(scanjob['minstrument'])
+    sweep_info = None
 
     if isinstance(read_ch, int):
         read_ch = [read_ch]
@@ -2291,22 +2293,35 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     if scanjob['scantype'] == 'scan2Dturbo':
         sweepgates = [sweepdata['param'].name, stepdata['param'].name]
-        waveform, sweep_info = station.awg.sweep_2D(
-            samp_freq, sweepgates, sweepranges, resolution, delete=delete)
+        if virtual_awg:
+            period = scanjob['sweepdata'].get('period')
+            waveform = virtual_awg.sweep_gates_2d(sweepgates, sweepranges, period, resolution, do_upload=delete)
+            keys = [list(item.keys())[0] for item in sweepgates]
+            virtual_awg.enable_outputs(keys)
+            virtual_awg.run()
+        else:
+            waveform, sweep_info = station.awg.sweep_2D(samp_freq, sweepgates, sweepranges, resolution, delete=delete)
         if verbose:
             print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
     else:
         scanjob._parse_2Dvec()
-        waveform, sweep_info = station.awg.sweep_2D_virt(
-            samp_freq, fast_sweep_gates, fast_step_gates, sweepranges, resolution, delete=delete)
+        if virtual_awg:
+            period = scanjob['sweepdata'].get('period')
+            waveform = virtual_awg.sweep_gates_2d([fast_sweep_gates, fast_step_gates], sweepranges, period, resolution, do_upload=delete)
+            keys = [list(item.keys())[0] for item in sweepgates]
+            virtual_awg.enable_outputs(keys)
+            virtual_awg.run()
+        else:
+            waveform, sweep_info = station.awg.sweep_2D_virt(samp_freq, fast_sweep_gates, fast_step_gates, sweepranges, resolution, delete=delete)
 
     time.sleep(wait_time_startscan)
-
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
-
     scan2Dturbo._data = data
 
-    station.awg.stop()
+    if virtual_awg:
+        virtual_awg.stop()
+    else:
+        station.awg.stop()
 
     if len(read_ch) == 1:
         measure_names = ['measured']
@@ -2325,7 +2340,6 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
                                 preset_data=data, location=location, loc_record={'label': scanjob['scantype']})
 
     dt = time.time() - t0
-
     liveplotwindow = _initialize_live_plotting(alldata, plotparam=None, liveplotwindow=liveplotwindow)
 
     if not hasattr(alldata, 'metadata'):
@@ -2334,9 +2348,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot(), allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
-
     alldata.write(write_metadata=True)
-
     return alldata, waveform, sweep_info
 
 
