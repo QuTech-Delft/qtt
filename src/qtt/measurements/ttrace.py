@@ -920,3 +920,46 @@ def show_data(tt, tx, data_raw, ttrace, tf=1e3, fig=10, labels=None):
     if labels is not None:
         import pylab
         pylab.subplots_adjust(hspace=.4)
+
+    # %% Test MultiTracePlot
+
+def test_multi_trace_plot():
+    import qtt.measurements.ttrace
+    from qtt.measurements.ttrace import MultiTracePlot
+
+    import qtt.simulation.virtual_dot_array
+    station = qtt.simulation.virtual_dot_array.initialize()
+
+    app = pg.mkQApp()
+    waveform, _ = station.awg.sweep_gate('P1', 50, 1e-3)
+    nplots = 3
+    ncurves = 2
+
+    def read_trace_dummy():
+        data = qtt.measurements.scans.measuresegment(
+            waveform, Naverage=1, minstrhandle=station.sdigitizer.name, read_ch=[1, 2])
+        dd = [data] * nplots
+        xd = np.linspace(-waveform['sweeprange'] / 2,
+                         waveform['sweeprange'] / 2, data[0].size)
+        xdata = [xd] * nplots
+        return xdata, dd
+
+    mt = MultiTracePlot(nplots=nplots, ncurves=ncurves)
+    mt.win.setGeometry(1400, 40, 500, 500)
+    mt.add_verticals()
+
+    def callback():
+        xdata, ydata = read_trace_dummy()
+        mt.plot_curves(xdata, ydata)
+        app.processEvents()
+
+    mt.startreadout(callback=callback)
+    mt.updatefunction()
+
+    mt.get_dataset()
+    mt.stopreadout()
+
+
+if __name__=='__main__':
+    test_multi_trace_plot()
+    

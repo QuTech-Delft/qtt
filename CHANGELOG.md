@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VirtualDAC now has an option to set gate_map and instruments on VirtualDAC (#583).
 - All unittests are moved to a tests folder (#574).
 - Legacy code now throws exceptions (#551).
+- VideoMode tool was restructured to clean up the interface (##594)
 
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).

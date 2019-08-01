@@ -25,9 +25,6 @@ def get_version(verbose=1, filename='src/qtt/version.py'):
 
 extras = {
     # name: (module_name, minversion, pip_name)
-    'MatPlot': ('matplotlib', '3.0', None),
-    'SciPi': ('scipy', '1.1', None),
-    'qcodes': ('qcodes', '0.4', None),
     'scikit-image': ('skimage', '0.11', 'scikit-image'),
     'pandas': ('pandas', '0.15', None),
     'attrs': ('attr', '16.2.0', 'attrs'),
@@ -36,7 +33,6 @@ extras = {
     'pytables': ('tables', '3.2', None),
     'apscheduler': ('apscheduler', '3.4', None),
     'Polygon3': ('Polygon', '0.1', None),
-    'pyqtgraph': ('pyqtgraph', '0.11', None),
     'pyqt5': ('PyQt5', '0.11', 'pyqt5'),
 }
 
@@ -70,10 +66,11 @@ setup(name='qtt',
       package_dir={'': 'src'},
       packages=find_packages(where='./src'),
       install_requires=[
-          'matplotlib', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
+          'matplotlib>=3.0', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
           'numpy>=1.15', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.4', 'Polygon3',
           'scipy', 'pyqtgraph', 'qupulse'
       ],
+      tests_require=['pytest'],
       extras_require=extras_require,
       zip_safe=False,
       )
