@@ -303,7 +303,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
     def process(self, measurement_data, videomode):
         measurement_data_selected = []
-        for ii, channel in enumerate(self.channels):
+        for _, channel in enumerate(self.channels):
             unique_channel_idx = self.unique_channels.index(channel)
             data_processed = np.array(measurement_data[unique_channel_idx])
             measurement_data_selected.append(data_processed)
