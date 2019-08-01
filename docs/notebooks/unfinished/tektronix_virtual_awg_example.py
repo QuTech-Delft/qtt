@@ -197,7 +197,7 @@ logviewer.show()
 
 #%%
 
-from qtt.measurements.scans import scan2Dturbo, scanjob_t
+from qtt.measurements.scans import scan2Dturbo
 
 gate1 = 'C1'
 gate2 = 'C2'

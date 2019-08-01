@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A JSON encoding for qcodes.DataSet is added to the serialized (#558).
 - Added scope reader for the Zurich Instruments UHFLI. (#554, #980).
 - Add option to compensate for re-arm time of M4i trigger.
-- Add methods for performing operations on datasets (#593)
+- Add methods for performing operations on datasets. (#593)
+- The new virtual AWG can now also be used with the turbo scan. (#618)
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
