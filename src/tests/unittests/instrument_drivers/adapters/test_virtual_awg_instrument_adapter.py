@@ -4,7 +4,7 @@ import qilib
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.utils import PythonJsonStructure
 import zhinst
-from qtt.adapters import VirtualAwgInstrumentAdapter
+from qtt.instrument_drivers.adapters import VirtualAwgInstrumentAdapter
 
 
 class TestVirtualAwgInstrumentAdapter(unittest.TestCase):

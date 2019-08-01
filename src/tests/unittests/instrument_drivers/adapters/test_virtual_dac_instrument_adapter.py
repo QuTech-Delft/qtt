@@ -5,7 +5,7 @@ from qcodes import Instrument
 from qilib.configuration_helper import InstrumentAdapterFactory, SerialPortResolver
 from qilib.configuration_helper.adapters import CommonInstrumentAdapter
 from qilib.utils import PythonJsonStructure
-from qtt.adapters import VirtualDACInstrumentAdapter
+from qtt.instrument_drivers.adapters import VirtualDACInstrumentAdapter
 
 
 class DummyInstrument(Instrument):
@@ -57,7 +57,7 @@ class TestVirtualDACInstrumentAdapter(unittest.TestCase):
         dummy_adapter.instrument.frequency(1)
         dummy_adapter.instrument.enable_output(False)
         mock_virtual_dac_instance = MagicMock()
-        with patch('qtt.adapters.virtual_dac_instrument_adapter.VirtualDAC') as mock_virtual_dac:
+        with patch('qtt.instrument_drivers.adapters.virtual_dac_instrument_adapter.VirtualDAC') as mock_virtual_dac:
             mock_virtual_dac.return_value = mock_virtual_dac_instance
             adapter = VirtualDACInstrumentAdapter('spirack3_module3')
             mock_virtual_dac.assert_called()
@@ -98,7 +98,7 @@ class TestVirtualDACInstrumentAdapter(unittest.TestCase):
                 'adapter_class_name': 'DummyInstrumentAdapter',
                 'config': {}}}
 
-        with patch('qtt.adapters.virtual_dac_instrument_adapter.VirtualDAC') as mock_virtual_dac:
+        with patch('qtt.instrument_drivers.adapters.virtual_dac_instrument_adapter.VirtualDAC') as mock_virtual_dac:
             mock_virtual_dac.return_value = mock_virtual_dac_instance
             adapter = VirtualDACInstrumentAdapter('spirack3_module3')
             adapter.apply(bootstrap_config)

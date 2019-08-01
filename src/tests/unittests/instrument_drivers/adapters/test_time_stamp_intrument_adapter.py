@@ -1,5 +1,5 @@
 import unittest
-from qtt.adapters import TimeStampInstrumentAdapter
+from qtt.instrument_drivers.adapters import TimeStampInstrumentAdapter
 
 
 class TestTimeStampInstrumentAdapter(unittest.TestCase):
