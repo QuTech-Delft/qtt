@@ -108,7 +108,7 @@ else:
 #%%
 
 uptime_in_seconds = 1e-7
-marker_delay_in_sec = 2e-7
+marker_delay_in_sec = 3e-7
 virtual_awg.update_digitizer_marker_settings(uptime_in_seconds, marker_delay_in_sec)
 
 amplitude = 4
@@ -193,6 +193,27 @@ dataset_measurement_fast = scan1Dfast(station, scanjob)
 
 logviewer = DataViewer()
 logviewer.show()
+
+
+#%%
+
+from qtt.measurements.scans import scan2Dturbo, scanjob_t
+
+gate1 = 'C1'
+gate2 = 'C2'
+
+scanjob = scanjob_t()
+
+scanjob['sweepdata'] = {'param': gate1, 'range': 100}
+scanjob['stepdata'] = {'param': gate2, 'range': 100}
+
+scanjob['minstrumenthandle'] = (digitizer.name)
+scanjob['minstrument'] = [3]
+
+scanjob['wait_time_startscan'] = 2
+scanjob['Naverage'] = 200
+
+alldata, _, _ = scan2Dturbo(station, scanjob)
 
 
 #%%
