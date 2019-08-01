@@ -438,6 +438,7 @@ if __name__ == '__main__':
     reload(qtt.measurements.scans)
     from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
     from qtt.instrument_drivers.simulation_instruments import SimulationAWG
+    from qtt.measurements.videomode_processor import DummyVideoModeProcessor
 
     station = qtt.simulation.virtual_dot_array.initialize()
     gates = station.gates
