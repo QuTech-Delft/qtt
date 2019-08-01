@@ -144,7 +144,7 @@ def _redisStrSet(value, var='qtt_live_value1'):
 liveValue = _redisStrValue
 liveValueSet = _redisStrSet
 
-abort_measurements = _abort_measurement
+abort_measurements = _abort_measurement # type: ignore
 
 # patch the qcodes abort function
 qcodes.loops.abort_measurements = _abort_measurement
