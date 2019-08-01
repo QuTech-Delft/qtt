@@ -1,12 +1,12 @@
 from typing import Dict
 
 from qilib.configuration_helper import InstrumentAdapter, InstrumentAdapterFactory
-from qilib.configuration_helper.adapters.constants import INSTRUMENTS, ADAPTER_CLASS_NAME, ADDRESS, CONFIG, SETTINGS, \
-    AWG_MAP
 from qilib.utils import PythonJsonStructure
 
 from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg
+from qtt.instrument_drivers.adapters.constants import INSTRUMENTS, ADAPTER_CLASS_NAME, ADDRESS, CONFIG, SETTINGS, \
+    AWG_MAP
 
 
 class VirtualAwgInstrumentAdapter(InstrumentAdapter):

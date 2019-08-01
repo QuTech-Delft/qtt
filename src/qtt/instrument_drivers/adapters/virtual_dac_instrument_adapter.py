@@ -2,11 +2,11 @@ from typing import Dict
 
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
-from qilib.configuration_helper.adapters.constants import CONFIG, BOUNDARIES, GATE_MAP, INSTRUMENTS, ADDRESS, \
-    ADAPTER_CLASS_NAME
 from qilib.utils import PythonJsonStructure
 
 from qtt.instrument_drivers.gates import VirtualDAC
+from qtt.instrument_drivers.adapters.constants import CONFIG, BOUNDARIES, GATE_MAP, INSTRUMENTS, ADDRESS, \
+    ADAPTER_CLASS_NAME
 
 
 class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
