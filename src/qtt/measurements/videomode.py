@@ -8,13 +8,11 @@ import time
 import datetime
 import threading
 import numpy as np
-import warnings
 import logging
 import numbers
 
 import pyqtgraph
 
-import qcodes
 from qcodes.instrument.parameter import Parameter
 from qcodes.utils.validators import Numbers
 import qtt
