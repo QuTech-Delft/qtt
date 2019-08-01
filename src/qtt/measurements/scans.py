@@ -1482,7 +1482,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
     trigger_delay_points = 16 * trigger_delay
 
     basic_pretrigger_size = 16
-    base_segment_size = int(np.ceil((number_points_period + trigger_delay_points) / 16) * 16) + basic_pretrigger_size
+    base_segment_size = ceilN(number_points_period + trigger_delay_points, 16) + basic_pretrigger_size
 
     memsize = base_segment_size * nsegments
     if memsize > digitizer.memory():
@@ -1496,7 +1496,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         if verbose:
             print(f'select_m4i_memsize: post_trigger {post_trigger}, max_segment_size_rearm {max_segment_size_re_arm}')
         post_trigger = min(post_trigger, max_segment_size_re_arm)
-        memsize = pre_trigger + post_trigger
+        memsize = (pre_trigger + post_trigger)*nsegments
 
     signal_start = basic_pretrigger_size + int(trigger_delay_points)
     signal_end = signal_start + number_points_period
