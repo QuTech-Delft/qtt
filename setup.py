@@ -70,7 +70,7 @@ setup(name='qtt',
           'numpy>=1.15', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.4', 'Polygon3',
           'scipy', 'pyqtgraph', 'qupulse'
       ],
-      tests_require=['unittest'],
+      tests_require=['pytest'],
       extras_require=extras_require,
       zip_safe=False,
       )
