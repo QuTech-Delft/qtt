@@ -227,14 +227,6 @@ class MeasurementControl(QtWidgets.QMainWindow):
             self.getVal(tv)
 
 
-def guitest_measurementcontrol():
-    import pyqtgraph
-    app = pyqtgraph.mkQApp()
-    mc = MeasurementControl()
-    mc.verbose = 1
-    mc.setGeometry(1700, 50, 300, 400)
-
-
 def start_measurement_control(doexec=False):
     """ Start measurement control GUI
 
@@ -377,7 +369,7 @@ class livePlot(QtCore.QObject):
         datafunction: the function to call for data acquisition
         sweepInstrument: the instrument to which sweepparams belong
         sweepparams: the parameter(s) being swept
-        sweepranges: the range over which sweepparams are being swept
+        sweepranges (list): the ranges over which sweepparams are being swept
         verbose (int): output level of logging information
         show_controls (bool): show gui elements for control of the live plotting
         alpha (float): parameter (value between 0 and 1) which determines the weight given in averaging to the latest
@@ -397,6 +389,7 @@ class livePlot(QtCore.QObject):
             verbose=1,
             show_controls=True,
             window_title='live view',
+            plot_dimension=None,
             plot_title=None,
             is1dscan=None, **kwargs):
         """Return a new livePlot object."""
@@ -438,6 +431,7 @@ class livePlot(QtCore.QObject):
         self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
         self.datafunction_result = None
+        self.plot_dimension=plot_dimension
         self.alpha = alpha
         if is1dscan is None:
             is1dscan = (
@@ -452,21 +446,17 @@ class livePlot(QtCore.QObject):
         if verbose:
             print('live_plotting: is1dscan %s' % is1dscan)
         if self.sweepparams is None:
-            p1 = plotwin.addPlot(title="Videomode")
+            p1 = plotwin.addPlot(title=plot_title)
             p1.setLabel('left', 'param2')
             p1.setLabel('bottom', 'param1')
-            if self.datafunction is None:
-                raise Exception(
-                    'Either specify a datafunction or sweepparams.')
+            if plot_dimension == 1:
+                dd = np.zeros((0,))
+                plot = p1.plot(dd, pen='b')
+                self.plot = plot
             else:
-                data = np.array(self.datafunction())
-                if data.ndim == 1:
-                    dd = np.zeros((0,))
-                    plot = p1.plot(dd, pen='b')
-                    self.plot = plot
-                else:
-                    self.plot = pg.ImageItem()
-                    p1.addItem(self.plot)
+                self.plot = pg.ImageItem()
+                p1.addItem(self.plot)
+            self._crosshair = []
         elif is1dscan:
             p1 = plotwin.addPlot(title=plot_title)
             p1.setLabel('left', 'Value')
@@ -592,8 +582,8 @@ class livePlot(QtCore.QObject):
                             self.sweepInstrument, self.sweepparams)
                         paramval = sweep_param.get_latest()
                     sweepvalues = np.linspace(
-                        paramval - self.sweepranges / 2,
-                        self.sweepranges / 2 + paramval,
+                        paramval - self.sweepranges[0] / 2,
+                        self.sweepranges[0] / 2 + paramval,
                         len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
                     self._sweepvalues = [sweepvalues]
@@ -729,11 +719,4 @@ class MockCallback_2d(qcodes.Instrument):
         return data_reshaped
 
 
-# %% Example
-if __name__ == '__main__' and 0:
-    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
-                  sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
-    lp.win.setGeometry(1500, 10, 400, 400)
-    lp.startreadout()
-    self = lp
-    pv = qtt.createParameterWidget([lp.datafunction])
+

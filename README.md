@@ -23,7 +23,7 @@ $ pip install qtt
 ```
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 ```
-$ python setup.py develop
+$ pip install -e .
 ```
 
 For the Vandersypen research group there are more detailed instructions, read the file INSTALL.md in the spin-projects repository.
@@ -50,8 +50,8 @@ See [Contributing](CONTRIBUTING.md) for information about bug/issue reports, con
 
 ## Testing
 
-Tests for the qtt packages are contained in the subdirectory `tests` and as test
-functions (`test_*`) in the code. To run the tests you can run the following command:
+Tests for the qtt packages are contained in the subdirectory `tests`. To run the tests install the `unittest` package
+and run the following command:
 ```
 $ pytest
 ```

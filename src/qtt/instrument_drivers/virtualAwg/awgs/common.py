@@ -12,8 +12,8 @@ class AwgCommon(ABC):
 
         Args:
             name (str): The name of the AWG class e.g. Tektronix_AWG5014.
-            channel_numbers (str): The channel numbers or identifiers of the AWG.
-            marker_numbers (str): The markers numbers or identifiers of the AWG.
+            channel_numbers (List[int]): The channel numbers or identifiers of the AWG.
+            marker_numbers (List[int]): The markers numbers or identifiers of the AWG.
         """
         self._awg_name = name
         self._channel_numbers = channel_numbers
@@ -156,15 +156,6 @@ class AwgCommon(ABC):
                 sequence_channels (int, list): A list with the channel for each sequence.
                 sequence_items (Sequence, list): The Sequencer sequences.
                 reload (bool): Reload all the sequences if True else only change the sequence order.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def retrieve_waveforms(self):
-        """ Gets the last uploaded sequences to the AWG.
-
-        Returns:
-            (list, list, list): A tuple with the uploaded channels, sequence names, and sequences.
         """
         raise NotImplementedError
 
