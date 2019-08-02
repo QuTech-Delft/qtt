@@ -91,6 +91,12 @@ class VirtualDAC(Instrument):
         """ A map between IVVI dac and gate."""
         return self._gate_map
 
+    @gate_map.setter  # type: ignore
+    def gate_map(self, gate_map):
+        self._remove_gates()
+        self._gate_map = gate_map
+        self._populate_direct_gate_map()
+
     @property
     def instruments(self):
         """ A list of QCoDeS instruments."""
@@ -108,12 +114,6 @@ class VirtualDAC(Instrument):
         self._instruments = value
         self._update_instruments_names()
         self.gate_map = {}  # invalidate gate_map
-
-    @gate_map.setter  # type: ignore
-    def gate_map(self, gate_map):
-        self._remove_gates()
-        self._gate_map = gate_map
-        self._populate_direct_gate_map()
 
     def _instrument_index(self, instrument):
         """ From an instrument name or index return the index """
