@@ -16,3 +16,8 @@ jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_ohmic.
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_onedot_scan.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_PAT_fitting.ipynb
 jupyter nbconvert --to notebook --execute docs/notebooks/analysis/example_polFitting.ipynb
+
+jupyter nbconvert --to notebook --execute docs/notebooks/simulation/example_PAT_simulations.ipynb
+
+jupyter nbconvert --to notebook --execute docs/notebooks/datasets/example_dataset_processing.ipynb
+
