@@ -43,6 +43,7 @@ class DummyInstrumentAdapter(CommonInstrumentAdapter):
         self._instrument = DummyInstrument(name=self.name)
 
     def _filter_parameters(self, parameters):
+        self._parameters = parameters
         return parameters
 
 

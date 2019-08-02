@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import qilib
-from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.utils import PythonJsonStructure
 import zhinst
 from qtt.instrument_drivers.adapters import VirtualAwgInstrumentAdapter

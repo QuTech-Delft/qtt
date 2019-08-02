@@ -18,6 +18,7 @@ class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
         self._dac_adapters: Dict[str, VirtualDAC] = {}
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        self._parameters = parameters
         return parameters
 
     def read(self, update: bool = False) -> PythonJsonStructure:

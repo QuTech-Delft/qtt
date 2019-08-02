@@ -81,6 +81,7 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
         self._instrument.settings.create_map()
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
+        self._parameters = parameters
         return parameters
 
     def close_instrument(self) -> None:

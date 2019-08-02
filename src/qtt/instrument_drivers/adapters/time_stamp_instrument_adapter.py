@@ -8,6 +8,7 @@ class TimeStampInstrumentAdapter(InstrumentAdapter):
     def __init__(self, address: str) -> None:
         super().__init__(address)
         self._instrument = TimeStampInstrument(name=self._name)
+        self._config = PythonJsonStructure()
 
     def apply(self, config: PythonJsonStructure) -> None:
         """ As there is no configuration to apply, this method is a NOP."""
@@ -21,4 +22,4 @@ class TimeStampInstrumentAdapter(InstrumentAdapter):
         Returns:
             Empty python-json structure.
         """
-        return PythonJsonStructure()
+        return self._config
