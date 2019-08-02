@@ -14,6 +14,7 @@ class TimeStampInstrumentAdapter(InstrumentAdapter):
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
         """ As there is no configuration to read, this method is a NOP."""
+        return PythonJsonStructure()
 
     def read(self, update: bool = False) -> PythonJsonStructure:
         """ Override default read mechanism as this adapter has no real configuration.
@@ -21,4 +22,4 @@ class TimeStampInstrumentAdapter(InstrumentAdapter):
         Returns:
             Empty python-json structure.
         """
-        return PythonJsonStructure()
+        return super().read(update)
