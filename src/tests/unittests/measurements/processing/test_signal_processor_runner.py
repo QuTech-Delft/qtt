@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from mock import patch
+from unittest.mock import patch
 from numpy import array_equal
 from numpy.ma import array
 from qilib.data_set import DataSet, DataArray
