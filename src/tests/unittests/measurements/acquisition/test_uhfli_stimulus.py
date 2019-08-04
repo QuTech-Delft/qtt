@@ -1,6 +1,6 @@
 import unittest
 
-from mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock, call
 from qilib.utils import PythonJsonStructure
 
 from qtt.measurements.acquisition import UHFLIStimulus

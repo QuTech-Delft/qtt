@@ -1,0 +1,8 @@
+from qtt.instrument_drivers.adapters.time_stamp_instrument_adapter import TimeStampInstrumentAdapter
+from qtt.instrument_drivers.adapters.virtual_dac_instrument_adapter import VirtualDACInstrumentAdapter
+from qtt.instrument_drivers.adapters.virtual_awg_instrument_adapter import VirtualAwgInstrumentAdapter
+
+from sys import modules
+from qilib.configuration_helper.instrument_adapter_factory import InstrumentAdapterFactory
+
+InstrumentAdapterFactory.add_instrument_adapters(modules[__name__])
