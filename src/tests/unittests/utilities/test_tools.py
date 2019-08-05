@@ -7,7 +7,8 @@ import qcodes
 from qcodes import DataArray
 from qcodes.tests.data_mocks import DataSet2D
 from qtt.utilities import tools
-from qtt.utilities.tools import resampleImage, diffImage, reshape_metadata, get_python_version, get_module_versions,\
+from qtt.utilities.tools import resampleImage, diffImage, diffImageSmooth, reshape_metadata, get_python_version, \
+    get_module_versions, \
     get_git_versions, code_version, rdeprecated
 import qtt.measurements.scans
 
@@ -38,7 +39,7 @@ class TestTools(unittest.TestCase):
     def test_array(self):
         # DataSet with one 2D array with 4 x 6 points
         yy, xx = np.meshgrid(np.arange(0, 10, .5), range(3))
-        zz = xx**2 + yy**2
+        zz = xx ** 2 + yy ** 2
         # outer setpoint should be 1D
         xx = xx[:, 0]
         x = DataArray(name='x', label='X', preset_data=xx, is_setpoint=True)
@@ -60,6 +61,16 @@ class TestTools(unittest.TestCase):
         if verbose:
             print('testing diffImage')
         _ = diffImage(ds.z, dy='x')
+
+    def test_diffImageSmooth(self):
+        image = np.arange(12.).reshape(4, 3)
+        diff_image = diffImageSmooth(image, dy='x')
+        np.testing.assert_array_almost_equal(diff_image, np.array(
+            [[0.346482, 0.390491, 0.346482], [0.346482, 0.390491, 0.346482], [0.346482, 0.390491, 0.346482],
+             [0.346482, 0.390491, 0.346482]]))
+
+        with self.assertRaises(Exception):
+            diffImageSmooth(np.arange(4), dy='x')
 
     def test_reshape_metadata(self, quiet=True):
         param = qcodes.ManualParameter('dummy')
