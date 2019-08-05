@@ -1470,7 +1470,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         signal_end (int): end position of signal in pixels
 
     """
-    sample_rate = digitizer.sample_rate()
+    sample_rate = digitizer.exact_sample_rate()
     if sample_rate == 0:
         raise Exception('digitizer samplerate is zero, please reset digitizer')
     number_points_period = int(period * sample_rate)
@@ -1537,7 +1537,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         trigger_re_arm_padding (bool): If True then remove any samples from the trigger re-arm compensation with zeros.
 
     """
-    sample_rate = digitizer.sample_rate()
+    sample_rate = digitizer.exact_sample_rate()
     maxrate = digitizer.max_sample_rate()
     if sample_rate == 0:
         raise Exception(
