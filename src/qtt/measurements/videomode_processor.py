@@ -282,11 +282,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
         if self.acquisition_device_type() == 'm4i':
             if self.scan_dimension() == 1:
-<<<<<<< HEAD
                 if (self.sampling_frequency() * self.period_1d())*(1-self.waveform['width'])/2 > 40+2*16:
-=======
-                if (self.sampling_frequency() * self.period_1d())*(1-self.waveform['width'])/2 > 64:
->>>>>>> d7c258e08f65a7cd114e9589bc4a382b19f1163f
                     trigger_re_arm_compensation = True
                 else:
                     trigger_re_arm_compensation = False
