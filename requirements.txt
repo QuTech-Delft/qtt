@@ -5,7 +5,6 @@ dulwich
 hickle>=3.1
 numpy>=1.15
 matplotlib>=3.0
-pandas
 Polygon3
 pyqtgraph
 pyzmqrpc
@@ -18,4 +17,4 @@ scikit-image
 scipy>=0.18
 tables
 git+https://github.com/QuTech-Delft/qilib.git#egg=qilib
-git+https://github.com/Qcodes/Qcodes#egg=qcodes
+qcodes
