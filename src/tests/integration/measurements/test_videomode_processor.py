@@ -18,6 +18,7 @@ class TestVideoModeProcessor(unittest.TestCase):
                        nplots=1, dorun=False, videomode_processor=dummy_processor)
         vm.updatebg()
         datasets = vm.get_dataset()
-
+        vm.close()
+        qtt.simulation.virtual_dot_array.close()
         self.assertIsInstance(datasets[0], qcodes.DataSet)
 
