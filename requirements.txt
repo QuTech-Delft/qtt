@@ -17,4 +17,4 @@ scikit-image
 scipy>=0.18
 tables
 git+https://github.com/QuTech-Delft/qilib.git#egg=qilib
-qcodes
+git+https://github.com/Qcodes/Qcodes.git#egg=Qcodes

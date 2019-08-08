@@ -5,13 +5,13 @@ coverage
 dulwich
 hickle
 numpy
-matplotlib >= 2.1
+matplotlib >= 3.0
 pandas
 Polygon3
 pyqtgraph
 pyzmqrpc
 PyQt5
-qcodes
+git+https://github.com/Qcodes/Qcodes.git#egg=Qcodes
 qtpy
 qupulse
 sympy
