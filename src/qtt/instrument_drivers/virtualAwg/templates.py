@@ -18,10 +18,10 @@ class Templates:
 
         Returns:
             FunctionPT: The pulse template with the chirp signal.
-                     Parameters of the pulse template are the `duration` (in ns),
-                     `omega_0` (in MHz), `delta_omega` (in MHz), `amplitude` and `phase`.
-        """
-        linear_chirp_template = FunctionPT('amplitude*cos(2*pi*(omega_0+(t/duration)*delta_omega) *t*1e-9+phase)', 'duration')
+                     Parameters of the pulse template are the `duration` (in the same unit as time),
+                     `omega_0` (in Hz), `delta_omega` (in Hz), `amplitude` and `phase`. Time is in ns.
+                     """
+        linear_chirp_template = FunctionPT('amplitude*cos(2*pi*(omega_0+(t/(2*duration))*delta_omega) *t*1e-9+phase)', 'duration')
         linear_chirp_template.__doc__='Template for linear chirp\nAlso see https://en.wikipedia.org/wiki/Chirp\n\n'+linear_chirp_template.__doc__
         return linear_chirp_template
 
