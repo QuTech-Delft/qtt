@@ -113,6 +113,7 @@ def plot_two_level_threshold(results, fig=100):
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
     plt.title('Result of two level threshold processing')
 
+
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
                     num_bins=None, plungers=None, fig=None, ppt=None, verbose=0):
     """
@@ -229,6 +230,9 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (
                 separation, max_sep))
 
+    fraction_down = np.sum(data < split)/data.size
+    fraction_up = 1-fraction_down
+
     # count the number of transitions and their duration
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
 
@@ -305,6 +309,9 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up_idx)}
     parameters['tunnelrate_down_to_up'] = 1. / parameters['down_segments']['mean']
     parameters['tunnelrate_up_to_down'] = 1. / parameters['up_segments']['mean']
+
+    parameters['fraction_down'] = fraction_down
+    parameters['fraction_up'] = fraction_up
 
     if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
