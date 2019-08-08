@@ -80,7 +80,7 @@ def check_version(version, module=qcodes, optional=False, install_message=None):
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'redis', optional=True)
-check_version('0.1.10', qcodes)
+check_version('0.4.0+216', qcodes)
 check_version('0.2', 'qupulse')
 
 check_version('3.0', 'Polygon', install_message="use command 'pip install Polygon3' to install the package")
