@@ -399,7 +399,7 @@ def dataset_labels(alldata, tag=None, add_unit=False):
     Args:
         ds (DataSet): dataset
         tag (str or int or None): can be 'x', 'y' or 'z' or the index of the axis
-        add_units (bool): If True then add units
+        add_unit (bool): If True then add units
     """
     if tag == 'y' or tag == 0:
         d = alldata.default_parameter_array()
