@@ -68,7 +68,7 @@ setup(name='qtt',
       install_requires=[
           'matplotlib>=3.0', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
           'numpy>=1.15', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.4', 'Polygon3',
-          'scipy', 'pyqtgraph', 'qupulse', 'PyQt5','apscheduler'
+          'scipy', 'pyqtgraph', 'qupulse', 'PyQt5','apscheduler', 'qilib'
       ],
       tests_require=['pytest'],
       extras_require=extras_require,

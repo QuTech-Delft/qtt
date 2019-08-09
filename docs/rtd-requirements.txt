@@ -12,6 +12,7 @@ pyqtgraph
 pyzmqrpc
 PyQt5
 qcodes
+qilib
 qtpy
 qupulse
 sympy
