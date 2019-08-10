@@ -12,6 +12,7 @@ pyqtgraph
 pyzmqrpc
 PyQt5
 git+https://github.com/Qcodes/Qcodes.git#egg=Qcodes
+qilib
 qtpy
 qupulse
 sympy
