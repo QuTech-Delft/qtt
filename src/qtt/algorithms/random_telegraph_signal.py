@@ -147,8 +147,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
                          fit probably failed and a FittingException is raised
         min_duration (int): minimal number of datapoints a duration should last to be taking into account for the
                             analysis
-        num_bins : TODO
-        plungers : TODO
+        num_bins (float or None) : number of bins for the histogram of signal values. If None, then determine based
+                            on the size of the data
         fig (None or int): shows figures and sends them to the ppt when is not None
         ppt (None or int): determines if the figures are send to a powerpoint presentation
         verbose (int): prints info to the console when > 0
@@ -252,17 +252,13 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
         raise FittingException('All durations_dn are shorter than the minimal duration.')
 
     # calculating the number of bins and counts for down level
-    counts_dn, bins_dn, bin_size = _create_integer_histogram(durations_dn, verbose=verbose >= 2)
+    counts_dn, bins_dn, _ = _create_integer_histogram(durations_dn, verbose=verbose >= 2)
 
     # calculating the number of bins and counts for up level
-    counts_up, bins_up, bin_size = _create_integer_histogram(durations_up, verbose=verbose >= 2)
+    counts_up, bins_up, _ = _create_integer_histogram(durations_up, verbose=verbose >= 2)
 
     if verbose >= 2:
         print(f' _create_integer_histogram: up/down: number of bins {len(bins_up)}/{len(bins_dn)}')
-
-    # calculating durations in seconds
-    durations_dn = durations_dn / samplerate
-    durations_up = durations_up / samplerate
 
     bins_dn = bins_dn / samplerate
     bins_up = bins_up / samplerate
@@ -303,56 +299,43 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
     if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
+        def _fit_and_plot_decay(bincentres, counts, label, fig_label):
+            """ Fitting and plotting of exponential decay for level """
+            A_fit, B_fit, gamma_fit = fit_exp_decay(bincentres, counts)
+            tunnelrate = gamma_fit / 1000
+
+            if verbose:
+                print(f'Tunnel rate {label} to up: %.1f kHz' % tunnelrate)
+
+            time_scaling = 1e3
+
+            if fig:
+                title = f'Fitted exponential decay, level {label}'
+                Fig = plt.figure(fig_label)
+                plt.clf()
+                plt.plot(time_scaling * bincentres, counts, 'o', label=f'Counts {label}')
+                plt.plot(time_scaling * bincentres, exp_function(bincentres, A_fit, B_fit, gamma_fit),
+                         'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate)
+                plt.xlabel('Lifetime (ms)')
+                plt.ylabel('Counts per bin')
+                plt.legend()
+                plt.title(title)
+                if ppt:
+                    addPPTslide(title=title, fig=Fig)
+
+            fit_parameters = [A_fit, B_fit, gamma_fit]
+            return tunnelrate, fit_parameters
+
         bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
-
-        # fitting exponential decay for down level
-        A_dn_fit, B_dn_fit, gamma_dn_fit = fit_exp_decay(bincentres_dn, counts_dn)
-        tunnelrate_dn = gamma_dn_fit / 1000
-
-        if verbose:
-            print('Tunnel rate down to up: %.1f kHz' % tunnelrate_dn)
-
-        time_scaling = 1e3
-
-        if fig:
-            title = 'Fitted exponential decay, level down'
-            Fig = plt.figure(fig + 2)
-            plt.clf()
-            plt.plot(time_scaling * bincentres_dn, counts_dn, 'o', label='Counts down')
-            plt.plot(time_scaling * bincentres_dn, exp_function(bincentres_dn, A_dn_fit, B_dn_fit, gamma_dn_fit),
-                     'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{down\ to\ up}}$: %.1f kHz' % tunnelrate_dn)
-            plt.xlabel('Lifetime (ms)')
-            plt.ylabel('Counts per bin')
-            plt.legend()
-            plt.title(title)
-            if ppt:
-                addPPTslide(title=title, fig=Fig)
+        fig_label = None if fig is None else fig + 2
+        tunnelrate_dn, fit_parameters_down = _fit_and_plot_decay(bincentres_dn, counts_dn, label='down', fig_label=fig_label)
 
         bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
+        fig_label = None if fig is None else fig + 3
+        tunnelrate_up, fit_parameters_up = _fit_and_plot_decay(bincentres_up, counts_up, label='up', fig_label=fig_label)
 
-        # fitting exponential decay for up level
-        A_up_fit, B_up_fit, gamma_up_fit = fit_exp_decay(bincentres_up, counts_up)
-        tunnelrate_up = gamma_up_fit / 1000
-
-        if verbose:
-            print('Tunnel rate up to down: %.1f kHz' % tunnelrate_up)
-
-        if fig:
-            title = 'Fitted exponential decay, level up'
-            Fig = plt.figure(fig + 3)
-            plt.clf()
-            plt.plot(time_scaling * bincentres_up, counts_up, 'o', label='Counts up')
-            plt.plot(time_scaling * bincentres_up, exp_function(bincentres_up, A_up_fit, B_up_fit, gamma_up_fit),
-                     'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{up\ to\ down}}$: %.1f kHz' % tunnelrate_up)
-            plt.xlabel('Lifetime (ms)')
-            plt.ylabel('Data points per bin')
-            plt.legend()
-            plt.title(title)
-            if ppt:
-                addPPTslide(title=title, fig=Fig)
-
-        parameters['fit parameters exp. decay down'] = [A_dn_fit, B_dn_fit, gamma_dn_fit]
-        parameters['fit parameters exp. decay up'] = [A_up_fit, B_up_fit, gamma_up_fit]
+        parameters['fit parameters exp. decay down'] = fit_parameters_down
+        parameters['fit parameters exp. decay up'] = fit_parameters_up
 
         parameters['tunnelrate_down_exponential_fit'] = tunnelrate_dn
         parameters['tunnelrate_up_exponential_fit'] = tunnelrate_up

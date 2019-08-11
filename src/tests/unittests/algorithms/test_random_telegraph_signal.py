@@ -66,6 +66,7 @@ class TestRandomTelegraphSignal(unittest.TestCase):
         input_data = np.array([2, 3, 4])
         counts, bins, bin_size = _create_integer_histogram(input_data)
         self.assertEqual(input_data.size, np.sum(counts))
+        self.assertEqual(1, bin_size)
 
         input_data = np.array([2.])
         counts, bins, bin_size = _create_integer_histogram(input_data)
