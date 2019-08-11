@@ -113,18 +113,20 @@ def plot_two_level_threshold(results, fig=100):
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
     plt.title('Result of two level threshold processing')
 
+
 def _create_integer_histogram(durations, verbose=0):
     """ Calculate number of bins, bin edges and histogram for durations
 
     This method works if the data is sampled at integer durations.
     """
     numbins = int(np.sqrt(len(durations)))
-    bin_size = int(np.ceil((durations.max() - (durations.min()-.5)) / numbins))
+    bin_size = int(np.ceil((durations.max() - (durations.min() - .5)) / numbins))
     # choose bins carefully, since our data is sampled only at discrete times
     bins = np.arange(durations.min() - .5, durations.max() + bin_size, bin_size)
     counts, bins = np.histogram(durations, bins=bins)
     return counts, bins, bin_size
-    
+
+
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
                     num_bins=None, plungers=None, fig=None, ppt=None, verbose=0):
     """
@@ -163,7 +165,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     """
     if plungers is not None:
         raise Exception('parameter plungers is not used any more')
-        
+
     if isinstance(data, qcodes.data.data_set.DataSet):
         if samplerate is None:
             samplerate = data.metadata.get('samplerate', None)
@@ -231,8 +233,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (
                 separation, max_sep))
 
-    fraction_down = np.sum(data < split)/data.size
-    fraction_up = 1-fraction_down
+    fraction_down = np.sum(data < split) / data.size
+    fraction_up = 1 - fraction_down
 
     # count the number of transitions and their duration
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
@@ -255,8 +257,8 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     # calculating the number of bins and counts for up level
     counts_up, bins_up, bin_size = _create_integer_histogram(durations_up, verbose=verbose >= 2)
 
-    if verbose>=2:
-            print(f' _create_integer_histogram: up/down: number of bins {len(bins_up)}/{len(bins_dn)}')
+    if verbose >= 2:
+        print(f' _create_integer_histogram: up/down: number of bins {len(bins_up)}/{len(bins_dn)}')
 
     # calculating durations in seconds
     durations_dn = durations_dn / samplerate
@@ -282,7 +284,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if counts_up[0] < minimal_count_number:
         warnings.warn(
             f'Number of up datapoints {counts_up[0]} is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level up. '
-             + 'Look therefore at the mean value of the measurement segments')
+            + 'Look therefore at the mean value of the measurement segments')
 
     parameters = {'sampling rate': samplerate,
                   'fit parameters double gaussian': double_gaussian_fit_parameters,

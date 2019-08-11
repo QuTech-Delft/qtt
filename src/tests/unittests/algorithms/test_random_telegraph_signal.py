@@ -55,11 +55,12 @@ class TestRandomTelegraphSignal(unittest.TestCase):
     def test_RTS_fractions(self, fig=None, verbose=0):
         data = np.sin(np.arange(0, 1000, .1)) > .6
         data = data + (np.random.rand(data.size) - .5) / 10
-        tunnelrate_dn, tunnelrate_up, rts_results = tunnelrates_RTS(data, samplerate=1e6, min_duration=1, max_sep=40, fig=None, verbose=0)
+        tunnelrate_dn, tunnelrate_up, rts_results = tunnelrates_RTS(data, samplerate=1e6, min_duration=1, max_sep=40,
+                                                                    fig=None, verbose=0)
         self.assertAlmostEqual(tunnelrate_dn, 1000, -2)
         self.assertAlmostEqual(tunnelrate_up, 1000, -2)
         self.assertAlmostEqual(rts_results['fraction_down'], 0.7047, 1)
-        self.assertEqual(rts_results['fraction_down'], 1-rts_results['fraction_up'])
+        self.assertEqual(rts_results['fraction_down'], 1 - rts_results['fraction_up'])
 
     def test_create_integer_histogram(self):
         input_data = np.array([2, 3, 4])
