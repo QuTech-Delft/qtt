@@ -1486,7 +1486,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
 
     memsize = base_segment_size * nsegments
     if memsize > digitizer.memory():
-        raise Exception('Trying to acquire too many points. Reduce sampling rate, period or number segments')
+        raise Exception(f'Trying to acquire too many points. Reduce sampling rate, period {period} or number segments {nsegments}')
 
     pre_trigger = ceilN(trigger_delay * sample_rate, 16) + basic_pretrigger_size
     post_trigger = ceilN(base_segment_size - pre_trigger, 16)
