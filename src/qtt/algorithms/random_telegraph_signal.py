@@ -113,7 +113,18 @@ def plot_two_level_threshold(results, fig=100):
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
     plt.title('Result of two level threshold processing')
 
+def _create_integer_histogram(durations, verbose=0):
+    """ Calculate number of bins, bin edges and histogram for durations
 
+    This method works if the data is sampled at integer durations.
+    """
+    numbins = int(np.sqrt(len(durations)))
+    bin_size = int(np.ceil((durations.max() - (durations.min()-.5)) / numbins))
+    # choose bins carefully, since our data is sampled only at discrete times
+    bins = np.arange(durations.min() - .5, durations.max() + bin_size, bin_size)
+    counts, bins = np.histogram(durations, bins=bins)
+    return counts, bins, bin_size
+    
 def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
                     num_bins=None, plungers=None, fig=None, ppt=None, verbose=0):
     """
@@ -126,8 +137,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
     Args:
         data (array): qcodes DataSet (or 1d data array) with the RTS data
-        plungers ([str, str]): array of the two plungers used to perform the RTS measurement
-        samplerate (int or float): sampling rate of the acquisition device, optional if given in the metadata
+        samplerate (float): sampling rate of the acquisition device, optional if given in the metadata
                                    of the measured data
         min_sep (float): if the separation found for the fit of the double gaussian is less then this value, the
                          fit probably failed and a FittingException is raised
@@ -151,26 +161,17 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
                 tunnelrate_up (float): tunnel rate up in Hz
 
     """
-    if plungers is None:
-        plungers = []
-
+    if plungers is not None:
+        raise Exception('parameter plungers is not used any more')
+        
     if isinstance(data, qcodes.data.data_set.DataSet):
-        try:
-            plungers = plungers
-            metadata = data.metadata
-            gates = metadata['allgatevalues']
-            plungervalue = gates[plungers[0]]
-        except BaseException:
-            plungervalue = []
         if samplerate is None:
-            metadata = data.metadata
-            samplerate = metadata['samplerate']
+            samplerate = data.metadata.get('samplerate', None)
 
-        data = np.array(data.measured)
-    else:
-        plungervalue = []
-        if samplerate is None:
-            raise Exception('samplerate is None')
+        data = np.array(data.default_parameter_array())
+
+    if samplerate is None:
+        raise Exception('samplerate is None')
 
     # plotting a 2d histogram of the RTS
     if fig:
@@ -248,25 +249,14 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if len(durations_dn) < 1:
         raise FittingException('All durations_dn are shorter than the minimal duration.')
 
-    def _create_histogram(durations, level, verbose=0):
-        """ Calculate number of bins, bin edges and histogram for durations
-
-        This method works if the data is sampled at integer durations.
-        """
-        numbins = int(np.sqrt(len(durations)))
-        bin_size = int(np.ceil((durations.max() - durations.min()) / numbins))
-        # choose bins carefully, since our data is sampled only an discrete times
-        bins = np.arange(durations.min() - .5, durations.max() + bin_size, bin_size)
-        counts, bins = np.histogram(durations, bins=bins)
-        if verbose:
-            print(' _create_histogram level ' + level + ': number of bins %d, bin_size %d' % (numbins, bin_size))
-        return counts, bins
-
     # calculating the number of bins and counts for down level
-    counts_dn, bins_dn = _create_histogram(durations_dn, level='down', verbose=verbose >= 2)
+    counts_dn, bins_dn, bin_size = _create_integer_histogram(durations_dn, verbose=verbose >= 2)
 
     # calculating the number of bins and counts for up level
-    counts_up, bins_up = _create_histogram(durations_up, level='up', verbose=verbose >= 2)
+    counts_up, bins_up, bin_size = _create_integer_histogram(durations_up, verbose=verbose >= 2)
+
+    if verbose>=2:
+            print(f' _create_integer_histogram: up/down: number of bins {len(bins_up)}/{len(bins_dn)}')
 
     # calculating durations in seconds
     durations_dn = durations_dn / samplerate
@@ -284,21 +274,17 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     minimal_count_number = 50
 
     if counts_dn[0] < minimal_count_number:
-        tunnelrate_dn = None
-        tunnelrate_up = None
         warnings.warn(
             f'Number of down datapoints {counts_dn[0]} is not enough (minimal_count_number {minimal_count_number})'
             f' to make an accurate fit of the exponential decay for level down. ' +
             'Look therefore at the mean value of the measurement segments')
 
     if counts_up[0] < minimal_count_number:
-        tunnelrate_dn = None
-        tunnelrate_up = None
         warnings.warn(
-            f'Number of up datapoints %d is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level up. ' %
-            counts_up[0] + 'Look therefore at the mean value of the measurement segments')
+            f'Number of up datapoints {counts_up[0]} is not enough (minimal_count_number {minimal_count_number}) to make an acurate fit of the exponential decay for level up. '
+             + 'Look therefore at the mean value of the measurement segments')
 
-    parameters = {'plunger value': plungervalue, 'sampling rate': samplerate,
+    parameters = {'sampling rate': samplerate,
                   'fit parameters double gaussian': double_gaussian_fit_parameters,
                   'separations between peaks gaussians': separation,
                   'split between the two levels': split}
