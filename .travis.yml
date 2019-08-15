@@ -49,7 +49,9 @@ script:
     - mypy src --ignore-missing-imports
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         jupyter --version;
-        source docs/notebooks/run_notebooks.sh;
+        chmod +x docs/notebooks/run_notebooks.sh;
+        bash docs/notebooks/run_notebooks.sh;
+        source docs/notebooks/run_selected_notebooks.sh;
       fi
 
 after_success:
