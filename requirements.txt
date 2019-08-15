@@ -16,5 +16,5 @@ sympy
 scikit-image
 scipy>=0.18
 tables
-git+https://github.com/Qcodes/Qcodes.git#egg=Qcodes
+qcodes>=0.5.0
 qilib

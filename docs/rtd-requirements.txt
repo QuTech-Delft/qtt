@@ -11,7 +11,7 @@ Polygon3
 pyqtgraph
 pyzmqrpc
 PyQt5
-git+https://github.com/Qcodes/Qcodes.git#egg=Qcodes
+qcodes>=0.5.0
 qilib
 qtpy
 qupulse
