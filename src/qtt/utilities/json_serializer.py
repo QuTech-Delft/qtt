@@ -1,159 +1,64 @@
 import base64
-import json
-from json import JSONDecoder, JSONEncoder
+from typing import Any
 
 import numpy as np
 import qcodes
+from qilib.utils.serialization import serialize, unserialize, register_encoder, register_decoder, transform_data, \
+    JsonSerializeKey
 
 import qtt.data
 
 
-class JsonSerializeKey:
-    """The custum value types for the JSON serializer."""
-    OBJECT = '__object__'
-    CONTENT = '__content__'
-    DATA_TYPE = '__data_type__'
+def encode_tuple(item):
+    return {
+        JsonSerializeKey.OBJECT: tuple.__name__,
+        JsonSerializeKey.CONTENT: [transform_data(value) for value in item]
+    }
 
 
-class QttJsonDecoder(JSONDecoder):
+def decode_tuple(item):
+    return tuple(item[JsonSerializeKey.CONTENT])
 
-    def __init__(self, *args, **kwargs):
-        """ JSON decoder that handles numpy arrays and tuples."""
 
-        super().__init__(object_hook=QttJsonDecoder.__object_hook, *args, **kwargs)
+def encode_qcodes_instrument(item):
+    return {
+        JsonSerializeKey.OBJECT: '__qcodes_instrument__',
+        JsonSerializeKey.CONTENT: {'name': item.name, 'qcodes_instrument': str(item)}
+    }
 
-    @staticmethod
-    def __decode_bytes(item):
-        return base64.b64decode(item[JsonSerializeKey.CONTENT].encode('ascii'))
 
-    @staticmethod
-    def __decode_qcodes_instrument(item):
-        return item
+def decode_qcodes_instrument(item):
+    return item
 
-    @staticmethod
-    def __decode_tuple(item):
-        return tuple(item[JsonSerializeKey.CONTENT])
 
-    @staticmethod
-    def __decode_numpy_number(item):
-        obj = item[JsonSerializeKey.CONTENT]
-        return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['dtype']))[0]
-
-    @staticmethod
-    def __decode_numpy_array(item):
-        obj = item[JsonSerializeKey.CONTENT]
-        array = np.frombuffer(base64.b64decode(obj['__ndarray__']), dtype=np.dtype(obj['dtype'])).reshape(obj['shape'])
-        # make the array writable
-        array = np.array(array)
-        return array
-
-    @staticmethod
-    def __decode_qcodes_dataset(item):
-        obj = item[JsonSerializeKey.CONTENT]
-        return qtt.data.dictionary_to_dataset(obj['__dataset_dictionary__'])
-
-    @staticmethod
-    def __object_hook(obj):
-        decoders = {
-            bytes.__name__: QttJsonDecoder.__decode_bytes,
-            tuple.__name__: QttJsonDecoder.__decode_tuple,
-            np.array.__name__: QttJsonDecoder.__decode_numpy_array,
-            '__npnumber__': QttJsonDecoder.__decode_numpy_number,
-            '__qcodes_instrument__': QttJsonDecoder.__decode_qcodes_instrument,
-            '__qcodes.DataSet__': QttJsonDecoder.__decode_qcodes_dataset,
+def encode_numpy_number(item):
+    return {
+        JsonSerializeKey.OBJECT: '__npnumber__',
+        JsonSerializeKey.CONTENT: {
+            '__npnumber__': base64.b64encode(item.tobytes()).decode('ascii'),
+            'dtype': item.dtype.str,
         }
-        if JsonSerializeKey.CONTENT in obj:
-            decoder_function = decoders.get(obj[JsonSerializeKey.OBJECT])
-            return decoder_function(obj)
-        return obj
+    }
 
 
-class QttJsonEncoder(JSONEncoder):
-    """ JSON encoder that handles numpy arrays and tuples """
+def decode_numpy_number(item):
+    obj = item[JsonSerializeKey.CONTENT]
+    return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['dtype']))[0]
 
-    @staticmethod
-    def __encode_bytes(item):
-        return {
-            JsonSerializeKey.OBJECT: bytes.__name__,
-            JsonSerializeKey.CONTENT: base64.b64encode(item).decode('ascii')
+
+def encode_qcodes_dataset(item):
+    dataset_dictionary = transform_data(qtt.data.dataset_to_dictionary(item))
+    return {
+        JsonSerializeKey.OBJECT: '__qcodes_dataset__',
+        JsonSerializeKey.CONTENT: {
+            '__dataset_dictionary__': dataset_dictionary,
         }
+    }
 
-    @staticmethod
-    def __encode_qcodes_instrument(item):
-        return {
-            JsonSerializeKey.OBJECT: '__qcodes_instrument__',
-            JsonSerializeKey.CONTENT: {'name': item.name, 'qcodes_instrument': str(item)}
-        }
 
-    @staticmethod
-    def __encode_tuple(item):
-        return {
-            JsonSerializeKey.OBJECT: tuple.__name__,
-            JsonSerializeKey.CONTENT: [QttJsonEncoder.__encoder(value) for value in item]
-        }
-
-    @staticmethod
-    def __encode_list(item):
-        return [QttJsonEncoder.__encoder(value) for value in item]
-
-    @staticmethod
-    def __encode_dict(item):
-        return {
-            key: QttJsonEncoder.__encoder(value) for key, value in item.items()
-        }
-
-    @staticmethod
-    def __encode_numpy_number(item):
-        return {
-            JsonSerializeKey.OBJECT: '__npnumber__',
-            JsonSerializeKey.CONTENT: {
-                '__npnumber__': base64.b64encode(item.tobytes()).decode('ascii'),
-                'dtype': item.dtype.str,
-            }
-        }
-
-    @staticmethod
-    def __encode_numpy_array(item):
-        return {
-            JsonSerializeKey.OBJECT: np.array.__name__,
-            JsonSerializeKey.CONTENT: {
-                '__ndarray__': base64.b64encode(item.tobytes()).decode('ascii'),
-                'dtype': item.dtype.str,
-                'shape': item.shape,
-            }
-        }
-
-    @staticmethod
-    def __encode_qcodes_dataset(item):
-        dataset_dictionary = QttJsonEncoder.__encoder(qtt.data.dataset_to_dictionary(item))
-        return {
-            JsonSerializeKey.OBJECT: '__qcodes.DataSet__',
-            JsonSerializeKey.CONTENT: {
-                '__dataset_dictionary__': dataset_dictionary,
-            }
-        }
-
-    @staticmethod
-    def __encoder(item):
-        encoders = {
-            bytes: QttJsonEncoder.__encode_bytes,
-            tuple: QttJsonEncoder.__encode_tuple,
-            list: QttJsonEncoder.__encode_list,
-            dict: QttJsonEncoder.__encode_dict,
-            np.ndarray: QttJsonEncoder.__encode_numpy_array,
-            np.int32: QttJsonEncoder.__encode_numpy_number,
-            np.int64: QttJsonEncoder.__encode_numpy_number,
-            np.float32: QttJsonEncoder.__encode_numpy_number,
-            np.float64: QttJsonEncoder.__encode_numpy_number,
-            np.bool_: QttJsonEncoder.__encode_numpy_number,
-            qcodes.Instrument: QttJsonEncoder.__encode_qcodes_instrument,
-            qcodes.DataSet: QttJsonEncoder.__encode_qcodes_dataset,
-        }
-        encoder_function = encoders.get(type(item), None)
-        return encoder_function(item) if encoder_function else item
-
-    def encode(self, o):
-        return super().encode(QttJsonEncoder.__encoder(o))
+def decode_qcodes_dataset(item):
+    obj = item[JsonSerializeKey.CONTENT]
+    return qtt.data.dictionary_to_dataset(obj['__dataset_dictionary__'])
 
 
 def encode_json(data: object) -> str:
@@ -165,10 +70,10 @@ def encode_json(data: object) -> str:
         String with formatted JSON
 
     """
-    return json.dumps(data, cls=QttJsonEncoder, indent=2)
+    return serialize(data)
 
 
-def decode_json(json_string: str) -> object:
+def decode_json(json_string: str) -> Any:
     """ Decode Python object to JSON
 
     Args:
@@ -177,10 +82,10 @@ def decode_json(json_string: str) -> object:
         Python object
 
     """
-    return json.loads(json_string, cls=QttJsonDecoder)
+    return unserialize(json_string)
 
 
-def save_json(data: object, filename: str):
+def save_json(data: Any, filename: str):
     """ Write a Python object to a JSON file
 
     Args:
@@ -202,3 +107,14 @@ def load_json(filename: str) -> object:
     with open(filename, 'rt') as fid:
         data = fid.read()
     return decode_json(data)
+
+
+register_encoder(tuple, encode_tuple)
+register_decoder(tuple.__name__, decode_tuple)
+register_encoder(qcodes.Instrument, encode_qcodes_instrument)
+register_decoder('__qcodes_instrument__', decode_qcodes_instrument)
+for t in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
+    register_encoder(t, encode_numpy_number)
+register_decoder('__npnumber__', decode_numpy_number)
+register_encoder(qcodes.DataSet, encode_qcodes_dataset)
+register_decoder('__qcodes_dataset__', decode_qcodes_dataset)
