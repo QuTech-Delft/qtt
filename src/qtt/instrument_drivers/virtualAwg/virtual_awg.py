@@ -504,7 +504,7 @@ class VirtualAwg(Instrument):
                     settings_data[number][gate_name] = {'scaling_ratio': scaling_ratio}
                     sequence_data *= scaling_ratio
 
-                sequence_name = sequence['name']
+                sequence_name = sequence'[0]['name']
                 sequence_names.append(f'{gate_name}_{sequence_name}')
                 sequence_channels.append((channel_number, *marker_number))
                 sequence_items.append(sequence_data)
