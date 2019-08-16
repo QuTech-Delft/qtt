@@ -235,7 +235,7 @@ class VirtualAwg(Instrument):
         delay = self.digitizer_marker_delay()
 
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
-            digitizer_marker = Sequencer.make_marker(period, uptime, delay(), repetitions)
+            digitizer_marker = Sequencer.make_marker(period, uptime, delay, repetitions)
             marker_properties[VirtualAwg.__digitizer_name] = [digitizer_marker]
 
         if VirtualAwg.__awg_slave_name in self._settings.awg_map:
