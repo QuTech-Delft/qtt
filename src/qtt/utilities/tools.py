@@ -460,11 +460,12 @@ def diffImageSmooth(im, dy='x', sigma=2):
     if dy is None:
         imx = im.copy()
     elif dy == 0 or dy == 'x':
-        imx = ndimage.gaussian_filter1d(
-            im, axis=1, sigma=sigma, order=1, mode='nearest')
+        if len(im.shape)==1:
+            raise Exception(f'invalid parameter dy={dy} for 1D image')
+        else:
+            imx = ndimage.gaussian_filter1d(im, axis=1, sigma=sigma, order=1, mode='nearest')
     elif dy == 1 or dy == 'y':
-        imx = ndimage.gaussian_filter1d(
-            im, axis=0, sigma=sigma, order=1, mode='nearest')
+        imx = ndimage.gaussian_filter1d(im, axis=0, sigma=sigma, order=1, mode='nearest')
     elif dy == -1:
         imx = -ndimage.gaussian_filter1d(im, axis=0,
                                          sigma=sigma, order=1, mode='nearest')

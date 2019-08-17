@@ -282,7 +282,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
         if self.acquisition_device_type() == 'm4i':
             if self.scan_dimension() == 1:
-                if (self.sampling_frequency() * self.period_1d())*(1-self.waveform['width'])/2 > 56:
+                if (self.sampling_frequency() * self.period_1d())*(1-self.waveform['width'])/2 > 40+2*16:
                     trigger_re_arm_compensation = True
                 else:
                     trigger_re_arm_compensation = False
@@ -293,6 +293,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
             device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation}
         else:
             device_parameters = {}
+        self._device_parameters = device_parameters
         data = qtt.measurements.scans.measuresegment(
             self.waveform, videomode.Naverage(), self.minstrumenthandle, self.unique_channels,
             **self.measuresegment_arguments, device_parameters=device_parameters)
@@ -327,7 +328,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 self.sampling_frequency = measurement_instrument_handle.sample_rate
             else:
                 measurement_instrument_handle.sample_rate(sample_rate)
-                self.sampling_frequency = station.digitizer.sample_rate
+                self.sampling_frequency = measurement_instrument_handle.sample_rate
         elif device_type == 'ziuhfli':
             self.sampling_frequency = measurement_instrument_handle.scope_samplingrate
         else:
