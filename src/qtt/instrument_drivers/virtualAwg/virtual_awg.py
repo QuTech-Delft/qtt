@@ -1,17 +1,15 @@
 import logging
-import numpy as np
-
 from typing import List
 
+import numpy as np
 from qcodes import Instrument
 
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon
-from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
-from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
-from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
-
 from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
+from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
+from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
+from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 
 
 class VirtualAwgError(Exception):
@@ -44,8 +42,8 @@ class VirtualAwg(Instrument):
         Arguments:
             awgs (list): A list with AWG instances. Currently the following AWG's are supported:
                          Tektronix5014C, KeysightM3202A and the ZurichInstrumentsHDAWG8.
-            settings (Instument): A class containing the settings of the quantum device, which are the
-                                  awg_map (specificies the relation between the quantum gates, marker outputs
+            settings (Instrument): A class containing the settings of the quantum device, which are the
+                                  awg_map (specifies the relation between the quantum gates, marker outputs
                                   and AWG channels) and the awg_to_gate [mV/V] (specifies how many millivolt
                                   on a sample is induced by an output in Volt from the AWG).
         """
@@ -132,7 +130,6 @@ class VirtualAwg(Instrument):
         Args:
             value: The list of instruments to update
         """
-
         self._instruments = value
         self.__set_hardware(value)
 
@@ -143,7 +140,6 @@ class VirtualAwg(Instrument):
         Args:
             instruments: The list of instruments to add
         """
-
         for instrument in instruments:
             if instrument not in self._instruments:
                 self._instruments.append(instrument)
@@ -206,7 +202,7 @@ class VirtualAwg(Instrument):
             value (float, int or string): The value of the setting e.g. 2.0 V.
         """
         if awg_number not in self.__awg_range:
-            raise VirtualAwgError('Invalid AWG number {}!'.format(awg_number))
+            raise VirtualAwgError(f'Invalid AWG number {awg_number}!')
         self.awgs[awg_number].change_setting(setting, value)
 
     def are_awg_gates(self, gate_names):
@@ -234,16 +230,19 @@ class VirtualAwg(Instrument):
             period (float): The period of the markers in seconds.
             repetitions (int): The number of markers in the sequence.
         """
-        marker_properies = dict()
+        marker_properties = dict()
+        uptime = self.digitizer_marker_uptime()
+        delay = self.digitizer_marker_delay()
+
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
-            digitizer_marker = Sequencer.make_marker(period, self.digitizer_marker_uptime(),
-                                                     self.digitizer_marker_delay(), repetitions)
-            marker_properies[VirtualAwg.__digitizer_name] = digitizer_marker
+            digitizer_marker = Sequencer.make_marker(period, uptime, delay, repetitions)
+            marker_properties[VirtualAwg.__digitizer_name] = [digitizer_marker]
+
         if VirtualAwg.__awg_slave_name in self._settings.awg_map:
-            awg_marker = Sequencer.make_marker(period, self.awg_marker_uptime(),
-                                               self.awg_marker_delay(), repetitions)
-            marker_properies[VirtualAwg.__awg_slave_name] = awg_marker
-        return marker_properies
+            awg_marker = Sequencer.make_marker(period, uptime, delay, repetitions)
+            marker_properties[VirtualAwg.__awg_slave_name] = [awg_marker]
+
+        return marker_properties
 
     def update_digitizer_marker_settings(self, uptime, delay):
         """ Updates the marker settings of the AWG to trigger the digitizer. Note that the
@@ -256,6 +255,7 @@ class VirtualAwg(Instrument):
         """
         if VirtualAwg.__digitizer_name not in self._settings.awg_map:
             raise ValueError('Digitizer marker not present in settings awg map!')
+
         self.digitizer_marker_uptime(uptime)
         self.digitizer_marker_delay(delay)
 
@@ -270,6 +270,7 @@ class VirtualAwg(Instrument):
         """
         if VirtualAwg.__awg_slave_name not in self._settings.awg_map:
             raise ValueError('Slave AWG marker not present in settings awg map!')
+
         self.awg_marker_uptime(uptime)
         self.awg_marker_delay(delay)
 
@@ -291,22 +292,29 @@ class VirtualAwg(Instrument):
         Example:
             >> gates_voltages = {'P4': [50, 0, -50], 'P7': [-25, 0, 25]}
             >> waiting_times = [1e-4, 1e-4, 1e-4]
-            >> pulse_data = virtualawg.pulse_gates(gate_voltages, waiting_times)
+            >> pulse_data = virtual_awg.pulse_gates(gate_voltages, waiting_times)
         """
         sequences = dict()
         period = sum(waiting_times)
         sequences.update(self.make_markers(period, repetitions))
+
         for gate_name, amplitudes in gate_voltages.items():
-            sequences[gate_name] = Sequencer.make_pulse_table(amplitudes, waiting_times, repetitions, gate_name)
+            pulse_wave = Sequencer.make_pulse_table(amplitudes, waiting_times, repetitions, gate_name)
+            sequences.setdefault(gate_name, []).append(pulse_wave)
+
         sweep_data = self.sequence_gates(sequences, do_upload)
-        sweep_data.update({'period': period, 'start_zero': True, 'width': 1.0})
+        sweep_data.update({'period': period,
+                           'start_zero': True,
+                           'width': 1.0})
+
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
+
         return sweep_data
 
     def sweep_gates(self, gates, sweep_range, period, width=0.9375, do_upload=True):
         """ Supplies a sawtooth wave to the given gates and returns the settings required
-            for processing and constucting the readout times for the digitizer.
+            for processing and constructing the readout times for the digitizer.
 
         Arguments:
             gates (dict): Contains the gate name keys with relative amplitude values.
@@ -325,26 +333,33 @@ class VirtualAwg(Instrument):
             >> sec_period = 1e-6
             >> mV_sweep_range = 100
             >> gates = {'P4': 1, 'P7': 0.1}
-            >> sweep_data = virtualawg.sweep_gates(gates, 100, 1e-3)
+            >> sweep_data = virtual_awg.sweep_gates(gates, 100, 1e-3)
         """
         sequences = dict()
         sequences.update(self.make_markers(period))
+
         for gate_name, rel_amplitude in gates.items():
             amplitude = rel_amplitude * sweep_range
-            sequences[gate_name] = Sequencer.make_sawtooth_wave(amplitude, period, width)
+            sweep_wave = Sequencer.make_sawtooth_wave(amplitude, period, width)
+            sequences.setdefault(gate_name, []).append(sweep_wave)
+
         sweep_data = self.sequence_gates(sequences, do_upload)
-        sweep_data.update({'sweeprange': sweep_range, 'period': period, 'width': width})
-        sweep_data.update({'start_zero': True})
-        sweep_data.update({'_gates': gates})
+        sweep_data.update({'sweeprange': sweep_range,
+                           'period': period,
+                           'width': width,
+                           'start_zero': True,
+                           '_gates': gates})
+
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             sweep_data.update({'markerdelay': self.digitizer_marker_delay()})
+
         return sweep_data
 
     def sweep_gates_2d(self, gates, sweep_ranges, period, resolution, width=0.9375, do_upload=True):
         """ Supplies sawtooth signals to a linear combination of gates, which effectively does a 2D scan.
 
         Arguments:
-            gates (list[dict]): A list containing two dicionaries with both the the gate name keys
+            gates (list[dict]): A list containing two dictionaries with both the the gate name keys
                                 and relative amplitude values.
             sweep_ranges (list): A list two overall amplitude of the sawtooth waves in millivolt in
                                  the x- and y-direction.
@@ -365,43 +380,41 @@ class VirtualAwg(Instrument):
             >> resolution = [10, 10]
             >> mV_sweep_ranges = [100, 100]
             >> gates = [{'P4': 1}, {'P7': 0.1}]
-            >> sweep_data = virtualawg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
+            >> sweep_data = virtual_awg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
-        total_period = period
         base_period = period / np.prod(resolution)
-        period_x = resolution[0] * base_period
-        sequences.update(self.make_markers(total_period, repetitions=1))
+        sequences.update(self.make_markers(period, repetitions=1))
 
+        period_x = resolution[0] * base_period
         for gate_name_x, rel_amplitude_x in gates[0].items():
             amplitude_x = rel_amplitude_x * sweep_ranges[0]
-            sequences[gate_name_x] = Sequencer.make_sawtooth_wave(
-                amplitude_x, period_x, width, repetitions=resolution[1])
+            sweep_wave_x = Sequencer.make_sawtooth_wave(amplitude_x, period_x, width, resolution[1])
+            sequences.setdefault(gate_name_x, []).append(sweep_wave_x)
 
         period_y = resolution[0] * resolution[1] * base_period
         for gate_name_y, rel_amplitude_y in gates[1].items():
             amplitude_y = rel_amplitude_y * sweep_ranges[1]
-            sequences[gate_name_y] = Sequencer.make_sawtooth_wave(amplitude_y, period_y, width)
+            sweep_wave_y = Sequencer.make_sawtooth_wave(amplitude_y, period_y, width)
+            sequences.setdefault(gate_name_y, []).append(sweep_wave_y)
 
         sweep_data = self.sequence_gates(sequences, do_upload)
-        sweep_data.update({
-            'sweeprange_horz': sweep_ranges[0],
-            'sweeprange_vert': sweep_ranges[1],
-            'width_horz': width,
-            'width_vert': width,
-            'resolution': resolution,
-            'start_zero': True,
-            'period': period_y, 'period_horz': period_x,
-            'samplerate': self.awgs[0].retrieve_sampling_rate(),
-            'markerdelay': self.digitizer_marker_delay()
-        })
+        sweep_data.update({'sweeprange_horz': sweep_ranges[0],
+                           'sweeprange_vert': sweep_ranges[1],
+                           'width_horz': width,
+                           'width_vert': width,
+                           'resolution': resolution,
+                           'start_zero': True,
+                           'period': period_y, 'period_horz': period_x,
+                           'samplerate': self.awgs[0].retrieve_sampling_rate(),
+                           'markerdelay': self.digitizer_marker_delay()})
         return sweep_data
 
     def pulse_gates_2d(self, gates, sweep_ranges, period, resolution, do_upload=True):
         """ Supplies square signals to a linear combination of gates, which effectively does a 2D scan.
 
         Arguments:
-            gates (list[dict]): A list containing two dicionaries with both the the gate name keys
+            gates (list[dict]): A list containing two dictionaries with both the the gate name keys
                                 and relative amplitude values.
             sweep_ranges (list): A list two overall amplitude of the square signal in millivolt in
                                  the x- and y-direction.
@@ -419,7 +432,7 @@ class VirtualAwg(Instrument):
             >> resolution = [10, 10]
             >> mV_sweep_ranges = [100, 100]
             >> gates = [{'P4': 1}, {'P7': 0.1}]
-            >> sweep_data = virtualawg.pulse_gates_2d(gates, mV_sweep_ranges, period, resolution)
+            >> sweep_data = virtual_awg.pulse_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
         sequences = dict()
         sequences.update(self.make_markers(period))
@@ -427,25 +440,28 @@ class VirtualAwg(Instrument):
         period_x = resolution[0] * period
         for gate_name_x, rel_amplitude_x in gates[0].items():
             amplitude_x = rel_amplitude_x * sweep_ranges[0]
-            sequences[gate_name_x] = Sequencer.make_square_wave(amplitude_x, period_x)
+            pulse_wave_x = Sequencer.make_square_wave(amplitude_x, period_x, resolution[1])
+            sequences.setdefault(gate_name_x, []).append(pulse_wave_x)
 
         period_y = resolution[0] * resolution[1] * period
         for gate_name_y, rel_amplitude_y in gates[1].items():
             amplitude_y = rel_amplitude_y * sweep_ranges[1]
-            sequences[gate_name_y] = Sequencer.make_square_wave(amplitude_y, period_y)
+            pulse_wave_y = Sequencer.make_square_wave(amplitude_y, period_y)
+            sequences.setdefault(gate_name_y, []).append(pulse_wave_y)
 
         sweep_data = self.sequence_gates(sequences, do_upload)
         sweep_data.update({'sweeprange_horz': sweep_ranges[0],
                            'sweeprange_vert': sweep_ranges[1],
                            'resolution': resolution,
-                           'period': period_x, 'period_vert': period_y,
+                           'period': period_x,
+                           'period_vert': period_y,
                            'samplerate': self.awgs[0].retrieve_setting('channel_sampling_rate'),
                            'markerdelay': self.awg_marker_delay()})
         return sweep_data
 
     def sequence_gates(self, sequences, do_upload=True):
         """ The base function for uploading sequences to the AWG's. The sequences must be
-            constructed using the qtt.instument_drivers.virtualAwg.sequencer.Sequencer class.
+            constructed using the qtt.instrument_drivers.virtualAwg.sequencer.Sequencer class.
 
         Arguments:
             sequences (dict): A dictionary with names as keys and sequences as values.
@@ -456,7 +472,7 @@ class VirtualAwg(Instrument):
             >> amplitude = 1.5
             >> period_in_seconds = 1e-6
             >> sawtooth_signal = Sequencer.make_sawtooth_wave(amplitude, period_in_seconds)
-            >> virtualawg.sequence_gates(sawtooth_signal)
+            >> virtual_awg.sequence_gates(sawtooth_signal)
         """
         upload_data = []
         settings_data = {}
@@ -479,15 +495,17 @@ class VirtualAwg(Instrument):
                 if awg_number != number:
                     continue
 
-                sequence_data = Sequencer.get_data(sequence, sampling_rate)
+                waveforms = [Sequencer.get_data(waveform, sampling_rate) for waveform in sequence]
+                sequence_data = np.sum(waveforms, 0)
                 sequence_data = sequence_data[:-1]
                 if not marker_number:
-                    awg_to_gate = self._settings.parameters['awg_to_{}'.format(gate_name)].get()
+                    awg_to_gate = self._settings.parameters[f'awg_to_{gate_name}'].get()
                     scaling_ratio = 1 / (awg_to_gate * gain_factor)
                     settings_data[number][gate_name] = {'scaling_ratio': scaling_ratio}
                     sequence_data *= scaling_ratio
 
-                sequence_names.append('{}_{}'.format(gate_name, sequence['name']))
+                sequence_name = sequence[0]['name']
+                sequence_names.append(f'{gate_name}_{sequence_name}')
                 sequence_channels.append((channel_number, *marker_number))
                 sequence_items.append(sequence_data)
 
