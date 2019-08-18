@@ -81,9 +81,9 @@ class TestData(unittest.TestCase):
         # check labels
         self.assertEqual(qtt.data.dataset_labels(ds), 'z')
         self.assertEqual(qtt.data.dataset_labels(ds, 'x'), 'horizontal')
-        self.assertEqual(qtt.data.dataset_labels(ds, 1), 'horizontal')
+        self.assertEqual(qtt.data.dataset_labels(ds, 1), 'vertical')
         self.assertEqual(qtt.data.dataset_labels(ds, 'y'), 'vertical')
-        self.assertEqual(qtt.data.dataset_labels(ds, 'y', add_unit='True'), 'vertical [Hz]')
+        self.assertEqual(qtt.data.dataset_labels(ds, 'y', add_unit=True), 'vertical [Hz]')
 
     def test_dataset_to_dictionary(self):
 
