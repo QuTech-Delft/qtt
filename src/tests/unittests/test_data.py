@@ -12,7 +12,7 @@ from qcodes import ManualParameter
 from qcodes.tests.data_mocks import DataSet2D
 import qtt.data
 from qtt.data import image_transform, dataset_to_dictionary, dictionary_to_dataset,\
-     compare_dataset_metadata, diffDataset, add_comment, load_dataset, determine_parameter_unit
+    compare_dataset_metadata, diffDataset, add_comment, load_dataset, determine_parameter_unit
 from qtt.data import logger
 
 
@@ -52,12 +52,38 @@ class TestData(unittest.TestCase):
         cc = qtt.data.datasetCentre(dataset)
         self.assertEqual(cc[0], 1.5)
 
+    def test_dataset_labels_dataset_1d(self):
+        dataset = qtt.data.makeDataSet1Dplain('x', [0, 1], 'y', [2, 3])
+        independent_label = qtt.data.dataset_labels(dataset, 'x')
+        self.assertEqual(independent_label, 'x')
+        independent_label = qtt.data.dataset_labels(dataset, 0)
+        self.assertEqual(independent_label, 'x')
+        dependent_label = qtt.data.dataset_labels(dataset)
+        self.assertEqual(dependent_label, 'y')
+        dependent_label = qtt.data.dataset_labels(dataset, 'z')
+        self.assertEqual(dependent_label, 'z')
+
     def test_dataset_labels_dataset_2d(self):
         dataset = qcodes.tests.data_mocks.DataSet2D()
         zz = qtt.data.dataset_labels(dataset)
         self.assertEqual(zz, 'Z')
         zz = qtt.data.dataset_labels(dataset, add_unit=True)
         self.assertEqual(zz, 'Z [None]')
+
+    def test_dataset_labels_dataset2dplain(self):
+        v = [0]
+        h = [0]
+        measurement = np.arange(len(v) * len(h)).reshape((len(v), len(h)))
+
+        ds = qtt.data.makeDataSet2Dplain('horizontal', h, 'vertical', v, 'z', measurement,
+                                         xunit='mV', yunit='Hz', zunit='A')
+
+        # check labels
+        self.assertEqual(qtt.data.dataset_labels(ds), 'z')
+        self.assertEqual(qtt.data.dataset_labels(ds, 'x'), 'horizontal')
+        self.assertEqual(qtt.data.dataset_labels(ds, 1), 'horizontal')
+        self.assertEqual(qtt.data.dataset_labels(ds, 'y'), 'vertical')
+        self.assertEqual(qtt.data.dataset_labels(ds, 'y', add_unit='True'), 'vertical [Hz]')
 
     def test_dataset_to_dictionary(self):
 
@@ -406,21 +432,6 @@ class TestMakeDataSet(unittest.TestCase):
         self.assertTrue(tuple_names[0] == 'dummy')
         self.assertTrue(tuple_names[1][0] == 'y1')
         self.assertTrue(tuple_names[1][1] == 'y2')
-
-    def test_dataset_labels_dataset2dplain(self):
-        v = [0]
-        h = [0]
-        measurement = np.arange(len(v) * len(h)).reshape((len(v), len(h)))
-
-        ds = qtt.data.makeDataSet2Dplain('horizontal', h, 'vertical', v, 'z', measurement,
-                                         xunit='mV', yunit='Hz', zunit='A')
-
-        # check labels
-        self.assertEqual(qtt.data.dataset_labels(ds), 'z')
-        self.assertEqual(qtt.data.dataset_labels(ds, 'x'), 'horizontal')
-        self.assertEqual(qtt.data.dataset_labels(ds, 1), 'horizontal')
-        self.assertEqual(qtt.data.dataset_labels(ds, 'y'), 'vertical')
-        self.assertEqual(qtt.data.dataset_labels(ds, 'y', add_unit='True'), 'vertical [Hz]')
 
     def test_makedataset2dplain_type_measurement_names_nok(self):
         v = [0, 1, 2.]
