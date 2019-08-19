@@ -1025,7 +1025,7 @@ try:
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
         if not isinstance(notes, str):
-            warnings.warn('type of notes argument is {type(notes)}, converting to string')
+            warnings.warn(f'type of notes argument is {type(notes)}, converting to string')
             notes = str(notes)
 
         if notes is not None:
