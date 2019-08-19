@@ -69,13 +69,12 @@ class TestVirtualDAC(TestCase):
     def test_restrict_boundaries(self):
         gate_map = {'P1': (0, 1), 'P2': (0, 2), 'P3': (0, 3)}
         virtual_dac = VirtualDAC(instrumentName('test'), instruments=[self.ivvi], gate_map=gate_map)
-        gate_boundaries = {'P1': (0, 100), 'P2': (0,100)}
+        gate_boundaries = {'P1': (0, 100), 'P2': (0, 100)}
         virtual_dac.set_boundaries(gate_boundaries)
-        virtual_dac.restrict_boundaries({'P1':(-50,50), 'P3': (0,1)} )
-        self.assertEqual(virtual_dac.get_boundaries(),  {'P1': (0, 50), 'P2': (0, 100), 'P3': (0, 1)})
-        self.assertEqual(self.ivvi.dac1.vals.valid_values, (0,50) )
+        virtual_dac.restrict_boundaries({'P1': (-50, 50), 'P3': (0, 1)})
+        self.assertEqual(virtual_dac.get_boundaries(), {'P1': (0, 50), 'P2': (0, 100), 'P3': (0, 1)})
+        self.assertEqual(self.ivvi.dac1.vals.valid_values, (0, 50))
 
-        
     def test_set_dacs(self):
         virtual_dac = VirtualDAC(instrumentName('gates'), instruments=[], gate_map={})
         virtual_dac.add_instruments([self.ivvi])
