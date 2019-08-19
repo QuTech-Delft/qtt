@@ -61,7 +61,7 @@ class TestData(unittest.TestCase):
         dependent_label = qtt.data.dataset_labels(dataset)
         self.assertEqual(dependent_label, 'y')
         dependent_label = qtt.data.dataset_labels(dataset, 'z')
-        self.assertEqual(dependent_label, 'z')
+        self.assertEqual(dependent_label, 'y')
 
     def test_dataset_labels_dataset_2d(self):
         dataset = qcodes.tests.data_mocks.DataSet2D()

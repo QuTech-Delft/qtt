@@ -176,7 +176,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if fig:
         xdata = np.array(range(0, len(data))) / samplerate * 1000
         Z, xedges, yedges = np.histogram2d(xdata, data, bins=[int(
-            np.sqrt(len(xdata))) / 2, int(np.sqrt(len(data))) / 2])
+            np.sqrt(len(xdata)) / 2), int(np.sqrt(len(data))/2) ])
         title = '2d histogram RTS'
         Fig = plt.figure(fig)
         plt.clf()
