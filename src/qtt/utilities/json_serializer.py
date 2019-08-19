@@ -3,16 +3,18 @@ from typing import Any
 
 import numpy as np
 import qcodes
-from qilib.utils.serialization import serialize, unserialize, register_encoder, register_decoder, transform_data, \
-    JsonSerializeKey
-
 import qtt.data
+from qilib.utils.serialization import Serializer, JsonSerializeKey
+
+
+class QttSerializer(Serializer):
+    pass
 
 
 def encode_tuple(item):
     return {
         JsonSerializeKey.OBJECT: tuple.__name__,
-        JsonSerializeKey.CONTENT: [transform_data(value) for value in item]
+        JsonSerializeKey.CONTENT: [qtt_serializer.transform_data(value) for value in item]
     }
 
 
@@ -47,7 +49,7 @@ def decode_numpy_number(item):
 
 
 def encode_qcodes_dataset(item):
-    dataset_dictionary = transform_data(qtt.data.dataset_to_dictionary(item))
+    dataset_dictionary = qtt_serializer.transform_data(qtt.data.dataset_to_dictionary(item))
     return {
         JsonSerializeKey.OBJECT: '__qcodes_dataset__',
         JsonSerializeKey.CONTENT: {
@@ -70,7 +72,7 @@ def encode_json(data: object) -> str:
         String with formatted JSON
 
     """
-    return serialize(data)
+    return qtt_serializer.serialize(data)
 
 
 def decode_json(json_string: str) -> Any:
@@ -82,7 +84,7 @@ def decode_json(json_string: str) -> Any:
         Python object
 
     """
-    return unserialize(json_string)
+    return qtt_serializer.unserialize(json_string)
 
 
 def save_json(data: Any, filename: str):
@@ -109,12 +111,14 @@ def load_json(filename: str) -> object:
     return decode_json(data)
 
 
-register_encoder(tuple, encode_tuple)
-register_decoder(tuple.__name__, decode_tuple)
-register_encoder(qcodes.Instrument, encode_qcodes_instrument)
-register_decoder('__qcodes_instrument__', decode_qcodes_instrument)
+qtt_serializer = QttSerializer()
+
+qtt_serializer.register_encoder(tuple, encode_tuple)
+qtt_serializer.register_decoder(tuple.__name__, decode_tuple)
+qtt_serializer.register_encoder(qcodes.Instrument, encode_qcodes_instrument)
+qtt_serializer.register_decoder('__qcodes_instrument__', decode_qcodes_instrument)
 for t in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
-    register_encoder(t, encode_numpy_number)
-register_decoder('__npnumber__', decode_numpy_number)
-register_encoder(qcodes.DataSet, encode_qcodes_dataset)
-register_decoder('__qcodes_dataset__', decode_qcodes_dataset)
+    qtt_serializer.register_encoder(t, encode_numpy_number)
+qtt_serializer.register_decoder('__npnumber__', decode_numpy_number)
+qtt_serializer.register_encoder(qcodes.DataSet, encode_qcodes_dataset)
+qtt_serializer.register_decoder('__qcodes_dataset__', decode_qcodes_dataset)
