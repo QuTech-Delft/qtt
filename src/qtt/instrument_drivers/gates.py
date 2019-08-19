@@ -246,9 +246,22 @@ class VirtualDAC(Instrument):
             boundaries[gate] = param.vals.valid_values
         return boundaries
 
+    def restrict_boundaries(self, gate_boundaries):
+        """ Restrict boundaries values that can be set on the gates.
+
+        Args:
+            gate_boundaries (dict): a range of allowed values per parameter.
+        """
+        new_boundaries = self.get_boundaries()
+        
+        for g, bnds in gate_boundaries.items():
+            new_boundaries[g] = (max(new_boundaries[g][0], bnds[0]), min(new_boundaries[g][1], bnds[1]) )
+
+        self.set_boundaries(new_boundaries)
+        
     def __repr__(self):
         gm = getattr(self, '_gate_map', [])
-        s = 'gates: %s (%d gates)' % (self.name, len(gm))
+        s = 'VirtualDAC: %s (%d gates)' % (self.name, len(gm))
 
         return s
 
