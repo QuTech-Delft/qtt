@@ -235,10 +235,13 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         for instrument_name in names:
             lst = self._itemsdict[instrument_name]
             for parameter_name in lst:
-                box = lst[parameter_name]['double_box']
-
-                if box is not None:
-                    box.setSingleStep(value)
+                try:
+                    box = lst[parameter_name]['double_box']
+    
+                    if box is not None:
+                        box.setSingleStep(value)
+                except:
+                    continue
 
     def _valueChanged(self, instrument_name: str, parameter_name: str, value: Any, *args, **kwargs):
         """ Callback used to update values in an instrument """
