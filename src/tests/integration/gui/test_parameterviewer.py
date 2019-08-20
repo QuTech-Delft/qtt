@@ -32,13 +32,13 @@ class TestParameterViewer(unittest.TestCase):
         _ = pyqtgraph.mkQApp()
 
         ivvi = qtt.instrument_drivers.virtual_instruments.VirtualIVVI('v', model=None)
-        pv=qtt.gui.parameterviewer.ParameterViewer([ivvi])        
+        pv=qtt.gui.parameterviewer.ParameterViewer([ivvi])
 
         single_step=.1
         pv.setSingleStep(single_step)
         
         with self.assertRaises(KeyError):
             pv.setSingleStep(-single_step, 'non_existent_instrument')
-        
+
         box1=pv._itemsdict['v']['dac1']['double_box']
         self.assertEqual(box1.singleStep(), single_step)
