@@ -27,7 +27,7 @@ class TestParameterViewer(unittest.TestCase):
         p.close()
         qtapp.processEvents()
 
-
+    @pytest.mark.skipif(sys.version_info >= (3, 7), reason="do not run with python3.7 or higher")
     def test_setSingleStep(self):
         _ = pyqtgraph.mkQApp()
 
