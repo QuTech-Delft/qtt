@@ -235,6 +235,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         for instrument_name in names:
             lst = self._itemsdict[instrument_name]
             for parameter_name in lst:
+                if parameter_name == '_treewidgetitem':
+                    continue
                 box = lst[parameter_name]['double_box']
 
                 if box is not None:
