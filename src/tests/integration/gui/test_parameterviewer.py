@@ -32,7 +32,7 @@ class TestParameterViewer(unittest.TestCase):
         qtapp = pyqtgraph.mkQApp()
 
         ivvi = qtt.instrument_drivers.virtual_instruments.VirtualIVVI('v', model=None)
-        pv=qtt.gui.parameterviewer.ParameterViewer([ivvi])
+        pv = ParameterViewer([ivvi])
 
         single_step=.1
         pv.setSingleStep(single_step)
@@ -47,6 +47,7 @@ class TestParameterViewer(unittest.TestCase):
         pv.setParamSingleStep('v', 'dac1', single_step)
         self.assertEqual(box1.singleStep(), single_step)
 
+        ivvi.close()
         pv.stop()
         pv.close()
         qtapp.processEvents()
