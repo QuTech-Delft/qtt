@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add option to compensate for re-arm time of M4i trigger.
 - Add methods for performing operations on datasets. (#593)
 - The new virtual AWG can now also be used with the turbo scan. (#618)
+- Add re-arm compensation. (#614)
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All unittests are moved to a tests folder (#574).
 - Legacy code now throws exceptions (#551).
 - VideoMode tool was restructured to clean up the interface (#594)
+- Updates requirements on QCoDeS version (#614)
 - Removed plunger argument from tunnelrates_RTS (#625)
 
 ### Deprecated
