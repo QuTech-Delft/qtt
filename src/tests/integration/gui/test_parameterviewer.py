@@ -29,16 +29,24 @@ class TestParameterViewer(unittest.TestCase):
 
     @pytest.mark.skipif(sys.version_info >= (3, 7), reason="do not run with python3.7 or higher")
     def test_setSingleStep(self):
-        _ = pyqtgraph.mkQApp()
+        qtapp = pyqtgraph.mkQApp()
 
         ivvi = qtt.instrument_drivers.virtual_instruments.VirtualIVVI('v', model=None)
         pv=qtt.gui.parameterviewer.ParameterViewer([ivvi])
 
         single_step=.1
         pv.setSingleStep(single_step)
-        
+
         with self.assertRaises(KeyError):
             pv.setSingleStep(-single_step, 'non_existent_instrument')
 
         box1=pv._itemsdict['v']['dac1']['double_box']
         self.assertEqual(box1.singleStep(), single_step)
+
+        single_step = 1.5
+        pv.setParamSingleStep('v', 'dac1', single_step)
+        self.assertEqual(box1.singleStep(), single_step)
+
+        pv.stop()
+        pv.close()
+        qtapp.processEvents()
