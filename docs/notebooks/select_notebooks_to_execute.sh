@@ -6,7 +6,8 @@
 
 echo "Running notebooks"
 set -ev
+export QTT_UNITTEST=ON
 find docs/notebooks/ -type d \( -path "docs/notebooks/measurements" -o -path "docs/notebooks/unfinished" \) -prune -o -type f -name "*.ipynb" -print0 | while IFS= read -r -d $'\0' file;
 do
-    jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 "$file"
+    jupyter nbconvert --to notebook --execute "$file"
 done
