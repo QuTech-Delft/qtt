@@ -15,9 +15,9 @@ class TestRandomTelegraphSignal(unittest.TestCase):
         try:
             _ = tunnelrates_RTS(data)
             raise Exception('no samplerate available')
-        except Exception as ex:
+        except ValueError as ex:
             # exception is good, since no samplerate was provided
-            self.assertTrue('samplerate is None' in str(ex))
+            self.assertTrue('samplerate should be set to the data samplerate' in str(ex))
         try:
             _ = tunnelrates_RTS(data, samplerate=10e6)
             raise Exception('data should not fit to RTS')
@@ -66,9 +66,13 @@ class TestRandomTelegraphSignal(unittest.TestCase):
         input_data = np.array([2, 3, 4])
         counts, bins, bin_size = _create_integer_histogram(input_data)
         self.assertEqual(input_data.size, np.sum(counts))
+        np.testing.assert_array_equal(bins, np.array([1.5, 4.5]))
         self.assertTrue(bin_size > 0)
 
         input_data = np.array([2.])
         counts, bins, bin_size = _create_integer_histogram(input_data)
         self.assertEqual(input_data.size, np.sum(counts))
         self.assertEqual(len(bins), 2)
+
+        with self.assertRaises(Exception):
+            _ = _create_integer_histogram([])
