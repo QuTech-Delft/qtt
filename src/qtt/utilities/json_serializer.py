@@ -7,10 +7,6 @@ import qtt.data
 from qilib.utils.serialization import Serializer, JsonSerializeKey
 
 
-class QttSerializer(Serializer):
-    pass
-
-
 def encode_qcodes_instrument(item):
     return {
         JsonSerializeKey.OBJECT: '__qcodes_instrument__',
@@ -100,7 +96,7 @@ def load_json(filename: str) -> object:
     return decode_json(data)
 
 
-qtt_serializer = QttSerializer()
+qtt_serializer = Serializer()
 
 qtt_serializer.register(qcodes.Instrument, encode_qcodes_instrument, '__qcodes_instrument__', decode_qcodes_instrument)
 for t in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
