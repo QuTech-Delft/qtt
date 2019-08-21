@@ -15,7 +15,7 @@ class TestVideoModeProcessor(unittest.TestCase):
 
     def test_DummyVideoModeProcessor(self):
         qtapp = pyqtgraph.mkQApp()
-        
+
         station = qtt.simulation.virtual_dot_array.initialize()
         dummy_processor = DummyVideoModeProcessor(station)
         vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=1,
