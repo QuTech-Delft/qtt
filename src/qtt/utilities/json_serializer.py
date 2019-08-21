@@ -11,17 +11,6 @@ class QttSerializer(Serializer):
     pass
 
 
-def encode_tuple(item):
-    return {
-        JsonSerializeKey.OBJECT: tuple.__name__,
-        JsonSerializeKey.CONTENT: [qtt_serializer.transform_data(value) for value in item]
-    }
-
-
-def decode_tuple(item):
-    return tuple(item[JsonSerializeKey.CONTENT])
-
-
 def encode_qcodes_instrument(item):
     return {
         JsonSerializeKey.OBJECT: '__qcodes_instrument__',
@@ -113,12 +102,7 @@ def load_json(filename: str) -> object:
 
 qtt_serializer = QttSerializer()
 
-qtt_serializer.register_encoder(tuple, encode_tuple)
-qtt_serializer.register_decoder(tuple.__name__, decode_tuple)
-qtt_serializer.register_encoder(qcodes.Instrument, encode_qcodes_instrument)
-qtt_serializer.register_decoder('__qcodes_instrument__', decode_qcodes_instrument)
+qtt_serializer.register(qcodes.Instrument, encode_qcodes_instrument, '__qcodes_instrument__', decode_qcodes_instrument)
 for t in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
-    qtt_serializer.register_encoder(t, encode_numpy_number)
-qtt_serializer.register_decoder('__npnumber__', decode_numpy_number)
-qtt_serializer.register_encoder(qcodes.DataSet, encode_qcodes_dataset)
-qtt_serializer.register_decoder('__qcodes_dataset__', decode_qcodes_dataset)
+    qtt_serializer.register(t, encode_numpy_number, '__npnumber__', decode_numpy_number)
+qtt_serializer.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
