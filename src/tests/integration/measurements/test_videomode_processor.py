@@ -27,7 +27,7 @@ class TestVideoModeProcessor(unittest.TestCase):
         vm.close()
         qtt.simulation.virtual_dot_array.close()
         self.assertIsInstance(datasets[0], qcodes.DataSet)
-        
+
         qtapp.processEvents()
         time.sleep(.1)
 
