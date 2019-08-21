@@ -309,7 +309,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
             tunnelrate = gamma_fit / 1000
 
             other_label = 'up' if label == 'down' else 'down'
-            
+
             if verbose:
                 print(f'Tunnel rate {label} to {other_label}: %.1f kHz' % tunnelrate)
 
