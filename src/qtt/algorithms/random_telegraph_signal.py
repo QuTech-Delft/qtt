@@ -120,7 +120,7 @@ def _create_integer_histogram(durations):
     This method works if the data is sampled at integer durations.
     """
     numbins = int(np.sqrt(len(durations)))
-    
+
     if numbins == 0:
         raise Exception('cannot create histogram with zero bins')
 
