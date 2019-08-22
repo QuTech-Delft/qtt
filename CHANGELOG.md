@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Legacy code now throws exceptions (#551).
 - VideoMode tool was restructured to clean up the interface (##594)
 - Updates requirements on QCoDeS version (#614)
+- qtt.data.dataset_labels works for 1D scans now (#629)
 
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).
