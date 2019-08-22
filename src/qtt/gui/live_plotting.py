@@ -352,8 +352,6 @@ class RdaControl(QtWidgets.QMainWindow):
         if self.verbose:
             print('valueChanged: %s %s' % (name, value))
         self.rda.set(name, value)
-        # self.label.setStyleSheet("QLabel { background-color : #baccba;
-        # margin: 2px; padding: 2px; }");
 
 
 # legacy name
@@ -502,9 +500,7 @@ class livePlot(QtCore.QObject):
 
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
-            # @Slot()
             def signal_drop_arguments(*args, **kwargs):
-                # print('call %s' % target)
                 target()
             return signal_drop_arguments
 
@@ -519,15 +515,13 @@ class livePlot(QtCore.QObject):
         self.plotwin.scene().sigMouseClicked.connect(self._onClick)
 
     def __del__(self):
-        print(f'## {self.__class__} destructor')
         self.stopreadout()
         pyqtgraph.mkQApp().processEvents()
         self.close()
         parent = super()
         if hasattr(parent, '__del__'):
             parent.__del__() 
-        print(f'{self.__class__} destructor done')
-        
+
     def _onClick(self, event):
         image_pt = self.plot.mapFromScene(event.scenePos())
 

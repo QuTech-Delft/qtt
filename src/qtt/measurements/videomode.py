@@ -338,7 +338,7 @@ class VideoMode:
             liveplot.deleteLater()
         if self.verbose>=2:
             print(f'{self.__class__}: call mainwin.close')
-            
+
         self.mainwin.close()
 
     def get_dataset(self):
