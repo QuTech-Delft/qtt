@@ -401,16 +401,29 @@ def dataset_labels(alldata, tag=None, add_unit=False):
         tag (str or int or None): can be 'x', 'y' or 'z' or the index of the axis
         add_unit (bool): If True then add units
     """
-    if tag == 'y' or tag == 0:
-        d = alldata.default_parameter_array()
+
+    dataset_dimension = len(alldata.default_parameter_array().set_arrays)
+    d = alldata.default_parameter_array()
+
+    if isinstance(tag, int):
         array = d.set_arrays[0]
-    elif tag == 'x' or tag == 1:
-        d = alldata.default_parameter_array()
-        array = d.set_arrays[1]
-    elif tag is None or tag == 'z':
-        array = alldata.default_parameter_array()
     else:
-        raise Exception('invalid value %s for tag' % (tag,))
+        if dataset_dimension == 1:
+            if tag == 'x':
+                array = d.set_arrays[0]
+            elif tag is None or tag == 'z' or tag == 'y':
+                array = d
+            else:
+                raise Exception('invalid value %s for tag' % (tag,))
+        else:
+            if tag == 'y':
+                array = d.set_arrays[0]
+            elif tag == 'x':
+                array = d.set_arrays[1]
+            elif tag is None or tag == 'z':
+                array = d
+            else:
+                raise Exception('invalid value %s for tag' % (tag,))
     label = array.label
 
     if add_unit:
