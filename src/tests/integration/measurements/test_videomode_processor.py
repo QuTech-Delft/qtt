@@ -1,4 +1,6 @@
 import unittest
+import pyqtgraph
+import time
 
 import qcodes
 import qtt.data
@@ -12,6 +14,8 @@ class TestVideoModeProcessor(unittest.TestCase):
 
 
     def test_DummyVideoModeProcessor(self):
+        qtapp = pyqtgraph.mkQApp()
+
         station = qtt.simulation.virtual_dot_array.initialize()
         dummy_processor = DummyVideoModeProcessor(station)
         vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=1,
@@ -24,3 +28,5 @@ class TestVideoModeProcessor(unittest.TestCase):
         qtt.simulation.virtual_dot_array.close()
         self.assertIsInstance(datasets[0], qcodes.DataSet)
 
+        qtapp.processEvents()
+        time.sleep(.1)
