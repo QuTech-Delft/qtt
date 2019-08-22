@@ -3,28 +3,13 @@
 import unittest
 import numpy as np
 import matplotlib.pyplot as plt
-from qtt.algorithms.random_telegraph_signal import tunnelrates_RTS, FittingException, generate_RTS_signal
+from qtt.algorithms.random_telegraph_signal import tunnelrates_RTS, generate_RTS_signal
 import warnings
 
 
 class TestRandomTelegraphSignal(unittest.TestCase):
 
     def test_RTS(self, fig=100, verbose=2):
-        data = np.random.rand(10000, )
-        try:
-            _ = tunnelrates_RTS(data)
-            raise Exception('no samplerate available')
-        except Exception as ex:
-            # exception is good, since no samplerate was provided
-            self.assertTrue('samplerate is None' in str(ex))
-        try:
-            _ = tunnelrates_RTS(data, samplerate=10e6)
-            raise Exception('data should not fit to RTS')
-        except FittingException as ex:
-            # fitting exception is good, since data is random
-            pass
-
-        data = generate_RTS_signal(100, std_gaussian_noise=0, uniform_noise=.1)
         data = generate_RTS_signal(100, std_gaussian_noise=0.1, uniform_noise=.1)
 
         samplerate = 2e6
