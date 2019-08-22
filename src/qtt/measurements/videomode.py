@@ -340,10 +340,15 @@ class VideoMode:
 
     def close(self):
         """ Stop the videomode and close the GUI"""
+        print(f'{self.__class__}: close')
         for liveplot in self.lp:
+            liveplot.stopreadout()
             liveplot.deleteLater()
+            print(f'{self.__class__}: call stop')
+
         self.stop()
         self.mainwin.close()
+        print(f'{self.__class__}: close done')
 
     def get_dataset(self):
         """ Return latest recorded dataset

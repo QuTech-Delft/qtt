@@ -381,7 +381,7 @@ class livePlot(QtCore.QObject):
     sigMouseClicked = Signal(object)
 
     def __del__(self):
-        print(f'{self.__class__} destructor')
+        print(f'## {self.__class__} destructor')
         self.stopreadout()
         self.close()
         parent = super()
@@ -565,6 +565,7 @@ class livePlot(QtCore.QObject):
                 x.setPos(pos)
 
     def update(self, data=None, processevents=True):
+        print(f'{self.__class__}: update() ')
         self.win.setWindowTitle('%s, fps: %.2f' %
                                 (self.window_title, self.fps.framerate()))
         if self.verbose >= 2:

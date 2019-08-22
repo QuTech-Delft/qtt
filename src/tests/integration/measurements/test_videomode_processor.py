@@ -41,3 +41,5 @@ class TestVideoModeProcessor(unittest.TestCase):
         qtapp.processEvents()
         time.sleep(.1)
 
+# https://stackoverflow.com/questions/5339062/python-pyside-internal-c-object-already-deleted
+# https://stackoverflow.com/questions/17914960/pyqt-runtimeerror-wrapped-c-c-object-has-been-deleted        
