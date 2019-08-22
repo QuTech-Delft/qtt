@@ -531,6 +531,7 @@ class livePlot(QtCore.QObject):
         if self.verbose:
             print('LivePlot.close()')
         self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
         self.win.close()
 
     def resetdata(self):
