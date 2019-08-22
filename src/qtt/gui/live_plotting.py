@@ -5,6 +5,7 @@ import numpy as np
 from functools import partial
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
+from qtpy.QtCore import Signal
 import pyqtgraph as pg
 import pyqtgraph
 import pyqtgraph.multiprocess as mp
@@ -374,7 +375,6 @@ class livePlot(QtCore.QObject):
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    from qtpy.QtCore import Signal
     sigMouseClicked = Signal(object)
 
     def __init__(
