@@ -520,7 +520,7 @@ class livePlot(QtCore.QObject):
         self.close()
         parent = super()
         if hasattr(parent, '__del__'):
-            parent.__del__() 
+            parent.__del__()
 
     def _onClick(self, event):
         image_pt = self.plot.mapFromScene(event.scenePos())
@@ -538,6 +538,7 @@ class livePlot(QtCore.QObject):
         pyqtgraph.mkQApp().processEvents()
         self.win.close()
 
+    @qtt.utilities.tools.rdeprecated(txt='method not used any more', expire='1 Dec 2019')
     def resetdata(self):
         self.idx = 0
         self.data = None
@@ -665,6 +666,7 @@ class livePlot(QtCore.QObject):
         time.sleep(0.00001)
 
     def enable_averaging(self, value):
+        """ Enabling rolling average """
         self._averaging_enabled = value
         if self.verbose >= 1:
             if self._averaging_enabled == 2:
@@ -685,8 +687,9 @@ class livePlot(QtCore.QObject):
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
+            callback (None or method): Method to call on update
             rate (float): sample rate in ms
-
+            maxidx (None or int): Stop reading if the index is larger than the maxidx
         """
         if maxidx is not None:
             self.maxidx = maxidx
@@ -697,6 +700,7 @@ class livePlot(QtCore.QObject):
             print('live_plotting: start readout: rate %.1f Hz' % rate)
 
     def stopreadout(self):
+        """ Stop the readout loop """
         if self.verbose:
             print('live_plotting: stop readout')
         self.timer.stop()
