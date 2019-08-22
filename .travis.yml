@@ -25,7 +25,7 @@ install:
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         echo "Full Installation";
         pip install -r develop_requirements.txt;
-        export FULL_TESTS=True
+        export FULL_TESTS=True;
       fi
     - pip install -e .
     - export QT_QPA_PLATFORM=offscreen

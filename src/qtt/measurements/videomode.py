@@ -148,9 +148,14 @@ class VideoMode:
             self.run()
 
     def __del__(self):
-        print('VideoMode destructor')
-        super(VideoMode, self).__del__() 
-        print('VideoMode destructor done')
+        print(f'{self.__class__} destructor')
+        self.stopreadout()
+        self.close()
+        parent = super()
+        if hasattr(parent, '__del__'):
+            parent.__del__() 
+        print(f'{self.__class__} destructor done')
+
 
 
     def set_videomode_name(self, name):
@@ -336,7 +341,7 @@ class VideoMode:
     def close(self):
         """ Stop the videomode and close the GUI"""
         for liveplot in self.lp:
-            del liveplot
+            del(liveplot)
         self.stop()
         self.mainwin.close()
 

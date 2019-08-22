@@ -381,13 +381,13 @@ class livePlot(QtCore.QObject):
     sigMouseClicked = Signal(object)
 
     def __del__(self):
-        print('livePlot destructor')
+        print(f'{self.__class__} destructor')
         self.stopreadout()
         self.close()
         parent = super()
         if hasattr(parent, '__del__'):
             parent.__del__() 
-        print('livePlot destructor done')
+        print(f'{self.__class__} destructor done')
 
     def __init__(
             self,
