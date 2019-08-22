@@ -25,6 +25,7 @@ install:
     - if [[ "$FULL_INSTALL" == "1" ]]; then
         echo "Full Installation";
         pip install -r develop_requirements.txt;
+        export FULL_TESTS=True
       fi
     - pip install -e .
     - export QT_QPA_PLATFORM=offscreen
@@ -34,10 +35,6 @@ script:
     - pytest --version
     - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/tools.py","./src/qtt/live_plotting.py","./src/qtt/live.py","./src/qtt/measurements/ttrace.py" -m pytest
     - mypy src --ignore-missing-imports
-    - if [[ "$FULL_INSTALL" == "1" ]]; then
-        jupyter --version;
-        bash docs/notebooks/select_notebooks_to_execute.sh;
-      fi
 
 after_success:
   - coveralls

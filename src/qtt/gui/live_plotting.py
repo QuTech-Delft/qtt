@@ -379,6 +379,12 @@ class livePlot(QtCore.QObject):
     from qtpy.QtCore import Signal
     sigMouseClicked = Signal(object)
 
+    def __del__(self):
+        print('livePlot destructor')
+        self.close()
+        super(livePlot, self).__del__() 
+        print('livePlot destructor done')
+
     def __init__(
             self,
             datafunction=None,
@@ -537,6 +543,7 @@ class livePlot(QtCore.QObject):
         self.idx = 0
         self.data = None
 
+        
     def crosshair(self, show=None, pos=None):
         """ Enable or disable crosshair
 

@@ -18,7 +18,7 @@ class TestVideoModeProcessor(unittest.TestCase):
 
         station = qtt.simulation.virtual_dot_array.initialize()
         dummy_processor = DummyVideoModeProcessor(station)
-        vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=1,
+        vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=2,
                        nplots=1, dorun=False, videomode_processor=dummy_processor)
         vm.stopreadout()
         vm.stop()

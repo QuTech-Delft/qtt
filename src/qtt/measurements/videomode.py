@@ -147,6 +147,12 @@ class VideoMode:
         if dorun:
             self.run()
 
+    def __del__(self):
+        print('VideoMode destructor')
+        super(VideoMode, self).__del__() 
+        print('VideoMode destructor done')
+
+
     def set_videomode_name(self, name):
         """ Set the name for this instance of the tool """
         if name is None:
@@ -190,7 +196,7 @@ class VideoMode:
         plot_dimension = self.videomode_processor.scan_dimension()
         for ii in range(number_of_plots):
             lp = livePlot(self.videomode_processor, self.station.gates,
-                          self.sweepparams, self.sweepranges, show_controls=False,
+                          self.sweepparams, self.sweepranges, show_controls=False, verbose=1,
                           plot_title=self.videomode_processor.plot_title(ii), plot_dimension=plot_dimension)
             self.lp.append(lp)
             self.plotLayout.addWidget(self.lp[ii].win)
@@ -329,6 +335,8 @@ class VideoMode:
 
     def close(self):
         """ Stop the videomode and close the GUI"""
+        for liveplot in self.lp:
+            del liveplot
         self.stop()
         self.mainwin.close()
 
