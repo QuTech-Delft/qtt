@@ -341,7 +341,7 @@ class VideoMode:
     def close(self):
         """ Stop the videomode and close the GUI"""
         for liveplot in self.lp:
-            del(liveplot)
+            liveplot.deleteLater()
         self.stop()
         self.mainwin.close()
 
