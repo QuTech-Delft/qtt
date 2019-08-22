@@ -1,5 +1,6 @@
 import unittest
 import pyqtgraph
+import time
 
 import qcodes
 import qtt.data
@@ -25,3 +26,5 @@ class TestVideoModeProcessor(unittest.TestCase):
         self.assertIsInstance(datasets[0], qcodes.DataSet)
 
         qt_application.processEvents()
+        qtapp.processEvents()
+        time.sleep(.1)
