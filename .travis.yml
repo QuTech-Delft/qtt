@@ -1,11 +1,11 @@
 language: python
 matrix:
   include:
-  - name: Minimal installation 3.6
-    python: 3.6
-    sudo: true
+
+  - name: Full installation 3.7
+    python: 3.7
     dist: xenial
-    env: QT_QPA_PLATFORM=offscreen
+    env: FULL_INSTALL=1
     services:
     - xvfb
 
@@ -17,19 +17,6 @@ matrix:
     services:
     - xvfb
 
-  - name: Full installation 3.6
-    python: 3.6
-    dist: xenial
-    env: FULL_INSTALL=1
-    services:
-    - xvfb
-
-  - name: Full installation 3.7
-    python: 3.7
-    dist: xenial
-    env: FULL_INSTALL=1
-    services:
-    - xvfb
 
 install:
     - pip install -r requirements.txt
