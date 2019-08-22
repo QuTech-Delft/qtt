@@ -383,6 +383,7 @@ class livePlot(QtCore.QObject):
     def __del__(self):
         print(f'## {self.__class__} destructor')
         self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
         self.close()
         parent = super()
         if hasattr(parent, '__del__'):
@@ -541,6 +542,7 @@ class livePlot(QtCore.QObject):
         if self.verbose:
             print('LivePlot.close()')
         self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
         self.win.close()
 
     def resetdata(self):
