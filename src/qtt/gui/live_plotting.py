@@ -5,6 +5,7 @@ import numpy as np
 from functools import partial
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
+from qtpy.QtCore import Signal
 import pyqtgraph as pg
 import pyqtgraph
 import pyqtgraph.multiprocess as mp
@@ -352,8 +353,6 @@ class RdaControl(QtWidgets.QMainWindow):
         if self.verbose:
             print('valueChanged: %s %s' % (name, value))
         self.rda.set(name, value)
-        # self.label.setStyleSheet("QLabel { background-color : #baccba;
-        # margin: 2px; padding: 2px; }");
 
 
 # legacy name
@@ -376,7 +375,6 @@ class livePlot(QtCore.QObject):
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    from qtpy.QtCore import Signal
     sigMouseClicked = Signal(object)
 
     def __init__(
@@ -502,9 +500,7 @@ class livePlot(QtCore.QObject):
 
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
-            # @Slot()
             def signal_drop_arguments(*args, **kwargs):
-                # print('call %s' % target)
                 target()
             return signal_drop_arguments
 
@@ -517,6 +513,14 @@ class livePlot(QtCore.QObject):
         self.datafunction_result = None
 
         self.plotwin.scene().sigMouseClicked.connect(self._onClick)
+
+    def __del__(self):
+        self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
+        self.close()
+        parent = super()
+        if hasattr(parent, '__del__'):
+            parent.__del__()
 
     def _onClick(self, event):
         image_pt = self.plot.mapFromScene(event.scenePos())
@@ -531,8 +535,10 @@ class livePlot(QtCore.QObject):
         if self.verbose:
             print('LivePlot.close()')
         self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
         self.win.close()
 
+    @qtt.utilities.tools.rdeprecated(txt='method not used any more', expire='1 Dec 2019')
     def resetdata(self):
         self.idx = 0
         self.data = None
@@ -660,6 +666,7 @@ class livePlot(QtCore.QObject):
         time.sleep(0.00001)
 
     def enable_averaging(self, value):
+        """ Enabling rolling average """
         self._averaging_enabled = value
         if self.verbose >= 1:
             if self._averaging_enabled == 2:
@@ -680,8 +687,9 @@ class livePlot(QtCore.QObject):
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
+            callback (None or method): Method to call on update
             rate (float): sample rate in ms
-
+            maxidx (None or int): Stop reading if the index is larger than the maxidx
         """
         if maxidx is not None:
             self.maxidx = maxidx
@@ -692,6 +700,7 @@ class livePlot(QtCore.QObject):
             print('live_plotting: start readout: rate %.1f Hz' % rate)
 
     def stopreadout(self):
+        """ Stop the readout loop """
         if self.verbose:
             print('live_plotting: stop readout')
         self.timer.stop()
