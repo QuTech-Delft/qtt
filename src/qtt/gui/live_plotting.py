@@ -518,6 +518,16 @@ class livePlot(QtCore.QObject):
 
         self.plotwin.scene().sigMouseClicked.connect(self._onClick)
 
+    def __del__(self):
+        print(f'## {self.__class__} destructor')
+        self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
+        self.close()
+        parent = super()
+        if hasattr(parent, '__del__'):
+            parent.__del__() 
+        print(f'{self.__class__} destructor done')
+        
     def _onClick(self, event):
         image_pt = self.plot.mapFromScene(event.scenePos())
 
