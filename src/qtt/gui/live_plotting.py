@@ -361,6 +361,7 @@ LivePlotControl = RdaControl
 
 # %% Liveplot object
 
+        
 
 class livePlot(QtCore.QObject):
     """ Class to enable live plotting of data.
@@ -381,8 +382,11 @@ class livePlot(QtCore.QObject):
 
     def __del__(self):
         print('livePlot destructor')
+        self.stopreadout()
         self.close()
-        super(livePlot, self).__del__() 
+        parent = super()
+        if hasattr(parent, '__del__'):
+            parent.__del__() 
         print('livePlot destructor done')
 
     def __init__(
@@ -725,5 +729,14 @@ class MockCallback_2d(qcodes.Instrument):
                     np.deg2rad(self.q()), w=2, l=self.nx / 4, H=3)
         return data_reshaped
 
-
-
+#%%
+if 0:
+    import gc
+    print('create')
+    l=livePlot();
+    print('del')
+    del(l)
+    print('gc')
+    gc.collect()
+    
+    
