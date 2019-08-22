@@ -19,10 +19,10 @@ class TestVideoModeProcessor(unittest.TestCase):
         station = qtt.simulation.virtual_dot_array.initialize()
         dummy_processor = DummyVideoModeProcessor(station)
         vm = VideoMode(station, Naverage=25, diff_dir=None, verbose=2,
-                       nplots=1, dorun=False, videomode_processor=dummy_processor)
+                       nplots=0, dorun=False, videomode_processor=dummy_processor)
         #vm.stopreadout()
         #vm.stop()
-        vm.updatebg()
+        #vm.updatebg()
         datasets = vm.get_dataset()
         time.sleep(.2)
         
@@ -43,3 +43,5 @@ class TestVideoModeProcessor(unittest.TestCase):
 
 # https://stackoverflow.com/questions/5339062/python-pyside-internal-c-object-already-deleted
 # https://stackoverflow.com/questions/17914960/pyqt-runtimeerror-wrapped-c-c-object-has-been-deleted        
+        
+        
