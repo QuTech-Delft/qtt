@@ -2,12 +2,12 @@ language: python
 matrix:
   include:
 
-  - name: Full installation 3.7
-    python: 3.7
-    dist: xenial
-    env: FULL_INSTALL=1
-    services:
-    - xvfb
+#  - name: Full installation 3.7
+#    python: 3.7
+#    dist: xenial
+#    env: FULL_INSTALL=1
+#    services:
+#    - xvfb
 
   - name: Minimal installation 3.7
     python: 3.7
