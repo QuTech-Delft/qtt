@@ -6,6 +6,17 @@ from typing import Any
 from qilib.utils.serialization import Serializer, JsonSerializeKey
 
 
+class QttSerializer(Serializer):
+    def __init__(self):
+        super().__init__()
+
+        self.register(qcodes.Instrument, encode_qcodes_instrument, '__qcodes_instrument__',
+                      decode_qcodes_instrument)
+        for numpy_integer_type in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
+            self.register(numpy_integer_type, encode_numpy_number, '__npnumber__', decode_numpy_number)
+        self.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
+
+
 def encode_qcodes_instrument(item):
     return {
         JsonSerializeKey.OBJECT: '__qcodes_instrument__',
@@ -95,9 +106,4 @@ def load_json(filename: str) -> object:
     return decode_json(data)
 
 
-qtt_serializer = Serializer()
-
-qtt_serializer.register(qcodes.Instrument, encode_qcodes_instrument, '__qcodes_instrument__', decode_qcodes_instrument)
-for numpy_integer_type in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
-    qtt_serializer.register(numpy_integer_type, encode_numpy_number, '__npnumber__', decode_numpy_number)
-qtt_serializer.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
+qtt_serializer = QttSerializer()
