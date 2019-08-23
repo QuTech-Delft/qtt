@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed issue with HDAWG8 sampling rate (#589).
 - Fixed Travis warnings and tests instrument_drivers (#569).
 - Fixed Travis build related to Qcodes version numbering (#604, #606).
+- Fixed issue with setSingleStep (#633)
 
 ### Security
 ...
