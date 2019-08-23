@@ -1,9 +1,8 @@
 import base64
-from typing import Any
-
 import numpy as np
 import qcodes
 import qtt.data
+from typing import Any
 from qilib.utils.serialization import Serializer, JsonSerializeKey
 
 
@@ -100,5 +99,5 @@ qtt_serializer = Serializer()
 
 qtt_serializer.register(qcodes.Instrument, encode_qcodes_instrument, '__qcodes_instrument__', decode_qcodes_instrument)
 for numpy_integer_type in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
-    qtt_serializer.register(t, encode_numpy_number, '__npnumber__', decode_numpy_number)
+    qtt_serializer.register(numpy_integer_type, encode_numpy_number, '__npnumber__', decode_numpy_number)
 qtt_serializer.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
