@@ -30,8 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VirtualDAC now has an option to set gate_map and instruments on VirtualDAC (#583).
 - All unittests are moved to a tests folder (#574).
 - Legacy code now throws exceptions (#551).
-- VideoMode tool was restructured to clean up the interface (##594)
+- VideoMode tool was restructured to clean up the interface (#594)
 - Updates requirements on QCoDeS version (#614)
+- qtt.data.dataset_labels works for 1D scans now (#629)
+- Removed plunger argument functionality from tunnelrates_RTS (#625)
 
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).
@@ -45,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed issue with HDAWG8 sampling rate (#589).
 - Fixed Travis warnings and tests instrument_drivers (#569).
 - Fixed Travis build related to Qcodes version numbering (#604, #606).
+- Fixed issue with setSingleStep (#633)
 
 ### Security
 ...
