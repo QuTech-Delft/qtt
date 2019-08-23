@@ -71,7 +71,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.update_field_signal.connect(self._set_field)
         self._create_gui_signal.connect(self._create_gui)
         self._itemsdict: dict = dict()
-        self._default_sizehints=[200,140]
+        self._default_sizehints = [200, 140]
 
         window = self
         window.setGeometry(1700, 50, 300, 600)
@@ -83,7 +83,6 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self.callbacklist: Sequence = []
 
         self.initialize_viewer(instruments)
-
 
         self.updatecallback()
         self.show()
@@ -235,6 +234,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         for instrument_name in names:
             lst = self._itemsdict[instrument_name]
             for parameter_name in lst:
+                if parameter_name == '_treewidgetitem':
+                    continue
                 box = lst[parameter_name]['double_box']
 
                 if box is not None:
