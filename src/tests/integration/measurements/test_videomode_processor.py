@@ -27,3 +27,4 @@ class TestVideoModeProcessor(unittest.TestCase):
 
         qt_application.processEvents()
         time.sleep(.1)
+

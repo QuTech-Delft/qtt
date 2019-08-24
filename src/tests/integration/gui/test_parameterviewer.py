@@ -9,7 +9,6 @@ from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 
 class TestParameterViewer(unittest.TestCase):
 
-    @pytest.mark.skipif(sys.version_info >= (3, 7), reason="do not run with python3.7 or higher")
     def test_parameterviewer(self):
         qtapp = pyqtgraph.mkQApp()
 
