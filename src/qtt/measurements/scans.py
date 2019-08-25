@@ -1861,15 +1861,18 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         exepected_measurement_time = nsegments*period
         print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
 
+    ism4i = isinstance(
+            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
     if average:
         data = measuresegment(waveform, nsegments,
                               minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation, 'trigger_re_arm_padding': trigger_re_arm_padding})
-        segment_time = np.linspace(0, period, len(data[0]))
+        if ism4i:
+            segment_time = np.arange(0., len(data[0])) / minstrhandle.exact_sample_rate()
+        else:
+            segment_time = np.linspace(0, period, len(data[0]))
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
                                      xunit='s', location=location, loc_record={'label': 'acquire_segments'})
     else:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if ism4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
                 minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2, trigger_re_arm_compensation = trigger_re_arm_compensation)
@@ -1883,6 +1886,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             minstrhandle.initialize_channels(read_ch, mV_range=mV_range,
                                              memsize=minstrhandle._channel_memsize, termination=None)
 
+            sample_rate = minstrhandle.exact_sample_rate()
             dataraw = minstrhandle.multiple_trigger_acquisition(
                 mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
             if np.all(dataraw == 0):
@@ -1893,13 +1897,13 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             data = data[:, :, signal_start:signal_end]
             if trigger_re_arm_compensation and trigger_re_arm_padding:
                 data = _trigger_re_arm_padding(data, signal_end-signal_start)
-            segment_time = np.linspace(0., period, data.shape[2])
+            segment_time = np.arange(0., data.shape[2]) / sample_rate
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
             alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num,
                                          zname=measure_names, z=data, xunit='s', location=location,
                                          loc_record={'label': 'acquire_segments'})
         else:
-            raise (Exception('Non-averaged acquisitions not supported for this measurement instrument'))
+            raise Exception(f'Non-averaged acquisitions not supported for measurement instrument {minstrhandle}')
 
     dt = time.time() - t0
     update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
