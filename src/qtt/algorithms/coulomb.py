@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from qtt.algorithms.generic import issorted
 from qtt.algorithms.functions import logistic
 from qtt.algorithms.generic import nonmaxsuppts
-
+from qtt.algorithms.filtering import butter_lowpass_filter
 
 # %% Functions related to detection of Coulumb peaks
 
@@ -241,7 +241,6 @@ def filterPeaks(x, y, peaks, verbose=1, minheight=None):
 
 # %%
 
-
 def peakFindBottom(x, y, peaks, fig=None, verbose=1):
     """ Find the left bottom of a detected peak
 
@@ -258,6 +257,8 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
     dy = np.diff(ys, n=1)
     dy = np.hstack((dy, [0]))
+    dy = butter_lowpass_filter(dy, cutoff_frequency = 150/dy.size, fs = 1)
+    
     for ii, peak in enumerate(peaks):
         if verbose:
             print('peakFindBottom: peak %d' % ii)
