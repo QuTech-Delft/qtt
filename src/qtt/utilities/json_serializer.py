@@ -44,7 +44,7 @@ def decode_numpy_number(item):
 
 
 def encode_qcodes_dataset(item):
-    dataset_dictionary = qtt_serializer.transform_data(qtt.data.dataset_to_dictionary(item))
+    dataset_dictionary = qtt_serializer.encode_data(qtt.data.dataset_to_dictionary(item))
     return {
         JsonSerializeKey.OBJECT: '__qcodes_dataset__',
         JsonSerializeKey.CONTENT: {
