@@ -224,10 +224,14 @@ class VirtualDAC(Instrument):
         for g, bnds in gate_boundaries.items():
             logging.debug('gate %s: %s' % (g, bnds))
 
+            if bnds[0] >= bnds[1]:
+                raise ValueError(f'boundary {bnds} for gate {g} is invalid')
+
             gx = self._gate_map.get(g, None)
             if gx is None:
-                # gate is not connected
+                warnings.warn(f'instrument {self} has no gate {g}')
                 continue
+
             instrument = self._instruments[self._instrument_index(gx[0])]
             param = self.get_instrument_parameter(g)
             param.vals = Numbers(bnds[0], max_value=bnds[1])
@@ -252,10 +256,12 @@ class VirtualDAC(Instrument):
         Args:
             gate_boundaries (dict): a range of allowed values per parameter.
         """
-        new_boundaries = self.get_boundaries()
+        current_boundaries = self.get_boundaries()
 
-        for g, bnds in gate_boundaries.items():
-            new_boundaries[g] = (max(new_boundaries[g][0], bnds[0]), min(new_boundaries[g][1], bnds[1]))
+        new_boundaries = {}
+        for gate, bnds in gate_boundaries.items():
+            new_boundaries[gate] = (
+            max(current_boundaries[gate][0], bnds[0]), min(current_boundaries[gate][1], bnds[1]))
 
         self.set_boundaries(new_boundaries)
 
