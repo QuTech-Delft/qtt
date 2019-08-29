@@ -254,7 +254,7 @@ class VirtualDAC(Instrument):
         """ Restrict boundaries values that can be set on the gates.
 
         Args:
-            gate_boundaries (dict): a range of allowed values per parameter.
+            gate_boundaries (dict): For each gate a range used to restrict the current boundaries to
         """
         current_boundaries = self.get_boundaries()
 
