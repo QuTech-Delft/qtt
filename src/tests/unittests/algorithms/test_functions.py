@@ -112,11 +112,6 @@ class TestFunctions(unittest.TestCase):
         self.assertTrue(np.abs(par_fit_test[-2] - (-1.255)) < 0.1)
         self.assertTrue(np.abs(par_fit_test[-1] - 0.38) < 0.1)
 
-        test_x = np.linspace(0, x_data.max() * 1e-6, 200)
-        test_y = gauss_ramsey(test_x, par_fit_test)
-
-        plot_gauss_ramsey_fit(x_data, y_data, par_fit_test, fig=fig)
-
     def test_logistic_and_linear_function(self):
         x_data = np.arange(-10, 10, 0.1)
 
