@@ -340,6 +340,67 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
     cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:]) ** 2 * (np.diff(x_data)) ** weight_power])
     return cost
 
+import matplotlib.pyplot as plt
+from qtt.utilities.visualization import plot_vertical_line
+
+def estimate_dominant_frequency(signal, sample_rate = 1, remove_dc=True, fig=None):
+    """ Estimate dominant frequency in a signal """
+    w = np.fft.fft(signal)    
+    freqs = np.fft.fftfreq(len(signal), d=1./sample_rate)
+    
+    if remove_dc:
+        w[0]=0
+    
+    ff=freqs[np.argmax(np.abs(w))]
+
+    if fig:
+        plt.figure(fig); plt.clf()
+        plt.plot(freqs, np.abs(w), '.b')
+        plt.xlabel('Frequency')
+        plt.ylabel('Abs of fft')
+        plot_vertical_line(ff)
+    return ff
+
+def test_estimate_dominant_frequency(self):
+
+    y_data = np.array([0.122, 0.2  , 0.308, 0.474, 0.534, 0.618, 0.564, 0.436, 0.318,
+           0.158, 0.13 , 0.158, 0.336, 0.434, 0.51 , 0.59 , 0.592, 0.418,
+           0.286, 0.164, 0.156, 0.186, 0.25 , 0.362, 0.524])
+    sample_rate = 47368421
+    ff=estimate_dominant_frequency(y_data, sample_rate = sample_rate, fig=12)
+    self.assertAlmostEqual(ff, 5684210, error=10)
+
+#%%
+#
+
+def estimate_parameters_damped_sine_wave(x_data, y_data, exponent = 2):
+        """ Estimate initial parameters of a damped sine wave
+        
+        Also see: https://en.wikipedia.org/wiki/Damped_sine_wave
+        
+        Args:
+            exponent: Exponent from the exponential decay factor
+            
+        """
+    
+        A = (np.max(y_data) - np.min(y_data)) / 2
+        B = (np.min(y_data) + A)
+
+        n=int(x_data.size/2)
+        mean_left = np.mean(np.abs(y_data[:n]-B))
+        mean_right = np.mean(np.abs(y_data[n:]-B))
+        
+        decay_factor = (mean_left/mean_right)
+        
+        duration = x_data[-1]-x_data[0]
+        sample_rate = x_data.size/duration
+        ramseyfreq = estimate_dominant_frequency(y_data, sample_rate = sample_rate)
+        n_start = (y_data[0]-B)/A
+        t2s = decay_factor*duration
+        
+        angle=-np.arcsin(n_start)
+        initial_params = np.array([A, t2s, ramseyfreq, angle, B])
+        return initial_params
 
 def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey
@@ -366,12 +427,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     def func(params): return cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
 
     if initial_params is None:
-        A = (np.max(y_data) - np.min(y_data)) / 2
-        t2s = 1e-6
-        ramseyfreq = 1 / (1e-6)
-        angle = 0
-        B = (np.min(y_data) + (np.max(y_data) - np.min(y_data)) / 2)
-        initial_params = np.array([A, t2s, ramseyfreq, angle, B])
+        initial_params = estimate_parameters_damped_sine_wave(x_data, y_data, exponent = 2)
 
     par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
@@ -383,7 +439,19 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
 
     return par_fit, result_dict
 
+def plot_gaus_ramsey_fit(x_data, y_data, fit_parameters, fig):
+    test_x = np.linspace(0, np.max(x_data), 200)
+    freq_fit = abs(fit_parameters[2] * 1e-6)
+    t2star_fit = fit_parameters[1] * 1e6
 
+    plt.figure(fig); plt.clf()
+    plt.plot(x_data * 1e6, y_data, 'o', label='Data')
+    plt.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
+    plt.title('Gauss Ramsey fit: %.1f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
+    plt.xlabel('time ($\mu$s)')
+    plt.ylabel('Spin-up probability')
+    plt.legend()
+    
 def linear_function(x, a, b):
     """ Linear function with offset"""
     return a * x + b
