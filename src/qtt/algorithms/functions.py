@@ -4,6 +4,8 @@ import numpy as np
 import scipy
 import scipy.constants
 import qtt.pgeometry
+import matplotlib.pyplot as plt
+from qtt.utilities.visualization import plot_vertical_line
 
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
@@ -340,11 +342,16 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
     cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:]) ** 2 * (np.diff(x_data)) ** weight_power])
     return cost
 
-import matplotlib.pyplot as plt
-from qtt.utilities.visualization import plot_vertical_line
 
 def estimate_dominant_frequency(signal, sample_rate = 1, remove_dc=True, fig=None):
-    """ Estimate dominant frequency in a signal """
+    """ Estimate dominant frequency in a signal
+    
+    Args:
+        signal (array): Input data
+        sample_rate (float): Sample rate of the data
+        remove_dc (bool): If True, then do not estimate the DC component
+        fig (int or None): Optionally plot the estimated frequency
+    """
     w = np.fft.fft(signal)    
     freqs = np.fft.fftfreq(len(signal), d=1./sample_rate)
     
@@ -361,15 +368,6 @@ def estimate_dominant_frequency(signal, sample_rate = 1, remove_dc=True, fig=Non
         plot_vertical_line(ff)
     return ff
 
-def test_estimate_dominant_frequency(self):
-
-    y_data = np.array([0.122, 0.2  , 0.308, 0.474, 0.534, 0.618, 0.564, 0.436, 0.318,
-           0.158, 0.13 , 0.158, 0.336, 0.434, 0.51 , 0.59 , 0.592, 0.418,
-           0.286, 0.164, 0.156, 0.186, 0.25 , 0.362, 0.524])
-    sample_rate = 47368421
-    ff=estimate_dominant_frequency(y_data, sample_rate = sample_rate, fig=12)
-    self.assertAlmostEqual(ff, 5684210, error=10)
-
 #%%
 #
 
@@ -382,7 +380,6 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent = 2):
             exponent: Exponent from the exponential decay factor
             
         """
-    
         A = (np.max(y_data) - np.min(y_data)) / 2
         B = (np.min(y_data) + A)
 
@@ -410,7 +407,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     see function 'gauss_ramsey' and example in qtt/docs/notebooks/example_fit_ramsey.ipynb
 
     Args:
-        x_data (array): the data for the independant variable
+        x_data (array): the data for the independent variable
         y_data (array): the data for the measured variable
         weight_power (float)
         maxiter (int): maximum number of iterations to perform
@@ -429,17 +426,24 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     if initial_params is None:
         initial_params = estimate_parameters_damped_sine_wave(x_data, y_data, exponent = 2)
 
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    fit_parameters = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     result_dict = {
         'description': 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = '
                        'A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B',
-        'parameters fit': par_fit,
+        'parameters fit': fit_parameters,
         'parameters initial guess': initial_params}
 
-    return par_fit, result_dict
+    return fit_parameters, result_dict
 
-def plot_gaus_ramsey_fit(x_data, y_data, fit_parameters, fig):
+def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
+    """ Plot Gauss Ramset fit
+
+    Args:
+        x_data: Input array with time variable
+        y_data: Input array with signal
+        fit_parameters: Result of fit_gauss_ramsey
+    """
     test_x = np.linspace(0, np.max(x_data), 200)
     freq_fit = abs(fit_parameters[2] * 1e-6)
     t2star_fit = fit_parameters[1] * 1e6
