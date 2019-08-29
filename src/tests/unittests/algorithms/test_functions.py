@@ -13,8 +13,8 @@ class TestFunctions(unittest.TestCase):
                0.158, 0.13 , 0.158, 0.336, 0.434, 0.51 , 0.59 , 0.592, 0.418,
                0.286, 0.164, 0.156, 0.186, 0.25 , 0.362, 0.524])
         sample_rate = 47368421
-        ff=qtt.algorithms.functions.estimate_dominant_frequency(y_data, sample_rate = sample_rate, fig=1)
-        self.assertAlmostEqual(ff, 5684210, error=10)
+        estimated_frequency = qtt.algorithms.functions.estimate_dominant_frequency(y_data, sample_rate = sample_rate, fig=1)
+        self.assertAlmostEqual(estimated_frequency, 5684210, places=-1)
         plt.close(1)
 
     @staticmethod
