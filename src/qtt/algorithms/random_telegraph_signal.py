@@ -62,8 +62,8 @@ def transitions_durations(data, split):
     return duration_dn, duration_up
 
 
-# %% function to analyse the RTS data
 class FittingException(Exception):
+    """ Fitting exception in RTS code """
     pass
 
 
