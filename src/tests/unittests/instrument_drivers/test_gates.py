@@ -13,8 +13,7 @@ class TestVirtualDAC(TestCase):
             'L': (0, 5), 'D1': (0, 6), 'R': (0, 7)}
 
         self.ivvi = VirtualIVVI(instrumentName('ivvi'), model=None)
-        self.gates = VirtualDAC(instrumentName('gates'),
-                                instruments=[self.ivvi], gate_map=gate_map)
+        self.gates = VirtualDAC(instrumentName('gates'), instruments=[self.ivvi], gate_map=gate_map)
 
     def tearDown(self):
         self.gates.close()
@@ -65,6 +64,23 @@ class TestVirtualDAC(TestCase):
         self.assertDictEqual(gate_boundaries, boundaries)
 
         virtual_dac.close()
+
+    def test_restrict_boundaries(self):
+        gate_map = {'P1': (0, 1), 'P2': (0, 2), 'P3': (0, 3)}
+        virtual_dac = VirtualDAC(instrumentName('test'), instruments=[self.ivvi], gate_map=gate_map)
+        gate_boundaries = {'P1': (0, 100), 'P2': (0, 100)}
+        virtual_dac.set_boundaries(gate_boundaries)
+        virtual_dac.restrict_boundaries({'P1': (-50, 50), 'P3': (0, 1)})
+        self.assertEqual(virtual_dac.get_boundaries(), {'P1': (0, 50), 'P2': (0, 100), 'P3': (0, 1)})
+        self.assertEqual(self.ivvi.dac1.vals.valid_values, (0, 50))
+
+    def test_invalid_boundary(self):
+        with self.assertRaises(ValueError):
+            self.gates.set_boundaries({'P1': [2, 1]})
+
+    def test_invalid_gate(self):
+        with self.assertWarnsRegex(UserWarning, 'has no gate'):
+            self.gates.set_boundaries({'no_gate': [0, 1]})
 
     def test_set_dacs(self):
         virtual_dac = VirtualDAC(instrumentName('gates'), instruments=[], gate_map={})
