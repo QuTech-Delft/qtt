@@ -5,6 +5,7 @@ Contains code for various structures
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
+from functools import partial
 
 import qcodes
 
@@ -12,6 +13,7 @@ import qtt
 import qtt.measurements.scans
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks, findSensingDotPosition
 from qtt.utilities.tools import freezeclass
+from qtt.dataset_processing import process_dataarray
 
 # %%
 
@@ -121,6 +123,7 @@ class sensingdot_t:
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
             virt_gates (None or object): virtual gates object (optional)
+            boxcar_filter_kernel_size (int): size of boxcar filter kernel to use in post-processing
         """
         self.verbose = 1
         self.gg = gate_names
@@ -128,6 +131,8 @@ class sensingdot_t:
             gate_values = [station.gates.get(g) for g in self.gg]
         self.sdval = gate_values
         self.targetvalue = np.NaN
+
+        self.boxcar_filter_kernel_size = 1
 
         self._selected_peak = None
         self._detune_axis = np.array([1, -1])
@@ -353,6 +358,7 @@ class sensingdot_t:
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
+        alldata = sd._measurement_post_processing(alldata)
         goodpeaks = sd._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
         if len(goodpeaks) > 0:
@@ -413,6 +419,14 @@ class sensingdot_t:
                 # set sweep to center
                 gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
 
+    def _measurement_post_processing(self, dataset):
+
+        if self.boxcar_filter_kernel_size > 1:
+            process_dataarray(dataset, dataset.default_parameter_name(), None, partial(
+                qtt.algorithms.generic.boxcar_filter, kernel_size=(self.boxcar_filter_kernel_size,)))
+
+        return dataset
+
     def fastTune(self, Naverage=90, sweeprange=79, period=.5e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, invert=False, verbose=1):
         """ Fast tuning of the sensing dot plunger.
@@ -459,6 +473,8 @@ class sensingdot_t:
 
         alldata.add_metadata({'scanjob': scanjob, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
+
+        alldata = self._measurement_post_processing(alldata)
 
         alldata.write(write_metadata=True)
 
