@@ -74,6 +74,8 @@ class TestVirtualDAC(TestCase):
         self.assertEqual(virtual_dac.get_boundaries(), {'P1': (0, 50), 'P2': (0, 100), 'P3': (0, 1)})
         self.assertEqual(self.ivvi.dac1.vals.valid_values, (0, 50))
 
+        virtual_dac.close()
+
     def test_invalid_boundary(self):
         with self.assertRaises(ValueError):
             self.gates.set_boundaries({'P1': [2, 1]})

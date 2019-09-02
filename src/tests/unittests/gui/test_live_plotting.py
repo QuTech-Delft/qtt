@@ -22,11 +22,13 @@ class TestLivePlotting(unittest.TestCase):
         self.assertAlmostEqual(data_reshaped.max(), 4.122574793363507, 6)
         self.assertAlmostEqual(data_reshaped.sum(), 3440.344282085355, 3)
 
+
     def test_livePlot(self):
         _ = pyqtgraph.mkQApp()
 
-        lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
-                      sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=True)
+        mock_callback = MockCallback_2d(qtt.measurements.scans.instrumentName('mock'))
+        lp = livePlot(datafunction=mock_callback, sweepInstrument=None,
+                      sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=True)
         lp.win.setGeometry(1500, 10, 400, 400)
         lp.startreadout()
         lp.crosshair(True)
@@ -34,6 +36,8 @@ class TestLivePlotting(unittest.TestCase):
         lp.updatebg()
         lp.close()
         self.assertIsInstance(lp.datafunction_result, np.ndarray)
+
+        mock_callback.close()
 
 
 class TestMeasurementControl(unittest.TestCase):
