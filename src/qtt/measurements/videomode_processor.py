@@ -115,6 +115,7 @@ class VideoModeProcessor(ABC):
         else:
             return 'other'
 
+
 class DummyVideoModeProcessor(VideoModeProcessor):
 
     def __init__(self, station, verbose=1):
@@ -141,7 +142,6 @@ class DummyVideoModeProcessor(VideoModeProcessor):
 
     def scan_dimension(self):
         return 1
-
 
 
 class VideomodeSawtoothMeasurement(VideoModeProcessor):
@@ -282,7 +282,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
 
         if self.acquisition_device_type() == 'm4i':
             if self.scan_dimension() == 1:
-                if (self.sampling_frequency() * self.period_1d())*(1-self.waveform['width'])/2 > 40+2*16:
+                if (self.sampling_frequency() * self.period_1d()) * (1 - self.waveform['width']) / 2 > 40 + 2 * 16:
                     trigger_re_arm_compensation = True
                 else:
                     trigger_re_arm_compensation = False
@@ -377,7 +377,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 total_period = period
                 warnings.warn('code untested')
             waveform = virtual_awg.sweep_gates_2d(gates, sweep_ranges, total_period, self.resolution)
-            keys = [list(item.keys())[0] for item in gates]
+            keys = qtt.utilities.tools.flatten([list(item.keys()) for item in gates])
             virtual_awg.enable_outputs(keys)
             virtual_awg.run()
         else:
@@ -424,5 +424,3 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
             if isinstance(self.sweepparams, (str, list)):
                 name += ': %s' % str(self.sweepparams)
         return name
-
-
