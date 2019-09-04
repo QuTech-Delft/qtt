@@ -1181,16 +1181,22 @@ def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0),
 
 def enlargelims(factor=1.05):
     """ Enlarge the limits of a plot
+    
+    Args:
+        factor (float or list of float): Factor to expand the limits of the current plot
+        
     Example:
       >>> enlargelims(1.1)
 
     """
+    if isinstance(factor, float):
+        factor=[factor]
     xl = plt.xlim()
-    d = (factor - 1) * (xl[1] - xl[0]) / 2
+    d = (factor[0] - 1) * (xl[1] - xl[0]) / 2
     xl = (xl[0] - d, xl[1] + d)
     plt.xlim(xl)
     yl = plt.ylim()
-    d = (factor - 1) * (yl[1] - yl[0]) / 2
+    d = (factor[1] - 1) * (yl[1] - yl[0]) / 2
     yl = (yl[0] - d, yl[1] + d)
     plt.ylim(yl)
 

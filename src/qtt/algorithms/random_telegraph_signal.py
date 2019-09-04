@@ -207,7 +207,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
     if verbose:
         print('Fit parameters double gaussian:\n mean down: %.3f counts' %
-              double_gaussian_fit_parameters[4] + ', mean up:%.3f counts' % double_gaussian_fit_parameters[
+              double_gaussian_fit_parameters[4] + ', mean up: %.3f counts' % double_gaussian_fit_parameters[
                   5] + ', std down: %.3f counts' % double_gaussian_fit_parameters[2] + ', std up:%.3f counts' %
               double_gaussian_fit_parameters[3])
         print('Separation between peaks gaussians: %.3f std' % separation)
