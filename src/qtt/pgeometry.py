@@ -1181,10 +1181,10 @@ def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0),
 
 def enlargelims(factor=1.05):
     """ Enlarge the limits of a plot
-    
+
     Args:
         factor (float or list of float): Factor to expand the limits of the current plot
-        
+
     Example:
       >>> enlargelims(1.1)
 
