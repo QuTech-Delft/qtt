@@ -114,6 +114,15 @@ def _cost_double_gaussian(x_data, y_data, params):
     return cost
 
 
+def _integral(x_data, y_data):
+    """ Calculate integral of function """
+    d_xdata = np.diff(x_data)
+    d_xdata=np.hstack( [d_xdata, d_xdata[-1]])
+    data_integral = np.sum(d_xdata*y_data)
+    return data_integral
+
+
+
 def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     """ Estimate of double gaussian model parameters."""
     maxsignal = np.percentile(x_data, 98)
@@ -127,6 +136,7 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     sigma_left = (maxsignal - minsignal) * 1 / 20
     sigma_right = (maxsignal - minsignal) * 1 / 20
 
+
     if fast_estimate:
         alpha = .1
         mean_left = minsignal + (alpha) * (maxsignal - minsignal)
@@ -134,6 +144,13 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     else:
         x_data_left = x_data[:int((len(y_data) / 2))]
         x_data_right = x_data[int((len(y_data) / 2)):]
+
+        data_integral_left=_integral(x_data_left, data_left)
+        data_integral_right=_integral(x_data_right, data_right)
+
+        sigma_left = data_integral_left/(np.sqrt(2*np.pi)* amplitude_left)
+        sigma_right = data_integral_right/(np.sqrt(2*np.pi)* amplitude_right)
+        
         mean_left = np.sum(x_data_left * data_left) / np.sum(data_left)
         mean_right = np.sum(x_data_right * data_right) / np.sum(data_right)
     initial_params = np.array([amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
