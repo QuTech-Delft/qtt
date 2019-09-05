@@ -1,9 +1,6 @@
-""" Mathematical functions and models."""
-
 import unittest
-import matplotlib.pyplot as plt
 import numpy as np
-from qtt.algorithms.functions import fit_gauss_ramsey, gauss_ramsey
+from qtt.algorithms.functions import fit_gauss_ramsey, plot_gauss_ramsey_fit
 
 
 class TestFunctions(unittest.TestCase):
@@ -18,17 +15,5 @@ class TestFunctions(unittest.TestCase):
 
         par_fit_test, _ = fit_gauss_ramsey(x_data * 1e-6, y_data)
 
-        self.assertTrue(np.abs(np.abs(par_fit_test[0]) - 0.21) < 0.1)
-        self.assertTrue(np.abs(par_fit_test[-2] - 1.88) < 0.1)
-        self.assertTrue(np.abs(par_fit_test[-1] - 0.38) < 0.1)
+        plot_gauss_ramsey_fit(x_data, y_data, par_fit_test, fig=fig)
 
-        test_x = np.linspace(0, x_data.max() * 1e-6, 200)
-        test_y = gauss_ramsey(test_x, par_fit_test)
-
-        if fig is not None:
-            plt.figure(fig)
-            plt.clf()
-            plt.plot(x_data, y_data, 'o', label='input data')
-            plt.plot(test_x * 1e6, test_y, label='fitted curve')
-            plt.legend(numpoints=1)
-            plt.close('all')

@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updates requirements on QCoDeS version (#614)
 - qtt.data.dataset_labels works for 1D scans now (#629)
 - Removed plunger argument functionality from tunnelrates_RTS (#625)
+- Improved initial fit of Gauss Ramsey (#643)
 
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).
