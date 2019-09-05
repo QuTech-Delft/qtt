@@ -454,7 +454,7 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
         peak['heightscore'] = h / (highvalue - lowvalue)
         peak['score'] = h * (2 / (1 + hw / hwtypical))
         peak['scorerelative'] = (
-                                        h / (highvalue - lowvalue)) * (2 / (1 + hw / hwtypical))
+            h / (highvalue - lowvalue)) * (2 / (1 + hw / hwtypical))
         peak['noisefactor'] = noisefac
         if verbose:
             print('peakScores: %d: height %.1f halfwidth %.1f, score %.2f' %
@@ -592,10 +592,12 @@ def sort_peaks_inplace(peaks):
     """ Sort a list of peaks according to the score field """
     peaks.sort(key=lambda x: -x['score'])
 
+
 def sort_peaks(peaks):
     """ Sort a list of peaks according to the score field """
     peaks_sorted = sorted(peaks, key=lambda p: -p['score'])
     return peaks_sorted
+
 
 def coulombPeaks(x_data, y_data, verbose=1, fig=None, plothalf=False, sampling_rate=None, parameters=None):
     """ Detects the Coulumb peaks in a 1D scan.
@@ -739,7 +741,7 @@ def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
 
 
 def findSensingDotPosition(x, y, verbose=1, fig=None, plotLabels=True, plotScore=True, plothalf=False, useslopes=True,
-                           sampling_rate=None):
+                           sampling_rate=None, parameters=None):
     """ Find best position for sensing dot
 
     Arguments:
@@ -751,7 +753,7 @@ def findSensingDotPosition(x, y, verbose=1, fig=None, plotLabels=True, plotScore
 
     """
     goodpeaks = coulombPeaks(x, y, verbose=verbose, fig=None,
-                             sampling_rate=sampling_rate, plothalf=False)
+                             sampling_rate=sampling_rate, plothalf=False, parameters=parameters)
 
     if len(goodpeaks) == 0 or useslopes:
         slopes, (dy, minder) = findBestSlope(x, y, fig=None, verbose=verbose >= 2)
