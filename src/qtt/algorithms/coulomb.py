@@ -258,6 +258,8 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
     dy = np.diff(ys, n=1)
     dy = np.hstack((dy, [0]))
+    kernel_size= [int(np.max([2, dy.size / 100])), ]
+    dy = qtt.algorithms.generic.boxcar_filter(dy, kernel_size = kernel_size)
     for ii, peak in enumerate(peaks):
         if verbose:
             print('peakFindBottom: peak %d' % ii)
