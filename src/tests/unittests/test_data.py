@@ -33,6 +33,18 @@ class TestPlotting(unittest.TestCase):
             self.assertTrue(plt.fignum_exists(fig))
             plt.close(fig)
 
+class TestExampleDatasets(unittest.TestCase):
+
+    def test_json_format(self):
+        dataset=qtt.data.load_example_dataset('elzerman_detuning_scan/2019-05-28_11-39-39_qtt_generic.json')
+        self.assertEqual(dataset.default_parameter_name(), 'signal')
+        self.assertEqual(dataset.default_parameter_array().shape, (240, 1367))
+        np.testing.assert_almost_equal(dataset.time[0, 0::500], np.array([0., 0.000512, 0.001024]))
+
+    def test_qcodes_hdf5_format(self):
+        dataset=qtt.data.load_example_dataset('2017-02-21/15-59-56')
+        self.assertEqual(dataset.default_parameter_name(), 'signal')
+        np.testing.assert_almost_equal(dataset.delta[0:3], np.array([-100.,  -99.79979706,  -99.59960175]))
 
 class TestData(unittest.TestCase):
 
