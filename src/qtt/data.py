@@ -23,17 +23,18 @@ from qcodes.plots.qcmatplotlib import MatPlot
 logger = logging.getLogger(__name__)
 
 
-def load_example_dataset(filename):
+def load_example_dataset(filename, verbose = 0):
     """ Return an example dataset from qtt
 
     Args:
         filename: Name of the dataset
+        verbose: Verbosity level
     Returns:
         Example dataset or None of no dataset can be found
     """
     exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
 
-    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename))
+    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose = verbose)
     return dataset
 
 
