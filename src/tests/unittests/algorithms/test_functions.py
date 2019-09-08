@@ -4,7 +4,7 @@ import numpy as np
 import qtt
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
-    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit
+    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave
 
 
 class TestFunctions(unittest.TestCase):
@@ -66,6 +66,24 @@ class TestFunctions(unittest.TestCase):
 
         value = Fermi(10., 0, 1, 2, kb=10)
         self.assertAlmostEqual(value, 0.3775406687981454, 6)
+
+    def test_estimate_parameters_damped_sine_wave(self):
+        y_data=np.array([0.25285714, 0.31714286, 0.48857143, 0.66285714, 0.77857143,
+       0.72857143, 0.58714286, 0.42571429, 0.28142857, 0.29571429,
+       0.39428571, 0.47285714, 0.56857143, 0.70428571, 0.76857143,
+       0.73571429, 0.62714286, 0.49714286, 0.42857143, 0.30714286,
+       0.31      , 0.31714286, 0.37285714])
+
+        x_data=np.array([0.00000000e+00, 6.81818182e-09, 1.36363636e-08, 2.04545455e-08,
+       2.72727273e-08, 3.40909091e-08, 4.09090909e-08, 4.77272727e-08,
+       5.45454545e-08, 6.13636364e-08, 6.81818182e-08, 7.50000000e-08,
+       8.18181818e-08, 8.86363636e-08, 9.54545455e-08, 1.02272727e-07,
+       1.09090909e-07, 1.15909091e-07, 1.22727273e-07, 1.29545455e-07,
+       1.36363636e-07, 1.43181818e-07, 1.50000000e-07])
+
+        estimated_parameters=estimate_parameters_damped_sine_wave(x_data, y_data)
+        self.assertFalse(np.any(np.isnan(estimated_parameters)))
+        self.assertAlmostEqual(estimated_parameters[0], 0.263, places=1)
 
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)
