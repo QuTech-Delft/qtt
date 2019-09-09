@@ -1,9 +1,11 @@
 import base64
 import numpy as np
 import qcodes
+from qilib.data_set.mongo_data_set_io import NumpyKeys
+
 import qtt.data
 from typing import Any
-from qilib.utils.serialization import Serializer, JsonSerializeKey
+from qilib.utils.serialization import Serializer, JsonSerializeKey, serializer
 
 
 class QttSerializer(Serializer):
@@ -15,6 +17,7 @@ class QttSerializer(Serializer):
         for numpy_integer_type in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
             self.register(numpy_integer_type, encode_numpy_number, '__npnumber__', decode_numpy_number)
         self.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
+        self.register(np.ndarray, encode_numpy_array, np.array.__name__, decode_numpy_array)
 
 
 def encode_qcodes_instrument(item):
@@ -56,6 +59,19 @@ def encode_qcodes_dataset(item):
 def decode_qcodes_dataset(item):
     obj = item[JsonSerializeKey.CONTENT]
     return qtt.data.dictionary_to_dataset(obj['__dataset_dictionary__'])
+
+
+def encode_numpy_array(item):
+    return serializer.encode_data(item)
+
+
+def decode_numpy_array(item):
+    if 'dtype' in item[JsonSerializeKey.CONTENT]:
+        item[JsonSerializeKey.CONTENT][NumpyKeys.DATA_TYPE] = item[JsonSerializeKey.CONTENT].pop('dtype')
+    if 'shape' in item[JsonSerializeKey.CONTENT]:
+        item[JsonSerializeKey.CONTENT][NumpyKeys.SHAPE] = item[JsonSerializeKey.CONTENT].pop('shape')
+
+    return serializer.decode_data(item)
 
 
 def encode_json(data: object) -> str:
