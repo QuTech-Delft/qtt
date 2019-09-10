@@ -250,7 +250,8 @@ try:
     import qtt.gui.parameterviewer
     import qtt.gui
     from qtt.utilities.tools import monitorSizes
-    from qcodes import QtPlot
+    from qcodes.plots.pyqtgraph import QtPlot
+
 
     def setupMeasurementWindows(station=None, create_parameter_widget=True,
                                 ilist=None):
