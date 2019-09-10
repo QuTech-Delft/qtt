@@ -14,8 +14,6 @@ class QttSerializer(Serializer):
 
         self.register(qcodes.Instrument, encode_qcodes_instrument, '__qcodes_instrument__',
                       decode_qcodes_instrument)
-        for numpy_integer_type in [np.int32, np.int64, np.float32, np.float64, np.bool_]:
-            self.register(numpy_integer_type, encode_numpy_number, '__npnumber__', decode_numpy_number)
         self.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
         self.register(np.ndarray, encode_numpy_array, np.array.__name__, decode_numpy_array)
 
@@ -29,21 +27,6 @@ def encode_qcodes_instrument(item):
 
 def decode_qcodes_instrument(item):
     return item
-
-
-def encode_numpy_number(item):
-    return {
-        JsonSerializeKey.OBJECT: '__npnumber__',
-        JsonSerializeKey.CONTENT: {
-            '__npnumber__': base64.b64encode(item.tobytes()).decode('ascii'),
-            'dtype': item.dtype.str,
-        }
-    }
-
-
-def decode_numpy_number(item):
-    obj = item[JsonSerializeKey.CONTENT]
-    return np.frombuffer(base64.b64decode(obj['__npnumber__']), dtype=np.dtype(obj['dtype']))[0]
 
 
 def encode_qcodes_dataset(item):
