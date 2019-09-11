@@ -95,12 +95,14 @@ class TestFunctions(unittest.TestCase):
 
     def test_estimate_parameters_damped_sine_wave_exact(self):
         x_data = np.arange(0, 20., .12)
-        y_data = np.sin(2*np.pi*.4*x_data)
+        exact_frequency = .4
+        exact_offset = 2.2
+        y_data = np.sin(2*np.pi*exact_frequency*x_data) + exact_offset
 
         estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
         self.assertAlmostEqual(estimated_parameters[0], 1., places=1)
-        self.assertAlmostEqual(estimated_parameters[2], 1., places=1)
-        self.assertAlmostEqual(estimated_parameters[-1], 0., places=1)
+        self.assertAlmostEqual(estimated_parameters[2], exact_frequency, places=1)
+        self.assertAlmostEqual(estimated_parameters[-1], exact_offset, places=1)
 
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)

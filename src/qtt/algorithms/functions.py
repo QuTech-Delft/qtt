@@ -426,7 +426,7 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     mean_right = np.mean(np.abs(y_data[n:] - B))
 
     laplace_factor = 1e-16
-    decay_factor = (mean_left + laplace_factor) / (mean_right + laplace_factor) 
+    decay_factor = (mean_left + laplace_factor) / (mean_right + laplace_factor)
 
     duration = x_data[-1] - x_data[0]
     sample_rate = x_data.size / duration
