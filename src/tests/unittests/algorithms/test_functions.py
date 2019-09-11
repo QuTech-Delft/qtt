@@ -86,6 +86,13 @@ class TestFunctions(unittest.TestCase):
         self.assertFalse(np.any(np.isnan(estimated_parameters)))
         self.assertAlmostEqual(estimated_parameters[0], 0.263, places=1)
 
+    def test_estimate_parameters_damped_sine_wave_degenerate(self):
+        x_data = np.array([0., 1., 2.])
+        y_data = np.array([0,0,0])
+
+        estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
+        self.assertEqual(estimated_parameters[0], 0.)
+
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)
         gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
