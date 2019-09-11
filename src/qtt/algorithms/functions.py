@@ -415,6 +415,8 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     Args:
         exponent: Exponent from the exponential decay factor
 
+    Returns:
+        Estimated parameters for gauss_ramsey method
     """
     A = (np.max(y_data) - np.min(y_data)) / 2
     B = (np.min(y_data) + A)

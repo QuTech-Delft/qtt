@@ -36,7 +36,7 @@ class TestFunctions(unittest.TestCase):
         y_data = exp_function(x_data, *parameters)
         fitted = fit_exp_decay(x_data, y_data)
         np.testing.assert_array_almost_equal(fitted, np.array(
-            [5.38675880e-05, -9.99998574e-01,  9.99760970e-01]), decimal=3)
+            [5.38675880e-05, -9.99998574e-01, 9.99760970e-01]), decimal=3)
 
     @staticmethod
     def test_fit_exp_decay_shifted_xdata():
@@ -88,10 +88,19 @@ class TestFunctions(unittest.TestCase):
 
     def test_estimate_parameters_damped_sine_wave_degenerate(self):
         x_data = np.array([0., 1., 2.])
-        y_data = np.array([0,0,0])
+        y_data = np.array([0, 0, 0])
 
         estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
         self.assertEqual(estimated_parameters[0], 0.)
+
+    def test_estimate_parameters_damped_sine_wave_exact(self):
+        x_data = np.arange(0, 20., .12)
+        y_data = np.sin(2*np.pi*.4*x_data)
+
+        estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
+        self.assertAlmostEqual(estimated_parameters[0], 1., places=1)
+        self.assertAlmostEqual(estimated_parameters[2], 1., places=1)
+        self.assertAlmostEqual(estimated_parameters[-1], 0., places=1)
 
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)
@@ -130,7 +139,7 @@ class TestFunctions(unittest.TestCase):
                            0.3061, 0.3161, 0.3976, 0.4246, 0.398, 0.3757, 0.3615, 0.3723,
                            0.3803, 0.3873, 0.3873, 0.3561, 0.37, 0.3819, 0.3834, 0.3838,
                            0.37, 0.383, 0.3573, 0.3869, 0.3838, 0.3792, 0.3757, 0.3815])
-        x_data = 1e-6*np.array([i * 1.6 / 40 for i in range(40)])
+        x_data = 1e-6 * np.array([i * 1.6 / 40 for i in range(40)])
 
         par_fit_test, _ = fit_gauss_ramsey(x_data, y_data)
 
