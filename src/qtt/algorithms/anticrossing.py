@@ -14,7 +14,7 @@ from qtt.utilities.imagetools import cleanSensingImage
 from qtt.utilities.imagetools import evaluateCross, fitModel
 import matplotlib.pyplot as plt
 
-from qcodes import MatPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 
 # %%
 
