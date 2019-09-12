@@ -16,6 +16,8 @@ class QttSerializer(Serializer):
                       decode_qcodes_instrument)
         self.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
         self.register(np.ndarray, encode_numpy_array, np.array.__name__, decode_numpy_array)
+        for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
+            self.register(numpy_integer_type, encode_numpy_number, '__npnumber__', decode_numpy_number)
 
 
 def encode_qcodes_instrument(item):
@@ -53,6 +55,17 @@ def decode_numpy_array(item):
         item[JsonSerializeKey.CONTENT][NumpyKeys.DATA_TYPE] = item[JsonSerializeKey.CONTENT].pop('dtype')
     if 'shape' in item[JsonSerializeKey.CONTENT]:
         item[JsonSerializeKey.CONTENT][NumpyKeys.SHAPE] = item[JsonSerializeKey.CONTENT].pop('shape')
+
+    return serializer.decode_data(item)
+
+
+def encode_numpy_number(item):
+    return serializer.encode_data(item)
+
+
+def decode_numpy_number(item):
+    if 'dtype' in item[JsonSerializeKey.CONTENT]:
+        item[JsonSerializeKey.CONTENT][NumpyKeys.DATA_TYPE] = item[JsonSerializeKey.CONTENT].pop('dtype')
 
     return serializer.decode_data(item)
 

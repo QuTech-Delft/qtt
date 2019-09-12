@@ -1,11 +1,10 @@
 import unittest
-import json
-import numpy as np
 
+import numpy as np
 import qcodes
 import qcodes.tests.data_mocks
 
-from qtt.utilities.json_serializer import encode_json, decode_json
+from qtt.utilities.json_serializer import encode_json, decode_json, qtt_serializer
 
 
 class TestJSONSerializer(unittest.TestCase):
@@ -61,3 +60,16 @@ class TestJSONSerializer(unittest.TestCase):
         self.assertEqual(loaded_data['instrument']['__object__'], '__qcodes_instrument__')
         self.assertEqual(loaded_data['instrument']['__content__']['name'], instrument.name)
         instrument.close()
+
+    def test_old_format_numpy_array(self):
+        data = np.array([1, 2, 3, 4, 5])
+        encoded_old = {'__object__': 'array',
+                       '__content__': {'__ndarray__': 'AQAAAAIAAAADAAAABAAAAAUAAAA=', 'shape': [5], 'dtype': '<i4'}}
+
+        np.testing.assert_array_equal(data, qtt_serializer.decode_data(encoded_old))
+
+    def test_old_format_numpy_number(self):
+        data = np.float32 = 13.37
+        encoded_old = {'__object__': '__npnumber__', '__content__': {'__npnumber__': 'hetVQQ==', 'dtype': '<f4'}}
+
+        np.testing.assert_almost_equal(data, qtt_serializer.decode_data(encoded_old), 1)
