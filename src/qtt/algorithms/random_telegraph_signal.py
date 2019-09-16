@@ -12,7 +12,7 @@ import qcodes
 from qtt.utilities.tools import addPPTslide
 import warnings
 
-from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay
+from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay, gaussian
 from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 from qtt.utilities.visualization import plot_vertical_line, plot_double_gaussian_fit
 
@@ -101,7 +101,7 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
     return result
 
 
-def plot_two_level_threshold(results, fig=100):
+def plot_two_level_threshold(results, fig=100, plot_initial_estimate = False):
     plt.figure(fig)
     plt.clf()
     bin_centres = results['histogram']['bin_centres']
@@ -113,6 +113,13 @@ def plot_two_level_threshold(results, fig=100):
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
     plt.title('Result of two level threshold processing')
 
+    if plot_initial_estimate:
+        xdata=np.linspace(bin_centres[0], bin_centres[-1], 300)
+        initial_estimate=results['double_gaussian_fit']['parameters initial guess']
+        left0=initial_estimate[::2][::-1]
+        right0=initial_estimate[1::2][::-1]
+        plt.plot(xdata, gaussian(xdata, *left0), ':g', label='initial estimate left')
+        plt.plot(xdata, gaussian(xdata, *right0), ':r', label='initial estimate right')
 
 def _create_integer_histogram(durations):
     """ Calculate number of bins, bin edges and histogram for durations

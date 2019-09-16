@@ -11,7 +11,7 @@ import qcodes
 import copy
 import matplotlib.pyplot as plt
 
-from qcodes import MatPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 import qtt.algorithms.images
 import qtt.utilities.imagetools
 from qtt.measurements.scans import scan2Dfast, scanjob_t

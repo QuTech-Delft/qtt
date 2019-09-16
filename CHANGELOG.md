@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - qtt.data.dataset_labels works for 1D scans now (#629)
 - Removed plunger argument functionality from tunnelrates_RTS (#625)
 - Improved initial fit of Gauss Ramsey (#643)
+- Double Gaussian fitting is faster (using lmfit) and has better initial estimates (#648)
 
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).

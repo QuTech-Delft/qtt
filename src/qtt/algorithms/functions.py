@@ -5,6 +5,8 @@ import scipy
 import scipy.constants
 import qtt.pgeometry
 import matplotlib.pyplot as plt
+from lmfit import Model
+
 from qtt.utilities.visualization import plot_vertical_line
 
 
@@ -114,6 +116,14 @@ def _cost_double_gaussian(x_data, y_data, params):
     return cost
 
 
+def _integral(x_data, y_data):
+    """ Calculate integral of function """
+    d_xdata = np.diff(x_data)
+    d_xdata = np.hstack([d_xdata, d_xdata[-1]])
+    data_integral = np.sum(d_xdata * y_data)
+    return data_integral
+
+
 def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     """ Estimate of double gaussian model parameters."""
     maxsignal = np.percentile(x_data, 98)
@@ -134,6 +144,13 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     else:
         x_data_left = x_data[:int((len(y_data) / 2))]
         x_data_right = x_data[int((len(y_data) / 2)):]
+
+        data_integral_left = _integral(x_data_left, data_left)
+        data_integral_right = _integral(x_data_right, data_right)
+
+        sigma_left = data_integral_left / (np.sqrt(2 * np.pi) * amplitude_left)
+        sigma_right = data_integral_right / (np.sqrt(2 * np.pi) * amplitude_right)
+
         mean_left = np.sum(x_data_left * data_left) / np.sum(data_left)
         mean_right = np.sum(x_data_right * data_right) / np.sum(data_right)
     initial_params = np.array([amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
@@ -165,12 +182,28 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
 
     """
 
-    def func(params):
-        return _cost_double_gaussian(x_data, y_data, params)
-
     if initial_params is None:
         initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+
+    def _double_gaussian(x, A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up):
+        """ Double Gaussian helper function for lmfit """
+        gauss_dn = gaussian(x, mean_dn, sigma_dn, A_dn)
+        gauss_up = gaussian(x, mean_up, sigma_up, A_up)
+        double_gauss = gauss_dn + gauss_up
+        return double_gauss
+
+    double_gaussian_model = Model(_double_gaussian)
+    delta_x = x_data.max() - x_data.min()
+    bounds = [x_data.min() - .1 * delta_x, x_data.max() + .1 * delta_x]
+    double_gaussian_model.set_param_hint('mean_up', min=bounds[0], max=bounds[1])
+    double_gaussian_model.set_param_hint('mean_dn', min=bounds[0], max=bounds[1])
+    double_gaussian_model.set_param_hint('A_up', min=0)
+    double_gaussian_model.set_param_hint('A_dn', min=0)
+
+    param_names = double_gaussian_model.param_names
+    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=0)
+
+    par_fit = np.array([result.best_values[p] for p in param_names])
 
     if par_fit[4] > par_fit[5]:
         par_fit = np.take(par_fit, [1, 0, 3, 2, 5, 4])
@@ -179,7 +212,8 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     # split equal distant to both peaks measured in std from the peak
     weigthed_distance_split = par_fit[4] + separation * abs(par_fit[2])
 
-    result_dict = {'parameters initial guess': initial_params, 'separation': separation, 'split': weigthed_distance_split}
+    result_dict = {'parameters initial guess': initial_params,
+                   'separation': separation, 'split': weigthed_distance_split}
     result_dict['parameters'] = par_fit
     result_dict['left'] = np.take(par_fit, [4, 2, 0])
     result_dict['right'] = np.take(par_fit, [5, 3, 1])
@@ -381,6 +415,8 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     Args:
         exponent: Exponent from the exponential decay factor
 
+    Returns:
+        Estimated parameters for gauss_ramsey method
     """
     A = (np.max(y_data) - np.min(y_data)) / 2
     B = (np.min(y_data) + A)
@@ -389,15 +425,19 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     mean_left = np.mean(np.abs(y_data[:n] - B))
     mean_right = np.mean(np.abs(y_data[n:] - B))
 
-    decay_factor = (mean_left / mean_right)
+    laplace_factor = 1e-16
+    decay_factor = (mean_left + laplace_factor) / (mean_right + laplace_factor)
 
     duration = x_data[-1] - x_data[0]
     sample_rate = x_data.size / duration
     ramseyfreq = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
-    n_start = (y_data[0] - B) / A
+    if A==0:
+        angle = 0
+    else:
+        n_start = max(min((y_data[0] - B) / A, 1), -1)
+        angle = -np.arcsin(n_start)
     t2s = decay_factor * duration
 
-    angle = -np.arcsin(n_start)
     initial_params = np.array([A, t2s, ramseyfreq, angle, B])
     return initial_params
 
