@@ -349,6 +349,10 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow=None, subplots=
         pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
     return liveplotwindow
 
+def _dataset_record_label(scanjob):
+    """ Return label to be used in dataset record """
+    default_label = scanjob.get('scantype', 'default')
+    return scanjob.get('dataset_label', default_label)
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -392,7 +396,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.debug('wait_time: %s' % str(wait_time))
 
     alldata, (set_names, measure_names) = makeDataSet1D(sweepvalues, yname=mparams,
-                                                        location=location, loc_record={'label': scanjob['scantype']},
+                                                        location=location, loc_record={'label': _dataset_record_label(scanjob)},
                                                         return_names=True)
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
@@ -564,7 +568,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data,
                                  xunit=qtt.data.determine_parameter_unit(sweepvalues.parameter),
                                  yunit=None,
-                                 location=location, loc_record={'label': scanjob['scantype']})
+                                 location=location, loc_record={'label': _dataset_record_label(scanjob)})
     if virtual_awg:
         virtual_awg.stop()
     else:
@@ -1115,7 +1119,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
                                                         measure_names=mparams, location=location, loc_record={
-                                                            'label': scanjob['scantype']},
+                                                            'label': _dataset_record_label(scanjob)},
                                                         return_names=True)
 
     if verbose >= 2:
@@ -2081,13 +2085,13 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if 'paramname' in stepdata:
             stepvalues_tmp.name = stepdata['paramname']
         alldata = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=measure_names,
-                                location=location, loc_record={'label': scanjob['scantype']})
+                                location=location, loc_record={'label': _dataset_record_label(scanjob)})
     else:
         if stepvalues.name == sweepvalues.name:
             stepvalues.name = stepvalues.name + '_y'
             sweepvalues.name = sweepvalues.name + '_x'
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                location=location, loc_record={'label': scanjob['scantype']})
+                                location=location, loc_record={'label': scanjob.get('dataset_label', _dataset_record_label(scanjob))})
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
 
@@ -2347,14 +2351,14 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     if scanjob['scantype'] == 'scan2Dturbo':
         alldata, _ = makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names=measure_names,
-                                          location=location, loc_record={'label': scanjob['scantype']})
+                                          location=location, loc_record={'label': _dataset_record_label(scanjob)})
     else:
         scanvalues = scanjob._convert_scanjob_vec(
             station, data[0].shape[1], data[0].shape[0])
         stepvalues = scanvalues[0]
         sweepvalues = scanvalues[1]
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                preset_data=data, location=location, loc_record={'label': scanjob['scantype']})
+                                preset_data=data, location=location, loc_record={'label': _dataset_record_label(scanjob)})
 
     dt = time.time() - t0
     liveplotwindow = _initialize_live_plotting(alldata, plotparam=None, liveplotwindow=liveplotwindow)
