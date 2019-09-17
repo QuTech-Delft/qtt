@@ -44,6 +44,7 @@ except ImportError:
     # no gui available
     warnings.warn('pyqtgraph could not be imported, gui elements not available')
 
+from qilib.data_set.mongo_data_set_io import NumpyKeys
 
 # %% Check packages
 
