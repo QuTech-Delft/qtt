@@ -30,7 +30,7 @@ class TestJSONSerializer(unittest.TestCase):
         self.assertIn('NaN', json_data)
         loaded_data = decode_json(json_data)
         self.assertEqual(data, loaded_data)
-        
+
     def test_numpy_bool_type(self):
         data = {'true': np.bool_(True), 'false': np.bool_(False)}
         serialized_data = json.dumps(data, cls=QttJsonEncoder)
