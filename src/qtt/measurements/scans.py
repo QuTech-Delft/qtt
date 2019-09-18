@@ -365,9 +365,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     Returns:
         alldata (DataSet): contains the measurement data and metadata
     """
-    gates = station.gates
-    gatevals = gates.allvalues()
-
     minstrument = scanjob.get('minstrument', None)
     mparams = get_measurement_params(station, minstrument)
 
@@ -456,7 +453,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+
+    if 'gates' in station.components:
+        gates = station.gates
+        gatevals = gates.allvalues()
+        update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
@@ -852,7 +853,6 @@ class scanjob_t(dict):
             scanjob (scanjob_t): updated data for scan
             scanvalues (list): contains the values for parameters to scan over
         """
-        gates = station.gates
 
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
@@ -861,10 +861,13 @@ class scanjob_t(dict):
                     sweepdata['start'] = -sweepdata['range'] / 2
                     sweepdata['end'] = sweepdata['range'] / 2
                 else:
+                    gates = station.gates
                     param_val = gates.get(sweepdata['param'])
                     sweepdata['start'] = param_val - sweepdata['range'] / 2
                     sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                gates = station.gates
+
                 if 'paramname' in self['sweepdata']:
                     sweepname = self['sweepdata']['paramname']
                 else:
@@ -873,6 +876,7 @@ class scanjob_t(dict):
                 sweepparam = VectorParameter(name=sweepname_identifier, label=sweepname, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan1D', 'scan1Dfast']:
+                gates = getattr(station, 'gates', None)
                 sweepparam = get_param(gates, sweepdata['param'])
             else:
                 raise Exception('unknown scantype')
@@ -880,6 +884,8 @@ class scanjob_t(dict):
                 sweepdata['step'] = (sweepdata['end']
                                      - sweepdata['start']) / sweeplength
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                gates = station.gates
+
                 last = sweepdata['start'] + sweepdata['range']
                 scanvalues = sweepparam[sweepdata['start']:last:sweepdata.get('step', 1.)]
 
@@ -897,6 +903,8 @@ class scanjob_t(dict):
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
+            gates = station.gates
+
             stepdata = self['stepdata']
             if 'range' in stepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:

@@ -75,6 +75,26 @@ class TestScans(TestCase):
         gates.close()
 
     @staticmethod
+    def test_scan1D_no_gates(self):
+        p = Parameter('p', set_cmd=None)
+        r = VoltageDivider(p, 4)
+        scanjob = scanjob_t({'sweepdata': {'param': p, 'start': 0, 'end': 10, 'step': 2}, 'minstrument': [r]})
+        station=qcodes.Station()
+        _ = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+        
+    def test_scanjob_record_label(self):
+        p = Parameter('p', set_cmd=None)
+        r = VoltageDivider(p, 4)
+
+        record_label='123unittest123'
+        scanjob = scanjob_t({'sweepdata': dict(
+            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
+        scanjob['dataset_label']=record_label
+        station=qcodes.Station()
+        dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+        self.assertTrue(dataset.location.endswith(record_label))
+       
+    @staticmethod
     def test_scan2D(verbose=0):
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)

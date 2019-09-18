@@ -1,3 +1,4 @@
+
 # Changelog
 All notable changes to the Quantum Tuning Toolkit will be documented in this file.
 
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The new virtual AWG can now also be used with the turbo scan. (#618)
 - Add re-arm compensation. (#614)
 - Add restrict_boundaries method to the VirtualDAC (#631)
+- Add option to set dataset record label through scanjob (##655)
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
