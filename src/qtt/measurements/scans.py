@@ -437,9 +437,9 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     myupdate()
     dt = time.time() - t0
 
-    if scanjob['scantype'] is 'scan1Dvec':
+    if scanjob['scantype'] == 'scan1Dvec':
         for param in scanjob['phys_gates_vals']:
-            parameter = gates.parameters[param]
+            parameter = station.gates.parameters[param]
             arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit,
                             preset_data=scanjob['phys_gates_vals'][param],
                             set_arrays=(alldata.arrays[sweepvalues.parameter.name],))
