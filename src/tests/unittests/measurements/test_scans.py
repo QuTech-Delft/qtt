@@ -75,7 +75,7 @@ class TestScans(TestCase):
         gates.close()
 
     @staticmethod
-    def test_scan1D_no_gates(self):
+    def test_scan1D_no_gates():
         p = Parameter('p', set_cmd=None)
         r = VoltageDivider(p, 4)
         scanjob = scanjob_t({'sweepdata': {'param': p, 'start': 0, 'end': 10, 'step': 2}, 'minstrument': [r]})
