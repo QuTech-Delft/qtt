@@ -93,7 +93,7 @@ class TestScans(TestCase):
         station=qcodes.Station()
         dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
         self.assertTrue(dataset.location.endswith(record_label))
-       
+
     @staticmethod
     def test_scan2D(verbose=0):
         p = Parameter('p', set_cmd=None)

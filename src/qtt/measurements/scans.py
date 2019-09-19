@@ -413,7 +413,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
         if scanjob['scantype'] == 'scan1Dvec':
             for param in scanjob['phys_gates_vals']:
-                gates.set(param, scanjob['phys_gates_vals'][param][ix])
+                station.gates.set(param, scanjob['phys_gates_vals'][param][ix])
         else:
             sweepvalues.set(x)
         if ix == 0:
