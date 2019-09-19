@@ -26,7 +26,7 @@ class TestJSONSerializer(unittest.TestCase):
 
     def test_float_nan_inf(self):
         data = [np.NaN, np.Inf, 1.]
-        json_data = encode_json()
+        json_data = encode_json(data)
         self.assertIn('NaN', json_data)
         loaded_data = decode_json(json_data)
         self.assertEqual(data, loaded_data)
