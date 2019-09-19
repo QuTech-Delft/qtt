@@ -29,7 +29,9 @@ class TestJSONSerializer(unittest.TestCase):
         json_data = encode_json(data)
         self.assertIn('NaN', json_data)
         loaded_data = decode_json(json_data)
-        self.assertEqual(data, loaded_data)
+        self.assertTrue(np.isnan(loaded_data[0]))
+        self.assertTrue(np.isinf(loaded_data[1]))
+        self.assertEqual(loaded_data[2], 1.)
 
     def test_numpy_bool_type(self):
         data = {'true': np.bool_(True), 'false': np.bool_(False)}
