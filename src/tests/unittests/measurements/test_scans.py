@@ -81,7 +81,7 @@ class TestScans(TestCase):
         scanjob = scanjob_t({'sweepdata': {'param': p, 'start': 0, 'end': 10, 'step': 2}, 'minstrument': [r]})
         station=qcodes.Station()
         _ = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-        
+
     def test_scanjob_record_label(self):
         p = Parameter('p', set_cmd=None)
         r = VoltageDivider(p, 4)
