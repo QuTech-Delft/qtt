@@ -49,6 +49,16 @@ class TestGeometryOperations(unittest.TestCase):
         Ha, Hs, Hp, _ = pgeometry.decomposeProjectiveTransformation(R)
         np.testing.assert_array_almost_equal(Hs @ Ha @ Hp, R)
 
+    def test_directionMean(self):
+        directions = [[1,0],[1,.1], [1,-.1]]
+        angle = pgeometry.directionMean(directions)
+        angle = np.mod(angle, np.pi)
+        self.assertAlmostEqual(angle, np.pi/2)
+
+        directions = [[1,0],[-1,0]]
+        angle = pgeometry.directionMean(directions)
+        angle = np.mod(angle, np.pi)
+        self.assertAlmostEqual(angle, np.pi/2)
 
 class TestPolygonGeometry(unittest.TestCase):
 
