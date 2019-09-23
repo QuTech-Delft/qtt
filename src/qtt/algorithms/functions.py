@@ -436,7 +436,7 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
         angle = -np.arcsin(n_start)
-    t2s = decay_factor * duration
+    t2s = 2 * duration / decay_factor
 
     initial_params = np.array([A, t2s, ramseyfreq, angle, B])
     return initial_params
