@@ -97,7 +97,7 @@ class TestFunctions(unittest.TestCase):
         x_data = np.arange(0, 20., .12)
         exact_frequency = .4
         exact_offset = 2.2
-        y_data = np.sin(2*np.pi*exact_frequency*x_data) + exact_offset
+        y_data = np.sin(2 * np.pi * exact_frequency * x_data) + exact_offset
 
         estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
         self.assertAlmostEqual(estimated_parameters[0], 1., places=1)
@@ -148,6 +148,16 @@ class TestFunctions(unittest.TestCase):
         self.assertTrue(np.abs(np.abs(par_fit_test[0]) - 0.21) < 0.1)
         self.assertTrue(np.abs(par_fit_test[-2] - (-1.255)) < 0.1)
         self.assertTrue(np.abs(par_fit_test[-1] - 0.38) < 0.1)
+
+        x_data = np.array([0.00000000e+00, 4.73333330e-07, 9.46666660e-07, 1.41999999e-06, 1.89333332e-06, 2.36666665e-06, 2.83333338e-06, 3.30666671e-06, 3.78000004e-06, 4.25333337e-06, 4.72666670e-06,
+                           5.20000003e-06, 5.67333336e-06, 6.14666669e-06, 6.62000002e-06, 7.09333335e-06, 7.56666668e-06, 8.03333296e-06, 8.50666675e-06, 8.97999962e-06, 9.45333340e-06, 9.92666628e-06, 1.04000001e-05])
+        y_data = np.array([0.59500003, 0.41499999, 0.12, 0.13166666, 0.35833332, 0.60500002, 0.48166665, 0.36166668, 0.28166667, 0.26333332, 0.28999999,
+                           0.32666665, 0.36666667, 0.37666667, 0.38499999, 0.38833332, 0.35166666, 0.31666666, 0.34, 0.30000001, 0.31999999, 0.33000001, 0.31666666])
+
+        par_fit_test, results = fit_gauss_ramsey(x_data, y_data)
+
+        self.assertAlmostEqual(par_fit_test[0], 0.33, places=1)
+        self.assertAlmostEqual(par_fit_test[1] * 1e6, 3.36, places=1)
 
     def test_logistic_and_linear_function(self):
         x_data = np.arange(-10, 10, 0.1)
