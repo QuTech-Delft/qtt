@@ -158,6 +158,7 @@ class TestFunctions(unittest.TestCase):
 
         self.assertAlmostEqual(par_fit_test[0], 0.33, places=1)
         self.assertAlmostEqual(par_fit_test[1] * 1e6, 3.36, places=1)
+        self.assertAlmostEqual(par_fit_test[2] * 1e-6, 0.36, places=1)
 
     def test_logistic_and_linear_function(self):
         x_data = np.arange(-10, 10, 0.1)
