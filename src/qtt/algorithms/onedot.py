@@ -12,6 +12,7 @@ import warnings
 import logging
 
 import qcodes
+from qcodes.plots.qcmatplotlib import MatPlot
 from qtt.data import dataset2Dmetadata, dataset2image, show2D
 import qtt.data
 import qtt.pgeometry as pgeometry
@@ -371,7 +372,7 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
 def _plot_dataset(dataset, fig):
     plt.figure(fig)
     plt.clf()
-    m = qcodes.MatPlot(dataset.default_parameter_array(), num=fig)
+    m = MatPlot(dataset.default_parameter_array(), num=fig)
     return m
 
 

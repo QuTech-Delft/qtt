@@ -6,6 +6,7 @@ import scipy
 import scipy.ndimage
 from qtt.pgeometry import plot2Dline
 import qcodes
+from qcodes.plots.qcmatplotlib import MatPlot
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -222,7 +223,7 @@ def plot_pinchoff(result, ds=None, fig=10, verbose=1):
     if fig is not None:
         plt.figure(fig)
         plt.clf()
-        qcodes.MatPlot(ds.default_parameter_array(), num=fig)
+        MatPlot(ds.default_parameter_array(), num=fig)
 
         lowvalue = result['lowvalue']
         highvalue = result['highvalue']
