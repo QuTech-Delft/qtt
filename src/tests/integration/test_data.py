@@ -1,14 +1,15 @@
+import io
 import os
 import unittest
 import unittest.mock
-import io
 
+import matplotlib.pyplot as plt
+import numpy as np
 import qcodes
 import qcodes.tests.data_mocks
+from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.data
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 class TestPlotting(unittest.TestCase):
@@ -42,10 +43,9 @@ class TestDataSet(unittest.TestCase):
         - Serialization
         - Utility functions:
             * default_parameter_array()
-            * qcodes.MatPlot, qcodes.QtPlot
+            * qcodes.plots.qcmatplotlib.MatPlot or qcodes.plots.pyqtgraph.QtPlot
             * Easy conversion to numpy: array = np.array(dataset.voltage). Even better: the DataArray's should
                 support the __array_interface__ attribute.
-
     """
 
     def setUp(self):
@@ -131,7 +131,7 @@ class TestDataSet(unittest.TestCase):
         """ We need to plot simple 1D and 2D datasets with proper units and labels."""
         plt.close(fig)
         xarray = self.dataset1d.x_set
-        qcodes.MatPlot(self.dataset1d.default_parameter_array(), num=fig)
+        MatPlot(self.dataset1d.default_parameter_array(), num=fig)
         plt.figure(fig)
         ax = plt.gca()
         self.assertEqual(ax.xaxis.label.get_text(), xarray.label + ' (' + str(xarray.unit) + ')')

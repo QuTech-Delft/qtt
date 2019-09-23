@@ -1,25 +1,25 @@
 """ Utilities to work with data and datasets """
 
-from typing import Optional
-from functools import wraps
-
-import numpy as np
-import scipy
-import os
-import qcodes
 import datetime
-import pickle
 import logging
-import matplotlib.pyplot as plt
+import os
+import pickle
+from functools import wraps
+from typing import Optional
 
+import matplotlib.pyplot as plt
+import numpy as np
+import qcodes
+import scipy
 from qcodes import new_data
-from qtt import pgeometry
+from qcodes.data.data_array import DataArray
+from qcodes.data.data_set import DataSet
+from qcodes.plots.qcmatplotlib import MatPlot
+
 import qtt.algorithms.generic
 import qtt.utilities.json_serializer
+from qtt import pgeometry
 
-from qcodes.data.data_set import DataSet
-from qcodes.data.data_array import DataArray
-from qcodes.plots.qcmatplotlib import MatPlot
 logger = logging.getLogger(__name__)
 
 
@@ -499,14 +499,14 @@ def plot_dataset(dataset: qcodes.DataSet, parameter_names: Optional[list] = None
         if len(default_array.shape) >= 2:
             if len(parameter_names) > 1:
                 arrays = [dataset.default_parameter_array(parameter_name) for parameter_name in parameter_names]
-                plot_handle = qcodes.MatPlot(*arrays, num=fig)
+                plot_handle = MatPlot(*arrays, num=fig)
 
             else:
-                plot_handle = qcodes.MatPlot(dataset.default_parameter_array(parameter_names[0]), num=fig)
+                plot_handle = MatPlot(dataset.default_parameter_array(parameter_names[0]), num=fig)
         else:
             for idx, parameter_name in enumerate(parameter_names):
                 if idx == 0:
-                    plot_handle = qcodes.MatPlot(dataset.default_parameter_array(parameter_name), num=fig)
+                    plot_handle = MatPlot(dataset.default_parameter_array(parameter_name), num=fig)
                 else:
                     plot_handle.add(dataset.default_parameter_array(parameter_name,))
 
