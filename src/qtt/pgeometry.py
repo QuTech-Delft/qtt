@@ -635,10 +635,17 @@ def directionMean(vec):
 
     The initial direction is determined using the oriented direction. Then a non-linear optimization is done.
 
+    Args:
+        vec: List of directions
+        
+    Returns
+        Angle of mean of directions
+        
     >>> vv=np.array( [[1,0],[1,0.1], [-1,.1]])
     >>> a=directionMean(vv)
 
     """
+    vec = np.array(vec)
     def dist(a, vec):
         phi = np.arctan2(vec[:, 0], vec[:, 1])
         x = a - phi
@@ -656,12 +663,11 @@ def directionMean(vec):
     m = vec.mean(axis=0)
     a0 = np.arctan2(m[0], m[1])
 
-    def ff(a): return dist(a, vec)
+    def cost_function(a): return dist(a, vec)
 
-    r = scipy.optimize.minimize(
-        ff, a0, callback=None, options=dict({'disp': False}))
-    a = r.x
-    return a
+    r = scipy.optimize.minimize(cost_function, a0, callback=None, options=dict({'disp': False}))
+    angle = r.x[0]
+    return angle
 
 
 def circular_mean(weights, angles):
