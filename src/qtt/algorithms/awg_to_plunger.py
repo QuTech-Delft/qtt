@@ -151,14 +151,11 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             angle_deg = None
             correction = None
         else:
-
-            a = lines[:, 0, 1]
-            angle_pixel = np.percentile(a, 50) + 0 * np.pi / 2
+            angles = lines[:, 0, 1]
+            angle_pixel = angles[0] # take most voted line
 
             fac = 2
-
-            xpix = np.array(
-                [[0, 0], [-fac * np.sin(angle_pixel), fac * np.cos(angle_pixel)]]).T
+            xpix = np.array([[0, 0], [-fac * np.sin(angle_pixel), fac * np.cos(angle_pixel)]]).T
             tmp = qtt.pgeometry.projectiveTransformation(np.linalg.inv(H), xpix)
             xscan = tr.pixel2scan(tmp)
 
@@ -176,7 +173,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             plt.axis('image')
 
             if angle_pixel is not None:
-                for offset in [-20, 0, 20]:
+                for offset in [-40, -20, 0, 20, 40]:
                     label = None
                     if offset is 0:
                         label = 'detected angle'
@@ -251,7 +248,7 @@ def plot_awg_to_plunger(result, fig=10):
     if angle is not None:
         rho = -(xscan[0] * np.cos(angle) - np.sin(angle) * xscan[1])
 
-        for offset in [-20, 0, 20]:
+        for offset in [-40, -20, 0, 20, 40]:
             label = None
             if offset is 0:
                 label = 'detected angle'
