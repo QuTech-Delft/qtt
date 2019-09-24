@@ -23,6 +23,15 @@ class TestJSONSerializer(unittest.TestCase):
         dataset2 = decode_json(json_data)
         self.assertIsInstance(dataset2, qcodes.DataSet)
 
+    def test_float_nan_inf(self):
+        data = [np.NaN, np.Inf, 1.]
+        json_data = encode_json(data)
+        self.assertIn('NaN', json_data)
+        loaded_data = decode_json(json_data)
+        self.assertTrue(np.isnan(loaded_data[0]))
+        self.assertTrue(np.isinf(loaded_data[1]))
+        self.assertEqual(loaded_data[2], 1.)
+
     def test_numpy_encoders(self):
         data = {'array': np.array([1., 2, 3]), 'intarray': np.array([1, 2])}
         serialized_data = encode_json(data)
