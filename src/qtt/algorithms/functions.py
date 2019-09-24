@@ -436,7 +436,7 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
         angle = -np.arcsin(n_start)
-    t2s = decay_factor * duration
+    t2s = 2 * duration / decay_factor
 
     initial_params = np.array([A, t2s, ramseyfreq, angle, B])
     return initial_params
@@ -496,7 +496,7 @@ def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
     plt.clf()
     plt.plot(x_data * 1e6, y_data, 'o', label='Data')
     plt.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
-    plt.title('Gauss Ramsey fit: %.1f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
+    plt.title('Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
     plt.xlabel('time ($\mu$s)')
     plt.ylabel('Spin-up probability')
     plt.legend()
