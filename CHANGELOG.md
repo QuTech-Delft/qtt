@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add re-arm compensation. (#614)
 - Add restrict_boundaries method to the VirtualDAC (#631)
 - Add option to set dataset record label through scanjob (##655)
+- Fix bug in awg_to_plunger method (#658)
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
@@ -37,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updates requirements on QCoDeS version (#614)
 - qtt.data.dataset_labels works for 1D scans now (#629)
 - Removed plunger argument functionality from tunnelrates_RTS (#625)
-- Improved initial fit of Gauss Ramsey (#643)
+- Improved initial fit of Gauss Ramsey (#643, #661)
 - Double Gaussian fitting is faster (using lmfit) and has better initial estimates (#648)
 - Updated json serialization code to use qilib (#630)
 

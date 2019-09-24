@@ -8,6 +8,7 @@ import copy
 from functools import partial
 
 import qcodes
+import qcodes.instrument.parameter
 
 import qtt
 import qtt.measurements.scans
