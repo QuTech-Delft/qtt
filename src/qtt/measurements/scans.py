@@ -349,6 +349,16 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow=None, subplots=
         pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
     return liveplotwindow
 
+def _dataset_record_label(scanjob):
+    """ Return label to be used in dataset record
+    
+    Args:
+        scanjob (dict): Scanjob that is used to generate the record label
+    Returns
+        String with record label
+    """
+    default_label = scanjob.get('scantype', 'default')
+    return scanjob.get('dataset_label', default_label)
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -361,9 +371,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     Returns:
         alldata (DataSet): contains the measurement data and metadata
     """
-    gates = station.gates
-    gatevals = gates.allvalues()
-
     minstrument = scanjob.get('minstrument', None)
     mparams = get_measurement_params(station, minstrument)
 
@@ -392,7 +399,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.debug('wait_time: %s' % str(wait_time))
 
     alldata, (set_names, measure_names) = makeDataSet1D(sweepvalues, yname=mparams,
-                                                        location=location, loc_record={'label': scanjob['scantype']},
+                                                        location=location, loc_record={'label': _dataset_record_label(scanjob)},
                                                         return_names=True)
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
@@ -412,7 +419,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
         if scanjob['scantype'] == 'scan1Dvec':
             for param in scanjob['phys_gates_vals']:
-                gates.set(param, scanjob['phys_gates_vals'][param][ix])
+                station.gates.set(param, scanjob['phys_gates_vals'][param][ix])
         else:
             sweepvalues.set(x)
         if ix == 0:
@@ -436,9 +443,9 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     myupdate()
     dt = time.time() - t0
 
-    if scanjob['scantype'] is 'scan1Dvec':
+    if scanjob['scantype'] == 'scan1Dvec':
         for param in scanjob['phys_gates_vals']:
-            parameter = gates.parameters[param]
+            parameter = station.gates.parameters[param]
             arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit,
                             preset_data=scanjob['phys_gates_vals'][param],
                             set_arrays=(alldata.arrays[sweepvalues.parameter.name],))
@@ -452,7 +459,11 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+
+    if 'gates' in station.components:
+        gates = station.gates
+        gatevals = gates.allvalues()
+        update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
@@ -564,7 +575,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data,
                                  xunit=qtt.data.determine_parameter_unit(sweepvalues.parameter),
                                  yunit=None,
-                                 location=location, loc_record={'label': scanjob['scantype']})
+                                 location=location, loc_record={'label': _dataset_record_label(scanjob)})
     if virtual_awg:
         virtual_awg.stop()
     else:
@@ -848,7 +859,6 @@ class scanjob_t(dict):
             scanjob (scanjob_t): updated data for scan
             scanvalues (list): contains the values for parameters to scan over
         """
-        gates = station.gates
 
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
@@ -857,10 +867,13 @@ class scanjob_t(dict):
                     sweepdata['start'] = -sweepdata['range'] / 2
                     sweepdata['end'] = sweepdata['range'] / 2
                 else:
+                    gates = station.gates
                     param_val = gates.get(sweepdata['param'])
                     sweepdata['start'] = param_val - sweepdata['range'] / 2
                     sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                gates = station.gates
+
                 if 'paramname' in self['sweepdata']:
                     sweepname = self['sweepdata']['paramname']
                 else:
@@ -869,6 +882,7 @@ class scanjob_t(dict):
                 sweepparam = VectorParameter(name=sweepname_identifier, label=sweepname, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan1D', 'scan1Dfast']:
+                gates = getattr(station, 'gates', None)
                 sweepparam = get_param(gates, sweepdata['param'])
             else:
                 raise Exception('unknown scantype')
@@ -876,6 +890,8 @@ class scanjob_t(dict):
                 sweepdata['step'] = (sweepdata['end']
                                      - sweepdata['start']) / sweeplength
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                gates = station.gates
+
                 last = sweepdata['start'] + sweepdata['range']
                 scanvalues = sweepparam[sweepdata['start']:last:sweepdata.get('step', 1.)]
 
@@ -893,6 +909,8 @@ class scanjob_t(dict):
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
+            gates = station.gates
+
             stepdata = self['stepdata']
             if 'range' in stepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
@@ -1018,7 +1036,7 @@ def fastScan(scanjob, station):
     if awg is None:
         awg = getattr(station, 'virtual_awg', None)
 
-    if 'awg' is None:
+    if awg is None:
         return 0
 
     if isinstance(awg, qtt.instrument_drivers.virtualAwg.virtual_awg.VirtualAwg):
@@ -1115,7 +1133,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
                                                         measure_names=mparams, location=location, loc_record={
-                                                            'label': scanjob['scantype']},
+                                                            'label': _dataset_record_label(scanjob)},
                                                         return_names=True)
 
     if verbose >= 2:
@@ -2081,13 +2099,13 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if 'paramname' in stepdata:
             stepvalues_tmp.name = stepdata['paramname']
         alldata = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=measure_names,
-                                location=location, loc_record={'label': scanjob['scantype']})
+                                location=location, loc_record={'label': _dataset_record_label(scanjob)})
     else:
         if stepvalues.name == sweepvalues.name:
             stepvalues.name = stepvalues.name + '_y'
             sweepvalues.name = sweepvalues.name + '_x'
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                location=location, loc_record={'label': scanjob['scantype']})
+                                location=location, loc_record={'label': scanjob.get('dataset_label', _dataset_record_label(scanjob))})
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
 
@@ -2347,14 +2365,14 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     if scanjob['scantype'] == 'scan2Dturbo':
         alldata, _ = makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names=measure_names,
-                                          location=location, loc_record={'label': scanjob['scantype']})
+                                          location=location, loc_record={'label': _dataset_record_label(scanjob)})
     else:
         scanvalues = scanjob._convert_scanjob_vec(
             station, data[0].shape[1], data[0].shape[0])
         stepvalues = scanvalues[0]
         sweepvalues = scanvalues[1]
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                preset_data=data, location=location, loc_record={'label': scanjob['scantype']})
+                                preset_data=data, location=location, loc_record={'label': _dataset_record_label(scanjob)})
 
     dt = time.time() - t0
     liveplotwindow = _initialize_live_plotting(alldata, plotparam=None, liveplotwindow=liveplotwindow)
