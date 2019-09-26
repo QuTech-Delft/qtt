@@ -350,7 +350,13 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow=None, subplots=
     return liveplotwindow
 
 def _dataset_record_label(scanjob):
-    """ Return label to be used in dataset record """
+    """ Return label to be used in dataset record
+    
+    Args:
+        scanjob (dict): Scanjob that is used to generate the record label
+    Returns
+        String with record label
+    """
     default_label = scanjob.get('scantype', 'default')
     return scanjob.get('dataset_label', default_label)
 

@@ -74,13 +74,14 @@ class TestScans(TestCase):
         self.assertTrue('hi' in data.metadata)
         gates.close()
 
-    @staticmethod
-    def test_scan1D_no_gates():
+    def test_scan1D_no_gates(self):
         p = Parameter('p', set_cmd=None)
         r = VoltageDivider(p, 4)
         scanjob = scanjob_t({'sweepdata': {'param': p, 'start': 0, 'end': 10, 'step': 2}, 'minstrument': [r]})
         station=qcodes.Station()
-        _ = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+        dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
+        default_record_label = 'scan1D'
+        self.assertTrue(dataset.location.endswith(default_record_label))
 
     def test_scanjob_record_label(self):
         p = Parameter('p', set_cmd=None)
