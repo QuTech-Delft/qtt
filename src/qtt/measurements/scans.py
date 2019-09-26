@@ -1036,7 +1036,7 @@ def fastScan(scanjob, station):
     if awg is None:
         awg = getattr(station, 'virtual_awg', None)
 
-    if 'awg' is None:
+    if awg is None:
         return 0
 
     if isinstance(awg, qtt.instrument_drivers.virtualAwg.virtual_awg.VirtualAwg):

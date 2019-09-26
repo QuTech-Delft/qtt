@@ -19,7 +19,7 @@ import qtt.gui.live_plotting
 import qtt.utilities.tools
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.measurements.scans import (get_instrument_parameter, instrumentName,
-                                    measure_segment_scope_reader,
+                                    measure_segment_scope_reader, fastScan,
                                     sample_data_t, scan1D, scan2D, scanjob_t)
 from qtt.structures import MultiParameter
 
@@ -195,6 +195,14 @@ class TestScans(TestCase):
                 process_mock.assert_called_with(raw_data_mock, [width], period, sample_rate,
                                                 resolution=None, start_zero=False, fig=None)
                 self.assertEqual(data_mock, result_data)
+
+    def test_fastScan_no_awg(self):
+        station = MagicMock()
+        station.awg = None
+        station.virtual_awg =  None
+        scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': []})
+
+        self.assertEqual(fastScan(scanjob, station), 0)
 
     def test_measure_segment_scope_reader_no_processing(self):
         mock_scope = MagicMock()
