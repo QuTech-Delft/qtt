@@ -1642,6 +1642,7 @@ class plotCallback:
         Args:
             func (function): function to be called
             xdata, ydata (arrays): datapoints to respond to
+            scale (list of float): scale factors for distance calculation
             verbose (int): output level
         Returns:
             pc (object): plot callback
@@ -1663,6 +1664,8 @@ class plotCallback:
             # automatically determine scale
             scale = [1 / (1e-8 + np.ptp(xdata)), 1 / (1e-8 + np.ptp(ydata))]
         self.scale = scale
+        if verbose:
+               print(f'plotCallback: scale {scale}')
         self.connection_ids = []
         
     def __call__(self, event):
@@ -1688,6 +1691,7 @@ class plotCallback:
                 dd = xx - pt
                 dd = np.multiply(np.array(self.scale).reshape((1, 2)), dd)
                 d = np.linalg.norm(dd, axis=1)
+                d[np.isnan(d)]=np.inf
                 idx = np.argmin(d)
                 distance = d[idx]
                 if self.verbose:
