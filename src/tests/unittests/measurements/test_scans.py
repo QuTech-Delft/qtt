@@ -82,6 +82,7 @@ class TestScans(TestCase):
         dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
         default_record_label = 'scan1D'
         print(dataset.location)
+        self.assertEqual(dataset.location, 'dd')
         self.assertTrue(dataset.location.endswith(default_record_label))
 
     def test_scanjob_record_label(self):
