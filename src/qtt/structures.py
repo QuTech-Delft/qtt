@@ -467,7 +467,7 @@ class sensingdot_t:
             scanjob['minstrument'] = channel
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
-            scanjob['dataset_label'] = 'sensingdot_fastune'
+            scanjob['dataset_label'] = 'sensingdot_fast_tune'
             alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
         else:
             raise Exception('legacy code, please do not use')
