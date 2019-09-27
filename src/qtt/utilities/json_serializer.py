@@ -73,6 +73,7 @@ def decode_numpy_number(item):
 
     return serializer.decode_data(item)
 
+
 def encode_json_dataclass(object_tag, item):
     """ Encode a JSON dataclass object
 
@@ -83,9 +84,10 @@ def encode_json_dataclass(object_tag, item):
         Dictionary that can be serialized
     """
     return {
-       JsonSerializeKey.OBJECT: object_tag,
-       JsonSerializeKey.CONTENT: item.to_dict()
-    }  
+        JsonSerializeKey.OBJECT: object_tag,
+        JsonSerializeKey.CONTENT: item.to_dict()
+    }
+
 
 def decode_json_dataclass(class_type, data):
     """ Decode a JSON dataclass object
@@ -97,6 +99,7 @@ def decode_json_dataclass(class_type, data):
         Object of type specified
     """
     return class_type.from_dict(data[JsonSerializeKey.CONTENT])
+
 
 def encode_json(data: object) -> str:
     """ Encode Python object to JSON
