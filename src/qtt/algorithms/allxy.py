@@ -55,7 +55,7 @@ def _default_measurement_array(dataset):
 
 
 def fit_allxy(dataset: qcodes.DataSet, initial_parameters: np.ndarray = None) -> Dict[str, Any]:
-    """ Fit AllXY measurement to piecewise linear model 
+    """ Fit AllXY measurement to piecewise linear model
     
     Args:
         dataset: Dataset containing the AllXY measurement
@@ -78,7 +78,12 @@ def fit_allxy(dataset: qcodes.DataSet, initial_parameters: np.ndarray = None) ->
 
 def plot_allxy(dataset: qcodes.DataSet, result: dict, fig: int = 1, verbose: int = 0):
     """ Plot the results of an AllXY fit
-    
+
+    Args:
+        dataset: Dataset containing the measurement data
+        result: Fitting result of fit_allxy
+        int: Figure handle
+        verbose: Verbosity level
     """
     allxy_data = _default_measurement_array(dataset)
     xy_pairs = generate_allxy_combinations()
