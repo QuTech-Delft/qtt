@@ -5,27 +5,26 @@ Created on Fri Sep 20 21:04:41 2019
 @author: eendebakpt
 """
 
+from typing import Dict, Any, List, Union
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Dict, Any
-
 from lmfit import Model
 
-import qtt
+import qcodes
 from qtt.utilities.visualization import plot_vertical_line
 
 
-def generate_allxy_combinations():
+def generate_allxy_combinations() -> List[Any]:
     """ Generate all combinations of the AllXY sequence from Reed 2013 """
     xymapping = {'I': 'I', 'x': 'X90', 'y': 'Y90', 'X': 'X180', 'Y': 'Y180'}
-    allxy_combinations = ['II', 'XX', 'YY', 'XY', 'YX'] + ['xI', 'yI', 'xy', 'yx',
+    allxy_combinations_input = ['II', 'XX', 'YY', 'XY', 'YX'] + ['xI', 'yI', 'xy', 'yx',
                                                            'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy'] + ['XI', 'YI', 'xx', 'yy']
-    allxy_combinations = [(xymapping[x[0]], xymapping[x[1]]) for x in allxy_combinations]
+    allxy_combinations = [(xymapping[x[0]], xymapping[x[1]]) for x in allxy_combinations_input]
 
     return allxy_combinations
 
 
-def allxy_model(x, offset0, slope0, offset1, slope1, offset2, slope2):
+def allxy_model(x: Union[float, np.ndarray], offset0:float, slope0:float, offset1:float, slope1:float, offset2:float, slope2:float) -> Union[float, np.ndarray]:
     """ Model for AllXY experiment
 
     The model consists of three linear segments
@@ -55,7 +54,15 @@ def _default_measurement_array(dataset):
     return dataset.arrays[mm[0]]
 
 
-def fit_allxy(dataset, initial_parameters: np.ndarray = None) -> Dict[str, Any]:
+def fit_allxy(dataset: qcodes.DataSet, initial_parameters: np.ndarray = None) -> Dict[str, Any]:
+    """ Fit AllXY measurement to piecewise linear model 
+    
+    Args:
+        dataset: Dataset containing the AllXY measurement
+        initial_parameters: Optional set of initialization parameters
+    Returns:
+        Dictionary with the fitting results
+    """
     allxy_data = _default_measurement_array(dataset)
 
     x_data = np.arange(21)
@@ -69,7 +76,10 @@ def fit_allxy(dataset, initial_parameters: np.ndarray = None) -> Dict[str, Any]:
     return {'fitted_parameters': fitted_parameters, 'description': 'allxy fit', 'initial_parameters': initial_parameters}
 
 
-def plot_allxy(dataset, result, fig: int = 1, verbose: int = 0):
+def plot_allxy(dataset: qcodes.DataSet, result: dict, fig: int = 1, verbose: int = 0):
+    """ Plot the results of an AllXY fit
+    
+    """
     allxy_data = _default_measurement_array(dataset)
     xy_pairs = generate_allxy_combinations()
     x_data = np.arange(21)
