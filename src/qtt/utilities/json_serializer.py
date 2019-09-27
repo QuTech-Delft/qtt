@@ -85,8 +85,7 @@ def encode_json_dataclass(object_tag, item):
     return {
        JsonSerializeKey.OBJECT: object_tag,
        JsonSerializeKey.CONTENT: item.to_dict()
-    }
-   
+    }  
 
 def decode_json_dataclass(class_type, data):
     """ Decode a JSON dataclass object
