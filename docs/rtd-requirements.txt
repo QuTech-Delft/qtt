@@ -2,6 +2,7 @@
 apscheduler
 attrs
 coverage
+dataclasses-json
 dulwich
 hickle
 numpy
