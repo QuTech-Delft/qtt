@@ -27,8 +27,19 @@ def generate_allxy_combinations() -> List[Any]:
 def allxy_model(x: Union[float, np.ndarray], offset0:float, slope0:float, offset1:float, slope1:float, offset2:float, slope2:float) -> Union[float, np.ndarray]:
     """ Model for AllXY experiment
 
-    The model consists of three linear segments
+    The model consists of three linear segments. The segments correspond to the pairs of gates that result in
+    fraction 0, 0.5 and 1 in the AllXY experiment.
 
+    Args:
+        x: Indices of the allxy pairs
+        offset0: Offset of first segment
+        slope0: Slope of first segment
+        offset1: Offset of second segment
+        slope1: Slope of second segment
+        offset2: Offset of last segment
+        slope2: Slope of last segment
+    Returns:
+        Fractions for the allxy pairs
     """
     x = np.array(x)
     x0 = x < 4.5
@@ -56,7 +67,7 @@ def _default_measurement_array(dataset):
 
 def fit_allxy(dataset: qcodes.DataSet, initial_parameters: np.ndarray = None) -> Dict[str, Any]:
     """ Fit AllXY measurement to piecewise linear model
-    
+
     Args:
         dataset: Dataset containing the AllXY measurement
         initial_parameters: Optional set of initialization parameters
