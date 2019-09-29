@@ -87,14 +87,14 @@ def fit_allxy(dataset: qcodes.DataSet, initial_parameters: np.ndarray = None) ->
     return {'fitted_parameters': fitted_parameters, 'description': 'allxy fit', 'initial_parameters': initial_parameters}
 
 
-def plot_allxy(dataset: qcodes.DataSet, result: dict, fig: int = 1, verbose: int = 0):
+def plot_allxy(dataset: qcodes.DataSet, result: dict, fig: int = 1, plot_initial_estimate: bool = False):
     """ Plot the results of an AllXY fit
 
     Args:
         dataset: Dataset containing the measurement data
         result: Fitting result of fit_allxy
         int: Figure handle
-        verbose: Verbosity level
+        plot_initial_guess: If True, then plot the initial estimate of the model
     """
     allxy_data = _default_measurement_array(dataset)
     xy_pairs = generate_allxy_combinations()
@@ -108,7 +108,7 @@ def plot_allxy(dataset: qcodes.DataSet, result: dict, fig: int = 1, verbose: int
 
     plt.plot(x_data, allxy_data, '.b', label='allxy data')
 
-    if verbose:
+    if plot_initial_estimate:
         p = [0, 0, .5, 0, 1, 0]
         plt.plot(xfine, allxy_model(xfine, *p), 'c', label='baseline', alpha=.5)
 

@@ -18,7 +18,7 @@ class TestAllxy(unittest.TestCase):
         self.assertIsInstance(result, dict)
         np.testing.assert_array_almost_equal([0.1, 0, .5, 0, .9, 0], result['fitted_parameters'], decimal=1)
 
-        plot_allxy(dataset, result, fig=1)
+        plot_allxy(dataset, result, fig=1, plot_initial_estimate=True)
         plt.close(1)
 
     def test_allxy_model(self):
