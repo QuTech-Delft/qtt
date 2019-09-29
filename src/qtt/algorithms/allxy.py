@@ -18,13 +18,13 @@ def generate_allxy_combinations() -> List[Any]:
     """ Generate all combinations of the AllXY sequence from Reed 2013 """
     xymapping = {'I': 'I', 'x': 'X90', 'y': 'Y90', 'X': 'X180', 'Y': 'Y180'}
     allxy_combinations_input = ['II', 'XX', 'YY', 'XY', 'YX'] + ['xI', 'yI', 'xy', 'yx',
-                                                           'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy'] + ['XI', 'YI', 'xx', 'yy']
+                                                                 'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy'] + ['XI', 'YI', 'xx', 'yy']
     allxy_combinations = [(xymapping[x[0]], xymapping[x[1]]) for x in allxy_combinations_input]
 
     return allxy_combinations
 
 
-def allxy_model(x: Union[float, np.ndarray], offset0:float, slope0:float, offset1:float, slope1:float, offset2:float, slope2:float) -> Union[float, np.ndarray]:
+def allxy_model(x: Union[float, np.ndarray], offset0: float, slope0: float, offset1: float, slope1: float, offset2: float, slope2: float) -> Union[float, np.ndarray]:
     """ Model for AllXY experiment
 
     The model consists of three linear segments. The segments correspond to the pairs of gates that result in
@@ -46,10 +46,10 @@ def allxy_model(x: Union[float, np.ndarray], offset0:float, slope0:float, offset
     x1 = np.logical_and(x >= 4.5, x < 16.5)
     x2 = (x >= 16.5)
 
-    v1 = x0 * (offset0 + x * slope0)
+    v1 = x0 * (offset0 + (x - 2.) * slope0)
 
-    v2 = x1 * (offset1 + x * slope1)
-    v3 = x2 * (offset2 + x * slope2)
+    v2 = x1 * (offset1 + (x - 10.5) * slope1)
+    v3 = x2 * (offset2 + (x - 19.) * slope2)
 
     return v1 + v2 + v3
 

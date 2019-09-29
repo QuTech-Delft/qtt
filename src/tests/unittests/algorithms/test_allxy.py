@@ -3,7 +3,7 @@ import unittest
 import matplotlib.pyplot as plt
 
 import qtt
-from qtt.algorithms.allxy import fit_allxy, plot_allxy
+from qtt.algorithms.allxy import fit_allxy, plot_allxy, allxy_model
 
 
 class TestAllxy(unittest.TestCase):
@@ -15,7 +15,26 @@ class TestAllxy(unittest.TestCase):
                                                                                 0.47333333, 0.488, 0.80799999, 0.78933333, 0.788,
                                                                                 0.79333333])
         result = fit_allxy(dataset)
+        self.assertIsInstance(result, dict)
+        np.testing.assert_array_almost_equal([0.1, 0, .5, 0, .9, 0], result['fitted_parameters'], decimal=1)
+
         plot_allxy(dataset, result, fig=1)
         plt.close(1)
-        self.assertIsInstance(result, dict)
-        self.assertTrue(result['fitted_parameters'][0] < 0.2)
+
+    def test_allxy_model(self):
+        for offset in [0, .1, .2]:
+            for slope in [-.1, 0, .1]:
+                for idx in [0, 1, 2, 3, 4]:
+                    mean_index = np.mean(range(5))
+                    self.assertAlmostEqual(allxy_model(idx, offset, slope, 1, 2, 3, 4),
+                                           offset + slope * (idx - mean_index))
+
+                for idx in range(5, 17):
+                    mean_index = np.mean(range(5, 17))
+                    self.assertAlmostEqual(allxy_model(idx, -1, -2, offset, slope, 3, 4),
+                                           offset + slope * (idx - mean_index))
+
+                for idx in range(17, 22):
+                    mean_index = np.mean(range(17, 22))
+                    self.assertAlmostEqual(allxy_model(idx, -1, -2, -3, -4, offset, slope),
+                                           offset + slope * (idx - mean_index))
