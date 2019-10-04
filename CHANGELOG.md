@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add restrict_boundaries method to the VirtualDAC (#631)
 - Add option to set dataset record label through scanjob (##655)
 - Fix bug in awg_to_plunger method (#658)
+- Add method to fit AllXY experiment (#664)
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 

@@ -5,7 +5,7 @@ Created on Fri Sep 20 21:04:41 2019
 @author: eendebakpt
 """
 
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import Model
@@ -54,18 +54,18 @@ def allxy_model(x: Union[float, np.ndarray], offset0: float, slope0: float, offs
     return v1 + v2 + v3
 
 
-def _estimate_allxy_parameters(allxy_data: np.ndarray):
+def _estimate_allxy_parameters(allxy_data: np.ndarray) -> List[float]:
     """ Return estimate of allxy model parameters """
     p = [np.mean(allxy_data[0:5]), 0, np.mean(allxy_data[5:17]), 0, np.mean(allxy_data[17:]), 0]
     return p
 
 
-def _default_measurement_array(dataset):
+def _default_measurement_array(dataset : qcodes.DataSet) -> qcodes.DataArray :
     mm = [name for (name, a) in dataset.arrays.items() if not a.is_setpoint]
     return dataset.arrays[mm[0]]
 
 
-def fit_allxy(dataset: qcodes.DataSet, initial_parameters: np.ndarray = None) -> Dict[str, Any]:
+def fit_allxy(dataset: qcodes.DataSet, initial_parameters: Optional[np.ndarray] = None) -> Dict[str, Any]:
     """ Fit AllXY measurement to piecewise linear model
 
     Args:
@@ -87,7 +87,7 @@ def fit_allxy(dataset: qcodes.DataSet, initial_parameters: np.ndarray = None) ->
     return {'fitted_parameters': fitted_parameters, 'description': 'allxy fit', 'initial_parameters': initial_parameters}
 
 
-def plot_allxy(dataset: qcodes.DataSet, result: dict, fig: int = 1, plot_initial_estimate: bool = False):
+def plot_allxy(dataset: qcodes.DataSet, result: Dict[str, Any], fig: int = 1, plot_initial_estimate: bool = False):
     """ Plot the results of an AllXY fit
 
     Args:
