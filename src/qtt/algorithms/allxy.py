@@ -17,7 +17,10 @@ from qtt.utilities.visualization import plot_vertical_line
 def generate_allxy_combinations() -> List[Any]:
     """ Generate all combinations of the AllXY sequence from Reed 2013 """
     xymapping = {'I': 'I', 'x': 'X90', 'y': 'Y90', 'X': 'X180', 'Y': 'Y180'}
-    allxy_combinations_input = ['II', 'XX', 'YY', 'XY', 'YX'] + ['xI', 'yI', 'xy', 'yx',
+ground_state_rotations = ['II', 'XX', 'YY', 'XY', 'YX']
+equator_state_rotations = ['xI', 'yI', 'xy', 'yx', 'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy']
+excited_state_rotations = ['XI', 'YI', 'xx', 'yy']
+allxy_combinations_input = ground_state_rotations + equator_state_rotations + excited_state_rotations
                                                                  'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy'] + ['XI', 'YI', 'xx', 'yy']
     allxy_combinations = [(xymapping[x[0]], xymapping[x[1]]) for x in allxy_combinations_input]
 
