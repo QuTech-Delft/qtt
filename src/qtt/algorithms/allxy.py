@@ -84,7 +84,10 @@ def fit_allxy(dataset: qcodes.DataSet, initial_parameters: Optional[np.ndarray] 
     param_names = lmfit_model.param_names
     result = lmfit_model.fit(allxy_data, x=x_data, **dict(zip(param_names, initial_parameters)), verbose=0)
     fitted_parameters = np.array([result.best_values[p] for p in param_names])
-    return {'fitted_parameters': fitted_parameters, 'description': 'allxy fit', 'initial_parameters': initial_parameters}
+    fitted_parameters_covariance = np.sqrt(np.diag(result.covar))
+    chi_squared = result.chisqr
+
+    return {'fitted_parameters': fitted_parameters, 'description': 'allxy fit', 'initial_parameters': initial_parameters, 'fitted_parameters_covariance': fitted_parameters_covariance, 'chi_squared': chi_squared}
 
 
 def plot_allxy(dataset: qcodes.DataSet, result: Dict[str, Any], fig: int = 1, plot_initial_estimate: bool = False):
