@@ -1,40 +1,32 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 20 21:04:41 2019
-
-@author: eendebakpt
-"""
-
 from typing import Dict, Any, List, Union, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import Model
 
-import qcodes
+from qcodes import DataSet, DataArray
 from qtt.utilities.visualization import plot_vertical_line
 
 
 def generate_allxy_combinations() -> List[Any]:
     """ Generate all combinations of the AllXY sequence from Reed 2013 """
     xymapping = {'I': 'I', 'x': 'X90', 'y': 'Y90', 'X': 'X180', 'Y': 'Y180'}
-ground_state_rotations = ['II', 'XX', 'YY', 'XY', 'YX']
-equator_state_rotations = ['xI', 'yI', 'xy', 'yx', 'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy']
-excited_state_rotations = ['XI', 'YI', 'xx', 'yy']
-allxy_combinations_input = ground_state_rotations + equator_state_rotations + excited_state_rotations
-                                                                 'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy'] + ['XI', 'YI', 'xx', 'yy']
+    ground_state_rotations = ['II', 'XX', 'YY', 'XY', 'YX']
+    equator_state_rotations = ['xI', 'yI', 'xy', 'yx', 'xY', 'yX', 'Xy', 'Yx', 'xX', 'Xx', 'yY', 'Yy']
+    excited_state_rotations = ['XI', 'YI', 'xx', 'yy']
+    allxy_combinations_input = ground_state_rotations + equator_state_rotations + excited_state_rotations
     allxy_combinations = [(xymapping[x[0]], xymapping[x[1]]) for x in allxy_combinations_input]
 
     return allxy_combinations
 
 
-def allxy_model(x: Union[float, np.ndarray], offset0: float, slope0: float, offset1: float, slope1: float, offset2: float, slope2: float) -> Union[float, np.ndarray]:
+def allxy_model(indices: Union[float, np.ndarray], offset0: float, slope0: float, offset1: float, slope1: float, offset2: float, slope2: float) -> Union[float, np.ndarray]:
     """ Model for AllXY experiment
 
     The model consists of three linear segments. The segments correspond to the pairs of gates that result in
     fraction 0, 0.5 and 1 in the AllXY experiment.
 
     Args:
-        x: Indices of the allxy pairs
+        index: Indices of the allxy pairs or a single index
         offset0: Offset of first segment
         slope0: Slope of first segment
         offset1: Offset of second segment
@@ -44,15 +36,14 @@ def allxy_model(x: Union[float, np.ndarray], offset0: float, slope0: float, offs
     Returns:
         Fractions for the allxy pairs
     """
-    x = np.array(x)
-    x0 = x < 4.5
-    x1 = np.logical_and(x >= 4.5, x < 16.5)
-    x2 = (x >= 16.5)
+    indices = np.array(indices)
+    x0 = indices < 4.5
+    x1 = np.logical_and(indices >= 4.5, indices < 16.5)
+    x2 = (indices >= 16.5)
 
-    v1 = x0 * (offset0 + (x - 2.) * slope0)
-
-    v2 = x1 * (offset1 + (x - 10.5) * slope1)
-    v3 = x2 * (offset2 + (x - 19.) * slope2)
+    v1 = x0 * (offset0 + (indices - 2.) * slope0)
+    v2 = x1 * (offset1 + (indices - 10.5) * slope1)
+    v3 = x2 * (offset2 + (indices - 19.) * slope2)
 
     return v1 + v2 + v3
 
@@ -63,12 +54,12 @@ def _estimate_allxy_parameters(allxy_data: np.ndarray) -> List[float]:
     return p
 
 
-def _default_measurement_array(dataset : qcodes.DataSet) -> qcodes.DataArray :
+def _default_measurement_array(dataset: DataSet) -> DataArray:
     mm = [name for (name, a) in dataset.arrays.items() if not a.is_setpoint]
     return dataset.arrays[mm[0]]
 
 
-def fit_allxy(dataset: qcodes.DataSet, initial_parameters: Optional[np.ndarray] = None) -> Dict[str, Any]:
+def fit_allxy(dataset: DataSet, initial_parameters: Optional[np.ndarray] = None) -> Dict[str, Any]:
     """ Fit AllXY measurement to piecewise linear model
 
     Args:
@@ -93,7 +84,7 @@ def fit_allxy(dataset: qcodes.DataSet, initial_parameters: Optional[np.ndarray] 
     return {'fitted_parameters': fitted_parameters, 'description': 'allxy fit', 'initial_parameters': initial_parameters, 'fitted_parameters_covariance': fitted_parameters_covariance, 'chi_squared': chi_squared}
 
 
-def plot_allxy(dataset: qcodes.DataSet, result: Dict[str, Any], fig: int = 1, plot_initial_estimate: bool = False):
+def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: int = 1, plot_initial_estimate: bool = False):
     """ Plot the results of an AllXY fit
 
     Args:
