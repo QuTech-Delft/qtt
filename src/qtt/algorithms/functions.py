@@ -1,12 +1,13 @@
 """ Mathematical functions and models """
 
-import numpy as np
-import scipy
-import scipy.constants
-import qtt.pgeometry
-import matplotlib.pyplot as plt
-from lmfit import Model
+import math
+from typing import List
 
+import matplotlib.pyplot as plt
+import numpy as np
+import qtt.pgeometry
+import scipy
+from lmfit import Model
 from qtt.utilities.visualization import plot_vertical_line
 
 
@@ -340,24 +341,46 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
     return fitted_parameters
 
 
+def damped_sine_wave(x_data, amplitude, decay_rate, power, frequency, phase, offset):
+    """
+    A sine wave with exponential decay of a power of x.
+    Function:
+    $$ amplitude * exp(-(x_data*decay_rate)**power) * sin(2pi*frequency * x_data + phase) + offset $$
+    Function parameters:
+
+    Args:
+        x_data (np.ndarray): array of independent variable values where the function needs to be evaluated.
+        amplitude: amplitude of the sine at x=0.
+        decay_rate (Hz): value of 1/x where the damping factor is 1/e
+        power (-): power of x_data*decay_rate inside the exponent.
+        frequency (Hz)
+        phase (radians): phase of the sine at x=0.
+        offset: constant offset of the function.
+
+    Returns:
+        np.ndarray with values of function for all x_data.
+    """
+    x = x_data
+    return amplitude * np.exp(-(x * decay_rate) ** power) * np.sin(2 * np.pi * frequency * x + phase) + offset
+
+
 def gauss_ramsey(x_data, params):
     """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase
     of the second pulse is made dependent on the free evolution time. This results in a gaussian decay multiplied
     by a sinus.
     Function as used by T.F. Watson et all., example in qtt/docs/notebooks/example_fit_ramsey.ipynb
 
-    $$ gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B  $$
+    $$ gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramsey_freq * x_data - angle) +B  $$
 
     Args:
-        x_data (array): the data for the input variable
-        params (array): parameters of the gauss_ramsey function, [A,t2s,ramseyfreq,angle,B]
+        x_data (numpy array): the data for the input variable
+        params (array): parameters of the gauss_ramsey function, [A,t2s,ramsey_freq,angle,B]
 
     Result:
         gauss_ramsey (array): model for the gauss_ramsey
     """
-    [A, t2s, ramseyfreq, angle, B] = params
-    gauss_ramsey = A * np.exp(-(x_data / t2s) ** 2) * np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
-    return gauss_ramsey
+    [A, t2s, ramsey_freq, angle, B] = params
+    return damped_sine_wave(np.array(x_data), A, 1.0 / t2s, 2, ramsey_freq, -angle, B)
 
 
 def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
@@ -381,33 +404,43 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
     """ Estimate dominant frequency in a signal
 
     Args:
-        signal (array): Input data
+        signal (numpy array): Input data
         sample_rate (float): Sample rate of the data
         remove_dc (bool): If True, then do not estimate the DC component
         fig (int or None): Optionally plot the estimated frequency
     """
     w = np.fft.fft(signal)
     freqs = np.fft.fftfreq(len(signal), d=1. / sample_rate)
+    select_pos = freqs >= 0
+    w_pos = w[select_pos]
+    freqs_pos = freqs[select_pos]
 
     if remove_dc:
-        w[0] = 0
+        if freqs_pos[0] == 0.0:
+            w_pos[0] = 0
+        dc_index = np.argmin(np.abs(freqs))
+        if freqs[dc_index] == 0.0:
+            w[0] = 0
 
     ff = freqs[np.argmax(np.abs(w))]
+    ff_pos = freqs_pos[np.argmax(np.abs(w_pos))]
 
     if fig:
         plt.figure(fig)
         plt.clf()
-        plt.plot(freqs, np.abs(w), '.b')
+        plt.plot(freqs, np.abs(w), '.r')
+        plt.plot(freqs_pos, np.abs(w_pos), '.b')
         plt.xlabel('Frequency')
         plt.ylabel('Abs of fft')
-        plot_vertical_line(ff)
-    return ff
+        plot_vertical_line(ff, color='r')
+        plot_vertical_line(ff_pos, color='b')
+    return ff_pos
 
 # %%
 #
 
 
-def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
+def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2, fig=None):
     """ Estimate initial parameters of a damped sine wave
 
     Also see: https://en.wikipedia.org/wiki/Damped_sine_wave
@@ -430,15 +463,15 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
 
     duration = x_data[-1] - x_data[0]
     sample_rate = x_data.size / duration
-    ramseyfreq = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
-    if A==0:
+    ramsey_freq = estimate_dominant_frequency(y_data, sample_rate=sample_rate, fig=fig)
+    if A == 0:
         angle = 0
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
         angle = -np.arcsin(n_start)
     t2s = 2 * duration / decay_factor
 
-    initial_params = np.array([A, t2s, ramseyfreq, angle, B])
+    initial_params = np.array([A, t2s, ramsey_freq, angle, B])
     return initial_params
 
 
@@ -450,8 +483,8 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     see function 'gauss_ramsey' and example in qtt/docs/notebooks/example_fit_ramsey.ipynb
 
     Args:
-        x_data (array): the data for the independent variable
-        y_data (array): the data for the measured variable
+        x_data (numpy array): the data for the independent variable
+        y_data (numpy array): the data for the measured variable
         weight_power (float)
         maxiter (int): maximum number of iterations to perform
         maxfun (int): maximum number of function evaluations to make
@@ -480,26 +513,65 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     return fit_parameters, result_dict
 
 
-def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
+def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig, initial_parameters=None, show_parameters=False):
     """ Plot Gauss Ramset fit
 
     Args:
-        x_data: Input array with time variable
+        x_data: Input array with time variable (seconds)
         y_data: Input array with signal
         fit_parameters: Result of fit_gauss_ramsey
+        fig: figure number to plot into
+        initial_parameters: if given, also plot function with initial parameters
+        show_parameters: if True, then all parameter values are shown in the plot
     """
-    test_x = np.linspace(0, np.max(x_data), 200)
-    freq_fit = abs(fit_parameters[2] * 1e-6)
+    def get_fit_pars_string(fit_parameters: List[float] = fit_parameters, title: str = "Fit parameters:") -> str:
+        amp = fit_parameters[0]
+        t2star = fit_parameters[1] * 1e6
+        freq = abs(fit_parameters[2] * 1e-6)
+        phi = fit_parameters[3] / math.pi
+        off = fit_parameters[4]
+        return '\n'.join([title,
+                          ('f   = %.3g MHz' % freq),
+                          ('$T_2^*$ = %.2g $\\mu$s' % t2star),
+                          ('amp = %.2g' % amp),
+                          ('off = %.2g' % off),
+                          ('phi = %.2g*pi rad' % phi)])
+
+    ampl_fit = fit_parameters[0]
     t2star_fit = fit_parameters[1] * 1e6
+    freq_fit = abs(fit_parameters[2] * 1e-6)
+    phi_fit = fit_parameters[3]
+    off_fit = fit_parameters[4]
+    x_min = np.min(x_data)
+    x_max = np.max(x_data)
+    duration = x_max - x_min
+    num_points = math.ceil(9 * duration * fit_parameters[2])
+    num_points = min(max(num_points, 200), 1000)
+    func_x = np.linspace(x_min, x_max, num_points)
 
     plt.figure(fig)
     plt.clf()
     plt.plot(x_data * 1e6, y_data, 'o', label='Data')
-    plt.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
-    plt.title('Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
+    plt.plot(func_x * 1e6, gauss_ramsey(func_x, fit_parameters), label='Fit')
+    if initial_parameters is not None:
+        plt.plot(func_x * 1e6, gauss_ramsey(func_x, initial_parameters), label='Initial parameters')
+
+    plt.title('Gauss Ramsey fit: %.3g MHz / $T_2^*$: %.2g $\mu$s' % (freq_fit, t2star_fit))
     plt.xlabel('time ($\mu$s)')
     plt.ylabel('Spin-up probability')
-    plt.legend()
+    plt.legend(loc='upper right')
+    if show_parameters:
+        par_opts = {'verticalalignment': 'bottom'}
+        x_margin, y_margin = plt.margins()
+        h_size = 0.2
+        x = 1.0 - (y_margin + h_size + 0.02)
+        y = x_margin + 0.1
+        plt.figtext(x, y, get_fit_pars_string(), **par_opts)
+        if initial_parameters is not None:
+            plt.figtext(x - h_size - 0.05, y, get_fit_pars_string(initial_parameters, "Initial parameters:"),
+                        **par_opts)
+
+    plt.show()
 
 
 def linear_function(x, a, b):
