@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import unittest
 import matplotlib.pyplot as plt
@@ -22,19 +23,23 @@ class TestAllxy(unittest.TestCase):
         plt.close(1)
 
     def test_allxy_model(self):
-        for offset in [0, .1, .2]:
-            for slope in [-.1, 0, .1]:
-                for idx in [0, 1, 2, 3, 4]:
-                    mean_index = np.mean(range(5))
-                    self.assertAlmostEqual(allxy_model(idx, offset, slope, 1, 2, 3, 4),
-                                           offset + slope * (idx - mean_index))
+        offsets = [.0, .1, .2]
+        slopes = [-.1, 0, .1]
 
-                for idx in range(5, 17):
-                    mean_index = np.mean(range(5, 17))
-                    self.assertAlmostEqual(allxy_model(idx, -1, -2, offset, slope, 3, 4),
-                                           offset + slope * (idx - mean_index))
+        indices = range(5)
+        for offset, slope, idx in itertools.product(offsets, slopes, indices):
+            mean_index = np.mean(indices)
+            self.assertAlmostEqual(allxy_model(idx, offset, slope, 1, 2, 3, 4),
+                                   offset + slope * (idx - mean_index))
 
-                for idx in range(17, 22):
-                    mean_index = np.mean(range(17, 22))
-                    self.assertAlmostEqual(allxy_model(idx, -1, -2, -3, -4, offset, slope),
-                                           offset + slope * (idx - mean_index))
+        indices = range(5, 17)
+        for offset, slope, idx in itertools.product(offsets, slopes, indices):
+            mean_index = np.mean(indices)
+            self.assertAlmostEqual(allxy_model(idx, -1, -2, offset, slope, 3, 4),
+                                   offset + slope * (idx - mean_index))
+
+        indices = range(17, 2)
+        for offset, slope, idx in itertools.product(offsets, slopes, indices):
+            mean_index = np.mean(indices)
+            self.assertAlmostEqual(allxy_model(idx, -1, -2, -3, -4, offset, slope),
+                                   offset + slope * (idx - mean_index))
