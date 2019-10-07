@@ -571,8 +571,6 @@ def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig, initial_parameter
             plt.figtext(x - h_size - 0.05, y, get_fit_pars_string(initial_parameters, "Initial parameters:"),
                         **par_opts)
 
-    plt.show()
-
 
 def linear_function(x, a, b):
     """ Linear function with offset"""
