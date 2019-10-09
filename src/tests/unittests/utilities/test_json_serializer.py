@@ -4,7 +4,7 @@ import numpy as np
 import qcodes
 import qcodes.tests.data_mocks
 
-from qtt.utilities.json_serializer import encode_json, decode_json, qtt_serializer, JsonSerializeKey, encode_json_dataclass, decode_json_dataclass
+from qtt.utilities.json_serializer import decode_json, encode_json, qtt_serializer
 
 
 class TestJSONSerializer(unittest.TestCase):
@@ -82,21 +82,3 @@ class TestJSONSerializer(unittest.TestCase):
         encoded_old = {'__object__': '__npnumber__', '__content__': {'__npnumber__': 'hetVQQ==', 'dtype': '<f4'}}
 
         self.assertIsNone(np.testing.assert_almost_equal(data, qtt_serializer.decode_data(encoded_old), 1))
-
-    def test_encode_json_dataclass(self):
-        tag = '123'
-        mock_object = unittest.mock.MagicMock()
-        mock_object.to_dict.return_value = 'mock_return_value'
-
-        d = encode_json_dataclass(tag, mock_object)
-        self.assertEqual(d[JsonSerializeKey.OBJECT], tag)
-        self.assertEqual(d[JsonSerializeKey.CONTENT], 'mock_return_value')
-
-    def test_decode_json_dataclass(self):
-        mock_class = unittest.mock.MagicMock()
-        mock_class.from_dict.return_value = 'decoded'
-        mock_object = unittest.mock.MagicMock()
-
-        d = decode_json_dataclass(mock_class, mock_object)
-        mock_class.from_dict.assert_called_once_with(mock_object[JsonSerializeKey.CONTENT])
-        self.assertEqual(d, 'decoded')

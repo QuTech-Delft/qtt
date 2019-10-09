@@ -1,7 +1,6 @@
 apscheduler
 attrs>=18.2.0
 coverage
-dataclasses-json
 dulwich
 hickle>=3.1
 lmfit
