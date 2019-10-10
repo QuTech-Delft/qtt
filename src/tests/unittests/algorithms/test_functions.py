@@ -1,8 +1,6 @@
 import unittest
 
-import matplotlib.pyplot as plt
 import numpy as np
-import qtt
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
     _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave, \
@@ -255,7 +253,8 @@ class TestGaussRamseyFunctionFit(unittest.TestCase):
         self.assertAlmostEqual(par_fit_test[1] * 1e6, 3.36, places=1)
         self.assertAlmostEqual(par_fit_test[2] * 1e-6, 0.36, places=1)
 
-    def _fit_ramsey_function(self, x_data, y_data, fig=None):
+    @staticmethod
+    def _fit_ramsey_function(x_data, y_data, fig=None):
         fit_parameters, r = fit_gauss_ramsey(x_data, y_data)
         freq_fit = fit_parameters[2]
         t2star_fit = fit_parameters[1]
@@ -286,7 +285,7 @@ class TestGaussRamseyFunctionFit(unittest.TestCase):
     @unittest.skip("enable once we have found a working fit on this data")
     def test_fit_high_freq_low_amp_1(self, fig=None):
         data = TestData.GaussRamsey.fit_high_freq_low_amp_1()
-        fit_parameters, r, fig = self._fit_ramsey_function(**data, fig=fig)
+        fit_parameters, _, fig = self._fit_ramsey_function(**data, fig=fig)
         freq_fit = fit_parameters[2]
         amp_fit = fit_parameters[0]
         self.assertLess(freq_fit, 6.0E6)

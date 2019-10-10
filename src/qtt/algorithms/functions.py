@@ -537,11 +537,8 @@ def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig, initial_parameter
                           ('off = %.2g' % off),
                           ('phi = %.2g*pi rad' % phi)])
 
-    ampl_fit = fit_parameters[0]
     t2star_fit = fit_parameters[1] * 1e6
     freq_fit = abs(fit_parameters[2] * 1e-6)
-    phi_fit = fit_parameters[3]
-    off_fit = fit_parameters[4]
     x_min = np.min(x_data)
     x_max = np.max(x_data)
     duration = x_max - x_min
