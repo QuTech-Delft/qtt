@@ -222,7 +222,7 @@ def plot_FermiLinear(x_data, y_data, results, fig=10):
         """
         fitted_parameters = results['fitted_parameters']
         lever_arm = results['lever_arm']
-        y = FermiLinear(x_data, *list(fitted_parameters), lever_arm = lever_arm)
+        y = FermiLinear(x_data, *list(fitted_parameters), l = lever_arm)
 
         plt.figure(fig)
         plt.clf()
