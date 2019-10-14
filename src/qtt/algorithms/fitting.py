@@ -154,7 +154,7 @@ def initFermiLinear(x_data, y_data, fig=None):
 
 # %%
 
-def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm = 1.16, l=None, use_lmfit=False):
+def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, use_lmfit=False):
     """ Fit data to a Fermi-Linear function
 
     Args:
@@ -177,7 +177,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm = 1.16, l=None
     if l is not None:
         warnings.warn('use argument lever_arm instead of l')
         lever_arm = l
-        
+
     # initial values
     linear_part, fermi_part = initFermiLinear(xdata, ydata, fig=None)
     initial_parameters = linear_part + fermi_part
@@ -202,8 +202,8 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm = 1.16, l=None
         fitted_parameters = fitting_results[0]
 
     results = dict({'fitted_parameters': fitted_parameters, 'pp': fitting_results,
-                                    'centre': fitted_parameters[2], 'initial_parameters': initial_parameters, 'lever_arm': lever_arm,
-                                    'fitting_results': fitting_results})
+                    'centre': fitted_parameters[2], 'initial_parameters': initial_parameters, 'lever_arm': lever_arm,
+                    'fitting_results': fitting_results})
 
     if fig is not None:
         plot_FermiLinear(xdata, ydata, results, fig=fig)
@@ -212,25 +212,26 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm = 1.16, l=None
 
 
 def plot_FermiLinear(x_data, y_data, results, fig=10):
-        """ Plot results for fitFermiLinear 
+    """ Plot results for fitFermiLinear 
 
-        Args:
-            x_data (np.array): Independant variable
-            y_data (np.array): Dependant variable
-            results (dict): Output of fitFermiLinear
-            
-        """
-        fitted_parameters = results['fitted_parameters']
-        lever_arm = results['lever_arm']
-        y = FermiLinear(x_data, *list(fitted_parameters), l = lever_arm)
+    Args:
+        x_data (np.array): Independant variable
+        y_data (np.array): Dependant variable
+        results (dict): Output of fitFermiLinear
 
-        plt.figure(fig)
-        plt.clf()
-        plt.plot(x_data, y_data, '.b', label='data')
-        plt.plot(x_data, y, 'm-', label='fitted FermiLinear')
-        plt.legend(numpoints=1)
+    """
+    fitted_parameters = results['fitted_parameters']
+    lever_arm = results['lever_arm']
+    y = FermiLinear(x_data, *list(fitted_parameters), l=lever_arm)
+
+    plt.figure(fig)
+    plt.clf()
+    plt.plot(x_data, y_data, '.b', label='data')
+    plt.plot(x_data, y, 'm-', label='fitted FermiLinear')
+    plt.legend(numpoints=1)
 
 # %%
+
 
 def fit_addition_line_array(x_data, y_data, trimborder=True):
     """ Fits a FermiLinear function to the addition line and finds the middle of the step.
