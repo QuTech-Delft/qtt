@@ -184,7 +184,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm = 1.16, l=None
 
     # fit
     def fermi_linear_fitting_function(xdata, a, b, cc, A, T):
-        return FermiLinear(xdata, a, b, cc, A, T, l=l)
+        return FermiLinear(xdata, a, b, cc, A, T, l=lever_arm)
 
     if use_lmfit:
         import lmfit
@@ -202,7 +202,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm = 1.16, l=None
         fitted_parameters = fitting_results[0]
 
     results = dict({'fitted_parameters': fitted_parameters, 'pp': fitting_results,
-                                    'centre': fitted_parameters[2], 'initial_parameters': initial_parameters, 'lever_arm': l,
+                                    'centre': fitted_parameters[2], 'initial_parameters': initial_parameters, 'lever_arm': lever_arm,
                                     'fitting_results': fitting_results})
 
     if fig is not None:
