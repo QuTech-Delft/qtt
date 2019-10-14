@@ -4,7 +4,7 @@ import numpy as np
 import qcodes
 import qcodes.tests.data_mocks
 
-from qtt.utilities.json_serializer import encode_json, decode_json, qtt_serializer
+from qtt.utilities.json_serializer import decode_json, encode_json, qtt_serializer
 
 
 class TestJSONSerializer(unittest.TestCase):
