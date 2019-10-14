@@ -154,7 +154,7 @@ def initFermiLinear(x_data, y_data, fig=None):
 
 # %%
 
-def fitFermiLinear(x_data, y_data, verbose=0, fig=None, l=1.16, use_lmfit=False):
+def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm = 1.16, l=None, use_lmfit=False):
     """ Fit data to a Fermi-Linear function
 
     Args:
@@ -162,7 +162,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, l=1.16, use_lmfit=False)
         y_data (array): dependent variable data
         verbose (int) : verbosity (0 == silent). Not used
         fig (int) : figure number
-        l (float): leverarm passed to FermiLinear function
+        lever_arm (float): leverarm passed to FermiLinear function
         use_lmfit (bool): If True use lmfit for optimization, otherwise use scipy
 
     Returns:
@@ -174,6 +174,10 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, l=1.16, use_lmfit=False)
     xdata = np.array(x_data)
     ydata = np.array(y_data)
 
+    if l is not None:
+        warnings.warn('use argument lever_arm instead of l')
+        lever_arm = l
+        
     # initial values
     linear_part, fermi_part = initFermiLinear(xdata, ydata, fig=None)
     initial_parameters = linear_part + fermi_part
@@ -197,18 +201,34 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, l=1.16, use_lmfit=False)
         fitting_results = scipy.optimize.curve_fit(fermi_linear_fitting_function, xdata, ydata, p0=initial_parameters)
         fitted_parameters = fitting_results[0]
 
-    if fig is not None:
-        y = FermiLinear(xdata, *list(fitted_parameters))
-        plt.figure(fig)
-        plt.clf()
-        plt.plot(xdata, ydata, '.b', label='data')
-        plt.plot(xdata, y, 'm-', label='fitted FermiLinear')
-        plt.legend(numpoints=1)
-
-    return fitted_parameters, dict({'fitted_parameters': fitted_parameters, 'pp': fitting_results,
-                                    'centre': fitted_parameters[2], 'initial_parameters': initial_parameters,
+    results = dict({'fitted_parameters': fitted_parameters, 'pp': fitting_results,
+                                    'centre': fitted_parameters[2], 'initial_parameters': initial_parameters, 'lever_arm': l,
                                     'fitting_results': fitting_results})
 
+    if fig is not None:
+        plot_FermiLinear(xdata, ydata, results, fig=fig)
+
+    return fitted_parameters, results
+
+
+def plot_FermiLinear(x_data, y_data, results, fig=10):
+        """ Plot results for fitFermiLinear 
+
+        Args:
+            x_data (np.array): Independant variable
+            y_data (np.array): Dependant variable
+            results (dict): Output of fitFermiLinear
+            
+        """
+        fitted_parameters = results['fitted_parameters']
+        lever_arm = results['lever_arm']
+        y = FermiLinear(x_data, *list(fitted_parameters), lever_arm = lever_arm)
+
+        plt.figure(fig)
+        plt.clf()
+        plt.plot(x_data, y_data, '.b', label='data')
+        plt.plot(x_data, y, 'm-', label='fitted FermiLinear')
+        plt.legend(numpoints=1)
 
 # %%
 
