@@ -212,7 +212,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
 
 
 def plot_FermiLinear(x_data, y_data, results, fig=10):
-    """ Plot results for fitFermiLinear 
+    """ Plot results for fitFermiLinear
 
     Args:
         x_data (np.array): Independant variable
