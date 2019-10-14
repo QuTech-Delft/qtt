@@ -340,11 +340,6 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
     return fitted_parameters
 
 
-def damped_sine_wave(x_data, params, exponent = 2):
-    [A, t2s, ramseyfreq, angle, B] = params
-    y = A * np.exp(-(x_data / t2s) ** 2) * np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
-    return y
-
 def gauss_ramsey(x_data, params):
     """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase
     of the second pulse is made dependent on the free evolution time. This results in a gaussian decay multiplied
