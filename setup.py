@@ -39,12 +39,15 @@ if platform.system() == 'Windows':
 if platform.python_version() < "3.7.0":
     install_requires.append('Polygon3')
 else:
-    # When Polygon3 not yet in git-repository get it locally
-    file_path = abspath(getsourcefile(lambda: 0))
-    bin_dir = os.path.join(os.path.dirname(file_path), 'bin')
-    Polygon3_local = f'Polygon3 @ file://{bin_dir}/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
-    Polygon3_git = 'Polygon3 @ https://github.com/QuTech-Delft/qtt/bin/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
-    Polygon3 = Polygon3_git
+    if platform.system() == 'Windows':
+        # When Polygon3 not yet in git-repository get it locally
+        file_path = abspath(getsourcefile(lambda: 0))
+        bin_dir = os.path.join(os.path.dirname(file_path), 'bin')
+        Polygon3_local = f'Polygon3 @ file://{bin_dir}/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
+        Polygon3_git = 'Polygon3 @ https://github.com/QuTech-Delft/qtt/bin/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
+        Polygon3 = Polygon3_git
+    else:
+        Polygon3 = 'Polygon3'
     install_requires.append(Polygon3)
 
 rtd_requires = [
