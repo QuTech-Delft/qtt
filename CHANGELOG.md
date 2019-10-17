@@ -1,12 +1,13 @@
 # Changelog
-All notable changes to the Quantum Tuning Toolkit will be documented in this file.
+All notable changes to the Quantum Technology Toolbox will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+...
 
-## [1.1.3] - 2019-10-08
+## [1.1.3] - 2019-10-18
 
 ### Added
 - Added boxcar filter to algorithms (#597).
@@ -103,7 +104,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 ...
 
-
 ## [1.1.2] - 2019-04-12
 
 ### Added
@@ -121,7 +121,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed the installation instructions (#546, #547).
 - Fixed the parameter viewer (#449).
-
 
 ## [1.1.0] - 2018-09-08
 
@@ -159,7 +158,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make sure units are saved and loaded with GNUPlotFormatter (#434).
 - Fixed problems with the scan2Dturbo function (#423).
 - Fixed parameter in widget (#384).
-
 
 [Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.1.2...HEAD
 [1.1.2]: https://github.com/QuTech-Delft/qtt/compare/v1.1.0...1.1.2
