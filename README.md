@@ -69,7 +69,7 @@ $ pip install -e .[rtd]
 ```
 The documentation generation process is dependent on pandoc. When you want to generate the
 documentation and pandoc is not yet installed on your system navigate
-to: https://pandoc.org/installing.html and follow the instructions found there to install pandoc. 
+to [Pandoc](https://pandoc.org/installing.html) and follow the instructions found there to install pandoc. 
 To build the 'readthedocs' documentation do:
 ```
 $ cd docs
