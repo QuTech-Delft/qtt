@@ -1,4 +1,3 @@
-
 # Changelog
 All notable changes to the Quantum Tuning Toolkit will be documented in this file.
 
