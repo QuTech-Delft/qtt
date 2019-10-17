@@ -17,16 +17,77 @@ on [Qcodes](https://github.com/qdev-dk/Qcodes) (basic framework such as instrume
 
 ## Installation
 
-QTT is compatible with Python 3.5+. QTT can be installed as a pip package:
+QTT is compatible with Python 3.5+. QTT can be installed as a pip package to be used in a (virtual) Python environment.
+
+### Setting up a virtual environment
+
+To create a clean virtual Python environment for your qtt development do:
+
+```
+$ mkdir qtt
+$ cd qtt
+$ python -m venv env
+```
+Now activate the virtual environment. On Linux do:
+```
+$ . ./env/Scripts/activate
+ or
+$ source ./env/Scripts/activate
+```
+On Windows do:
+```
+$ env\Scripts\activate.bat
+```
+
+Now we are ready to install QTT.
+
+### Installation from Pypi
+
+To use QTT, install it as a pip package: 
 ```
 $ pip install qtt
 ```
-For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
+
+### Installing from source
+
+For QTT development we advice to install from source. The source for qtt can be found at Github.
+For the default installation from the qtt source directory execute:
 ```
+$ git clone https://github.com/QuTech-Delft/qtt.git
+$ cd qtt
 $ pip install -e .
 ```
 
-For the Vandersypen research group there are more detailed instructions, read the file INSTALL.md in the spin-projects repository.
+### When problems arise
+Sometimes the default installation does not work because of incompatible dependencies between the used packages
+on your system. To be sure you use all the right versions of the packages used by QTT and its dependencies do:
+```
+$ pip install -r requirements_lock.txt
+```
+or for development
+```
+$ pip install -e . -r requirements_lock.txt
+```
+This will install a tested set of all the packages QTT depends on.
+   
+### Installing for generating documentation
+To install the necessary packages to perform documentation activities for QTT do:
+```
+$ pip install -e .[rtd]
+```
+The documentation generation process is dependent on pandoc. When you want to generate the
+documentation and pandoc is not yet installed on your system navigate
+to: https://pandoc.org/installing.html and follow the instructions found there to install pandoc. 
+To build the 'readthedocs' documentation do:  
+```
+$ cd docs
+$ make html
+```
+
+### Vandersypen research group
+
+For the Vandersypen research group there are more detailed instructions, read the file INSTALL.md in the spin-projects
+repository.
 
 ### Updating QTT
 
