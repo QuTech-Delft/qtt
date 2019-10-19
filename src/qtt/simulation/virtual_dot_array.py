@@ -164,7 +164,7 @@ class DotModel(Instrument):
                 self._data[instr] = dict()
             g = instr + '_amplitude'
             self.add_parameter(g,
-                               label='Amplitude {g} (pA)'.format(g),
+                               label='Amplitude {} (pA)'.format(g),
                                get_cmd=partial(getattr(self, instr + '_get'), 'amplitude'),
                                )
 
