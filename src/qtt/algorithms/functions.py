@@ -427,7 +427,7 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
     if fig:
         plt.figure(fig)
         plt.clf()
-        plt.plot(freqs, np.abs(w), '.r')
+        plt.plot(freqs, np.abs(w), '.r', label='FFT')
         plt.plot(freqs_pos, np.abs(w_pos), '.b')
         plt.xlabel('Frequency')
         plt.ylabel('Abs of fft')
