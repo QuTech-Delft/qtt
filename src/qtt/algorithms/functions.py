@@ -349,12 +349,12 @@ def damped_sine_wave(x_data, amplitude, decay_rate, power, frequency, phase, off
 
     Args:
         x_data (np.ndarray): array of independent variable values where the function needs to be evaluated.
-        amplitude: amplitude of the sine at x=0.
+        amplitude (float): amplitude of the sine at x=0.
         decay_rate (Hz): value of 1/x where the damping factor is 1/e
-        power (-): power of x_data*decay_rate inside the exponent.
+        power (float): power of x_data*decay_rate inside the exponent.
         frequency (float): Frequency in Hz
-        phase (radians): phase of the sine at x=0.
-        offset: constant offset of the function.
+        phase (float): phase of the sine at x=0 in radians.
+        offset (float): constant offset of the function.
 
     Returns:
         np.ndarray with values of function for all x_data.
