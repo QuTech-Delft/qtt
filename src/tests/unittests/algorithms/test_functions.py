@@ -266,7 +266,7 @@ class TestGaussRamseyFunctionFit(unittest.TestCase):
 
     def test_fit_negative_frequency_1(self, fig=None):
         data = TestData.GaussRamsey.negative_frequency_1()
-        fit_parameters, r, fig = self._fit_ramsey_function(**data, fig=fig)
+        fit_parameters, _, fig = self._fit_ramsey_function(**data, fig=fig)
         freq_fit = fit_parameters[2]
         self.assertGreater(freq_fit, 0.0)
 
