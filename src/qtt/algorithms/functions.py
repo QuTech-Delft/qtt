@@ -431,7 +431,6 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
         plt.plot(freqs_pos, np.abs(w_pos), '.b')
         plt.xlabel('Frequency')
         plt.ylabel('Abs of fft')
-        plot_vertical_line(ff, color='r')
         plot_vertical_line(ff_pos, color='b')
     return ff_pos
 
