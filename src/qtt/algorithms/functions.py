@@ -357,7 +357,7 @@ def damped_sine_wave(x_data, amplitude, decay_rate, power, frequency, phase, off
         offset: constant offset of the function.
 
     Returns:
-        np.ndarray with values of function for all x_data.
+        Array with values of function for all x_data.
     """
     x = x_data
     return amplitude * np.exp(-(x * decay_rate) ** power) * np.sin(2 * np.pi * frequency * x + phase) + offset
