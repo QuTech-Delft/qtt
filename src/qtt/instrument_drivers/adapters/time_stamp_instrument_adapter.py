@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qilib.configuration_helper import InstrumentAdapter
 from qilib.utils import PythonJsonStructure
 
@@ -5,9 +7,10 @@ from qtt.instrument_drivers.TimeStamp import TimeStampInstrument
 
 
 class TimeStampInstrumentAdapter(InstrumentAdapter):
-    def __init__(self, address: str) -> None:
-        super().__init__(address)
-        self._instrument = TimeStampInstrument(name=self._name)
+
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+        super().__init__(address, instrument_name)
+        self._instrument = TimeStampInstrument(name=self._instrument_name)
         self._config = PythonJsonStructure()
 
     def apply(self, config: PythonJsonStructure) -> None:

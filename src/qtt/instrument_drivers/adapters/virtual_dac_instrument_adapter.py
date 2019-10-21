@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from qilib.configuration_helper import InstrumentAdapterFactory
 from qilib.configuration_helper.adapters import SpiModuleInstrumentAdapter
@@ -12,9 +12,9 @@ from qtt.instrument_drivers.adapters.constants import CONFIG, BOUNDARIES, GATE_M
 class VirtualDACInstrumentAdapter(SpiModuleInstrumentAdapter):
     """ Adapter for the qtt VirtualDAC."""
 
-    def __init__(self, address: str) -> None:
-        super().__init__(address)
-        self._instrument = VirtualDAC(self._name, instruments=[], gate_map={})
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+        super().__init__(address, instrument_name)
+        self._instrument = VirtualDAC(self._instrument_name, instruments=[], gate_map={})
         self._dac_adapters: Dict[str, VirtualDAC] = {}
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
