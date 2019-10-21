@@ -346,7 +346,6 @@ def damped_sine_wave(x_data, amplitude, decay_rate, power, frequency, phase, off
     A sine wave with exponential decay of a power of x.
     Function:
     $$ amplitude * exp(-(x_data*decay_rate)**power) * sin(2pi*frequency * x_data + phase) + offset $$
-    Function parameters:
 
     Args:
         x_data (np.ndarray): array of independent variable values where the function needs to be evaluated.
