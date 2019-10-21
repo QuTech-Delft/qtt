@@ -342,8 +342,8 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
 
 
 def damped_sine_wave(x_data, amplitude, decay_rate, power, frequency, phase, offset):
-    """
-    A sine wave with exponential decay of a power of x.
+    """ A sine wave with exponential decay of a power of x.
+
     Function:
     $$ amplitude * exp(-(x_data*decay_rate)**power) * sin(2pi*frequency * x_data + phase) + offset $$
 
@@ -421,7 +421,6 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
         if freqs[dc_index] == 0.0:
             w[0] = 0
 
-    ff = freqs[np.argmax(np.abs(w))]
     ff_pos = freqs_pos[np.argmax(np.abs(w_pos))]
 
     if fig:
@@ -438,7 +437,7 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
 #
 
 
-def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2, fig=None):
+def estimate_parameters_gauss_ramsey(x_data, y_data, exponent=2, fig=None):
     """ Estimate initial parameters of a damped sine wave
 
     Also see: https://en.wikipedia.org/wiki/Damped_sine_wave
@@ -498,7 +497,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     def func(params): return cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
 
     if initial_params is None:
-        initial_params = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
+        initial_params = estimate_parameters_gauss_ramsey(x_data, y_data, exponent=2)
 
     fit_parameters = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
