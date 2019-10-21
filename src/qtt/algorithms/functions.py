@@ -357,7 +357,7 @@ def damped_sine_wave(x_data, amplitude, decay_rate, power, frequency, phase, off
         offset (float): constant offset of the function.
 
     Returns:
-        np.ndarray with values of function for all x_data.
+        Array with values of function for all x_data.
     """
     x = x_data
     return amplitude * np.exp(-(x * decay_rate) ** power) * np.sin(2 * np.pi * frequency * x + phase) + offset
@@ -427,12 +427,11 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
     if fig:
         plt.figure(fig)
         plt.clf()
-        plt.plot(freqs, np.abs(w), '.r')
+        plt.plot(freqs, np.abs(w), '.r', label='FFT')
         plt.plot(freqs_pos, np.abs(w_pos), '.b')
         plt.xlabel('Frequency')
         plt.ylabel('Abs of fft')
-        plot_vertical_line(ff, color='r')
-        plot_vertical_line(ff_pos, color='b')
+        plot_vertical_line(ff_pos, color='b', label='Estimated dominant frequency')
     return ff_pos
 
 # %%
