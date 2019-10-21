@@ -657,7 +657,7 @@ def directionMean(vec):
     def callbackF(Xi):
         global Nfeval
         print(Xi)
-        print(f'{Nfeval:4d}   {Xi[0]: 3.6f}: distance {dist(Xi[0], vec)}'
+        print(f'{Nfeval:4d}   {Xi[0]: 3.6f}: distance {dist(Xi[0], vec)}')
         Nfeval += 1
 
     m = vec.mean(axis=0)
