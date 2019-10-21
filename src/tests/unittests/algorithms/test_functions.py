@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
-    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave, \
+    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_gauss_ramsey, \
     estimate_dominant_frequency
 
 
@@ -142,7 +142,7 @@ class TestFunctions(unittest.TestCase):
         value = Fermi(10., 0, 1, 2, kb=10)
         self.assertAlmostEqual(value, 0.3775406687981454, 6)
 
-    def test_estimate_parameters_damped_sine_wave(self):
+    def test_estimate_parameters_gauss_ramsey(self):
         y_data = np.array([0.25285714, 0.31714286, 0.48857143, 0.66285714, 0.77857143,
                            0.72857143, 0.58714286, 0.42571429, 0.28142857, 0.29571429,
                            0.39428571, 0.47285714, 0.56857143, 0.70428571, 0.76857143,
@@ -156,7 +156,7 @@ class TestFunctions(unittest.TestCase):
                            1.09090909e-07, 1.15909091e-07, 1.22727273e-07, 1.29545455e-07,
                            1.36363636e-07, 1.43181818e-07, 1.50000000e-07])
 
-        estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
+        estimated_parameters = estimate_parameters_gauss_ramsey(x_data, y_data)
         self.assertFalse(np.any(np.isnan(estimated_parameters)))
         self.assertAlmostEqual(estimated_parameters[0], 0.263, places=1)
 
@@ -164,16 +164,16 @@ class TestFunctions(unittest.TestCase):
         x_data = np.array([0., 1., 2.])
         y_data = np.array([0, 0, 0])
 
-        estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
+        estimated_parameters = estimate_parameters_gauss_ramsey(x_data, y_data)
         self.assertEqual(estimated_parameters[0], 0.)
 
-    def test_estimate_parameters_damped_sine_wave_exact(self):
+    def test_estimate_parameters_gauss_ramsey_exact(self):
         x_data = np.arange(0, 20., .12)
         exact_frequency = .4
         exact_offset = 2.2
         y_data = np.sin(2 * np.pi * exact_frequency * x_data) + exact_offset
 
-        estimated_parameters = estimate_parameters_damped_sine_wave(x_data, y_data)
+        estimated_parameters = estimate_parameters_gauss_ramsey(x_data, y_data)
         self.assertAlmostEqual(estimated_parameters[0], 1., places=1)
         self.assertAlmostEqual(estimated_parameters[2], exact_frequency, places=1)
         self.assertAlmostEqual(estimated_parameters[-1], exact_offset, places=1)
@@ -272,7 +272,7 @@ class TestGaussRamseyFunctionFit(unittest.TestCase):
 
     def test_fit_negative_frequency_2(self, fig=None):
         data = TestData.GaussRamsey.negative_frequency_2()
-        fit_parameters, r, fig = self._fit_ramsey_function(**data, fig=fig)
+        fit_parameters, _, fig = self._fit_ramsey_function(**data, fig=fig)
         freq_fit = fit_parameters[2]
         self.assertGreater(freq_fit, 0.0)
 
