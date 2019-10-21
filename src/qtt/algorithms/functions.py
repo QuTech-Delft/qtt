@@ -352,7 +352,7 @@ def damped_sine_wave(x_data, amplitude, decay_rate, power, frequency, phase, off
         amplitude: amplitude of the sine at x=0.
         decay_rate (Hz): value of 1/x where the damping factor is 1/e
         power (-): power of x_data*decay_rate inside the exponent.
-        frequency (Hz)
+        frequency (float): Frequency in Hz
         phase (radians): phase of the sine at x=0.
         offset: constant offset of the function.
 
