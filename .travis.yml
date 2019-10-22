@@ -17,6 +17,14 @@ matrix:
     services:
     - xvfb
 
+  - name: Minimal installation 3.8
+    python: 3.8
+    sudo: true
+    dist: xenial
+    env: QT_QPA_PLATFORM=offscreen
+    services:
+    - xvfb
+
   - name: Full installation 3.6
     python: 3.6
     dist: xenial
@@ -26,6 +34,13 @@ matrix:
 
   - name: Full installation 3.7
     python: 3.7
+    dist: xenial
+    env: FULL_INSTALL=1
+    services:
+    - xvfb
+
+  - name: Full installation 3.8
+    python: 3.8
     dist: xenial
     env: FULL_INSTALL=1
     services:
