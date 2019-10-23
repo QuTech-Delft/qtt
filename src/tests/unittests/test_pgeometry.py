@@ -62,6 +62,9 @@ class TestGeometryOperations(unittest.TestCase):
 
 class TestPolygonGeometry(unittest.TestCase):
 
+    def assertEmptyPolygon(self, polygon):
+        self.assertTrue(len(polygon)==0)
+    
     def test_polyintersect(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
@@ -73,7 +76,7 @@ class TestPolygonGeometry(unittest.TestCase):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = 100+np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
         intersection_polygon = pgeometry.polyintersect(x1, x2)
-        self.assertEqual(intersection_polygon, [])
+        self.assertEmptyPolygon(intersection_polygon)
 
     def test_polyintersect_identical_polygons(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
@@ -85,7 +88,7 @@ class TestPolygonGeometry(unittest.TestCase):
         x1 = np.array([(0, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5)])
         intersection_polygon = pgeometry.polyintersect(x1, x2)
-        self.assertEqual(intersection_polygon, [])
+        self.assertEmptyPolygon(intersection_polygon)
 
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
