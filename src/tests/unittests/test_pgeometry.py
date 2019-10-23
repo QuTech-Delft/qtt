@@ -65,27 +65,27 @@ class TestPolygonGeometry(unittest.TestCase):
     def test_polyintersect(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        x = pgeometry.polyintersect(x1, x2)
-        self.assertEqual(3, len(x))
-        self.assertEqual(0.25, np.abs(pgeometry.polyarea(x)))
+        intersection_polygon = pgeometry.polyintersect(x1, x2)
+        self.assertEqual(3, len(intersection_polygon))
+        self.assertEqual(0.25, np.abs(pgeometry.polyarea(intersection_polygon)))
 
     def test_polyintersect_empty_intersection(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = 100+np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        x = pgeometry.polyintersect(x1, x2)
-        self.assertEqual(x, [])
+        intersection_polygon = pgeometry.polyintersect(x1, x2)
+        self.assertEqual(intersection_polygon, [])
 
     def test_polyintersect_identical_polygons(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
-        x = pgeometry.polyintersect(x1, x1)
-        for idx in range(len(x1)):
-            self.assertIn(x1[idx], x)
+        intersection_polygon = pgeometry.polyintersect(x1, x1)
+        for pt in x1:
+            self.assertIn(pt, intersection_polygon)
 
     def test_polyintersect_degenerate_polygons(self):
         x1 = np.array([(0, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5)])
-        x = pgeometry.polyintersect(x1, x2)
-        self.assertEqual(x, [])
+        intersection_polygon = pgeometry.polyintersect(x1, x2)
+        self.assertEqual(intersection_polygon, [])
 
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
