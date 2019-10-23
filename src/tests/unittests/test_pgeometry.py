@@ -64,7 +64,7 @@ class TestPolygonGeometry(unittest.TestCase):
 
     def assertEmptyPolygon(self, polygon):
         self.assertTrue(len(polygon)==0)
-    
+
     def test_polyintersect(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
