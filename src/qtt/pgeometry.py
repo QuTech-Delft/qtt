@@ -34,7 +34,7 @@ import logging
 import pkgutil
 
 import numpy as np
-import Polygon as polygon3
+from sympy import Point, Polygon, Point2D, Segment2D
 import scipy.io
 import numpy
 import scipy.ndimage.morphology as morphology
@@ -1139,6 +1139,13 @@ def polyarea(p):
 def polyintersect(x1, x2):
     """ Intersection of two polygons
 
+    Args:
+        x1 (array): First polygon
+        x2 (array): Second polygon
+    Returns:
+        Array with points of the intersection
+        
+    Example:
     >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
     >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
     >>> x=polyintersect(x1, x2)
@@ -1148,13 +1155,23 @@ def polyintersect(x1, x2):
     >>> plotPoints(x.T, '.-g' , linewidth=2)
 
     """
+    poly1 = Polygon(*map(Point, x1))
+    poly2 = Polygon(*map(Point, x2))
+    intersection_poly = poly1.intersection(poly2)
+    
+    intersection_points =[]
+    for intersection_element in intersection_poly:
+        if isinstance(intersection_element, Point2D):
+            intersection_points.append(intersection_element)
+        elif isinstance(intersection_element, Segment2D):
+            intersection_points.append(intersection_element.p1)
+            intersection_points.append(intersection_element.p2)
+        else:
+            raise NotImplementedError('element {intersection_element} in intersection result  not supported')
+    
+    intersection_points = np.array([ (float(pt.y),float(pt.y)) for pt in intersection_points])
 
-    p1 = polygon3.Polygon(x1)
-    p2 = polygon3.Polygon(x2)
-    p = p1 & p2
-    x = np.array(p)
-    x = x.reshape((-1, 2))
-    return x
+    return intersection_points
 
 # %%
 

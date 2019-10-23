@@ -69,6 +69,12 @@ class TestPolygonGeometry(unittest.TestCase):
         self.assertEqual(3, len(x))
         self.assertEqual(0.25, np.abs(pgeometry.polyarea(x)))
 
+    def test_polyintersect_empty(self):
+        x1 = np.array([(0, 0), (1, 1), (1, 0)])
+        x2 = 100+np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+        x = pgeometry.polyintersect(x1, x2)
+        self.assertEqual(x, [])
+
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
         sub_im = np.ones((40, 30,))
