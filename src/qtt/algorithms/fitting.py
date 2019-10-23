@@ -195,7 +195,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
         gmodel.set_param_hint('T', min=0)
 
         params = gmodel.make_params(**param_init)
-        lmfit_results = gmodel.fit(y_data, params, xdata=x_data)
+        lmfit_results = gmodel.fit(y_data, params, x_data=x_data)
         fitting_results = lmfit_results.fit_report()
         fitted_parameters = np.array([lmfit_results.best_values[p] for p in gmodel.param_names])
     else:
