@@ -183,7 +183,6 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
     linear_part, fermi_part = initFermiLinear(x_data, y_data, fig=None)
     initial_parameters = linear_part + fermi_part
 
-    # fit
     def fermi_linear_fitting_function(x_data, a, b, cc, A, T):
         return FermiLinear(x_data, a, b, cc, A, T, l=lever_arm)
 
@@ -219,7 +218,7 @@ def plot_FermiLinear(x_data, y_data, results, fig=10):
         x_data (np.array): Independant variable
         y_data (np.array): Dependant variable
         results (dict): Output of fitFermiLinear
-        fit (int): Figure handle
+        fig (int): Figure handle
 
     """
     fitted_parameters = results['fitted_parameters']
