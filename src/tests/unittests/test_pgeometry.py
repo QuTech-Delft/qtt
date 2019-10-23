@@ -69,9 +69,21 @@ class TestPolygonGeometry(unittest.TestCase):
         self.assertEqual(3, len(x))
         self.assertEqual(0.25, np.abs(pgeometry.polyarea(x)))
 
-    def test_polyintersect_empty(self):
+    def test_polyintersect_empty_intersection(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = 100+np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+        x = pgeometry.polyintersect(x1, x2)
+        self.assertEqual(x, [])
+
+    def test_polyintersect_identical_polygons(self):
+        x1 = np.array([(0, 0), (1, 1), (1, 0)])
+        x = pgeometry.polyintersect(x1, x1)
+        for idx in range(len(x1)):
+            self.assertIn(x1[idx], x)
+
+    def test_polyintersect_degenerate_polygons(self):
+        x1 = np.array([(0, 0)])
+        x2 = np.array([(1, 0), (1.5, 1.5)])
         x = pgeometry.polyintersect(x1, x2)
         self.assertEqual(x, [])
 

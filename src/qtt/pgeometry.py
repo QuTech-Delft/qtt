@@ -1158,20 +1158,31 @@ def polyintersect(x1, x2):
     poly1 = Polygon(*map(Point, x1))
     poly2 = Polygon(*map(Point, x2))
     intersection_poly = poly1.intersection(poly2)
-    
+
     intersection_points =[]
     for intersection_element in intersection_poly:
         if isinstance(intersection_element, Point2D):
             intersection_points.append(intersection_element)
         elif isinstance(intersection_element, Segment2D):
-            intersection_points.append(intersection_element.p1)
             intersection_points.append(intersection_element.p2)
+            intersection_points.append(intersection_element.p1)
         else:
             raise NotImplementedError('element {intersection_element} in intersection result  not supported')
-    
-    intersection_points = np.array([ (float(pt.y),float(pt.y)) for pt in intersection_points])
 
-    return intersection_points
+    intersection_points = np.array([ (float(pt.x),float(pt.y)) for pt in intersection_points])
+
+    intersection_points_filtered=[]
+    previous_ip = None
+    for ip in intersection_points:
+        if not np.array_equal(ip,previous_ip):
+            intersection_points_filtered.append(ip)
+        previous_ip = ip
+
+    if len(intersection_points_filtered)>2:
+        if np.array_equal(intersection_points_filtered[0], intersection_points_filtered[-1]):
+            intersection_points_filtered=intersection_points_filtered[0:-1]
+
+    return np.array(intersection_points_filtered)
 
 # %%
 
