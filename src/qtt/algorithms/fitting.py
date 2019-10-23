@@ -163,6 +163,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
         verbose (int) : verbosity (0 == silent). Not used
         fig (int) : figure number
         lever_arm (float): leverarm passed to FermiLinear function
+        l (Any): Deprecated parameter. Use lever_arm instead
         use_lmfit (bool): If True use lmfit for optimization, otherwise use scipy
 
     Returns:
@@ -171,20 +172,20 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
 
     .. seealso:: FermiLinear
     """
-    xdata = np.array(x_data)
-    ydata = np.array(y_data)
+    x_data = np.array(x_data)
+    y_data = np.array(y_data)
 
     if l is not None:
         warnings.warn('use argument lever_arm instead of l')
         lever_arm = l
 
     # initial values
-    linear_part, fermi_part = initFermiLinear(xdata, ydata, fig=None)
+    linear_part, fermi_part = initFermiLinear(x_data, y_data, fig=None)
     initial_parameters = linear_part + fermi_part
 
     # fit
-    def fermi_linear_fitting_function(xdata, a, b, cc, A, T):
-        return FermiLinear(xdata, a, b, cc, A, T, l=lever_arm)
+    def fermi_linear_fitting_function(x_data, a, b, cc, A, T):
+        return FermiLinear(x_data, a, b, cc, A, T, l=lever_arm)
 
     if use_lmfit:
         import lmfit
@@ -198,7 +199,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
         fitting_results = lmfit_results.fit_report()
         fitted_parameters = np.array([lmfit_results.best_values[p] for p in gmodel.param_names])
     else:
-        fitting_results = scipy.optimize.curve_fit(fermi_linear_fitting_function, xdata, ydata, p0=initial_parameters)
+        fitting_results = scipy.optimize.curve_fit(fermi_linear_fitting_function, x_data, y_data, p0=initial_parameters)
         fitted_parameters = fitting_results[0]
 
     results = dict({'fitted_parameters': fitted_parameters, 'pp': fitting_results,
@@ -206,7 +207,7 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
                     'fitting_results': fitting_results})
 
     if fig is not None:
-        plot_FermiLinear(xdata, ydata, results, fig=fig)
+        plot_FermiLinear(x_data, y_data, results, fig=fig)
 
     return fitted_parameters, results
 
@@ -218,6 +219,7 @@ def plot_FermiLinear(x_data, y_data, results, fig=10):
         x_data (np.array): Independant variable
         y_data (np.array): Dependant variable
         results (dict): Output of fitFermiLinear
+        fit (int): Figure handle
 
     """
     fitted_parameters = results['fitted_parameters']
