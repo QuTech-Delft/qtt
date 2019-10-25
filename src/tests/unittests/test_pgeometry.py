@@ -89,7 +89,7 @@ class TestPolygonGeometry(unittest.TestCase):
         x2 = np.array([(1, 0), (1.5, 1.5)])
         try:
             pgeometry.polyintersect(x1, x2)            
-        except Exception:
+        except Exception: # the assertRaises does not work due to the ctypes error message
             pass
             
     def test_geometry(self, fig=None):
