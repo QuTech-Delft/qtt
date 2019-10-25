@@ -92,8 +92,8 @@ class TestPolygonGeometry(unittest.TestCase):
         try:
             intersection_polygon = pgeometry.polyintersect(x1, x2)
             self.assertEmptyPolygon(intersection_polygon)
-        except PolygonError: # the assertRaises does not work due to the ctypes error message
-            pass
+        except PolygonError as ex: # the assertRaises does not work due to the ctypes error message
+            self.assertIn('Invalid polygon or contour for operation', str(ex))
 
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
