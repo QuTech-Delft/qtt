@@ -86,7 +86,7 @@ class TestPolygonGeometry(unittest.TestCase):
             self.assertIn(pt, intersection_polygon)
 
     @staticmethod
-    def test_polyintersect_degenerate_polygons(self):
+    def test_polyintersect_degenerate_polygons():
         x1 = np.array([(0, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5)])
         try:
