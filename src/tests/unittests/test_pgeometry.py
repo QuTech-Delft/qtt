@@ -87,8 +87,12 @@ class TestPolygonGeometry(unittest.TestCase):
     def test_polyintersect_degenerate_polygons(self):
         x1 = np.array([(0, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5)])
-        intersection_polygon = pgeometry.polyintersect(x1, x2)
-        self.assertEmptyPolygon(intersection_polygon)
+        with self.assertRaises(Exception):
+            pgeometry.polyintersect(x1, x2)
+        x1 = np.array([(0, 0), (1., 1), (0., 1.)])
+        x2 = np.array([(1, 0), (1.5, 1.5)])
+        with self.assertRaises(Exception):
+            pgeometry.polyintersect(x1, x2)
 
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
