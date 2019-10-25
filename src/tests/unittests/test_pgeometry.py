@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import point_in_polygon, points_in_polygon
+from Polygon.cPolygon import Error as PolygonError
 
 
 class TestPGeometry(unittest.TestCase):
@@ -84,14 +85,15 @@ class TestPolygonGeometry(unittest.TestCase):
         for pt in x1:
             self.assertIn(pt, intersection_polygon)
 
+    @staticmethod
     def test_polyintersect_degenerate_polygons(self):
         x1 = np.array([(0, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5)])
         try:
-            pgeometry.polyintersect(x1, x2)            
-        except Exception: # the assertRaises does not work due to the ctypes error message
+            pgeometry.polyintersect(x1, x2)
+        except PolygonError: # the assertRaises does not work due to the ctypes error message
             pass
-            
+
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
         sub_im = np.ones((40, 30,))
