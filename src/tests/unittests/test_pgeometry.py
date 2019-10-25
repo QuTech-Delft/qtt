@@ -85,12 +85,13 @@ class TestPolygonGeometry(unittest.TestCase):
         for pt in x1:
             self.assertIn(pt, intersection_polygon)
 
-    @staticmethod
-    def test_polyintersect_degenerate_polygons():
+    def test_polyintersect_degenerate_polygon(self):
         x1 = np.array([(0, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5)])
+
         try:
-            pgeometry.polyintersect(x1, x2)
+            intersection_polygon = pgeometry.polyintersect(x1, x2)
+            self.assertEmptyPolygon(intersection_polygon)
         except PolygonError: # the assertRaises does not work due to the ctypes error message
             pass
 
