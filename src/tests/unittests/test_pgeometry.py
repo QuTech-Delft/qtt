@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import point_in_polygon, points_in_polygon
+from Polygon.cPolygon import Error as PolygonError
 
 
 class TestPGeometry(unittest.TestCase):
@@ -62,12 +63,37 @@ class TestGeometryOperations(unittest.TestCase):
 
 class TestPolygonGeometry(unittest.TestCase):
 
+    def assertEmptyPolygon(self, polygon):
+        self.assertTrue(len(polygon)==0)
+
     def test_polyintersect(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        x = pgeometry.polyintersect(x1, x2)
-        self.assertEqual(3, len(x))
-        self.assertEqual(0.25, np.abs(pgeometry.polyarea(x)))
+        intersection_polygon = pgeometry.polyintersect(x1, x2)
+        self.assertEqual(3, len(intersection_polygon))
+        self.assertEqual(0.25, np.abs(pgeometry.polyarea(intersection_polygon)))
+
+    def test_polyintersect_empty_intersection(self):
+        x1 = np.array([(0, 0), (1, 1), (1, 0)])
+        x2 = 100+np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+        intersection_polygon = pgeometry.polyintersect(x1, x2)
+        self.assertEmptyPolygon(intersection_polygon)
+
+    def test_polyintersect_identical_polygons(self):
+        x1 = np.array([(0, 0), (1, 1), (1, 0)])
+        intersection_polygon = pgeometry.polyintersect(x1, x1)
+        for pt in x1:
+            self.assertIn(pt, intersection_polygon)
+
+    def test_polyintersect_degenerate_polygon(self):
+        x1 = np.array([(0, 0)])
+        x2 = np.array([(1, 0), (1.5, 1.5)])
+
+        try:
+            intersection_polygon = pgeometry.polyintersect(x1, x2)
+            self.assertEmptyPolygon(intersection_polygon)
+        except PolygonError as ex: # the assertRaises does not work due to the ctypes error message
+            self.assertIn('Invalid polygon or contour for operation', str(ex))
 
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
