@@ -15,7 +15,7 @@ import pyqtgraph
 _ = pyqtgraph.mkQApp()
 
 import qcodes
-from qcodes import MatPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt
 from qtt.gui.parameterviewer import createParameterWidget
