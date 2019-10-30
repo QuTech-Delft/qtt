@@ -15,14 +15,12 @@ import pyqtgraph
 _ = pyqtgraph.mkQApp()
 
 import qcodes
-from qcodes.plots.qcmatplotlib import MatPlot
-
 import qtt
 from qtt.gui.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
 from qtt.instrument_drivers.virtual_gates import virtual_gates
-from qtt import save_state, load_state
+from qtt import save_state
 import qtt.measurements.videomode
 
 import qtt.simulation.virtual_dot_array
@@ -152,13 +150,25 @@ vm.updatebg()
 
 
 #%%
-#gates.P3.increment(-40)
 
 s1=qtt.measurements.scans.create_vectorscan(virts.VP1, 160)
 s2=qtt.measurements.scans.create_vectorscan(virts.VP2, 160)
-vm = qtt.measurements.videomode.VideoMode(station, {'gates_horz': s1['param'],'gates_vert': s2['param']}, [200,180],    
+vm_virtual = qtt.measurements.videomode.VideoMode(station, {'gates_horz': s1['param'],'gates_vert': s2['param']}, [200,180],    
                     minstrument=(digitizer.name,[1,1]), resolution = [96,96],
                     diff_dir=[None, 'g'], name='virtual gates' )
-vm.crosshair(True)
-vm.stopreadout()
-vm.updatebg()                                               
+vm_virtual.crosshair(True)
+vm_virtual.stopreadout()
+vm_virtual.updatebg()                                               
+
+
+#%% Close all GUI elements
+if not qtt.utilities.tools.is_spyder_environment():
+    print('close all GUI elements')
+    vm.close()
+    vm_virtual.close()
+    plt.close('all')
+    pv.close()
+    logviewer.close()
+    
+    qtt.gui.live_plotting.liveplotwindow.win.close()
+    print('close all GUI elements: done')
