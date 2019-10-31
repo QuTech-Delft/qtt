@@ -16,7 +16,7 @@ class TestFunctions(unittest.TestCase):
         sample_rate = 47368421
         estimated_frequency = qtt.algorithms.functions.estimate_dominant_frequency(
             y_data, sample_rate=sample_rate, fig=1)
-        self.assertAlmostEqual(estimated_frequency, 5684210, places=-1)
+        self.assertAlmostEqual(estimated_frequency, 4750425, places=-2)
         plt.close(1)
 
     def test_estimate_parameters_damped_sine_wave_angle(self):
