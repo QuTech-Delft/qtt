@@ -392,15 +392,15 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
 
     if remove_dc:
         w[0] = 0
-    w[freqs<0]=0
-    
+    w[freqs < 0] = 0
+
     dominant_idx = np.argmax(np.abs(w))
     dominant_frequency = freqs[dominant_idx]
-    
-    if dominant_idx>0 and dominant_idx>freqs.size/2-1:
-        dominant_idx_subpixel, _ =    subpixelmax(np.abs(w), [dominant_idx] )
-        dominant_frequency = np.interp(dominant_idx_subpixel, np.arange(freqs.size), freqs)
-    
+
+    if dominant_idx > 0 and dominant_idx < freqs.size / 2 - 1:
+        dominant_idx_subpixel, _ = subpixelmax(np.abs(w), [dominant_idx])
+        dominant_frequency = np.interp(dominant_idx_subpixel, np.arange(freqs.size), freqs)[0]
+
     if fig:
         plt.figure(fig)
         plt.clf()
@@ -436,20 +436,21 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     decay_factor = (mean_left + laplace_factor) / (mean_right + laplace_factor)
 
     duration = x_data[-1] - x_data[0]
-    sample_rate = (x_data.size-1) / duration
+    sample_rate = (x_data.size - 1) / duration
     ramseyfreq = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
-    
-    if A==0:
+
+    if A == 0:
         angle = 0
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
         angle_first_datapoint = -np.arcsin(n_start)
-        angle = angle_first_datapoint + 2*np.pi* ramseyfreq*x_data[0]
-        angle=np.mod(np.pi+angle, 2*np.pi)-np.pi
-    t2s = 2 * duration / (decay_factor )
+        angle = angle_first_datapoint + 2 * np.pi * ramseyfreq * x_data[0]
+        angle = np.mod(np.pi + angle, 2 * np.pi) - np.pi
+    t2s = 2 * duration / (decay_factor)
 
     initial_params = np.array([A, t2s, ramseyfreq, angle, B])
     return initial_params
+
 
 def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey
