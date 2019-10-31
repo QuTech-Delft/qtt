@@ -64,6 +64,8 @@ def localMaxima(arr, radius=1, thr=None):
 def subpixelmax(A, mpos, verbose=0):
     """ Calculate maximum position with subpixel accuracy
 
+    The method fits a parabola through 3 points and calculates the maximum of the parabola.
+
     Args:
         A (1D array):
         mpos (array with integer indicess):
@@ -75,6 +77,7 @@ def subpixelmax(A, mpos, verbose=0):
     """
 
     A = np.array(A)
+    mpos=np.array(mpos)
     if np.array(mpos).size == 0:
         # corner case
         import copy
@@ -92,8 +95,13 @@ def subpixelmax(A, mpos, verbose=0):
 
     cy = val
     ay = (valm + valp) / 2 - cy
-    by = ay + cy - valm
-    shift = -by / (2 * ay)  # Maxima of quadradic
+
+    if ay>=0:
+        # degenerate case
+        raise Exception('position specified by mpos is not a maximum')
+    else:
+        by = ay + cy - valm
+        shift = -by / (2 * ay)  # Maxima of quadradic
 
     if verbose:
         print('subpixelmax: mp %d, pp %d\n', mp, pp)
