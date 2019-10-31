@@ -96,7 +96,7 @@ def subpixelmax(A, mpos, verbose=0):
     cy = val
     ay = (valm + valp) / 2 - cy
 
-    if ay>=0:
+    if np.any(ay==0):
         # degenerate case
         raise Exception('position specified by mpos is not a maximum')
     else:
