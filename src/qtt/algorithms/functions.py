@@ -66,7 +66,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_p
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
     if initial_params is None:
-        amplitude = np.max(y_data)
+        amplitude = np.max(y_data) - np.min(y_data)
         s = (maxsignal - minsignal) * 1 / 20
         mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
         offset = np.min(y_data)
