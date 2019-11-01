@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Travis warnings and tests instrument_drivers (#569).
 - Fixed Travis build related to Qcodes version numbering (#604, #606).
 - Fixed issue with setSingleStep (#633)
+- Fixed incorrect initial estimate of fit_gaussian (#671)
 
 ### Security
 ...
