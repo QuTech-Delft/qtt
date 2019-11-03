@@ -1139,6 +1139,14 @@ def polyarea(p):
 def polyintersect(x1, x2):
     """ Intersection of two polygons
 
+    Args:
+        x1 (array): First polygon
+        x2 (array): Second polygon
+    Returns:
+        Array with points of the intersection
+
+   Example:
+    
     >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
     >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
     >>> x=polyintersect(x1, x2)
@@ -1148,7 +1156,6 @@ def polyintersect(x1, x2):
     >>> plotPoints(x.T, '.-g' , linewidth=2)
 
     """
-
     p1 = polygon3.Polygon(x1)
     p2 = polygon3.Polygon(x2)
     p = p1 & p2

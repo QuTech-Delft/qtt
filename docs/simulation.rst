@@ -11,7 +11,7 @@ The package contains software to simulation quantum dot systems and plot charge 
 3. Calculate the eigenvalues and eigenstatus of the the system
 4. Calculate derived properties such as the occupation numbers and charge stability diagrams.
 
-Example notebooks: :ref:`Simulation of quantum dots`, :ref:`Classical simulation of triple dot`.
+Example notebooks: :ref:`Classical simulation of quantum dots`, :ref:`Classical simulation of triple dot`.
 
 The documentation is in :py:mod:`qtt.simulation.dotsystem`
 
