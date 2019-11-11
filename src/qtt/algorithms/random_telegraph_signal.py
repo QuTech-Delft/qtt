@@ -15,6 +15,7 @@ import warnings
 from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay, gaussian
 from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 from qtt.utilities.visualization import plot_vertical_line, plot_double_gaussian_fit
+from qtt.algorithms.functions import refit_double_gaussian
 
 
 # %% calculate durations of states
@@ -79,9 +80,6 @@ def _plot_rts_histogram(data, num_bins, double_gaussian_fit, split, figure_title
     plt.title(figure_title)
 
 
-from qtt.algorithms.functions import refit_double_gaussian
-
-
 def two_level_threshold(data, number_of_bins=40) -> dict:
     """ Determine threshold for separation of two-level signal
 
@@ -97,7 +95,7 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
     counts, bins = np.histogram(data, bins=number_of_bins)
     bin_centres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
     _, result_dict = fit_double_gaussian(bin_centres, counts)
-    _refit_double_gaussian(result_dict, bin_centres, counts)
+    refit_double_gaussian(result_dict, bin_centres, counts)
 
     result = {'signal_threshold': result_dict['split'], 'double_gaussian_fit': result_dict,
               'separation': result_dict['separation'],
