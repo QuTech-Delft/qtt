@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """ Example script to show QTT capabilities
 
-The script should be executed from an interactive environment such as Spyder. An event loop should be running for the GUI elements.
+The script should be executed from an interactive environment such as Spyder.
+An event loop should be running for the GUI elements.
 
 @author: eendebakpt
 """
@@ -123,10 +124,6 @@ scanjob['stepdata'] = dict({'param': virts.VP2, 'start': cc2 - r, 'end': cc2 + r
 data = qtt.measurements.scans.scan2D(station, scanjob)
 gates.resetgates(gv, gv, verbose=0)
 
-
-print('virtual and physical gates: ' + ','.join('%.2f' %
-                                                x for x in [virts.VP1(), virts.VP2(), virts.VP3(), gates.P1(), gates.P2(), gates.P3()]))
-
 vgates = ['vSD1b'] + virts.vgates() + ['vSD1a']
 pgates = ['SD1b'] + virts.pgates() + ['SD1a']
 virts2 = qtt.instrument_drivers.virtual_gates.extend_virtual_gates(vgates, pgates, virts, name='vgates')
@@ -157,7 +154,8 @@ vm.updatebg()
 
 s1 = qtt.measurements.scans.create_vectorscan(virts.VP1, 160)
 s2 = qtt.measurements.scans.create_vectorscan(virts.VP2, 160)
-vm_virtual = qtt.measurements.videomode.VideoMode(station, {'gates_horz': s1['param'], 'gates_vert': s2['param']}, [200, 180],
+scan_parameters = {'gates_horz': s1['param'], 'gates_vert': s2['param']}
+vm_virtual = qtt.measurements.videomode.VideoMode(station, scan_parameters, [200, 180],
                                                   minstrument=(digitizer.name, [1, 1]), resolution=[96, 96],
                                                   diff_dir=[None, 'g'], name='virtual gates')
 vm_virtual.crosshair(True)
