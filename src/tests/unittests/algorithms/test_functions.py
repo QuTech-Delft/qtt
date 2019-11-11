@@ -4,7 +4,8 @@ import numpy as np
 import qtt
 from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
-    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave
+    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave, \
+    refit_double_gaussian
 
 
 class TestFunctions(unittest.TestCase):
@@ -113,6 +114,20 @@ class TestFunctions(unittest.TestCase):
         self.assertTrue(0.5 < s < 1.5)
         self.assertTrue(4.5 < amplitude < 5.5)
         self.assertTrue(0.0 < offset < 1.0)
+
+    def test_refit_double_gaussian(self):
+        dataset=qtt.data.load_example_dataset('double_gaussian_dataset.json')
+        x_data=np.array(dataset.signal)
+        y_data=np.array(dataset.counts)
+
+        _, result_dict = fit_double_gaussian(x_data, y_data)
+        result_dict=refit_double_gaussian(result_dict, x_data, y_data)
+
+        self.assertAlmostEqual(result_dict['left'][0], -1.23, places=1)
+        self.assertAlmostEqual(result_dict['right'][0], -0.77, places=1)
+        self.assertAlmostEqual(result_dict['left'][2], 162.8, places=0)
+        self.assertAlmostEqual(result_dict['right'][2], 1971, places=-1)
+
 
     def test_fit_double_gaussian(self):
         x_data = np.arange(-4, 4, .05)

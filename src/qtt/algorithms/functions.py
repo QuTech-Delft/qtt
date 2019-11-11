@@ -216,13 +216,44 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
                    'separation': separation, 'split': weigthed_distance_split}
     result_dict['parameters'] = par_fit
     result_dict['reduced_chi_squared']=result.redchi
-    
+
     result_dict['left'] = np.take(par_fit, [4, 2, 0])
     result_dict['right'] = np.take(par_fit, [5, 3, 1])
     result_dict['type'] = 'fitted double gaussian'
 
     return par_fit, result_dict
 
+def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_threshold = 8):
+    """ Improve fit of double Gaussian by estimating the initial parameters based on an existing fit
+
+    Args:
+        result_dict(dict): Result dictionary from fit_double_gaussian
+        bin_centres (array): Result from 
+        counts (array)
+        gaussian_amplitude_ratio_threshold (float): If ratio between amplitudes of Gaussian peaks is larger than this fit, re-estimate
+    Returns:
+        Dictionary with improved fitting results
+    """
+    if result_dict['left'][2]>result_dict['right'][2]:
+              large_gaussian_parameters =  result_dict['left']
+              small_gaussian_parameters =  result_dict['right']
+    else:
+              large_gaussian_parameters =  result_dict['right']
+              small_gaussian_parameters =  result_dict['left']
+    gaussian_ratio = large_gaussian_parameters[2]/small_gaussian_parameters[2]
+
+    if gaussian_ratio>gaussian_amplitude_ratio_threshold:
+           # re-estimate by fitting a single gaussian to the data remaining after removing the main gaussian
+           y_residual=y_data-gaussian(x_data, *large_gaussian_parameters)
+           idx=np.logical_and(x_data>large_gaussian_parameters[0]-1.5*large_gaussian_parameters[1], x_data<large_gaussian_parameters[0]+1.5*large_gaussian_parameters[1])
+           y_residual[idx]=0
+           gauss_fit,_=fit_gaussian(x_data, y_residual)
+
+           initial_parameters = np.vstack( (large_gaussian_parameters[::-1], gauss_fit[0:3][::-1])).T.flatten()
+           _, result_dict2 = fit_double_gaussian(x_data, y_data, initial_params=initial_parameters)
+           if result_dict2['reduced_chi_squared']<result_dict['reduced_chi_squared']:
+                  result_dict=result_dict2
+    return result_dict
 
 def exp_function(x, a, b, c):
     """ Model for exponential function
