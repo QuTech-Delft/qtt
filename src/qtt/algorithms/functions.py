@@ -229,8 +229,8 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
 
     Args:
         result_dict(dict): Result dictionary from fit_double_gaussian
-        bin_centres (array): Result from 
-        counts (array)
+        x_data (array): Independent data
+        y_data (array): Signal data
         gaussian_amplitude_ratio_threshold (float): If ratio between amplitudes of Gaussian peaks is larger than this fit, re-estimate
     Returns:
         Dictionary with improved fitting results
