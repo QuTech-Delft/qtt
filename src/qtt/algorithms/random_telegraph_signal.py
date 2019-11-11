@@ -79,6 +79,33 @@ def _plot_rts_histogram(data, num_bins, double_gaussian_fit, split, figure_title
     plt.title(figure_title)
 
 
+from qtt.algorithms.functions import fit_gaussian
+
+def _refit_double_gaussian(result_dict, bin_centres, counts):
+    """ Improve fit of double Gaussian by estimating the initial parameters based on an existing fit
+       
+    """ 
+    if result_dict['left'][2]>result_dict['right'][2]:
+              large_gaussian_parameters =  result_dict['left']
+              small_gaussian_parameters =  result_dict['right']
+    else:
+              large_gaussian_parameters =  result_dict['right']
+              small_gaussian_parameters =  result_dict['left']
+    gaussian_ratio = large_gaussian_parameters[2]/small_gaussian_parameters[2]
+    print(f'gaussian_ratio: {gaussian_ratio}')
+    if gaussian_ratio>8:
+           # re-estimate by fitting a single gaussian to the data remaining after removing the main gaussian
+           residual_counts=counts-gaussian(bin_centres, *large_gaussian_parameters)
+           idx=np.logical_and(bin_centres>large_gaussian_parameters[0]-1.5*large_gaussian_parameters[1], bin_centres<large_gaussian_parameters[0]+1.5*large_gaussian_parameters[1])
+           residual_counts[idx]=0
+           gauss_fit,_=fit_gaussian(bin_centres, residual_counts)
+
+           initial_parameters = np.vstack( (large_gaussian_parameters[::-1], gauss_fit[0:3][::-1])).T.flatten()
+           _, result_dict2 = fit_double_gaussian(bin_centres, counts, initial_params=initial_parameters)
+           if result_dict2['reduced_chi_squared']<result_dict['reduced_chi_squared']:
+                  result_dict=result_dict2
+    return result_dict 
+
 def two_level_threshold(data, number_of_bins=40) -> dict:
     """ Determine threshold for separation of two-level signal
 
@@ -94,6 +121,7 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
     counts, bins = np.histogram(data, bins=number_of_bins)
     bin_centres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
     _, result_dict = fit_double_gaussian(bin_centres, counts)
+    _refit_double_gaussian(result_dict, bin_centres, counts)
 
     result = {'signal_threshold': result_dict['split'], 'double_gaussian_fit': result_dict,
               'separation': result_dict['separation'],

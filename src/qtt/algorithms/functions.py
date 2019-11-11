@@ -215,6 +215,8 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     result_dict = {'parameters initial guess': initial_params,
                    'separation': separation, 'split': weigthed_distance_split}
     result_dict['parameters'] = par_fit
+    result_dict['reduced_chi_squared']=result.redchi
+    
     result_dict['left'] = np.take(par_fit, [4, 2, 0])
     result_dict['right'] = np.take(par_fit, [5, 3, 1])
     result_dict['type'] = 'fitted double gaussian'
