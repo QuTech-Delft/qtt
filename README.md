@@ -24,17 +24,18 @@ To create a clean virtual Python environment for your qtt development do:
 ```
 $ mkdir qtt
 $ cd qtt
-$ python -m venv env
 ```
 Now activate the virtual environment. On Linux do:
 ```
-$ . ./env/Scripts/activate
+$ python3 -m venv env
+$ . ./env/bin/activate
  or
-$ source ./env/Scripts/activate
+$ source ./env/bin/activate
 ```
 On Windows do:
 ```
-$ env\Scripts\activate.bat
+$ python -m venv env
+$ env/Scripts/activate.bat
 ```
 Now we are ready to install QTT.
 ### Installation from Pypi
@@ -54,7 +55,7 @@ $ pip install -e .
 Sometimes the default installation does not work because of incompatible dependencies between the used packages
 on your system. To be sure you use all the right versions of the packages used by QTT and its dependencies do:
 ```
-$ pip install -r requirements_lock.txt
+$ pip install . -r requirements_lock.txt
 ```
 or for development
 ```

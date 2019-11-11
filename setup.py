@@ -45,7 +45,7 @@ else:
         bin_dir = os.path.join(os.path.dirname(file_path), 'bin')
         Polygon3_local = f'Polygon3 @ file://{bin_dir}/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
         Polygon3_git = 'Polygon3 @ https://github.com/QuTech-Delft/qtt/bin/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
-        Polygon3 = Polygon3_git
+        Polygon3 = Polygon3_local
     else:
         Polygon3 = 'Polygon3'
     install_requires.append(Polygon3)
