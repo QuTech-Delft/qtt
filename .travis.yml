@@ -51,6 +51,7 @@ script:
         jupyter --version;
         bash docs/notebooks/select_notebooks_to_execute.sh;
       fi
+    - python docs/notebooks/qtt_example.py
 
 after_success:
   - coveralls

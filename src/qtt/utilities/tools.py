@@ -60,6 +60,9 @@ except BaseException:
 
 # %%
 
+def is_spyder_environment():
+    """ Return True if the process is running in a Spyder environment """
+    return 'SPY_TESTING' in os.environ
 
 def get_module_versions(modules, verbose=0):
     """ Returns the module version of the given pip packages.
