@@ -18,6 +18,8 @@ on [Qcodes](https://github.com/qdev-dk/Qcodes) (basic framework such as instrume
 ## Installation
 
 QTT is compatible with Python 3.5+. QTT can be installed as a pip package to be used in a (virtual) Python environment.
+We assume that software packages like [git](https://git-scm.com/downloads) and [python](https://www.python.org/downloads/)
+are already installed on your system. 
 
 ### Setting up a virtual environment
 To create a clean virtual Python environment for your qtt development do:
@@ -49,6 +51,7 @@ For the default installation from the qtt source directory execute:
 ```
 $ git clone https://github.com/QuTech-Delft/qtt.git
 $ cd qtt
+$ pip install wheel
 $ pip install -e .
 ```
 ### When problems arise

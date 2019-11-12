@@ -9,9 +9,12 @@ An event loop should be running for the GUI elements.
 
 # %% Load packages
 import numpy as np
+import matplotlib.pyplot as plt
 import tempfile
 from collections import OrderedDict
 import pyqtgraph
+_ = pyqtgraph.mkQApp()
+
 import qcodes
 import qtt
 from qtt.gui.parameterviewer import createParameterWidget
@@ -23,7 +26,6 @@ import qtt.measurements.videomode
 
 import qtt.simulation.virtual_dot_array
 
-_ = pyqtgraph.mkQApp()
 datadir = tempfile.mkdtemp(prefix='qtt_example')
 qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
 
