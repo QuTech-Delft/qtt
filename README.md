@@ -19,7 +19,17 @@ on [Qcodes](https://github.com/qdev-dk/Qcodes) (basic framework such as instrume
 
 QTT is compatible with Python 3.5+. QTT can be installed as a pip package to be used in a (virtual) Python environment.
 We assume that software packages like [git](https://git-scm.com/downloads) and [python](https://www.python.org/downloads/)
-are already installed on your system. 
+are already installed on your system.
+
+Note: when running Ubuntu Linux, installing these packages is done via:
+```
+$ sudo apt install git gcc python3 python3-venv python3-dev
+```
+for Python 3.6.x or
+```
+$ sudo apt install git gcc python3.7 python3.7-venv python3.7-dev
+```
+for Python 3.7.x. Other Linux distributions require similar steps.
 
 ### Setting up a virtual environment
 To create a clean virtual Python environment for your qtt development do:
@@ -34,6 +44,7 @@ $ . ./env/bin/activate
  or
 $ source ./env/bin/activate
 ```
+or use the python3.7 equivalent to generate a python 3.7 environment.
 On Windows do:
 ```
 $ python -m venv env
@@ -54,7 +65,7 @@ $ cd qtt
 $ pip install wheel
 $ pip install -e .
 ```
-### When problems arise
+### When incompatibility problems arise
 Sometimes the default installation does not work because of incompatible dependencies between the used packages
 on your system. To be sure you use all the right versions of the packages used by QTT and its dependencies do:
 ```
@@ -65,7 +76,7 @@ or for development
 $ pip install -e . -r requirements_lock.txt
 ```
 This will install a tested set of all the packages QTT depends on.
-  
+
 ### Installing for generating documentation
 To install the necessary packages to perform documentation activities for QTT do:
 ```
