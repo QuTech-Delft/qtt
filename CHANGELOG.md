@@ -1,12 +1,13 @@
-
 # Changelog
-All notable changes to the Quantum Tuning Toolkit will be documented in this file.
+All notable changes to the Quantum Technology Toolbox will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
 ## [Unreleased]
+...
+
+## [1.1.3] - 2019-10-18
 
 ### Added
 - Added boxcar filter to algorithms (#597).
@@ -20,30 +21,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a lock-in amplifier interface for the Zurich instruments UHFLI (#560).
 - A JSON encoding for qcodes.DataSet is added to the serialized (#558).
 - Added scope reader for the Zurich Instruments UHFLI. (#554, #980).
-- Add option to compensate for re-arm time of M4i trigger.
-- Add methods for performing operations on datasets. (#593)
-- The new virtual AWG can now also be used with the turbo scan. (#618)
-- Add re-arm compensation. (#614)
-- Add restrict_boundaries method to the VirtualDAC (#631)
-- Add option to set dataset record label through scanjob (##655)
-- Fix bug in awg_to_plunger method (#658)
 - Add method to fit AllXY experiment (#664)
 - Added more example datasets (#670)
+- Add option to compensate for re-arm time of M4i trigger (#607).
+- Add methods for performing operations on datasets (#593).
+- The new virtual AWG can now also be used with the turbo scan (#618).
+- Add re-arm compensation (#614).
+- Add restrict_boundaries method to the VirtualDAC (#631).
+- Add option to set dataset record label through scanjob (#655).
+- Add calibration exception (#585).
+- Add dataclasses to setup.py (#628).
+- Add fraction up and down as output of rts (#623).
+- Add integration tests back to automated testing (#603).
+- Add integration tests for dataset (#567).
+- Add option to perform filtering (#645).
+- Add pyqt5 to setup.py; remove pandas (#621).
+- Add unit field to parameter viewer (#566).
+- Add unittest on loading a json and hdf5 format dataset (#647).
+- Add smoothing to derivative of signal in Coulomb peak fitting (#641).
+- Added option to enlargelims to set x and y independently (#646).
+- Measurement according to Elzerman readout (#562).
+- Added UHFLI integration (#573).
+- Added example for scan1D with UHFLI (#561).
+- Added VirtualAwgInstrumentAdapter (#588).
+- Add update model for markov chains (#592).
+- Implement signal processor and signal processor interface (#556).
+- Virtual gate scans with overlapping gates (#626).
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
 - Allow plotCallback to operate on datetime axis (#584).
 - VirtualDAC now has an option to set gate_map and instruments on VirtualDAC (#583).
-- All unittests are moved to a tests folder (#574).
+- All unit tests/integration tests are moved to a separated tests folder (#574, #600).
 - Legacy code now throws exceptions (#551).
-- VideoMode tool was restructured to clean up the interface (#594)
-- Updates requirements on QCoDeS version (#614)
-- qtt.data.dataset_labels works for 1D scans now (#629)
-- Removed plunger argument functionality from tunnelrates_RTS (#625)
-- Improved initial fit of Gauss Ramsey (#643, #661)
-- Double Gaussian fitting is faster (using lmfit) and has better initial estimates (#648)
-- Updated json serialization code to use qilib (#630)
 - Name of chirp template is passed to QuPulse template (#668)
+- VideoMode tool was restructured to clean up the interface (#594).
+- Updates requirements on QCoDeS version (#614).
+- qtt.data.dataset_labels works for 1D scans now (#629).
+- Removed plunger argument functionality from tunnelrates_RTS (#625).
+- Improved initial fit of Gauss Ramsey (#643, #661).
+- Double Gaussian fitting is faster (using lmfit) and has better initial estimates (#648).
+- Updated json serialization code to use qilib (#630).
+- Autodetect notebooks for Travis testing (#627).
+- Improved installation procedure (#613).
+- Updated docs of PPT methods (#550).
+- Updated documentation (#555).
+- Updated to upstream QCoDeS: import from plot packages instead of main module (#649).
+- Raise exception when diffImageSmooth is called with incorrect arguments (#608).
+- Move mock imports to unittest.mock (#620).
+- Enable all output channels for virtual awg in videomode (#644).
+- Refactor parameterviewer; remove default min max values for parameters (#570).
+- Refactor part of the RTS code (#577).
 
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).
@@ -57,8 +85,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed issue with HDAWG8 sampling rate (#589).
 - Fixed Travis warnings and tests instrument_drivers (#569).
 - Fixed Travis build related to Qcodes version numbering (#604, #606).
-- Fixed issue with setSingleStep (#633)
 - Fixed incorrect initial estimate of fit_gaussian (#671)
+- Fixed issue with setSingleStep (#633).
+- QCodes 0.6.0 fix (#660).
+- Fix matplotlib callback for NaN entries (#662).
+- Fixed time axis for m4i acquire segments (#638).
+- Fixed Travis build for VideoMode (#637).
+- Resolved circular dependency problem in qtt and qilib (#609).
+- Fix bug in awg_to_plunger method (#658).
+- Fix default_parameter_name in scan method; fix issue with delete argument in scans1Dfast (#568).
+- Fix definition of chirp signal (#622).
+- Fix to acquire_segments (#575).
+- Fixes to cc measurements (#572).
+- Fix qilib for readthedocs build (#624).
+- Fix coulomb example notebook (#619).
+- VirtualDacInstrumentAdapter needs to set instead of append instruments (#605).
 
 ### Security
 ...
@@ -80,7 +121,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed the installation instructions (#546, #547).
 - Fixed the parameter viewer (#449).
-
 
 ## [1.1.0] - 2018-09-08
 
@@ -118,7 +158,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make sure units are saved and loaded with GNUPlotFormatter (#434).
 - Fixed problems with the scan2Dturbo function (#423).
 - Fixed parameter in widget (#384).
-
 
 [Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.1.2...HEAD
 [1.1.2]: https://github.com/QuTech-Delft/qtt/compare/v1.1.0...1.1.2
