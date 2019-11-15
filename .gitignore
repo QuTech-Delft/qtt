@@ -54,6 +54,7 @@ coverage.xml
 
 # IDEs
 .idea
+.spyproject
 
 # Django stuff:
 *.log
