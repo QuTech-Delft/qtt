@@ -32,13 +32,7 @@ matrix:
     - xvfb
 
 install:
-    - pip install -r requirements.txt
-    - pip install opencv-python coveralls
-    - pip install mypy
-    - if [[ "$FULL_INSTALL" == "1" ]]; then
-        echo "Full Installation";
-        pip install -r develop_requirements.txt;
-      fi
+    - pip install coveralls
     - pip install -e .
     - export QT_QPA_PLATFORM=offscreen
 
@@ -55,6 +49,14 @@ script:
 
 after_success:
   - coveralls
-    
 
-# https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-to-run-tests-that-require-a-gui
+deploy:
+  provider: pypi
+  user: __token__
+  password:
+    secure: OOySOOyaFw0QhK1J9yC1+AB6PyzfXmF3iMRzb1o+fhaiGW9rYkxB12SEgHd2whxEA2CQg7tKhQuzF6BUal02TVISGN8It+tlGViA0CAr7k4ZHAUdAkRFy2scUlTCtfSYBPSITYb8RzoJLeI0gRLB5D0k0UnzQIMyVpCr7YLOWVnUq28X52i8NCMQG1H2yACmk4qvtp7rfmzEAFwxvkNZMWL592CS+je0GKTcT4Uj4q85IbDnZtjxyl3DCk3xcqK64tg81hrBxkYeuQyva8rIWGqcltTWLldF/sp01bkw8Oeeba7Uyaq2JCgGnSV+l59L2hVPgC7fcbdiq2akO3XqhjkGfHzE4yndHI9I/9Nd+ccBDzi4d+2K0jyYsCaeuEzCpYkxVF3K+RZissiFsJIdZc5heDyMA4htNvlNHhkonkuvn6lETOEVjFRqK5Sb2k8IeG6SoBD38BlNoXNLgY21oVTZ6LtNOC/kOe/HVfOv9buvLeEyLx4++nfTNK5q0dmkeReGt0J+11mtcvkz/N+bvmdIc8yVAEfPn3PXvq+7k1MFsePRfLQ0YDTseGF6SYZ61NSO6RsY1wnYSNPRwukEAp8RXNTkdaYB/8zQ4ltYkTAqk25bXRh861aVybsTTygOQjvSmAV4sHNY6KzGCn2u3UWDNwTQG3G5QrwzM0/FIE4=
+  on:
+    tags: true
+    branch: master
+  skip_existing: true
+

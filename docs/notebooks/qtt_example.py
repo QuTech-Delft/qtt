@@ -97,7 +97,7 @@ try:
     qtt.measurements.scans.plotData(data, fig=30)
 
     pt, resultsfine = analyse2dot(data, fig=300, efig=400, istep=1, verbose=2)
-except:
+except ImportError:
     pass
 
 # %% Make virtual gates
