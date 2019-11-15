@@ -63,7 +63,7 @@ class CliffordRandomizedBenchmarkingSingleQubit:
         model = pygsti.construction.build_standard_localnoise_model(nQubits=len(self._chip_spec.qubit_labels),
                                                                     gate_names=self._chip_spec.root_gate_names,
                                                                     qubit_labels=self._chip_spec.qubit_labels)
-        sim_out = {m: [c.simulate(model) for c in cs] for (m, cs) in circuits_dict}
+        sim_out = {m: [c.simulate(model) for c in cs] for (m, cs) in circuits_dict.items()}
         return sim_out
 
     def simulate_summary_data(self, lengths: Union[list, tuple], num_seq: int, repetitions: int,

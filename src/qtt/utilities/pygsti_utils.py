@@ -15,10 +15,15 @@ except ImportError:
 
 __to_gst_gate_map = {
     # qtt gate : pygsty gate
+    'Z': 'Gzpi',
+    'Z90': 'Gzpi2',
+    'mZ90': 'Gzmpi2',
     'X90': 'Gxpi2',
-    'X': 'Gxpi',
+    'X': 'Gxpi',    
+    'mX90': 'Gxmpi2',
     'Y90': 'Gypi2',
     'Y': 'Gypi',
+    'mY90': 'Gympi2',
     'I': 'Gi',
     'CX': 'Gcnot',
     'CZ': 'Gcphase'
