@@ -259,7 +259,7 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
         y_residual[idx] = 0
         gauss_fit, _ = fit_gaussian(x_data, y_residual)
 
-        initial_parameters = _double_gaussian_parameters(large_gaussian_parameters, gauss_fit)
+        initial_parameters = _double_gaussian_parameters(large_gaussian_parameters, gauss_fit[:3])
         _, result_dict_refit = fit_double_gaussian(x_data, y_data, initial_params=initial_parameters)
         if result_dict_refit['reduced_chi_squared'] < result_dict['reduced_chi_squared']:
             result_dict = result_dict_refit
