@@ -223,6 +223,8 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
 
     return par_fit, result_dict
 
+def _double_gaussian_parameters(gauss_left, gauss_right):
+    return np.vstack((gauss_left[::-1], gauss_right[::-1])).T.flatten()
 
 def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_threshold=8):
     """ Improve fit of double Gaussian by estimating the initial parameters based on an existing fit
@@ -257,7 +259,7 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
         y_residual[idx] = 0
         gauss_fit, _ = fit_gaussian(x_data, y_residual)
 
-        initial_parameters = np.vstack((large_gaussian_parameters[::-1], gauss_fit[0:3][::-1])).T.flatten()
+        initial_parameters = _double_gaussian_parameters(large_gaussian_parameters, gauss_fit)
         _, result_dict_refit = fit_double_gaussian(x_data, y_data, initial_params=initial_parameters)
         if result_dict_refit['reduced_chi_squared'] < result_dict['reduced_chi_squared']:
             result_dict = result_dict_refit
