@@ -13,7 +13,7 @@ import qcodes
 
 from qtt.utilities.tools import addPPTslide
 from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay,\
-         gaussian, refit_double_gaussian
+    gaussian, refit_double_gaussian
 from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 from qtt.utilities.visualization import plot_vertical_line, plot_double_gaussian_fit
 

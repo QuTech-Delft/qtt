@@ -236,11 +236,11 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
     Returns:
         Dictionary with improved fitting results
     """
-    
+
     mean = operator.itemgetter(0)
     std = operator.itemgetter(1)
     amplitude = operator.itemgetter(2)
-    
+
     if amplitude(result_dict['left']) > amplitude(result_dict['right']):
         large_gaussian_parameters = result_dict['left']
         small_gaussian_parameters = result_dict['right']
