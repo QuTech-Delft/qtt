@@ -42,6 +42,33 @@ def _cost_gaussian(x_data, y_data, params):
     cost = np.linalg.norm(y_data - model_y_data)
     return cost
 
+def _extract_lmfit_parameters(lmfit_model, lmfit_result):
+    param_names = lmfit_model.param_names
+    fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
+    initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
+
+    results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters, 'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name}    
+    return results
+
+def fit_gaussian_flat(x_data, y_data, initial_params=None):
+    if initial_params is None:
+        initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
+        initial_params=initial_params[:3]
+
+    def gaussian_model(x, mean, sigma, amplitude):
+        """ Gaussian helper function for lmfit """
+        y = gaussian(x, mean, sigma, amplitude)
+        return y
+
+    lmfit_model = Model(gaussian_model)
+    lmfit_model.set_param_hint('amplitude', min=0)
+
+    param_names = gaussian_model.param_names
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=0)
+
+    result_dict = _extract_lmfit_parameters(lmfit_model, lmfit_result)
+    
+    return  result_dict
 
 def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
