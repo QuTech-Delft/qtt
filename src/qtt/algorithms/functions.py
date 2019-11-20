@@ -43,19 +43,22 @@ def _cost_gaussian(x_data, y_data, params):
     cost = np.linalg.norm(y_data - model_y_data)
     return cost
 
+
 def _extract_lmfit_parameters(lmfit_model, lmfit_result):
     """ Convert lmfit results to a dictionary """
     param_names = lmfit_model.param_names
     fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
     initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
 
-    results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters, 'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name}    
+    results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
+               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name}
     return results
 
+
 def fit_gaussian_flat(x_data, y_data, initial_parameters=None):
-    
+
     if initial_parameters is None:
-        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset = True)
+        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset=True)
 
     def gaussian_model(x, mean, sigma, amplitude):
         """ Gaussian helper function for lmfit """
@@ -64,25 +67,28 @@ def fit_gaussian_flat(x_data, y_data, initial_parameters=None):
 
     lmfit_model = Model(gaussian_model)
     lmfit_model.set_param_hint('amplitude', min=0)
-    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=0)
+    lmfit_result = lmfit_model.fit(
+        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=0)
     result_dict = _extract_lmfit_parameters(lmfit_model, lmfit_result)
-    
+
     return result_dict
 
+
 def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
-        maxsignal = np.percentile(x_data, 98)
-        minsignal = np.percentile(x_data, 2)
-        amplitude = np.max(y_data) - np.min(y_data)
-        s = (maxsignal - minsignal) * 1 / 20
-        mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
-        offset = np.min(y_data)
-        if include_offset:
-            initial_parameters = np.array([mean, s, amplitude, offset])
-        else:
-            initial_parameters = np.array([mean, s, amplitude])
-        return initial_parameters
-    
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_parameters = None, initial_params=None):
+    maxsignal = np.percentile(x_data, 98)
+    minsignal = np.percentile(x_data, 2)
+    amplitude = np.max(y_data) - np.min(y_data)
+    s = (maxsignal - minsignal) * 1 / 20
+    mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
+    offset = np.min(y_data)
+    if include_offset:
+        initial_parameters = np.array([mean, s, amplitude, offset])
+    else:
+        initial_parameters = np.array([mean, s, amplitude])
+    return initial_parameters
+
+
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_parameters=None, initial_params=None):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
 
     Args:
@@ -107,18 +113,19 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_p
         warnings.warn('argument maxiter is not used any more')
     if maxfun is not None:
         warnings.warn('argument maxfun is not used any more')
-        
+
     if initial_parameters is None:
-        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset = True)
+        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset=True)
 
     lmfit_model = Model(gaussian)
     lmfit_model.set_param_hint('amplitude', min=0)
-    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
+    lmfit_result = lmfit_model.fit(
+        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
     result_dict = _extract_lmfit_parameters(lmfit_model, lmfit_result)
 
-    result_dict['parameters fitted gaussian']=result_dict['fitted_parameters']
-    result_dict['parameters initial guess']=result_dict['initial_parameters']
-    
+    result_dict['parameters fitted gaussian'] = result_dict['fitted_parameters']
+    result_dict['parameters initial guess'] = result_dict['initial_parameters']
+
     return result_dict['fitted_parameters'], result_dict
 
 
@@ -476,7 +483,7 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     duration = x_data[-1] - x_data[0]
     sample_rate = x_data.size / duration
     ramseyfreq = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
-    if A==0:
+    if A == 0:
         angle = 0
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
