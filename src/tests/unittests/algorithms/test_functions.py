@@ -104,6 +104,14 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(estimated_parameters[2], exact_frequency, places=1)
         self.assertAlmostEqual(estimated_parameters[-1], exact_offset, places=1)
 
+    def test_fit_gaussian_flat(self):
+        x_data = np.linspace(0, 10, 100)
+        gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
+        noise = np.random.rand(100)
+        result_dict = qtt.algorithms.functions.fit_gaussian_flat(x_data=x_data, y_data=(gauss_data + noise))
+        np.testing.assert_array_almost_equal(result_dict['fitted_parameters'], np.array([4, 1, 5.]))
+        self.assertTrue(result_dict['reduced_chi_squared']< .2)
+
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)
         gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)

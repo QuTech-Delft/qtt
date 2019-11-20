@@ -1,5 +1,6 @@
 """ Mathematical functions and models """
 
+import warnings
 import numpy as np
 import scipy
 import scipy.constants
@@ -43,6 +44,7 @@ def _cost_gaussian(x_data, y_data, params):
     return cost
 
 def _extract_lmfit_parameters(lmfit_model, lmfit_result):
+    """ Convert lmfit results to a dictionary """
     param_names = lmfit_model.param_names
     fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
     initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
@@ -50,10 +52,10 @@ def _extract_lmfit_parameters(lmfit_model, lmfit_result):
     results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters, 'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name}    
     return results
 
-def fit_gaussian_flat(x_data, y_data, initial_params=None):
-    if initial_params is None:
-        initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
-        initial_params=initial_params[:3]
+def fit_gaussian_flat(x_data, y_data, initial_parameters=None):
+    
+    if initial_parameters is None:
+        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset = True)
 
     def gaussian_model(x, mean, sigma, amplitude):
         """ Gaussian helper function for lmfit """
@@ -62,46 +64,62 @@ def fit_gaussian_flat(x_data, y_data, initial_params=None):
 
     lmfit_model = Model(gaussian_model)
     lmfit_model.set_param_hint('amplitude', min=0)
-
-    param_names = gaussian_model.param_names
-    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=0)
-
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=0)
     result_dict = _extract_lmfit_parameters(lmfit_model, lmfit_result)
     
-    return  result_dict
+    return result_dict
 
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
+def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
+        maxsignal = np.percentile(x_data, 98)
+        minsignal = np.percentile(x_data, 2)
+        amplitude = np.max(y_data) - np.min(y_data)
+        s = (maxsignal - minsignal) * 1 / 20
+        mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
+        offset = np.min(y_data)
+        if include_offset:
+            initial_parameters = np.array([mean, s, amplitude, offset])
+        else:
+            initial_parameters = np.array([mean, s, amplitude])
+        return initial_parameters
+    
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_parameters = None, initial_params=None):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
 
     Args:
         x_data (array): x values of the data
         y_data (array): y values of the data
-        maxiter (int): maximum number of iterations to perform
-        maxfun (int): maximum number of function evaluations to make
-        verbose (int): set to >0 to print convergence messages
-        initial_params (None or array): optional, initial guess for the fit parameters: 
+        verbose (int): set positive for verbose fit
+        initial_parameters (None or array): optional, initial guess for the fit parameters: 
             [mean, s, amplitude, offset]
+
+        maxiter (int): Legacy argument, not used
+        maxfun (int): Legacy argument, not used
 
     Returns:
         par_fit (array): fit parameters of the gaussian: [mean, s, amplitude, offset]
         result_dict (dict): result dictonary containging the fitparameters and the initial guess parameters
     """
 
-    def cost_function(params): return _cost_gaussian(x_data, y_data, params)
+    if initial_params is not None:
+        warnings.warn('use initial_parameters instead of initial_params')
+        initial_parameters = initial_params
+    if maxiter is not None:
+        warnings.warn('argument maxiter is not used any more')
+    if maxfun is not None:
+        warnings.warn('argument maxfun is not used any more')
+        
+    if initial_parameters is None:
+        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset = True)
 
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
-    if initial_params is None:
-        amplitude = np.max(y_data) - np.min(y_data)
-        s = (maxsignal - minsignal) * 1 / 20
-        mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
-        offset = np.min(y_data)
-        initial_params = np.array([mean, s, amplitude, offset])
-    par_fit = scipy.optimize.fmin(cost_function, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    lmfit_model = Model(gaussian)
+    lmfit_model.set_param_hint('amplitude', min=0)
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
+    result_dict = _extract_lmfit_parameters(lmfit_model, lmfit_result)
 
-    result_dict = {'parameters fitted gaussian': par_fit, 'parameters initial guess': initial_params}
-
-    return par_fit, result_dict
+    result_dict['parameters fitted gaussian']=result_dict['fitted_parameters']
+    result_dict['parameters initial guess']=result_dict['initial_parameters']
+    
+    return result_dict['fitted_parameters'], result_dict
 
 
 def double_gaussian(x_data, params):
