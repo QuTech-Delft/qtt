@@ -95,8 +95,8 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_p
         x_data (array): x values of the data
         y_data (array): y values of the data
         verbose (int): set positive for verbose fit
-        initial_parameters (None or array): optional, initial guess for the fit parameters: 
-            [mean, s, amplitude, offset]
+        initial_parameters (None or array): optional, initial guess for the
+            fit parameters: [mean, s, amplitude, offset]
 
         maxiter (int): Legacy argument, not used
         maxfun (int): Legacy argument, not used
