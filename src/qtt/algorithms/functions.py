@@ -10,8 +10,16 @@ from lmfit import Model
 
 import qtt.pgeometry
 from qtt.utilities.visualization import plot_vertical_line
-import qtt.algorithms.fitting.extract_lmfit_parameters
 
+def extract_lmfit_parameters(lmfit_model, lmfit_result):
+    """ Convert lmfit results to a dictionary """
+    param_names = lmfit_model.param_names
+    fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
+    initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
+
+    results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
+               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name, 'fitted_parameter_dictionary': lmfit_result.best_values}
+    return results
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
     """ Model for Gaussian function
@@ -105,7 +113,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
     lmfit_model.set_param_hint('amplitude', min=2)
     lmfit_result = lmfit_model.fit(
         y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
-    result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
+    result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['parameters fitted gaussian'] = result_dict['fitted_parameters']
     result_dict['parameters initial guess'] = result_dict['initial_parameters']

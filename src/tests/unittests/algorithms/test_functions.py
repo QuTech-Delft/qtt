@@ -105,23 +105,23 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(estimated_parameters[2], exact_frequency, places=1)
         self.assertAlmostEqual(estimated_parameters[-1], exact_offset, places=1)
 
-    def test_fit_gaussian_flat(self):
+    def test_fit_gaussian_no_offset(self):
         x_data = np.linspace(0, 10, 100)
         gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
         noise = np.random.rand(100) - .5
-        result_dict = qtt.algorithms.functions.fit_gaussian_flat(x_data=x_data, y_data=(gauss_data + noise))
+        result_dict = qtt.algorithms.functions.fit_gaussian(x_data=x_data, y_data=(gauss_data + noise), estimate_offset=0)
         np.testing.assert_array_almost_equal(result_dict['fitted_parameters'], np.array([4, 1, 5.]), decimal=1)
         self.assertTrue(result_dict['reduced_chi_squared']< .2)
 
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)
-        gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
-        noise = np.random.rand(100)
+        gauss_data = 0.1 + gaussian(x_data, mean=4, std=1, amplitude=5)
+        noise = np.random.rand(100)-.5
         [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise))
         self.assertTrue(3.5 < mean < 4.5)
         self.assertTrue(0.5 < s < 1.5)
         self.assertTrue(4.5 < amplitude < 5.5)
-        self.assertTrue(0.0 < offset < 1.0)
+        self.assertAlmostEqual(offset, 0.1, places = 0)
 
     def test_refit_double_gaussian(self):
         dataset = qtt.data.load_example_dataset('double_gaussian_dataset.json')
