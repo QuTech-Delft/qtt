@@ -10,6 +10,15 @@ import qtt.pgeometry
 from qcodes import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function
 
+def extract_lmfit_parameters(lmfit_model, lmfit_result):
+    """ Convert lmfit results to a dictionary """
+    param_names = lmfit_model.param_names
+    fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
+    initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
+
+    results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
+               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name, 'fitted_parameter_dictionary': lmfit_result.best_values}
+    return results
 
 def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
     """ Estimates the following properties of a charge addition line; the center location

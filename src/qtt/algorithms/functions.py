@@ -10,6 +10,7 @@ from lmfit import Model
 
 import qtt.pgeometry
 from qtt.utilities.visualization import plot_vertical_line
+import qtt.algorithms.fitting.extract_lmfit_parameters
 
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
@@ -45,36 +46,6 @@ def _cost_gaussian(x_data, y_data, params):
     return cost
 
 
-def _extract_lmfit_parameters(lmfit_model, lmfit_result):
-    """ Convert lmfit results to a dictionary """
-    param_names = lmfit_model.param_names
-    fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
-    initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
-
-    results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
-               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name}
-    return results
-
-
-def fit_gaussian_flat(x_data, y_data, initial_parameters=None):
-
-    if initial_parameters is None:
-        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset=True)
-
-    def gaussian_model(x, mean, sigma, amplitude):
-        """ Gaussian helper function for lmfit """
-        y = gaussian(x, mean, sigma, amplitude)
-        return y
-
-    lmfit_model = Model(gaussian_model)
-    lmfit_model.set_param_hint('amplitude', min=0)
-    lmfit_result = lmfit_model.fit(
-        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=0)
-    result_dict = _extract_lmfit_parameters(lmfit_model, lmfit_result)
-
-    return result_dict
-
-
 def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
@@ -89,7 +60,7 @@ def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
     return initial_parameters
 
 
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_parameters=None, initial_params=None):
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
 
     Args:
@@ -98,6 +69,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_p
         verbose (int): set positive for verbose fit
         initial_parameters (None or array): optional, initial guess for the
             fit parameters: [mean, s, amplitude, offset]
+        estimate_offset (bool): If True then include offset in the Gaussian parameters
 
         maxiter (int): Legacy argument, not used
         maxfun (int): Legacy argument, not used
@@ -116,13 +88,24 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=0, initial_p
         warnings.warn('argument maxfun is not used any more')
 
     if initial_parameters is None:
-        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset=True)
+        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset=estimate_offset)
 
-    lmfit_model = Model(gaussian)
-    lmfit_model.set_param_hint('amplitude', min=0)
+    if estimate_offset:
+        def gaussian_model(x, mean, sigma, amplitude, offset):
+            """ Gaussian helper function for lmfit """
+            y = gaussian(x, mean, sigma, amplitude, offset)
+            return y
+    else:
+        def gaussian_model(x, mean, sigma, amplitude):
+            """ Gaussian helper function for lmfit """
+            y = gaussian(x, mean, sigma, amplitude)
+            return y
+
+    lmfit_model = Model(gaussian_model)
+    lmfit_model.set_param_hint('amplitude', min=2)
     lmfit_result = lmfit_model.fit(
         y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
-    result_dict = _extract_lmfit_parameters(lmfit_model, lmfit_result)
+    result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['parameters fitted gaussian'] = result_dict['fitted_parameters']
     result_dict['parameters initial guess'] = result_dict['initial_parameters']
@@ -275,8 +258,10 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
 
     return par_fit, result_dict
 
+
 def _double_gaussian_parameters(gauss_left, gauss_right):
     return np.vstack((gauss_left[::-1], gauss_right[::-1])).T.flatten()
+
 
 def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_threshold=8):
     """ Improve fit of double Gaussian by estimating the initial parameters based on an existing fit
