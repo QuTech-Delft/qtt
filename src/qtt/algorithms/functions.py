@@ -113,7 +113,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
     lmfit_model.set_param_hint('amplitude', min=2)
     lmfit_result = lmfit_model.fit(
         y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
-    result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)
+    result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['parameters fitted gaussian'] = result_dict['fitted_parameters']
     result_dict['parameters initial guess'] = result_dict['initial_parameters']
