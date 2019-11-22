@@ -79,10 +79,10 @@ class TestTools(unittest.TestCase):
         metadata = reshape_metadata(data_set, printformat='dict')
         self.assertTrue(metadata.startswith('dataset'))
 
-        data_set.metadata['scanjob']= {'scanjobdict': True}        
+        data_set.metadata['scanjob'] = {'scanjobdict': True}
         metadata = reshape_metadata(data_set, printformat='dict')
         self.assertIn('scanjobdict', metadata)
-            
+
     def test_reshape_metadata_station(self):
         instr = qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123'))
         st = qcodes.Station(instr)
