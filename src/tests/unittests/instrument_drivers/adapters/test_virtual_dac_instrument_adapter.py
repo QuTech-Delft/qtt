@@ -50,6 +50,7 @@ class DummyInstrumentAdapter(CommonInstrumentAdapter):
 class TestVirtualDACInstrumentAdapter(unittest.TestCase):
     def setUp(self):
         SerialPortResolver.serial_port_identifiers['spirack3'] = 'COM3'
+        InstrumentAdapterFactory.add_instrument_adapter_class(DummyInstrumentAdapter)
 
     def test_apply(self):
         qilib.configuration_helper.adapters.DummyInstrumentAdapter = DummyInstrumentAdapter
