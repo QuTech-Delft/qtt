@@ -74,13 +74,16 @@ class TestTools(unittest.TestCase):
 
     def test_reshape_metadata(self, quiet=True):
         param = qcodes.ManualParameter('dummy')
-        try:
-            data_set = qcodes.Loop(param[0:1:10]).each(param).run(quiet=quiet)
-        except (TypeError, ValueError):
-            data_set = None
+        data_set = qcodes.Loop(param[0:1:10]).each(param).run(quiet=quiet)
 
-        if data_set is not None:
-            _ = reshape_metadata(data_set, printformat='dict')
+        metadata = reshape_metadata(data_set, printformat='dict')
+        self.assertTrue(metadata.startswith('dataset'))
+
+        data_set.metadata['scanjob']= {'scanjobdict': True}        
+        metadata = reshape_metadata(data_set, printformat='dict')
+        self.assertIn('scanjobdict', metadata)
+            
+    def test_reshape_metadata_station(self):
         instr = qcodes.Instrument(qtt.measurements.scans.instrumentName('_dummy_test_reshape_metadata_123'))
         st = qcodes.Station(instr)
         result = reshape_metadata(st, printformat='dict')
