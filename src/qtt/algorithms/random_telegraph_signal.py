@@ -6,13 +6,14 @@ Created on Wed Feb 28 10:20:46 2018
 """
 
 # %%
+import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
-from qtt.utilities.tools import addPPTslide
-import warnings
 
-from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay, gaussian
+from qtt.utilities.tools import addPPTslide
+from qtt.algorithms.functions import double_gaussian, fit_double_gaussian, exp_function, fit_exp_decay,\
+    gaussian, refit_double_gaussian
 from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 from qtt.utilities.visualization import plot_vertical_line, plot_double_gaussian_fit
 
@@ -94,6 +95,7 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
     counts, bins = np.histogram(data, bins=number_of_bins)
     bin_centres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
     _, result_dict = fit_double_gaussian(bin_centres, counts)
+    result_dict = refit_double_gaussian(result_dict, bin_centres, counts)
 
     result = {'signal_threshold': result_dict['split'], 'double_gaussian_fit': result_dict,
               'separation': result_dict['separation'],
@@ -101,7 +103,7 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
     return result
 
 
-def plot_two_level_threshold(results, fig=100, plot_initial_estimate = False):
+def plot_two_level_threshold(results, fig=100, plot_initial_estimate=False):
     plt.figure(fig)
     plt.clf()
     bin_centres = results['histogram']['bin_centres']
@@ -114,12 +116,13 @@ def plot_two_level_threshold(results, fig=100, plot_initial_estimate = False):
     plt.title('Result of two level threshold processing')
 
     if plot_initial_estimate:
-        xdata=np.linspace(bin_centres[0], bin_centres[-1], 300)
-        initial_estimate=results['double_gaussian_fit']['parameters initial guess']
-        left0=initial_estimate[::2][::-1]
-        right0=initial_estimate[1::2][::-1]
+        xdata = np.linspace(bin_centres[0], bin_centres[-1], 300)
+        initial_estimate = results['double_gaussian_fit']['parameters initial guess']
+        left0 = initial_estimate[::2][::-1]
+        right0 = initial_estimate[1::2][::-1]
         plt.plot(xdata, gaussian(xdata, *left0), ':g', label='initial estimate left')
         plt.plot(xdata, gaussian(xdata, *right0), ':r', label='initial estimate right')
+
 
 def _create_integer_histogram(durations):
     """ Calculate number of bins, bin edges and histogram for durations
@@ -190,7 +193,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     if fig:
         xdata = np.array(range(0, len(data))) / samplerate * 1000
         Z, xedges, yedges = np.histogram2d(xdata, data, bins=[int(
-            np.sqrt(len(xdata)) / 2), int(np.sqrt(len(data))/2) ])
+            np.sqrt(len(xdata)) / 2), int(np.sqrt(len(data)) / 2)])
         title = '2d histogram RTS'
         Fig = plt.figure(fig)
         plt.clf()
@@ -328,7 +331,7 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
                 plt.clf()
                 plt.plot(time_scaling * bincentres, counts, 'o', label=f'Counts {label}')
                 plt.plot(time_scaling * bincentres, exp_function(bincentres, A_fit, B_fit, gamma_fit),
-                         'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{%s\ to\ %s}}$: %.1f kHz' % (label, other_label, tunnelrate) )
+                         'r', label=r'Fitted exponential decay $\Gamma_{\mathrm{%s\ to\ %s}}$: %.1f kHz' % (label, other_label, tunnelrate))
                 plt.xlabel('Lifetime (ms)')
                 plt.ylabel('Counts per bin')
                 plt.legend()
@@ -341,11 +344,13 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
         bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
         fig_label = None if fig is None else fig + 2
-        tunnelrate_dn, fit_parameters_down = _fit_and_plot_decay(bincentres_dn, counts_dn, label='down', fig_label=fig_label)
+        tunnelrate_dn, fit_parameters_down = _fit_and_plot_decay(
+            bincentres_dn, counts_dn, label='down', fig_label=fig_label)
 
         bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
         fig_label = None if fig is None else fig + 3
-        tunnelrate_up, fit_parameters_up = _fit_and_plot_decay(bincentres_up, counts_up, label='up', fig_label=fig_label)
+        tunnelrate_up, fit_parameters_up = _fit_and_plot_decay(
+            bincentres_up, counts_up, label='up', fig_label=fig_label)
 
         parameters['fit parameters exp. decay down'] = fit_parameters_down
         parameters['fit parameters exp. decay up'] = fit_parameters_up

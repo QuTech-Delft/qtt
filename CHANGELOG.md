@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added scope reader for the Zurich Instruments UHFLI. (#554, #980).
 - Add method to fit AllXY experiment (#664)
 - Added more example datasets (#670)
+- Add method to improve double gaussian fit by initialization based on large-small gaussian (#680)
 - Add option to compensate for re-arm time of M4i trigger (#607).
 - Add methods for performing operations on datasets (#593).
 - The new virtual AWG can now also be used with the turbo scan (#618).
