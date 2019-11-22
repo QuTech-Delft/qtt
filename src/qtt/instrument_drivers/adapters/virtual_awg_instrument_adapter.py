@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from qilib.configuration_helper import InstrumentAdapter, InstrumentAdapterFactory
 from qilib.utils import PythonJsonStructure
@@ -10,11 +10,11 @@ from qtt.instrument_drivers.adapters.constants import INSTRUMENTS, ADAPTER_CLASS
 
 
 class VirtualAwgInstrumentAdapter(InstrumentAdapter):
-    def __init__(self, address: str) -> None:
-        super().__init__(address)
+    def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
+        super().__init__(address, instrument_name)
 
-        settings_instrument = SettingsInstrument('settings')
-        self._instrument: VirtualAwg = VirtualAwg(settings=settings_instrument)
+        settings_instrument = SettingsInstrument(f'settings_{instrument_name}')
+        self._instrument: VirtualAwg = VirtualAwg(name=instrument_name, settings=settings_instrument)
         self._adapters: Dict[str, InstrumentAdapter] = {}
 
     def apply(self, config: PythonJsonStructure) -> None:
@@ -81,7 +81,6 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
         self._instrument.settings.create_map()
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
-        self._parameters = parameters
         return parameters
 
     def close_instrument(self) -> None:
