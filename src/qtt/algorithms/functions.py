@@ -461,13 +461,15 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
 def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     """ Estimate initial parameters of a damped sine wave
 
-    Also see: https://en.wikipedia.org/wiki/Damped_sine_wave
+    The damped sine wave is described in https://en.wikipedia.org/wiki/Damped_sine_wave.
 
     Args:
-        exponent: Exponent from the exponential decay factor
+        x_data (float): Independent data
+        y_data (float): Dependent data
+        exponent (float): Exponent from the exponential decay factor
 
     Returns:
-        Estimated parameters for gauss_ramsey method
+        Estimated parameters for damped sine wave (see the gauss_ramsey method)
     """
     A = (np.max(y_data) - np.min(y_data)) / 2
     B = (np.min(y_data) + A)
@@ -490,7 +492,7 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
         angle_first_datapoint = -np.arcsin(n_start)
         angle = angle_first_datapoint + 2 * np.pi * frequency * x_data[0]
         angle = np.mod(np.pi + angle, 2 * np.pi) - np.pi
-    t2s = 2 * duration / (decay_factor)
+    t2s = 2 * duration / decay_factor
 
     initial_params = np.array([A, t2s, frequency, angle, B])
     return initial_params

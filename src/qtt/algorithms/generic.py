@@ -1,6 +1,7 @@
 """ Various functions """
 
 import warnings
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
@@ -81,7 +82,6 @@ def subpixelmax(A, mpos, verbose=0):
     mpos = np.array(mpos)
     if np.array(mpos).size == 0:
         # corner case
-        import copy
         subpos = copy.copy(mpos)
         return subpos, []
 
@@ -96,12 +96,11 @@ def subpixelmax(A, mpos, verbose=0):
 
     cy = val
     ay = (valm + valp) / 2 - cy
+    by = ay + cy - valm
 
     if np.any(ay == 0):
-        # degenerate case
-        raise Exception('position specified by mpos is not a maximum')
+        shift = 0 * ay
     else:
-        by = ay + cy - valm
         shift = -by / (2 * ay)  # Maxima of quadradic
 
     if verbose:
