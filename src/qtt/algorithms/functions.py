@@ -441,7 +441,7 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
     dominant_idx = np.argmax(np.abs(w))
     dominant_frequency = freqs[dominant_idx]
 
-    if dominant_idx > 0 and dominant_idx < freqs.size / 2 - 1:
+    if 0 < dominant_idx < freqs.size / 2 - 1:
         dominant_idx_subpixel, _ = subpixelmax(np.abs(w), [dominant_idx])
         dominant_frequency = np.interp(dominant_idx_subpixel, np.arange(freqs.size), freqs)[0]
 

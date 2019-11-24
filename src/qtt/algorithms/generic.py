@@ -64,20 +64,21 @@ def localMaxima(arr, radius=1, thr=None):
 def subpixelmax(A, mpos, verbose=0):
     """ Calculate maximum position with subpixel accuracy
 
-    The method fits a parabola through 3 points and calculates the maximum of the parabola.
+    For each position specified by mpos this method fits a parabola through 3 points and calculates the
+    maximum position of the parabola.
 
     Args:
-        A (1D array):
-        mpos (array with integer indicess):
-        verbose (int):
+        A (1D array): Input data
+        mpos (array with integer indices): Positions in the array A with maxima
+        verbose (int): Verbosity level
 
     Returns:
-        subpos (array with subpixel positions):
-        subval (array):
+        subpos (array): Array with subpixel positions
+        subval (array): Values at maximum positions
     """
 
     A = np.array(A)
-    mpos=np.array(mpos)
+    mpos = np.array(mpos)
     if np.array(mpos).size == 0:
         # corner case
         import copy
@@ -96,7 +97,7 @@ def subpixelmax(A, mpos, verbose=0):
     cy = val
     ay = (valm + valp) / 2 - cy
 
-    if np.any(ay==0):
+    if np.any(ay == 0):
         # degenerate case
         raise Exception('position specified by mpos is not a maximum')
     else:
@@ -107,7 +108,6 @@ def subpixelmax(A, mpos, verbose=0):
         print('subpixelmax: mp %d, pp %d\n', mp, pp)
         print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n', ay, by, cy)
 
-    shift[ay == 0] = 0  # fix for flat areas
     subpos = mpos + shift
 
     subval = ay * shift * shift + by * shift + cy
@@ -376,7 +376,7 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
     # improve estimate by taking a local average
     valr = pgeometry.rot2D(np.pi / 2).dot(val.reshape((2, 1)))
     sidesteps = np.arange(-6, 6.01, 3).reshape((-1, 1)) * \
-                np.matrix(valr.reshape((1, 2)))
+        np.matrix(valr.reshape((1, 2)))
     pts = ptx + .5 * np.array(sidesteps)
     ptsf = ptxf + resizefactor * sidesteps
     valx = np.array([getValuePixel(flow, p) for p in ptsf])
