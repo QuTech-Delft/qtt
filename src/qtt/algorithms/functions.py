@@ -481,18 +481,18 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
 
     duration = x_data[-1] - x_data[0]
     sample_rate = (x_data.size - 1) / duration
-    ramseyfreq = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
+    frequency = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
 
     if A == 0:
         angle = 0
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
         angle_first_datapoint = -np.arcsin(n_start)
-        angle = angle_first_datapoint + 2 * np.pi * ramseyfreq * x_data[0]
+        angle = angle_first_datapoint + 2 * np.pi * frequency * x_data[0]
         angle = np.mod(np.pi + angle, 2 * np.pi) - np.pi
     t2s = 2 * duration / (decay_factor)
 
-    initial_params = np.array([A, t2s, ramseyfreq, angle, B])
+    initial_params = np.array([A, t2s, frequency, angle, B])
     return initial_params
 
 
