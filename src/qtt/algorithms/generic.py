@@ -422,45 +422,6 @@ def show2Dimage(im, dd, **kwargs):
     _ = show2D(dd, im=im, **kwargs)
     return None
 
-    # try:
-    #     extentImage, xdata, ydata, imdummy = get2Ddata(
-    #         dd, fastscan=False, verbose=0, fig=None, midx=midx)
-    #     mdata = dd
-    # except:
-    #     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-    #         dd, arrayname=None)
-    #     extentImage = [vsweep[0], vsweep[-1], vstep[-1],
-    #                    vstep[0]]  # matplotlib extent style
-    #     mdata = dd.metadata
-    #
-    # pgeometry.cfigure(fig, facecolor=facecolor)
-    # plt.clf()
-    # if verbose >= 2:
-    #     print('show2D: show image')
-    # imh = plt.imshow(im, extent=extent2fullextent(
-    #     extentImage, im), interpolation='nearest')
-    # # imh=plt.imshow(im, extent=xx, interpolation='nearest')
-    # if units is not None:
-    #     if 'stepdata' in mdata:
-    #         plt.xlabel('%s (%s)' % (dd['sweepdata']['gates'][0], units))
-    #         plt.ylabel('%s (%s)' % (dd['stepdata']['gates'][0], units))
-    # else:
-    #     if 'stepdata' in mdata:
-    #         plt.xlabel('%s' % dd['sweepdata']['gates'][0])
-    #         plt.ylabel('%s' % dd['stepdata']['gates'][0])
-    # if not title is None:
-    #     plt.title(title)
-    # if colorbar:
-    #     plt.colorbar()
-    # if verbose >= 2:
-    #     print('show2D: at show')
-    # try:
-    #     plt.show(block=False)
-    # except:
-    #     # ipython backend does not know about block keyword...
-    #     plt.show()
-    # return extentImage
-
 
 def getValuePixel(imx, pt):
     """ Return interpolated pixel value in an image
