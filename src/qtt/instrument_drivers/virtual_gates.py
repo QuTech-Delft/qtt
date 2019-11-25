@@ -101,7 +101,6 @@ class VirtualGates(Instrument):
 
         """
         super().__init__(name, **kwargs)
-        self.name = name
         self.gates = gates_instr
         self._fast_readout = False
         if isinstance(crosscap_map, ordered_dict):
