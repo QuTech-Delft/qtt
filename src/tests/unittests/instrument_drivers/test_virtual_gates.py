@@ -50,9 +50,11 @@ class TestVirtualGates(unittest.TestCase):
         self.assertEqual(0.6, crosscap_matrix[0][1])
 
         vgates.set_distances(1.0 / np.arange(1, 5))
-        _ = vgates.to_dictionary()
-        pickled_virtual_gates = pickle.dumps(vgates)
-        pickle.loads(pickled_virtual_gates)
+        vgates_dictionary = vgates.to_dictionary()
+        vgates_new = VirtualGates.from_dictionary(vgates_dictionary, gates, 'new_vgates')
+        self.assertEqual(vgates_new.name, 'new_vgates')
+        self.assertEqual(vgates_new.pgates(), vgates.pgates())
+        vgates_new.close()
 
         v_gates = vgates.vgates() + ['vP4']
         p_gates = vgates.pgates() + ['P4']
