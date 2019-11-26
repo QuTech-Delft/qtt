@@ -231,7 +231,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
             return y
 
     lmfit_model = Model(gaussian_model)
-    lmfit_model.set_param_hint('amplitude', min=2)
+    lmfit_model.set_param_hint('amplitude', min=0)
     lmfit_result = lmfit_model.fit(
         y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)

@@ -1,7 +1,5 @@
 """ Mathematical functions and models """
 
-import warnings
-import operator
 import numpy as np
 import scipy
 import scipy.constants
