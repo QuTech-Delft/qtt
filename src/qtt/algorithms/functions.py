@@ -455,13 +455,21 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
     return dominant_frequency
 
 # %%
-#
 
 
 def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     """ Estimate initial parameters of a damped sine wave
 
     The damped sine wave is described in https://en.wikipedia.org/wiki/Damped_sine_wave.
+    This is a first estimate of the parameters, no numerical optimization is performed.
+
+    The amplitude is estimated from the minimum and maximum values of the data. The osciallation frequency using
+    the dominant frequency in the FFT of the signal. The phase of the signal is calculated based on the first
+    datapoint in the sequences and the other parameter estimates. Finally, the decay factor of the damped sine wave is 
+    determined by a heuristic rule.
+
+    Example:
+        >>> estimate_parameters_damped_sine_wave(np.arange(10), np.sin(np.arange(10)))
 
     Args:
         x_data (float): Independent data
