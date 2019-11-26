@@ -2,7 +2,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 import qtt
-from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
+from qtt.algorithms.functions import gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
     _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave
 
@@ -61,6 +61,11 @@ class TestFunctions(unittest.TestCase):
         y = logistic(0.0, 1.0, alpha=1.0)
         np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=6)
 
+    @staticmethod
+    def test_gaussian():
+        y = gaussian(np.array([0.0, 1., 2.]), 1.0, .2)
+        np.testing.assert_almost_equal(y, np.array([3.72665317e-06, 1.00000000e+00, 3.72665317e-06]), decimal=6)
+
     def test_Fermi(self):
         values = Fermi(np.array([0, 1, 2]), 0, 1, 2, kb=1)
         np.testing.assert_array_almost_equal(values, np.array([0.5, 0.37754067, 0.26894142]))
@@ -103,24 +108,6 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(estimated_parameters[0], 1., places=1)
         self.assertAlmostEqual(estimated_parameters[2], exact_frequency, places=1)
         self.assertAlmostEqual(estimated_parameters[-1], exact_offset, places=1)
-
-    def test_fit_gaussian_no_offset(self):
-        x_data = np.linspace(0, 10, 100)
-        gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
-        noise = np.random.rand(100) - .5
-        result_dict = qtt.algorithms.functions.fit_gaussian(x_data=x_data, y_data=(gauss_data + noise), estimate_offset=0)
-        np.testing.assert_array_almost_equal(result_dict['fitted_parameters'], np.array([4, 1, 5.]), decimal=1)
-        self.assertTrue(result_dict['reduced_chi_squared']< .2)
-
-    def test_fit_gaussian(self):
-        x_data = np.linspace(0, 10, 100)
-        gauss_data = 0.1 + gaussian(x_data, mean=4, std=1, amplitude=5)
-        noise = np.random.rand(100)-.5
-        [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise))
-        self.assertTrue(3.5 < mean < 4.5)
-        self.assertTrue(0.5 < s < 1.5)
-        self.assertTrue(4.5 < amplitude < 5.5)
-        self.assertAlmostEqual(offset, 0.1, places = 0)
 
     def test_cost_exp_decay(self):
         params = [0, 1, 1]
