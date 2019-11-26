@@ -3,11 +3,36 @@
 import unittest
 import numpy as np
 import matplotlib.pyplot as plt
-from qtt.algorithms.functions import FermiLinear, linear_function
-from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear
+import qtt
+from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian
+from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear, fit_double_gaussian, refit_double_gaussian
 
 
-class TestFitting(unittest.TestCase):
+class TestDoubleGaussianFitting(unittest.TestCase):
+
+    def test_refit_double_gaussian(self):
+        dataset = qtt.data.load_example_dataset('double_gaussian_dataset.json')
+        x_data = np.array(dataset.signal)
+        y_data = np.array(dataset.counts)
+
+        _, result_dict = fit_double_gaussian(x_data, y_data)
+        result_dict = refit_double_gaussian(result_dict, x_data, y_data)
+
+        self.assertAlmostEqual(result_dict['left'][0], -1.23, places=1)
+        self.assertAlmostEqual(result_dict['right'][0], -0.77, places=1)
+        self.assertAlmostEqual(result_dict['left'][2], 162.8, places=0)
+        self.assertAlmostEqual(result_dict['right'][2], 1971, places=-1)
+
+    def test_fit_double_gaussian(self):
+        x_data = np.arange(-4, 4, .05)
+        initial_parameters = [10, 20, 1, 1, -2, 2]
+        y_data = double_gaussian(x_data, initial_parameters)
+
+        fitted_parameters, _ = fit_double_gaussian(x_data, y_data)
+        parameter_diff = np.abs(fitted_parameters - initial_parameters)
+        self.assertTrue(np.all(parameter_diff < 1e-3))
+
+class TestFermiFitting(unittest.TestCase):
 
     def test_initial_estimate_fermi_linear(self, fig=None):
         expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
