@@ -60,6 +60,9 @@ except BaseException:
 
 # %%
 
+def is_spyder_environment():
+    """ Return True if the process is running in a Spyder environment """
+    return 'SPY_TESTING' in os.environ
 
 def get_module_versions(modules, verbose=0):
     """ Returns the module version of the given pip packages.
@@ -1021,7 +1024,7 @@ try:
                 notes = '\n' + extranotes + '\n' + notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
-        if isinstance(notes, qcodes.DataSet):
+        elif isinstance(notes, qcodes.DataSet):
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
         if not isinstance(notes, str):
@@ -1160,9 +1163,6 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         all_md = station.snapshot(update=False)['instruments']
         header = None
     else:
-        if 'station' not in dataset.metadata:
-            return 'dataset %s: no metadata available' % (str(dataset.location),)
-
         tmp = dataset.metadata.get('station', None)
         if tmp is None:
             all_md = {}

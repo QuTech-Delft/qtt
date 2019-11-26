@@ -1,9 +1,10 @@
+import os
+from inspect import getsourcefile
+from os.path import abspath
 import platform
 import re
-from importlib import import_module
 
 from setuptools import find_packages, setup
-from setuptools._vendor.packaging.version import Version, InvalidVersion
 
 
 def readme():
@@ -23,25 +24,37 @@ def get_version(verbose=1, filename='src/qtt/version.py'):
     return version
 
 
-extras = {
-    # name: (module_name, minversion, pip_name)
-    'scikit-image': ('skimage', '0.11', 'scikit-image'),
-    'pandas': ('pandas', '0.15', None),
-    'attrs': ('attr', '16.2.0', 'attrs'),
-    'h5py': ('h5py', '0.1', None),
-    'pyzmqrpc': ('zmqrpc', '1.5', None),
-    'pytables': ('tables', '3.2', None),
-    'apscheduler': ('apscheduler', '3.4', None),
-    'Polygon3': ('Polygon', '0.1', None),
-    'pyqt5': ('PyQt5', '0.11', 'pyqt5'),
-}
+tests_require = ['coverage', 'jupyter', 'mypy', 'pytest']
+
+install_requires = [
+    'apscheduler', 'attrs', 'dulwich', 'h5py', 'hickle', 'IPython>=0.1', 'lmfit', 'matplotlib>=3.0',
+    'numpy>=1.15', 'opencv-python', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.5.0',
+    'qcodes-contrib-drivers', 'qilib', 'qtpy', 'qupulse', 'redis', 'scipy>=0.18', 'scikit-image', 'jupyter',
+    'coverage', 'sympy'
+] + tests_require
 
 if platform.system() == 'Windows':
-    extras['pywin32'] = ('win32', '0.1', None)
+    install_requires.append('pywin32')
 
-extras_require = {k: '>='.join(v[0:2]) for k, v in extras.items()}
+if platform.python_version() < "3.7.0":
+    install_requires.append('Polygon3')
+else:
+    if platform.system() == 'Windows':
+        # When Polygon3 not yet in git-repository get it locally
+        file_path = abspath(getsourcefile(lambda: 0))
+        bin_dir = os.path.join(os.path.dirname(file_path), 'bin')
+        Polygon3_local = f'Polygon3 @ file://{bin_dir}/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
+        Polygon3_git = 'Polygon3 @ https://github.com/QuTech-Delft/qtt/bin/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'
+        Polygon3 = Polygon3_local
+    else:
+        Polygon3 = 'Polygon3'
+    install_requires.append(Polygon3)
 
-print('packages: %s' % find_packages())
+rtd_requires = [
+    'sphinx>=1.7', 'sphinx_rtd_theme', 'nbsphinx', 'sphinx-automodapi'
+]
+
+extras_require = {"rtd": rtd_requires}
 
 setup(name='qtt',
       version=get_version(),
@@ -66,51 +79,8 @@ setup(name='qtt',
       license='MIT',
       package_dir={'': 'src'},
       packages=find_packages(where='./src'),
-      install_requires=[
-          'matplotlib>=3.0', 'pandas', 'attrs', 'dulwich', 'qtpy', 'nose', 'hickle', 'pyzmqrpc',
-          'numpy>=1.15', 'scikit-image', 'IPython>=0.1', 'qcodes>=0.5.0', 'Polygon3',
-          'scipy', 'pyqtgraph', 'qupulse', 'PyQt5','apscheduler', 'qilib', 'dataclasses', 'lmfit'
-      ],
-      tests_require=['pytest'],
+      install_requires=install_requires,
+      tests_require=tests_require,
       extras_require=extras_require,
       zip_safe=False,
       )
-
-version_template = '''
-*****
-***** package {0} must be at least version {1}.
-***** Please upgrade it (pip install -U {0}) in order to use {2}
-*****
-'''
-
-missing_template = '''
-*****
-***** package {} not found
-***** Please install it in order to use {}
-*****
-'''
-
-invalid_version_template = '''
-*****
-***** package {0} has an invalid version: {1}
-*****
-'''
-
-# now test the versions of extras
-for extra, (module_name, min_version, pip_name) in extras.items():
-    try:
-        module = import_module(module_name)
-    except ImportError:
-        print(missing_template.format(module_name, extra))
-        continue
-
-    try:
-        fnd_version = Version(module.__version__)
-    except AttributeError:
-        # probably a package not providing the __version__ attribute
-        pass
-    except InvalidVersion:
-        print(invalid_version_template.format(module_name, module.__version__))
-    else:
-        if fnd_version < Version(min_version):
-            print(version_template.format(module_name, min_version, extra))
