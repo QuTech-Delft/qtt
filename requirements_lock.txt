@@ -83,7 +83,7 @@ pyzmq==18.1.0
 pyzmqrpc==2.0.0
 qcodes==0.7.0
 qcodes-contrib-drivers==0.3.0
-qilib==0.3.1
+qilib==0.3.2
 qtconsole==4.5.5
 QtPy==1.9.0
 qupulse==0.4
