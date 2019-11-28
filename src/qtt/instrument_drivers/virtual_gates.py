@@ -101,7 +101,6 @@ class VirtualGates(Instrument):
 
         """
         super().__init__(name, **kwargs)
-        self.name = name
         self.gates = gates_instr
         self._fast_readout = False
         if isinstance(crosscap_map, ordered_dict):
@@ -143,7 +142,7 @@ class VirtualGates(Instrument):
     def from_dictionary(vgdict, gates, name=None):
         """ Convert dictionary to virtual gate matrix object """
         if name is None:
-            name = qtt.measurements.scans.instrumentName(vgdict['name'])
+            name = qtt.measurements.scans.instrumentName(vgdict['_name'])
         pgates = vgdict['_gates_list']
         vgates = vgdict['_virts_list']
         virt_map = create_virtual_matrix_dict(vgates, pgates, c=vgdict['crosscap_matrix'], verbose=0)
