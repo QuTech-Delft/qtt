@@ -182,9 +182,7 @@ for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str  # type: ignore
 
 # make a qcodes instrument pickable
-qcodes.Instrument.__getstate__ = _copy_to_str  # type: ignore
 qcodes.Parameter.__getstate__ = _copy_to_str  # type: ignore
-qcodes.Instrument.__setstate__ = _setstate  # type: ignore
 qcodes.Parameter.__setstate__ = _setstate  # type: ignore
 
 
