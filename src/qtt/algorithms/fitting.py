@@ -13,7 +13,7 @@ from qcodes import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian
 
 def extract_lmfit_parameters(lmfit_model, lmfit_result):
-    """ Convert lmfit results to a dictionary 
+    """ Convert lmfit results to a dictionary
 
     Args:
         lmfit_model: Model that was fitted

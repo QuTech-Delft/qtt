@@ -71,7 +71,7 @@ def _cost_double_gaussian(x_data, y_data, params):
 
 def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     raise Exception('fit_double_gaussian was moved to qtt.algorithms.fitting')
-    
+
 
 def exp_function(x, a, b, c):
     """ Model for exponential function
