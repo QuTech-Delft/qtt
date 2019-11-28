@@ -116,7 +116,7 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     double_gaussian_model.set_param_hint('A_dn', min=0)
 
     param_names = double_gaussian_model.param_names
-    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=0)
+    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=False)
 
     par_fit = np.array([result.best_values[p] for p in param_names])
 
