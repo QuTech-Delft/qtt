@@ -465,7 +465,7 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
 
     The amplitude is estimated from the minimum and maximum values of the data. The osciallation frequency using
     the dominant frequency in the FFT of the signal. The phase of the signal is calculated based on the first
-    datapoint in the sequences and the other parameter estimates. Finally, the decay factor of the damped sine wave is 
+    datapoint in the sequences and the other parameter estimates. Finally, the decay factor of the damped sine wave is
     determined by a heuristic rule.
 
     Example:
