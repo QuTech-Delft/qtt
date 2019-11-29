@@ -225,7 +225,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
             y = gaussian(x, mean, sigma, amplitude, offset)
             return y
     else:
-        def gaussian_model(x, mean, sigma, amplitude):
+        def gaussian_model(x, mean, sigma, amplitude): # type: ignore
             """ Gaussian helper function for lmfit """
             y = gaussian(x, mean, sigma, amplitude)
             return y
