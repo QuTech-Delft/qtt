@@ -1265,7 +1265,7 @@ def get_sampling_frequency(instrument_handle):
         return instrument_handle.sample_rate
     try:
         import qcodes_contrib_drivers.drivers.Spectrum.M4i
-        if isinstance(instrument_handle, qcodes_contrib_drivers.drivers.Spectrum.M4i):
+        if isinstance(instrument_handle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i):
             return instrument_handle.sample_rate()
     except ImportError:
         pass
