@@ -1811,10 +1811,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     if device_parameters is None:
         device_parameters = {}
         
-    try:
-        is_m4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        is_m4i = False
+    is_m4i = _is_m4i(minstrhandle)
+    
     try:
         is_uhfli = isinstance(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
     except:
@@ -1948,6 +1946,22 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
 
     return alldata
 
+def _is_m4i(instrument):
+       
+    try:
+        is_m4i = isinstance(instrument, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+        if is_m4i:
+               warnings.warn('please use qcodes_contrib_drivers.drivers.Spectrum.M4i instead of qcodes.instrument_drivers.Spectrum.M4i.M4i)')
+               return is_m4i
+    except:
+        is_m4i = False
+    try:
+        import qcodes_contrib_drivers.drivers.Spectrum.M4i
+        is_m4i = isinstance(instrument, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i)
+    except:
+        is_m4i = False
+
+    return is_m4i
 
 def single_shot_readout(minstparams, length, shots, threshold=None):
     """Acquires several measurement traces, averages the signal over the entire trace for each shot and returns the proportion of shots that are above a defined threshold.
@@ -1964,8 +1978,8 @@ def single_shot_readout(minstparams, length, shots, threshold=None):
         allshots (array of floats): average signal of every shot taken
     """
     minstrhandle = minstparams['handle']
-    if not isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
-        raise (Exception('single shot readout is only supported for M4i digitizer'))
+    if not _is_m4i(minstrhandle):
+        raise Exception('single shot readout is only supported for M4i digitizer')
     read_ch = minstparams['read_ch']
     if isinstance(read_ch, int):
         read_ch = [read_ch]
