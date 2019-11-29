@@ -1812,7 +1812,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
         device_parameters = {}
         
     is_m4i = _is_m4i(minstrhandle)
-    
+
     try:
         is_uhfli = isinstance(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
     except:
@@ -1884,8 +1884,8 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         exepected_measurement_time = nsegments*period
         print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
 
-    ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+    ism4i = _is_m4i(minstrhandle)
+
     if average:
         data = measuresegment(waveform, nsegments,
                               minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation, 'trigger_re_arm_padding': trigger_re_arm_padding})
@@ -1947,7 +1947,6 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     return alldata
 
 def _is_m4i(instrument):
-       
     try:
         is_m4i = isinstance(instrument, qcodes.instrument_drivers.Spectrum.M4i.M4i)
         if is_m4i:
