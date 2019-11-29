@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import qtt
 from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian
-from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear, fit_double_gaussian, refit_double_gaussian, fit_gaussian
+from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear,\
+        fit_double_gaussian, refit_double_gaussian, fit_gaussian
 
 
 class TestDoubleGaussianFitting(unittest.TestCase):
