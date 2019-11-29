@@ -39,8 +39,9 @@ class TestGaussianFitting(unittest.TestCase):
         x_data = np.linspace(0, 10, 100)
         gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
         noise = np.random.rand(100) - .5
-        result_dict = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise), estimate_offset=0)
+        parameters, result_dict = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise), estimate_offset=0)
         np.testing.assert_array_almost_equal(result_dict['fitted_parameters'], np.array([4, 1, 5.]), decimal=1)
+        self.assertEqual(parameters, result_dict['fitted_parameters'])
         self.assertTrue(result_dict['reduced_chi_squared'] < .2)
 
     def test_fit_gaussian(self):
