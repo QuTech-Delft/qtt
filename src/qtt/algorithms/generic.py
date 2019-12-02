@@ -105,7 +105,7 @@ def subpixelmax(A, mpos, verbose=0):
 
     if verbose:
         print('subpixelmax: mp %d, pp %d\n' % (mp, pp))
-        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n', ay, by, cy)
+        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n' % (ay, by, cy))
 
     subpos = mpos + shift
 
