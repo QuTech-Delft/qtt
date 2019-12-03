@@ -12,7 +12,7 @@ class VirtualDACInstrumentAdapter(InstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument = VirtualDAC(self._name, instruments=[], gate_map={})
+        self._instrument = VirtualDAC(self._instrument_name, instruments=[], gate_map={})
         self._dac_adapters: Dict[str, VirtualDAC] = {}
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
