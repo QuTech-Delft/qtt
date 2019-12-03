@@ -13,8 +13,8 @@ class VirtualAwgInstrumentAdapter(InstrumentAdapter):
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
 
-        settings_instrument = SettingsInstrument(f'settings_{instrument_name}')
-        self._instrument: VirtualAwg = VirtualAwg(name=instrument_name, settings=settings_instrument)
+        settings_instrument = SettingsInstrument(f'settings_{self._instrument_name}')
+        self._instrument: VirtualAwg = VirtualAwg(name=self._instrument_name, settings=settings_instrument)
         self._adapters: Dict[str, InstrumentAdapter] = {}
 
     def apply(self, config: PythonJsonStructure) -> None:
