@@ -9,6 +9,7 @@ from lmfit import Model
 import qtt.pgeometry
 import qtt.utilities.tools
 from qtt.utilities.visualization import plot_vertical_line
+from qtt.algorithms.generic import subpixelmax
 
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
@@ -244,8 +245,14 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
 
     if remove_dc:
         w[0] = 0
+    w[freqs < 0] = 0
 
-    ff = freqs[np.argmax(np.abs(w))]
+    dominant_idx = np.argmax(np.abs(w))
+    dominant_frequency = freqs[dominant_idx]
+
+    if 0 < dominant_idx < freqs.size / 2 - 1:
+        dominant_idx_subpixel, _ = subpixelmax(np.abs(w), [dominant_idx])
+        dominant_frequency = np.interp(dominant_idx_subpixel, np.arange(freqs.size), freqs)[0]
 
     if fig:
         plt.figure(fig)
@@ -253,23 +260,33 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
         plt.plot(freqs, np.abs(w), '.b')
         plt.xlabel('Frequency')
         plt.ylabel('Abs of fft')
-        plot_vertical_line(ff)
-    return ff
+        plot_vertical_line(dominant_frequency, label='Dominant frequency')
+    return dominant_frequency
 
 # %%
-#
 
 
 def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     """ Estimate initial parameters of a damped sine wave
 
-    Also see: https://en.wikipedia.org/wiki/Damped_sine_wave
+    The damped sine wave is described in https://en.wikipedia.org/wiki/Damped_sine_wave.
+    This is a first estimate of the parameters, no numerical optimization is performed.
+
+    The amplitude is estimated from the minimum and maximum values of the data. The osciallation frequency using
+    the dominant frequency in the FFT of the signal. The phase of the signal is calculated based on the first
+    datapoint in the sequences and the other parameter estimates. Finally, the decay factor of the damped sine wave is
+    determined by a heuristic rule.
+
+    Example:
+        >>> estimate_parameters_damped_sine_wave(np.arange(10), np.sin(np.arange(10)))
 
     Args:
-        exponent: Exponent from the exponential decay factor
+        x_data (float): Independent data
+        y_data (float): Dependent data
+        exponent (float): Exponent from the exponential decay factor
 
     Returns:
-        Estimated parameters for gauss_ramsey method
+        Estimated parameters for damped sine wave (see the gauss_ramsey method)
     """
     A = (np.max(y_data) - np.min(y_data)) / 2
     B = (np.min(y_data) + A)
@@ -282,16 +299,19 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     decay_factor = (mean_left + laplace_factor) / (mean_right + laplace_factor)
 
     duration = x_data[-1] - x_data[0]
-    sample_rate = x_data.size / duration
-    ramseyfreq = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
+    sample_rate = (x_data.size - 1) / duration
+    frequency = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
+
     if A == 0:
         angle = 0
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
-        angle = -np.arcsin(n_start)
+        angle_first_datapoint = -np.arcsin(n_start)
+        angle = angle_first_datapoint + 2 * np.pi * frequency * x_data[0]
+        angle = np.mod(np.pi + angle, 2 * np.pi) - np.pi
     t2s = 2 * duration / decay_factor
 
-    initial_params = np.array([A, t2s, ramseyfreq, angle, B])
+    initial_params = np.array([A, t2s, frequency, angle, B])
     return initial_params
 
 
