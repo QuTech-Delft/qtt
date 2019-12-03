@@ -12,6 +12,7 @@ import qtt.pgeometry
 from qcodes import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian
 
+
 def extract_lmfit_parameters(lmfit_model, lmfit_result):
     """ Convert lmfit results to a dictionary
 
@@ -30,12 +31,14 @@ def extract_lmfit_parameters(lmfit_model, lmfit_result):
                'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name, 'fitted_parameter_dictionary': lmfit_result.best_values}
     return results
 
+
 def _integral(x_data, y_data):
     """ Calculate integral of function """
     d_xdata = np.diff(x_data)
     d_xdata = np.hstack([d_xdata, d_xdata[-1]])
     data_integral = np.sum(d_xdata * y_data)
     return data_integral
+
 
 def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     """ Estimate of double gaussian model parameters."""
@@ -68,6 +71,7 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
         mean_right = np.sum(x_data_right * data_right) / np.sum(data_right)
     initial_params = np.array([amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
     return initial_params
+
 
 def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     """ Fitting of double gaussian
@@ -134,8 +138,10 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
 
     return par_fit, result_dict
 
+
 def _double_gaussian_parameters(gauss_left, gauss_right):
     return np.vstack((gauss_left[::-1], gauss_right[::-1])).T.flatten()
+
 
 def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_threshold=8):
     """ Improve fit of double Gaussian by estimating the initial parameters based on an existing fit
@@ -176,6 +182,7 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
             result_dict = result_dict_refit
     return result_dict
 
+
 def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
@@ -188,6 +195,7 @@ def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
     else:
         initial_parameters = np.array([mean, s, amplitude])
     return initial_parameters
+
 
 def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
@@ -225,7 +233,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
             y = gaussian(x, mean, sigma, amplitude, offset)
             return y
     else:
-        def gaussian_model(x, mean, sigma, amplitude): # type: ignore
+        def gaussian_model(x, mean, sigma, amplitude):  # type: ignore
             """ Gaussian helper function for lmfit """
             y = gaussian(x, mean, sigma, amplitude)
             return y
@@ -429,7 +437,8 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
         fitting_results = lmfit_results.fit_report()
         fitted_parameters = np.array([lmfit_results.best_values[p] for p in gmodel.param_names])
     else:
-        fitting_results = scipy.optimize.curve_fit(fermi_linear_fitting_function, x_data, y_data, p0=initial_parameters)
+        fitting_results = scipy.optimize.curve_fit(
+            fermi_linear_fitting_function, x_data, y_data, p0=initial_parameters)
         fitted_parameters = fitting_results[0]
 
     results = dict({'fitted_parameters': fitted_parameters, 'pp': fitting_results,

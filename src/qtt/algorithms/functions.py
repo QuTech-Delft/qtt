@@ -10,6 +10,7 @@ import qtt.pgeometry
 import qtt.utilities.tools
 from qtt.utilities.visualization import plot_vertical_line
 
+
 def gaussian(x, mean, std, amplitude=1, offset=0):
     """ Model for Gaussian function
 
@@ -24,6 +25,7 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
     """
     y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * std * std))
     return y
+
 
 def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
     raise Exception('The fit_gaussian method has moved to qtt.algorithms.fitting')
