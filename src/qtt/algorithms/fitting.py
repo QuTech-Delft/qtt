@@ -50,10 +50,10 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
 
     amplitude_left = np.max(data_left)
     amplitude_right = np.max(data_right)
-    sigma_left = (maxsignal - minsignal) * 1 / 20
-    sigma_right = (maxsignal - minsignal) * 1 / 20
 
     if fast_estimate:
+        sigma_left = (maxsignal - minsignal) * 1 / 20
+        sigma_right = (maxsignal - minsignal) * 1 / 20
         alpha = .1
         mean_left = minsignal + (alpha) * (maxsignal - minsignal)
         mean_right = minsignal + (1 - alpha) * (maxsignal - minsignal)

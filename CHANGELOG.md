@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add update model for markov chains (#592).
 - Implement signal processor and signal processor interface (#556).
 - Virtual gate scans with overlapping gates (#626).
+- Fitting of Gaussian using lmfit (#686)
+- Method to convert lmfit fitting result to dictionary (#686)
 
 ### Changed
 - makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
@@ -73,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enable all output channels for virtual awg in videomode (#644).
 - Refactor parameterviewer; remove default min max values for parameters (#570).
 - Refactor part of the RTS code (#577).
+- Moved fit_gaussian to fitting module (#686)
 
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).
