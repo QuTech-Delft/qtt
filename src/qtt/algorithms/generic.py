@@ -1,6 +1,7 @@
 """ Various functions """
 
 import warnings
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
@@ -64,20 +65,23 @@ def localMaxima(arr, radius=1, thr=None):
 def subpixelmax(A, mpos, verbose=0):
     """ Calculate maximum position with subpixel accuracy
 
+    For each position specified by mpos this method fits a parabola through 3 points and calculates the
+    maximum position of the parabola.
+
     Args:
-        A (1D array):
-        mpos (array with integer indicess):
-        verbose (int):
+        A (1D array): Input data
+        mpos (array with integer indices): Positions in the array A with maxima
+        verbose (int): Verbosity level
 
     Returns:
-        subpos (array with subpixel positions):
-        subval (array):
+        subpos (array): Array with subpixel positions
+        subval (array): Values at maximum positions
     """
 
     A = np.array(A)
+    mpos = np.array(mpos)
     if np.array(mpos).size == 0:
         # corner case
-        import copy
         subpos = copy.copy(mpos)
         return subpos, []
 
@@ -93,13 +97,16 @@ def subpixelmax(A, mpos, verbose=0):
     cy = val
     ay = (valm + valp) / 2 - cy
     by = ay + cy - valm
-    shift = -by / (2 * ay)  # Maxima of quadradic
+
+    if np.any(ay == 0):
+        shift = 0 * ay
+    else:
+        shift = -by / (2 * ay)  # Maxima of quadradic
 
     if verbose:
-        print('subpixelmax: mp %d, pp %d\n', mp, pp)
-        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n', ay, by, cy)
+        print('subpixelmax: mp %d, pp %d\n' % (mp, pp))
+        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n' % (ay, by, cy))
 
-    shift[ay == 0] = 0  # fix for flat areas
     subpos = mpos + shift
 
     subval = ay * shift * shift + by * shift + cy
@@ -368,7 +375,7 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
     # improve estimate by taking a local average
     valr = pgeometry.rot2D(np.pi / 2).dot(val.reshape((2, 1)))
     sidesteps = np.arange(-6, 6.01, 3).reshape((-1, 1)) * \
-                np.matrix(valr.reshape((1, 2)))
+        np.matrix(valr.reshape((1, 2)))
     pts = ptx + .5 * np.array(sidesteps)
     ptsf = ptxf + resizefactor * sidesteps
     valx = np.array([getValuePixel(flow, p) for p in ptsf])
@@ -413,45 +420,6 @@ def show2Dimage(im, dd, **kwargs):
     """
     _ = show2D(dd, im=im, **kwargs)
     return None
-
-    # try:
-    #     extentImage, xdata, ydata, imdummy = get2Ddata(
-    #         dd, fastscan=False, verbose=0, fig=None, midx=midx)
-    #     mdata = dd
-    # except:
-    #     extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-    #         dd, arrayname=None)
-    #     extentImage = [vsweep[0], vsweep[-1], vstep[-1],
-    #                    vstep[0]]  # matplotlib extent style
-    #     mdata = dd.metadata
-    #
-    # pgeometry.cfigure(fig, facecolor=facecolor)
-    # plt.clf()
-    # if verbose >= 2:
-    #     print('show2D: show image')
-    # imh = plt.imshow(im, extent=extent2fullextent(
-    #     extentImage, im), interpolation='nearest')
-    # # imh=plt.imshow(im, extent=xx, interpolation='nearest')
-    # if units is not None:
-    #     if 'stepdata' in mdata:
-    #         plt.xlabel('%s (%s)' % (dd['sweepdata']['gates'][0], units))
-    #         plt.ylabel('%s (%s)' % (dd['stepdata']['gates'][0], units))
-    # else:
-    #     if 'stepdata' in mdata:
-    #         plt.xlabel('%s' % dd['sweepdata']['gates'][0])
-    #         plt.ylabel('%s' % dd['stepdata']['gates'][0])
-    # if not title is None:
-    #     plt.title(title)
-    # if colorbar:
-    #     plt.colorbar()
-    # if verbose >= 2:
-    #     print('show2D: at show')
-    # try:
-    #     plt.show(block=False)
-    # except:
-    #     # ipython backend does not know about block keyword...
-    #     plt.show()
-    # return extentImage
 
 
 def getValuePixel(imx, pt):
