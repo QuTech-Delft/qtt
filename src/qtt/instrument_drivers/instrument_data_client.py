@@ -30,7 +30,7 @@ class InstrumentDataClient(Instrument):
                           sec_time_out=3):
         try:
             return self._client_.invoke(command_name, params, sec_time_out)
-        except:
+        except Exception:
             return default_value
 
     def add_measurable_quantity(self, name='quantity', unit='arb.',
