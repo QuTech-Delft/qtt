@@ -1,7 +1,7 @@
 import sys
 from functools import partial
 
-from qtt.instrument_drivers.BlueforsMonitorApp import BlueforsApp, FridgeDataSender
+from qtt.instrument_drivers.BlueforsMonitorApp import BlueforsApp
 from qtt.instrument_drivers.DistributedInstrument import InstrumentDataClient
 
 # -----------------------------------------------------------------------------
