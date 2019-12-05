@@ -69,9 +69,9 @@ class TestFunctions(unittest.TestCase):
         y = logistic(0.0, 1.0, alpha=1.0)
         np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=6)
 
-    @staticmethod
-    def test_gaussian():
+    def test_gaussian(self):
         y = gaussian(np.array([0.0, 1., 2.]), 1.0, .2)
+        self.assertIsInstance(y, np.ndarray)
         np.testing.assert_almost_equal(y, np.array([3.72665317e-06, 1.00000000e+00, 3.72665317e-06]), decimal=6)
 
     def test_Fermi(self):
