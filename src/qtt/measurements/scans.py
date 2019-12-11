@@ -22,7 +22,6 @@ from qcodes import DataArray, Instrument
 from qcodes.instrument.parameter import Parameter, StandardParameter
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
-import qcodes_contrib_drivers
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
@@ -39,6 +38,11 @@ from qtt.data import uniqueArrayName
 
 from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
+
+try:
+    import qcodes_contrib_drivers.drivers.Spectrum.M4i
+except Exception:
+    qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i = None
 
 # %%
 
@@ -1266,7 +1270,6 @@ def get_sampling_frequency(instrument_handle):
     if isinstance(instrument_handle, AcquisitionScopeInterface):
         return instrument_handle.sample_rate
     try:
-        import qcodes_contrib_drivers.drivers.Spectrum.M4i
         if isinstance(instrument_handle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i):
             return instrument_handle.sample_rate()
     except ImportError:
@@ -1815,8 +1818,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
 
     is_m4i = _is_measurement_device(minstrhandle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i)
     is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
-    is_simulator = _is_measurement_device(minstrhandle, SimulationDigitizer)
     is_scope_reader = _is_measurement_device(minstrhandle, AcquisitionScopeInterface)
+    is_simulator = _is_measurement_device(minstrhandle, SimulationDigitizer)
 
     measure_instrument = get_instrument(minstrhandle)
 
