@@ -39,11 +39,6 @@ from qtt.data import uniqueArrayName
 from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
 
-try:
-    import qcodes_contrib_drivers.drivers.Spectrum.M4i
-except Exception:
-    qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i = None
-
 # %%
 
 
@@ -1816,7 +1811,7 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     if device_parameters is None:
         device_parameters = {}
 
-    is_m4i = _is_measurement_device(minstrhandle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i)
+    is_m4i = _is_m4i(minstrhandle)
     is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
     is_scope_reader = _is_measurement_device(minstrhandle, AcquisitionScopeInterface)
     is_simulator = _is_measurement_device(minstrhandle, SimulationDigitizer)
@@ -1884,19 +1879,19 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         exepected_measurement_time = nsegments*period
         print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
 
-    has_m4i = _is_measurement_device(minstrhandle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i)
+    is_m4i = _is_m4i(minstrhandle)
 
     if average:
         data = measuresegment(waveform, nsegments,
                               minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation, 'trigger_re_arm_padding': trigger_re_arm_padding})
-        if has_m4i:
+        if is_m4i:
             segment_time = np.arange(0., len(data[0])) / minstrhandle.exact_sample_rate()
         else:
             segment_time = np.linspace(0, period, len(data[0]))
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
                                      xunit='s', location=location, loc_record={'label': 'acquire_segments'})
     else:
-        if has_m4i:
+        if is_m4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
                 minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2, trigger_re_arm_compensation = trigger_re_arm_compensation)
 
@@ -1947,6 +1942,16 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     return alldata
 
 
+def _is_m4i(instrument_handle: Any) -> bool:
+    """ Returns True if the instrument handle is an M4i instance, else False."""
+    try:
+        from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
+    except Exception:
+        return False
+
+    return _is_measurement_device(instrument_handle, M4i)
+
+
 def _is_measurement_device(instrument_handle: Any, class_type: Type) -> bool:
     """ Returns True if the instrument handle is of the given type, else False.
 
@@ -1984,9 +1989,10 @@ def single_shot_readout(minstparams, length, shots, threshold=None):
         allshots (array of floats): average signal of every shot taken
     """
     minstrhandle = minstparams['handle']
-    is_m4i = _is_measurement_device(minstrhandle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i)
+    is_m4i = _is_m4i(minstrhandle)
     if not is_m4i:
         raise Exception('single shot readout is only supported for M4i digitizer')
+
     read_ch = minstparams['read_ch']
     if isinstance(read_ch, int):
         read_ch = [read_ch]
@@ -2339,17 +2345,12 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     else:
         sweepranges = [sweepdata['range'], stepdata['range']]
 
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    if ism4i:
-        samp_freq = minstrhandle.sample_rate()
-        resolution[0] = np.ceil(resolution[0] / 16) * 16
-    else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % minstrhandle)
+    is_m4i = _is_m4i(minstrhandle)
+    if not is_m4i:
+        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+
+    samp_freq = minstrhandle.sample_rate()
+    resolution[0] = np.ceil(resolution[0] / 16) * 16
 
     if scanjob['scantype'] == 'scan2Dturbo':
         sweepgates = [sweepdata['param'].name, stepdata['param'].name]
