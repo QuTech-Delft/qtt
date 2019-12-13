@@ -1957,7 +1957,7 @@ def _is_measurement_device(instrument_handle: Any, class_type: Type) -> bool:
 
         This function checks whether the given handle is of the correct instrument type.
         All error's are catched related to importing of not installed drivers or instruments
-        which are note connected.
+        which are not connected.
 
         Args:
             instrument_handle: An measurement device instance.
