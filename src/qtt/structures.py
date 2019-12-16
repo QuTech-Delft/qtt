@@ -347,6 +347,15 @@ class sensingdot_t:
             qtt.measurements.scans.plotData(alldata, fig=fig)
         return alldata
 
+    def _select_results(self, goodpeaks):
+            if len(goodpeaks) > 0:
+                self.sdval[1] = float(goodpeaks[0]['xhalfl'])
+                self.targetvalue = float(goodpeaks[0]['yhalfl'])
+                self._selected_peak = goodpeaks[0]
+            else:
+                self._selected_peak = None
+                raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
+
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, step=-2.,
                  max_wait_time=1., scanrange=300, add_slopes=False):
         """ Automatically determine optimal value of plunger """
@@ -481,13 +490,7 @@ class sensingdot_t:
 
         goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig, invert=invert)
 
-        if len(goodpeaks) > 0:
-            self.sdval[1] = float(goodpeaks[0]['xhalfl'])
-            self.targetvalue = float(goodpeaks[0]['yhalfl'])
-            self._selected_peak = goodpeaks[0]
-        else:
-            self._selected_peak = None
-            raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
+        self._select_results(goodpeaks)
 
         if self.verbose:
             print('sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
