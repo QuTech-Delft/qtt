@@ -371,11 +371,7 @@ class sensingdot_t:
         alldata = sd._measurement_post_processing(alldata)
         goodpeaks = sd._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
-        if len(goodpeaks) > 0:
-            sd.sdval[1] = goodpeaks[0]['xhalfl']
-            sd.targetvalue = goodpeaks[0]['yhalfl']
-        else:
-            print('autoTune: could not find good peak')
+        sd._select_results(goodpeaks)
 
         if sd.verbose:
             print('sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
