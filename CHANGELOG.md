@@ -4,9 +4,9 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2019-12-16
+## \[1.2.0] - 2019-12-17
 
-## [1.1.3] - Unreleased
+## \[1.1.3] - Unreleased
 
 ### Added
 - Added boxcar filter to algorithms (#597).
@@ -102,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VirtualDacInstrumentAdapter needs to set instead of append instruments (#605).
 - Fixes for transition of m4i to qcodes contrib (#692). 
 
-## [1.1.2] - 2019-04-12
+## \[1.1.2] - 2019-04-12
 
 ### Added
 - Added normalization function to virtual gate matrix (#465).
@@ -120,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the installation instructions (#546, #547).
 - Fixed the parameter viewer (#449).
 
-## [1.1.0] - 2018-09-08
+## \[1.1.0] - 2018-09-08
 
 ### Added
 - Added example notebook for awg_to_plunger (#424).
