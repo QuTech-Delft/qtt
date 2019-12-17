@@ -4,10 +4,9 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-...
+## [1.2.0] - 2019-12-16
 
-## [1.1.3] - 2019-10-18
+## [1.1.3] - Unreleased
 
 ### Added
 - Added boxcar filter to algorithms (#597).
@@ -80,9 +79,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 - loadExperimentData and saveExperimentData are now deprecated functions (#581).
 
-### Removed
-...
-
 ### Fixed
 - Fixed virtual AWG marker on the same channel (#599).
 - Fixed the readthedocs build (#590).
@@ -104,9 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix qilib for readthedocs build (#624).
 - Fix coulomb example notebook (#619).
 - VirtualDacInstrumentAdapter needs to set instead of append instruments (#605).
-
-### Security
-...
+- Fixes for transition of m4i to qcodes contrib (#692). 
 
 ## [1.1.2] - 2019-04-12
 
@@ -163,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed problems with the scan2Dturbo function (#423).
 - Fixed parameter in widget (#384).
 
-[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.1.2...HEAD
+[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/QuTech-Delft/qtt/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/QuTech-Delft/qtt/compare/v1.1.0...1.1.2
 [1.1.0]: https://github.com/QuTech-Delft/qtt/releases/v1.1.0
