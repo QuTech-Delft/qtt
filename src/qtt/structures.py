@@ -428,7 +428,7 @@ class sensingdot_t:
 
         return dataset
 
-    def fastTune(self, Naverage=90, sweeprange=79, period=.5e-3, location=None,
+    def fastTune(self, Naverage=90, sweeprange=79, period=1e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, invert=False, verbose=1):
         """ Fast tuning of the sensing dot plunger.
 
@@ -464,6 +464,7 @@ class sensingdot_t:
                 scanjob['sweepdata'] = {'param': gate, 'start': cc -
                                         sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
 
+            scanjob['sweepdata']['period']=period
             scanjob['minstrument'] = channel
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
