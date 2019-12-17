@@ -32,7 +32,7 @@ $ sudo apt install git gcc python3.7 python3.7-venv python3.7-dev
 for Python 3.7.x. Other Linux distributions require similar steps.
 
 ### Setting up a virtual environment
-To create a clean virtual Python environment for your qtt development do:
+To create a clean virtual Python environment for your QTT development do:
 ```
 $ mkdir qtt
 $ cd qtt
@@ -48,7 +48,7 @@ or use the python3.7 equivalent to generate a python 3.7 environment.
 On Windows do:
 ```
 $ python -m venv env
-$ env/Scripts/activate.bat
+$ env\Scripts\activate.bat
 ```
 Now we are ready to install QTT.
 ### Installation from Pypi
@@ -57,8 +57,8 @@ To use QTT, install it as a pip package:
 $ pip install qtt
 ```
 ### Installing from source
-For QTT development we advice to install from source. The source for qtt can be found at Github.
-For the default installation from the qtt source directory execute:
+For QTT development we advice to install from source. The source for QTT can be found at Github.
+For the default installation from the QTT source directory execute:
 ```
 $ git clone https://github.com/QuTech-Delft/qtt.git
 $ cd qtt
@@ -77,6 +77,13 @@ $ pip install -e . -r requirements_lock.txt
 ```
 This will install a tested set of all the packages QTT depends on.
 
+### Testing
+
+Tests for the QTT packages are contained in the subdirectory `tests`. To run the tests run the following command:
+
+```
+$ pytest
+```
 ### Installing for generating documentation
 To install the necessary packages to perform documentation activities for QTT do:
 ```
@@ -97,7 +104,10 @@ repository.
 
 ### Updating QTT
 
-If you registered qtt with Python via `setup.py develop`, all you need to do to get the latest code is open a terminal window pointing to anywhere inside the repository and run `git pull`
+To update QTT do:
+```
+$ pip install . --upgrade
+```
 
 ## Usage
 
@@ -114,14 +124,6 @@ If you use [Spyder](https://github.com/spyder-ide/spyder) then use the following
 ## Contributing
 
 See [Contributing](CONTRIBUTING.md) for information about bug/issue reports, contributing code, style, and testing
-
-## Testing
-
-Tests for the qtt packages are contained in the subdirectory `tests`. To run the tests install the `unittest` package
-and run the following command:
-```
-$ pytest
-```
 
 ## License
 
