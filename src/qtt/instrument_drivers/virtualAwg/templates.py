@@ -1,4 +1,4 @@
-from qupulse.pulses import TablePT
+from qupulse.pulses import TablePT, FunctionPT
 
 
 class DataTypes:
@@ -8,6 +8,22 @@ class DataTypes:
 
 
 class Templates:
+
+    @staticmethod
+    def chirp(name):
+        """ Creates a chirp signal
+
+        Args:
+            name (str): The user defined name of the pulse template.
+
+        Returns:
+            FunctionPT: The pulse template with the chirp signal.
+                     Parameters of the pulse template are the `duration` (in the same unit as time),
+                     `omega_0` (in Hz), `delta_omega` (in Hz), `amplitude` and `phase`. Time is in ns.
+                     """
+        linear_chirp_template = FunctionPT('amplitude*cos(2*pi*(omega_0+(t/(2*duration))*delta_omega) *t*1e-9+phase)', 'duration', channel=name)
+        linear_chirp_template.__doc__='Template for linear chirp\nAlso see https://en.wikipedia.org/wiki/Chirp\n\n'+linear_chirp_template.__doc__
+        return linear_chirp_template
 
     @staticmethod
     def square(name):

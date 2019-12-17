@@ -26,11 +26,11 @@ import qcodes
 from qcodes import Instrument
 
 import qtt
-from qtt.instrument_drivers.gates import VirtualDAC as virtual_gates
+from qtt.instrument_drivers.gates import VirtualDAC
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer, SimulationAWG
 from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
 from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
-from qtt.simulation.dotsystem import DotSystem, GateTransform
+from qtt.simulation.dotsystem import GateTransform
 from qtt.simulation.dotsystem import OneDot
 from qtt.structures import onedot_t
 
@@ -164,7 +164,7 @@ class DotModel(Instrument):
                 self._data[instr] = dict()
             g = instr + '_amplitude'
             self.add_parameter(g,
-                               label='Amplitude (pA)'.format(g),
+                               label=f'Amplitude {g} (pA)',
                                get_cmd=partial(getattr(self, instr + '_get'), 'amplitude'),
                                )
 
@@ -262,12 +262,6 @@ class DotModel(Instrument):
                 setattr(ds, k, val)
         gatevalues = [float(tv[k]) for k in sorted(tv.keys())]
         ret = ds.calculate_ground_state(gatevalues)
-        if 0:
-            for k, val in tv.items():
-                setattr(ds, k, val)
-            ds.makeHsparse()
-            ds.solveH(usediag=usediag)
-            ret = ds.OCC
 
         sd1 = (1 / np.sum(self.sensingdot1_distance)) * (ret * self.sensingdot1_distance).sum()
         sd2 = (1 / np.sum(self.sensingdot2_distance)) * (ret * self.sensingdot2_distance).sum()
@@ -405,7 +399,7 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
     ivvis = []
     for ii in range(model.nr_ivvi):
         ivvis.append(VirtualIVVI(name='ivvi%d' % (ii + 1), model=model))
-    gates = virtual_gates(name='gates', gate_map=gate_map, instruments=ivvis)
+    gates = VirtualDAC(name='gates', gate_map=gate_map, instruments=ivvis)
     gates.set_boundaries(gate_boundaries(gate_map))
 
     logger.info('initialize: set values on gates')
@@ -430,7 +424,7 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
 
     logger.info('initialize: create station')
     station = qcodes.Station(gates, keithley1, keithley3, keithley4, *ivvis,
-                             vawg, digitizer, update_snapshot=False)
+                             vawg, digitizer, model, update_snapshot=False)
     station.awg = station.vawg
     station.metadata['sample'] = 'virtual_dot'
     station.model = model

@@ -1,24 +1,41 @@
 """ Utilities to work with data and datasets """
 
-import numpy as np
-import unittest
-import scipy
-import os
-import sys
-import time
-import qcodes
 import datetime
-import warnings
-import pickle
 import logging
+import os
+import pickle
+from functools import wraps
+from typing import Optional
+
 import matplotlib.pyplot as plt
-
-from qcodes import DataArray, new_data
-from qtt import pgeometry
-import qtt.algorithms.generic
-
-from qcodes import DataSet
+import numpy as np
+import qcodes
+import scipy
+from qcodes import new_data
+from qcodes.data.data_array import DataArray
+from qcodes.data.data_set import DataSet
 from qcodes.plots.qcmatplotlib import MatPlot
+
+import qtt.algorithms.generic
+import qtt.utilities.json_serializer
+from qtt import pgeometry
+
+logger = logging.getLogger(__name__)
+
+
+def load_example_dataset(filename, verbose = 0):
+    """ Return an example dataset from qtt
+
+    Args:
+        filename: Name of the dataset
+        verbose: Verbosity level
+    Returns:
+        Example dataset or None of no dataset can be found
+    """
+    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
+
+    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose = verbose)
+    return dataset
 
 
 def _data_array_to_dictionary(data_array, include_data=True):
@@ -36,7 +53,7 @@ def _data_array_to_dictionary(data_array, include_data=True):
         keys.append('ndarray')
 
     data_dictionary = {key: getattr(data_array, key) for key in keys}
-    data_dictionary['set_arrays'] = tuple((array.array_id) for array in data_array.set_arrays)
+    data_dictionary['set_arrays'] = tuple(array.array_id for array in data_array.set_arrays)
 
     return data_dictionary
 
@@ -134,7 +151,8 @@ def get_dataset(dataset_handle):
 def load_dataset(location, io=None, verbose=0):
     """ Load a dataset from storage
 
-    An attempt is made to automatically detect the formatter. Supported are currently GNUPlotFormat and HDF5Format
+    An attempt is made to automatically detect the formatter. Supported are currently qcodes GNUPlotFormat,
+    qcodes HDF5Format and json format.
 
     Args:
         location (str): either the relative or full location
@@ -147,11 +165,9 @@ def load_dataset(location, io=None, verbose=0):
         io = qcodes.DataSet.default_io
     formatters = [qcodes.DataSet.default_formatter]
 
-    try:
-        from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
-        formatters += [HDF5FormatHickle()]
-    except BaseException:
-        pass
+    from qcodes.data.hdf5_format import HDF5FormatMetadata
+    from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
+    formatters += [HDF5FormatHickle(), HDF5FormatMetadata()]
 
     from qcodes.data.hdf5_format import HDF5Format
     formatters += [HDF5Format()]
@@ -160,68 +176,45 @@ def load_dataset(location, io=None, verbose=0):
     formatters += [GNUPlotFormat()]
 
     data = None
-    for ii, hformatter in enumerate(formatters):
-        try:
-            if verbose:
-                print('%d: %s' % (ii, hformatter))
-            data = qcodes.load_data(location, formatter=hformatter, io=io)
-            if len(data.arrays) == 0:
-                data = None
-                raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
-            logging.debug('load_data: loaded %s with %s' % (location, hformatter))
-        except Exception as ex:
-            logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
-            if verbose:
-                print(ex)
-            pass
-        finally:
-            if data is not None:
-                if isinstance(hformatter, GNUPlotFormat):
-                    # workaround for bug in GNUPlotFormat not saving the units
-                    if '__dataset_metadata' in data.metadata:
-                        dataset_meta = data.metadata['__dataset_metadata']
-                        for key, array_metadata in dataset_meta['arrays'].items():
-                            if key in data.arrays:
-                                if data.arrays[key].unit is None:
-                                    if verbose:
-                                        print('load_dataset: updating unit for %s' % key)
-                                    data.arrays[key].unit = array_metadata['unit']
 
+    if location.endswith('.json'):
+        dataset_dictionary = qtt.utilities.json_serializer.load_json(location)
+        data = qtt.data.dictionary_to_dataset(dataset_dictionary)
+    else:
+        # assume we have a QCoDeS dataset
+        for ii, hformatter in enumerate(formatters):
+            try:
                 if verbose:
-                    print('succes with formatter %s' % hformatter)
-                break
+                    print('%d: %s' % (ii, hformatter))
+                data = qcodes.load_data(location, formatter=hformatter, io=io)
+                if len(data.arrays) == 0:
+                    data = None
+                    raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
+                logging.debug('load_data: loaded %s with %s' % (location, hformatter))
+            except Exception as ex:
+                logging.info('load_data: location %s: failed for formatter %d: %s' % (location, ii, hformatter))
+                if verbose:
+                    print(ex)
+            finally:
+                if data is not None:
+                    if isinstance(hformatter, GNUPlotFormat):
+                        # workaround for bug in GNUPlotFormat not saving the units
+                        if '__dataset_metadata' in data.metadata:
+                            dataset_meta = data.metadata['__dataset_metadata']
+                            for key, array_metadata in dataset_meta['arrays'].items():
+                                if key in data.arrays:
+                                    if data.arrays[key].unit is None:
+                                        if verbose:
+                                            print('load_dataset: updating unit for %s' % key)
+                                        data.arrays[key].unit = array_metadata['unit']
+
+                    if verbose:
+                        print('succes with formatter %s' % hformatter)
+                    break
     if verbose:
         if data is None:
             print('could not load data from %s, returning None' % location)
     return data
-
-
-def test_load_dataset(verbose=0):
-    import tempfile
-    h = qcodes.data.hdf5_format.HDF5Format()
-    g = qcodes.data.gnuplot_format.GNUPlotFormat()
-
-    io = qcodes.data.io.DiskIO(tempfile.mkdtemp())
-    dd = []
-    name = qcodes.DataSet.location_provider.base_record['name']
-    for jj, fmt in enumerate([g, h]):
-        ds = qcodes.tests.data_mocks.DataSet2D(name='format%d' % jj)
-        ds.formatter = fmt
-        ds.io = io
-        ds.add_metadata({'1': 1, '2': [2, 'x'], 'np': np.array([1, 2.])})
-        ds.write(write_metadata=True)
-        dd.append(ds.location)
-        time.sleep(.1)
-    qcodes.DataSet.location_provider.base_record['name'] = name
-
-    for ii, location in enumerate(dd):
-        if verbose:
-            print('load %s' % location)
-        r = load_dataset(location, io=io)
-        if verbose:
-            print(r)
-
-# %%
 
 
 def default_setpoint_array(dataset, measured_name='measured'):
@@ -231,7 +224,6 @@ def default_setpoint_array(dataset, measured_name='measured'):
 
 
 # %% Monkey patch qcodes to store latest dataset
-from functools import wraps
 
 
 @qtt.utilities.tools.deprecated
@@ -245,6 +237,7 @@ def store_latest_decorator(function, obj):
         ds = function(*args, **kwargs)
         obj._latest = ds  # store the latest result
         return ds
+
     wrapper._special = 'yes'
     return wrapper
 
@@ -270,37 +263,12 @@ def add_comment(txt, dataset=None, verbose=0):
                 pass
         else:
             raise NotImplementedError('dataset not specified and _latest_datasets not available')
-            dataset = qcodes.DataSet._latest
     if dataset is None:
         raise Exception('no DataSet to add comments to')
 
     dataset.add_metadata({'comment': txt})
     if verbose:
         print('added comments to DataSet %s' % dataset.location)
-
-
-def test_add_comment():
-    import qcodes.tests.data_mocks
-
-    ds0 = qcodes.tests.data_mocks.DataSet2D()
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    try:
-        add_comment('hello world')
-    except NotImplementedError as ex:
-        ds.metadata['comment'] = 'hello world'
-        pass
-    add_comment('hello world 0', ds0)
-    assert(ds.metadata['comment'] == 'hello world')
-    assert(ds0.metadata['comment'] == 'hello world 0')
-
-
-if __name__ == '__main__':
-    test_add_comment()
-
-    # ds=qcodes.tests.data_mocks.DataSet2D()
-    #print('latest dataset %s' % (qcodes.DataSet._latest_datasets[0], ))
-
-# %%
 
 
 def datasetCentre(ds, ndim=None):
@@ -324,14 +292,6 @@ def datasetCentre(ds, ndim=None):
         my = np.nanmean(y)
         cc = [mx, my]
     return cc
-
-
-def test_dataset():
-    import qcodes.tests.data_mocks
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    cc = datasetCentre(ds)
-    assert(cc[0] == 1.5)
-    zz = dataset_labels(ds)
 
 
 def drawCrosshair(ds, ax=None, ndim=None):
@@ -404,30 +364,31 @@ def dataset2image2(dataset, arrayname=None):
 
     return imraw, impixel, tr
 
+
 # %%
 
 
 def dataset_get_istep(alldata, mode=None):
     """ Return number of mV per pixel in scan """
     try:
-        istep = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
+        resolution = np.abs(alldata.metadata['scanjob']['stepdata']['step'])
     except BaseException:
         try:
             extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
                 alldata, verbose=0, arrayname=None)
-            istep = np.abs(np.nanmean(np.diff(vstep)))
+            resolution = np.abs(np.nanmean(np.diff(vstep)))
         except BaseException:
-            _, _, _, istep, _ = dataset1Dmetadata(alldata)
-    return istep
+            _, _, _, resolution, _ = dataset1Dmetadata(alldata)
+    return resolution
 
 
 def dataset1Ddata(alldata):
-    ''' Parse a dataset into the x and y scan values
+    """ Parse a dataset into the x and y scan values
 
     Returns:
         x (array)
         y (array)
-    '''
+    """
     y = alldata.default_parameter_array()
     x = y.set_arrays[0]
     return x, y
@@ -438,19 +399,32 @@ def dataset_labels(alldata, tag=None, add_unit=False):
 
     Args:
         ds (DataSet): dataset
-        tag (str or None): can be 'x', 'y' or 'z' or the index of the axis
-        add_units (bool): If True then add units
+        tag (str or int or None): can be 'x', 'y' or 'z' or the index of the axis
+        add_unit (bool): If True then add units
     """
-    if tag == 'y' or tag == 0:
-        d = alldata.default_parameter_array()
+
+    dataset_dimension = len(alldata.default_parameter_array().set_arrays)
+    d = alldata.default_parameter_array()
+
+    if isinstance(tag, int):
         array = d.set_arrays[0]
-    elif tag == 'x' or tag == 1:
-        d = alldata.default_parameter_array()
-        array = d.set_arrays[1]
-    elif tag is None or tag == 'z':
-        array = alldata.default_parameter_array()
     else:
-        raise Exception('invalid value %s for tag' % (tag, ))
+        if dataset_dimension == 1:
+            if tag == 'x':
+                array = d.set_arrays[0]
+            elif tag is None or tag == 'z' or tag == 'y':
+                array = d
+            else:
+                raise Exception('invalid value %s for tag' % (tag,))
+        else:
+            if tag == 'y':
+                array = d.set_arrays[0]
+            elif tag == 'x':
+                array = d.set_arrays[1]
+            elif tag is None or tag == 'z':
+                array = d
+            else:
+                raise Exception('invalid value %s for tag' % (tag,))
     label = array.label
 
     if add_unit:
@@ -459,7 +433,7 @@ def dataset_labels(alldata, tag=None, add_unit=False):
 
 
 def uniqueArrayName(dataset, name0):
-    ''' Generate a unique name for a DataArray in a dataset '''
+    """ Generate a unique name for a DataArray in a dataset """
     ii = 0
     name = name0
     while name in dataset.arrays:
@@ -499,6 +473,42 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
         plot.fig.axes[1].autoscale(tight=True)
 
     return alldata
+
+
+def plot_dataset(dataset: qcodes.DataSet, parameter_names: Optional[list] = None, fig: Optional[int] = 1) -> None:
+    """ Plot a dataset to matplotlib figure window
+
+    Args:
+        dataset: DataSet to be plotted
+        parameter_names: List of arrays to be plotted
+        fig: Specification if Matplotlib figure window
+
+    """
+    if parameter_names is None:
+        parameter_names = [dataset.default_parameter_name()]
+
+    if parameter_names == 'all':
+        parameter_names = [name for name in dataset.arrays.keys() if not dataset.arrays[name].is_setpoint]
+
+    default_array = dataset.default_parameter_array()
+
+    if fig:
+        plt.figure(fig)
+        plt.clf()
+
+        if len(default_array.shape) >= 2:
+            if len(parameter_names) > 1:
+                arrays = [dataset.default_parameter_array(parameter_name) for parameter_name in parameter_names]
+                plot_handle = MatPlot(*arrays, num=fig)
+
+            else:
+                plot_handle = MatPlot(dataset.default_parameter_array(parameter_names[0]), num=fig)
+        else:
+            for idx, parameter_name in enumerate(parameter_names):
+                if idx == 0:
+                    plot_handle = MatPlot(dataset.default_parameter_array(parameter_name), num=fig)
+                else:
+                    plot_handle.add(dataset.default_parameter_array(parameter_name,))
 
 # %%
 
@@ -599,7 +609,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None,
             else:
                 plt.ylabel('%s (%s)' % (stepgate(scanjob), units))
 
-        if not title is None:
+        if title is not None:
             plt.title(title)
         if colorbar:
             plt.colorbar()
@@ -618,7 +628,7 @@ def show2D(dd, impixel=None, im=None, fig=101, verbose=1, dy=None,
 
 
 def dataset1Dmetadata(alldata, arrayname=None, verbose=0):
-    """ Extract metadata from a 2D scan
+    """ Extract metadata from a 1D scan
 
     Returns:
 
@@ -674,9 +684,6 @@ def dataset2Dmetadata(alldata, arrayname=None, verbose=0):
         print('2D scan: gates %s %s' % (g0, g1))
     return extent, g0, g1, vstep, vsweep, arrayname
 
-
-if __name__ == '__main__' and 0:
-    test_dataset()
 
 # %%
 
@@ -737,15 +744,15 @@ class image_transform:
             imextent = self.scan_image_extent()
             if self.verbose:
                 print('image_transform: unitsperpixel %s' %
-                      (self.unitsperpixel, ))
+                      (self.unitsperpixel,))
             ims, Hs, _ = qtt.algorithms.generic.rescaleImage(
                 self._imraw, imextent, mvx=unitsperpixel[0], mvy=unitsperpixel[1])
             self._im = ims
             self.H = Hs @ self.H
 
         if verbose:
-            print('image_transform: tr._imraw.shape %s' % (self._imraw.shape, ))
-            print('image_transform: tr._im.shape %s' % (self._im.shape, ))
+            print('image_transform: tr._imraw.shape %s' % (self._imraw.shape,))
+            print('image_transform: tr._im.shape %s' % (self._im.shape,))
         self._im = self._transform(self._imraw)
         self.Hi = np.linalg.inv(self.H)
 
@@ -760,10 +767,10 @@ class image_transform:
 
     @qtt.utilities.tools.deprecated
     def istep(self):
-        return self._istep
+        return self.scan_resolution()
 
     def scan_resolution(self):
-        """ Return the scan resulution in [units]/pixel """
+        """ Return the scan resolution in [units]/pixel """
         return self._istep
 
     def scan_image_extent(self):
@@ -897,25 +904,6 @@ class image_transform:
         return ptpixel
 
 
-def test_image_transform(verbose=0):
-    from qcodes.tests.data_mocks import DataSet2D
-    ds = DataSet2D()
-    tr = image_transform(ds)
-    im = tr.image()
-    if verbose:
-        print('transform: im.shape %s' % (str(im.shape),))
-    tr = image_transform(ds, unitsperpixel=[None, 2])
-    im = tr.image()
-    if verbose:
-        print('transform: im.shape %s' % (str(im.shape),))
-
-
-if __name__ == '__main__':
-    test_image_transform()
-
-# %%
-
-
 def pickleload(pkl_file):
     """ Load objects from file with pickle """
     with open(pkl_file, 'rb') as output:
@@ -928,7 +916,7 @@ def _data_extension():
 
 
 def load_data(mfile: str):
-    ''' Load data from specified file '''
+    """ Load data from specified file """
     # return hickle.load(mfile)
     ext = _data_extension()
     if ext is not None:
@@ -938,7 +926,7 @@ def load_data(mfile: str):
 
 
 def write_data(mfile: str, data):
-    ''' Write data to specified file '''
+    """ Write data to specified file """
     ext = _data_extension()
     if ext is not None:
         if not mfile.endswith(ext):
@@ -950,13 +938,13 @@ def write_data(mfile: str, data):
         pickle.dump(data, fid)
 
 
-@qtt.utilities.tools.rdeprecated(expire='1-1-2019')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2019')
 def loadDataset(path):
-    ''' Wrapper function
+    """ Wrapper function
 
     :param path: filename without extension
     :returns dateset, metadata:
-    '''
+    """
     dataset = qcodes.load_data(path)
 
     mfile = os.path.join(path, 'qtt-metadata')
@@ -964,12 +952,12 @@ def loadDataset(path):
     return dataset, metadata
 
 
-@qtt.utilities.tools.rdeprecated(expire='1-1-2019')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2019')
 def writeDataset(path, dataset, metadata=None):
-    ''' Wrapper function
+    """ Wrapper function
 
     :param path: filename without extension
-    '''
+    """
 
     dataset = qtt.utilities.tools.stripDataset(dataset)
 
@@ -1033,12 +1021,13 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
     basename = '%s' % (dstr,)
     if bname is not None:
         basename = '%s-' % bname + basename
-    if not outputdir is None:
+    if outputdir is not None:
         qtt.utilities.tools.mkdirc(os.path.join(outputdir, tag))
     pfile = os.path.join(outputdir, tag, basename + '.' + ext)
     return pfile
 
 
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2020')
 def loadExperimentData(outputdir, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('loadExperimentdata %s' % path)
@@ -1048,121 +1037,274 @@ def loadExperimentData(outputdir, tag, dstr):
     return dataset
 
 
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2020')
 def saveExperimentData(outputdir, dataset, tag, dstr):
     path = experimentFile(outputdir, tag=tag, dstr=dstr)
     logging.info('saveExperimentData %s' % path)
     write_data(path, dataset)
 
 
+def determine_parameter_unit(parameter):
+    """ Determine unit associated with a parameter
+
+    Arguments:
+        parameter (Any): the parameter to get the unit from
+
+    Returns:
+        The unit associated with the parameter when the parameter is a qcodes parameter, otherwise None
+    """
+    if isinstance(parameter, qcodes.Parameter):
+        return parameter.unit
+    else:
+        return None
+
+
+def _check_parameter(parameter):
+    """ Check parameter to be of correct type - used in MakeDataSet1D and MakeDataSet2D.
+
+    Arguments:
+        parameter (qcodes.SweepFixedValues): the parameter to check
+
+    Raises:
+        TypeError: When parameter does not have attribute 'parameter'
+        TypeError: When attribute parameter.parameter is not an instance of qcodes.parameter.
+    """
+    if hasattr(parameter, 'parameter'):
+        if not isinstance(parameter.parameter, qcodes.Parameter):
+            raise TypeError('Type of parameter.parameter must be qcodes.Parameter')
+    else:
+        raise TypeError('Type of parameter must be qcodes.SweepFixedValues')
+
+
+def _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record, preset_data,
+                   setpoints):
+    """ Generic code to make the data set for makeDataSet1D, makeDataSet1DPlain, makeDataSet2D, makeDataSet2DPlain
+
+        Warnings logged:
+        1. When the shape of the measured data is not matching the shape of the setpoint array. When the
+           measured data is a list, each list item must match the shape of the setpoint array.
+
+    Raises:
+        ValueError: When the number of measurements names in the measurement_list does not match the number of
+                    measurements.
+                    If len(measurement_list) > len(measured_data_list) we would otherwise get an
+                    IndexError later on. When len(measurement_list) < len(measured_data_list) now a ValueError is
+                    raised because a part of the measure data is not stored silently otherwise.
+
+        TypeError: When a measurement name in the measurement list has an invalid type.
+
+    Returns:
+        The resulting data set and the measure names list.
+    """
+    data_set = new_data(arrays=(), location=location, loc_record=loc_record)
+
+    if len(setpoints) > 1:
+        set_arrays = (setpoints[0], setpoints[1])
+    else:
+        set_arrays = (setpoints[0], )
+
+    if measured_data_list is not None:
+        if len(measurement_list) != len(measured_data_list):
+            raise ValueError('The number of measurement names does not match the number of measurements',
+                             len(measurement_list), len(measured_data_list))
+
+    measure_names = []
+    measure_units = []
+    for parameter in measurement_list:
+        if isinstance(parameter, str):
+            # parameter is a str
+            measure_names += [parameter]
+            measure_units += [measurement_unit]
+        elif isinstance(parameter, qcodes.Parameter):
+            # parameter is a Parameter
+            measure_names += [parameter.name]
+            measure_units += [parameter.unit]
+        else:
+            raise TypeError('Type of measurement names must be str or qcodes.Parameter')
+
+    for idm, mname in enumerate(measure_names):
+        preset_data_array = DataArray(name=mname, array_id=mname, label=mname, unit=measure_units[idm],
+                                      preset_data=np.copy(preset_data), set_arrays=set_arrays)
+        data_set.add_array(preset_data_array)
+        if measured_data_list is not None and measured_data_list[idm] is not None:
+            measured_array = np.array(measured_data_list[idm])
+            if measured_array.shape != preset_data.shape:
+                logger.warning('Shape of measured data does not match setpoint shape')
+
+            getattr(data_set, mname).ndarray = measured_array
+
+    if len(setpoints) > 1:
+        data_set.add_array(setpoints[1])
+        data_set.add_array(setpoints[0])
+    else:
+        data_set.add_array(setpoints[0])
+
+    return data_set, measure_names
+
+
 def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location=None, loc_record=None):
-    ''' Make DataSet with one 1D array and one setpoint array
+    """ Make DataSet with one 1D array and one setpoint array
 
     Arguments:
         xname (string): the name of the setpoint array
-        x (array): the setpoint data
-        yname (str or list): the name of the measured array
-        y (array): the measured data
-    '''
-    xx = np.array(x)
-    yy = np.NaN * np.ones(xx.size) if y is None else np.array(y)
-    x = DataArray(name=xname, array_id=xname, preset_data=xx, unit=xunit, is_setpoint=True)
-    dd = new_data(arrays=(), location=location, loc_record=loc_record)
-    dd.add_array(x)
-    if isinstance(yname, str):
-        y = DataArray(name=yname, array_id=yname, preset_data=yy, unit=yunit, set_arrays=(x,))
-        dd.add_array(y)
+        x (array or ndarray or list): the setpoint data
+        yname (str or qcodes.Parameter or list): the name of the measured array
+        y (array or ndarray or list): the measured data
+        xunit (str or None): optional, the unit of the values stored in x array.
+        yunit (str or None): optional, the unit of the values stored in y array.
+        location (str, callable, bool or None): If you provide a string,
+            it must be an unused location in the io manager.
+            Can also be:
+            - a callable `location provider` with one required parameter
+              (the io manager), and one optional (`record` dict),
+              which returns a location string when called.
+            - `False` - denotes an only-in-memory temporary DataSet.
+        loc_record (dict or None): If location is a callable, this will be
+            passed to it as `record`.
+
+    Raises:
+        See _make_data_set for the ValueError and TypeError exceptions that can be raised
+
+    Returns:
+        The resulting dataset.
+    """
+    setpoint_data = np.array(x)
+    preset_data = np.NaN * np.ones(setpoint_data.size)
+    if y is not None:
+        y = np.array(y)
+
+    setpoint = DataArray(name=xname, array_id=xname, preset_data=setpoint_data, unit=xunit, is_setpoint=True)
+
+    if isinstance(yname, (str, qcodes.Parameter)):
+        measured_data_list = [y]
+        measurement_list = [yname]
     else:
-        for ii, name in enumerate(yname):
-            y = DataArray(name=name, array_id=name, preset_data=yy[ii], unit=yunit, set_arrays=(x,))
-            dd.add_array(y)
-    return dd
+        measured_data_list = y
+        measurement_list = yname
+
+    measurement_unit = yunit
+
+    data_set, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
+                                 preset_data, [setpoint])
+
+    return data_set
 
 
-def makeDataSet1D(x, yname='measured', y=None, location=None, loc_record=None, return_names=False):
-    ''' Make DataSet with one or multiple 1D arrays and one setpoint array.
+def makeDataSet1D(p, yname='measured', y=None, location=None, loc_record=None, return_names=False):
+    """ Make DataSet with one or multiple 1D arrays and one setpoint array.
 
     Arguments:
-        x (array): the setpoint array of data
-        yname (str or list): name(s) of measured array(s)
-        y (array or None): optional array to fill the DataSet
-        location (str or None): location for the DataSet
-        loc_record (dict): will be added to the location
+        p (qcodes.SweepFixedValues): the setpoint array of data
+        yname (str or list of str or Parameter or list of Parameter):
+            when type is str or list of str : the name of measured array(s)
+            when type is parameter or list of parameter: the measured Parameters
+        y (array or list of array or None): optional (measured) data to fill the DataSet
+        location (str, callable, bool or None): If you provide a string,
+            it must be an unused location in the io manager.
+            Can also be:
+            - a callable `location provider` with one required parameter
+              (the io manager), and one optional (`record` dict),
+              which returns a location string when called.
+            - `False` - denotes an only-in-memory temporary DataSet.
+        loc_record (dict or None): If location is a callable, this will be
+            passed to it as `record`.
         return_names (bool): if True return array names in output
-    '''
-    xx = np.array(x)
-    yy = np.NaN * np.ones(xx.size)
-    x = DataArray(name=x.name, array_id=x.name, label=x.parameter.label,
-                  unit=x.parameter.unit, preset_data=xx, is_setpoint=True)
-    if isinstance(yname, str):
-        measure_names = [yname]
-        if y is not None:
-            preset_data = [y]
+
+    Raises:
+        See _make_data_set for the ValueError and TypeError exceptions that can be raised
+        See _check_parameter for the TypeError exceptions that can be raised
+
+    Returns:
+        Depending on parameter return_names
+            True: The resulting dataset and a tuple with the names of the added arrays (setpoint and measurements).
+            False: The resulting dataset.
+    """
+    _check_parameter(p)
+
+    setpoint_data = np.array(p)
+    preset_data = np.NaN * np.ones(setpoint_data.size)
+
+    setpoint = DataArray(name=p.name, array_id=p.name, label=p.parameter.label,
+                         unit=p.parameter.unit, preset_data=setpoint_data, is_setpoint=True)
+
+    if isinstance(yname, (str, qcodes.Parameter)):
+        measured_data_list = [y]
+        measurement_list = [yname]
     else:
-        measure_names = yname
-    mnamesx = measure_names
-    measure_names = []
-    measure_units = []
-    for parameter in mnamesx:
-        if isinstance(parameter, str):
-            measure_names += [parameter]
-            measure_units += [None]
-        else:
-            # assume p is a Parameter
-            measure_names += [parameter.name]
-            measure_units += [parameter.unit]
+        measured_data_list = y
+        measurement_list = yname
 
-    dd = new_data(arrays=(), location=location, loc_record=loc_record)
+    measurement_unit = None
 
-    for idm, mname in enumerate(measure_names):
-        ytmp = DataArray(name=mname, array_id=mname, label=mname,
-                         preset_data=np.copy(yy), set_arrays=(x,), unit=measure_units[idm])
-        dd.add_array(ytmp)
-        if y is not None:
-            getattr(dd, mname).ndarray = np.array(preset_data[idm])
-    dd.add_array(x)
+    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location,
+                                             loc_record, preset_data, [setpoint])
 
+    data_set.metadata['default_parameter_name'] = measure_names[0]
     if return_names:
-        set_names = x.name
-        return dd, (set_names, measure_names)
+        set_names = setpoint.name
+        return data_set, (set_names, measure_names)
     else:
-        return dd
+        return data_set
 
 
 def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
                        yunit=None, zunit=None, location=None, loc_record=None):
-    ''' Make DataSet with one 2D array and two setpoint arrays
+    """ Make DataSet with one 2D array and two setpoint arrays
 
     Arguments:
-        xname, yname (string): the name of the setpoint array
-        x, y (array): the setpoint data
-        zname (str or list): the name of the measured array
-        z (array or list): the measured data
-    '''
-    yy = np.array(y)
-    xx0 = np.array(x)
-    xx = np.tile(xx0, [yy.size, 1])
-    zz = np.NaN * np.ones((yy.size, xx0.size))
-    ya = DataArray(name=yname, array_id=yname, preset_data=yy,
-                   unit=yunit, is_setpoint=True)
-    xa = DataArray(name=xname, array_id=xname, preset_data=xx,
-                   unit=xunit, set_arrays=(ya,), is_setpoint=True)
-    dd = new_data(arrays=(), location=location, loc_record=loc_record)
-    if isinstance(zname, str):
-        zname = [zname]
+        xname (string): the name of the setpoint x array.
+        x (array or ndarray or list): the x setpoint data.
+        yname (string): the name of the setpoint y array.
+        y (array or ndarray or list): the y setpoint data.
+        zname (str or list of str): the name of the measured array.
+        z (array or list or None): optional the measured data.
+        xunit (str or None): optional, the unit of the values stored in x.
+        yunit (str or None): optional, the unit of the values stored in y.
+        zunit (str or None): optional, the unit of the measured data.
+        location (str, callable, bool or None): If you provide a string,
+            it must be an unused location in the io manager.
+            Can also be:
+            - a callable `location provider` with one required parameter
+              (the io manager), and one optional (`record` dict),
+              which returns a location string when called.
+            - `False` - denotes an only-in-memory temporary DataSet.
+        loc_record (dict or None): If location is a callable, this will be
+            passed to it as `record`.
+
+    Raises:
+        See _make_data_set for the ValueError and TypeError exceptions that can be raised
+
+    Returns:
+        The resulting dataset.
+
+    """
+    setpoint_datay = np.array(y)
+    setpoint_datax = np.array(x)
+    setpoint_dataxy = np.tile(setpoint_datax, [setpoint_datay.size, 1])
+    preset_data = np.NaN * np.ones((setpoint_datay.size, setpoint_datax.size))
+    setpointy = DataArray(name=yname, array_id=yname, preset_data=setpoint_datay,
+                          unit=yunit, is_setpoint=True)
+    setpointx = DataArray(name=xname, array_id=xname, preset_data=setpoint_dataxy,
+                          unit=xunit, set_arrays=(setpointy,), is_setpoint=True)
+
+    if isinstance(zname, (str, qcodes.Parameter)):
         if isinstance(z, np.ndarray):
-            z = [z]
-    for ii, name in enumerate(zname):
-        za = DataArray(name=name, array_id=name, label=name,
-                       preset_data=np.copy(zz), unit=zunit, set_arrays=(ya, xa))
-        dd.add_array(za)
-        if z is not None:
-            getattr(dd, name).ndarray = np.array(z[ii])
-    dd.add_array(xa)
-    dd.add_array(ya)
+            measured_data_list = [z]
+        else:
+            measured_data_list = z
+        measurement_list = [zname]
+    else:
+        measured_data_list = z
+        measurement_list = zname
 
-    dd.last_write = -1
+    measurement_unit = zunit
 
-    return dd
+    data_set, _ = _make_data_set(measured_data_list, measurement_list, measurement_unit, location, loc_record,
+                                 preset_data, [setpointy, setpointx])
+
+    data_set.last_write = -1
+
+    return data_set
 
 
 def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=None,
@@ -1173,70 +1315,65 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
     measure_names should match the order of preset_data.
 
     Args:
-        p1 (array): first setpoint array of data
-        p2 (array): second setpoint array of data
-        mname (str or list): name(s) of measured array(s)
-        location (str or None): location for the DataSet
-        preset_data (array or None): optional array to fill the DataSet
+        p1 (qcodes.SweepFixedValues): first setpoint array of data
+        p2 (qcodes.SweepFixedValues): second setpoint array of data
+        measure_names (str or list): name(s) of measured array(s)
+        location (str, callable, bool or None): If you provide a string,
+            it must be an unused location in the io manager.
+            Can also be:
+            - a callable `location provider` with one required parameter
+              (the io manager), and one optional (`record` dict),
+              which returns a location string when called.
+            - `False` - denotes an only-in-memory temporary DataSet.
+        loc_record (dict or None): If location is a callable, this will be
+            passed to it as `record`.
+        preset_data (array or ndarray or list or None): optional array to fill the DataSet
         return_names (bool): if True return array names in output
-    Returns:
-        dd (DataSet)
-        names (tuple, optional)
-    """
-    xx = np.array(p1)
-    yy0 = np.array(p2)
-    yy = np.tile(yy0, [xx.size, 1])
-    zz = np.NaN * np.ones((xx.size, yy0.size))
-    set_names = [p1.name, p2.name]
-    x = DataArray(name=p1.name, array_id=p1.name, label=p1.parameter.label,
-                  unit=p1.parameter.unit, preset_data=xx, is_setpoint=True)
-    y = DataArray(name=p2.name, array_id=p2.name, label=p2.parameter.label,
-                  unit=p2.parameter.unit, preset_data=yy, set_arrays=(x,), is_setpoint=True)
-    if isinstance(measure_names, str):
-        measure_names = [measure_names]
-        if preset_data is not None:
-            preset_data = [preset_data]
-    mnamesx = measure_names
-    measure_names = []
-    for p in mnamesx:
-        if isinstance(p, str):
-            measure_names += [p]
-        else:
-            # assume p is a Parameter
-            measure_names += [p.name]
-    dd = new_data(arrays=(), location=location, loc_record=loc_record)
-    for idm, mname in enumerate(measure_names):
-        z = DataArray(name=mname, array_id=mname, label=mname,
-                      preset_data=np.copy(zz), set_arrays=(x, y))
-        dd.add_array(z)
-        if preset_data is not None:
-            getattr(dd, mname).ndarray = np.array(preset_data[idm])
-    dd.add_array(x)
-    dd.add_array(y)
 
-    dd.last_write = -1
+    Raises:
+        See _make_data_set for the ValueError and TypeError exceptions that can be raised
+        See _check_parameter for the TypeError exceptions that can be raised
+
+    Returns:
+        Depending on parameter return_names:
+            True: The resulting dataset and a tuple with the names of the added arrays (setpoint and measurements).
+            False: The resulting dataset.
+    """
+    _check_parameter(p1)
+    _check_parameter(p2)
+
+    y = p1
+    x = p2
+    z = preset_data
+
+    setpoint_datay = np.array(y)
+    setpoint_datax = np.array(x)
+    setpoint_dataxy = np.tile(setpoint_datax, [setpoint_datay.size, 1])
+    preset_data = np.NaN * np.ones((setpoint_datay.size, setpoint_datax.size))
+    setpointy = DataArray(name=y.name, array_id=y.name, preset_data=setpoint_datay,
+                          unit=y.parameter.unit, is_setpoint=True)
+    setpointx = DataArray(name=x.name, array_id=x.name, preset_data=setpoint_dataxy,
+                          unit=x.parameter.unit, set_arrays=(setpointy,), is_setpoint=True)
+
+    if isinstance(measure_names, (str, qcodes.Parameter)):
+        measured_data_list = [z]
+        measurement_list = [measure_names]
+    else:
+        measured_data_list = z
+        measurement_list = measure_names
+
+    measurement_unit = None
+
+    data_set, measure_names = _make_data_set(measured_data_list, measurement_list, measurement_unit, location,
+                                             loc_record, preset_data, [setpointy, setpointx])
+
+    data_set.last_write = -1
 
     if return_names:
-        return dd, (set_names, measure_names)
+        set_names = [y.name, x.name]
+        return data_set, (set_names, measure_names)
     else:
-        return dd
-
-
-def test_makeDataSet2D():
-    from qcodes import ManualParameter
-    p = ManualParameter('dummy')
-    p2 = ManualParameter('dummy2')
-    ds = makeDataSet2D(p[0:10:1], p2[0:4:1], ['m1', 'm2'])
-
-    _ = diffDataset(ds)
-
-
-def test_makeDataSet1Dplain():
-    x = np.arange(0, 10)
-    y = np.vstack((x - 1, x + 10))
-    ds = makeDataSet1Dplain('x', x, ['y1', 'y2'], y)
-
-# %%
+        return data_set
 
 
 def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbose=1):
@@ -1251,59 +1388,18 @@ def compare_dataset_metadata(dataset1, dataset2, metakey='allgatevalues', verbos
         metakey (str): key in the DataSet metadata to compare
     """
     if (metakey not in dataset1.metadata) or (metakey not in dataset2.metadata):
-        print('key %s not in dataset metadata' % metakey)
+        if verbose:
+            print('key %s not in dataset metadata' % metakey)
         return
     if metakey == 'allgatevalues':
         for ikey, value1 in dataset1.metadata[metakey].items():
             if ikey in dataset2.metadata[metakey]:
                 value2 = dataset2.metadata[metakey][ikey]
                 if value1 != value2:
-                    print('Gate %s from %.1f to %.1f' % (ikey, value1, value2))
+                    if verbose:
+                        print('Gate %s from %.1f to %.1f' % (ikey, value1, value2))
             else:
-                print('Gate %s not in second dataset' % (ikey))
+                if verbose:
+                    print('Gate %s not in second dataset' % ikey)
     else:
         raise Exception('metadata key not yet supported')
-
-
-def test_compare():
-    import qcodes.tests.data_mocks
-    ds = qcodes.tests.data_mocks.DataSet2D()
-    compare_dataset_metadata(ds, ds, verbose=0)
-
-# %%
-
-
-def test_numpy_on_dataset():
-    import qcodes.tests.data_mocks
-    alldata = qcodes.tests.data_mocks.DataSet2D()
-    X = alldata.z
-    _ = np.array(X)
-    s = np.linalg.svd(X)
-    # print(s)
-
-
-if __name__ == '__main__':
-    import numpy as np
-    import qcodes.tests.data_mocks
-
-    test_numpy_on_dataset()
-    test_makeDataSet2D()
-    test_makeDataSet1Dplain()
-    test_compare()
-
-
-class TestData(unittest.TestCase):
-
-    def test_dataset_to_dictionary(self):
-        import qcodes.tests.data_mocks
-
-        input_dataset = qcodes.tests.data_mocks.DataSet2D()
-
-        data_dictionary = dataset_to_dictionary(input_dataset, include_data=False, include_metadata=False)
-        self.assertIsNone(data_dictionary['metadata'])
-
-        data_dictionary = dataset_to_dictionary(input_dataset, include_data=True, include_metadata=True)
-        self.assertTrue('metadata' in data_dictionary)
-
-        converted_dataset = dictionary_to_dataset(data_dictionary)
-        self.assertEqual(converted_dataset.default_parameter_name(), input_dataset.default_parameter_name())

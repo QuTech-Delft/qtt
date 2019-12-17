@@ -7,7 +7,7 @@ The output is a dictionary with the main results as keys of the dictionary.
 Example algorithms in notebooks
 -------------------------------
 
-Most of the algorithms are documented in the `Example notebooks`_ section.
+Most of the algorithms are documented in the :ref:`Example notebooks` section.
 
 
 Source code
@@ -20,6 +20,8 @@ The source code for the algoritms can be found below:
    See https://sphinx-automodapi.readthedocs.io/en/latest/automodsumm.html
 
 .. autosummary::
+
+   qtt.algorithms.allxy
    qtt.algorithms.anticrossing
    qtt.algorithms.awg_to_plunger
    qtt.algorithms.bias_triangles

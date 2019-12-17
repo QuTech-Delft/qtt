@@ -3,17 +3,18 @@ Contains code for various structures
 
 """
 import numpy as np
-import time
 import matplotlib.pyplot as plt
-import warnings
 import copy
+from functools import partial
 
 import qcodes
+import qcodes.instrument.parameter
 
 import qtt
 import qtt.measurements.scans
 from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks, findSensingDotPosition
 from qtt.utilities.tools import freezeclass
+from qtt.dataset_processing import process_dataarray
 
 # %%
 
@@ -25,7 +26,8 @@ class twodot_t(dict):
         """ Class to represent a double quantum dot
 
         Args:
-            gates (list of str): gate names of barrier left, plunger left, barrier middle, plunger right and barrier right
+            gates (list of str): gate names of barrier left, plunger left, barrier middle, plunger right and barrier
+                                 right
             name (str): name for the object
         """
         self['gates'] = gates
@@ -91,21 +93,6 @@ class onedot_t(dict):
         return d
 
 
-def test_spin_structures(verbose=0):
-    import pickle
-    import json
-    o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)
-    if verbose:
-        print('test_spin_structures: %s' % (o,))
-    _ = pickle.dumps(o)
-    x = json.dumps(o)
-    if verbose:
-        print('test_spin_structures: %s' % (x,))
-
-
-if __name__ == '__main__':
-    test_spin_structures()
-
 # %%
 
 
@@ -122,8 +109,8 @@ def _scanlabel(ds):
 @freezeclass
 class sensingdot_t:
 
-    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, fpga_ch=None, virt_gates=None):
-        """ Class representing a sensing dot 
+    def __init__(self, gate_names, gate_values=None, station=None, index=None, minstrument=None, virt_gates=None):
+        """ Class representing a sensing dot
 
         We assume the sensing dot can be controlled by two barrier gates and a single plunger gate.
         An instrument to measure the current through the dot is provided by the minstrument argument.
@@ -132,10 +119,12 @@ class sensingdot_t:
             gate_names (list): gates to be used
             gate_values (array or None): values to be set on the gates
             station (Qcodes station)
-            minstrument (tuple or str or Parameter): measurement instrument to use. tuple of instrument and channel index
+            minstrument (tuple or str or Parameter): measurement instrument to use. tuple of instrument and channel
+                                                     index
             index (None or int): deprecated
             fpga_ch (deprecated, int): index of FPGA channel to use for readout
             virt_gates (None or object): virtual gates object (optional)
+            boxcar_filter_kernel_size (int): size of boxcar filter kernel to use in post-processing
         """
         self.verbose = 1
         self.gg = gate_names
@@ -144,6 +133,9 @@ class sensingdot_t:
         self.sdval = gate_values
         self.targetvalue = np.NaN
 
+        self.boxcar_filter_kernel_size = 1
+
+        self._selected_peak = None
         self._detune_axis = np.array([1, -1])
         self._detune_axis = self._detune_axis / np.linalg.norm(self._detune_axis)
         self._debug = {}  # store debug data
@@ -158,22 +150,22 @@ class sensingdot_t:
 
         self.data = {}
 
-        if fpga_ch is None:
-            self.fpga_ch = None
-        else:
-            raise Exception('do not use fpga_ch argument, use minstrument instead')
+        self.plunger = qcodes.Parameter('plunger', get_cmd=self.plungervalue, set_cmd=self._set_plunger)
 
         # values for measurement
         if index is not None:
             self.valuefunc = station.components[
                 'keithley%d' % index].amplitude.get
+        else:
+            self.valuefunc = None
 
     def __repr__(self):
         return 'sd gates: %s, %s, %s' % (self.gg[0], self.gg[1], self.gg[2])
 
     def __getstate__(self):
         """ Override to make the object pickable."""
-        print('sensingdot_t: __getstate__')
+        if self.verbose:
+            print('sensingdot_t: __getstate__')
         import copy
         d = copy.copy(self.__dict__)
         for name in ['station', 'valuefunc']:
@@ -197,7 +189,7 @@ class sensingdot_t:
 
     def initialize(self, sdval=None, setPlunger=False):
         gates = self.station.gates
-        if not sdval is None:
+        if sdval is not None:
             self.sdval = sdval
         gg = self.gg
         for ii in [0, 2]:
@@ -215,6 +207,10 @@ class sensingdot_t:
         gates = self.station.gates
         return gates.get(self.tunegate())
 
+    def _set_plunger(self, value):
+        gates = self.station.gates
+        gates.set(self.tunegate(), value)
+
     def value(self):
         """Return current through sensing dot """
         if self.valuefunc is not None:
@@ -224,7 +220,8 @@ class sensingdot_t:
 
     def scan1D(sd, outputdir=None, step=-2., max_wait_time=.75, scanrange=300):
         """ Make 1D-scan of the sensing dot."""
-        print('### sensing dot scan')
+        if sd.verbose:
+            print('### sensing dot scan')
         minstrument = sd.minstrument
         if sd.index is not None:
             minstrument = [sd.index]
@@ -240,7 +237,7 @@ class sensingdot_t:
         wait_time = 0.8
         try:
             wait_time = sd.station.gate_settle(gg[1])
-        except:
+        except BaseException:
             pass
         wait_time = np.minimum(wait_time, max_wait_time)
 
@@ -252,8 +249,9 @@ class sensingdot_t:
         scanjob1['compensateGates'] = []
         scanjob1['gate_values_corners'] = [[]]
 
-        print('sensingdot_t: scan1D: gate %s, wait_time %.3f' % (sd.gg[1], wait_time))
-        alldata = qtt.measurements.scans.scan1D(sd.station, scanjob=scanjob1)
+        if sd.verbose:
+            print('sensingdot_t: scan1D: gate %s, wait_time %.3f' % (sd.gg[1], wait_time))
+        alldata = qtt.measurements.scans.scan1D(sd.station, scanjob=scanjob1, verbose=sd.verbose)
         return alldata
 
     def detuning_scan(sd, stepsize=2, nsteps=5, verbose=1, fig=None):
@@ -352,7 +350,7 @@ class sensingdot_t:
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, step=-2.,
                  max_wait_time=1., scanrange=300, add_slopes=False):
         """ Automatically determine optimal value of plunger """
-        if not scanjob is None:
+        if scanjob is not None:
             sd.autoTuneInit(scanjob)
 
         if sd.virt_gates is not None:
@@ -361,6 +359,7 @@ class sensingdot_t:
         alldata = sd.scan1D(outputdir=outputdir, step=step,
                             scanrange=scanrange, max_wait_time=max_wait_time)
 
+        alldata = sd._measurement_post_processing(alldata)
         goodpeaks = sd._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
         if len(goodpeaks) > 0:
@@ -370,13 +369,12 @@ class sensingdot_t:
             print('autoTune: could not find good peak')
 
         if sd.verbose:
-            print(
-                'sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
+            print('sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
         return sd.sdval[1], alldata
 
     def _process_scan(self, alldata, useslopes=True, fig=None, invert=False, verbose=0):
         """ Determine peaks in 1D scan """
-        istep = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
+        scan_sampling_rate = float(np.abs(alldata.metadata['scanjob']['sweepdata']['step']))
         x, y = qtt.data.dataset1Ddata(alldata)
         x, y = peakdataOrientation(x, y)
 
@@ -385,11 +383,11 @@ class sensingdot_t:
 
         if useslopes:
             goodpeaks = findSensingDotPosition(
-                x, y, useslopes=useslopes, fig=fig, verbose=verbose, istep=istep)
+                x, y, useslopes=useslopes, fig=fig, verbose=verbose, sampling_rate=scan_sampling_rate)
         else:
 
             goodpeaks = coulombPeaks(
-                x, y, verbose=verbose, fig=fig, plothalf=True, sampling_rate=istep)
+                x, y, verbose=verbose, fig=fig, plothalf=True, sampling_rate=scan_sampling_rate)
         if fig is not None:
             plt.xlabel('%s' % (self.tunegate(), ))
             plt.ylabel('%s' % (self.minstrument, ))
@@ -411,7 +409,7 @@ class sensingdot_t:
         gates = sd.station.gates
         gates.set(
             sweepparam, (sweepdata['start'] + sweepdata['end']) / 2)
-        if not stepdata is None:
+        if stepdata is not None:
             if mode == 'end':
                 # set sweep to center
                 gates.set(stepparam, (stepdata['end']))
@@ -422,11 +420,20 @@ class sensingdot_t:
                 # set sweep to center
                 gates.set(stepparam, (stepdata['start'] + stepdata['end']) / 2)
 
+    def _measurement_post_processing(self, dataset):
+
+        if self.boxcar_filter_kernel_size > 1:
+            process_dataarray(dataset, dataset.default_parameter_name(), None, partial(
+                qtt.algorithms.generic.boxcar_filter, kernel_size=(self.boxcar_filter_kernel_size,)))
+
+        return dataset
+
     def fastTune(self, Naverage=90, sweeprange=79, period=.5e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, invert=False, verbose=1):
         """ Fast tuning of the sensing dot plunger.
 
-        If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used for the sweep.
+        If the sensing dot object is initialized with a virtual gates object the virtual plunger will be used
+        for the sweep.
 
         Args:
             fig (int or None): window for plotting results
@@ -448,7 +455,8 @@ class sensingdot_t:
             if self.virt_gates is not None:
                 vsensorgate = self.virt_gates.vgates()[self.virt_gates.pgates().index(self.gg[1])]
                 scanjob['sweepdata'] = qtt.measurements.scans.create_vectorscan(
-                    self.virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True, station=self.station)
+                    self.virt_gates.parameters[vsensorgate], g_range=sweeprange, remove_slow_gates=True,
+                    station=self.station)
                 scanjob['sweepdata']['paramname'] = vsensorgate
             else:
                 gate = self.gg[1]
@@ -459,13 +467,15 @@ class sensingdot_t:
             scanjob['minstrument'] = channel
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
-
+            scanjob['dataset_label'] = 'sensingdot_fast_tune'
             alldata = qtt.measurements.scans.scan1Dfast(self.station, scanjob)
         else:
             raise Exception('legacy code, please do not use')
 
         alldata.add_metadata({'scanjob': scanjob, 'scantype': 'fastTune'})
         alldata.add_metadata({'snapshot': self.station.snapshot()})
+
+        alldata = self._measurement_post_processing(alldata)
 
         alldata.write(write_metadata=True)
 
@@ -474,25 +484,15 @@ class sensingdot_t:
         if len(goodpeaks) > 0:
             self.sdval[1] = float(goodpeaks[0]['xhalfl'])
             self.targetvalue = float(goodpeaks[0]['yhalfl'])
+            self._selected_peak = goodpeaks[0]
         else:
-            print('autoTune: could not find good peak, may need to adjust mirror factor')
+            self._selected_peak = None
+            raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
 
         if self.verbose:
-            print(
-                'sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
+            print('sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
 
         return self.sdval[1], alldata
-
-
-def test_sensingdot_t():
-    import qtt.simulation.virtual_dot_array
-    station = qtt.simulation.virtual_dot_array.initialize()
-    sensing_dot = qtt.structures.sensingdot_t(
-        ['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')
-    _ = sensing_dot.autoTune(step=-8, fig=None)
-    qtt.simulation.virtual_dot_array.close()
-
-# %%
 
 
 class VectorParameter(qcodes.instrument.parameter.Parameter):
@@ -520,7 +520,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         return value
 
     def set_raw(self, value):
-        """Set the parameter to value. 
+        """Set the parameter to value.
 
         Note: the set is not unique, i.e. the result of this method depends on
         the previous value of this parameter.
@@ -595,21 +595,3 @@ class CombiParameter(qcodes.instrument.parameter.Parameter):
     def set_raw(self, value):
         for idp, p in enumerate(self.params):
             p.set(value)
-
-
-def test_multi_parameter():
-    p = qcodes.Parameter('p', set_cmd=None)
-    q = qcodes.Parameter('q', set_cmd=None)
-    mp = MultiParameter('multi_param', [p, q])
-    mp.set([1, 2])
-    _ = mp.get()
-    mp = CombiParameter('multi_param', [p, q])
-    mp.set([1, 3])
-    v = mp.get()
-    assert(v == 2)
-
-
-if __name__ == '__main__':
-    import qcodes
-    test_multi_parameter()
-    test_sensingdot_t()

@@ -54,7 +54,7 @@ except:
 import matplotlib.pyplot as plt
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def showDotGraph(dot, fig=10):
     dot.format = 'png'
     outfile = dot.render('dot-dummy', view=False)
@@ -71,7 +71,7 @@ def showDotGraph(dot, fig=10):
 # %%
 
 
-@rdeprecated(expire='7-1-2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='7-1-2018')
 def positionScanjob(scanjob, pt):
     """ Helper function
 
@@ -93,7 +93,7 @@ def positionScanjob(scanjob, pt):
 # %%
 
 
-@rdeprecated(expire='1-7-2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1-7-2018')
 def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     """ Save matplotlib figure to disk
 
@@ -120,7 +120,7 @@ def saveImage(resultsdir, name, fig=None, dpi=300, ext='png', tight=False):
     return imfilerel, imfile
 
 
-@rdeprecated(expire='1-7-2019')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1-7-2019')
 def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     """ Plot a circle in a matplotlib figure
 
@@ -135,7 +135,7 @@ def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
     return c2
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def scaleCmap(imx, setclim=True, verbose=0):
     """ Scale colormap of sensing dot image """
     p99 = np.percentile(imx, 99.9)
@@ -157,7 +157,7 @@ def scaleCmap(imx, setclim=True, verbose=0):
     return cl
 
 
-@rdeprecated(expire='1-1-2019')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2019')
 def writeBatchData(outputdir, tag, timestart, timecomplete):
     tt = datetime.datetime.now().strftime('%d%m%Y-%H%m%S')
     with open(os.path.join(outputdir, '%s-%s.txt' % (tag, tt)), 'wt') as fid:
@@ -170,7 +170,7 @@ def writeBatchData(outputdir, tag, timestart, timecomplete):
 # %%
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def filterBG(imx, ksize, sigma=None):
     """ Filter away background using Gaussian filter """
     # imq = cv2.bilateralFilter(imx.astype(np.float32),9,75,75)
@@ -187,7 +187,7 @@ def filterBG(imx, ksize, sigma=None):
     return imq
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1, cut=None, verbose=0, fig=None):
     """
     Filter image with Gabor
@@ -234,7 +234,7 @@ def filterGabor(im, theta0=-np.pi / 8, istep=1, widthmv=2, lengthmv=10, gammax=1
 # %%
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def cmap_map(function, cmap):
     """ Applies function (which should operate on vectors of shape 3:
     [r, g, b], on colormap cmap. This routine will break any discontinuous     points in a colormap.
@@ -266,7 +266,7 @@ def cmap_map(function, cmap):
     return matplotlib.colors.LinearSegmentedColormap('colormap', cdict, 1024)
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def cmap_discretize(cmap, N, m=1024):
     """Return a discrete colormap from the continuous colormap cmap.
 
@@ -302,7 +302,7 @@ from qtt.utilities.imagetools import cleanSensingImage
 fitBackground = qtt.utilities.tools.deprecated(fitBackgroundTmp)
 
 
-@qtt.utilities.tools.deprecated
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def showIm(ims, fig=1, title='', showz=False):
     """ Show image with nearest neighbor interpolation and axis scaling """
     plt.figure(fig)
@@ -319,7 +319,7 @@ def showIm(ims, fig=1, title='', showz=False):
 from qtt.algorithms.misc import point_in_poly, points_in_poly, fillPoly
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def getPinchvalues(od, xdir, verbose=1):
     """ Get pinch values from recorded data """
     gg = od['gates']
@@ -338,7 +338,7 @@ def getPinchvalues(od, xdir, verbose=1):
     return od
 
 
-@rdeprecated(expire='1 Sep 2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
 def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdinstruments=[], fig=None, verbose=1):
     """ Create settings for a double-dot from scans of the individual one-dots """
     raise Exception('function was removed from qtt')
@@ -346,13 +346,13 @@ def createDoubleDotJobs(two_dots, one_dots, resultsdir, basevalues=dict(), sdins
 
 # %%
 
-@rdeprecated(expire='1-1-2019')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2019')
 def printGateValues(gv, verbose=1):
     s = ', '.join(['%s: %.1f' % (x, gv[x]) for x in sorted(gv.keys())])
     return s
 
 
-@rdeprecated(expire='1-1-2019')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2019')
 def getODbalancepoint(od):
     bp = od['balancepoint']
     if 'balancepointfine' in od:
@@ -360,7 +360,7 @@ def getODbalancepoint(od):
     return bp
 
 
-@rdeprecated(expire='1-6-2018')
+@rdeprecated(txt='Method will be removed in future release of qtt', expire='1-6-2018')
 def loadpickle(pkl_file):
     """ Load objects from file """
     try:

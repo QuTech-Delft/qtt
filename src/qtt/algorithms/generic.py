@@ -1,6 +1,7 @@
 """ Various functions """
 
 import warnings
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
@@ -9,6 +10,7 @@ try:
     import cv2
 except:
     import qtt.exceptions
+
     warnings.warn('could not find opencv, not all functionality available',
                   qtt.exceptions.MissingOptionalPackageWarning)
 
@@ -45,12 +47,13 @@ def disk(radius):
     radius = int(radius)
     nn = 2 * radius + 1
     x, y = np.meshgrid(range(nn), range(nn))
-    d = ((x - radius)**2 + (y - radius)**2 < 0.01 + radius**2).astype(int)
+    d = ((x - radius) ** 2 + (y - radius) ** 2 < 0.01 + radius ** 2).astype(int)
     return d
 
 
 def localMaxima(arr, radius=1, thr=None):
-    ''' Calculate local maxima in a 2D array '''
+    """ Calculate local maxima in a 2D array
+    """
     strel = disk(radius)  # skimage.morphology.disk(radius)
     local_max = (filters.maximum_filter(arr, footprint=strel) == arr)
 
@@ -59,26 +62,26 @@ def localMaxima(arr, radius=1, thr=None):
     return np.where(local_max)
 
 
-import skimage.feature  # import peak_local_max
-
-
 def subpixelmax(A, mpos, verbose=0):
     """ Calculate maximum position with subpixel accuracy
 
+    For each position specified by mpos this method fits a parabola through 3 points and calculates the
+    maximum position of the parabola.
+
     Args:
-        A (1D array):
-        mpos (array with integer indicess):
-        verbose (int):
+        A (1D array): Input data
+        mpos (array with integer indices): Positions in the array A with maxima
+        verbose (int): Verbosity level
 
     Returns:
-        subpos (array with subpixel positions):
-        subval (array):
+        subpos (array): Array with subpixel positions
+        subval (array): Values at maximum positions
     """
 
     A = np.array(A)
+    mpos = np.array(mpos)
     if np.array(mpos).size == 0:
         # corner case
-        import copy
         subpos = copy.copy(mpos)
         return subpos, []
 
@@ -94,13 +97,16 @@ def subpixelmax(A, mpos, verbose=0):
     cy = val
     ay = (valm + valp) / 2 - cy
     by = ay + cy - valm
-    shift = -by / (2 * ay)  # Maxima of quadradic
+
+    if np.any(ay == 0):
+        shift = 0 * ay
+    else:
+        shift = -by / (2 * ay)  # Maxima of quadradic
 
     if verbose:
-        print('subpixelmax: mp %d, pp %d\n', mp, pp)
-        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n', ay, by, cy)
+        print('subpixelmax: mp %d, pp %d\n' % (mp, pp))
+        print('subpixelmax: ap %.3f, by %.3f , cy %.3f\n' % (ay, by, cy))
 
-    shift[ay == 0] = 0   # fix for flat areas
     subpos = mpos + shift
 
     subval = ay * shift * shift + by * shift + cy
@@ -111,38 +117,18 @@ def subpixelmax(A, mpos, verbose=0):
     return subpos, subval
 
 
-def test_subpixel(fig=None):
-    import qtt
-    import matplotlib.pyplot as plt
-    A = np.random.rand(40,)**2 + 1e1
-    A = qtt.algorithms.generic.smoothImage(A)
-
-    mpos = skimage.feature.peak_local_max(A, min_distance=3).flatten()
-    subpos, subval = subpixelmax(A, mpos)
-
-    if fig:
-        plt.figure(fig)
-        plt.clf()
-        plt.plot(np.arange(A.size), A, '.:r', label='data points')
-
-        plt.plot(mpos, A[mpos], 'om', label='integer maxima')
-        plt.plot(subpos, subval, '.g', markersize=15, label='subpixel maxima')
-        plt.legend(numpoints=1)
-
-# %%
-
-
 def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None, fig=None):
     """ Scale image to make pixels at specified resolution
 
     Args:
       im (array): input image
-      imextend (list of 4 floats): coordinates of image region (x0, x1, y0, y1)
+      imextent (list of 4 floats): coordinates of image region (x0, x1, y0, y1)
       mvx, mvy (float or None): number of units per pixel requested. If None then keep unchanged
 
     Returns:
        ims (array): transformed image
-       H (array): transformation matrix from units to pixels. H is the homogeneous transform from original to scaled image
+       H (array): transformation matrix from units to pixels. H is the homogeneous transform from original to
+                  scaled image
        mvx (float): internal data
        mvy (float): internal data
        fx (float):  internal data
@@ -157,7 +143,7 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
 
     dx = im.shape[1]
     dy = im.shape[0]
-    mvx0 = dxmv / float(dx - 1)     # current unit/pixel
+    mvx0 = dxmv / float(dx - 1)  # current unit/pixel
     mvy0 = dymv / float(dy - 1)
 
     if mvy is None:
@@ -180,7 +166,7 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
         fwx = fw
         fac = 1
         ims = im
-        while (fwx < .5):
+        while fwx < .5:
             ims = cv2.resize(
                 ims, None, fx=.5, fy=1, interpolation=cv2.INTER_LINEAR)
             fwx *= 2
@@ -192,7 +178,7 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
         ims = cv2.resize(im, None, fx=fw, fy=fh, interpolation=interpolation)
 
     H = pgeometry.pg_transl2H(
-        [-.5, -.5]) .dot(np.diag([fw, fh, 1]).dot(pgeometry.pg_transl2H([.5, .5])))
+        [-.5, -.5]).dot(np.diag([fw, fh, 1]).dot(pgeometry.pg_transl2H([.5, .5])))
 
     if fig is not None:
         plt.figure(fig)
@@ -203,12 +189,6 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
         plt.imshow(ims, interpolation='nearest')
         plt.title('scaled')
     return ims, H, (mvx, mvy, fw, fh)
-
-
-def test_rescale_image():
-    im = np.random.rand(300, 600)
-    _ = rescaleImage(im, [0, im.shape[1] - 1, 0,
-                          im.shape[0] - 1], mvx=4, verbose=0, fig=None)
 
 
 def scaleImage(image, display_min=None, display_max=None):
@@ -278,6 +258,8 @@ def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
         cv2.imshow('input', im8)
         cv2.imshow('flow', vis)
     return flow, ll
+
+
 # %%
 
 
@@ -336,6 +318,7 @@ def showFlowField(im, flow, ll=None, ff=None, d=12, fig=-1):
         cv2.imshow('flow', vis)
     return flow, ll
 
+
 # %%
 
 
@@ -368,7 +351,7 @@ def showCoulombDirection(ptx, ww, im=None, dd=None, fig=100):
     if fig is not None:
         plt.figure(fig)
         hh = pylab.arrow(pp[0, 0], pp[0, 1], ww[0], ww[
-                         1], linewidth=4, fc="k", ec="k", head_width=sigma / 2, head_length=sigma / 2)
+            1], linewidth=4, fc="k", ec="k", head_width=sigma / 2, head_length=sigma / 2)
         hh.set_alpha(0.8)
 
         plt.axis('image')
@@ -390,7 +373,7 @@ def findCoulombDirection(im, ptx, step, widthmv=8, fig=None, verbose=1):
         print('findCoulombDirection: initial: %s' % str(val))
 
     # improve estimate by taking a local average
-    valr = pgeometry.rot2D(np.pi / 2) .dot(val.reshape((2, 1)))
+    valr = pgeometry.rot2D(np.pi / 2).dot(val.reshape((2, 1)))
     sidesteps = np.arange(-6, 6.01, 3).reshape((-1, 1)) * \
         np.matrix(valr.reshape((1, 2)))
     pts = ptx + .5 * np.array(sidesteps)
@@ -438,58 +421,12 @@ def show2Dimage(im, dd, **kwargs):
     _ = show2D(dd, im=im, **kwargs)
     return None
 
-    try:
-        extentImage, xdata, ydata, imdummy = get2Ddata(
-            dd, fastscan=False, verbose=0, fig=None, midx=midx)
-        mdata = dd
-    except:
-        extentscan, g0, g2, vstep, vsweep, arrayname = dataset2Dmetadata(
-            dd, arrayname=None)
-        extentImage = [vsweep[0], vsweep[-1], vstep[-1],
-                       vstep[0]]  # matplotlib extent style
-        mdata = dd.metadata
-
-    pgeometry.cfigure(fig, facecolor=facecolor)
-    plt.clf()
-    if verbose >= 2:
-        print('show2D: show image')
-    imh = plt.imshow(im, extent=extent2fullextent(
-        extentImage, im), interpolation='nearest')
-    # imh=plt.imshow(im, extent=xx, interpolation='nearest')
-    if units is not None:
-        if 'stepdata' in mdata:
-            plt.xlabel('%s (%s)' % (dd['sweepdata']['gates'][0], units))
-            plt.ylabel('%s (%s)' % (dd['stepdata']['gates'][0], units))
-    else:
-        if 'stepdata' in mdata:
-            plt.xlabel('%s' % dd['sweepdata']['gates'][0])
-            plt.ylabel('%s' % dd['stepdata']['gates'][0])
-    if not title is None:
-        plt.title(title)
-    if colorbar:
-        plt.colorbar()
-    if verbose >= 2:
-        print('show2D: at show')
-    try:
-        plt.show(block=False)
-    except:
-        # ipython backend does not know about block keyword...
-        plt.show()
-    return extentImage
-
-
-if __name__ == '__main__':
-    pass
-    #show2Dimage(im, alldata)
-
-# %%
-
 
 def getValuePixel(imx, pt):
     """ Return interpolated pixel value in an image
 
     Args:
-        im (numpy array): input image
+        imx (numpy array): input image
         pt (numpy array): list of points
 
     Returns:
@@ -511,22 +448,18 @@ def smoothImage(im, k=3):
     """ Super simple image smoothing
 
     Args:
-
-    im : array
-        input image
-    k : int
-        kernel size
+        im (array): input image
+        k (int): kernel size
 
     Returns:
+        ims (array): smoothed image
 
-    im : array
-        smoothed image
-
-    >>> ims = smoothImage(np.random.rand( 30,40) )
+    Example:
+        ims = smoothImage(np.random.rand( 30,40))
     """
     ndim = len(im.shape)
-    k = np.ones((k,) * ndim) / k**ndim
-    ims = scipy.ndimage.filters.convolve(im, k, mode='nearest')
+    kernel = np.ones((k,) * ndim) / k ** ndim
+    ims = scipy.ndimage.filters.convolve(im, kernel, mode='nearest')
     return ims
 
 
@@ -619,3 +552,40 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
         plt.plot(yx[1], yx[0], '.m', markersize=12)
         plt.plot(xyw[0], xyw[1], '.g', markersize=17)
     return xyw
+
+
+def boxcar_filter(signal, kernel_size):
+    """ Perform boxcar filtering on an array.
+    At the edges, the edge value is replicated beyond the edge as needed by the size of the kernel.
+    This is the 'nearest' mode of scipy.ndimage.convolve. For details, see
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.convolve.html?highlight=mode
+
+
+    Args:
+        signal (array): An array containing the signal to be filtered.
+        kernel_size (tuple): Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
+
+    Returns:
+        a numpy array containing the filtered signal.
+    """
+
+    if not isinstance(signal, np.ndarray):
+        signal = np.array(signal)
+    if not isinstance(kernel_size, np.ndarray):
+        kernel_size = np.array(kernel_size, dtype=np.int_)
+
+    if len(kernel_size) != len(signal.shape):
+        raise RuntimeError('Number of dimensions of kernel (%d) not equal to number of dimension of input signal (%d)' %
+                           (len(kernel_size), len(signal.shape)))
+    if np.any(kernel_size <= 0):
+        raise RuntimeError('Kernel sizes must be > 0')
+
+    if signal.dtype.kind in ('i', 'u'):
+        filtered_signal = signal.astype(np.float64)
+    else:
+        filtered_signal = signal
+
+    boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
+    filtered_signal = scipy.ndimage.filters.convolve(filtered_signal, boxcar_kernel, mode='nearest')
+
+    return filtered_signal

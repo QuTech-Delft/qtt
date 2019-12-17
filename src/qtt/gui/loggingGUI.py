@@ -319,9 +319,9 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
 
+    #dlg.close()
 
-# %% Send message to logger
-if 0:
-    port = 5800
-    installZMQlogger(port=port, level=None)
-    logging.warning('test')
+    def send_message_to_logger():
+        port = 5800
+        installZMQlogger(port=port, level=None)
+        logging.warning('test')

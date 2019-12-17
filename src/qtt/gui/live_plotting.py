@@ -5,7 +5,7 @@ import numpy as np
 from functools import partial
 import qtpy.QtWidgets as QtWidgets
 import qtpy.QtCore as QtCore
-import scipy.ndimage as ndimage
+from qtpy.QtCore import Signal
 import pyqtgraph as pg
 import pyqtgraph
 import pyqtgraph.multiprocess as mp
@@ -54,7 +54,7 @@ class rda_t:
         try:
             self.set('dummy_rda_t', -3141592)
             v = self.get_float('dummy_rda_t')
-            if (not v == -3141592):
+            if not v == -3141592:
                 raise Exception('set not equal to get')
         except redis.exceptions.ConnectionError as e:
             print('rda_t: check whether redis is installed and the server is running')
@@ -228,14 +228,6 @@ class MeasurementControl(QtWidgets.QMainWindow):
             self.getVal(tv)
 
 
-def guitest_measurementcontrol():
-    import pyqtgraph
-    app = pyqtgraph.mkQApp()
-    mc = MeasurementControl()
-    mc.verbose = 1
-    mc.setGeometry(1700, 50, 300, 400)
-
-
 def start_measurement_control(doexec=False):
     """ Start measurement control GUI
 
@@ -258,7 +250,8 @@ try:
     import qtt.gui.parameterviewer
     import qtt.gui
     from qtt.utilities.tools import monitorSizes
-    from qcodes import QtPlot
+    from qcodes.plots.pyqtgraph import QtPlot
+
 
     def setupMeasurementWindows(station=None, create_parameter_widget=True,
                                 ilist=None):
@@ -361,8 +354,6 @@ class RdaControl(QtWidgets.QMainWindow):
         if self.verbose:
             print('valueChanged: %s %s' % (name, value))
         self.rda.set(name, value)
-        # self.label.setStyleSheet("QLabel { background-color : #baccba;
-        # margin: 2px; padding: 2px; }");
 
 
 # legacy name
@@ -378,14 +369,13 @@ class livePlot(QtCore.QObject):
         datafunction: the function to call for data acquisition
         sweepInstrument: the instrument to which sweepparams belong
         sweepparams: the parameter(s) being swept
-        sweepranges: the range over which sweepparams are being swept
+        sweepranges (list): the ranges over which sweepparams are being swept
         verbose (int): output level of logging information
         show_controls (bool): show gui elements for control of the live plotting
         alpha (float): parameter (value between 0 and 1) which determines the weight given in averaging to the latest
                         measurement result (alpha) and the previous measurement result (1-alpha), default value 0.3
     """
 
-    from qtpy.QtCore import Signal
     sigMouseClicked = Signal(object)
 
     def __init__(
@@ -398,6 +388,7 @@ class livePlot(QtCore.QObject):
             verbose=1,
             show_controls=True,
             window_title='live view',
+            plot_dimension=None,
             plot_title=None,
             is1dscan=None, **kwargs):
         """Return a new livePlot object."""
@@ -409,7 +400,7 @@ class livePlot(QtCore.QObject):
         win.setWindowTitle(self.window_title)
         vertLayout = QtWidgets.QVBoxLayout()
 
-        self._averaging_enabled = True
+        self._averaging_enabled = 2
         if show_controls:
             topLayout = QtWidgets.QHBoxLayout()
             win.start_button = QtWidgets.QPushButton('Start')
@@ -439,6 +430,7 @@ class livePlot(QtCore.QObject):
         self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
         self.datafunction_result = None
+        self.plot_dimension=plot_dimension
         self.alpha = alpha
         if is1dscan is None:
             is1dscan = (
@@ -453,21 +445,17 @@ class livePlot(QtCore.QObject):
         if verbose:
             print('live_plotting: is1dscan %s' % is1dscan)
         if self.sweepparams is None:
-            p1 = plotwin.addPlot(title="Videomode")
+            p1 = plotwin.addPlot(title=plot_title)
             p1.setLabel('left', 'param2')
             p1.setLabel('bottom', 'param1')
-            if self.datafunction is None:
-                raise Exception(
-                    'Either specify a datafunction or sweepparams.')
+            if plot_dimension == 1:
+                dd = np.zeros((0,))
+                plot = p1.plot(dd, pen='b')
+                self.plot = plot
             else:
-                data = np.array(self.datafunction())
-                if data.ndim == 1:
-                    dd = np.zeros((0,))
-                    plot = p1.plot(dd, pen='b')
-                    self.plot = plot
-                else:
-                    self.plot = pg.ImageItem()
-                    p1.addItem(self.plot)
+                self.plot = pg.ImageItem()
+                p1.addItem(self.plot)
+            self._crosshair = []
         elif is1dscan:
             p1 = plotwin.addPlot(title=plot_title)
             p1.setLabel('left', 'Value')
@@ -513,9 +501,7 @@ class livePlot(QtCore.QObject):
 
         def connect_slot(target):
             """ Create a slot by dropping signal arguments """
-            # @Slot()
             def signal_drop_arguments(*args, **kwargs):
-                # print('call %s' % target)
                 target()
             return signal_drop_arguments
 
@@ -528,6 +514,14 @@ class livePlot(QtCore.QObject):
         self.datafunction_result = None
 
         self.plotwin.scene().sigMouseClicked.connect(self._onClick)
+
+    def __del__(self):
+        self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
+        self.close()
+        parent = super()
+        if hasattr(parent, '__del__'):
+            parent.__del__()
 
     def _onClick(self, event):
         image_pt = self.plot.mapFromScene(event.scenePos())
@@ -542,8 +536,10 @@ class livePlot(QtCore.QObject):
         if self.verbose:
             print('LivePlot.close()')
         self.stopreadout()
+        pyqtgraph.mkQApp().processEvents()
         self.win.close()
 
+    @qtt.utilities.tools.rdeprecated(txt='method not used any more', expire='1 Dec 2019')
     def resetdata(self):
         self.idx = 0
         self.data = None
@@ -593,8 +589,8 @@ class livePlot(QtCore.QObject):
                             self.sweepInstrument, self.sweepparams)
                         paramval = sweep_param.get_latest()
                     sweepvalues = np.linspace(
-                        paramval - self.sweepranges / 2,
-                        self.sweepranges / 2 + paramval,
+                        paramval - self.sweepranges[0] / 2,
+                        self.sweepranges[0] / 2 + paramval,
                         len(data))
                     self.plot.setData(sweepvalues, self.data_avg)
                     self._sweepvalues = [sweepvalues]
@@ -671,14 +667,18 @@ class livePlot(QtCore.QObject):
         time.sleep(0.00001)
 
     def enable_averaging(self, value):
+        """ Enabling rolling average """
         self._averaging_enabled = value
         if self.verbose >= 1:
             if self._averaging_enabled == 2:
-                print('enable_averaging called, alpha = ' + str(self.alpha))
+                if self.verbose:
+                    print('enable_averaging called, alpha = ' + str(self.alpha))
             elif self._averaging_enabled == 0:
-                print('enable_averaging called, averaging turned off')
+                if self.verbose:
+                    print('enable_averaging called, averaging turned off')
             else:
-                print('enable_averaging called, undefined')
+                if self.verbose:
+                    print('enable_averaging called, undefined: value %s' % (self._averaging_enabled,))
 
     def enable_averaging_slot(self, *args, **kwargs):
         """ Update the averaging mode of the widget """
@@ -688,8 +688,9 @@ class livePlot(QtCore.QObject):
     def startreadout(self, callback=None, rate=30, maxidx=None):
         """
         Args:
+            callback (None or method): Method to call on update
             rate (float): sample rate in ms
-
+            maxidx (None or int): Stop reading if the index is larger than the maxidx
         """
         if maxidx is not None:
             self.maxidx = maxidx
@@ -700,6 +701,7 @@ class livePlot(QtCore.QObject):
             print('live_plotting: start readout: rate %.1f Hz' % rate)
 
     def stopreadout(self):
+        """ Stop the readout loop """
         if self.verbose:
             print('live_plotting: stop readout')
         self.timer.stop()
@@ -727,18 +729,4 @@ class MockCallback_2d(qcodes.Instrument):
         return data_reshaped
 
 
-def test_mock2d():
-    mock_callback = MockCallback_2d(qtt.measurements.scans.instrumentName('dummy2d'))
-    mock_callback()
-    mock_callback.close()
 
-
-# %% Example
-if __name__ == '__main__' and 0:
-    test_mock2d()
-    lp = livePlot(datafunction=MockCallback_2d(qtt.measurements.scans.instrumentName('mock')),
-                  sweepInstrument=None, sweepparams=['L', 'R'], sweepranges=[50, 50], show_controls=False)
-    lp.win.setGeometry(1500, 10, 400, 400)
-    lp.startreadout()
-    self = lp
-    pv = qtt.createParameterWidget([lp.datafunction])

@@ -3,8 +3,7 @@ from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonEr
 
 
 class ZurichInstrumentsHDAWG8(AwgCommon):
-    __sampling_rate_map = {0: 2.4e9, 1: 1.2e9, 2: 600e6, 3: 300e6, 4: 150e6, 5: 75e6, 6: 37.5e6, 7: 18.75e6,
-                           8: 9.37e6, 9: 4.68e6, 10: 2.34e6, 11: 1.17e6, 12: 585.93e3, 13: 292.96e3}
+    __sampling_rate_map = {ii: 2.4e9/2**ii for ii in range(0, 14)}
 
     def __init__(self, awg, awg_number=0):
         """ Implements the common functionality of the AwgCommon for the Zurich Instruments HDAWG8 to be controlled by
@@ -92,7 +91,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
     def retrieve_gain(self):
         gains = [self.__awg.get('sigouts_{}_range'.format(ch)) for ch in self._channel_numbers]
         if not all(g == gains[0] for g in gains):
-            raise ValueError('Not all channel gains are equal. Please reset!')
+            raise ValueError(f'Not all channel gains {gains} are equal. Please reset!')
         return gains[0]
 
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
@@ -113,9 +112,6 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             wave_infos.append((channel, *waves))
         sequence_program = self.__awg.generate_csv_sequence_program(wave_infos)
         self.__awg.upload_sequence_program(self.__awg_number, sequence_program)
-
-    def retrieve_waveforms(self):
-        raise NotImplementedError
 
     def delete_waveforms(self):
         pass

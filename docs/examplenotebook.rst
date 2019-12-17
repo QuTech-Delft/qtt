@@ -24,6 +24,17 @@ Analysis
 
     notebooks/analysis/example_ohmic.ipynb
     notebooks/analysis/*
+
+Data
+----
+
+.. toctree::
+    :maxdepth: 3
+    :titlesonly:
+    :glob:
+
+    notebooks/datasets/*
+
     
 Simulation
 ----------

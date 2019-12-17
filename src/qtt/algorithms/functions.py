@@ -1,11 +1,15 @@
 """ Mathematical functions and models """
 
 import numpy as np
-import unittest
 import scipy
 import scipy.constants
-import qtt.pgeometry
 import matplotlib.pyplot as plt
+from lmfit import Model
+
+import qtt.pgeometry
+import qtt.utilities.tools
+from qtt.utilities.visualization import plot_vertical_line
+from qtt.algorithms.generic import subpixelmax
 
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
@@ -24,53 +28,8 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
     return y
 
 
-def _cost_gaussian(x_data, y_data, params):
-    """Cost function for fitting a gaussian
-
-    Args:
-        x_data (array): x values of the data
-        y_data (array): y values of the data
-        params (array): parameters of a gaussian, [mean, s, amplitude, offset]
-    Returns:
-        cost (float): value which indicates the difference between the data and the fit
-    """
-
-    [mean, std, amplitude, offset] = params
-    model_y_data = gaussian(x_data, mean, std, amplitude, offset)
-    cost = np.linalg.norm(y_data - model_y_data)
-    return cost
-
-
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
-    """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
-
-    Args:
-        x_data (array): x values of the data
-        y_data (array): y values of the data
-        maxiter (int): maximum number of iterations to perform
-        maxfun (int): maximum number of function evaluations to make
-        verbose (int): set to >0 to print convergence messages
-        initial_params (None or array): optional, initial guess for the fit parameters: 
-            [mean, s, amplitude, offset]
-
-    Returns:
-        par_fit (array): fit parameters of the gaussian: [mean, s, amplitude, offset]
-        result_dict (dict): result dictonary containging the fitparameters and the initial guess parameters
-    """
-    def func(params): return _cost_gaussian(x_data, y_data, params)
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
-    if initial_params is None:
-        amplitude = np.max(y_data)
-        s = (maxsignal - minsignal) * 1 / 20
-        mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
-        offset = np.min(y_data)
-        initial_params = np.array([mean, s, amplitude, offset])
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
-
-    result_dict = {'parameters fitted gaussian': par_fit, 'parameters initial guess': initial_params}
-
-    return par_fit, result_dict
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
+    raise Exception('The fit_gaussian method has moved to qtt.algorithms.fitting')
 
 
 def double_gaussian(x_data, params):
@@ -93,6 +52,7 @@ def double_gaussian(x_data, params):
     return double_gauss
 
 
+@qtt.utilities.tools.rdeprecated(txt='Function will be removed from qtt')
 def _cost_double_gaussian(x_data, y_data, params):
     """ Cost function for fitting of double Gaussian.
 
@@ -112,74 +72,9 @@ def _cost_double_gaussian(x_data, y_data, params):
     return cost
 
 
-def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
-    """ Estimate of double gaussian model parameters."""
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
-
-    data_left = y_data[:int((len(y_data) / 2))]
-    data_right = y_data[int((len(y_data) / 2)):]
-
-    amplitude_left = np.max(data_left)
-    amplitude_right = np.max(data_right)
-    sigma_left = (maxsignal - minsignal) * 1 / 20
-    sigma_right = (maxsignal - minsignal) * 1 / 20
-
-    if fast_estimate:
-        alpha = .1
-        mean_left = minsignal + (alpha) * (maxsignal - minsignal)
-        mean_right = minsignal + (1 - alpha) * (maxsignal - minsignal)
-    else:
-        x_data_left = x_data[:int((len(y_data) / 2))]
-        x_data_right = x_data[int((len(y_data) / 2)):]
-        mean_left = np.sum(x_data_left * data_left) / np.sum(data_left)
-        mean_right = np.sum(x_data_right * data_right) / np.sum(data_right)
-    initial_params = np.array([amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
-    return initial_params
-
-
 def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
-    """ Fitting of double gaussian
+    raise Exception('fit_double_gaussian was moved to qtt.algorithms.fitting')
 
-    Fitting the Gaussians and finding the split between the up and the down state,
-    separation between the max of the two gaussians measured in the sum of the std.
-
-    Args:
-        x_data (array): x values of the data
-        y_data (array): y values of the data
-        maxiter (int): maximum number of iterations to perform
-        maxfun (int): maximum number of function evaluations to make
-        verbose (int): set to >0 to print convergence messages
-        initial_params (None or array): optional, initial guess for the fit parameters:
-            [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-
-    Returns:
-        par_fit (array): fit parameters of the double gaussian: [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-        result_dict (dict): dictionary with results of the fit. Fields in the dictionary:
-            parameters initial guess (array): initial guess for the fit parameters, either the ones give to the function, or generated by the function: [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-            separation (float): separation between the max of the two gaussians measured in the sum of the std
-            split (float): value that seperates the up and the down level
-
-    """
-    def func(params): return _cost_double_gaussian(x_data, y_data, params)
-    if initial_params is None:
-        initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
-
-    if par_fit[4] > par_fit[5]:
-        par_fit = np.take(par_fit, [1, 0, 3, 2, 5, 4])
-    # separation is the difference between the max of the gaussians devided by the sum of the std of both gaussians
-    separation = (par_fit[5] - par_fit[4]) / (abs(par_fit[2]) + abs(par_fit[3]))
-    # split equal distant to both peaks measured in std from the peak
-    split = par_fit[4] + separation * abs(par_fit[2])
-
-    result_dict = {'parameters initial guess': initial_params, 'separation': separation, 'split': split}
-    result_dict['parameters'] = par_fit
-    result_dict['left'] = np.take(par_fit, [4, 2, 0])
-    result_dict['right'] = np.take(par_fit, [5, 3, 1])
-    result_dict['type'] = 'fitted double gaussian'
-
-    return par_fit, result_dict
 
 def exp_function(x, a, b, c):
     """ Model for exponential function
@@ -206,7 +101,8 @@ def cost_exp_decay(x_data, y_data, params, threshold=None):
         x_data (array): the data for the input variable
         y_data (array): the data for the measured variable
         params (array): parameters of the exponential decay function, [A,B, gamma]
-        threshold (float or None or 'auto'): if the difference between data and model is larger then the threshold, then the cost penalty is reduced.
+        threshold (float or None or 'auto'): if the difference between data and model is larger then the threshold,
+                                             then the cost penalty is reduced.
             If None use normal cost function. If 'auto' use automatic detection (at 95th percentile)
     Returns:
         cost (float): value which indicates the difference between the data and the fit
@@ -215,6 +111,44 @@ def cost_exp_decay(x_data, y_data, params, threshold=None):
     cost = qtt.pgeometry.robustCost(y_data - model, thr=threshold)
     cost = np.linalg.norm(cost)
     return cost
+
+
+def _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter):
+    """ Estimate parameters for exponential decay function
+
+    Args:
+        x_data (array): Independent data
+        y_data (array): Dependent data
+        offset_parameter (None or float): If None, then estimate the offset, otherwise fix the offset to the
+        specified value
+    Returns:
+        Array with initial parameters
+    """
+    maxsignal = np.percentile(y_data, 98)
+    minsignal = np.percentile(y_data, 2)
+    midpoint = int(len(x_data) / 2)
+    gamma = 1 / (x_data[midpoint] - x_data[0])
+
+    mean_left = np.mean(y_data[:midpoint])
+    mean_right = np.mean(y_data[midpoint:])
+    increasing_exponential = mean_left < mean_right
+    alpha = np.exp(gamma * x_data[0])
+
+    if offset_parameter is None:
+        if increasing_exponential:
+            A = maxsignal
+            B = -(maxsignal - minsignal) * alpha
+        else:
+            A = minsignal
+            B = (maxsignal - minsignal) * alpha
+        initial_params = np.array([A, B, gamma])
+    else:
+        if increasing_exponential:
+            B = -(offset_parameter - minsignal) * alpha
+        else:
+            B = (maxsignal - offset_parameter) * alpha
+        initial_params = np.array([B, gamma])
+    return initial_params
 
 
 def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None, threshold=None,
@@ -229,51 +163,41 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
         verbose (int): set to >0 to print convergence messages
         initial_params (None or array): optional, initial guess for the fit parameters: [A,B, gamma]
         threshold (float or None): threshold for the cost function.
-            If the difference between data and model is larger then the threshold, these data are not taken into account for the fit.
+            If the difference between data and model is larger then the threshold, these data are not taken into
+            account for the fit.
             If None use automatic detection (at 95th percentile)
-        offset_parameter (None or float): if None, then estimate the offset, otherwise fix the offset to the specified value
+        offset_parameter (None or float): if None, then estimate the offset, otherwise fix the offset to the
+            specified value
     Returns:
-        par_fit (array): fit parameters of the exponential decay, [A, B, gamma]
+        fitted_parameters (array): fit parameters of the exponential decay, [A, B, gamma]
 
     See: :func:`exp_function`
 
     """
 
     if initial_params is None:
-        maxsignal = np.percentile(y_data, 98)
-        minsignal = np.percentile(y_data, 2)
-        gamma = 1 / (x_data[int(len(x_data) / 2)])
-        B = maxsignal
-        if offset_parameter is None:
-            A = minsignal
-            initial_params = np.array([A, B, gamma])
+        initial_params = _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter)
 
-            def func(params): return cost_exp_decay(x_data, y_data, params, threshold)
-        else:
-            initial_params = np.array([B, gamma])
+    if offset_parameter is None:
+        def cost_function(params):
+            return cost_exp_decay(x_data, y_data, params, threshold)
+    else:
+        def cost_function(params):
+            return cost_exp_decay(
+                x_data, y_data, np.hstack((offset_parameter, params)), threshold)
 
-            def func(params): return cost_exp_decay(x_data, y_data, np.hstack((offset_parameter, params)), threshold)
-
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    fitted_parameters = scipy.optimize.fmin(cost_function, initial_params,
+                                            maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
     if offset_parameter is not None:
-        par_fit = np.hstack(([offset_parameter], par_fit))
+        fitted_parameters = np.hstack(([offset_parameter], fitted_parameters))
 
-    return par_fit
-
-
-def test_fit_exp_decay():
-    x_data = np.arange(0, 10., .1)
-    parameters = [0, 1, 1]
-    y_data = exp_function(x_data, *parameters)
-    fitted = fit_exp_decay(x_data, y_data)
-    np.testing.assert_array_almost_equal(fitted, parameters, decimal=3)
-    fitted = fit_exp_decay(x_data, y_data, offset_parameter=0.1)
-    np.testing.assert_array_almost_equal(fitted, [.1, .95, 1.4], decimal=1)
+    return fitted_parameters
 
 
 def gauss_ramsey(x_data, params):
-    """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase of the second pulse
-    is made dependent on the free evolution time. This results in a gaussian decay multiplied by a sinus.
+    """ Model for the measurement result of a pulse Ramsey sequence while varying the free evolution time, the phase
+    of the second pulse is made dependent on the free evolution time. This results in a gaussian decay multiplied
+    by a sinus.
     Function as used by T.F. Watson et all., example in qtt/docs/notebooks/example_fit_ramsey.ipynb
 
     $$ gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B  $$
@@ -286,7 +210,7 @@ def gauss_ramsey(x_data, params):
         gauss_ramsey (array): model for the gauss_ramsey
     """
     [A, t2s, ramseyfreq, angle, B] = params
-    gauss_ramsey = A * np.exp(-(x_data / t2s)**2) * np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
+    gauss_ramsey = A * np.exp(-(x_data / t2s) ** 2) * np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
     return gauss_ramsey
 
 
@@ -303,19 +227,103 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
         cost (float): value which indicates the difference between the data and the fit
     """
     model = gauss_ramsey(x_data, params)
-    #cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2*(np.array(x_data)[1:]-np.array(x_data)[:-1])**weight_power])
-    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])**2 * (np.diff(x_data))**weight_power])
+    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:]) ** 2 * (np.diff(x_data)) ** weight_power])
     return cost
 
 
+def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None):
+    """ Estimate dominant frequency in a signal
+
+    Args:
+        signal (array): Input data
+        sample_rate (float): Sample rate of the data
+        remove_dc (bool): If True, then do not estimate the DC component
+        fig (int or None): Optionally plot the estimated frequency
+    """
+    w = np.fft.fft(signal)
+    freqs = np.fft.fftfreq(len(signal), d=1. / sample_rate)
+
+    if remove_dc:
+        w[0] = 0
+    w[freqs < 0] = 0
+
+    dominant_idx = np.argmax(np.abs(w))
+    dominant_frequency = freqs[dominant_idx]
+
+    if 0 < dominant_idx < freqs.size / 2 - 1:
+        dominant_idx_subpixel, _ = subpixelmax(np.abs(w), [dominant_idx])
+        dominant_frequency = np.interp(dominant_idx_subpixel, np.arange(freqs.size), freqs)[0]
+
+    if fig:
+        plt.figure(fig)
+        plt.clf()
+        plt.plot(freqs, np.abs(w), '.b')
+        plt.xlabel('Frequency')
+        plt.ylabel('Abs of fft')
+        plot_vertical_line(dominant_frequency, label='Dominant frequency')
+    return dominant_frequency
+
+# %%
+
+
+def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
+    """ Estimate initial parameters of a damped sine wave
+
+    The damped sine wave is described in https://en.wikipedia.org/wiki/Damped_sine_wave.
+    This is a first estimate of the parameters, no numerical optimization is performed.
+
+    The amplitude is estimated from the minimum and maximum values of the data. The osciallation frequency using
+    the dominant frequency in the FFT of the signal. The phase of the signal is calculated based on the first
+    datapoint in the sequences and the other parameter estimates. Finally, the decay factor of the damped sine wave is
+    determined by a heuristic rule.
+
+    Example:
+        >>> estimate_parameters_damped_sine_wave(np.arange(10), np.sin(np.arange(10)))
+
+    Args:
+        x_data (float): Independent data
+        y_data (float): Dependent data
+        exponent (float): Exponent from the exponential decay factor
+
+    Returns:
+        Estimated parameters for damped sine wave (see the gauss_ramsey method)
+    """
+    A = (np.max(y_data) - np.min(y_data)) / 2
+    B = (np.min(y_data) + A)
+
+    n = int(x_data.size / 2)
+    mean_left = np.mean(np.abs(y_data[:n] - B))
+    mean_right = np.mean(np.abs(y_data[n:] - B))
+
+    laplace_factor = 1e-16
+    decay_factor = (mean_left + laplace_factor) / (mean_right + laplace_factor)
+
+    duration = x_data[-1] - x_data[0]
+    sample_rate = (x_data.size - 1) / duration
+    frequency = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
+
+    if A == 0:
+        angle = 0
+    else:
+        n_start = max(min((y_data[0] - B) / A, 1), -1)
+        angle_first_datapoint = -np.arcsin(n_start)
+        angle = angle_first_datapoint + 2 * np.pi * frequency * x_data[0]
+        angle = np.mod(np.pi + angle, 2 * np.pi) - np.pi
+    t2s = 2 * duration / decay_factor
+
+    initial_params = np.array([A, t2s, frequency, angle, B])
+    return initial_params
+
+
 def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
-    """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey sequence while varying
-    the free evolution time, the phase of the second pulse is made dependent on the free evolution time.
+    """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey
+    sequence while varying the free evolution time, the phase of the second pulse is made dependent on the free
+    evolution time.
     This results in a gaussian decay multiplied by a sinus. Function as used by T.F. Watson et all.,
     see function 'gauss_ramsey' and example in qtt/docs/notebooks/example_fit_ramsey.ipynb
 
     Args:
-        x_data (array): the data for the independant variable
+        x_data (array): the data for the independent variable
         y_data (array): the data for the measured variable
         weight_power (float)
         maxiter (int): maximum number of iterations to perform
@@ -328,21 +336,43 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
         result_dict (dict): dictionary containing a description, the par_fit and initial_params
 
     """
-    def func(params): return cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
-    if initial_params is None:
-        A = (np.max(y_data) - np.min(y_data)) / 2
-        t2s = 1e-6
-        ramseyfreq = 1 / (1e-6)
-        angle = 0
-        B = (np.min(y_data) + (np.max(y_data) - np.min(y_data)) / 2)
-        initial_params = np.array([A, t2s, ramseyfreq, angle, B])
 
-    par_fit = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    def func(params): return cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
+
+    if initial_params is None:
+        initial_params = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
+
+    fit_parameters = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
 
     result_dict = {
-        'description': 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B', 'parameters fit': par_fit, 'parameters initial guess': initial_params}
+        'description': 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = '
+                       'A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B',
+        'parameters fit': fit_parameters,
+        'parameters initial guess': initial_params}
 
-    return par_fit, result_dict
+    return fit_parameters, result_dict
+
+
+def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
+    """ Plot Gauss Ramset fit
+
+    Args:
+        x_data: Input array with time variable
+        y_data: Input array with signal
+        fit_parameters: Result of fit_gauss_ramsey
+    """
+    test_x = np.linspace(0, np.max(x_data), 200)
+    freq_fit = abs(fit_parameters[2] * 1e-6)
+    t2star_fit = fit_parameters[1] * 1e6
+
+    plt.figure(fig)
+    plt.clf()
+    plt.plot(x_data * 1e6, y_data, 'o', label='Data')
+    plt.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
+    plt.title('Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
+    plt.xlabel('time ($\mu$s)')
+    plt.ylabel('Spin-up probability')
+    plt.legend()
 
 
 def linear_function(x, a, b):
@@ -403,81 +433,19 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
 def logistic(x, x0=0, alpha=1):
     """ Logistic function
 
+    Defines the logistic function
+
+    .. math::
+
+        y = 1 / (1 + \exp(-2 * alpha * (x - x0)))
+
     Args:
-        x (array): array with values
-        x0 (float):  parameters of function
-        alpha (float): parameters of function
+        x (array): Independent data
+        x0 (float): Midpoint of the logistic function
+        alpha (float): Growth rate
 
     Example:
-        >>> y=logistic(0, 1, alpha=1)
+        y = logistic(0, 1, alpha=1)
     """
     f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
     return f
-
-
-class TestFunctions(unittest.TestCase):
-
-    def test_fit_gaussian(self):
-        x_data = np.linspace(0, 10, 100)
-        gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
-        noise = np.random.rand(100)
-        [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise))
-        self.assertTrue(3.5 < mean < 4.5)
-        self.assertTrue(0.5 < s < 1.5)
-        self.assertTrue(4.5 < amplitude < 5.5)
-        self.assertTrue(0.0 < offset < 1.0)
-
-    def test_fit_double_gaussian(self):
-        x_data = np.arange(-4, 4, .05)
-        initial_parameters = [10, 20, 1, 1, -2, 2]
-        y_data = double_gaussian(x_data, initial_parameters)
-
-        fitted_parameters, _ = fit_double_gaussian(x_data, y_data)
-        parameter_diff = np.abs(fitted_parameters - initial_parameters)
-        self.assertTrue(np.all(parameter_diff < 1e-3))
-
-    def test_cost_exp_decay(self):
-        params = [0, 1, 1]
-        x_data = np.arange(0, 20)
-        y_data = exp_function(x_data, *params)
-        y_data[-1] += 10
-        c = cost_exp_decay(x_data, y_data, params)
-        self.assertTrue(c == 10.0)
-        c = cost_exp_decay(x_data, y_data, params, threshold=None)
-        self.assertTrue(c == 10.0)
-        c = cost_exp_decay(x_data, y_data, params, threshold='auto')
-        self.assertTrue(c < 10.0)
-
-    def test_fit_gauss_ramsey(self, fig=None):
-        y_data = np.array([0.6019, 0.5242, 0.3619, 0.1888, 0.1969, 0.3461, 0.5276, 0.5361,
-                           0.4261, 0.28, 0.2323, 0.2992, 0.4373, 0.4803, 0.4438, 0.3392,
-                           0.3061, 0.3161, 0.3976, 0.4246, 0.398, 0.3757, 0.3615, 0.3723,
-                           0.3803, 0.3873, 0.3873, 0.3561, 0.37, 0.3819, 0.3834, 0.3838,
-                           0.37, 0.383, 0.3573, 0.3869, 0.3838, 0.3792, 0.3757, 0.3815])
-        x_data = np.array([i * 1.6 / 40 for i in range(40)])
-
-        par_fit_test, _ = fit_gauss_ramsey(x_data * 1e-6, y_data)
-
-        self.assertTrue(np.abs(np.abs(par_fit_test[0]) - 0.21) < 0.1)
-        self.assertTrue(np.abs(par_fit_test[-2] - 1.88) < 0.1)
-        self.assertTrue(np.abs(par_fit_test[-1] - 0.38) < 0.1)
-
-        test_x = np.linspace(0, x_data.max() * 1e-6, 200)
-        test_y = gauss_ramsey(test_x, par_fit_test)
-
-        if fig is not None:
-            plt.figure(10)
-            plt.clf()
-            plt.plot(x_data, y_data, 'o', label='input data')
-            plt.plot(test_x * 1e6, test_y, label='fitted curve')
-            plt.legend(numpoints=1)
-
-    def test_logistic_and_linear_function(self):
-        x_data = np.arange(-10, 10, 0.1)
-
-        _ = logistic(x_data, x0=0, alpha=1)
-        self.assertTrue(logistic(0, x0=0, alpha=1) == 0.5)
-
-        _ = linear_function(x_data, 1, 2)
-        self.assertTrue(linear_function(0, 1, 2) == 2)
-        self.assertTrue(linear_function(3, 1, 2) == 5)

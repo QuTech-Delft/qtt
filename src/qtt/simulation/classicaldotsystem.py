@@ -260,15 +260,3 @@ class SquareDot(ClassicalDotSystem):
 
         for name in self.varnames:
             setattr(self, name, vardict[name + '_values'])
-
-
-def test_dotsystem():
-    m = MultiDot('multidot', 4, maxelectrons=3)
-    m.calculate_energies(np.random.rand(m.ndots))
-    m.solve()
-    if __name__ == '__main__':
-        m.showstates(8)
-
-
-if __name__ == '__main__':
-    test_dotsystem()

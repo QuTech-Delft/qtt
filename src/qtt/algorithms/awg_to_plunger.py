@@ -1,4 +1,4 @@
-""" Functionality to determine the awg_to_plunger ratio
+""" Functionality to determine the awg_to_plunger ratio.
 
 pieter.eendebak@tno.nl
 
@@ -11,7 +11,7 @@ import qcodes
 import copy
 import matplotlib.pyplot as plt
 
-from qcodes import MatPlot
+from qcodes.plots.qcmatplotlib import MatPlot
 import qtt.algorithms.images
 import qtt.utilities.imagetools
 from qtt.measurements.scans import scan2Dfast, scanjob_t
@@ -22,13 +22,13 @@ from qtt.algorithms.images import straightenImage
 
 
 def get_dataset(ds):
-    """ Get a dataset from a results dict, a string or a dataset
+    """ Get a dataset from a results dict, a string or a dataset.
 
     Args:
-        ds (dict, str or qcodes.DataSet): the data to be put in the dataset
+        ds (dict, str or qcodes.DataSet): the data to be put in the dataset.
 
     Returns:
-        ds (qcodes.DataSet) dataset made from the input data
+        ds (qcodes.DataSet) dataset made from the input data.
 
     """
     if isinstance(ds, dict):
@@ -44,11 +44,11 @@ def click_line(fig=None):
     """ Define a line through two points. The points are choosen by clicking on a position in a plot, two times.
 
     Args:
-        fig (int or None): number of figure to plot the points in, when None it will plot a figure
+        fig (int or None): number of figure to plot the points in, when None it will plot a figure.
 
     Returns:
-        offset (float): offset of the line
-        slope (float): slope of the line
+        offset (float): offset of the line.
+        slope (float): slope of the line.
     """
     if fig is not None:
         plt.figure(fig)
@@ -65,19 +65,19 @@ def click_line(fig=None):
 
 def measure_awg_to_plunger(station, gate, minstrument, scanrange=30, step=0.5):
     """ Performing a scan2Dfast measurement, same gate on both axis, where the one axis is sweeped with the awg
-    and one axis is stepped with the DAC's. Measurement should be centred around an addition line. From the slope of the addition line
-    the awg to plunger conversion factor can be checked with the function analyse_awg_to_plunger.
+    and one axis is stepped with the DAC's. Measurement should be centred around an addition line. From the slope
+    of the addition line the awg to plunger conversion factor can be checked with the function analyse_awg_to_plunger.
 
     Args:
-        station (QCoDeS station): measurement setup
-        gate (str): gate for which the awg to plunger conversion
-        minstrument (str, int): list with the name of the measurement instrument (str), and the channel number (int)
-        scanrange (float): sweep- and steprange (mV), making a square 2d measurement
-        step (float): stepsize (mV)
+        station (QCoDeS station): measurement setup.
+        gate (str): gate for which the awg to plunger conversion.
+        minstrument (str, int): list with the name of the measurement instrument (str), and the channel number (int).
+        scanrange (float): sweep- and steprange (mV), making a square 2d measurement.
+        step (float): stepsize (mV).
 
     Returns:
         result (dict): resultresult (dic): result dictionary of the function measure_awg_to_plunger,
-            shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}
+            shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}.
 
     """
     gates = station.gates
@@ -96,23 +96,23 @@ def measure_awg_to_plunger(station, gate, minstrument, scanrange=30, step=0.5):
 
 
 def analyse_awg_to_plunger(result, method='hough', fig=None):
-    """ Determine the awg_to_plunger conversion factor from a 2D scan, two possible methods: 'hough' it fits the slope of the addition line and calculates the
-        correction to the awg_to_plunger conversion factor from there. if this doesn't work for some reason, method 'click' can be used
-        to find the addition lines by hand/eye
+    """ Determine the awg_to_plunger conversion factor from a 2D scan, two possible methods: 'hough' it fits the slope
+        of the addition line and calculates the correction to the awg_to_plunger conversion factor from there. if this
+        doesn't work for some reason, method 'click' can be used to find the addition lines by hand/eye.
 
     Args:
         result (dic): result dictionary of the function measure_awg_to_plunger,
-            shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}
-        method (str): either 'hough' or 'click'
-        fig (int or None): determines of the analysis staps and the result is plotted
+            shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}.
+        method (str): either 'hough' or 'click'.
+        fig (int or None): determines of the analysis staps and the result is plotted.
 
     Returns:
         result (dict): including to following entries:
-            angle (float): angle in radians
-            angle_degrees (float): angle in degrees
-            correction of awg_to_plunger (float): correction factor
-            dataset (str): location where the dataset is stored
-            type(str): type of calibration, 'awg_to_plunger'
+            angle (float): angle in radians.
+            angle_degrees (float): angle in degrees.
+            correction of awg_to_plunger (float): correction factor.
+            dataset (str): location where the dataset is stored.
+            type(str): type of calibration, 'awg_to_plunger'.
 
     """
     # getting the dataset from the result from the measure_awg_to_plunger function
@@ -127,7 +127,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
         import cv2
         im, tr = qtt.data.dataset2image(ds)
         imextent = tr.scan_image_extent()
-        istep = tr.istep()
+        istep = tr.scan_resolution()
         _, r = qtt.algorithms.images.straightenImage(
             im, imextent, mvx=istep, mvy=None)
         H = r[4]
@@ -151,14 +151,11 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             angle_deg = None
             correction = None
         else:
-
-            a = lines[:, 0, 1]
-            angle_pixel = np.percentile(a, 50) + 0 * np.pi / 2
+            angles = lines[:, 0, 1]
+            angle_pixel = angles[0] # take most voted line
 
             fac = 2
-
-            xpix = np.array(
-                [[0, 0], [-fac * np.sin(angle_pixel), fac * np.cos(angle_pixel)]]).T
+            xpix = np.array([[0, 0], [-fac * np.sin(angle_pixel), fac * np.cos(angle_pixel)]]).T
             tmp = qtt.pgeometry.projectiveTransformation(np.linalg.inv(H), xpix)
             xscan = tr.pixel2scan(tmp)
 
@@ -176,7 +173,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             plt.axis('image')
 
             if angle_pixel is not None:
-                for offset in [-20, 0, 20]:
+                for offset in [-40, -20, 0, 20, 40]:
                     label = None
                     if offset is 0:
                         label = 'detected angle'
@@ -232,12 +229,10 @@ def plot_awg_to_plunger(result, fig=10):
     """ This function tests the analyse_awg_to_plunger function. Plotting is optional and for debugging purposes.
 
     Args:
-        result (dict): result dictionary from the analyse_awg_to_plunger function
-        fig (int): index of matplotlib window
-
+        result (dict): result dictionary from the analyse_awg_to_plunger function.
+        fig (int): index of matplotlib window.
 
     """
-
     if not result.get('type', None) == 'awg_to_plunger':
         raise Exception('calibration result not of correct type ')
 
@@ -253,50 +248,10 @@ def plot_awg_to_plunger(result, fig=10):
     if angle is not None:
         rho = -(xscan[0] * np.cos(angle) - np.sin(angle) * xscan[1])
 
-        for offset in [-20, 0, 20]:
+        for offset in [-40, -20, 0, 20, 40]:
             label = None
             if offset is 0:
                 label = 'detected angle'
             qtt.pgeometry.plot2Dline(
                 [np.cos(angle), -np.sin(angle), rho + offset], '--m', alpha=.6, label=label)
     plt.title('Detected line direction')
-
-
-# %% Test functions
-import unittest
-
-
-class TestAwgToPlunger(unittest.TestCase):
-
-    def test_awg_to_plunger(self, fig=None):
-        """ Plot results of awg_to_plunger calibration check?
-
-        Args:
-            fig (str, int or None): default None. Name of figure to plot in, if None not plotted
-
-        Returns:
-            Nothing
-
-        """
-        x = np.arange(0, 80, 1.0).astype(np.float32)
-        y = np.arange(0, 60).astype(np.float32)
-        z = np.meshgrid(x, y)
-        z = 0.01 * z[0].astype(np.uint8)
-        input_angle = np.deg2rad(-35)
-        qtt.utilities.imagetools.semiLine(z, np.array([[0], [y.max()]]), input_angle, w=2.2, l=30, H=0.52)
-        ds = qtt.data.makeDataSet2Dplain('x', x, 'y', y, 'z', z)
-        result = {'dataset': ds, 'type': 'awg_to_plunger'}
-        r = analyse_awg_to_plunger(result, method='hough', fig=fig)
-        output_angle = r['angle']
-
-        if fig:
-            print(r)
-            print('angle input %.3f: output angle %s' % (input_angle, str(output_angle)))
-
-        d = qtt.pgeometry.angleDiff(input_angle, (-np.pi / 2 - output_angle))
-        self.assertTrue(np.abs(d) < np.deg2rad(5))
-
-
-if __name__ == '__main__':
-    tester = TestAwgToPlunger()
-    tester.test_awg_to_plunger(fig=10)

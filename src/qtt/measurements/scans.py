@@ -4,38 +4,40 @@ This module contains functions for basic scans, e.g. scan1D, scan2D, etc.
 This is part of qtt. 
 """
 
-import unittest
-import numpy as np
+import datetime
+import logging
 import os
 import re
-import logging
 import time
-import datetime
 import warnings
+from typing import Any, Type
+
+import matplotlib.pyplot as plt
+import numpy as np
 import pyqtgraph
+import qcodes
 import skimage
 import skimage.filters
-import matplotlib.pyplot as plt
-
-import qcodes
-from qcodes.utils.helpers import tprint
+from qcodes import DataArray, Instrument
 from qcodes.instrument.parameter import Parameter, StandardParameter
-from qcodes import DataArray
 from qcodes.plots.qcmatplotlib import MatPlot
-from qcodes import Instrument
+from qcodes.utils.helpers import tprint
 
-import qtt.utilities.tools
-from qtt.algorithms.gatesweep import analyseGateSweep
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
+import qtt.instrument_drivers.virtualAwg.virtual_awg
+import qtt.utilities.tools
+from qtt.algorithms.gatesweep import analyseGateSweep
+from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
+from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
+import qtt.instrument_drivers.simulation_instruments
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset, loadDataset, writeDataset
+from qtt.data import diffDataset, loadDataset
 from qtt.data import uniqueArrayName
 
 from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
-
 
 # %%
 
@@ -172,7 +174,7 @@ def get_param_name(gates, sweepgate):
 # %%
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt. Use qtt.data.plot_dataset', expire='1 Sep 2018')
 def plot1D(data, fig=100, mstyle='-b'):
     """ Show result of a 1D scan """
 
@@ -223,14 +225,17 @@ def get_instrument(instr, station=None):
     """ Return handle to instrument
 
     Args:
-        instr (str, Instrument, tuple): name of instrument or handle
+        instr (str, Instrument, tuple, list): name of instrument or handle or pair (handle, channel)
     """
 
-    if isinstance(instr, tuple):
+    if isinstance(instr, (tuple, list)):
         # assume the tuple is (instrument, channel)
         instr = instr[0]
 
     if isinstance(instr, Instrument):
+        return instr
+
+    if isinstance(instr, AcquisitionScopeInterface):
         return instr
 
     if not isinstance(instr, str):
@@ -316,7 +321,7 @@ def _add_dataset_metadata(dataset):
         dataset, include_data=False, include_metadata=False))
 
 
-def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=False):
+def _initialize_live_plotting(alldata, plotparam, liveplotwindow=None, subplots=False):
     """ Initialize live plotting
 
     Args:
@@ -345,6 +350,16 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=False
         pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
     return liveplotwindow
 
+def _dataset_record_label(scanjob):
+    """ Return label to be used in dataset record
+    
+    Args:
+        scanjob (dict): Scanjob that is used to generate the record label
+    Returns
+        String with record label
+    """
+    default_label = scanjob.get('scantype', 'default')
+    return scanjob.get('dataset_label', default_label)
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -357,9 +372,6 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     Returns:
         alldata (DataSet): contains the measurement data and metadata
     """
-    gates = station.gates
-    gatevals = gates.allvalues()
-
     minstrument = scanjob.get('minstrument', None)
     mparams = get_measurement_params(station, minstrument)
 
@@ -388,7 +400,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.debug('wait_time: %s' % str(wait_time))
 
     alldata, (set_names, measure_names) = makeDataSet1D(sweepvalues, yname=mparams,
-                                                        location=location, loc_record={'label': scanjob['scantype']},
+                                                        location=location, loc_record={'label': _dataset_record_label(scanjob)},
                                                         return_names=True)
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
@@ -408,7 +420,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
         if scanjob['scantype'] == 'scan1Dvec':
             for param in scanjob['phys_gates_vals']:
-                gates.set(param, scanjob['phys_gates_vals'][param][ix])
+                station.gates.set(param, scanjob['phys_gates_vals'][param][ix])
         else:
             sweepvalues.set(x)
         if ix == 0:
@@ -432,9 +444,9 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     myupdate()
     dt = time.time() - t0
 
-    if scanjob['scantype'] is 'scan1Dvec':
+    if scanjob['scantype'] == 'scan1Dvec':
         for param in scanjob['phys_gates_vals']:
-            parameter = gates.parameters[param]
+            parameter = station.gates.parameters[param]
             arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit,
                             preset_data=scanjob['phys_gates_vals'][param],
                             set_arrays=(alldata.arrays[sweepvalues.parameter.name],))
@@ -446,9 +458,13 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot())
-    update_dictionary(alldata.metadata, allgatevalues=gatevals)
+
+    if 'gates' in station.components:
+        gates = station.gates
+        gatevals = gates.allvalues()
+        update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
 
     logging.info('scan1D: done %s' % (str(alldata.location),))
@@ -542,7 +558,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         else:
             if virtual_awg:
                 sweep_range = sweeprange
-                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period)
+                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period, do_upload=delete)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
             else:
@@ -558,7 +574,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
     alldata = makeDataSet1Dplain(sweepvalues.parameter.name, sweepvalues, measure_names, data,
-                                 location=location, loc_record={'label': scanjob['scantype']})
+                                 xunit=qtt.data.determine_parameter_unit(sweepvalues.parameter),
+                                 yunit=None,
+                                 location=location, loc_record={'label': _dataset_record_label(scanjob)})
     if virtual_awg:
         virtual_awg.stop()
     else:
@@ -573,7 +591,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, dt=dt, station=station.snapshot())
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob), dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
 
@@ -663,7 +681,8 @@ class scanjob_t(dict):
 
     def add_sweep(self, param, start, end, step, **kwargs):
         """ Add sweep to scan job """
-        sweep = {'param': param, 'start': float(start), 'end': float(end), 'step': step, **kwargs}
+        end_value = float(end) if end is not None else end
+        sweep = {'param': param, 'start': float(start), 'end': end_value, 'step': step, **kwargs}
         if not 'sweepdata' in self:
             self['sweepdata'] = sweep
         elif 'stepdata' not in self:
@@ -841,7 +860,6 @@ class scanjob_t(dict):
             scanjob (scanjob_t): updated data for scan
             scanvalues (list): contains the values for parameters to scan over
         """
-        gates = station.gates
 
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
@@ -850,10 +868,13 @@ class scanjob_t(dict):
                     sweepdata['start'] = -sweepdata['range'] / 2
                     sweepdata['end'] = sweepdata['range'] / 2
                 else:
+                    gates = station.gates
                     param_val = gates.get(sweepdata['param'])
                     sweepdata['start'] = param_val - sweepdata['range'] / 2
                     sweepdata['end'] = param_val + sweepdata['range'] / 2
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                gates = station.gates
+
                 if 'paramname' in self['sweepdata']:
                     sweepname = self['sweepdata']['paramname']
                 else:
@@ -862,6 +883,7 @@ class scanjob_t(dict):
                 sweepparam = VectorParameter(name=sweepname_identifier, label=sweepname, comb_map=[(
                     gates.parameters[x], sweepdata['param'][x]) for x in sweepdata['param']])
             elif self['scantype'] in ['scan1D', 'scan1Dfast']:
+                gates = getattr(station, 'gates', None)
                 sweepparam = get_param(gates, sweepdata['param'])
             else:
                 raise Exception('unknown scantype')
@@ -869,6 +891,8 @@ class scanjob_t(dict):
                 sweepdata['step'] = (sweepdata['end']
                                      - sweepdata['start']) / sweeplength
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
+                gates = station.gates
+
                 last = sweepdata['start'] + sweepdata['range']
                 scanvalues = sweepparam[sweepdata['start']:last:sweepdata.get('step', 1.)]
 
@@ -886,6 +910,8 @@ class scanjob_t(dict):
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
+            gates = station.gates
+
             stepdata = self['stepdata']
             if 'range' in stepdata:
                 if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
@@ -1011,12 +1037,16 @@ def fastScan(scanjob, station):
     if awg is None:
         awg = getattr(station, 'virtual_awg', None)
 
-    if 'awg' is None:
+    if awg is None:
         return 0
 
     if isinstance(awg, qtt.instrument_drivers.virtualAwg.virtual_awg.VirtualAwg):
         awg_map = awg._settings.awg_map
-        if not scanjob['sweepdata']['param'] in awg_map:
+        if isinstance(scanjob['sweepdata']['param'], dict):
+            params = scanjob['sweepdata']['param'].keys()
+        else:
+            params = [scanjob['sweepdata']['param']]
+        if not np.all([(param in awg_map) for param in params]):
             # sweep gate is not fast, so no fast scan possible
             return 0
         if 'stepdata' in scanjob:
@@ -1101,22 +1131,18 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     if type(stepvalues) is np.ndarray:
         stepvalues = stepdata['param'][list(stepvalues[:, 0])]
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues, measure_names=mparams,
-                                                            location=location,
-                                                            loc_record={'label': scanjob['scantype']},
-                                                            return_names=True)
-    else:
-        alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
-                                                            measure_names=mparams, location=location, loc_record={
-                                                                'label': scanjob['scantype']},
-                                                            return_names=True)
+
+    alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
+                                                        measure_names=mparams, location=location, loc_record={
+                                                            'label': _dataset_record_label(scanjob)},
+                                                        return_names=True)
 
     if verbose >= 2:
         print('scan2D: created dataset')
         print('  set_names: %s ' % (set_names,))
         print('  measure_names: %s ' % (measure_names,))
 
-    if plotparam is 'all':
+    if plotparam == 'all':
         liveplotwindow = _initialize_live_plotting(alldata, measure_names, liveplotwindow, subplots=True)
     else:
         liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
@@ -1199,8 +1225,6 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if scanjob['scantype'] == 'scan2Dvec':
         for param in scanjob['phys_gates_vals']:
             parameter = gates.parameters[param]
-            # if type(stepvalues) is np.ndarray:
-            #    stepvalues = stepvalues_tmp
             if parameter.name in alldata.arrays.keys():
                 warnings.warn('parameter %s already in dataset, skipping!' % parameter.name)
                 continue
@@ -1216,7 +1240,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
@@ -1238,13 +1262,31 @@ def get_sampling_frequency(instrument_handle):
     """
     instrument_handle = get_instrument(instrument_handle)
 
-    if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+    if isinstance(instrument_handle, AcquisitionScopeInterface):
+        return instrument_handle.sample_rate
+    try:
+        if isinstance(instrument_handle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i):
+            return instrument_handle.sample_rate()
+    except ImportError:
+        pass
+    try:
+        import qcodes.instrument_drivers.Spectrum.M4i
+        if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
+            warnings.warn('please use the M4i driver from qcodes_contrib_drivers')
+            return instrument_handle.sample_rate()
+    except ImportError:
+        pass
+    try:
+        import qcodes.instrument_drivers.ZI.ZIUHFLI
+        if isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
+             return NotImplementedError('not implemented yet')
+    except ImportError:
+        pass
+
+    if isinstance(instrument_handle, qtt.instrument_drivers.simulation_instruments.SimulationDigitizer):
         return instrument_handle.sample_rate()
-    elif isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
-        return Exception('not implemented yet')
-    else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % instrument_handle)
+
+    raise Exception('Unrecognized fast readout instrument %s' % instrument_handle)
 
 
 def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, start_zero=True, fig=None):
@@ -1427,8 +1469,12 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
 
     return processed_data, (trace_start, trace_end)
 
+def ceilN(x, n):
+    return int(n*np.ceil(x/n))
+def floorN(x, n):
+    return int(n*np.floor(x//n))
 
-def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
+def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1, trigger_re_arm_compensation = False):
     """ Select suitable memory size for a given period
 
     The selected memory size is the period times the sample rate, but rounded above to a multiple of 16.
@@ -1439,33 +1485,43 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         period (float): period of signal to measure
         trigger_delay (float): delay in seconds between ingoing signal and returning signal
         nsegments (int): number of segments of period length to fit in memory
+        trigger_arm_compensation (bool): In block average mode the M4i needs a time of 40 samples + pretrigger to 
+            re-arm the triggering. With this option the segment size is reduced. The signal_end can be larger then
+            the segment size.
     Returns:
         memsize (int): total memory size selected
         pre_trigger (int): size of pretrigger selected
         signal_start (int): starting position of signal in pixels
-        signal_start (int): end position of signal in pixels
+        signal_end (int): end position of signal in pixels
 
     """
-    sample_rate = digitizer.sample_rate()
+    sample_rate = digitizer.exact_sample_rate()
     if sample_rate == 0:
         raise Exception('digitizer samplerate is zero, please reset digitizer')
     number_points_period = int(period * sample_rate)
 
-    if trigger_delay is None:
+    if trigger_delay is None or trigger_delay == 0:
         trigger_delay = 0
     else:
-        warnings.warn('untested')
+        warnings.warn('non-zero trigger_delay is untested')
     trigger_delay_points = 16 * trigger_delay
 
     basic_pretrigger_size = 16
-    base_segment_size = int(np.ceil((number_points_period + trigger_delay_points) / 16) * 16) + basic_pretrigger_size
+    base_segment_size = ceilN(number_points_period + trigger_delay_points, 16) + basic_pretrigger_size
 
     memsize = base_segment_size * nsegments
     if memsize > digitizer.memory():
-        raise Exception('Trying to acquire too many points. Reduce sampling rate, period or number segments')
+        raise Exception(f'Trying to acquire too many points. Reduce sampling rate, period {period} or number segments {nsegments}')
 
-    pre_trigger = int(np.ceil((trigger_delay * sample_rate) // 16) * 16) + basic_pretrigger_size
-    post_trigger = int(np.ceil((base_segment_size - pre_trigger) // 16) * 16)
+    pre_trigger = ceilN(trigger_delay * sample_rate, 16) + basic_pretrigger_size
+    post_trigger = ceilN(base_segment_size - pre_trigger, 16)
+
+    if trigger_re_arm_compensation:
+        max_segment_size_re_arm = floorN(number_points_period - pre_trigger - 40, 16)
+        if verbose:
+            print(f'select_m4i_memsize: post_trigger {post_trigger}, max_segment_size_rearm {max_segment_size_re_arm}')
+        post_trigger = min(post_trigger, max_segment_size_re_arm)
+        memsize = (pre_trigger + post_trigger)*nsegments
 
     signal_start = basic_pretrigger_size + int(trigger_delay_points)
     signal_end = signal_start + number_points_period
@@ -1483,8 +1539,15 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
     return memsize, pre_trigger, signal_start, signal_end
 
+def _trigger_re_arm_padding(data, number_of_samples, verbose=0):
+    """ Pad array to specified size in last dimension """
+    re_arm_padding = (number_of_samples)-data.shape[-1]
+    data = np.concatenate( (data, np.zeros( data.shape[:-1]+(re_arm_padding, ))), axis=-1 )
+    if verbose:
+        print(f'measure_raw_segment_m4i: re-arm padding: {re_arm_padding}')        
+    return data
 
-def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0):
+def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0, trigger_re_arm_compensation = False, trigger_re_arm_padding = True):
     """ Record a trace from the digitizer
 
     Args:
@@ -1494,9 +1557,12 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         mV_range (float): range for input
         Naverage (int): number of averages to perform
         verbose (int): verbosity level
+        trigger_arm_compensation (bool): In block average mode the M4i needs a time of 40 samples + pretrigger to 
+            re-arm the triggering. With this option this is compensated for by measuring less samples and padding with zeros.
+        trigger_re_arm_padding (bool): If True then remove any samples from the trigger re-arm compensation with zeros.
 
     """
-    sample_rate = digitizer.sample_rate()
+    sample_rate = digitizer.exact_sample_rate()
     maxrate = digitizer.max_sample_rate()
     if sample_rate == 0:
         raise Exception(
@@ -1509,8 +1575,11 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     signal_delay = getattr(digitizer, 'signal_delay', None)
 
     memsize, _, signal_start, signal_end = select_m4i_memsize(
-        digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose)
+        digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose, trigger_re_arm_compensation = trigger_re_arm_compensation)
     post_trigger = digitizer.posttrigger_memory_size()
+
+    if mV_range is None:
+        mV_range = digitizer.range_channel_0()
 
     digitizer.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
     dataraw = digitizer.blockavg_hardware_trigger_acquisition(
@@ -1520,9 +1589,9 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
         dataraw = dataraw[0]
     data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
     data = data[:, signal_start:signal_end]
-
+    if trigger_re_arm_compensation and trigger_re_arm_padding:
+        data = _trigger_re_arm_padding(data, signal_end-signal_start, verbose)
     return data
-
 
 @qtt.utilities.tools.deprecated
 def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
@@ -1563,7 +1632,9 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
     return memsize
 
 
-def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None):
+@qtt.pgeometry.static_var('debug_enabled', False)
+@qtt.pgeometry.static_var('debug_data', {})
+def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None, trigger_re_arm_compensation = False, trigger_re_arm_padding = True):
     """ Measure block data with M4i
 
     Args:
@@ -1573,6 +1644,8 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
         mV_range (float): range for input
         Naverage (int): number of averages to perform
         verbose (int): verbosity level
+        trigger_re_arm_compensation (bool): Passed to raw measurement function
+        trigger_re_arm_padding (bool):  Passed to raw measurement function
     Returns:
         data (numpy array): recorded and processed data
 
@@ -1580,7 +1653,12 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
     period = waveform['period']
     raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range,
-                                       Naverage=Naverage, verbose=verbose)
+                                       Naverage=Naverage, verbose=verbose, trigger_re_arm_compensation=trigger_re_arm_compensation, trigger_re_arm_padding = trigger_re_arm_padding)
+    if measuresegment_m4i.debug_enabled:
+        measuresegment_m4i.debug_data['raw_data'] = raw_data
+        measuresegment_m4i.debug_data['waveform'] = waveform
+        measuresegment_m4i.debug_data['timestamp'] = qtt.data.dateString()
+
     if not process:
         return raw_data
 
@@ -1595,14 +1673,15 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
     if len(width) == 2:
         data, _ = process_2d_sawtooth(raw_data.T, period, samplerate,
-                                      resolution, width, start_zero=start_zero, fig=None)
-        measuresegment_m4i._latest_data = data
-        measuresegment_m4i._latest_rawdata = raw_data
+                                      resolution, width, start_zero=start_zero, fig=fig)
     else:
 
         data, _ = process_1d_sawtooth(raw_data.T, width, period, samplerate,
                                       resolution=resolution, start_zero=start_zero,
                                       verbose=verbose, fig=fig)
+    if measuresegment_m4i.debug_enabled:
+        measuresegment_m4i.debug_data['data'] = data
+        
     if verbose:
         print('measuresegment_m4i: processed_data: width %s, data shape %s' % (width, data.shape,))
 
@@ -1641,7 +1720,7 @@ def get_uhfli_scope_records(device, daq, scopeModule, number_of_records=1, timeo
     return data[wave_nodepath][:number_of_records]
 
 
-def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
+def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100, **kwargs):
     """ Measure block data with Zurich Instruments UHFLI
 
     Args:
@@ -1675,7 +1754,45 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100):
     return [avarage]
 
 
-def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True):
+def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, process=True, **kwargs):
+    """ Measure block data with scope reader.
+
+    Args:
+        scope_reader (AcquisitionScopeInterface): Instance of scope reader.
+        waveform (dict): Information about the waveform that is to be collected.
+        number_of_averages (int) : Number of times the sample is collected.
+        process (bool): If True, cut off the downward sawtooth slopes from the data.
+
+    Returns:
+        data (numpy array): An array of arrays, one array per input channel.
+
+    """
+    data_arrays = scope_reader.acquire(number_of_averages)
+    raw_data = np.array(data_arrays)
+    if not process:
+        return raw_data
+
+    if 'width' in waveform:
+        width = [waveform['width']]
+    else:
+        width = [waveform['width_horz'], waveform['width_vert']]
+
+    resolution = waveform.get('resolution', None)
+    start_zero = waveform.get('start_zero', False)
+    sample_rate = scope_reader.sample_rate
+    period = waveform['period']
+
+    if len(width) == 2:
+        data, _ = process_2d_sawtooth(raw_data.T, period, sample_rate, resolution,
+                                      width, start_zero=start_zero, fig=None)
+    else:
+        data, _ = process_1d_sawtooth(raw_data.T, width, period, sample_rate,
+                                      resolution=resolution, start_zero=start_zero, fig=None)
+
+    return data
+
+
+def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True, device_parameters = None):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
     Supported instruments: m4i digitizer, ZI UHF-LI
 
@@ -1686,45 +1803,47 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
         read_ch (list): channels to read from the instrument
         mV_range (float): range for input
         verbose (int): verbosity level
+        device_parameters (dict): dictionary passed as keyword parameters to the measurement methods
     Returns:
         data (numpy array): recorded and processed data
 
     """
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    try:
-        uhfli = isinstance(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
-    except:
-        uhfli = False
+    if device_parameters is None:
+        device_parameters = {}
 
-    minstrument = get_instrument(minstrhandle)
-    is_simulation = minstrument.name.startswith('sdigitizer')
+    is_m4i = _is_m4i(minstrhandle)
+    is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
+    is_scope_reader = _is_measurement_device(minstrhandle, AcquisitionScopeInterface)
+    is_simulator = _is_measurement_device(minstrhandle, SimulationDigitizer)
 
-    if ism4i:
-        data = measuresegment_m4i(
-            minstrhandle, waveform, read_ch, mV_range, Naverage, process=process)
-    elif uhfli:
-        data = measure_segment_uhfli(
-            minstrhandle, waveform, read_ch, Naverage)
+    measure_instrument = get_instrument(minstrhandle)
+
+    if is_m4i:
+        data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process, **device_parameters)
+    elif is_uhfli:
+        data = measure_segment_uhfli(minstrhandle, waveform, read_ch, Naverage, **device_parameters)
+    elif is_scope_reader:
+        data = measure_segment_scope_reader(minstrhandle, waveform, Naverage, process=process, **device_parameters)
+    elif is_simulator:
+        data = measure_instrument.measuresegment(waveform, channels=read_ch)
     elif minstrhandle == 'dummy':
         # for testing purposes
         data = np.random.rand(100, )
-    elif is_simulation:
-        data = minstrument.measuresegment(waveform, channels=read_ch)
     else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % minstrhandle)
+        raise Exception(f'Unrecognized fast readout instrument {minstrhandle}')
+
     if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
+
     return data
 
 
 def acquire_segments(station, parameters, average=True, mV_range=2000,
-                     save_to_disk=True, location=None, verbose=True):
+                     save_to_disk=True, location=None, verbose=True, trigger_re_arm_compensation=False, trigger_re_arm_padding = True):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
+
+    Note that if the requested period is equal or longer than the period on the AWG, then not all trigger events might
+    be used by the M4i.
 
     The saving to disk can take minutes or even longer.
 
@@ -1747,8 +1866,6 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     nsegments = parameters['nsegments']
 
     t0 = time.time()
-    gates = station.gates
-    gatevals = gates.allvalues()
 
     waveform = {'period': period, 'width': 0}
     if isinstance(read_ch, int):
@@ -1758,48 +1875,103 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     else:
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
+    if verbose:
+        exepected_measurement_time = nsegments*period
+        print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
+
+    is_m4i = _is_m4i(minstrhandle)
+
     if average:
         data = measuresegment(waveform, nsegments,
-                              minstrhandle, read_ch, mV_range, process=False)
-        segment_time = np.linspace(0, period, len(data[0]))
+                              minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation, 'trigger_re_arm_padding': trigger_re_arm_padding})
+        if is_m4i:
+            segment_time = np.arange(0., len(data[0])) / minstrhandle.exact_sample_rate()
+        else:
+            segment_time = np.linspace(0, period, len(data[0]))
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
-                                     xunit='s', location=location, loc_record={'label': 'save_segments'})
+                                     xunit='s', location=location, loc_record={'label': 'acquire_segments'})
     else:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-        if ism4i:
+        if is_m4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
-                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose)
+                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2, trigger_re_arm_compensation = trigger_re_arm_compensation)
 
             segment_size = int(memsize_total / nsegments)
             post_trigger = segment_size - pre_trigger
 
-            #minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize, termination=None)
-            minstrhandle.initialize_channels(read_ch, mV_range=mV_range, memsize=memsize_total, termination=None)
+            if mV_range is None:
+                mV_range = minstrhandle.range_channel_0()
+
+            minstrhandle.initialize_channels(read_ch, mV_range=mV_range,
+                                             memsize=minstrhandle._channel_memsize, termination=None)
+
+            sample_rate = minstrhandle.exact_sample_rate()
             dataraw = minstrhandle.multiple_trigger_acquisition(
                 mV_range, memsize_total, seg_size=segment_size, posttrigger_size=post_trigger)
+            if np.all(dataraw == 0):
+                warnings.warn('multiple_trigger_acquisition returned zero data! did a timeout occur?')
             if isinstance(dataraw, tuple):
                 dataraw = dataraw[0]
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1))
             data = data[:, :, signal_start:signal_end]
-            segment_time = np.linspace(0., period, data.shape[2])
+            if trigger_re_arm_compensation and trigger_re_arm_padding:
+                data = _trigger_re_arm_padding(data, signal_end-signal_start)
+            segment_time = np.arange(0., data.shape[2]) / sample_rate
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
             alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num,
                                          zname=measure_names, z=data, xunit='s', location=location,
-                                         loc_record={'label': 'save_segments'})
+                                         loc_record={'label': 'acquire_segments'})
         else:
-            raise (Exception('Non-averaged acquisitions not supported for this measurement instrument'))
+            raise Exception(f'Non-averaged acquisitions not supported for measurement instrument {minstrhandle}')
 
     dt = time.time() - t0
     update_dictionary(alldata.metadata, dt=dt, station=station.snapshot())
     update_dictionary(alldata.metadata, scantime=str(
-        datetime.datetime.now()), allgatevalues=gatevals, nsegments=str(nsegments))
+        datetime.datetime.now()), nsegments=str(nsegments))
+
+    if verbose:
+        print(f'acquire_segments: acquired data of shape {data.shape}')
+    if hasattr(station, 'gates'):
+        gates = station.gates
+        gatevals = gates.allvalues()
+        update_dictionary(alldata.metadata, allgatevalues=gatevals)
 
     if save_to_disk:
         alldata = qtt.utilities.tools.stripDataset(alldata)
         alldata.write(write_metadata=True)
 
     return alldata
+
+
+def _is_m4i(instrument_handle: Any) -> bool:
+    """ Returns True if the instrument handle is an M4i instance, else False."""
+    try:
+        from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
+    except Exception:
+        return False
+
+    return _is_measurement_device(instrument_handle, M4i)
+
+
+def _is_measurement_device(instrument_handle: Any, class_type: Type) -> bool:
+    """ Returns True if the instrument handle is of the given type, else False.
+
+        This function checks whether the given handle is of the correct instrument type.
+        All error's are catched related to importing of not installed drivers or instruments
+        which are not connected.
+
+        Args:
+            instrument_handle: An measurement device instance.
+            class_type: The type of the measurement class.
+
+        Returns:
+            True if of the given class_type, else False.
+    """
+    try:
+        is_present = isinstance(instrument_handle, class_type)
+    except Exception:
+        is_present = False
+
+    return is_present
 
 
 def single_shot_readout(minstparams, length, shots, threshold=None):
@@ -1817,8 +1989,10 @@ def single_shot_readout(minstparams, length, shots, threshold=None):
         allshots (array of floats): average signal of every shot taken
     """
     minstrhandle = minstparams['handle']
-    if not isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
-        raise (Exception('single shot readout is only supported for M4i digitizer'))
+    is_m4i = _is_m4i(minstrhandle)
+    if not is_m4i:
+        raise Exception('single shot readout is only supported for M4i digitizer')
+
     read_ch = minstparams['read_ch']
     if isinstance(read_ch, int):
         read_ch = [read_ch]
@@ -1959,13 +2133,13 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         if 'paramname' in stepdata:
             stepvalues_tmp.name = stepdata['paramname']
         alldata = makeDataSet2D(stepvalues_tmp, sweepvalues, measure_names=measure_names,
-                                location=location, loc_record={'label': scanjob['scantype']})
+                                location=location, loc_record={'label': _dataset_record_label(scanjob)})
     else:
         if stepvalues.name == sweepvalues.name:
             stepvalues.name = stepvalues.name + '_y'
             sweepvalues.name = sweepvalues.name + '_x'
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                location=location, loc_record={'label': scanjob['scantype']})
+                                location=location, loc_record={'label': scanjob.get('dataset_label', _dataset_record_label(scanjob))})
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
 
@@ -2033,7 +2207,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
 
-    update_dictionary(alldata.metadata, scanjob=scanjob, allgatevalues=gatevals,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob), allgatevalues=gatevals,
                       dt=dt, station=station.snapshot())
     _add_dataset_metadata(alldata)
 
@@ -2067,7 +2241,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
                         pp.pop(gate, None)
 
             except BaseException:
-                warnings.warn('error when removing slow gate from scan data')
+                warnings.warn(f'error when removing slow gate {gate} from scan data')
     else:
         pp = {virtual_parameter.name: 1}
     sweeporstepdata = {'start': start, 'range': g_range,
@@ -2137,7 +2311,9 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     scanjob.parse_param('stepdata', station, paramtype='fast')
 
     minstrhandle = qtt.measurements.scans.get_instrument(scanjob.get('minstrumenthandle', 'digitizer'))
+    virtual_awg = getattr(station, 'virtual_awg', None)
     read_ch = get_minstrument_channels(scanjob['minstrument'])
+    sweep_info = None
 
     if isinstance(read_ch, int):
         read_ch = [read_ch]
@@ -2155,7 +2331,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     sweepdata = scanjob['sweepdata']
 
     Naverage = scanjob.get('Naverage', 20)
-    resolution = scanjob.get('resolution', [80, 80])
+    resolution = scanjob.get('resolution', [96, 96])
 
     t0 = time.time()
 
@@ -2169,36 +2345,47 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     else:
         sweepranges = [sweepdata['range'], stepdata['range']]
 
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    if ism4i:
-        samp_freq = minstrhandle.sample_rate()
-        resolution[0] = np.ceil(resolution[0] / 16) * 16
-    else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % minstrhandle)
+    is_m4i = _is_m4i(minstrhandle)
+    if not is_m4i:
+        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+
+    samp_freq = minstrhandle.sample_rate()
+    resolution[0] = np.ceil(resolution[0] / 16) * 16
 
     if scanjob['scantype'] == 'scan2Dturbo':
         sweepgates = [sweepdata['param'].name, stepdata['param'].name]
-        waveform, sweep_info = station.awg.sweep_2D(
-            samp_freq, sweepgates, sweepranges, resolution, delete=delete)
+        if virtual_awg:
+            period = np.prod(resolution) / samp_freq
+            sweep_gates = [{g: 1} for g in sweepgates]
+            waveform = virtual_awg.sweep_gates_2d(sweep_gates, sweepranges, period, resolution, do_upload=delete)
+            virtual_awg.enable_outputs(sweepgates)
+            virtual_awg.run()
+        else:
+            waveform, sweep_info = station.awg.sweep_2D(samp_freq, sweepgates, sweepranges, resolution, delete=delete)
         if verbose:
             print('scan2Dturbo: sweepgates %s' % (str(sweepgates),))
     else:
         scanjob._parse_2Dvec()
-        waveform, sweep_info = station.awg.sweep_2D_virt(
-            samp_freq, fast_sweep_gates, fast_step_gates, sweepranges, resolution, delete=delete)
+        if virtual_awg:
+            sweepgates = [*fast_sweep_gates, *fast_step_gates]
+            period = np.prod(resolution) / samp_freq
+            sweep_gates = [{g: 1 for g in fast_sweep_gates}, {g: 1 for g in fast_step_gates}]
+            waveform = virtual_awg.sweep_gates_2d(sweep_gates, sweepranges, period, resolution, do_upload=delete)
+            virtual_awg.enable_outputs(sweepgates)
+            virtual_awg.run()
+        else:
+            waveform, sweep_info = station.awg.sweep_2D_virt(samp_freq, fast_sweep_gates, fast_step_gates, sweepranges,
+                                                             resolution, delete=delete)
 
     time.sleep(wait_time_startscan)
-
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
-
     scan2Dturbo._data = data
 
-    station.awg.stop()
+    if virtual_awg:
+        virtual_awg.disable_outputs(sweepgates)
+        virtual_awg.stop()
+    else:
+        station.awg.stop()
 
     if len(read_ch) == 1:
         measure_names = ['measured']
@@ -2207,28 +2394,25 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
 
     if scanjob['scantype'] == 'scan2Dturbo':
         alldata, _ = makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names=measure_names,
-                                          location=location, loc_record={'label': scanjob['scantype']})
+                                          location=location, loc_record={'label': _dataset_record_label(scanjob)})
     else:
         scanvalues = scanjob._convert_scanjob_vec(
             station, data[0].shape[1], data[0].shape[0])
         stepvalues = scanvalues[0]
         sweepvalues = scanvalues[1]
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                preset_data=data, location=location, loc_record={'label': scanjob['scantype']})
+                                preset_data=data, location=location, loc_record={'label': _dataset_record_label(scanjob)})
 
     dt = time.time() - t0
-
     liveplotwindow = _initialize_live_plotting(alldata, plotparam=None, liveplotwindow=liveplotwindow)
 
     if not hasattr(alldata, 'metadata'):
         alldata.metadata = dict()
 
-    update_dictionary(alldata.metadata, scanjob=scanjob,
+    update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot(), allgatevalues=gatevals)
     _add_dataset_metadata(alldata)
-
     alldata.write(write_metadata=True)
-
     return alldata, waveform, sweep_info
 
 
@@ -2245,60 +2429,6 @@ def waitTime(gate, station=None, gate_settle=None, default=1e-3):
         if hasattr(station, 'gate_settle'):
             return station.gate_settle(gate)
     return default
-
-
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
-def scanPinchValue(station, outputdir, gate, basevalues=None, minstrument=[1], sample_data={}, stepdelay=None,
-                   cache=False, verbose=1, fig=10, full=0, background=False):
-    """ Scan pinch-off value for a gate """
-    basename = pinchoffFilename(gate, od=None)
-    outputfile = os.path.join(outputdir, 'one_dot', basename + '.pickle')
-    outputfile = os.path.join(outputdir, 'one_dot', basename)
-
-    if cache and os.path.exists(outputfile):
-        if verbose:
-            print('  cached data: skipping pinch-off scans for gate %s' % (gate))
-            if verbose >= 2:
-                print(outputfile)
-        alldata = qcodes.load_data(outputfile)
-        return alldata
-
-    if stepdelay is None:
-        stepdelay = waitTime(gate, station=station)
-
-    if basevalues is None:
-        b = 0
-    else:
-        b = basevalues[gate]
-
-    minimum_gate_value = sample_data['gate_boundaries'].get(
-        gate, [-700, 100])[0]
-
-    sweepdata = dict(
-        {'param': gate, 'start': max(b, 0), 'end': minimum_gate_value, 'step': -2})
-    if full == 0:
-        sweepdata['step'] = -6
-
-    scanjob = scanjob_t(
-        {'sweepdata': sweepdata, 'minstrument': minstrument, 'wait_time': stepdelay})
-
-    station.gates.set(gate, sweepdata['start'])  # set gate to starting value
-    time.sleep(stepdelay)
-
-    alldata = scan1D(station, scanjob=scanjob)
-
-    station.gates.set(gate, basevalues[gate])  # reset gate to base value
-
-    # show results
-    if fig is not None:
-        plot1D(alldata, fig=fig)
-
-    adata = analyseGateSweep(alldata, fig=None, minthr=None, maxthr=None)
-    alldata.metadata['adata'] = adata
-
-    alldata = qtt.utilities.tools.stripDataset(alldata)
-    writeDataset(outputfile, alldata)
-    return alldata
 
 
 # %%
@@ -2410,7 +2540,7 @@ def makeDataset_sweep_2D(data, gates, sweepgates, sweepranges, measure_names='me
 # %%
 
 
-@qtt.utilities.tools.rdeprecated(expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='1 Sep 2018')
 def loadOneDotPinchvalues(od, outputdir, verbose=1):
     """ Load the pinch-off values for a one-dot
 
@@ -2467,98 +2597,3 @@ def enforce_boundaries(scanjob, sample_data, eps=1e-2):
             bstep = sample_data.gate_boundaries(param)
             scanjob[param] = max(scanjob[param], bstep[0] + eps)
             scanjob[param] = min(scanjob[param], bstep[1] - eps)
-
-
-class TestScans(unittest.TestCase):
-
-    def test_get_instrument_parameter(self):
-        instrument = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
-            qtt.measurements.scans.instrumentName('test'), None)
-        ix, p = get_instrument_parameter((instrument.name, 'dac2'))
-        self.assertEqual(id(ix), id(instrument))
-        self.assertEqual(id(p), id(instrument.dac2))
-        ix, p = get_instrument_parameter((instrument, 'dac2'))
-        self.assertEqual(id(p), id(instrument.dac2))
-        ix, p = get_instrument_parameter(instrument.name + '.dac2')
-        self.assertEqual(id(p), id(instrument.dac2))
-        instrument.close()
-
-    def test_sample_data(self):
-        s = sample_data_t()
-        s['gate_boundaries'] = {'D0': [-500, 100]}
-        v = s.restrict_boundaries('D0', 1000)
-        self.assertEqual(100, v)
-
-    def test_scan2D(self, verbose=0):
-        import qcodes
-        from qcodes import Parameter
-        from qcodes.instrument_drivers.devices import VoltageDivider
-        from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-        from qtt.structures import MultiParameter
-        import qtt.measurements.scans
-        from qtt.measurements.scans import scanjob_t
-        p = Parameter('p', set_cmd=None)
-        q = Parameter('q', set_cmd=None)
-        R = VoltageDivider(p, 4)
-        mp = MultiParameter(instrumentName('multi_param'), [p, q])
-
-        gates = VirtualIVVI(
-            name=qtt.measurements.scans.instrumentName('gates'), model=None)
-        station = qcodes.Station(gates)
-        station.gates = gates
-
-        if verbose:
-            print('test_scan2D: running scan2D')
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': p, 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
-        scanjob['stepdata'] = dict(
-            {'param': q, 'start': 24, 'end': 30, 'step': 1.})
-        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict({'param': {
-            'dac1': 1, 'dac2': .1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
-        scanjob['stepdata'] = dict(
-            {'param': {'dac2': 1}, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
-        data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
-        scanjob['stepdata'] = {'param': MultiParameter('multi_param', [gates.dac2, gates.dac3])}
-        scanjob['stepvalues'] = np.array([[2 * i, 3 * i] for i in range(10)])
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
-                data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-        except Exception as ex:
-            print(ex)
-            warnings.warn('MultiParameter test failed!')
-        # not supported:
-        try:
-            scanjob = scanjob_t({'sweepdata': dict({'param': {
-                'dac1': 1}, 'start': 0, 'range': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
-            scanjob['stepdata'] = dict(
-                {'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
-            data = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-        except:
-            if verbose:
-                print('combination of Parameter and vector argument not supported')
-
-        if verbose:
-            print('test_scan2D: running scan1D')
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [R]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [q, R]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': 'dac1', 'start': 0, 'end': 10, 'step': 2}), 'minstrument': [R]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
-
-        scanjob = scanjob_t({'sweepdata': dict(
-            {'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': [R]})
-        data = scan1D(station, scanjob, liveplotwindow=False, verbose=0, extra_metadata={'hi': 'world'})
-        self.assertTrue('hi' in data.metadata)
-        gates.close()

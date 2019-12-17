@@ -12,6 +12,7 @@ import warnings
 import logging
 
 import qcodes
+from qcodes.plots.qcmatplotlib import MatPlot
 from qtt.data import dataset2Dmetadata, dataset2image, show2D
 import qtt.data
 import qtt.pgeometry as pgeometry
@@ -21,14 +22,13 @@ from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
 
 try:
     import cv2
-except:
+except ImportError:
     import qtt.exceptions
     warnings.warn('could not find opencv, not all functionality available',
                   qtt.exceptions.MissingOptionalPackageWarning)
 
 
 # %%
-
 
 def _onedotGetBlobs(fimg, fig=None):
     """ Extract blobs for a 2D scan of a one-dot """
@@ -109,7 +109,8 @@ def _onedotSelectBlob(im, xx, fimg=None, verbose=0):
     return pt
 
 
-def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-np.pi / 4, units=None, full_output=False):
+def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-np.pi / 4, units=None,
+                         full_output=False):
     """ Determine central position of Coulomb peak in 2D scan
 
     The position is determined by scanning with Gabor filters and then performing blob detection
@@ -167,7 +168,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
 
     acc = 1
 
-    if (np.abs(ptvalue) / bestvalue < 0.05):
+    if np.abs(ptvalue) / bestvalue < 0.05:
         acc = 0
         logging.debug('accuracy: %d: %.2f' % (acc, (np.abs(ptvalue) / bestvalue)))
 
@@ -371,7 +372,7 @@ def onedotGetBalance(dataset, verbose=1, fig=None, drawpoly=False, polylinewidth
 def _plot_dataset(dataset, fig):
     plt.figure(fig)
     plt.clf()
-    m = qcodes.MatPlot(dataset.default_parameter_array(), num=fig)
+    m = MatPlot(dataset.default_parameter_array(), num=fig)
     return m
 
 
@@ -397,7 +398,7 @@ def plot_onedot(results, ds=None, verbose=2, fig=100, linecolor='c', ims=None, e
         pgeometry.plotPoints(results['balancepoint'], '.m', markersize=17, label='balancepoint')
 
         if ims is not None:
-            qtt.utilities.tools.showImage((ims), extentImageMatlab, fig=fig + 1)  # XX
+            qtt.utilities.tools.showImage(ims, extentImageMatlab, fig=fig + 1)  # XX
             plt.axis('image')
             plt.title('Smoothed image')
             pgeometry.plotPoints(results['balancepoint'], '.m', markersize=16, label='balancepoint')
@@ -407,7 +408,6 @@ def plot_onedot(results, ds=None, verbose=2, fig=100, linecolor='c', ims=None, e
             pgeometry.plotLabels(results['balancefitpixel'])
             plt.axis('image')
             plt.title('thresholded area')
-
 
             if verbose >= 2:
                 qq = ims.flatten()
@@ -421,34 +421,3 @@ def plot_onedot(results, ds=None, verbose=2, fig=100, linecolor='c', ims=None, e
                 plt.legend(numpoints=1)
                 plt.title('Histogram of image intensities')
                 plt.xlabel('Image (smoothed) values')
-
-
-def test_onedot(fig=None):
-    import qtt
-    import qtt.simulation.virtual_dot_array
-    import qtt.algorithms.onedot
-
-    nr_dots = 3
-    station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=nr_dots, maxelectrons=2, verbose=0)
-    gates = station.gates
-
-    gv = {'B0': -300.000, 'B1': 0.487, 'B2': -0.126, 'B3': 0.000, 'D0': 0.111, 'O1': -0.478, 'O2': 0.283, 'O3': 0.404, 'O4': 0.070,
-          'O5': 0.392, 'P1': 0.436, 'P2': 0.182, 'P3': 39.570, 'SD1a': -0.160, 'SD1b': -0.022, 'SD1c': 0.425, 'bias_1': -0.312, 'bias_2': 0.063}
-    gates.resetgates(gv, gv, verbose=0)
-
-    start = -250
-    scanjob = qtt.measurements.scans.scanjob_t({'sweepdata': dict(
-        {'param': 'B0', 'start': start, 'end': start + 200, 'step': 4., 'wait_time': 0.}), 'minstrument': ['keithley3.amplitude']})
-    scanjob['stepdata'] = dict({'param': 'B1', 'start': start, 'end': start + 200, 'step': 5.})
-    data = qtt.measurements.scans.scan2D(station, scanjob)
-
-    x = qtt.algorithms.onedot.onedotGetBalance(dataset=data, verbose=1, fig=fig)
-    results = x[0]
-    _, _ = qtt.algorithms.onedot.onedotGetBalanceFine(impixel=None, dd=data, fig=fig)
-    qtt.algorithms.onedot.plot_onedot(results, ds=data, fig=None, verbose=1)
-
-
-if __name__ == '__main__':
-    plt.interactive(False)
-    test_onedot(fig=1000)
-    plt.show()

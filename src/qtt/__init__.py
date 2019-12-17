@@ -1,11 +1,11 @@
 """ Quantum Technology Toolbox
 
 The QTT package contains functionality for the tuning and calibration of spin-qubits. The package is
-divided into subpacakges:
+divided into subpackages:
 
     - Measurements: functionality to perform measurements on devices
     - Algorithms: functionality to analyse measurements
-    - Simulation: contains simulations of quantom dot systems
+    - Simulation: contains simulations of quantum dot systems
     - Tools: misc tools
     - Gui: Several gui element for visualization of data
     - Instrument drivers: contains QCoDeS drivers for various instruments
@@ -16,20 +16,22 @@ For more information see https://github.com/qutech-delft/qtt
 # flake8: noqa (we don't need the "<...> imported but unused" error)
 
 import copy
-import warnings
 import importlib
-import distutils
-import distutils.version
+import warnings
 
 import qcodes
-import qtt.utilities.tools
-import qtt.data
-import qtt.algorithms
-import qtt.measurements
-import qtt.exceptions
+from qcodes import Instrument, ManualParameter, Parameter, StandardParameter, Station
+from qcodes.data.location import FormatLocation
+from setuptools._vendor.packaging.version import Version
 
+import qtt.algorithms
+import qtt.data
+import qtt.exceptions
+import qtt.measurements
+import qtt.utilities.tools
+from qtt.gui.live_plotting import start_measurement_control
+from qtt.measurements.storage import load_state, save_state
 from qtt.version import __version__
-from qtt.measurements.storage import save_state, load_state
 
 try:
     import pyqtgraph
@@ -66,7 +68,7 @@ def check_version(version, module=qcodes, optional=False, install_message=None):
     if mversion is None:
         raise Exception(' module %s has no __version__ attribute' % (module,))
 
-    if distutils.version.StrictVersion(mversion) < distutils.version.StrictVersion(version):
+    if Version(mversion) < Version(version):
         if optional:
             warnings.warn('package %s has incorrect version' % module, qtt.exceptions.PackageVersionWarning)
         else:
@@ -78,17 +80,16 @@ def check_version(version, module=qcodes, optional=False, install_message=None):
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'redis', optional=True)
-check_version('0.1.10', qcodes)
+check_version('0.8.0', qcodes)
 check_version('0.2', 'qupulse')
 
 check_version('3.0', 'Polygon', install_message="use command 'pip install Polygon3' to install the package")
 
 # %% Load often used constructions
 
-from qtt.gui.live_plotting import start_measurement_control
 
 
-@qtt.utilities.tools.rdeprecated(expire='Aug 1 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='Aug 1 2018')
 def start_dataviewer():
     from qtt.gui.dataviewer import DataViewer
     dv = DataViewer()
@@ -143,14 +144,13 @@ def _redisStrSet(value, var='qtt_live_value1'):
 liveValue = _redisStrValue
 liveValueSet = _redisStrSet
 
-abort_measurements = _abort_measurement
+abort_measurements = _abort_measurement # type: ignore
 
 # patch the qcodes abort function
-qcodes.loops.abort_measurements = _abort_measurement
+qcodes.loops.abort_measurements = _abort_measurement # type: ignore
 
 # %% Override default location formatter
 
-from qcodes.data.location import FormatLocation
 FormatLocation.default_fmt = '{date}/{time}_{name}_{label}'
 qcodes.DataSet.location_provider = FormatLocation(
     fmt='{date}/{time}_{name}_{label}', record={'name': 'qtt', 'label': 'generic'})
@@ -163,18 +163,8 @@ def set_location_name(name, verbose=1):
 # %%
 
 
-def _copy_to_str(x, memo):
+def _copy_to_str(x, memo=None):
     return str(x)
-
-
-# black magic to make qcodes objects work with deepcopy
-from qcodes import Parameter, Instrument, StandardParameter, ManualParameter, Station
-for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
-    copy._deepcopy_dispatch[c] = _copy_to_str # type: ignore
-
-# make a qcodes instrument pickable
-qcodes.Instrument.__getstate__ = lambda self: str(self)
-qcodes.Parameter.__getstate__ = lambda self: str(self)
 
 
 def _setstate(self, d):
@@ -184,11 +174,17 @@ def _setstate(self, d):
     def _get():
         print('instrument %s was serialized, no get available' % self.name)
         raise Exception('no get function defined')
+
     self.get = _get
 
+# black magic to make qcodes objects work with deepcopy
+for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
+    copy._deepcopy_dispatch[c] = _copy_to_str  # type: ignore
 
-qcodes.Instrument.__setstate__ = _setstate
-qcodes.Parameter.__setstate__ = _setstate
+# make a qcodes instrument pickable
+qcodes.Parameter.__getstate__ = _copy_to_str  # type: ignore
+qcodes.Parameter.__setstate__ = _setstate  # type: ignore
+
 
 # %% Enhance the qcodes functionality
 
@@ -205,7 +201,7 @@ try:
         super(QtPlot, self).keyPressEvent(e)
 
     # update the keypress callback function
-    QtPlot.keyPressEvent = _qtt_keyPressEvent
+    QtPlot.keyPressEvent = _qtt_keyPressEvent  # type: ignore
 except BaseException:
     pass
 
@@ -220,6 +216,6 @@ try:
         clipboard = app.clipboard()
         clipboard.setPixmap(self.win.grab())
 
-    QtPlot.copyToClipboard = _copyToClipboard
+    QtPlot.copyToClipboard = _copyToClipboard  # type: ignore
 except BaseException:
     pass

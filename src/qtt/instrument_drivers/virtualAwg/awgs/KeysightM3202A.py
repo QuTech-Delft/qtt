@@ -8,7 +8,7 @@ from qtt.instrument_drivers.virtualAwg.awgs.common import (AwgCommon,
 try:
     from qcodes.instrument_drivers.Keysight.M3201A import Keysight_M3201A
 except ImportError:
-    Keysight_M3201A = None
+    Keysight_M3201A = None  # type: ignore
 
 
 class KeysightM3202A_AWG(AwgCommon):

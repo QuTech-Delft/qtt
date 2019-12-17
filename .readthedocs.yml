@@ -4,5 +4,6 @@ build:
 python:
   version: 3.6
   setup_py_install: true
-  
-requirements_file: docs/rtd-requirements.txt
+  pip_install: true
+  extra_requirements:
+    - rtd

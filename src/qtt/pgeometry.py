@@ -25,17 +25,20 @@ import os
 import sys
 import tempfile
 import math
-import numpy as np
 import time
 import warnings
 import pickle
+import subprocess
 import re
 import logging
 import pkgutil
+
+import numpy as np
+import Polygon as polygon3
 import scipy.io
 import numpy
-import subprocess
-import unittest
+import scipy.ndimage.morphology as morphology
+import scipy.ndimage.filters as filters
 
 from functools import wraps
 
@@ -76,19 +79,6 @@ try:
     _pyside = len([_x for _x in _ll if _x.startswith('PySide.QtGui')]) > 0
     _pyqt4 = len([_x for _x in _ll if _x.startswith('PyQt4.QtGui')]) > 0
     _pyqt5 = len([_x for _x in _ll if _x.startswith('PyQt5.QtGui')]) > 0
-
-    if 0:
-        try:
-            # the normal creation of a Qt application instance can fail
-            # this is an additional mechanism
-            import pyqtgraph
-            _applocalqt = pyqtgraph.mkQApp()
-        except:
-            pass
-        _applocalqt = QtWidgets.QApplication.instance()
-        # print('pgeometry: _applocalqt %s' % _applocalqt )
-        if _applocalqt is None:
-            _applocalqt = QtWidgets.QApplication([])
 
     def slotTest(txt):
         """ Helper function for Qt slots """
@@ -139,26 +129,26 @@ try:
     # needed for 3d plot points, do not remove!
     try:
         from mpl_toolkits.mplot3d import Axes3D
-    except:
+    except BaseException:
         pass
-except Exception as inst:
+except ModuleNotFoundError as ex:
     warnings.warn(
-        'could not import matplotlib, not all functionality available...')
+        'could not find matplotlib, not all functionality available...')
     plt = None
     pass
 
 try:
     import skimage.filters
-except Exception as inst:
+except ModuleNotFoundError as ex:
     warnings.warn(
-        'could not load skimage.filters, not all functionality is available')
+        'could not find skimage.filters, not all functionality is available')
     pass
 
 
 try:
     import cv2
     _haveOpenCV = True
-except:
+except ModuleNotFoundError:
     _haveOpenCV = False
     warnings.warn('could not find OpenCV, not all functionality is available')
     pass
@@ -177,7 +167,7 @@ try:
         # http://chase-seibert.github.io/blog/2013/08/03/diagnosing-memory-leaks-python.html
         print('Memory usage: %s (mb)' %
               ((resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024., ))
-except:
+except BaseException:
     def memUsage():
         print('Memory usage: ? (mb)')
 
@@ -230,7 +220,7 @@ def package_versions(verbose=1):
     try:
         import cv2
         print('cv2.__version__ %s' % cv2.__version__)
-    except:
+    except BaseException:
         pass
     try:
         import qtpy
@@ -238,12 +228,12 @@ def package_versions(verbose=1):
         print('qtpy.API_NAME %s' % (qtpy.API_NAME))
         print('qtpy.QtCore %s' % (qtpy.QtCore))
         print('qtpy.QtCore.__version__ %s' % (qtpy.QtCore.__version__))
-    except:
+    except BaseException:
         pass
     try:
         import sip
         print('sip %s' % sip.SIP_VERSION_STR)
-    except:
+    except BaseException:
         pass
 
 
@@ -289,7 +279,7 @@ def static_var(varname, value):
 
 @static_var("time", {'default': 0})
 def tprint(string, dt=1, output=False, tag='default'):
-    """ Print progress of a loop every dt seconds 
+    """ Print progress of a loop every dt seconds
 
     Args:
         string (str): text to print
@@ -316,6 +306,8 @@ def tprint(string, dt=1, output=False, tag='default'):
 
 def partiala(method, **kwargs):
     """ Function to perform functools.partial on named arguments """
+    raise Exception('Use functools.partial instead')
+
     def t(x):
         return method(x, **kwargs)
     return t
@@ -342,7 +334,7 @@ def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
 
 
 def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
-    """
+    """ Plot a cost function on specified data points
 
     Example with variation of Booth's function:
 
@@ -448,7 +440,7 @@ def mkdirc(d):
     """ Similar to mkdir, but no warnings if the directory already exists """
     try:
         os.mkdir(d)
-    except:
+    except BaseException:
         pass
     return d
 
@@ -643,10 +635,17 @@ def directionMean(vec):
 
     The initial direction is determined using the oriented direction. Then a non-linear optimization is done.
 
+    Args:
+        vec: List of directions
+        
+    Returns
+        Angle of mean of directions
+        
     >>> vv=np.array( [[1,0],[1,0.1], [-1,.1]])
     >>> a=directionMean(vv)
 
     """
+    vec = np.array(vec)
     def dist(a, vec):
         phi = np.arctan2(vec[:, 0], vec[:, 1])
         x = a - phi
@@ -658,18 +657,17 @@ def directionMean(vec):
     def callbackF(Xi):
         global Nfeval
         print(Xi)
-        print('{0:4d}   {1: 3.6f}'.format(Nfeval, Xi[0], dist(Xi[0], vec)))
+        print(f'{Nfeval:4d}   {Xi[0]: 3.6f}: distance {dist(Xi[0], vec)}')
         Nfeval += 1
 
     m = vec.mean(axis=0)
     a0 = np.arctan2(m[0], m[1])
 
-    def ff(a): return dist(a, vec)
+    def cost_function(a): return dist(a, vec)
 
-    r = scipy.optimize.minimize(
-        ff, a0, callback=None, options=dict({'disp': False}))
-    a = r.x
-    return a
+    r = scipy.optimize.minimize(cost_function, a0, callback=None, options=dict({'disp': False}))
+    angle = r.x[0]
+    return angle
 
 
 def circular_mean(weights, angles):
@@ -805,7 +803,7 @@ def imshowz(im, *args, **kwargs):
                     return 'x=%1.4f, y=%1.4f, z=%1.4f' % (x, y, z)
                 else:
                     return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z))
-            except:
+            except BaseException:
                 return 'x=%1.4f, y=%1.4f, z=%s' % (x, y, str(z))
         else:
             return 'x=%1.4f, y=%1.4f' % (x, y)
@@ -902,7 +900,7 @@ def setregion(im, subim, pos, mask=None, clip=False):
 
 def region2poly(rr):
     """ Convert a region (bounding box xxyy) to polygon """
-    if type(rr) == tuple or type(rr) == list:
+    if isinstance(rr, tuple) or isinstance(rr, list):
         # x,y,x2,y2 format
         rr = np.array(rr).reshape((2, 2)).transpose()
         poly = np.array([rr[:, 0:1], np.array([[rr[0, 1]], [rr[1, 0]]]), rr[
@@ -934,9 +932,9 @@ def plotLabels(xx, *args, **kwargs):
         lbl = ['%d' % i for i in v]
     else:
         lbl = args[0]
-        if type(lbl) == int:
+        if isinstance(lbl, int):
             lbl = [str(lbl)]
-        elif type(lbl) == str:
+        elif isinstance(lbl, str):
             lbl = [str(lbl)]
     nn = xx.shape[1]
     ax = plt.gca()
@@ -1003,7 +1001,7 @@ def scaleImage(image, display_min=None, display_max=None):
     Example:
         >>> im=scaleImage(255*np.random.rand( 30,40), 40, 100)
 
-    Code modified from: https://stackoverflow.com/questions/14464449/using-numpy-to-efficiently-convert-16-bit-image-data-to-8-bit-for-display-with?noredirect=1&lq=1        
+    Code modified from: https://stackoverflow.com/questions/14464449/using-numpy-to-efficiently-convert-16-bit-image-data-to-8-bit-for-display-with?noredirect=1&lq=1
     """
     image = np.array(image, copy=True)
 
@@ -1138,12 +1136,17 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-import Polygon as polygon3
-
-
 def polyintersect(x1, x2):
     """ Intersection of two polygons
 
+    Args:
+        x1 (array): First polygon
+        x2 (array): Second polygon
+    Returns:
+        Array with points of the intersection
+
+   Example:
+    
     >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
     >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
     >>> x=polyintersect(x1, x2)
@@ -1153,7 +1156,6 @@ def polyintersect(x1, x2):
     >>> plotPoints(x.T, '.-g' , linewidth=2)
 
     """
-
     p1 = polygon3.Polygon(x1)
     p2 = polygon3.Polygon(x2)
     p = p1 & p2
@@ -1192,16 +1194,22 @@ def opencv_draw_points(bgr, imgpts, drawlabel=True, radius=3, color=(255, 0, 0),
 
 def enlargelims(factor=1.05):
     """ Enlarge the limits of a plot
+
+    Args:
+        factor (float or list of float): Factor to expand the limits of the current plot
+
     Example:
       >>> enlargelims(1.1)
 
     """
+    if isinstance(factor, float):
+        factor=[factor]
     xl = plt.xlim()
-    d = (factor - 1) * (xl[1] - xl[0]) / 2
+    d = (factor[0] - 1) * (xl[1] - xl[0]) / 2
     xl = (xl[0] - d, xl[1] + d)
     plt.xlim(xl)
     yl = plt.ylim()
-    d = (factor - 1) * (yl[1] - yl[0]) / 2
+    d = (factor[1] - 1) * (yl[1] - yl[0]) / 2
     yl = (yl[0] - d, yl[1] + d)
     plt.ylim(yl)
 
@@ -1246,7 +1254,7 @@ def findfilesR(p, patt, show_progress=False):
         patt (string): pattern to match
         show_progress (bool)
     Returns:
-        lst (list of str)               
+        lst (list of str)
     """
     lst = []
     rr = re.compile(patt)
@@ -1382,11 +1390,6 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
 # %%
 
 
-import numpy as np
-import scipy.ndimage.filters as filters
-import scipy.ndimage.morphology as morphology
-
-
 def detect_local_minima(arr, thr=None):
     """
     Takes an array and detects the troughs using the local maximum filter.
@@ -1484,7 +1487,7 @@ def load(pkl_file):
         output = open(pkl_file, 'rb')
         data2 = pickle.load(output)
         output.close()
-    except:
+    except BaseException:
         if sys.version_info.major >= 3:
             # if pickle file was saved in python2 we might fix issues with a different encoding
             output = open(pkl_file, 'rb')
@@ -1527,21 +1530,12 @@ def choose(n, k):
     return ntok
 
 
-# def closefn():
-#    """ Destructor function for the module """
-#    return
-#
-#
-#import atexit
-# atexit.register(closefn)
-
-
 # %%
-import warnings
 
 
 def deprecation(message):
     """ Issue a deprecation warning message """
+    raise Exception('Method has been removed from this module. Use the warnings package directly.')
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
@@ -1558,7 +1552,7 @@ try:
             try:
                 fonttype = r'c:\Windows\Fonts\Verdana.ttf'
                 font = ImageFont.truetype(fonttype, fontsize)
-            except:
+            except BaseException:
                 fonttype = '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
                 font = ImageFont.truetype(fonttype, fontsize)
         else:
@@ -1568,7 +1562,7 @@ try:
         draw = ImageDraw.Draw(im1)
         draw.text(pos, txt, fill=color, font=font)
         return np.array(im1)
-except:
+except BaseException:
     def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
         """ Dummy function """
         warnings.warn('writeTxt: could not find PIL')
@@ -1583,14 +1577,12 @@ try:
     try:
         import matplotlib.pyplot
         _usegtk = 0
-    except:
+    except BaseException:
         import pygtk
         pygtk.require('2.0')
         import gtk
         _usegtk = 1
         pass
-
-    import cv2
 
     def mpl2clipboard(event=None, verbose=1, fig=None):
         """ Copy current Matplotlib figure to clipboard """
@@ -1620,14 +1612,7 @@ try:
             qim = QtGui.QPixmap(tmpfile)
             cb.setPixmap(qim)
 
-            if 0:
-                im = im[:, :, 0:3].copy()
-                qim = QtWidgets.QImage(
-                    im.data, im.shape[0], im.shape[1], QtWidgets.QImage.Format_RGB888)
-                cb.setImage(qim)
-
-
-except:
+except BaseException:
     def mpl2clipboard(event=None, verbose=1, fig=None):
         """ Copy current Matplotlib figure to clipboard
 
@@ -1664,6 +1649,7 @@ class plotCallback:
         Args:
             func (function): function to be called
             xdata, ydata (arrays): datapoints to respond to
+            scale (list of float): scale factors for distance calculation
             verbose (int): output level
         Returns:
             pc (object): plot callback
@@ -1685,7 +1671,10 @@ class plotCallback:
             # automatically determine scale
             scale = [1 / (1e-8 + np.ptp(xdata)), 1 / (1e-8 + np.ptp(ydata))]
         self.scale = scale
-
+        if verbose:
+               print(f'plotCallback: scale {scale}')
+        self.connection_ids = []
+        
     def __call__(self, event):
         if self.verbose:
             print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
@@ -1694,17 +1683,22 @@ class plotCallback:
 
         # pick data point
         idx = None
+        self._last_event = event
 
         try:
             if self.xdata is not None:
                 xdata = np.array(self.xdata)
+                
+                if isinstance(xdata[0], numpy.datetime64):
+                    xdata=matplotlib.dates.date2num(xdata)
+
                 ydata = np.array(self.ydata)
-                pt = np.array(event.xdata, event.ydata)
                 pt = np.array([event.xdata, event.ydata])
                 xx = np.vstack((xdata.flat, ydata.flat)).T
                 dd = xx - pt
                 dd = np.multiply(np.array(self.scale).reshape((1, 2)), dd)
                 d = np.linalg.norm(dd, axis=1)
+                d[np.isnan(d)]=np.inf
                 idx = np.argmin(d)
                 distance = d[idx]
                 if self.verbose:
@@ -1715,8 +1709,8 @@ class plotCallback:
 
             # call the function
             self.func(plotidx=idx, button=event.button)
-        except Exception as e:
-            print(e)
+        except Exception as ex:
+            print(ex)
         if self.verbose:
             print('plot callback complete')
 
@@ -1724,7 +1718,8 @@ class plotCallback:
         if isinstance(fig, int):
             fig = plt.figure(fig)
         cid = fig.canvas.mpl_connect('button_press_event', self)
-
+        self.connection_ids.append(cid)
+        return cid
 
 def cfigure(*args, **kwargs):
     """ Create Matplotlib figure with copy to clipboard functionality
@@ -1754,8 +1749,6 @@ try:
             wa = [
                 [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
         else:
-            # tmp=QtWidgets.QApplication.startingUp()
-            # logging.debug('starting QApplication: startingUp %d' % tmp)
             _applocalqt = QtWidgets.QApplication.instance()
 
             if _applocalqt is None:
@@ -1768,20 +1761,11 @@ try:
             wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
             wa = [[w.x(), w.y(), w.width(), w.height()] for w in wa]
 
-        if 0:
-            # import gtk # issues with OpenCV...
-            window = gtk.Window()
-            screen = window.get_screen()
-
-            nmon = screen.get_n_monitors()
-            wa = [screen.get_monitor_geometry(ii) for ii in range(nmon)]
-            wa = [[w.x, w.y, w.width, w.height] for w in wa]
-
         if verbose:
             for ii, w in enumerate(wa):
                 print('monitor %d: %s' % (ii, str(w)))
         return wa
-except:
+except BaseException:
     def monitorSizes(verbose=0):
         """ Dummy function for monitor sizes """
         return [[0, 0, 1600, 1200]]
@@ -1811,9 +1795,14 @@ def getWindowRectangle():
     return (x, y, w, h)
 
 
-def setWindowRectangle(x, y=None, w=None, h=None, mngr=None, be=None):
+def setWindowRectangle(x, y=None, w=None, h=None, fig=None, mngr=None):
     """ Position the current Matplotlib figure at the specified position
-    Usage: setWindowRectangle(x,y,w,h)
+
+    Args:
+        x: position in format (x,y,w,h)
+        fig (None or int): specification of figure window. Use None for the current active window
+
+    Usage: setWindowRectangle([x,y,w,h])
     """
     if y is None:
         y = x[1]
@@ -1835,7 +1824,6 @@ def setWindowRectangle(x, y=None, w=None, h=None, mngr=None, be=None):
         mngr.canvas.manager.window.move(x, y)
         mngr.canvas.manager.window.resize(w, h)
         mngr.canvas.manager.window.setGeometry(x, y, w, h)
-        # mngr.window.setGeometry(x,y,w,h)
 
 
 try:
@@ -1848,7 +1836,7 @@ try:
             k = msvcrt.getch()
             return k
         return None
-except:
+except BaseException:
     pass
 
 
@@ -1907,7 +1895,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
             # try
             try:
                 fignum = f.fig.number
-            except:
+            except BaseException:
                 fignum = -1
         if not plt.fignum_exists(fignum):
             if verbose >= 2:
@@ -2026,16 +2014,6 @@ def robustCost(x, thr, method='L1'):
     else:
         raise Exception('no such method')
     return y
-
-# %%
-
-
-def test_robustCost():
-    x = np.array([0, 1, 2, 3, 4, 5])
-    _ = robustCost(x, 2)
-    _ = robustCost(x, 'auto')
-
-# %%
 
 
 def findImageHandle(fig, verbose=0, otype=matplotlib.image.AxesImage):
@@ -2160,7 +2138,7 @@ def decomposeProjectiveTransformation(H, verbose=0):
         # primitive...
         sc = np.sign(np.diag(K))
         K = np.diag(sc).dot(K)
-        R = R.dot( np.diag(sc))
+        R = R.dot(np.diag(sc))
     br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
     Hs = np.array(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
     Ha = np.array(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))
@@ -2202,14 +2180,6 @@ def point_in_polygon(pt, pp):
     """
     r = cv2.pointPolygonTest(pp, (pt[0], pt[1]), measureDist=False)
     return r
-
-
-def test_polygon_functions():
-    pp = np.array([[0, 0], [4, 0], [0, 4]])
-    assert(point_in_polygon([1, 1], pp) == 1)
-    assert(point_in_polygon([-1, 1], pp) == -1)
-
-    assert(np.all(points_in_polygon(np.array([[-1, 1], [1, 1], [.5, .5]]), pp) == np.array([-1, 1, 1])))
 
 
 def minAlg_5p4(A):
@@ -2281,40 +2251,3 @@ def checkmodule(module_name, verbose=1):
     if verbose:
         print(module_spec)
     return module_spec
-
-
-class TestPolygonGeometry(unittest.TestCase):
-
-    def test_polyintersect(self):
-        x1 = np.array([(0, 0), (1, 1), (1, 0)])
-        x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        x = polyintersect(x1, x2)
-        self.assertEqual(3, len(x))
-        self.assertEqual(0.25, np.abs(polyarea(x)))
-
-    def test_geometry(self, verbose=1, fig=None):
-        im = np.zeros((200, 100, 3))
-        subim = np.ones((40, 30,))
-        im = setregion(im, subim, [0, 0])
-        im = np.zeros((200, 100, 3))
-        subim = np.ones((40, 30,))
-        im = setregion(im, subim, [95, 0], clip=True)
-        if fig:
-            plt.figure(fig)
-            plt.clf()
-            plt.imshow(im, interpolation='nearest')
-        self.assertIsInstance(im, np.ndarray)
-
-    def test_intersect2lines(self):
-        p1 = np.array([[0, 0]])
-        p2 = np.array([[1, 0]])
-        p3 = np.array([[1, 1]])
-        p4 = np.array([[2, 2]])
-
-        line1 = fitPlane(np.vstack((p1, p2)))
-        line2 = fitPlane(np.vstack((p3, p4)))
-
-        a = intersect2lines(line1, line2)
-        pt = dehom(a)
-        self.assertIsNotNone(pt)
-        np.testing.assert_almost_equal(pt, 0)

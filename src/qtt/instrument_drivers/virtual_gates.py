@@ -6,12 +6,13 @@ Created on Thu Dec  8 10:37:36 2016
 """
 
 # %% Load packages
-import unittest
 from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
 import numpy as np
-from collections import OrderedDict
+#from collections import OrderedDict as ordered_dict
+ordered_dict = dict
+
 import warnings
 import matplotlib.pyplot as plt
 
@@ -22,7 +23,7 @@ def set_distance_matrix(virt_gates, dists):
     """ Update the cross capacitance matrix for a virtual_gate matrix
 
     Args:
-        virt_gates (virtual_gates): virtual gates object
+        virt_gates (VirtualGates): virtual gates object
         dists (list): list of distances between dots
     """
     cc = virt_gates.get_crosscap_matrix()
@@ -43,7 +44,7 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
     Returns: 
         virtual_matrix (dict): dictionary, mapping of the virtual gates
     """
-    virtual_matrix = OrderedDict()
+    virtual_matrix = ordered_dict()
     for ii, vname in enumerate(virt_basis):
         if verbose:
             print('create_virtual_matrix_dict: adding %s ' % (vname,))
@@ -52,12 +53,11 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
             v[ii] = 1
         else:
             v = c[ii, :]
-        tmp = OrderedDict(zip(physical_gates, v))
+        tmp = ordered_dict(zip(physical_gates, v))
         virtual_matrix[vname] = tmp
     return virtual_matrix
 
-
-class virtual_gates(Instrument):
+class VirtualGates(Instrument):
     """A virtual gate instrument to control linear combinations of gates.
 
     The virtual gates can be defined, such that when changing one of the
@@ -82,16 +82,16 @@ class virtual_gates(Instrument):
         Args:
             name (string): The name of the object (used for?)
             gates_instr (Instrument): The instrument of physical gates
-            crosscap_map (OrderedDict/dict): Full map of cross capacitance matrix defined
+            crosscap_map (ordered_dict/dict): Full map of cross capacitance matrix defined
                     as a dictionary labeled between dot parameters and gates.
                     Name of dot parameters are initially defined in this dict.
-                    Use OrderedDict form when the order is important.
+                    Use ordered_dict form when the order is important.
 
                     Example:
-                        crosscap_map = OrderedDict((
-                    ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-                    ('VP2', OrderedDict((('P1', 0.5), ('P2', 1), ('P3', 0)))),
-                    ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
+                        crosscap_map = ordered_dict((
+                    ('VP1', ordered_dict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
+                    ('VP2', ordered_dict((('P1', 0.5), ('P2', 1), ('P3', 0)))),
+                    ('VP3', ordered_dict((('P1', 0), ('P2', 0), ('P3', 1))))
                     ))
 
                     Note: this matrix describes the influence of each physical
@@ -101,10 +101,9 @@ class virtual_gates(Instrument):
 
         """
         super().__init__(name, **kwargs)
-        self.name = name
         self.gates = gates_instr
         self._fast_readout = False
-        if isinstance(crosscap_map, OrderedDict):
+        if isinstance(crosscap_map, ordered_dict):
             self._crosscap_map = crosscap_map
             for vg in list(crosscap_map.keys()):
                 for g in list(crosscap_map[list(crosscap_map.keys())[0]].keys()):
@@ -113,9 +112,9 @@ class virtual_gates(Instrument):
                     except:
                         raise NameError('missing physical gate "%s" in virtual gate "%s"' % (g, vg))
         elif isinstance(crosscap_map, dict):
-            self._crosscap_map = OrderedDict()
+            self._crosscap_map = ordered_dict()
             for vg in sorted(list(crosscap_map.keys())):
-                self._crosscap_map[vg] = OrderedDict()
+                self._crosscap_map[vg] = ordered_dict()
                 for g in sorted(list(crosscap_map[list(crosscap_map.keys())[0]].keys())):
                     self._crosscap_map[vg][g] = crosscap_map[vg][g]
         else:
@@ -134,7 +133,7 @@ class virtual_gates(Instrument):
         """ Convert a virtual gates object to a dictionary for storage """
         def without_keys(d, keys):
             return {x: d[x] for x in d if x not in keys}
-        d = without_keys(self.__dict__, ['parameters', 'log'])
+        d = without_keys(self.__dict__, ['parameters', 'log','_crosscap_map', '_crosscap_map_inv'])
         d['gates'] = str(d['gates'])
         d['crosscap_matrix'] = self.get_crosscap_matrix()
         return d
@@ -143,12 +142,12 @@ class virtual_gates(Instrument):
     def from_dictionary(vgdict, gates, name=None):
         """ Convert dictionary to virtual gate matrix object """
         if name is None:
-            name = qtt.measurements.scans.instrumentName(vgdict['name'])
+            name = qtt.measurements.scans.instrumentName(vgdict['_name'])
         pgates = vgdict['_gates_list']
         vgates = vgdict['_virts_list']
         virt_map = create_virtual_matrix_dict(vgates, pgates, c=vgdict['crosscap_matrix'], verbose=0)
 
-        return virtual_gates(name, gates, virt_map)
+        return VirtualGates(name, gates, virt_map)
 
     def _create_parameters(self):
         for g in self._virts_list:
@@ -222,7 +221,7 @@ class virtual_gates(Instrument):
         """
 
         increment = value - self.get(gate)
-        #self.multi_set({gate: increment})
+        # self.multi_set({gate: increment})
         gate_vec = np.zeros(len(self._virts_list))
         gate_vec[self._virts_list.index(gate)] = increment
         set_vec = np.dot(self.get_crosscap_matrix_inv(), gate_vec)
@@ -283,7 +282,7 @@ class virtual_gates(Instrument):
         if verbose:
             print('resetgates: setting gates to default values')
         for g in activegates:
-            if basevalues == None:
+            if basevalues is None:
                 val = 0
             else:
                 if g in basevalues:
@@ -447,7 +446,6 @@ class virtual_gates(Instrument):
 
         """
         if base_map == self._crosscap_map:
-            crosscap_map_inv = OrderedDict()
             cmatrix = self.get_crosscap_matrix()
             cmatrix_inv = np.linalg.inv(cmatrix)
             crosscap_map_inv = self.convert_matrix_to_map(cmatrix_inv, gates=self._virts_list, vgates=self._gates_list)
@@ -481,7 +479,7 @@ class virtual_gates(Instrument):
         """Convert map of the crosscap form to matrix
 
         Args:
-            base_map (OrderedDict): Crosscap map or its inverse.
+            base_map (ordered_dict): Crosscap map or its inverse.
              gates (list or None): list of gate names (columns of matrix)
              vgates (list or None): list of virtual gate names (rows of matrix)
         Return:
@@ -503,16 +501,16 @@ class virtual_gates(Instrument):
              vgates (list or None): list of virtual gate names (rows of matrix)
 
         Return:
-            converted_map (OrderedDict): Map after conversion.
+            converted_map (ordered_dict): Map after conversion.
 
         """
         if gates is None:
             gates = self._gates_list
         if vgates is None:
             vgates = self._virts_list
-        converted_map = OrderedDict()
+        converted_map = ordered_dict()
         for idvirt, virtg in enumerate(vgates):
-            converted_map[virtg] = OrderedDict()
+            converted_map[virtg] = ordered_dict()
             for idg, g in enumerate(gates):
                 converted_map[virtg][g] = base_matrix[idvirt][idg]
         return converted_map
@@ -551,7 +549,7 @@ def extend_virtual_gates(vgates, pgates, virts, name='vgates', verbose=0):
                 if verbose:
                     print('extend_virtual_gates: %s %s = %s' % (v, p, cc[i, j]))
     crosscap_map = create_virtual_matrix_dict(vgates, pgates, cc, verbose=0)
-    virts = virtual_gates(qtt.measurements.scans.instrumentName(name), virts.gates, crosscap_map)
+    virts = VirtualGates(qtt.measurements.scans.instrumentName(name), virts.gates, crosscap_map)
     return virts
 
 
@@ -559,7 +557,7 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
     """ Create a new virtual gates object using an update matrix
 
     Args:
-        virt_gates (virtual_gates): virtual gates object
+        virt_gates (VirtualGates): virtual gates object
         update_cc (array): update to cc matrix
         old_cc (array or None): if None, then get the old cc matrix from the virt_gates
         verbose (int): verbosity level
@@ -573,7 +571,7 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
 
     if old_cc is None:
         old_cc = virt_gates.get_crosscap_matrix()
-    new_cc = (update_cc).dot(old_cc)
+    new_cc = update_cc.dot(old_cc)
 
     if verbose:
         print('old matrix')
@@ -584,7 +582,7 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
         print(new_cc)
 
     virt_map = create_virtual_matrix_dict(vgates, physical_gates, new_cc, verbose)
-    new_virt_gates = virtual_gates(qtt.measurements.scans.instrumentName('virt_gates'), virt_gates.gates, virt_map)
+    new_virt_gates = VirtualGates(qtt.measurements.scans.instrumentName('virt_gates'), virt_gates.gates, virt_map)
     if verbose >= 2:
         new_virt_gates.print_map(virt_map)
         print(virt_gates.get_crosscap_matrix_inv())
@@ -592,99 +590,4 @@ def update_cc_matrix(virt_gates, update_cc, old_cc=None, verbose=1):
     return new_virt_gates, new_cc, {'old_cc': old_cc}
 
 
-class TestVirtualGates(unittest.TestCase):
-
-    def test_virtual_gates(self, verbose=0):
-        """ Test for virtual gates object """
-        from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-        from qtt.measurements.scans import instrumentName
-        import pickle
-
-        gates = VirtualIVVI(name=instrumentName('testivvi'),
-                            model=None, gates=['P1', 'P2', 'P3', 'P4'])
-
-        crosscap_map = OrderedDict((
-            ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-            ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
-            ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
-        ))
-        vgates = virtual_gates(instrumentName('testvgates'), gates, crosscap_map)
-
-        vp1 = vgates.VP1()
-        if verbose:
-            print('before set: VP1 {}'.format(vp1))
-        vgates.VP1.set(10)
-        vp1 = vgates.VP1()
-        if verbose:
-            print('after set: VP1 {}'.format(vp1))
-        vgates.VP1.set(10)
-        vp1 = vgates.VP1()
-        if verbose:
-            print('after second set: VP1 {}'.format(vp1))
-
-        vgates_matrix = vgates.convert_map_to_matrix(crosscap_map)
-        _ = vgates.convert_matrix_to_map(vgates_matrix)
-
-        vgates.multi_set({'VP1': 10, 'VP2': 20, 'VP3': 30})
-        all_values = vgates.allvalues()
-        self.assertTrue(isinstance(all_values, dict))
-
-        crosscap_matrix = vgates.get_crosscap_matrix()
-        self.assertEqual(1.0, crosscap_matrix[0][0])
-        self.assertEqual(0.6, crosscap_matrix[0][1])
-
-        vgates.set_distances(1.0 / np.arange(1, 5))
-        _ = vgates.to_dictionary()
-        pickled_virtual_gates = pickle.dumps(vgates)
-        extended_vgates = pickle.loads(pickled_virtual_gates)
-
-        v_gates = vgates.vgates() + ['vP4']
-        p_gates = vgates.pgates() + ['P4']
-        extended_vgates = extend_virtual_gates(v_gates, p_gates, vgates, name='vgates')
-        if verbose:
-            extended_vgates.print_matrix()
-
-        _ = update_cc_matrix(vgates, update_cc=np.eye(3), verbose=0)
-
-        update_matrix = 0.1 * np.random.rand(3, 3)
-        np.fill_diagonal(update_matrix, 1)
-
-        # test normalization of virtual gate matrix
-        extended_vgates, _, _ = update_cc_matrix(vgates, update_cc=update_matrix, verbose=0)
-        np.testing.assert_almost_equal(extended_vgates.get_crosscap_matrix(),
-                                       update_matrix.dot(vgates.get_crosscap_matrix()))
-
-        # test normalization of virtual gate matrix
-        serialized_matrix = extended_vgates.get_crosscap_matrix()
-        extended_vgates.normalize_matrix()
-        crosscap_matrix = extended_vgates.get_crosscap_matrix()
-        for row in range(serialized_matrix.shape[0]):
-            np.testing.assert_almost_equal(serialized_matrix[row] / serialized_matrix[row][row], crosscap_matrix[row])
-        cc_matrix_diagonal = crosscap_matrix.diagonal()
-        np.testing.assert_almost_equal(cc_matrix_diagonal, 1.)
-
-        vgates.close()
-        extended_vgates.close()
-        gates.close()
-
-    def test_virtual_gates_serialization(self, verbose=0):
-        """ Test for virtual gates object """
-        import qtt.instrument_drivers.virtual_instruments
-        gates = qtt.instrument_drivers.virtual_instruments.VirtualIVVI(
-            name=qtt.measurements.scans.instrumentName('ivvi_dummy_serialization_test'), model=None, gates=['P1', 'P2', 'P3', 'P4'])
-
-        crosscap_map = OrderedDict((
-            ('VP1', OrderedDict((('P1', 1), ('P2', 0.6), ('P3', 0)))),
-            ('VP2', OrderedDict((('P1', 0.3), ('P2', 1), ('P3', 0.3)))),
-            ('VP3', OrderedDict((('P1', 0), ('P2', 0), ('P3', 1))))
-        ))
-        virts = virtual_gates(qtt.measurements.scans.instrumentName('testvgates'), gates, crosscap_map)
-        vgdict = virts.to_dictionary()
-
-        vx = virtual_gates.from_dictionary(vgdict, gates, name=qtt.measurements.scans.instrumentName('vgdummy'))
-
-        np.testing.assert_almost_equal(vx.get_crosscap_matrix_inv(), virts.get_crosscap_matrix_inv())
-        self.assertTrue(vx.pgates() == ['P%d' % i for i in range(1, 4)])
-
-        gates.close()
-        virts.close()
+virtual_gates=qtt.utilities.tools.deprecated(VirtualGates)
