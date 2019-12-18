@@ -8,7 +8,6 @@ matrix:
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
-
   - name: Minimal installation 3.7
     python: 3.7
     sudo: true
@@ -16,45 +15,39 @@ matrix:
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
-
   - name: Full installation 3.6
     python: 3.6
     dist: xenial
     env: FULL_INSTALL=1
     services:
     - xvfb
-
   - name: Full installation 3.7
     python: 3.7
     dist: xenial
     env: FULL_INSTALL=1
     services:
     - xvfb
-
 install:
-    - pip install coveralls
-    - pip install -e .
-    - export QT_QPA_PLATFORM=offscreen
-
+  - pip install coveralls
+  - pip install -e .
+  - export QT_QPA_PLATFORM=offscreen
 script:
-    - ls
-    - pytest --version
-    - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/tools.py","./src/qtt/live_plotting.py","./src/qtt/live.py","./src/qtt/measurements/ttrace.py" -m pytest
-    - mypy src --ignore-missing-imports
-    - if [[ "$FULL_INSTALL" == "1" ]]; then
-        jupyter --version;
-        bash docs/notebooks/select_notebooks_to_execute.sh;
-      fi
-    - python docs/notebooks/qtt_example.py
-
+  - ls
+  - pytest --version
+  - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/tools.py","./src/qtt/live_plotting.py","./src/qtt/live.py","./src/qtt/measurements/ttrace.py" -m pytest
+  - mypy src --ignore-missing-imports
+  - if [[ "$FULL_INSTALL" == "1" ]]; then
+      jupyter --version;
+      bash docs/notebooks/select_notebooks_to_execute.sh;
+    fi
+  - python docs/notebooks/qtt_example.py
 after_success:
   - coveralls
-
 deploy:
   provider: pypi
   user: __token__
   password:
-    secure: OOySOOyaFw0QhK1J9yC1+AB6PyzfXmF3iMRzb1o+fhaiGW9rYkxB12SEgHd2whxEA2CQg7tKhQuzF6BUal02TVISGN8It+tlGViA0CAr7k4ZHAUdAkRFy2scUlTCtfSYBPSITYb8RzoJLeI0gRLB5D0k0UnzQIMyVpCr7YLOWVnUq28X52i8NCMQG1H2yACmk4qvtp7rfmzEAFwxvkNZMWL592CS+je0GKTcT4Uj4q85IbDnZtjxyl3DCk3xcqK64tg81hrBxkYeuQyva8rIWGqcltTWLldF/sp01bkw8Oeeba7Uyaq2JCgGnSV+l59L2hVPgC7fcbdiq2akO3XqhjkGfHzE4yndHI9I/9Nd+ccBDzi4d+2K0jyYsCaeuEzCpYkxVF3K+RZissiFsJIdZc5heDyMA4htNvlNHhkonkuvn6lETOEVjFRqK5Sb2k8IeG6SoBD38BlNoXNLgY21oVTZ6LtNOC/kOe/HVfOv9buvLeEyLx4++nfTNK5q0dmkeReGt0J+11mtcvkz/N+bvmdIc8yVAEfPn3PXvq+7k1MFsePRfLQ0YDTseGF6SYZ61NSO6RsY1wnYSNPRwukEAp8RXNTkdaYB/8zQ4ltYkTAqk25bXRh861aVybsTTygOQjvSmAV4sHNY6KzGCn2u3UWDNwTQG3G5QrwzM0/FIE4=
+    secure: KuzNakVg9wpcMlf/ArvpIyh7gpIRBTmOx63vudib3Ey1itRvuhiW0/8/2A801gf7dUSZErsvRlVTkT2uECdfieZ3xg3PFz+Hx5EtQqfESJK0cPJ4r4tTlNIWNUymhWQ9NphEbmrJL8f2mwdWgqNgW+JPd7G4/Ki23nE6MTWdXvcMv31BBjza4xDGoFsOMdQh3zHHh9TJiVsXgP/1DetTyShfGoUnhqodVpTrTXEyXHjkw12lipfDLNeT6bgIjLJS8cBLTiW45kOLxP+G/qejlWwO54O9fJxwfXOnJ6lswNOUweRHVr6w4nrlvz52/QOLRYAJdRrLmMUDNykxzetf7quROio8sNhd4VeKE88Q53/qDsvQEzorZvCKwHxCjRvhEmmq8RNnYOhqk6+ejA8Hee98RXzYVKKIUYWMAyjlg7K9kExGdKD3LESg1TtizLlssIVOAwyCkN/BxOUCWV7EBPog61doCvHaUFBzxcSYKG1XDB/wa3e0462XBmAzfhZMGmBmwYCfheUliE4jFCYCsyjMBGrYxH0S+XLgu/FUNVlLcZ9jGOf3jsbAacXJXHC+t8ixNYNcP24HmRoyZwD6S2LilC+PEToaPPrwQKpuDm/4qkcmSi1h88NcUZi2bGw8UC0kNMnZoNxlGfnO6nMzEQ/IX3Y4ML59Oj+1iK4FK2s=
   on:
     tags: true
     branch: master
