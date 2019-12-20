@@ -20,7 +20,7 @@ import importlib
 import warnings
 
 import qcodes
-from qcodes import Instrument, ManualParameter, Parameter, StandardParameter, Station
+from qcodes import Instrument, ManualParameter, Parameter, Station
 from qcodes.data.location import FormatLocation
 from setuptools._vendor.packaging.version import Version
 
@@ -178,7 +178,7 @@ def _setstate(self, d):
     self.get = _get
 
 # black magic to make qcodes objects work with deepcopy
-for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
+for c in [Parameter, Instrument, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str  # type: ignore
 
 # make a qcodes instrument pickable
