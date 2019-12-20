@@ -4,6 +4,25 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[1.2.1] - Current
+### Added
+...
+
+### Changed
+...
+
+### Removed
+- Removed the QCoDeS StandardParameter from QTT (#700).
+
+### Deprecated
+...
+
+### Fixed
+- Fixed the import of M4i driver in function get_sampling_frequency (#700).
+
+### Security
+...
+
 ## \[1.2.0] - 2019-12-17
 
 ## \[1.1.3] - Unreleased

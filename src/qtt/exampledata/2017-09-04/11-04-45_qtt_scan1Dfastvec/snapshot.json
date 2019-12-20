@@ -1919,7 +1919,7 @@
                 "name": "RF",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "IDN",
@@ -1935,7 +1935,7 @@
                         }
                     },
                     "frequency": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "Frequency",
@@ -1946,7 +1946,7 @@
                         "value": 118500000.0
                     },
                     "phase": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "Phase",
@@ -1957,7 +1957,7 @@
                         "value": null
                     },
                     "power": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "Power",
@@ -1968,7 +1968,7 @@
                         "value": 10.0
                     },
                     "pulsemod_source": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "pulsemod_source",
@@ -1979,7 +1979,7 @@
                         "value": null
                     },
                     "pulsemod_state": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "pulsemod_state",
@@ -1990,7 +1990,7 @@
                         "value": null
                     },
                     "ref_osc_external_freq": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "Reference oscillator external frequency",
@@ -2001,7 +2001,7 @@
                         "value": null
                     },
                     "ref_osc_output_freq": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "Reference oscillator output frequency",
@@ -2012,7 +2012,7 @@
                         "value": null
                     },
                     "ref_osc_source": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "Reference oscillator source",
@@ -2023,7 +2023,7 @@
                         "value": null
                     },
                     "status": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "status",
@@ -2034,7 +2034,7 @@
                         "value": "on"
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SGS100A.RohdeSchwarz_SGS100A",
                         "instrument_name": "RF",
                         "label": "timeout",
@@ -2055,7 +2055,7 @@
                 "name": "awg",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.virtual_awg.virtual_awg",
                         "instrument_name": "awg",
                         "label": "IDN",
@@ -2077,7 +2077,7 @@
                 "name": "awg1",
                 "parameters": {
                     "DC_output": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "DC Output (ON/OFF)",
@@ -2088,7 +2088,7 @@
                         "value": null
                     },
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "IDN",
@@ -2104,7 +2104,7 @@
                         }
                     },
                     "ch1_DC_out": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "DC output level channel 1",
@@ -2115,7 +2115,7 @@
                         "value": null
                     },
                     "ch1_add_input": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Add input channel {}",
@@ -2126,7 +2126,7 @@
                         "value": null
                     },
                     "ch1_amp": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Amplitude channel 1",
@@ -2137,7 +2137,7 @@
                         "value": 4.0
                     },
                     "ch1_direct_output": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Direct output channel 1",
@@ -2148,7 +2148,7 @@
                         "value": null
                     },
                     "ch1_filter": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Low pass filter channel 1",
@@ -2159,7 +2159,7 @@
                         "value": null
                     },
                     "ch1_m1_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 1 Marker 1 delay",
@@ -2170,7 +2170,7 @@
                         "value": null
                     },
                     "ch1_m1_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 1 Marker 1 high level",
@@ -2181,7 +2181,7 @@
                         "value": null
                     },
                     "ch1_m1_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 1 Marker 1 low level",
@@ -2192,7 +2192,7 @@
                         "value": null
                     },
                     "ch1_m2_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 1 Marker 2 delay",
@@ -2203,7 +2203,7 @@
                         "value": null
                     },
                     "ch1_m2_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 1 Marker 2 high level",
@@ -2214,7 +2214,7 @@
                         "value": null
                     },
                     "ch1_m2_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 1 Marker 2 low level",
@@ -2225,7 +2225,7 @@
                         "value": null
                     },
                     "ch1_offset": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Offset channel 1",
@@ -2236,7 +2236,7 @@
                         "value": null
                     },
                     "ch1_state": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Status channel 1",
@@ -2247,7 +2247,7 @@
                         "value": 0
                     },
                     "ch1_waveform": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Waveform channel 1",
@@ -2258,7 +2258,7 @@
                         "value": null
                     },
                     "ch2_DC_out": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "DC output level channel 2",
@@ -2269,7 +2269,7 @@
                         "value": null
                     },
                     "ch2_add_input": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Add input channel {}",
@@ -2280,7 +2280,7 @@
                         "value": null
                     },
                     "ch2_amp": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Amplitude channel 2",
@@ -2291,7 +2291,7 @@
                         "value": 4.0
                     },
                     "ch2_direct_output": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Direct output channel 2",
@@ -2302,7 +2302,7 @@
                         "value": null
                     },
                     "ch2_filter": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Low pass filter channel 2",
@@ -2313,7 +2313,7 @@
                         "value": null
                     },
                     "ch2_m1_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 2 Marker 1 delay",
@@ -2324,7 +2324,7 @@
                         "value": null
                     },
                     "ch2_m1_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 2 Marker 1 high level",
@@ -2335,7 +2335,7 @@
                         "value": 2.6
                     },
                     "ch2_m1_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 2 Marker 1 low level",
@@ -2346,7 +2346,7 @@
                         "value": 0
                     },
                     "ch2_m2_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 2 Marker 2 delay",
@@ -2357,7 +2357,7 @@
                         "value": null
                     },
                     "ch2_m2_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 2 Marker 2 high level",
@@ -2368,7 +2368,7 @@
                         "value": null
                     },
                     "ch2_m2_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 2 Marker 2 low level",
@@ -2379,7 +2379,7 @@
                         "value": null
                     },
                     "ch2_offset": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Offset channel 2",
@@ -2390,7 +2390,7 @@
                         "value": null
                     },
                     "ch2_state": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Status channel 2",
@@ -2401,7 +2401,7 @@
                         "value": 0
                     },
                     "ch2_waveform": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Waveform channel 2",
@@ -2412,7 +2412,7 @@
                         "value": "sweep_P1"
                     },
                     "ch3_DC_out": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "DC output level channel 3",
@@ -2423,7 +2423,7 @@
                         "value": null
                     },
                     "ch3_add_input": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Add input channel {}",
@@ -2434,7 +2434,7 @@
                         "value": null
                     },
                     "ch3_amp": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Amplitude channel 3",
@@ -2445,7 +2445,7 @@
                         "value": 4.0
                     },
                     "ch3_direct_output": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Direct output channel 3",
@@ -2456,7 +2456,7 @@
                         "value": null
                     },
                     "ch3_filter": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Low pass filter channel 3",
@@ -2467,7 +2467,7 @@
                         "value": null
                     },
                     "ch3_m1_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 3 Marker 1 delay",
@@ -2478,7 +2478,7 @@
                         "value": null
                     },
                     "ch3_m1_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 3 Marker 1 high level",
@@ -2489,7 +2489,7 @@
                         "value": null
                     },
                     "ch3_m1_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 3 Marker 1 low level",
@@ -2500,7 +2500,7 @@
                         "value": null
                     },
                     "ch3_m2_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 3 Marker 2 delay",
@@ -2511,7 +2511,7 @@
                         "value": null
                     },
                     "ch3_m2_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 3 Marker 2 high level",
@@ -2522,7 +2522,7 @@
                         "value": null
                     },
                     "ch3_m2_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 3 Marker 2 low level",
@@ -2533,7 +2533,7 @@
                         "value": null
                     },
                     "ch3_offset": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Offset channel 3",
@@ -2544,7 +2544,7 @@
                         "value": null
                     },
                     "ch3_state": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Status channel 3",
@@ -2555,7 +2555,7 @@
                         "value": 0
                     },
                     "ch3_waveform": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Waveform channel 3",
@@ -2566,7 +2566,7 @@
                         "value": "sweep_P2"
                     },
                     "ch4_DC_out": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "DC output level channel 4",
@@ -2577,7 +2577,7 @@
                         "value": null
                     },
                     "ch4_add_input": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Add input channel {}",
@@ -2588,7 +2588,7 @@
                         "value": null
                     },
                     "ch4_amp": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Amplitude channel 4",
@@ -2599,7 +2599,7 @@
                         "value": 4.0
                     },
                     "ch4_direct_output": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Direct output channel 4",
@@ -2610,7 +2610,7 @@
                         "value": null
                     },
                     "ch4_filter": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Low pass filter channel 4",
@@ -2621,7 +2621,7 @@
                         "value": null
                     },
                     "ch4_m1_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 4 Marker 1 delay",
@@ -2632,7 +2632,7 @@
                         "value": null
                     },
                     "ch4_m1_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 4 Marker 1 high level",
@@ -2643,7 +2643,7 @@
                         "value": null
                     },
                     "ch4_m1_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 4 Marker 1 low level",
@@ -2654,7 +2654,7 @@
                         "value": null
                     },
                     "ch4_m2_del": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 4 Marker 2 delay",
@@ -2665,7 +2665,7 @@
                         "value": null
                     },
                     "ch4_m2_high": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 4 Marker 2 high level",
@@ -2676,7 +2676,7 @@
                         "value": null
                     },
                     "ch4_m2_low": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Channel 4 Marker 2 low level",
@@ -2687,7 +2687,7 @@
                         "value": null
                     },
                     "ch4_offset": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Offset channel 4",
@@ -2698,7 +2698,7 @@
                         "value": null
                     },
                     "ch4_state": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Status channel 4",
@@ -2709,7 +2709,7 @@
                         "value": 0
                     },
                     "ch4_waveform": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Waveform channel 4",
@@ -2720,7 +2720,7 @@
                         "value": null
                     },
                     "clock_freq": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Clock frequency",
@@ -2731,7 +2731,7 @@
                         "value": 100000000.0
                     },
                     "clock_source": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Clock source",
@@ -2742,7 +2742,7 @@
                         "value": null
                     },
                     "event_impedance": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Event impedance",
@@ -2753,7 +2753,7 @@
                         "value": null
                     },
                     "event_jump_timing": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "event_jump_timing",
@@ -2764,7 +2764,7 @@
                         "value": null
                     },
                     "event_level": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Event level",
@@ -2775,7 +2775,7 @@
                         "value": null
                     },
                     "event_polarity": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "event_polarity",
@@ -2786,7 +2786,7 @@
                         "value": null
                     },
                     "ref_source": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Reference source",
@@ -2797,7 +2797,7 @@
                         "value": null
                     },
                     "run_mode": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "run_mode",
@@ -2808,7 +2808,7 @@
                         "value": "CONT"
                     },
                     "sequence_length": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Sequence length",
@@ -2819,7 +2819,7 @@
                         "value": null
                     },
                     "sequence_pos": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Sequence position",
@@ -2830,7 +2830,7 @@
                         "value": null
                     },
                     "setup_filename": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "setup_filename",
@@ -2841,7 +2841,7 @@
                         "value": null
                     },
                     "state": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "state",
@@ -2852,7 +2852,7 @@
                         "value": null
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "timeout",
@@ -2863,7 +2863,7 @@
                         "value": 300.0
                     },
                     "trigger_impedance": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Trigger impedance",
@@ -2874,7 +2874,7 @@
                         "value": 50
                     },
                     "trigger_level": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "Trigger level",
@@ -2885,7 +2885,7 @@
                         "value": null
                     },
                     "trigger_mode": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "trigger_mode",
@@ -2896,7 +2896,7 @@
                         "value": null
                     },
                     "trigger_slope": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "trigger_slope",
@@ -2907,7 +2907,7 @@
                         "value": null
                     },
                     "trigger_source": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
                         "instrument_name": "awg1",
                         "label": "trigger_source",
@@ -2929,7 +2929,7 @@
                 "name": "fpga",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "IDN",
@@ -2940,7 +2940,7 @@
                         "value": null
                     },
                     "ch1_cycle_num": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "ch1_cycle_num",
@@ -2951,7 +2951,7 @@
                         "value": 1000
                     },
                     "ch1_data": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "ch1_data",
@@ -2962,7 +2962,7 @@
                         "value": null
                     },
                     "ch1_datapoint_num": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "ch1_datapoint_num",
@@ -2973,7 +2973,7 @@
                         "value": null
                     },
                     "ch2_cycle_num": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "ch2_cycle_num",
@@ -2984,7 +2984,7 @@
                         "value": null
                     },
                     "ch2_data": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "ch2_data",
@@ -2995,7 +2995,7 @@
                         "value": null
                     },
                     "ch2_datapoint_num": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "ch2_datapoint_num",
@@ -3006,7 +3006,7 @@
                         "value": null
                     },
                     "data": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "data",
@@ -3017,7 +3017,7 @@
                         "value": null
                     },
                     "measurement_done": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "measurement_done",
@@ -3028,7 +3028,7 @@
                         "value": null
                     },
                     "mode": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "mode",
@@ -3039,7 +3039,7 @@
                         "value": 0
                     },
                     "sampling_frequency": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "sampling_frequency",
@@ -3050,7 +3050,7 @@
                         "value": null
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "timeout",
@@ -3061,7 +3061,7 @@
                         "value": 5.0
                     },
                     "total_cycle_num": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
                         "instrument_name": "fpga",
                         "label": "total_cycle_num",
@@ -3127,7 +3127,7 @@
                 "name": "gates",
                 "parameters": {
                     "D1": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "D1",
@@ -3138,7 +3138,7 @@
                         "value": 69.97787441824994
                     },
                     "D2": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "D2",
@@ -3149,7 +3149,7 @@
                         "value": -230.0144960708019
                     },
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "IDN",
@@ -3160,7 +3160,7 @@
                         "value": null
                     },
                     "LS": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "LS",
@@ -3171,7 +3171,7 @@
                         "value": -295.01792935072876
                     },
                     "LS_fine": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "LS_fine",
@@ -3182,7 +3182,7 @@
                         "value": 0.03051804379333589
                     },
                     "P1": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "P1",
@@ -3193,7 +3193,7 @@
                         "value": -48.00488288700694
                     },
                     "P1_fine": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "P1_fine",
@@ -3204,7 +3204,7 @@
                         "value": -1.0070954451819034
                     },
                     "P2": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "P2",
@@ -3215,7 +3215,7 @@
                         "value": -116.3653009842069
                     },
                     "P2_fine": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "P2_fine",
@@ -3226,7 +3226,7 @@
                         "value": 1.0070954451819034
                     },
                     "P3": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "P3",
@@ -3237,7 +3237,7 @@
                         "value": 0.03051804379333589
                     },
                     "P3_fine": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "P3_fine",
@@ -3248,7 +3248,7 @@
                         "value": 4.242008087281647
                     },
                     "QPC": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "QPC",
@@ -3259,7 +3259,7 @@
                         "value": 0.03051804379333589
                     },
                     "RS": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "RS",
@@ -3270,7 +3270,7 @@
                         "value": 0.03051804379333589
                     },
                     "RS_fine": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "RS_fine",
@@ -3281,7 +3281,7 @@
                         "value": 0.03051804379333589
                     },
                     "SDL": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "SDL",
@@ -3292,7 +3292,7 @@
                         "value": -302.2812237735561
                     },
                     "SDP": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "SDP",
@@ -3303,7 +3303,7 @@
                         "value": -331.15129320210576
                     },
                     "SDP_fine": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "SDP_fine",
@@ -3314,7 +3314,7 @@
                         "value": 0.03051804379333589
                     },
                     "SDR": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "SDR",
@@ -3325,7 +3325,7 @@
                         "value": -213.77889677271673
                     },
                     "T": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "T",
@@ -3336,7 +3336,7 @@
                         "value": -95.85717555504698
                     },
                     "bias_1": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "bias_1",
@@ -3347,7 +3347,7 @@
                         "value": 0.03051804379333589
                     },
                     "bias_2": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "bias_2",
@@ -3358,7 +3358,7 @@
                         "value": 0.03051804379333589
                     },
                     "bias_3": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "bias_3",
@@ -3369,7 +3369,7 @@
                         "value": 0.03051804379333589
                     },
                     "bias_4": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qtt.instrument_drivers.gates.virtual_IVVI",
                         "instrument_name": "gates",
                         "label": "bias_4",
@@ -3388,7 +3388,7 @@
                 "name": "hardware3dot",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "triple_dot.hardware.hardware",
                         "instrument_name": "hardware3dot",
                         "label": "IDN",
@@ -3441,7 +3441,7 @@
                 "name": "ivvi1",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "IDN",
@@ -3463,7 +3463,7 @@
                         "value": false
                     },
                     "dac voltages": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac voltages",
@@ -3491,7 +3491,7 @@
                         ]
                     },
                     "dac1": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 1",
@@ -3502,7 +3502,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac10": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 10",
@@ -3513,7 +3513,7 @@
                         "value": 4.242008087281647
                     },
                     "dac11": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 11",
@@ -3524,7 +3524,7 @@
                         "value": -295.01792935072876
                     },
                     "dac12": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 12",
@@ -3535,7 +3535,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac13": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 13",
@@ -3546,7 +3546,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac14": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 14",
@@ -3557,7 +3557,7 @@
                         "value": -302.2812237735561
                     },
                     "dac15": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 15",
@@ -3568,7 +3568,7 @@
                         "value": -95.85717555504698
                     },
                     "dac16": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 16",
@@ -3579,7 +3579,7 @@
                         "value": -213.77889677271673
                     },
                     "dac2": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 2",
@@ -3590,7 +3590,7 @@
                         "value": 69.97787441824994
                     },
                     "dac3": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 3",
@@ -3601,7 +3601,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac4": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 4",
@@ -3612,7 +3612,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac5": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 5",
@@ -3623,7 +3623,7 @@
                         "value": -48.00488288700694
                     },
                     "dac6": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 6",
@@ -3634,7 +3634,7 @@
                         "value": -1.0070954451819034
                     },
                     "dac7": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 7",
@@ -3645,7 +3645,7 @@
                         "value": -116.3653009842069
                     },
                     "dac8": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 8",
@@ -3656,7 +3656,7 @@
                         "value": 1.0070954451819034
                     },
                     "dac9": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "Dac 9",
@@ -3689,7 +3689,7 @@
                         "value": 0.05
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "timeout",
@@ -3700,7 +3700,7 @@
                         "value": 5.0
                     },
                     "version": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi1",
                         "label": "version",
@@ -3722,7 +3722,7 @@
                 "name": "ivvi2",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "IDN",
@@ -3744,7 +3744,7 @@
                         "value": false
                     },
                     "dac voltages": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac voltages",
@@ -3772,7 +3772,7 @@
                         ]
                     },
                     "dac1": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 1",
@@ -3783,7 +3783,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac10": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 10",
@@ -3794,7 +3794,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac11": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 11",
@@ -3805,7 +3805,7 @@
                         "value": -331.15129320210576
                     },
                     "dac12": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 12",
@@ -3816,7 +3816,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac13": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 13",
@@ -3827,7 +3827,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac14": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 14",
@@ -3838,7 +3838,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac15": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 15",
@@ -3849,7 +3849,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac16": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 16",
@@ -3860,7 +3860,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac2": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 2",
@@ -3871,7 +3871,7 @@
                         "value": -230.0144960708019
                     },
                     "dac3": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 3",
@@ -3882,7 +3882,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac4": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 4",
@@ -3893,7 +3893,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac5": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 5",
@@ -3904,7 +3904,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac6": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 6",
@@ -3915,7 +3915,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac7": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 7",
@@ -3926,7 +3926,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac8": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 8",
@@ -3937,7 +3937,7 @@
                         "value": 0.03051804379333589
                     },
                     "dac9": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "Dac 9",
@@ -3970,7 +3970,7 @@
                         "value": 0.05
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "timeout",
@@ -3981,7 +3981,7 @@
                         "value": 5.0
                     },
                     "version": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
                         "instrument_name": "ivvi2",
                         "label": "version",
@@ -4003,7 +4003,7 @@
                 "name": "keithley1",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "IDN",
@@ -4019,7 +4019,7 @@
                         }
                     },
                     "amplitude": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "keithley1",
@@ -4030,7 +4030,7 @@
                         "value": null
                     },
                     "averaging": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "averaging",
@@ -4041,7 +4041,7 @@
                         "value": false
                     },
                     "digits": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "digits",
@@ -4052,7 +4052,7 @@
                         "value": 7
                     },
                     "display": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "display",
@@ -4063,7 +4063,7 @@
                         "value": true
                     },
                     "integrationtime": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "integrationtime",
@@ -4074,7 +4074,7 @@
                         "value": 0.02
                     },
                     "mode": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "mode",
@@ -4085,7 +4085,7 @@
                         "value": "VOLT:DC"
                     },
                     "nplc": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "nplc",
@@ -4096,7 +4096,7 @@
                         "value": 1
                     },
                     "range": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "range",
@@ -4107,7 +4107,7 @@
                         "value": 10
                     },
                     "readnext": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "keithley1",
@@ -4118,7 +4118,7 @@
                         "value": null
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "timeout",
@@ -4129,7 +4129,7 @@
                         "value": 10.0
                     },
                     "trigger_continuous": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "trigger_continuous",
@@ -4140,7 +4140,7 @@
                         "value": true
                     },
                     "trigger_count": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "trigger_count",
@@ -4151,7 +4151,7 @@
                         "value": 1
                     },
                     "trigger_delay": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley1",
                         "label": "trigger_delay",
@@ -4173,7 +4173,7 @@
                 "name": "keithley2",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "IDN",
@@ -4189,7 +4189,7 @@
                         }
                     },
                     "amplitude": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "keithley2",
@@ -4200,7 +4200,7 @@
                         "value": null
                     },
                     "averaging": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "averaging",
@@ -4211,7 +4211,7 @@
                         "value": false
                     },
                     "digits": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "digits",
@@ -4222,7 +4222,7 @@
                         "value": 7
                     },
                     "display": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "display",
@@ -4233,7 +4233,7 @@
                         "value": true
                     },
                     "integrationtime": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "integrationtime",
@@ -4244,7 +4244,7 @@
                         "value": 0.02
                     },
                     "mode": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "mode",
@@ -4255,7 +4255,7 @@
                         "value": "VOLT:DC"
                     },
                     "nplc": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "nplc",
@@ -4266,7 +4266,7 @@
                         "value": 1
                     },
                     "range": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "range",
@@ -4277,7 +4277,7 @@
                         "value": 10
                     },
                     "readnext": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "keithley2",
@@ -4288,7 +4288,7 @@
                         "value": null
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "timeout",
@@ -4299,7 +4299,7 @@
                         "value": 10.0
                     },
                     "trigger_continuous": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "trigger_continuous",
@@ -4310,7 +4310,7 @@
                         "value": true
                     },
                     "trigger_count": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "trigger_count",
@@ -4321,7 +4321,7 @@
                         "value": 1
                     },
                     "trigger_delay": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
                         "instrument_name": "keithley2",
                         "label": "trigger_delay",
@@ -4343,7 +4343,7 @@
                 "name": "mwsource",
                 "parameters": {
                     "IDN": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "IDN",
@@ -4359,7 +4359,7 @@
                         }
                     },
                     "frequency": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "Frequency",
@@ -4370,7 +4370,7 @@
                         "value": 409900000.0
                     },
                     "power": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "Power",
@@ -4381,7 +4381,7 @@
                         "value": -30.0
                     },
                     "pulse_delay": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "pulse_delay",
@@ -4392,7 +4392,7 @@
                         "value": null
                     },
                     "status": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "status",
@@ -4403,7 +4403,7 @@
                         "value": "off"
                     },
                     "status_of_ALC": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "status_of_ALC",
@@ -4414,7 +4414,7 @@
                         "value": null
                     },
                     "status_of_modulation": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "status_of_modulation",
@@ -4425,7 +4425,7 @@
                         "value": null
                     },
                     "timeout": {
-                        "__class__": "qcodes.instrument.parameter.StandardParameter",
+                        "__class__": "qcodes.instrument.parameter.Parameter",
                         "instrument": "qcodes.instrument_drivers.rohde_schwarz.SMR40.RohdeSchwarz_SMR40",
                         "instrument_name": "mwsource",
                         "label": "timeout",
