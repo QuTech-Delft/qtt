@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import qcodes
-from qcodes import Parameter
+from qcodes import Parameter, ManualParameter
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
 import zhinst
@@ -23,7 +23,8 @@ import qtt.utilities.tools
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.measurements.scans import (get_instrument_parameter, instrumentName,
                                     measure_segment_scope_reader, fastScan,
-                                    sample_data_t, scan1D, scan2D, scanjob_t)
+                                    sample_data_t, scan1D, scan2D, scanjob_t,
+                                    get_sampling_frequency)
 from qtt.structures import MultiParameter
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.scans import measuresegment
@@ -296,3 +297,14 @@ class TestScans(TestCase):
             actual_data = measuresegment(waveform, number_of_averages, simulation_digitizer, read_channels)
             warn_mock.assert_called_once_with('measuresegment: received empty data array')
             np.testing.assert_array_equal(expected_data, actual_data)
+
+    def test_get_sampling_frequency_m4i(self):
+        expected_value = 12.345e6
+
+        m4i_digitizer = M4i('test')
+        m4i_digitizer.sample_rate = ManualParameter('sample_rate', initial_value=expected_value)
+
+        actual_value = get_sampling_frequency(m4i_digitizer)
+        self.assertEqual(expected_value, actual_value)
+
+        m4i_digitizer.close()
