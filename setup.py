@@ -28,7 +28,7 @@ tests_require = ['coverage', 'jupyter', 'mypy', 'pytest']
 
 install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'h5py', 'hickle', 'IPython>=0.1', 'lmfit', 'matplotlib>=3.0',
-    'numpy>=1.15', 'opencv-python', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.5.0',
+    'numpy>=1.15', 'opencv-python', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.8.0',
     'qcodes-contrib-drivers', 'qilib', 'qtpy', 'qupulse', 'redis', 'scipy>=0.18', 'scikit-image', 'jupyter',
     'coverage', 'sympy'
 ] + tests_require
@@ -79,6 +79,8 @@ setup(name='qtt',
       license='MIT',
       package_dir={'': 'src'},
       packages=find_packages(where='./src'),
+      data_files=[('bin',
+                  ['bin/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'])],
       install_requires=install_requires,
       tests_require=tests_require,
       extras_require=extras_require,

@@ -1,6 +1,5 @@
 """ Mathematical functions and models """
 
-import operator
 import numpy as np
 import scipy
 import scipy.constants
@@ -8,7 +7,9 @@ import matplotlib.pyplot as plt
 from lmfit import Model
 
 import qtt.pgeometry
+import qtt.utilities.tools
 from qtt.utilities.visualization import plot_vertical_line
+from qtt.algorithms.generic import subpixelmax
 
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
@@ -27,55 +28,8 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
     return y
 
 
-def _cost_gaussian(x_data, y_data, params):
-    """Cost function for fitting a gaussian
-
-    Args:
-        x_data (array): x values of the data
-        y_data (array): y values of the data
-        params (array): parameters of a gaussian, [mean, s, amplitude, offset]
-    Returns:
-        cost (float): value which indicates the difference between the data and the fit
-    """
-
-    [mean, std, amplitude, offset] = params
-    model_y_data = gaussian(x_data, mean, std, amplitude, offset)
-    cost = np.linalg.norm(y_data - model_y_data)
-    return cost
-
-
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
-    """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
-
-    Args:
-        x_data (array): x values of the data
-        y_data (array): y values of the data
-        maxiter (int): maximum number of iterations to perform
-        maxfun (int): maximum number of function evaluations to make
-        verbose (int): set to >0 to print convergence messages
-        initial_params (None or array): optional, initial guess for the fit parameters: 
-            [mean, s, amplitude, offset]
-
-    Returns:
-        par_fit (array): fit parameters of the gaussian: [mean, s, amplitude, offset]
-        result_dict (dict): result dictonary containging the fitparameters and the initial guess parameters
-    """
-
-    def cost_function(params): return _cost_gaussian(x_data, y_data, params)
-
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
-    if initial_params is None:
-        amplitude = np.max(y_data) - np.min(y_data)
-        s = (maxsignal - minsignal) * 1 / 20
-        mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
-        offset = np.min(y_data)
-        initial_params = np.array([mean, s, amplitude, offset])
-    par_fit = scipy.optimize.fmin(cost_function, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
-
-    result_dict = {'parameters fitted gaussian': par_fit, 'parameters initial guess': initial_params}
-
-    return par_fit, result_dict
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
+    raise Exception('The fit_gaussian method has moved to qtt.algorithms.fitting')
 
 
 def double_gaussian(x_data, params):
@@ -98,6 +52,7 @@ def double_gaussian(x_data, params):
     return double_gauss
 
 
+@qtt.utilities.tools.rdeprecated(txt='Function will be removed from qtt')
 def _cost_double_gaussian(x_data, y_data, params):
     """ Cost function for fitting of double Gaussian.
 
@@ -117,153 +72,8 @@ def _cost_double_gaussian(x_data, y_data, params):
     return cost
 
 
-def _integral(x_data, y_data):
-    """ Calculate integral of function """
-    d_xdata = np.diff(x_data)
-    d_xdata = np.hstack([d_xdata, d_xdata[-1]])
-    data_integral = np.sum(d_xdata * y_data)
-    return data_integral
-
-
-def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
-    """ Estimate of double gaussian model parameters."""
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
-
-    data_left = y_data[:int((len(y_data) / 2))]
-    data_right = y_data[int((len(y_data) / 2)):]
-
-    amplitude_left = np.max(data_left)
-    amplitude_right = np.max(data_right)
-    sigma_left = (maxsignal - minsignal) * 1 / 20
-    sigma_right = (maxsignal - minsignal) * 1 / 20
-
-    if fast_estimate:
-        alpha = .1
-        mean_left = minsignal + (alpha) * (maxsignal - minsignal)
-        mean_right = minsignal + (1 - alpha) * (maxsignal - minsignal)
-    else:
-        x_data_left = x_data[:int((len(y_data) / 2))]
-        x_data_right = x_data[int((len(y_data) / 2)):]
-
-        data_integral_left = _integral(x_data_left, data_left)
-        data_integral_right = _integral(x_data_right, data_right)
-
-        sigma_left = data_integral_left / (np.sqrt(2 * np.pi) * amplitude_left)
-        sigma_right = data_integral_right / (np.sqrt(2 * np.pi) * amplitude_right)
-
-        mean_left = np.sum(x_data_left * data_left) / np.sum(data_left)
-        mean_right = np.sum(x_data_right * data_right) / np.sum(data_right)
-    initial_params = np.array([amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
-    return initial_params
-
-
 def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
-    """ Fitting of double gaussian
-
-    Fitting the Gaussians and finding the split between the up and the down state,
-    separation between the max of the two gaussians measured in the sum of the std.
-
-    Args:
-        x_data (array): x values of the data
-        y_data (array): y values of the data
-        maxiter (int): maximum number of iterations to perform
-        maxfun (int): maximum number of function evaluations to make
-        verbose (int): set to >0 to print convergence messages
-        initial_params (None or array): optional, initial guess for the fit parameters:
-            [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-
-    Returns:
-        par_fit (array): fit parameters of the double gaussian: [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-        result_dict (dict): dictionary with results of the fit. Fields guaranteed in the dictionary:
-            parameters (array): Fitted parameters
-            parameters initial guess (array): initial guess for the fit parameters, either the ones give to the
-                 function, or generated by the function: [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-            reduced_chi_squared (float): Reduced chi squared value of the fit
-            separation (float): separation between the max of the two gaussians measured in the sum of the std
-            split (float): value that separates the up and the down level
-            left (array), right (array): Parameters of the left and right fitted Gaussian
-
-    """
-
-    if initial_params is None:
-        initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
-
-    def _double_gaussian(x, A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up):
-        """ Double Gaussian helper function for lmfit """
-        gauss_dn = gaussian(x, mean_dn, sigma_dn, A_dn)
-        gauss_up = gaussian(x, mean_up, sigma_up, A_up)
-        double_gauss = gauss_dn + gauss_up
-        return double_gauss
-
-    double_gaussian_model = Model(_double_gaussian)
-    delta_x = x_data.max() - x_data.min()
-    bounds = [x_data.min() - .1 * delta_x, x_data.max() + .1 * delta_x]
-    double_gaussian_model.set_param_hint('mean_up', min=bounds[0], max=bounds[1])
-    double_gaussian_model.set_param_hint('mean_dn', min=bounds[0], max=bounds[1])
-    double_gaussian_model.set_param_hint('A_up', min=0)
-    double_gaussian_model.set_param_hint('A_dn', min=0)
-
-    param_names = double_gaussian_model.param_names
-    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=0)
-
-    par_fit = np.array([result.best_values[p] for p in param_names])
-
-    if par_fit[4] > par_fit[5]:
-        par_fit = np.take(par_fit, [1, 0, 3, 2, 5, 4])
-    # separation is the difference between the max of the gaussians divided by the sum of the std of both gaussians
-    separation = (par_fit[5] - par_fit[4]) / (abs(par_fit[2]) + abs(par_fit[3]))
-    # split equal distant to both peaks measured in std from the peak
-    weigthed_distance_split = par_fit[4] + separation * abs(par_fit[2])
-
-    result_dict = {'parameters': par_fit, 'parameters initial guess': initial_params, 'separation': separation,
-                   'split': weigthed_distance_split, 'reduced_chi_squared': result.redchi,
-                   'left': np.take(par_fit, [4, 2, 0]), 'right': np.take(par_fit, [5, 3, 1]),
-                   'type': 'fitted double gaussian'}
-
-    return par_fit, result_dict
-
-def _double_gaussian_parameters(gauss_left, gauss_right):
-    return np.vstack((gauss_left[::-1], gauss_right[::-1])).T.flatten()
-
-def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_threshold=8):
-    """ Improve fit of double Gaussian by estimating the initial parameters based on an existing fit
-
-    Args:
-        result_dict(dict): Result dictionary from fit_double_gaussian
-        x_data (array): Independent data
-        y_data (array): Signal data
-        gaussian_amplitude_ratio_threshold (float): If ratio between amplitudes of Gaussian peaks is larger than
-                            this fit, re-estimate
-    Returns:
-        Dictionary with improved fitting results
-    """
-
-    mean = operator.itemgetter(0)
-    std = operator.itemgetter(1)
-    amplitude = operator.itemgetter(2)
-
-    if amplitude(result_dict['left']) > amplitude(result_dict['right']):
-        large_gaussian_parameters = result_dict['left']
-        small_gaussian_parameters = result_dict['right']
-    else:
-        large_gaussian_parameters = result_dict['right']
-        small_gaussian_parameters = result_dict['left']
-    gaussian_ratio = amplitude(large_gaussian_parameters) / amplitude(small_gaussian_parameters)
-
-    if gaussian_ratio > gaussian_amplitude_ratio_threshold:
-        # re-estimate by fitting a single gaussian to the data remaining after removing the main gaussian
-        y_residual = y_data - gaussian(x_data, *large_gaussian_parameters)
-        idx = np.logical_and(x_data > mean(large_gaussian_parameters) - 1.5 * std(large_gaussian_parameters),
-                             x_data < mean(large_gaussian_parameters) + 1.5 * std(large_gaussian_parameters))
-        y_residual[idx] = 0
-        gauss_fit, _ = fit_gaussian(x_data, y_residual)
-
-        initial_parameters = _double_gaussian_parameters(large_gaussian_parameters, gauss_fit[:3])
-        _, result_dict_refit = fit_double_gaussian(x_data, y_data, initial_params=initial_parameters)
-        if result_dict_refit['reduced_chi_squared'] < result_dict['reduced_chi_squared']:
-            result_dict = result_dict_refit
-    return result_dict
+    raise Exception('fit_double_gaussian was moved to qtt.algorithms.fitting')
 
 
 def exp_function(x, a, b, c):
@@ -435,8 +245,14 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
 
     if remove_dc:
         w[0] = 0
+    w[freqs < 0] = 0
 
-    ff = freqs[np.argmax(np.abs(w))]
+    dominant_idx = np.argmax(np.abs(w))
+    dominant_frequency = freqs[dominant_idx]
+
+    if 0 < dominant_idx < freqs.size / 2 - 1:
+        dominant_idx_subpixel, _ = subpixelmax(np.abs(w), [dominant_idx])
+        dominant_frequency = np.interp(dominant_idx_subpixel, np.arange(freqs.size), freqs)[0]
 
     if fig:
         plt.figure(fig)
@@ -444,23 +260,33 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
         plt.plot(freqs, np.abs(w), '.b')
         plt.xlabel('Frequency')
         plt.ylabel('Abs of fft')
-        plot_vertical_line(ff)
-    return ff
+        plot_vertical_line(dominant_frequency, label='Dominant frequency')
+    return dominant_frequency
 
 # %%
-#
 
 
 def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     """ Estimate initial parameters of a damped sine wave
 
-    Also see: https://en.wikipedia.org/wiki/Damped_sine_wave
+    The damped sine wave is described in https://en.wikipedia.org/wiki/Damped_sine_wave.
+    This is a first estimate of the parameters, no numerical optimization is performed.
+
+    The amplitude is estimated from the minimum and maximum values of the data. The osciallation frequency using
+    the dominant frequency in the FFT of the signal. The phase of the signal is calculated based on the first
+    datapoint in the sequences and the other parameter estimates. Finally, the decay factor of the damped sine wave is
+    determined by a heuristic rule.
+
+    Example:
+        >>> estimate_parameters_damped_sine_wave(np.arange(10), np.sin(np.arange(10)))
 
     Args:
-        exponent: Exponent from the exponential decay factor
+        x_data (float): Independent data
+        y_data (float): Dependent data
+        exponent (float): Exponent from the exponential decay factor
 
     Returns:
-        Estimated parameters for gauss_ramsey method
+        Estimated parameters for damped sine wave (see the gauss_ramsey method)
     """
     A = (np.max(y_data) - np.min(y_data)) / 2
     B = (np.min(y_data) + A)
@@ -473,16 +299,19 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     decay_factor = (mean_left + laplace_factor) / (mean_right + laplace_factor)
 
     duration = x_data[-1] - x_data[0]
-    sample_rate = x_data.size / duration
-    ramseyfreq = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
+    sample_rate = (x_data.size - 1) / duration
+    frequency = estimate_dominant_frequency(y_data, sample_rate=sample_rate)
+
     if A == 0:
         angle = 0
     else:
         n_start = max(min((y_data[0] - B) / A, 1), -1)
-        angle = -np.arcsin(n_start)
+        angle_first_datapoint = -np.arcsin(n_start)
+        angle = angle_first_datapoint + 2 * np.pi * frequency * x_data[0]
+        angle = np.mod(np.pi + angle, 2 * np.pi) - np.pi
     t2s = 2 * duration / decay_factor
 
-    initial_params = np.array([A, t2s, ramseyfreq, angle, B])
+    initial_params = np.array([A, t2s, frequency, angle, B])
     return initial_params
 
 

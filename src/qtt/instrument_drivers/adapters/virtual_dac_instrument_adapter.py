@@ -12,7 +12,7 @@ class VirtualDACInstrumentAdapter(InstrumentAdapter):
 
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
-        self._instrument = VirtualDAC(self._name, instruments=[], gate_map={})
+        self._instrument = VirtualDAC(self._instrument_name, instruments=[], gate_map={})
         self._dac_adapters: Dict[str, VirtualDAC] = {}
 
     def _filter_parameters(self, parameters: PythonJsonStructure) -> PythonJsonStructure:
@@ -49,10 +49,18 @@ class VirtualDACInstrumentAdapter(InstrumentAdapter):
         self._instrument.gate_map = config[GATE_MAP]
         super().apply(config[CONFIG])
 
-    def add_adapter_to_instrument_adapter(self, adapter_class_name: str, address: str) -> None:
-        """ Add a dac to the virtual dac and cache a corresponding instrument adapter."""
+    def add_adapter_to_instrument_adapter(self, instrument_adapter_class_name: str, address: str,
+                                          instrument_name: Optional[str] = None) -> None:
+        """ Adds a DAC to the virtual DAC and cache a corresponding instrument adapter.
 
-        adapter = InstrumentAdapterFactory.get_instrument_adapter(adapter_class_name, address)
+        Args:
+            instrument_adapter_class_name: Name of the InstrumentAdapter subclass.
+            address: Address of the physical instrument.
+            instrument_name: An optional name for the underlying instrument.
+        """
+
+        adapter = InstrumentAdapterFactory.get_instrument_adapter(instrument_adapter_class_name, address,
+                                                                  instrument_name)
         if adapter.name not in self._dac_adapters:
             self._dac_adapters[adapter.name] = adapter
         if adapter.instrument not in self.instrument.instruments:
