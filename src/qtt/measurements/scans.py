@@ -19,7 +19,7 @@ import qcodes
 import skimage
 import skimage.filters
 from qcodes import DataArray, Instrument
-from qcodes.instrument.parameter import Parameter, StandardParameter
+from qcodes.instrument.parameter import Parameter
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
 
@@ -138,7 +138,7 @@ def _parse_stepdata(stepdata):
         stepdata['param'] = stepdata['gate']
 
     v = stepdata.get('param', None)
-    if isinstance(v, (str, StandardParameter, Parameter, dict)):
+    if isinstance(v, (str, Parameter, dict)):
         pass
     elif isinstance(v, list):
         warnings.warn('please use string or Instrument instead of list')
@@ -745,7 +745,7 @@ class scanjob_t(dict):
                 stepdata['param'] = getattr(gates, v)
             else:
                 pass
-        elif isinstance(v, (StandardParameter, Parameter, dict)):
+        elif isinstance(v, (Parameter, dict)):
             pass
         self[field] = stepdata
 
@@ -1265,14 +1265,8 @@ def get_sampling_frequency(instrument_handle):
     if isinstance(instrument_handle, AcquisitionScopeInterface):
         return instrument_handle.sample_rate
     try:
+        import qcodes_contrib_drivers.drivers.Spectrum.M4i
         if isinstance(instrument_handle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i):
-            return instrument_handle.sample_rate()
-    except ImportError:
-        pass
-    try:
-        import qcodes.instrument_drivers.Spectrum.M4i
-        if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
-            warnings.warn('please use the M4i driver from qcodes_contrib_drivers')
             return instrument_handle.sample_rate()
     except ImportError:
         pass
