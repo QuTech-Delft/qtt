@@ -160,6 +160,7 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
 
 
 def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_parameter_name: Optional[str], copy_metadata: bool, verbose : int =0):
+    """ Slice the measurement array of a dataset and adjust the setpoints arrays accordingly """
     zarray = dataset.default_parameter_array()
     if output_parameter_name is None:
         output_parameter_name = zarray.name
@@ -169,6 +170,7 @@ def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_par
 
     scan_dimension = len(set_arrays)
     is_1d_dataset = len(set_arrays) == 1
+    is_2d_dataset = len(set_arrays) == 2
 
     if verbose:
         print(f'slice_dataset: dimension {scan_dimension} slice_objects {slice_objects}')
@@ -177,12 +179,14 @@ def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_par
         signal_window = zarray[slice_objects]
         dataset_window = qtt.data.makeDataSet1Dplain(yarray.name, yarray[slice_objects[0]], yname=output_parameter_name,
                                                      y=signal_window, xunit=yarray.unit, yunit=zarray.unit)
-    else:
+    elif is_2d_dataset:
         xarray = set_arrays[1]
         signal_window = zarray[slice_objects]
         dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][slice_objects[1]], yarray.name, yarray[slice_objects[0]], zname=output_parameter_name,
                                                      z=signal_window, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
-
+    else:
+           raise NotImplementedError('slicing a multi-dimensional dataset of dimension {len(set_arrays)} is not supported')
+               
     if copy_metadata:
         dataset_window.metadata = copy.deepcopy(dataset.metadata)
     return dataset_window
