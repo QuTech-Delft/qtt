@@ -186,7 +186,7 @@ def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_par
                                                      z=signal_window, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
     else:
            raise NotImplementedError('slicing a multi-dimensional dataset of dimension {len(set_arrays)} is not supported')
-               
+
     if copy_metadata:
         dataset_window.metadata = copy.deepcopy(dataset.metadata)
     return dataset_window
