@@ -2226,20 +2226,24 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     if sweeporstepdata is None:
         sweeporstepdata = {}
     if hasattr(virtual_parameter, 'comb_map'):
-        pp = dict([(p.name, r)
-                   for p, r in virtual_parameter.comb_map if round(r, 5) != 0])
+        active_parameters = dict([(p.name, r)
+                   for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
         if remove_slow_gates:
             try:
-                for gate in list(pp.keys()):
-                    if not station.awg.awg_gate(gate):
-                        pp.pop(gate, None)
-
+                if 'awg' in station.components:
+                       for gate in list(active_parameters.keys()):
+                           if not station.awg.awg_gate(gate):
+                               active_parameters.pop(gate, None)
+                else:
+                       for gate in list(active_parameters.keys()):
+                           if not station.virtual_awg.are_awg_gates([gate]):
+                               active_parameters.pop(gate, None)
             except BaseException:
                 warnings.warn(f'error when removing slow gate {gate} from scan data')
     else:
-        pp = {virtual_parameter.name: 1}
+        active_parameters = {virtual_parameter.name: 1}
     sweeporstepdata = {'start': start, 'range': g_range,
-                       'end': start + g_range, 'param': pp}
+                       'end': start + g_range, 'param': active_parameters}
     if step is not None:
         sweeporstepdata['step'] = step
     return sweeporstepdata
