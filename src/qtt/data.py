@@ -1105,7 +1105,7 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
 
     if measured_data_list is not None:
         if len(measurement_list) != len(measured_data_list):
-            raise ValueError(f'The number of measurement names {len(measurement_list)} does not match the number of measurements {len(measured_data_list)}')                             
+            raise ValueError(f'The number of measurement names {len(measurement_list)} does not match the number of measurements {len(measured_data_list)}')
 
     measure_names = []
     measure_units = []
