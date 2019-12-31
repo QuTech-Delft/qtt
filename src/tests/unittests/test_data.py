@@ -227,7 +227,7 @@ class TestMakeDataSet(unittest.TestCase):
     def test_makedataset1dplain_shape_measuredata_list_nok1(self):
         x = np.arange(0, 10)
         y = np.arange(1, 11)
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+        self.assertRaisesRegex(ValueError, 'The number of measurement names 2 does not match the number of measurements 10',
                                qtt.data.makeDataSet1Dplain, 'x', x, ['y1', 'y2'], y)
 
     def test_makedataset1dplain_shape_measuredata_list_nok2(self):
@@ -243,7 +243,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_makedataset1dplain_type_yname_parameter(self):
@@ -277,7 +277,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_shape_measuredata_second_nok(self):
@@ -295,7 +295,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_right_shape(self):
@@ -318,7 +318,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_no_data(self):
@@ -369,7 +369,7 @@ class TestMakeDataSet(unittest.TestCase):
         x = dummy_parameter[0:10:1]
         yname = ['measured1', 'measured2']
         y = np.arange(len(x)).reshape((len(x)))
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+        self.assertRaisesRegex(ValueError, 'The number of measurement names 2 does not match the number of measurements 10',
                                qtt.data.makeDataSet1D, x, yname, y, return_names=False)
 
     def test_makedataset1d_shape_measuredata_list_nok2(self):
@@ -387,7 +387,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_makedataset1d_shape_measuredata_nok(self):
@@ -404,7 +404,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_makedataset1d_shape_second_item_measuredata_nok(self):
@@ -422,7 +422,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_makedataset1d_no_data(self):
@@ -474,7 +474,7 @@ class TestMakeDataSet(unittest.TestCase):
         h = [0., 1, 2, 3, 4]
         measurement = np.arange(len(v) * len(h)).reshape((len(v), len(h)))
         z = [measurement, measurement, measurement]
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+        self.assertRaisesRegex(ValueError, 'The number of measurement names 2 does not match the number of measurements 3',
                                qtt.data.makeDataSet2Dplain, 'horizontal', h, 'vertical', v, ['z1', 'z2'],
                                z, xunit='mV', yunit='Hz', zunit='A')
 
@@ -483,7 +483,7 @@ class TestMakeDataSet(unittest.TestCase):
         h = [0., 1, 2, 3, 4]
         measurement = np.arange(len(v) * len(h)).reshape((len(v), len(h)))
         z = [measurement, measurement]
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+        self.assertRaisesRegex(ValueError, 'The number of measurement names 3 does not match the number of measurements 2',
                                qtt.data.makeDataSet2Dplain, 'horizontal', h, 'vertical', v, ['z1', 'z2', 'z3'],
                                z, xunit='mV', yunit='Hz', zunit='A')
 
@@ -508,7 +508,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_dataset2dplain_shape_measuredata_second_nok(self):
@@ -522,7 +522,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_dataset2dplain_no_measuredata(self):
@@ -584,7 +584,7 @@ class TestMakeDataSet(unittest.TestCase):
         m1 = ManualParameter('measurement1')
         measure_names = [m1]
         preset_data = np.ones((len(x), len(y)))
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+        self.assertRaisesRegex(ValueError, 'The number of measurement names 1 does not match the number of measurements 10',
                                qtt.data.makeDataSet2D, x, y, measure_names, preset_data=preset_data, return_names=False)
 
     def test_makedataset2d_shape_measure_names_parameters(self):
@@ -640,7 +640,7 @@ class TestMakeDataSet(unittest.TestCase):
         y = p2[0:4:1]
         measure_names = ['measured1', 'measured2']
         preset_data = [np.ones((len(x), len(y))).shape]
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+        self.assertRaisesRegex(ValueError, 'The number of measurement names 2 does not match the number of measurements 1',
                                qtt.data.makeDataSet2D, x, y, measure_names, preset_data=preset_data, return_names=False)
 
     def test_makedataset2d_shape_measuredata_list_nok2(self):
@@ -650,7 +650,7 @@ class TestMakeDataSet(unittest.TestCase):
         y = p2[0:4:1]
         measure_names = ['measured1']
         preset_data = [np.ones((len(x), len(y))).shape, np.ones((len(x), len(y))).shape]
-        self.assertRaisesRegex(ValueError, 'The number of measurement names does not match the number of measurements',
+        self.assertRaisesRegex(ValueError, 'The number of measurement names 1 does not match the number of measurements 2',
                                qtt.data.makeDataSet2D, x, y, measure_names, preset_data=preset_data, return_names=False)
 
     def test_makedataset2d_shape_measuredata_nok(self):
@@ -668,7 +668,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
 
     def test_makedataset2d_shape_measuredata_second_nok(self):
@@ -686,5 +686,5 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertIn('Shape of measured data does not match setpoint shape', print_string)
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
             logger.removeHandler(stream_handler)
