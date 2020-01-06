@@ -1129,7 +1129,8 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
         if measured_data_list is not None and measured_data_list[idm] is not None:
             measured_array = np.array(measured_data_list[idm])
             if measured_array.shape != preset_data.shape:
-                logger.warning(f'Shape of measured data {preset_data.shape} does not match setpoint shape {measured_array.shape}')
+                logger.warning(f'Shape of measured data {preset_data.shape} does not match '
+                               f'setpoint shape {measured_array.shape}')
 
             getattr(data_set, mname).ndarray = measured_array
 
