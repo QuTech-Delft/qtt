@@ -6,11 +6,13 @@ import qcodes
 import qtt.data
 from qtt.data import DataSet
 
+
 # %%
 
 
 def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name: str,
-                      processing_function: Callable, label: Optional[str] = None, unit: Optional[str] = None, ) -> DataSet:
+                      processing_function: Callable, label: Optional[str] = None,
+                      unit: Optional[str] = None, ) -> DataSet:
     """ Apply a function to a DataArray in a DataSet
 
     Args:
@@ -36,7 +38,7 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
     return dataset
 
 
-def dataset_dimension(dataset : DataSet) -> int:
+def dataset_dimension(dataset: DataSet) -> int:
     """ Return dimension of DataSet """
     return len(dataset.default_parameter_array().set_arrays)
 
@@ -71,7 +73,8 @@ def average_dataset(dataset: qtt.data.DataSet, axis: Union[str, int] = 'vertical
         new_setpoint_array_data = new_setpoint_array
         averaged_signal = zarray.mean(axis=1)
 
-    dataset_averaged = qtt.data.makeDataSet1Dplain(new_setpoint_array.name, new_setpoint_array_data, yname=zarray.name, y=averaged_signal,
+    dataset_averaged = qtt.data.makeDataSet1Dplain(new_setpoint_array.name, new_setpoint_array_data, yname=zarray.name,
+                                                   y=averaged_signal,
                                                    xunit=new_setpoint_array.unit, yunit=zarray.unit)
 
     return dataset_averaged
@@ -103,8 +106,10 @@ def average_multirow_dataset(dataset: DataSet, number_of_repetitions: int, new_v
     ncolumns = data.shape[1]
     averaged_signal = data.transpose().reshape(-1, number_of_repetitions).mean(1).reshape(ncolumns, -1).transpose()
 
-    dataset_averaged = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0], yarray.name, new_values, zname=output_parameter_name,
-                                                   z=averaged_signal, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
+    dataset_averaged = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0], yarray.name, new_values,
+                                                   zname=output_parameter_name,
+                                                   z=averaged_signal, xunit=xarray.unit, yunit=yarray.unit,
+                                                   zunit=zarray.unit)
 
     return dataset_averaged
 
@@ -133,7 +138,8 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
 
     set_arrays = zarray.set_arrays
     yarray = set_arrays[0]
-    is_1d_dataset = len(set_arrays) == 1
+    scan_dimension = dataset_dimension(dataset)
+    is_1d_dataset = scan_dimension == 1
 
     if is_1d_dataset:
         if not axis == 0:
@@ -159,7 +165,8 @@ def slice_dataset(dataset: DataSet, window: Sequence[float], axis: int = 0,
     return _slice_dataset(dataset, tuple(slice_objects), output_parameter_name, copy_metadata=copy_metadata, verbose=0)
 
 
-def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_parameter_name: Optional[str], copy_metadata: bool, verbose : int =0):
+def _slice_dataset(dataset: DataSet, slice_objects: Sequence[slice], output_parameter_name: Optional[str],
+                   copy_metadata: bool, verbose: int = 0):
     """ Slice the measurement array of a dataset and adjust the setpoints arrays accordingly """
     zarray = dataset.default_parameter_array()
     if output_parameter_name is None:
@@ -168,9 +175,9 @@ def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_par
     set_arrays = zarray.set_arrays
     yarray = set_arrays[0]
 
-    scan_dimension = len(set_arrays)
-    is_1d_dataset = len(set_arrays) == 1
-    is_2d_dataset = len(set_arrays) == 2
+    scan_dimension = dataset_dimension(dataset)
+    is_1d_dataset = scan_dimension == 1
+    is_2d_dataset = scan_dimension == 2
 
     if verbose:
         print(f'slice_dataset: dimension {scan_dimension} slice_objects {slice_objects}')
@@ -182,17 +189,20 @@ def _slice_dataset(dataset : DataSet, slice_objects: Sequence[slice], output_par
     elif is_2d_dataset:
         xarray = set_arrays[1]
         signal_window = zarray[slice_objects]
-        dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][slice_objects[1]], yarray.name, yarray[slice_objects[0]], zname=output_parameter_name,
-                                                     z=signal_window, xunit=xarray.unit, yunit=yarray.unit, zunit=zarray.unit)
+        dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][slice_objects[1]], yarray.name,
+                                                     yarray[slice_objects[0]], zname=output_parameter_name,
+                                                     z=signal_window, xunit=xarray.unit, yunit=yarray.unit,
+                                                     zunit=zarray.unit)
     else:
-           raise NotImplementedError('slicing a multi-dimensional dataset of dimension {len(set_arrays)} is not supported')
+        raise NotImplementedError('slicing a multi-dimensional dataset of dimension {scan_dimension} is not supported')
 
     if copy_metadata:
         dataset_window.metadata = copy.deepcopy(dataset.metadata)
     return dataset_window
 
 
-def resample_dataset(dataset: DataSet, sample_rate: Tuple[int], copy_metadata: bool = False, output_parameter_name : Optional[str] = None) -> DataSet:
+def resample_dataset(dataset: DataSet, sample_rate: Tuple[int], copy_metadata: bool = False,
+                     output_parameter_name: Optional[str] = None) -> DataSet:
     """ Given a dataset resample the measurement array
 
     Args:
