@@ -2227,7 +2227,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
         sweeporstepdata = {}
     if hasattr(virtual_parameter, 'comb_map'):
         active_parameters = dict([(p.name, r)
-                   for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
+        active_parameters = dict([(p.name, r) for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
         if remove_slow_gates:
             try:
                 if 'awg' in station.components:
