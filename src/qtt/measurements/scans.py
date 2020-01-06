@@ -2249,13 +2249,14 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
         virtual_parameter (obj): parameter of the virtual gate which is varied
         g_range (float): scan range (total range)
         remove_slow_gates: Removes slow gates from the linear combination of gates. Useful if virtual gates include compensation ofn slow gates, but a fast measurement should be run.
+        station (None or qcodes.Station): Used to access the virtual awg
         start (float): start if the scanjob data 
         step (None or float): if not None, then add to the scanning field
     Returns:
-        sweeporstepdata (dict): sweepdata or stepdata needed in the scanjob for virtual vector scans
+        sweep_or_stepdata (dict): sweepdata or stepdata needed in the scanjob for virtual vector scans
     """
-    if sweeporstepdata is None:
-        sweeporstepdata = {}
+    if sweeporstepdata is not None:
+        raise Exception('parameter sweeporstepdata is not used')
     if hasattr(virtual_parameter, 'comb_map'):
         active_parameters = dict([(p.name, r)
                                   active_parameters = dict(
@@ -2274,11 +2275,11 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
                 warnings.warn(f'error when removing slow gate {gate} from scan data')
     else:
         active_parameters = {virtual_parameter.name: 1}
-    sweeporstepdata = {'start': start, 'range': g_range,
+    sweep_or_stepdata = {'start': start, 'range': g_range,
                        'end': start + g_range, 'param': active_parameters}
     if step is not None:
-        sweeporstepdata['step'] = step
-    return sweeporstepdata
+        sweep_or_stepdata['step'] = step
+    return sweep_or_stepdata
 
 
 def plotData(alldata, diff_dir=None, fig=1):
