@@ -39,6 +39,7 @@ from qtt.data import uniqueArrayName
 from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
 
+
 # %%
 
 
@@ -174,7 +175,8 @@ def get_param_name(gates, sweepgate):
 # %%
 
 
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt. Use qtt.data.plot_dataset', expire='1 Sep 2018')
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt. Use qtt.data.plot_dataset',
+                                 expire='1 Sep 2018')
 def plot1D(data, fig=100, mstyle='-b'):
     """ Show result of a 1D scan """
 
@@ -350,6 +352,7 @@ def _initialize_live_plotting(alldata, plotparam, liveplotwindow=None, subplots=
         pyqtgraph.mkQApp().processEvents()  # needed for the parameterviewer
     return liveplotwindow
 
+
 def _dataset_record_label(scanjob):
     """ Return label to be used in dataset record
     
@@ -360,6 +363,7 @@ def _dataset_record_label(scanjob):
     """
     default_label = scanjob.get('scantype', 'default')
     return scanjob.get('dataset_label', default_label)
+
 
 def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='measured', verbose=1, extra_metadata=None):
     """Simple 1D scan. 
@@ -400,7 +404,8 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     logging.debug('wait_time: %s' % str(wait_time))
 
     alldata, (set_names, measure_names) = makeDataSet1D(sweepvalues, yname=mparams,
-                                                        location=location, loc_record={'label': _dataset_record_label(scanjob)},
+                                                        location=location,
+                                                        loc_record={'label': _dataset_record_label(scanjob)},
                                                         return_names=True)
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow)
@@ -475,7 +480,8 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
 
 # %%
-def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, plotparam=None, extra_metadata=None):
+def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True, verbose=1, plotparam=None,
+               extra_metadata=None):
     """ Fast 1D scan. The scan is performed by putting a sawtooth signal on the AWG and measuring with a fast acquisition device.
 
     Args:
@@ -611,13 +617,13 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
     nx = len(sweepgates)
     step = sweepranges[0] / resolution[0]
     stepdata = {'gates': [sweepgates[0]], 'start': values[0]
-                - sweepranges[0] / 2, 'end': values[0] + sweepranges[0] / 2,
+                                                   - sweepranges[0] / 2, 'end': values[0] + sweepranges[0] / 2,
                 'step': step}
     sj['stepdata'] = stepdata
     if nx == 2:
         step = sweepranges[1] / resolution[1]
         sweepdata = {'gates': [sweepgates[1]], 'start': values[1]
-                     - sweepranges[1] / 2, 'end': values[1] + sweepranges[0] / 2,
+                                                        - sweepranges[1] / 2, 'end': values[1] + sweepranges[0] / 2,
                      'step': step}
         sj['sweepdata'] = sweepdata
         sj['wait_time_step'] = 4
@@ -904,7 +910,7 @@ class scanjob_t(dict):
                                           sweepdata['range'] / 2, len(scanvalues))
                 for param in sweepdata['param']:
                     self['phys_gates_vals'][param] = param_init[param] + \
-                        sweep_array * sweepdata['param'][param]
+                                                     sweep_array * sweepdata['param'][param]
             else:
                 scanvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
 
@@ -958,13 +964,13 @@ class scanjob_t(dict):
                     sweepdata['step'] = sweepdata['range'] / sweeplength
                 else:
                     sweepdata['step'] = (
-                        sweepdata['end'] - sweepdata['start']) / sweeplength
+                                                sweepdata['end'] - sweepdata['start']) / sweeplength
             if steplength is not None:
                 if 'range' in stepdata:
                     stepdata['step'] = stepdata['range'] / steplength
                 else:
                     stepdata['step'] = (
-                        stepdata['end'] - stepdata['start']) / steplength
+                                               stepdata['end'] - stepdata['start']) / steplength
 
             sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
             if stepvalues is None:
@@ -981,11 +987,11 @@ class scanjob_t(dict):
                 for param in sweepdata['param']:
                     if isinstance(stepvalues, np.ndarray):
                         self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * \
-                            sweepdata['param'][param]
+                                                         sweepdata['param'][param]
                     else:
                         self['phys_gates_vals'][param] = param_init[param] + step_array2d * \
-                            stepdata['param'][param] + sweep_array2d * \
-                            sweepdata['param'][param]
+                                                         stepdata['param'][param] + sweep_array2d * \
+                                                         sweepdata['param'][param]
             self['stepdata'] = stepdata
             self['sweepdata'] = sweepdata
 
@@ -1134,7 +1140,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
 
     alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
                                                         measure_names=mparams, location=location, loc_record={
-                                                            'label': _dataset_record_label(scanjob)},
+            'label': _dataset_record_label(scanjob)},
                                                         return_names=True)
 
     if verbose >= 2:
@@ -1161,7 +1167,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             t1_str = time.strftime('%H:%M:%S', time.gmtime(t1))
             if (ix == 0):
                 time_est = len(sweepvalues) * len(stepvalues) * \
-                    scanjob['sweepdata'].get('wait_time', 0) * 2
+                           scanjob['sweepdata'].get('wait_time', 0) * 2
             else:
                 time_est = (t1) / ix * len(stepvalues) - t1
             time_est_str = time.strftime(
@@ -1229,8 +1235,9 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
                 warnings.warn('parameter %s already in dataset, skipping!' % parameter.name)
                 continue
 
-            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit, preset_data=scanjob['phys_gates_vals'][param], set_arrays=(
-                alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
+            arr = DataArray(name=parameter.name, array_id=parameter.name, label=parameter.label, unit=parameter.unit,
+                            preset_data=scanjob['phys_gates_vals'][param], set_arrays=(
+                    alldata.arrays[stepvalues.parameter.name], alldata.arrays[sweepvalues.parameter.name]))
 
             alldata.add_array(arr)
 
@@ -1273,7 +1280,7 @@ def get_sampling_frequency(instrument_handle):
     try:
         import qcodes.instrument_drivers.ZI.ZIUHFLI
         if isinstance(instrument_handle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI):
-             return NotImplementedError('not implemented yet')
+            return NotImplementedError('not implemented yet')
     except ImportError:
         pass
 
@@ -1309,10 +1316,10 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
     period_y = period
 
     if verbose:
-        print('process_2d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints, ))
+        print('process_2d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints,))
 
     if np.abs(npoints - npoints_expected) > 0:
-        raise Exception('process_2d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints, ))
+        raise Exception('process_2d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints,))
 
     full_trace = False
     if start_zero and (not full_trace):
@@ -1357,7 +1364,7 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
 
     if verbose:
         print('process_2d_sawtooth: number of points in forward trace (horizontal) %d, vertical %d' %
-              (npoints_forward_x, npoints_forward_y, ))
+              (npoints_forward_x, npoints_forward_y,))
         print('   horizontal mismatch %d/%.1f' % (npoints_forward_x, width_horz * period_x * samplerate))
 
     processed_data = []
@@ -1394,7 +1401,7 @@ def process_2d_sawtooth(data, period, samplerate, resolution, width, verbose=0, 
         qtt.pgeometry.plot2Dline([-1, 0, 0, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='start trace')
         qtt.pgeometry.plot2Dline([-1, 0, period, ], '-', color=(0, 1, 0, .41), linewidth=.8, label='end trace')
 
-        #qtt.pgeometry.plot2Dline([0, -1, data[0,3], ], '--', color=(1, 0, 0, .41), linewidth=.8, label='first value of data')
+        # qtt.pgeometry.plot2Dline([0, -1, data[0,3], ], '--', color=(1, 0, 0, .41), linewidth=.8, label='first value of data')
 
         plt.legend(numpoints=1)
 
@@ -1428,7 +1435,7 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
     npoints_expected = int(period * samplerate)  # expected number of points
     npoints = data.shape[0]
     if verbose:
-        print('process_1d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints, ))
+        print('process_1d_sawtooth: expected %d data points, got %d' % (npoints_expected, npoints,))
 
     if len(width) != 1:
         raise Exception('specification is not for a 1D sawtooth signal')
@@ -1463,12 +1470,17 @@ def process_1d_sawtooth(data, width, period, samplerate, resolution=None, paddin
 
     return processed_data, (trace_start, trace_end)
 
-def ceilN(x, n):
-    return int(n*np.ceil(x/n))
-def floorN(x, n):
-    return int(n*np.floor(x//n))
 
-def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1, trigger_re_arm_compensation = False):
+def ceilN(x, n):
+    return int(n * np.ceil(x / n))
+
+
+def floorN(x, n):
+    return int(n * np.floor(x // n))
+
+
+def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1,
+                       trigger_re_arm_compensation=False):
     """ Select suitable memory size for a given period
 
     The selected memory size is the period times the sample rate, but rounded above to a multiple of 16.
@@ -1505,7 +1517,8 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
 
     memsize = base_segment_size * nsegments
     if memsize > digitizer.memory():
-        raise Exception(f'Trying to acquire too many points. Reduce sampling rate, period {period} or number segments {nsegments}')
+        raise Exception(
+            f'Trying to acquire too many points. Reduce sampling rate, period {period} or number segments {nsegments}')
 
     pre_trigger = ceilN(trigger_delay * sample_rate, 16) + basic_pretrigger_size
     post_trigger = ceilN(base_segment_size - pre_trigger, 16)
@@ -1515,7 +1528,7 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         if verbose:
             print(f'select_m4i_memsize: post_trigger {post_trigger}, max_segment_size_rearm {max_segment_size_re_arm}')
         post_trigger = min(post_trigger, max_segment_size_re_arm)
-        memsize = (pre_trigger + post_trigger)*nsegments
+        memsize = (pre_trigger + post_trigger) * nsegments
 
     signal_start = basic_pretrigger_size + int(trigger_delay_points)
     signal_end = signal_start + number_points_period
@@ -1533,15 +1546,18 @@ def select_m4i_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbo
         print('select_m4i_memsize %s: signal_start %d, signal_end %d' % (digitizer.name, signal_start, signal_end))
     return memsize, pre_trigger, signal_start, signal_end
 
+
 def _trigger_re_arm_padding(data, number_of_samples, verbose=0):
     """ Pad array to specified size in last dimension """
-    re_arm_padding = (number_of_samples)-data.shape[-1]
-    data = np.concatenate( (data, np.zeros( data.shape[:-1]+(re_arm_padding, ))), axis=-1 )
+    re_arm_padding = (number_of_samples) - data.shape[-1]
+    data = np.concatenate((data, np.zeros(data.shape[:-1] + (re_arm_padding,))), axis=-1)
     if verbose:
-        print(f'measure_raw_segment_m4i: re-arm padding: {re_arm_padding}')        
+        print(f'measure_raw_segment_m4i: re-arm padding: {re_arm_padding}')
     return data
 
-def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0, trigger_re_arm_compensation = False, trigger_re_arm_padding = True):
+
+def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, verbose=0,
+                            trigger_re_arm_compensation=False, trigger_re_arm_padding=True):
     """ Record a trace from the digitizer
 
     Args:
@@ -1569,7 +1585,8 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     signal_delay = getattr(digitizer, 'signal_delay', None)
 
     memsize, _, signal_start, signal_end = select_m4i_memsize(
-        digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose, trigger_re_arm_compensation = trigger_re_arm_compensation)
+        digitizer, period, trigger_delay=signal_delay, nsegments=1, verbose=verbose,
+        trigger_re_arm_compensation=trigger_re_arm_compensation)
     post_trigger = digitizer.posttrigger_memory_size()
 
     if mV_range is None:
@@ -1584,8 +1601,9 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     data = np.transpose(np.reshape(dataraw, [-1, len(read_ch)]))
     data = data[:, signal_start:signal_end]
     if trigger_re_arm_compensation and trigger_re_arm_padding:
-        data = _trigger_re_arm_padding(data, signal_end-signal_start, verbose)
+        data = _trigger_re_arm_padding(data, signal_end - signal_start, verbose)
     return data
+
 
 @qtt.utilities.tools.deprecated
 def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
@@ -1628,7 +1646,8 @@ def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1,
 
 @qtt.pgeometry.static_var('debug_enabled', False)
 @qtt.pgeometry.static_var('debug_data', {})
-def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None, trigger_re_arm_compensation = False, trigger_re_arm_padding = True):
+def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, process=False, verbose=0, fig=None,
+                       trigger_re_arm_compensation=False, trigger_re_arm_padding=True):
     """ Measure block data with M4i
 
     Args:
@@ -1647,7 +1666,9 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
 
     period = waveform['period']
     raw_data = measure_raw_segment_m4i(digitizer, period, read_ch, mV_range=mV_range,
-                                       Naverage=Naverage, verbose=verbose, trigger_re_arm_compensation=trigger_re_arm_compensation, trigger_re_arm_padding = trigger_re_arm_padding)
+                                       Naverage=Naverage, verbose=verbose,
+                                       trigger_re_arm_compensation=trigger_re_arm_compensation,
+                                       trigger_re_arm_padding=trigger_re_arm_padding)
     if measuresegment_m4i.debug_enabled:
         measuresegment_m4i.debug_data['raw_data'] = raw_data
         measuresegment_m4i.debug_data['waveform'] = waveform
@@ -1675,7 +1696,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
                                       verbose=verbose, fig=fig)
     if measuresegment_m4i.debug_enabled:
         measuresegment_m4i.debug_data['data'] = data
-        
+
     if verbose:
         print('measuresegment_m4i: processed_data: width %s, data shape %s' % (width, data.shape,))
 
@@ -1703,7 +1724,8 @@ def get_uhfli_scope_records(device, daq, scopeModule, number_of_records=1, timeo
         if (time.time() - start) > timeout:
             # Break out of the loop if for some reason we're no longer receiving scope data from the device.
             logging.warning(
-                "\nScope Module did not return {} records after {} s - forcing stop.".format(number_of_records, timeout))
+                "\nScope Module did not return {} records after {} s - forcing stop.".format(number_of_records,
+                                                                                             timeout))
             break
     daq.setInt('/%s/scopes/0/enable' % device, 0)
     # Read out the scope data from the module.
@@ -1786,7 +1808,7 @@ def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, pro
     return data
 
 
-def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True, device_parameters = None):
+def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, process=True, device_parameters=None):
     """Wrapper to identify measurement instrument and run appropriate acquisition function.
     Supported instruments: m4i digitizer, ZI UHF-LI
 
@@ -1813,7 +1835,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     measure_instrument = get_instrument(minstrhandle)
 
     if is_m4i:
-        data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process, **device_parameters)
+        data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process,
+                                  **device_parameters)
     elif is_uhfli:
         data = measure_segment_uhfli(minstrhandle, waveform, read_ch, Naverage, **device_parameters)
     elif is_scope_reader:
@@ -1833,7 +1856,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
 
 
 def acquire_segments(station, parameters, average=True, mV_range=2000,
-                     save_to_disk=True, location=None, verbose=True, trigger_re_arm_compensation=False, trigger_re_arm_padding = True):
+                     save_to_disk=True, location=None, verbose=True, trigger_re_arm_compensation=False,
+                     trigger_re_arm_padding=True):
     """Record triggered segments as time traces into dataset. AWG must be already sending a trigger pulse per segment.
 
     Note that if the requested period is equal or longer than the period on the AWG, then not all trigger events might
@@ -1870,14 +1894,16 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         measure_names = ['READOUT_ch%d' % c for c in read_ch]
 
     if verbose:
-        exepected_measurement_time = nsegments*period
+        exepected_measurement_time = nsegments * period
         print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
 
     is_m4i = _is_m4i(minstrhandle)
 
     if average:
         data = measuresegment(waveform, nsegments,
-                              minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation, 'trigger_re_arm_padding': trigger_re_arm_padding})
+                              minstrhandle, read_ch, mV_range, process=False,
+                              device_parameters={'trigger_re_arm_compensation': trigger_re_arm_compensation,
+                                                 'trigger_re_arm_padding': trigger_re_arm_padding})
         if is_m4i:
             segment_time = np.arange(0., len(data[0])) / minstrhandle.exact_sample_rate()
         else:
@@ -1887,7 +1913,8 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     else:
         if is_m4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
-                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2, trigger_re_arm_compensation = trigger_re_arm_compensation)
+                minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2,
+                trigger_re_arm_compensation=trigger_re_arm_compensation)
 
             segment_size = int(memsize_total / nsegments)
             post_trigger = segment_size - pre_trigger
@@ -1908,7 +1935,7 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
             data = np.reshape(np.transpose(np.reshape(dataraw, (-1, len(read_ch)))), (len(read_ch), nsegments, -1))
             data = data[:, :, signal_start:signal_end]
             if trigger_re_arm_compensation and trigger_re_arm_padding:
-                data = _trigger_re_arm_padding(data, signal_end-signal_start)
+                data = _trigger_re_arm_padding(data, signal_end - signal_start)
             segment_time = np.arange(0., data.shape[2]) / sample_rate
             segment_num = np.arange(nsegments).astype(segment_time.dtype)
             alldata = makeDataSet2Dplain('time', segment_time, 'segment_number', segment_num,
@@ -2070,7 +2097,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                 if v != 0:
                     sg.append(g)
             if len(sg) > 1:
-                raise(Exception('AWG pulses does not yet support virtual gates'))
+                raise (Exception('AWG pulses does not yet support virtual gates'))
             waveform, _ = station.awg.sweepandpulse_gate({'gate': sg[0], 'sweeprange': sweepdata['range'],
                                                           'period': period}, scanjob['pulsedata'])
         else:
@@ -2089,8 +2116,9 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
             gates.set(sweepdata['paramname'], float(sweepgate_value))
         if 'pulsedata' in scanjob:
-            waveform, sweep_info = station.awg.sweepandpulse_gate({'gate': sweepdata['param'].name, 'sweeprange': sweeprange,
-                                                                   'period': period}, scanjob['pulsedata'])
+            waveform, sweep_info = station.awg.sweepandpulse_gate(
+                {'gate': sweepdata['param'].name, 'sweeprange': sweeprange,
+                 'period': period}, scanjob['pulsedata'])
         else:
             if virtual_awg:
                 gates = {sweepdata['param'].name: 1}
@@ -2133,7 +2161,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             stepvalues.name = stepvalues.name + '_y'
             sweepvalues.name = sweepvalues.name + '_x'
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                location=location, loc_record={'label': scanjob.get('dataset_label', _dataset_record_label(scanjob))})
+                                location=location,
+                                loc_record={'label': scanjob.get('dataset_label', _dataset_record_label(scanjob))})
 
     liveplotwindow = _initialize_live_plotting(alldata, plotparam, liveplotwindow, subplots=True)
 
@@ -2184,9 +2213,11 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
         for idp, steppm_add in enumerate(stepdata['param'].params):
             if idp <= 0:
                 continue
-            data_arr_step_add = DataArray(steppm_add, name=steppm_add.name, full_name=steppm_add.name, array_id=steppm_add.name,
+            data_arr_step_add = DataArray(steppm_add, name=steppm_add.name, full_name=steppm_add.name,
+                                          array_id=steppm_add.name,
                                           preset_data=np.repeat(
-                                              stepvalues[:, idp, np.newaxis], alldata.arrays[measure_names[0]].shape[1], axis=1),
+                                              stepvalues[:, idp, np.newaxis], alldata.arrays[measure_names[0]].shape[1],
+                                              axis=1),
                                           set_arrays=(alldata.arrays[measure_names[0]].set_arrays))
             alldata.add_array(data_arr_step_add)
 
@@ -2227,17 +2258,18 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
         sweeporstepdata = {}
     if hasattr(virtual_parameter, 'comb_map'):
         active_parameters = dict([(p.name, r)
-        active_parameters = dict([(p.name, r) for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
+                                  active_parameters = dict(
+            [(p.name, r) for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
         if remove_slow_gates:
             try:
                 if 'awg' in station.components:
-                       for gate in list(active_parameters.keys()):
-                           if not station.awg.awg_gate(gate):
-                               active_parameters.pop(gate, None)
+                    for gate in list(active_parameters.keys()):
+                        if not station.awg.awg_gate(gate):
+                            active_parameters.pop(gate, None)
                 else:
-                       for gate in list(active_parameters.keys()):
-                           if not station.virtual_awg.are_awg_gates([gate]):
-                               active_parameters.pop(gate, None)
+                    for gate in list(active_parameters.keys()):
+                        if not station.virtual_awg.are_awg_gates([gate]):
+                            active_parameters.pop(gate, None)
             except BaseException:
                 warnings.warn(f'error when removing slow gate {gate} from scan data')
     else:
@@ -2399,7 +2431,8 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
         stepvalues = scanvalues[0]
         sweepvalues = scanvalues[1]
         alldata = makeDataSet2D(stepvalues, sweepvalues, measure_names=measure_names,
-                                preset_data=data, location=location, loc_record={'label': _dataset_record_label(scanjob)})
+                                preset_data=data, location=location,
+                                loc_record={'label': _dataset_record_label(scanjob)})
 
     dt = time.time() - t0
     liveplotwindow = _initialize_live_plotting(alldata, plotparam=None, liveplotwindow=liveplotwindow)
