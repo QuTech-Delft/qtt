@@ -616,15 +616,13 @@ def makeScanjob(sweepgates, values, sweepranges, resolution):
 
     nx = len(sweepgates)
     step = sweepranges[0] / resolution[0]
-    stepdata = {'gates': [sweepgates[0]], 'start': values[0]
-                                                   - sweepranges[0] / 2, 'end': values[0] + sweepranges[0] / 2,
-                'step': step}
+    stepdata = {'gates': [sweepgates[0]], 'start': values[0] - sweepranges[0] / 2,
+                'end': values[0] + sweepranges[0] / 2, 'step': step}
     sj['stepdata'] = stepdata
     if nx == 2:
         step = sweepranges[1] / resolution[1]
-        sweepdata = {'gates': [sweepgates[1]], 'start': values[1]
-                                                        - sweepranges[1] / 2, 'end': values[1] + sweepranges[0] / 2,
-                     'step': step}
+        sweepdata = {'gates': [sweepgates[1]], 'start': values[1] - sweepranges[1] / 2,
+                     'end': values[1] + sweepranges[0] / 2, 'step': step}
         sj['sweepdata'] = sweepdata
         sj['wait_time_step'] = 4
     return sj
@@ -963,14 +961,12 @@ class scanjob_t(dict):
                 if 'range' in sweepdata:
                     sweepdata['step'] = sweepdata['range'] / sweeplength
                 else:
-                    sweepdata['step'] = (
-                                                sweepdata['end'] - sweepdata['start']) / sweeplength
+                    sweepdata['step'] = (sweepdata['end'] - sweepdata['start']) / sweeplength
             if steplength is not None:
                 if 'range' in stepdata:
                     stepdata['step'] = stepdata['range'] / steplength
                 else:
-                    stepdata['step'] = (
-                                               stepdata['end'] - stepdata['start']) / steplength
+                    stepdata['step'] = (stepdata['end'] - stepdata['start']) / steplength
 
             sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
             if stepvalues is None:
@@ -1138,10 +1134,8 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
     if type(stepvalues) is np.ndarray:
         stepvalues = stepdata['param'][list(stepvalues[:, 0])]
 
-    alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues,
-                                                        measure_names=mparams, location=location, loc_record={
-            'label': _dataset_record_label(scanjob)},
-                                                        return_names=True)
+    alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues, measure_names=mparams,
+             location=location, loc_record={'label': _dataset_record_label(scanjob)}, return_names=True)
 
     if verbose >= 2:
         print('scan2D: created dataset')
@@ -2258,9 +2252,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     if sweeporstepdata is not None:
         raise Exception('parameter sweeporstepdata is not used')
     if hasattr(virtual_parameter, 'comb_map'):
-        active_parameters = dict([(p.name, r)
-                                  active_parameters = dict(
-            [(p.name, r) for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
+        active_parameters = dict([(p.name, r) for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
         if remove_slow_gates:
             try:
                 if 'awg' in station.components:
@@ -2275,8 +2267,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
                 warnings.warn(f'error when removing slow gate {gate} from scan data')
     else:
         active_parameters = {virtual_parameter.name: 1}
-    sweep_or_stepdata = {'start': start, 'range': g_range,
-                       'end': start + g_range, 'param': active_parameters}
+    sweep_or_stepdata = {'start': start, 'range': g_range, 'end': start + g_range, 'param': active_parameters}
     if step is not None:
         sweep_or_stepdata['step'] = step
     return sweep_or_stepdata
