@@ -2,10 +2,9 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 import qtt
-from qtt.algorithms.functions import gaussian, fit_gaussian, fit_double_gaussian, double_gaussian, exp_function, \
+from qtt.algorithms.functions import gaussian, double_gaussian, exp_function, \
     fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
-    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave, \
-    refit_double_gaussian
+    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave
 
 
 class TestFunctions(unittest.TestCase):
@@ -70,6 +69,11 @@ class TestFunctions(unittest.TestCase):
         y = logistic(0.0, 1.0, alpha=1.0)
         np.testing.assert_almost_equal(y, 0.11920292202211755, decimal=6)
 
+    def test_gaussian(self):
+        y = gaussian(np.array([0.0, 1., 2.]), 1.0, .2)
+        self.assertIsInstance(y, np.ndarray)
+        np.testing.assert_almost_equal(y, np.array([3.72665317e-06, 1.00000000e+00, 3.72665317e-06]), decimal=6)
+
     def test_Fermi(self):
         values = Fermi(np.array([0, 1, 2]), 0, 1, 2, kb=1)
         np.testing.assert_array_almost_equal(values, np.array([0.5, 0.37754067, 0.26894142]))
@@ -112,38 +116,6 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(estimated_parameters[0], 1., places=1)
         self.assertAlmostEqual(estimated_parameters[2], exact_frequency, places=1)
         self.assertAlmostEqual(estimated_parameters[-1], exact_offset, places=1)
-
-    def test_fit_gaussian(self):
-        x_data = np.linspace(0, 10, 100)
-        gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
-        noise = np.random.rand(100)
-        [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise))
-        self.assertTrue(3.5 < mean < 4.5)
-        self.assertTrue(0.5 < s < 1.5)
-        self.assertTrue(4.5 < amplitude < 5.5)
-        self.assertTrue(0.0 < offset < 1.0)
-
-    def test_refit_double_gaussian(self):
-        dataset = qtt.data.load_example_dataset('double_gaussian_dataset.json')
-        x_data = np.array(dataset.signal)
-        y_data = np.array(dataset.counts)
-
-        _, result_dict = fit_double_gaussian(x_data, y_data)
-        result_dict = refit_double_gaussian(result_dict, x_data, y_data)
-
-        self.assertAlmostEqual(result_dict['left'][0], -1.23, places=1)
-        self.assertAlmostEqual(result_dict['right'][0], -0.77, places=1)
-        self.assertAlmostEqual(result_dict['left'][2], 162.8, places=0)
-        self.assertAlmostEqual(result_dict['right'][2], 1971, places=-1)
-
-    def test_fit_double_gaussian(self):
-        x_data = np.arange(-4, 4, .05)
-        initial_parameters = [10, 20, 1, 1, -2, 2]
-        y_data = double_gaussian(x_data, initial_parameters)
-
-        fitted_parameters, _ = fit_double_gaussian(x_data, y_data)
-        parameter_diff = np.abs(fitted_parameters - initial_parameters)
-        self.assertTrue(np.all(parameter_diff < 1e-3))
 
     def test_cost_exp_decay(self):
         params = [0, 1, 1]

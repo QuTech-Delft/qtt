@@ -20,7 +20,7 @@ import importlib
 import warnings
 
 import qcodes
-from qcodes import Instrument, ManualParameter, Parameter, StandardParameter, Station
+from qcodes import Instrument, ManualParameter, Parameter, Station
 from qcodes.data.location import FormatLocation
 from setuptools._vendor.packaging.version import Version
 
@@ -80,7 +80,7 @@ def check_version(version, module=qcodes, optional=False, install_message=None):
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'redis', optional=True)
-check_version('0.5.0', qcodes)
+check_version('0.8.0', qcodes)
 check_version('0.2', 'qupulse')
 
 check_version('3.0', 'Polygon', install_message="use command 'pip install Polygon3' to install the package")
@@ -178,7 +178,7 @@ def _setstate(self, d):
     self.get = _get
 
 # black magic to make qcodes objects work with deepcopy
-for c in [Parameter, Instrument, StandardParameter, ManualParameter, Station]:
+for c in [Parameter, Instrument, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str  # type: ignore
 
 # make a qcodes instrument pickable

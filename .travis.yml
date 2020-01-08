@@ -4,59 +4,51 @@ matrix:
   - name: Minimal installation 3.6
     python: 3.6
     sudo: true
-    dist: xenial
+    dist: bionic
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
-
   - name: Minimal installation 3.7
     python: 3.7
     sudo: true
-    dist: xenial
+    dist: bionic
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
-
   - name: Full installation 3.6
     python: 3.6
-    dist: xenial
+    dist: bionic
     env: FULL_INSTALL=1
     services:
     - xvfb
-
   - name: Full installation 3.7
     python: 3.7
-    dist: xenial
+    dist: bionic
     env: FULL_INSTALL=1
     services:
     - xvfb
-
 install:
-    - pip install coveralls
-    - pip install -e .
-    - export QT_QPA_PLATFORM=offscreen
-
+  - pip install coveralls
+  - pip install -e .
+  - export QT_QPA_PLATFORM=offscreen
 script:
-    - ls
-    - pytest --version
-    - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/tools.py","./src/qtt/live_plotting.py","./src/qtt/live.py","./src/qtt/measurements/ttrace.py" -m pytest
-    - mypy src --ignore-missing-imports
-    - if [[ "$FULL_INSTALL" == "1" ]]; then
-        jupyter --version;
-        bash docs/notebooks/select_notebooks_to_execute.sh;
-      fi
-    - python docs/notebooks/qtt_example.py
-
+  - ls
+  - pytest --version
+  - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/tools.py","./src/qtt/live_plotting.py","./src/qtt/live.py","./src/qtt/measurements/ttrace.py" -m pytest
+  - mypy src --ignore-missing-imports
+  - if [[ "$FULL_INSTALL" == "1" ]]; then
+      jupyter --version;
+      bash docs/notebooks/select_notebooks_to_execute.sh;
+    fi
+  - python docs/notebooks/qtt_example.py
 after_success:
   - coveralls
-
 deploy:
   provider: pypi
-  user: __token__
+  user: qutech.sdst
   password:
-    secure: OOySOOyaFw0QhK1J9yC1+AB6PyzfXmF3iMRzb1o+fhaiGW9rYkxB12SEgHd2whxEA2CQg7tKhQuzF6BUal02TVISGN8It+tlGViA0CAr7k4ZHAUdAkRFy2scUlTCtfSYBPSITYb8RzoJLeI0gRLB5D0k0UnzQIMyVpCr7YLOWVnUq28X52i8NCMQG1H2yACmk4qvtp7rfmzEAFwxvkNZMWL592CS+je0GKTcT4Uj4q85IbDnZtjxyl3DCk3xcqK64tg81hrBxkYeuQyva8rIWGqcltTWLldF/sp01bkw8Oeeba7Uyaq2JCgGnSV+l59L2hVPgC7fcbdiq2akO3XqhjkGfHzE4yndHI9I/9Nd+ccBDzi4d+2K0jyYsCaeuEzCpYkxVF3K+RZissiFsJIdZc5heDyMA4htNvlNHhkonkuvn6lETOEVjFRqK5Sb2k8IeG6SoBD38BlNoXNLgY21oVTZ6LtNOC/kOe/HVfOv9buvLeEyLx4++nfTNK5q0dmkeReGt0J+11mtcvkz/N+bvmdIc8yVAEfPn3PXvq+7k1MFsePRfLQ0YDTseGF6SYZ61NSO6RsY1wnYSNPRwukEAp8RXNTkdaYB/8zQ4ltYkTAqk25bXRh861aVybsTTygOQjvSmAV4sHNY6KzGCn2u3UWDNwTQG3G5QrwzM0/FIE4=
+    secure: RwTnD4RBnErHXF8umOlLmePlXSwbRlF7F6Mw7OVgvFVCu7cs8AJORYclCDjcVhCxqTNTPiSp3PnTpHJrC32EV6zyI2D9aFB+CjDHYgsbWO45lknP7X3QLr+cbWd2ApgZk3h8WOn+LyXtH8+YLl46ujAApES2K04Tp3DPqFDkdlzDjhSp3FyvQ1RYx84YlROSxAsUrvWiGfVc1BoF7lSqknvxomHmGUrQlatSpmoJ0JvMuz+8o6zHLOWyXQDSiHkAg+kkRYuJY+eJBQRdpKwa5ZH0O00WKSuwEMQl3d+wQJL5GTiqbBBhYWmakARX6OQToMbKKxUZ+VZsv2N6CwuhmSgGYmzl9b6UK2o5kiPDcFqfqmwiSOJFH7Eg4D8xAZCJyrbeeKzGzddq+STBgAEK59zAq7Vx3Lqsqv81vQlbIatBIZxQtvkwxsqnaGib0Xvu7p3TDjkXX4kZVOdEDx1+mwJgkIVAcTJSq/ILjIQIP3cOYWDTzVS4VFm6OrWuiXNllyzzfKNTjhoJnwea4QHqkqLTwUYMxr6qighXSiP6mBB1uyNMoKXBypD7pHMyZvrlWjxoV5UnGCGl0v8oGURzzUXqPIaNtcFnIgGCaabtkE+gyPyVVnOQyjJYW5aVEFDKIyARPhu8IrMLBefdnWKpQTJW7wXCDiRvTqa03AgE6Rg=
   on:
     tags: true
     branch: master
   skip_existing: true
-

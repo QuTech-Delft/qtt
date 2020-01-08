@@ -10,6 +10,7 @@ import os
 import re
 import time
 import warnings
+from typing import Any, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +19,7 @@ import qcodes
 import skimage
 import skimage.filters
 from qcodes import DataArray, Instrument
-from qcodes.instrument.parameter import Parameter, StandardParameter
+from qcodes.instrument.parameter import Parameter
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
 
@@ -137,7 +138,7 @@ def _parse_stepdata(stepdata):
         stepdata['param'] = stepdata['gate']
 
     v = stepdata.get('param', None)
-    if isinstance(v, (str, StandardParameter, Parameter, dict)):
+    if isinstance(v, (str, Parameter, dict)):
         pass
     elif isinstance(v, list):
         warnings.warn('please use string or Instrument instead of list')
@@ -744,7 +745,7 @@ class scanjob_t(dict):
                 stepdata['param'] = getattr(gates, v)
             else:
                 pass
-        elif isinstance(v, (StandardParameter, Parameter, dict)):
+        elif isinstance(v, (Parameter, dict)):
             pass
         self[field] = stepdata
 
@@ -1266,13 +1267,6 @@ def get_sampling_frequency(instrument_handle):
     try:
         import qcodes_contrib_drivers.drivers.Spectrum.M4i
         if isinstance(instrument_handle, qcodes_contrib_drivers.drivers.Spectrum.M4i.M4i):
-            return instrument_handle.sample_rate()
-    except ImportError:
-        pass
-    try:
-        import qcodes.instrument_drivers.Spectrum.M4i
-        if isinstance(instrument_handle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
-            warnings.warn('please use the M4i driver from qcodes_contrib_drivers')
             return instrument_handle.sample_rate()
     except ImportError:
         pass
@@ -1810,22 +1804,13 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     """
     if device_parameters is None:
         device_parameters = {}
-        
-    try:
-        is_m4i = isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        is_m4i = False
-    try:
-        is_uhfli = isinstance(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
-    except:
-        is_uhfli = False
-    try:
-        is_scope_reader = isinstance(minstrhandle, AcquisitionScopeInterface)
-    except:
-        is_scope_reader = False
 
-    minstrument = get_instrument(minstrhandle)
-    is_simulation = isinstance(minstrhandle, SimulationDigitizer)
+    is_m4i = _is_m4i(minstrhandle)
+    is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
+    is_scope_reader = _is_measurement_device(minstrhandle, AcquisitionScopeInterface)
+    is_simulator = _is_measurement_device(minstrhandle, SimulationDigitizer)
+
+    measure_instrument = get_instrument(minstrhandle)
 
     if is_m4i:
         data = measuresegment_m4i(minstrhandle, waveform, read_ch, mV_range, Naverage, process=process, **device_parameters)
@@ -1833,15 +1818,17 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
         data = measure_segment_uhfli(minstrhandle, waveform, read_ch, Naverage, **device_parameters)
     elif is_scope_reader:
         data = measure_segment_scope_reader(minstrhandle, waveform, Naverage, process=process, **device_parameters)
+    elif is_simulator:
+        data = measure_instrument.measuresegment(waveform, channels=read_ch)
     elif minstrhandle == 'dummy':
         # for testing purposes
         data = np.random.rand(100, )
-    elif is_simulation:
-        data = minstrument.measuresegment(waveform, channels=read_ch)
     else:
-        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+        raise Exception(f'Unrecognized fast readout instrument {minstrhandle}')
+
     if np.array(data).size == 0:
         warnings.warn('measuresegment: received empty data array')
+
     return data
 
 
@@ -1886,19 +1873,19 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
         exepected_measurement_time = nsegments*period
         print(f'acquire_segments: expected measurement time: {exepected_measurement_time:.3f} [s]')
 
-    ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
+    is_m4i = _is_m4i(minstrhandle)
+
     if average:
         data = measuresegment(waveform, nsegments,
                               minstrhandle, read_ch, mV_range, process=False, device_parameters = {'trigger_re_arm_compensation': trigger_re_arm_compensation, 'trigger_re_arm_padding': trigger_re_arm_padding})
-        if ism4i:
+        if is_m4i:
             segment_time = np.arange(0., len(data[0])) / minstrhandle.exact_sample_rate()
         else:
             segment_time = np.linspace(0, period, len(data[0]))
         alldata = makeDataSet1Dplain('time', segment_time, measure_names, data,
                                      xunit='s', location=location, loc_record={'label': 'acquire_segments'})
     else:
-        if ism4i:
+        if is_m4i:
             memsize_total, pre_trigger, signal_start, signal_end = select_m4i_memsize(
                 minstrhandle, period, trigger_delay=None, nsegments=nsegments, verbose=verbose >= 2, trigger_re_arm_compensation = trigger_re_arm_compensation)
 
@@ -1949,6 +1936,38 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     return alldata
 
 
+def _is_m4i(instrument_handle: Any) -> bool:
+    """ Returns True if the instrument handle is an M4i instance, else False."""
+    try:
+        from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
+    except Exception:
+        return False
+
+    return _is_measurement_device(instrument_handle, M4i)
+
+
+def _is_measurement_device(instrument_handle: Any, class_type: Type) -> bool:
+    """ Returns True if the instrument handle is of the given type, else False.
+
+        This function checks whether the given handle is of the correct instrument type.
+        All error's are catched related to importing of not installed drivers or instruments
+        which are not connected.
+
+        Args:
+            instrument_handle: An measurement device instance.
+            class_type: The type of the measurement class.
+
+        Returns:
+            True if of the given class_type, else False.
+    """
+    try:
+        is_present = isinstance(instrument_handle, class_type)
+    except Exception:
+        is_present = False
+
+    return is_present
+
+
 def single_shot_readout(minstparams, length, shots, threshold=None):
     """Acquires several measurement traces, averages the signal over the entire trace for each shot and returns the proportion of shots that are above a defined threshold.
     NOTE: The AWG marker delay should be set so that the triggered acquisition starts at the correct part of the readout pulse.
@@ -1964,8 +1983,10 @@ def single_shot_readout(minstparams, length, shots, threshold=None):
         allshots (array of floats): average signal of every shot taken
     """
     minstrhandle = minstparams['handle']
-    if not isinstance(minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i):
-        raise (Exception('single shot readout is only supported for M4i digitizer'))
+    is_m4i = _is_m4i(minstrhandle)
+    if not is_m4i:
+        raise Exception('single shot readout is only supported for M4i digitizer')
+
     read_ch = minstparams['read_ch']
     if isinstance(read_ch, int):
         read_ch = [read_ch]
@@ -2318,17 +2339,12 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     else:
         sweepranges = [sweepdata['range'], stepdata['range']]
 
-    try:
-        ism4i = isinstance(
-            minstrhandle, qcodes.instrument_drivers.Spectrum.M4i.M4i)
-    except:
-        ism4i = False
-    if ism4i:
-        samp_freq = minstrhandle.sample_rate()
-        resolution[0] = np.ceil(resolution[0] / 16) * 16
-    else:
-        raise Exception(
-            'Unrecognized fast readout instrument %s' % minstrhandle)
+    is_m4i = _is_m4i(minstrhandle)
+    if not is_m4i:
+        raise Exception('Unrecognized fast readout instrument %s' % minstrhandle)
+
+    samp_freq = minstrhandle.sample_rate()
+    resolution[0] = np.ceil(resolution[0] / 16) * 16
 
     if scanjob['scantype'] == 'scan2Dturbo':
         sweepgates = [sweepdata['param'].name, stepdata['param'].name]

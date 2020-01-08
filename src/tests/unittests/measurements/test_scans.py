@@ -5,14 +5,17 @@ This is part of qtt.
 
 """
 
+import sys
 import warnings
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import qcodes
-from qcodes import Parameter
+from qcodes import Parameter, ManualParameter
 from qcodes.instrument_drivers.devices import VoltageDivider
+from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
+import zhinst
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
@@ -20,8 +23,15 @@ import qtt.utilities.tools
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.measurements.scans import (get_instrument_parameter, instrumentName,
                                     measure_segment_scope_reader, fastScan,
-                                    sample_data_t, scan1D, scan2D, scanjob_t)
+                                    sample_data_t, scan1D, scan2D, scanjob_t,
+                                    get_sampling_frequency)
 from qtt.structures import MultiParameter
+from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
+from qtt.measurements.scans import measuresegment
+
+sys.modules['pyspcm'] = MagicMock()
+from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
+del sys.modules['pyspcm']
 
 
 class TestScans(TestCase):
@@ -213,3 +223,88 @@ class TestScans(TestCase):
             result_data = measure_segment_scope_reader(mock_scope, None, average_count, process=False)
             mock_scope.acquire.assert_called_once_with(average_count)
             self.assertEqual(numpy_array_mock, result_data)
+
+    @staticmethod
+    def test_measure_segment_m4i_has_correct_output():
+        expected_data = np.array([1, 2, 3, 4])
+        waveform = {'bla': 1, 'ble': 2, 'blu': 3}
+        number_of_averages = 100
+        read_channels = [0, 1]
+
+        with patch('qtt.measurements.scans.measuresegment_m4i') as measure_segment_mock:
+
+            m4i_digitizer = M4i('test')
+            measure_segment_mock.return_value = expected_data
+
+            actual_data = measuresegment(waveform, number_of_averages, m4i_digitizer, read_channels)
+            np.testing.assert_array_equal(actual_data, expected_data)
+            measure_segment_mock.assert_called_with(m4i_digitizer, waveform, read_channels,
+                                                    2000, number_of_averages, process=True)
+
+            m4i_digitizer.close()
+
+    @staticmethod
+    def test_measure_segment_uhfli_has_correct_output():
+        expected_data = np.array([1, 2, 3, 4])
+        waveform = {'bla': 1, 'ble': 2, 'blu': 3}
+        number_of_averages = 100
+        read_channels = [0, 1]
+
+        with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)), \
+             patch('qtt.measurements.scans.measure_segment_uhfli') as measure_segment_mock:
+
+            uhfli_digitizer = ZIUHFLI('test', 'dev1234')
+            measure_segment_mock.return_value = expected_data
+
+            actual_data = measuresegment(waveform, number_of_averages, uhfli_digitizer, read_channels)
+            np.testing.assert_array_equal(actual_data, expected_data)
+            measure_segment_mock.assert_called_with(uhfli_digitizer, waveform, read_channels, number_of_averages)
+
+            uhfli_digitizer.close()
+
+    @staticmethod
+    def test_measure_segment_simulator_has_correct_output():
+        expected_data = np.array([1, 2, 3, 4])
+        waveform = {'bla': 1, 'ble': 2, 'blu': 3}
+        number_of_averages = 100
+        read_channels = [0, 1]
+
+        with patch('qtt.instrument_drivers.simulation_instruments.SimulationDigitizer',
+                   spec=SimulationDigitizer) as simulation_digitizer:
+
+            simulation_digitizer.measuresegment.return_value = expected_data
+            actual_data = measuresegment(waveform, number_of_averages, simulation_digitizer, read_channels)
+            np.testing.assert_array_equal(actual_data, expected_data)
+            simulation_digitizer.measuresegment.assert_called_with(waveform, channels=read_channels)
+
+    def test_measure_segment_invalid_device(self):
+        waveform = {'bla': 1, 'ble': 2, 'blu': 3}
+        read_channels = [0, 1]
+
+        self.assertRaises(Exception, measuresegment, waveform, 100, MagicMock(), read_channels)
+
+    @staticmethod
+    def test_measure_segment_no_data_raises_warning():
+        expected_data = np.array([])
+        waveform = {'bla': 1, 'ble': 2, 'blu': 3}
+        number_of_averages = 100
+        read_channels = [0, 1]
+
+        with patch('qtt.instrument_drivers.simulation_instruments.SimulationDigitizer', \
+                   spec=SimulationDigitizer) as simulation_digitizer, patch('warnings.warn') as warn_mock:
+
+            simulation_digitizer.measuresegment.return_value = expected_data
+            actual_data = measuresegment(waveform, number_of_averages, simulation_digitizer, read_channels)
+            warn_mock.assert_called_once_with('measuresegment: received empty data array')
+            np.testing.assert_array_equal(expected_data, actual_data)
+
+    def test_get_sampling_frequency_m4i(self):
+        expected_value = 12.345e6
+
+        m4i_digitizer = M4i('test')
+        m4i_digitizer.sample_rate = ManualParameter('sample_rate', initial_value=expected_value)
+
+        actual_value = get_sampling_frequency(m4i_digitizer)
+        self.assertEqual(expected_value, actual_value)
+
+        m4i_digitizer.close()
