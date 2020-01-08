@@ -4,26 +4,26 @@ matrix:
   - name: Minimal installation 3.6
     python: 3.6
     sudo: true
-    dist: xenial
+    dist: bionic
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
   - name: Minimal installation 3.7
     python: 3.7
     sudo: true
-    dist: xenial
+    dist: bionic
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
   - name: Full installation 3.6
     python: 3.6
-    dist: xenial
+    dist: bionic
     env: FULL_INSTALL=1
     services:
     - xvfb
   - name: Full installation 3.7
     python: 3.7
-    dist: xenial
+    dist: bionic
     env: FULL_INSTALL=1
     services:
     - xvfb
