@@ -2,11 +2,12 @@ class MissingOptionalPackageWarning(UserWarning, ValueError):
     """ An optional package is missing """
     pass
 
+
 class PackageVersionWarning(UserWarning):
-    """ An package has the incorrect version """
+    """ A package has the incorrect version """
     pass
 
 
-class CalibrationException(BaseException):
+class CalibrationException(Exception):
     """ Exception thrown for a bad calibration """
     pass
