@@ -16,6 +16,7 @@ from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks, findSensin
 from qtt.utilities.tools import freezeclass
 from qtt.dataset_processing import process_dataarray
 
+
 # %%
 
 
@@ -389,9 +390,9 @@ class sensingdot_t:
             goodpeaks = coulombPeaks(
                 x, y, verbose=verbose, fig=fig, plothalf=True, sampling_rate=scan_sampling_rate)
         if fig is not None:
-            plt.xlabel('%s' % (self.tunegate(), ))
-            plt.ylabel('%s' % (self.minstrument, ))
-            plt.title('autoTune: %s' % (self.__repr__(), ), fontsize=14)
+            plt.xlabel('%s' % (self.tunegate(),))
+            plt.ylabel('%s' % (self.minstrument,))
+            plt.title('autoTune: %s' % (self.__repr__(),), fontsize=14)
 
         self.goodpeaks = goodpeaks
         self.data['tunex'] = x
@@ -462,9 +463,9 @@ class sensingdot_t:
                 gate = self.gg[1]
                 cc = self.station.gates.get(gate)
                 scanjob['sweepdata'] = {'param': gate, 'start': cc -
-                                        sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
+                                                                sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
 
-            scanjob['sweepdata']['period']=period
+            scanjob['sweepdata']['period'] = period
             scanjob['minstrument'] = channel
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
@@ -532,6 +533,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         val_diff = value - self.get()
         for (param, coeff) in self.comb_map:
             param.set(param.get() + coeff * val_diff / self.coeffs_sum)
+
 
 # %%
 
