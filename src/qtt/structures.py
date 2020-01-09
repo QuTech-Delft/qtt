@@ -437,8 +437,10 @@ class sensingdot_t:
         for the sweep.
 
         Args:
-            fig (int or None): window for plotting results
             Naverage (int): number of averages
+            scanrange (float): Range to be used for scanning
+            period (float): Period to be used in the scan sweep
+            fig (int or None): window for plotting results
 
         Returns:
             plungervalue (float): value of plunger
