@@ -218,7 +218,7 @@ class VirtualAwg(Instrument):
             return False
         if isinstance(gate_names, list):
             return np.all([self.are_awg_gates(g) for g in gate_names])
-        if VirtualAwg.__digitizer_name or VirtualAwg.__awg_slave_name in gate_names:
+        if (VirtualAwg.__digitizer_name in gate_names) or (VirtualAwg.__awg_slave_name in gate_names):
             return False
         return True if gate_names in self._settings.awg_map else False
 
