@@ -33,7 +33,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
     def __str__(self):
            classname = self.__class__.__name__
            instrument_name = self.__awg.name
-           return '<{} at 0x{}: {}>'.format(classname, '%x' % id(self), instrument_name)
+           return '<{} at {}: {}>'.format(classname, hex(id(self)), instrument_name)
 
     @property
     def fetch_awg(self):
