@@ -354,7 +354,7 @@ class sensingdot_t:
             self._selected_peak = goodpeaks[0]
         else:
             self._selected_peak = None
-            raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
+            raise qtt.exceptions.CalibrationException('could not find good peak')
 
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, step=-2.,
                  max_wait_time=1., scanrange=300, add_slopes=False):
