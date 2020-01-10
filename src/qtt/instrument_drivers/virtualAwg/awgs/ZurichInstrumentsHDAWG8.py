@@ -30,6 +30,11 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
                                                       set_cmd=self.update_sampling_rate,
                                                       get_cmd=self.retrieve_sampling_rate)}
 
+    def __str__(self):
+        class_name = self.__class__.__name__
+        instrument_name = self.__awg.name
+        return '<{} at {}: {}>'.format(class_name, hex(id(self)), instrument_name)
+
     @property
     def fetch_awg(self):
         return self.__awg
