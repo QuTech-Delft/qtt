@@ -65,6 +65,11 @@ $ cd qtt
 $ pip install wheel
 $ pip install -e .
 ```
+When (encountered on Linux) PyQt5 gives an error when installing try upgrading pip and setuptools and rerun 'pip install -e .'
+```
+$ pip install --upgrade pip
+$ pip install --upgrade setuptools
+```
 ### When incompatibility problems arise
 Sometimes the default installation does not work because of incompatible dependencies between the used packages
 on your system. To be sure you use all the right versions of the packages used by QTT and its dependencies do:

@@ -1156,8 +1156,8 @@ def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
+            - a callable `location provider` with one required parameter \
+              (the io manager), and one optional (`record` dict),        \
               which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be
@@ -1203,8 +1203,8 @@ def makeDataSet1D(p, yname='measured', y=None, location=None, loc_record=None, r
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
+            - a callable `location provider` with one required parameter \
+              (the io manager), and one optional (`record` dict),        \
               which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be
@@ -1265,9 +1265,9 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
-              which returns a location string when called.
+            - a callable `location provider` with one required parameter \
+                (the io manager), and one optional (`record` dict),      \
+                which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be
             passed to it as `record`.
@@ -1322,8 +1322,8 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
+            - a callable `location provider` with one required parameter \
+              (the io manager), and one optional (`record` dict),        \
               which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be

@@ -29,12 +29,14 @@ matrix:
     - xvfb
 install:
   - pip install coveralls
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
 script:
   - ls
   - pytest --version
-  - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/tools.py","./src/qtt/live_plotting.py","./src/qtt/live.py","./src/qtt/measurements/ttrace.py" -m pytest
+  - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/measurements/ttrace.py" -m pytest
   - mypy src --ignore-missing-imports
   - if [[ "$FULL_INSTALL" == "1" ]]; then
       jupyter --version;
