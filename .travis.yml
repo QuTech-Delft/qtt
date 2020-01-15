@@ -30,7 +30,6 @@ matrix:
 install:
   - pip install coveralls
   - pip install --upgrade pip
-  - pip install --upgrade setuptools
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
 script:
