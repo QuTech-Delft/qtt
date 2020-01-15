@@ -43,7 +43,7 @@ from qtt.algorithms.generic import smoothImage
 from qtt import pgeometry as pmatlab
 from qtt.pgeometry import plotPoints, tilefigs
 
-warnings.warn('please do not this import this module')
+warnings.warn('please do not import this module')
 
 # %%
 
@@ -128,7 +128,7 @@ def plotCircle(pt, radius=11.5, color='r', alpha=.5, linewidth=3, **kwargs):
         pt (array): center of circle
         radius (float): radius of circle
         color (str or list)
-        alpha (float): transparency        
+        alpha (float): transparency
     """
     c2 = plt.Circle(pt, radius, color=color, fill=False, linewidth=3, alpha=alpha, **kwargs)
     plt.gca().add_artist(c2)

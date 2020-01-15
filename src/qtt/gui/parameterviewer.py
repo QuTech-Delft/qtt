@@ -204,7 +204,7 @@ class ParameterViewer(QtWidgets.QTreeWidget):
     def is_running(self):
         if self._timer is None:
             return False
-        if self._timer.isAlive():
+        if self._timer.is_alive():
             return True
         else:
             return False
