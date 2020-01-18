@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
+- The ttrace code has been deprecated and will be removed in a future release (#709)
+
 ### Fixed
 
 ### Security
