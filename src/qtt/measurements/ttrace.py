@@ -4,6 +4,8 @@
 @author: eendebakpt (houckm)
 """
 
+raise DeprecationWarning('the ttrace module is deprecated')
+
 # %% Load packages
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,7 +29,6 @@ except ModuleNotFoundError:
     warnings.warn('could not import pycqed, not all functionality available')
 
 # %% Virtual
-
 
 def trace_read_virtual(ttraces, gates):
     """ Simulation of trace read """
