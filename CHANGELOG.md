@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Removed
-
 - The ttrace code has been deprecated and is removed in this release (#709)
 
 ### Deprecated
