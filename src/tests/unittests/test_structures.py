@@ -1,5 +1,4 @@
 import unittest
-import qcodes
 import pickle
 import json
 import tempfile
