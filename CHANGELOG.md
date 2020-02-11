@@ -4,6 +4,20 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[1.2.2] - Unreleased
+### Added
+
+### Changed
+
+### Removed
+
+### Deprecated
+
+### Fixed
+
+### Security
+
+
 ## \[1.2.1] - 15-1-2020
 ### Added
 - add representation method for virtual awg (#697)
