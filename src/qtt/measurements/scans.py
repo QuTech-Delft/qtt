@@ -1961,7 +1961,7 @@ def _is_m4i(instrument_handle: Any) -> bool:
     """ Returns True if the instrument handle is an M4i instance, else False."""
     try:
         from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
-    except Exception:
+    except (Exception, ImportError):
         return False
 
     return _is_measurement_device(instrument_handle, M4i)
