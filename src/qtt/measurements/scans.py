@@ -865,6 +865,26 @@ class scanjob_t(dict):
             scanvalues (list): contains the values for parameters to scan over
         """
 
+        def _update_stepsize_from_length(data, length):
+            """ From desired number of data points determine the required step size """
+            if sweeplength is not None:
+                if sweeplength==1:
+                        data['step'] = 0
+                else:
+                    if 'range' in sweepdata:
+                        data['step'] = data['range'] / (sweeplength-1)
+                    else:
+                        data['step'] = (data['end'] - data['start']) / (sweeplength-1)
+
+        def _caluclate_sweepvalues(param, sweepdata, inclusive=False):
+            """ From parameter and sweep data create a SweepFixedValues object """
+            if inclusive:
+                epsilon=1e-8
+                sweepvalues = param[sweepdata['start']:(sweepdata['end']+epsilon):sweepdata['step']]
+            else:
+                sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+            return sweepvalues
+
         if self['scantype'][:6] == 'scan1D':
             sweepdata = self['sweepdata']
             if 'range' in sweepdata:
@@ -891,14 +911,15 @@ class scanjob_t(dict):
                 sweepparam = get_param(gates, sweepdata['param'])
             else:
                 raise Exception('unknown scantype')
+
             if sweeplength is not None:
-                sweepdata['step'] = (sweepdata['end']
-                                     - sweepdata['start']) / sweeplength
+                _update_stepsize_from_length(sweepdata, sweeplength)
+
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 gates = station.gates
 
-                last = sweepdata['start'] + sweepdata['range']
-                scanvalues = sweepparam[sweepdata['start']:last:sweepdata.get('step', 1.)]
+                sweepdata['end'] = sweepdata['start'] + sweepdata['range']
+                scanvalues = _caluclate_sweepvalues(sweepparam, sweepdata, sweeplength is not None)
 
                 param_init = {param: gates.get(param)
                               for param in sweepdata['param']}
@@ -910,7 +931,7 @@ class scanjob_t(dict):
                     self['phys_gates_vals'][param] = param_init[param] + \
                                                      sweep_array * sweepdata['param'][param]
             else:
-                scanvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+                scanvalues = _caluclate_sweepvalues(sweepparam, sweepdata, sweeplength is not None)
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
@@ -957,20 +978,12 @@ class scanjob_t(dict):
                 sweepparam = sweepdata['param']
             else:
                 raise Exception('unknown scantype')
-            if sweeplength is not None:
-                if 'range' in sweepdata:
-                    sweepdata['step'] = sweepdata['range'] / sweeplength
-                else:
-                    sweepdata['step'] = (sweepdata['end'] - sweepdata['start']) / sweeplength
-            if steplength is not None:
-                if 'range' in stepdata:
-                    stepdata['step'] = stepdata['range'] / steplength
-                else:
-                    stepdata['step'] = (stepdata['end'] - stepdata['start']) / steplength
 
-            sweepvalues = sweepparam[sweepdata['start']:sweepdata['end']:sweepdata['step']]
+            _update_stepsize_from_length(sweepdata, sweeplength)
+            _update_stepsize_from_length(stepdata, steplength)
+            sweepvalues = _caluclate_sweepvalues(sweepparam, sweepdata, sweeplength is not None)
             if stepvalues is None:
-                stepvalues = stepparam[stepdata['start']:stepdata['end']:stepdata['step']]
+                stepvalues = _caluclate_sweepvalues(stepparam, stepdata, steplength is not None)
             scanvalues = [stepvalues, sweepvalues]
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                 param_init = {param: gates.get(param)
