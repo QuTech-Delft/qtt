@@ -3,6 +3,7 @@ from inspect import getsourcefile
 from os.path import abspath
 import platform
 import re
+import glob
 
 from setuptools import find_packages, setup
 
@@ -78,6 +79,8 @@ setup(name='qtt',
       license='MIT',
       package_dir={'': 'src'},
       packages=find_packages(where='./src'),
+#      package_data={'': ['exampledata/*.*', 'exampledata/*/*.*', 'exampledata/*/*/*.*', 'exampledata/*/*/*/*.*']},
+      include_package_data = True,
       data_files=[('bin',
                   ['bin/Polygon3-3.0.8-cp37-cp37m-win_amd64.whl'])],
       install_requires=install_requires,
