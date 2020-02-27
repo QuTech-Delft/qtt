@@ -354,12 +354,12 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
 
 
 def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
-    """ Plot Gauss Ramset fit
+    """ Plot Gauss Ramsey fit
 
     Args:
-        x_data: Input array with time variable
+        x_data: Input array with time variable (in seconds)
         y_data: Input array with signal
-        fit_parameters: Result of fit_gauss_ramsey
+        fit_parameters: Result of fit_gauss_ramsey (fitting units in seconds)
     """
     test_x = np.linspace(0, np.max(x_data), 200)
     freq_fit = abs(fit_parameters[2] * 1e-6)
