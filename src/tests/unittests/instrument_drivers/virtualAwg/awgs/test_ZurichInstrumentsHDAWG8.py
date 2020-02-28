@@ -71,7 +71,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
 
     def test_update_gain(self):
         self.zi_hdawg8.update_gain(0.5)
-        calls = [call.set('sigouts_{}_range'.format(ch), 0.5) for ch in range(8)]
+        calls = [call.set('sigouts_{}_range'.format(ch), 1.0) for ch in range(8)]
         self.awg.assert_has_calls(calls)
 
     def test_retrieve_gain(self):
