@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix for period argument of sensingdot_t (#696)
 - Fix create_vectorscan for the new virtual awg  (#702)
 - fix deprecation warnings (#703)
+- Fix bug in HDAWG8 driver where the gain was set to the range, whereas it should be gain = range/2 (#720)
 
 ## \[1.2.0] - 2019-12-17
 
