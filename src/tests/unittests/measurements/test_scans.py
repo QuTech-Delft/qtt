@@ -320,17 +320,23 @@ class TestScans(TestCase):
         m4i_digitizer.close()
 
     def test_convert_scanjob_vec_scan1Dfast(self):
-        station = qcodes.Station()
-        ivvi = qtt.instrument_drivers.virtual_instruments.VirtualIVVI('ivvi', None)
-        gates = VirtualDAC('gates', [ivvi], {'P1': (0, 1)})
-        station.add_component(gates)
+        p = Parameter('p', set_cmd=None)
+        q = Parameter('q', set_cmd=None)
+        r = VoltageDivider(p, 4)
+        _ = MultiParameter(instrumentName('multi_param'), [p, q])
 
-        scanjob = scanjob_t({'scantype': 'scan1Dfast', 'sweepdata': {'param': 'P1', 'start': -2, 'end': 2, 'step': .4}})
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        scanjob = scanjob_t({'scantype': 'scan1Dfast', 'sweepdata': {'param': p, 'start': -2, 'end': 2, 'step': .4}})
         _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=5)
         actual_values = sweepvalues._values
         expected_values = [-2.0, -1.0, 0.0, 1.0, 2.0]
         self.assertEqual(expected_values, actual_values)
         self.assertEqual(sweepvalues._value_snapshot[0]['num'], 5)
+        gates.close()
 
     def test_convert_scanjob_vec_scan2Dfast(self):
         p = Parameter('p', set_cmd=None)
@@ -359,3 +365,4 @@ class TestScans(TestCase):
         expected_sweepvalues = [0, 2.5, 5.0, 7.5, 10.0]
         self.assertEqual(expected_sweepvalues, actual_sweepvalues)
         self.assertEqual(sweepvalues._value_snapshot[0]['num'], 5)
+        gates.close()
