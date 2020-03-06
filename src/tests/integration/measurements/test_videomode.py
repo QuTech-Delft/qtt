@@ -15,7 +15,7 @@ from qtt.measurements.videomode_processor import DummyVideoModeProcessor
 class TestVideoMode(unittest.TestCase):
 
     def tearDown(self) -> None:
-        VideoMode.stop_all_instances()
+        VideoMode.destruct()
 
     def test_video_mode_update_position(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
