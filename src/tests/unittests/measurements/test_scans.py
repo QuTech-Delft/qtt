@@ -16,11 +16,13 @@ import qcodes
 from qcodes import Parameter, ManualParameter
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
+
 import zhinst
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.utilities.tools
+from qtt.instrument_drivers.gates import VirtualDAC
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.measurements.scans import (get_instrument_parameter, instrumentName,
                                     measure_segment_scope_reader, fastScan,
@@ -92,7 +94,7 @@ class TestScans(TestCase):
         p = Parameter('p', set_cmd=None)
         r = VoltageDivider(p, 4)
         scanjob = scanjob_t({'sweepdata': {'param': p, 'start': 0, 'end': 10, 'step': 2}, 'minstrument': [r]})
-        station=qcodes.Station()
+        station = qcodes.Station()
         dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
         default_record_label = 'scan1D'
         self.assertTrue(default_record_label in dataset.location)
@@ -101,11 +103,11 @@ class TestScans(TestCase):
         p = Parameter('p', set_cmd=None)
         r = VoltageDivider(p, 4)
 
-        record_label='123unittest123'
+        record_label = '123unittest123'
         scanjob = scanjob_t({'sweepdata': dict(
             {'param': p, 'start': 0, 'end': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
-        scanjob['dataset_label']=record_label
-        station=qcodes.Station()
+        scanjob['dataset_label'] = record_label
+        station = qcodes.Station()
         dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
         self.assertTrue(dataset.location.endswith(record_label))
 
@@ -173,7 +175,7 @@ class TestScans(TestCase):
         waveform = dict(period=period, width_horz=width[0], width_vert=width[1], resolution=resolution)
         average_count = 123
 
-        with patch('qtt.measurements.scans.process_2d_sawtooth', return_value = (data_mock, None)) as process_mock:
+        with patch('qtt.measurements.scans.process_2d_sawtooth', return_value=(data_mock, None)) as process_mock:
             with patch('numpy.array') as array_mock:
                 array_mock.return_value.T = raw_data_mock
                 result_data = measure_segment_scope_reader(mock_scope, waveform, average_count)
@@ -198,7 +200,7 @@ class TestScans(TestCase):
         waveform = dict(period=period, width=width)
         average_count = 123
 
-        with patch('qtt.measurements.scans.process_1d_sawtooth', return_value = (data_mock, None)) as process_mock:
+        with patch('qtt.measurements.scans.process_1d_sawtooth', return_value=(data_mock, None)) as process_mock:
             with patch('numpy.array') as array_mock:
                 array_mock.return_value.T = raw_data_mock
                 result_data = measure_segment_scope_reader(mock_scope, waveform, average_count)
@@ -212,8 +214,12 @@ class TestScans(TestCase):
     def test_fastScan_no_awg(self):
         station = MagicMock()
         station.awg = None
-        station.virtual_awg =  None
-        scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1}, 'start': 0, 'range': 10, 'step': 2}), 'minstrument': []})
+        station.virtual_awg = None
+        scanjob = scanjob_t({'sweepdata': dict({'param': {'dac1': 1},
+                                                'start': 0,
+                                                'range': 10,
+                                                'step': 2}),
+                             'minstrument': []})
 
         self.assertEqual(fastScan(scanjob, station), 0)
 
@@ -224,7 +230,7 @@ class TestScans(TestCase):
         average_count = 123
         numpy_array_mock = MagicMock()
         with patch('numpy.array', return_value=numpy_array_mock):
-            result_data = measure_segment_scope_reader(mock_scope, None, average_count, process=False)
+            result_data = measure_segment_scope_reader(mock_scope, {}, average_count, process=False)
             mock_scope.acquire.assert_called_once_with(average_count)
             self.assertEqual(numpy_array_mock, result_data)
 
@@ -255,7 +261,7 @@ class TestScans(TestCase):
         read_channels = [0, 1]
 
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)), \
-             patch('qtt.measurements.scans.measure_segment_uhfli') as measure_segment_mock:
+                patch('qtt.measurements.scans.measure_segment_uhfli') as measure_segment_mock:
 
             uhfli_digitizer = ZIUHFLI('test', 'dev1234')
             measure_segment_mock.return_value = expected_data
@@ -294,7 +300,7 @@ class TestScans(TestCase):
         number_of_averages = 100
         read_channels = [0, 1]
 
-        with patch('qtt.instrument_drivers.simulation_instruments.SimulationDigitizer', \
+        with patch('qtt.instrument_drivers.simulation_instruments.SimulationDigitizer',
                    spec=SimulationDigitizer) as simulation_digitizer, patch('warnings.warn') as warn_mock:
 
             simulation_digitizer.measuresegment.return_value = expected_data
@@ -312,3 +318,44 @@ class TestScans(TestCase):
         self.assertEqual(expected_value, actual_value)
 
         m4i_digitizer.close()
+
+    def test_convert_scanjob_vec_scan1Dfast(self):
+        station = qcodes.Station()
+        ivvi = qtt.instrument_drivers.virtual_instruments.VirtualIVVI('ivvi', None)
+        gates = VirtualDAC('gates', [ivvi], {'P1': (0, 1)})
+        station.add_component(gates)
+
+        scanjob = scanjob_t({'scantype': 'scan1Dfast', 'sweepdata': {'param': 'P1', 'start': -2, 'end': 2, 'step': .4}})
+        _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=5)
+        actual_values = sweepvalues._values
+        expected_values = [-2.0, -1.0, 0.0, 1.0, 2.0]
+        self.assertEqual(expected_values, actual_values)
+        self.assertEqual(sweepvalues._value_snapshot[0]['num'], 5)
+
+    def test_convert_scanjob_vec_scan2Dfast(self):
+        p = Parameter('p', set_cmd=None)
+        q = Parameter('q', set_cmd=None)
+        r = VoltageDivider(p, 4)
+        _ = MultiParameter(instrumentName('multi_param'), [p, q])
+
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        scanjob = scanjob_t({'scantype': 'scan2Dfast',
+                             'sweepdata': dict(
+                                 {'param': p, 'start': 0, 'end': 10, 'step': 4}), 'minstrument': [r]})
+        scanjob['stepdata'] = dict(
+            {'param': q, 'start': 24, 'end': 32, 'step': 1.})
+
+        stepvalues, sweepvalues = scanjob._convert_scanjob_vec(station, 3, 5)
+        actual_stepvalues = stepvalues._values
+        expected_stepvalues = [24.0, 28.0, 32.0]
+        self.assertEqual(expected_stepvalues, actual_stepvalues)
+        self.assertEqual(stepvalues._value_snapshot[0]['num'], 3)
+
+        actual_sweepvalues = sweepvalues._values
+        expected_sweepvalues = [0, 2.5, 5.0, 7.5, 10.0]
+        self.assertEqual(expected_sweepvalues, actual_sweepvalues)
+        self.assertEqual(sweepvalues._value_snapshot[0]['num'], 5)
