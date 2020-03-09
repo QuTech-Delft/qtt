@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- scanjob_t uses SweepFixedValues (including 'end') instead of slices (excluding 'end') (#722)
 
 ### Removed
 
 ### Deprecated
+- Moved the deprecated loadOneDotPinchvalues to legacy.py (#722)
 
 ### Fixed
 
