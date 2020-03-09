@@ -22,7 +22,6 @@ import zhinst
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.utilities.tools
-from qtt.instrument_drivers.gates import VirtualDAC
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.measurements.scans import (get_instrument_parameter, instrumentName,
                                     measure_segment_scope_reader, fastScan,
@@ -321,10 +320,37 @@ class TestScans(TestCase):
 
     def test_convert_scanjob_vec_scan1Dfast(self):
         p = Parameter('p', set_cmd=None)
-        q = Parameter('q', set_cmd=None)
-        r = VoltageDivider(p, 4)
-        _ = MultiParameter(instrumentName('multi_param'), [p, q])
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
 
+        scanjob = scanjob_t({'scantype': 'scan1Dfast', 'sweepdata': {'param': p, 'start': -2., 'end': 2., 'step': .4}})
+        _, sweepvalues = scanjob._convert_scanjob_vec(station)
+        actual_values = sweepvalues._values
+        expected_values = [-2.0, -1.6, -1.2, -0.8, -0.4, 0.0, 0.4, 0.8, 1.2, 1.6, 2.0]
+        for a_val, e_val in zip(actual_values, expected_values):
+            self.assertAlmostEqual(a_val, e_val, 12)
+        self.assertEqual(sweepvalues._value_snapshot[0]['num'], 11)
+        gates.close()
+
+    def test_convert_scanjob_vec_scan1Dfast_range(self):
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        scanjob = scanjob_t({'scantype': 'scan1Dfast', 'sweepdata': {'param': 'dac1', 'range': 8, 'step': 2}})
+        _, sweepvalues = scanjob._convert_scanjob_vec(station)
+        actual_values = sweepvalues._values
+        expected_values = [-4.0, -2.0, 0.0, 2.0, 4.0]
+        for a_val, e_val in zip(actual_values, expected_values):
+            self.assertAlmostEqual(a_val, e_val, 12)
+        self.assertEqual(sweepvalues._value_snapshot[0]['num'], 5)
+        gates.close()
+
+    def test_convert_scanjob_vec_scan1Dfast_adjust_sweeplength(self):
+        p = Parameter('p', set_cmd=None)
         gates = VirtualIVVI(
             name=qtt.measurements.scans.instrumentName('gates'), model=None)
         station = qcodes.Station(gates)

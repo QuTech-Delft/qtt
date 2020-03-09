@@ -2,46 +2,24 @@
 import copy
 
 import numpy as np
-import scipy
 import matplotlib
 import sys
 import os
-import logging
 import cv2
-import time
-import math
 import pickle
 import warnings
 
-import qcodes
-# explicit import
-from qcodes.plots.pyqtgraph import QtPlot
-from qcodes.plots.qcmatplotlib import MatPlot
-from qtt.algorithms.images import straightenImage
-
 import qtt.data
-from qtt.data import loadExperimentData
 import qtt.algorithms.onedot
-from qtt.measurements.scans import scanjob_t
-import matplotlib.pyplot as plt
 import datetime
-
-from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
 # %%
 
 from qtt.algorithms.gatesweep import analyseGateSweep
-from qtt.algorithms.onedot import onedotGetBalanceFine
-from qtt.data import dataset2Dmetadata, dataset2image
-from qtt.measurements.scans import fixReversal
-from qtt.data import load_data, show2D, loadDataset
-from qtt.utilities.tools import diffImage, diffImageSmooth, rdeprecated
-from qtt.algorithms.generic import smoothImage
-#from qtt.measurements.scans import scanPinchValue
-
+from qtt.data import loadDataset
+from qtt.utilities.tools import diffImage, rdeprecated
 
 from qtt import pgeometry as pmatlab
-from qtt.pgeometry import plotPoints, tilefigs
 
 warnings.warn('please do not import this module')
 
@@ -357,7 +335,7 @@ def loadOneDotPinchvalues(od, outputdir, verbose=1):
         basename = pinchoffFilename(g, od=None)
 
         pfile = os.path.join(outputdir, 'one_dot', basename)
-        alldata, mdata = loadDataset(pfile)
+        alldata, _ = loadDataset(pfile)
         if alldata is None:
             raise Exception('could not load file %s' % pfile)
         adata = analyseGateSweep(

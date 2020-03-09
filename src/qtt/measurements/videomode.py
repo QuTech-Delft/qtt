@@ -25,29 +25,26 @@ from qtt.measurements.videomode_processor import VideomodeSawtoothMeasurement
 # %%
 
 
-def add_sawtooth_videomode_processor(vm, sweepparams, sweepranges, resolution, sample_rate, minstrument):
+def add_sawtooth_videomode_processor(videomode, sweepparams, sweepranges, resolution, sample_rate, minstrument):
     """ Add all required variables to the VideoMode for the VideomodeSawtoothMeasurement """
-    vm.resolution = resolution
-    vm.sample_rate = sample_rate
-    vm.minstrumenthandle = minstrument[0]
+    videomode.resolution = resolution
+    videomode.sample_rate = sample_rate
+    videomode.minstrumenthandle = minstrument[0]
     channels = minstrument[1]
     if isinstance(channels, int):
         channels = [channels]
-    vm.channels = channels
+    videomode.channels = channels
 
-    vm.videomode_processor = VideomodeSawtoothMeasurement(vm.station)
+    videomode.videomode_processor = VideomodeSawtoothMeasurement(videomode.station)
 
-    sampling_frequency = vm.videomode_processor.parse_instrument(vm.minstrumenthandle, sample_rate)
+    sampling_frequency = videomode.videomode_processor.parse_instrument(videomode.minstrumenthandle, sample_rate)
 
-    vm.videomode_processor.set_scan_parameters(
+    videomode.videomode_processor.set_scan_parameters(
         {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument,
-         'resolution': vm.resolution, 'sampling_frequency': sampling_frequency, 'channels': channels})
+         'resolution': videomode.resolution, 'sampling_frequency': sampling_frequency, 'channels': channels})
 
 
 # %%
-
-
-pgApp = None
 
 
 class VideoMode:
@@ -94,10 +91,9 @@ class VideoMode:
             mouse_click_callback (None or function): if None then update scan position with callback
 
         """
-        global pgApp
         if VideoMode.videomode_class_index == 0:
             # create instance of QApplication
-            pgApp = pyqtgraph.mkQApp()
+            _ = pyqtgraph.mkQApp()
         VideoMode.videomode_class_index += 1
         self.videomode_index = VideoMode.videomode_class_index
 
@@ -445,15 +441,12 @@ class VideoMode:
     @staticmethod
     def destruct():
         """ Stop all VideoMode instances and cleanup """
-        global pgApp
         lst = qtt.pgeometry.list_objects(VideoMode)
         for v in lst:
             v.stopreadout()
             v.stop()
             v.close()
         pyqtgraph.cleanup()
-        if pgApp is not None:
-            del pgApp
         VideoMode.videomode_class_index = 0
 
 
