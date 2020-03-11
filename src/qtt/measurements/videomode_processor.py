@@ -270,7 +270,7 @@ class VideomodeSawtoothMeasurement(VideoModeProcessor):
                 self.station.RF.off()
             if hasattr(self.station, 'virtual_awg'):
                 self.station.virtual_awg.stop()
-                self.station.virtual_awg.disable_outputs(None)
+                self.station.virtual_awg.disable_outputs()
         if isinstance(self.minstrumenthandle, AcquisitionScopeInterface):
             self.minstrumenthandle.stop_acquisition()
 
