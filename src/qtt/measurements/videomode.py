@@ -25,23 +25,23 @@ from qtt.measurements.videomode_processor import VideomodeSawtoothMeasurement
 # %%
 
 
-def add_sawtooth_videomode_processor(self, sweepparams, sweepranges, resolution, sample_rate, minstrument):
+def add_sawtooth_videomode_processor(videomode, sweepparams, sweepranges, resolution, sample_rate, minstrument):
     """ Add all required variables to the VideoMode for the VideomodeSawtoothMeasurement """
-    self.resolution = resolution
-    self.sample_rate = sample_rate
-    self.minstrumenthandle = minstrument[0]
+    videomode.resolution = resolution
+    videomode.sample_rate = sample_rate
+    videomode.minstrumenthandle = minstrument[0]
     channels = minstrument[1]
     if isinstance(channels, int):
         channels = [channels]
-    self.channels = channels
+    videomode.channels = channels
 
-    self.videomode_processor = VideomodeSawtoothMeasurement(self.station)
+    videomode.videomode_processor = VideomodeSawtoothMeasurement(videomode.station)
 
-    sampling_frequency = self.videomode_processor.parse_instrument(self.minstrumenthandle, sample_rate)
+    sampling_frequency = videomode.videomode_processor.parse_instrument(videomode.minstrumenthandle, sample_rate)
 
-    self.videomode_processor.set_scan_parameters(
+    videomode.videomode_processor.set_scan_parameters(
         {'sweepparams': sweepparams, 'sweepranges': sweepranges, 'minstrument': minstrument,
-         'resolution': self.resolution, 'sampling_frequency': sampling_frequency, 'channels': channels})
+         'resolution': videomode.resolution, 'sampling_frequency': sampling_frequency, 'channels': channels})
 
 
 # %%
@@ -94,7 +94,7 @@ class VideoMode:
         if VideoMode.videomode_class_index == 0:
             # create instance of QApplication
             _ = pyqtgraph.mkQApp()
-        VideoMode.videomode_class_index = VideoMode.videomode_class_index + 1
+        VideoMode.videomode_class_index += 1
         self.videomode_index = VideoMode.videomode_class_index
 
         self.station = station
@@ -119,6 +119,11 @@ class VideoMode:
         self.diff = True
         self.laplace = False
         self.idx = 0
+        self.name = ''
+        self.maxidx = None
+        self.datafunction = None
+        self.alldata = None
+        self._averaging_enabled = None
         self.fps = qtt.pgeometry.fps_t(nn=6)
 
         if videomode_processor is None:
@@ -331,12 +336,12 @@ class VideoMode:
         """ Stop the videomode and close the GUI"""
         self.stop()
 
-        if self.verbose>=2:
+        if self.verbose >= 2:
             print(f'{self.__class__}: close')
         for liveplot in self.lp:
             liveplot.stopreadout()
             liveplot.deleteLater()
-        if self.verbose>=2:
+        if self.verbose >= 2:
             print(f'{self.__class__}: call mainwin.close')
 
         self.mainwin.close()
@@ -398,9 +403,8 @@ class VideoMode:
 
     def _makeDataset(self, data, Naverage=None):
         """ Create datasets from the processed data """
-        metadata = {'scantime': str(datetime.datetime.now(
-        )), 'station': self.station.snapshot(), 'allgatevalues': self.station.gates.allvalues()}
-        metadata['Naverage'] = Naverage
+        metadata = {'scantime': str(datetime.datetime.now()), 'station': self.station.snapshot(),
+                    'allgatevalues': self.station.gates.allvalues(), 'Naverage': Naverage}
 
         alldata = self.videomode_processor.create_dataset(data, metadata)
         return alldata
@@ -433,6 +437,17 @@ class VideoMode:
         lst = qtt.pgeometry.list_objects(VideoMode)
         for v in lst:
             v.stopreadout()
+
+    @staticmethod
+    def destruct():
+        """ Stop all VideoMode instances and cleanup """
+        lst = qtt.pgeometry.list_objects(VideoMode)
+        for v in lst:
+            v.stopreadout()
+            v.stop()
+            v.close()
+        pyqtgraph.cleanup()
+        VideoMode.videomode_class_index = 0
 
 
 # %% Testing
