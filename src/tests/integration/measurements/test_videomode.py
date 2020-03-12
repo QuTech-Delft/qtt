@@ -14,6 +14,9 @@ from qtt.measurements.videomode_processor import DummyVideoModeProcessor
 
 class TestVideoMode(unittest.TestCase):
 
+    def tearDown(self) -> None:
+        VideoMode.destruct()
+
     def test_video_mode_update_position(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
             station = qtt.simulation.virtual_dot_array.initialize(reinit=True, verbose=0)
@@ -38,8 +41,6 @@ class TestVideoMode(unittest.TestCase):
         dummy_processor = DummyVideoModeProcessor(station)
         videomode = VideoMode(station, dorun=False, nplots=1, videomode_processor=dummy_processor)
         self.assertIn(videomode, VideoMode.all_instances())
-
-        VideoMode.stop_all_instances()
 
     def test_video_1d(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
