@@ -388,6 +388,23 @@ class TestScans(TestCase):
 
         gates.close()
 
+    def test_convert_scanjob_vec_end_equals_start(self):
+        p = Parameter('p', set_cmd=None)
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                             'sweepdata': {'param': p, 'start': 20, 'end': 20, 'step': .0075}})
+        _, sweepvalues = scanjob._convert_scanjob_vec(station)
+        actual_values = sweepvalues._values
+        self.assertEqual(actual_values[0], 20.0)
+        self.assertEqual(scanjob['sweepdata']['end'], 20)
+        self.assertEqual(sweepvalues._value_snapshot[0]['num'], 1)
+
+        gates.close()
+
     def test_convert_scanjob_vec_adjust_values_randomly_will_never_raise_exception(self):
         p = Parameter('p', set_cmd=None)
         gates = VirtualIVVI(
