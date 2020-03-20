@@ -78,7 +78,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
         self.awg.get.return_value = 0.2
         self.assertEqual(0.1, self.zi_hdawg8.retrieve_gain())
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.awg.get.side_effect = lambda v: int(v[8:9])
             self.zi_hdawg8.retrieve_gain()
 
