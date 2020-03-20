@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix bug in generation of stepvalues for vector scans
+- Packages 'tests' are not installed anymore which gave problems with loading similar named modules in other packages.
 
 ### Security
 
