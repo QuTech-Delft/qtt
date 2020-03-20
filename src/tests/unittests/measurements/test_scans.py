@@ -7,6 +7,7 @@ This is part of qtt.
 
 import sys
 import warnings
+import random
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 import tempfile
@@ -110,8 +111,8 @@ class TestScans(TestCase):
         dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
         self.assertTrue(dataset.location.endswith(record_label))
 
-    @staticmethod
-    def test_scan2D(verbose=0):
+    def test_scan2D(self):
+        verbose = 0
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)
         r = VoltageDivider(p, 4)
@@ -147,16 +148,13 @@ class TestScans(TestCase):
         except Exception as ex:
             print(ex)
             warnings.warn('MultiParameter test failed!')
-        # not supported:
-        try:
-            scanjob = scanjob_t({'sweepdata': dict({'param': {
-                'dac1': 1}, 'start': 0, 'range': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
-            scanjob['stepdata'] = dict(
-                {'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
-            _ = scan2D(station, scanjob, liveplotwindow=False, verbose=0)
-        except Exception as ex:
-            if verbose:
-                print('combination of Parameter and vector argument not supported')
+        # Test combination of Parameter and vector argument not supported:
+        scanjob = scanjob_t({'sweepdata': dict({'param': {
+            'dac1': 1}, 'start': 0, 'range': 10, 'step': 2, 'wait_time': 0.}), 'minstrument': [r]})
+        scanjob['stepdata'] = dict(
+            {'param': q, 'start': 24, 'range': 6, 'end': np.NaN, 'step': 1.})
+
+        self.assertRaises(Exception, scan2D, station, scanjob, liveplotwindow=False, verbose=0)
         gates.close()
 
     def test_measure_segment_scope_reader_2D(self):
@@ -362,6 +360,52 @@ class TestScans(TestCase):
         expected_values = [-2.0, -1.0, 0.0, 1.0, 2.0]
         self.assertEqual(expected_values, actual_values)
         self.assertEqual(sweepvalues._value_snapshot[0]['num'], 5)
+        gates.close()
+
+    def test_convert_scanjob_vec_scan1Dfast_adjust_sweeplength_adjusted_end(self):
+        p = Parameter('p', set_cmd=None)
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                             'sweepdata': {'param': p, 'start': -20, 'end': 20, 'step': .0075}})
+        _, sweepvalues = scanjob._convert_scanjob_vec(station)
+        actual_values = sweepvalues._values
+        self.assertEqual(actual_values[0], -20.0)
+        self.assertAlmostEqual(scanjob['sweepdata']['end'], 20.0 - 0.0025, 10)
+        self.assertEqual(sweepvalues._value_snapshot[0]['num'], 5334)
+
+        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                             'sweepdata': dict({'param': p, 'start': -500, 'end': 1,
+                                                'step': .8, 'wait_time': 3e-3})})
+        _, sweepvalues = scanjob._convert_scanjob_vec(station)
+        actual_values = sweepvalues._values
+        self.assertEqual(actual_values[0], -500.0)
+        self.assertAlmostEqual(scanjob['sweepdata']['end'], 1 - 0.2, 10)
+        self.assertEqual(sweepvalues._value_snapshot[0]['num'], 627)
+
+        gates.close()
+
+    def test_convert_scanjob_vec_adjust_values_randomly_will_never_raise_exception(self):
+        p = Parameter('p', set_cmd=None)
+        gates = VirtualIVVI(
+            name=qtt.measurements.scans.instrumentName('gates'), model=None)
+        station = qcodes.Station(gates)
+        station.gates = gates
+
+        idx = 1
+        for idx in range(1, 100):
+            start = -random.randint(1, 20)
+            end = random.randint(1, 20)
+            step = random.randint(1, 40) / (idx * 10)
+            scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                                 'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
+            _, sweepvalues = scanjob._convert_scanjob_vec(station)
+
+        # all the conversions were successful
+        self.assertEqual(idx, 99)
         gates.close()
 
     def test_convert_scanjob_vec_scan2Dfast(self):

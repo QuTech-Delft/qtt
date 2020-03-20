@@ -881,7 +881,18 @@ class scanjob_t(dict):
                         data['step'] = (data['end'] - data['start']) / (length-1)
 
         def _calculate_sweepvalues(param, sweep_data) -> SweepFixedValues:
-            """ From parameter and sweep data create a SweepFixedValues object """
+            """ From parameter and sweep data create a SweepFixedValues object. When (end - start) / step is not an
+            integer value, the end-value will be adjusted (lowered) until it is.
+             """
+            if sweep_data['step'] is not None:
+                steps = abs((sweep_data['end'] - sweep_data['start']) / sweep_data['step'])
+                tolerance = 1e-10
+                steps_lo = int(np.floor(steps + tolerance))
+                steps_hi = int(np.ceil(steps - tolerance))
+
+                if steps_lo != steps_hi:
+                    sweep_data['end'] = sweep_data['start'] + steps_lo * sweep_data['step']
+
             sweep_values = SweepFixedValues(param,
                                             start=sweep_data['start'],
                                             stop=sweep_data['end'],
