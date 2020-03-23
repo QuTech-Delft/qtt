@@ -42,7 +42,7 @@ class InstrumentDataClient(Instrument):
                           default_value=default_value, params=params)
         self.add_parameter(name, unit=unit, get_cmd=command,
                            docstring=doc_string)
-    
+
     def __del__(self):
         self._client_.destroy()
 
