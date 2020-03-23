@@ -72,7 +72,7 @@ def _dictionary_to_data_array(array_dictionary):
                                   label=array_dictionary['label'],
                                   unit=array_dictionary['unit'],
                                   is_setpoint=array_dictionary['is_setpoint'],
-                                  shape=array_dictionary['shape'],
+                                  shape=tuple(array_dictionary['shape']),
                                   array_id=array_id,
                                   preset_data=preset_data)
     return data_array
@@ -1105,8 +1105,8 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
 
     if measured_data_list is not None:
         if len(measurement_list) != len(measured_data_list):
-            raise ValueError('The number of measurement names does not match the number of measurements',
-                             len(measurement_list), len(measured_data_list))
+            raise ValueError(f'The number of measurement names {len(measurement_list)} does not match the number '
+                             f'of measurements {len(measured_data_list)}')
 
     measure_names = []
     measure_units = []
@@ -1129,7 +1129,8 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
         if measured_data_list is not None and measured_data_list[idm] is not None:
             measured_array = np.array(measured_data_list[idm])
             if measured_array.shape != preset_data.shape:
-                logger.warning('Shape of measured data does not match setpoint shape')
+                logger.warning(f'Shape of measured data {preset_data.shape} does not match '
+                               f'setpoint shape {measured_array.shape}')
 
             getattr(data_set, mname).ndarray = measured_array
 
@@ -1155,8 +1156,8 @@ def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
+            - a callable `location provider` with one required parameter \
+              (the io manager), and one optional (`record` dict),        \
               which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be
@@ -1202,8 +1203,8 @@ def makeDataSet1D(p, yname='measured', y=None, location=None, loc_record=None, r
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
+            - a callable `location provider` with one required parameter \
+              (the io manager), and one optional (`record` dict),        \
               which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be
@@ -1264,9 +1265,9 @@ def makeDataSet2Dplain(xname, x, yname, y, zname='measured', z=None, xunit=None,
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
-              which returns a location string when called.
+            - a callable `location provider` with one required parameter \
+                (the io manager), and one optional (`record` dict),      \
+                which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be
             passed to it as `record`.
@@ -1321,8 +1322,8 @@ def makeDataSet2D(p1, p2, measure_names='measured', location=None, loc_record=No
         location (str, callable, bool or None): If you provide a string,
             it must be an unused location in the io manager.
             Can also be:
-            - a callable `location provider` with one required parameter
-              (the io manager), and one optional (`record` dict),
+            - a callable `location provider` with one required parameter \
+              (the io manager), and one optional (`record` dict),        \
               which returns a location string when called.
             - `False` - denotes an only-in-memory temporary DataSet.
         loc_record (dict or None): If location is a callable, this will be

@@ -413,10 +413,16 @@ class VirtualGates(Instrument):
 
         Args:
             fig (int): number of figure window
+            inverse (bool): If True then plot the inverse matrix
         """
-        xlabels = self.pgates()
-        ylabels = self.vgates()
-        m = self.get_crosscap_matrix()
+        if inverse:
+            m = self.get_crosscap_matrix_inv()
+            xlabels = self.vgates()
+            ylabels = self.pgates()
+        else:
+            m = self.get_crosscap_matrix()
+            xlabels = self.pgates()
+            ylabels = self.vgates()
         x = range(0, len(xlabels))
         y = range(0, len(ylabels))
 

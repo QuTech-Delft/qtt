@@ -4,24 +4,48 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## \[1.2.1] - Current
+## \[1.2.2] - Unreleased
 ### Added
-...
+- Add analysis results to notes (#712)
 
 ### Changed
-...
+- Prevent tests from writing data to the user directory (#710)
+- Implement functionality for print_matrix argument (#714)
+- Bump bleach from 3.1.0 to 3.1.1 (#717)
+- scanjob_t uses SweepFixedValues (including 'end') instead of slices (excluding 'end') (#722)
+
+### Removed
+
+### Deprecated
+- Moved the deprecated loadOneDotPinchvalues to legacy.py (#722)
+
+### Fixed
+- Fix bug in generation of stepvalues for vector scans
+
+### Security
+
+
+## \[1.2.1] - 15-1-2020
+### Added
+- add representation method for virtual awg (#697)
+
+### Changed
+- Cleanup result selection of sensingdot_t (#694)
+- Update dataset processing (#701)
+- derive calibration exception from normal exception (#704)
+- use bionic as build env (#705)
 
 ### Removed
 - Removed the QCoDeS StandardParameter from QTT (#700).
 
 ### Deprecated
-...
+- Deprecated live.py, live_plotting.py and tools.py removed
 
 ### Fixed
 - Fixed the import of M4i driver in function get_sampling_frequency (#700).
-
-### Security
-...
+- fix for period argument of sensingdot_t (#696)
+- Fix create_vectorscan for the new virtual awg  (#702)
+- fix deprecation warnings (#703)
 
 ## \[1.2.0] - 2019-12-17
 
@@ -176,7 +200,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed problems with the scan2Dturbo function (#423).
 - Fixed parameter in widget (#384).
 
-[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.2.1...HEAD
+[1.2.1]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/QuTech-Delft/qtt/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/QuTech-Delft/qtt/compare/v1.1.0...1.1.2
 [1.1.0]: https://github.com/QuTech-Delft/qtt/releases/v1.1.0

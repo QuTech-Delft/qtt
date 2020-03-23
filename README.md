@@ -52,19 +52,32 @@ $ env\Scripts\activate.bat
 ```
 Now we are ready to install QTT.
 ### Installation from Pypi
-To use QTT, install it as a pip package: 
+To use QTT for Python 3.6.x or lower, install it as a pip package: 
 ```
 $ pip install qtt
 ```
+To use QTT for Python 3.7.x or higher, install QTT from source.
 ### Installing from source
-For QTT development we advice to install from source. The source for QTT can be found at Github.
+The source for QTT can be found at Github.
 For the default installation from the QTT source directory execute:
 ```
 $ git clone https://github.com/QuTech-Delft/qtt.git
 $ cd qtt
 $ pip install wheel
+```
+For QTT development install QTT in editable mode:
+``` 
 $ pip install -e .
 ```
+For non-editable mode do:
+``` 
+$ pip install .
+```
+When (encountered on Linux) PyQt5 gives an error when installing try upgrading pip 
+```
+$ pip install --upgrade pip
+```
+ and rerun the respective install command.
 ### When incompatibility problems arise
 Sometimes the default installation does not work because of incompatible dependencies between the used packages
 on your system. To be sure you use all the right versions of the packages used by QTT and its dependencies do:

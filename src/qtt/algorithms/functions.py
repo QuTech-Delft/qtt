@@ -354,12 +354,12 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
 
 
 def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
-    """ Plot Gauss Ramset fit
+    """ Plot Gauss Ramsey fit
 
     Args:
-        x_data: Input array with time variable
+        x_data: Input array with time variable (in seconds)
         y_data: Input array with signal
-        fit_parameters: Result of fit_gauss_ramsey
+        fit_parameters: Result of fit_gauss_ramsey (fitting units in seconds)
     """
     test_x = np.linspace(0, np.max(x_data), 200)
     freq_fit = abs(fit_parameters[2] * 1e-6)
@@ -369,8 +369,8 @@ def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
     plt.clf()
     plt.plot(x_data * 1e6, y_data, 'o', label='Data')
     plt.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
-    plt.title('Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
-    plt.xlabel('time ($\mu$s)')
+    plt.title(r'Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
+    plt.xlabel(r'time ($\mu$s)')
     plt.ylabel('Spin-up probability')
     plt.legend()
 
@@ -431,7 +431,7 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
 
 
 def logistic(x, x0=0, alpha=1):
-    """ Logistic function
+    r""" Logistic function
 
     Defines the logistic function
 

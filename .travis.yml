@@ -4,14 +4,14 @@ matrix:
   - name: Minimal installation 3.6
     python: 3.6
     sudo: true
-    dist: xenial
+    dist: bionic
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
   - name: Minimal installation 3.7
     python: 3.7
     sudo: true
-    dist: xenial
+    dist: bionic
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
@@ -27,13 +27,13 @@ matrix:
 
   - name: Full installation 3.6
     python: 3.6
-    dist: xenial
+    dist: bionic
     env: FULL_INSTALL=1
     services:
     - xvfb
   - name: Full installation 3.7
     python: 3.7
-    dist: xenial
+    dist: bionic
     env: FULL_INSTALL=1
     services:
     - xvfb
@@ -48,12 +48,13 @@ matrix:
 
 install:
   - pip install coveralls
+  - pip install --upgrade pip
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
 script:
   - ls
   - pytest --version
-  - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/tools.py","./src/qtt/live_plotting.py","./src/qtt/live.py","./src/qtt/measurements/ttrace.py" -m pytest
+  - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/measurements/ttrace.py" -m pytest
   - mypy src --ignore-missing-imports
   - if [[ "$FULL_INSTALL" == "1" ]]; then
       jupyter --version;

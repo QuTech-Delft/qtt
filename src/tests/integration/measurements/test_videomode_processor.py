@@ -12,6 +12,9 @@ from qtt.measurements.videomode import VideoMode
 
 class TestVideoModeProcessor(unittest.TestCase):
 
+    def tearDown(self) -> None:
+        VideoMode.destruct()
+
     def test_DummyVideoModeProcessor(self):
         qt_application = pyqtgraph.mkQApp()
 
