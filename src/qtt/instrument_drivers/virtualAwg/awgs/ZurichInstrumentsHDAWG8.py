@@ -1,9 +1,10 @@
+
 from qcodes import Parameter
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
 
 
 class ZurichInstrumentsHDAWG8(AwgCommon):
-    __sampling_rate_map = {ii: 2.4e9/2**ii for ii in range(0, 14)}
+    __sampling_rate_map = {ii: 2.4e9 / 2**ii for ii in range(0, 14)}
 
     def __init__(self, awg, awg_number=0):
         """ Implements the common functionality of the AwgCommon for the Zurich Instruments HDAWG8 to be controlled by
@@ -91,10 +92,15 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         return ZurichInstrumentsHDAWG8.__sampling_rate_map[sampling_rate_key]
 
     def update_gain(self, gain):
-        _ = [self.__awg.set('sigouts_{}_range'.format(ch), gain) for ch in self._channel_numbers]
+        """ Set the gain of the device by setting the range of all channels to two times the gain
+
+        The range is twice the gain under the assumption that the load on the output channels is 50 Ohm. For a high
+        impedance load the gain equals the range.
+        """
+        _ = [self.__awg.set('sigouts_{}_range'.format(ch), 2 * gain) for ch in self._channel_numbers]
 
     def retrieve_gain(self):
-        gains = [self.__awg.get('sigouts_{}_range'.format(ch)) for ch in self._channel_numbers]
+        gains = [self.__awg.get('sigouts_{}_range'.format(ch)) / 2 for ch in self._channel_numbers]
         if not all(g == gains[0] for g in gains):
             raise ValueError(f'Not all channel gains {gains} are equal. Please reset!')
         return gains[0]
