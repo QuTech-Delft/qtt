@@ -294,22 +294,28 @@ def datasetCentre(ds, ndim=None):
     return cc
 
 
-def drawCrosshair(ds, ax=None, ndim=None):
+def drawCrosshair(ds, ax=None, ndim=None, **kwargs):
     """ Draw a crosshair on the centre of the dataset
 
     Args:
         ds (DataSet):
         ax (None or matplotlib axis handle)
         ndim (None or int): dimension of dataset
+        kwargs: Arguments passed to the plotting command
     """
 
     cc = datasetCentre(ds, ndim=ndim)
 
+    if not 'linestyle' in kwargs:
+        kwargs['linestyle'] = ':'
+    if not 'color' in kwargs:
+        kwargs['color'] = 'c'
+             
     if ax is None:
         ax = plt.gca()
-    ax.axvline(x=cc[0], linestyle=':', color='c')
+    ax.axvline(x=cc[0], **kwargs)
     if len(cc) == 2:
-        ax.axhline(y=cc[1], linestyle=':', color='c')
+        ax.axhline(y=cc[1], **kwargs)
 
 
 # %%
