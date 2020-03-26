@@ -23,7 +23,7 @@ from qtt import pgeometry
 logger = logging.getLogger(__name__)
 
 
-def load_example_dataset(filename, verbose = 0):
+def load_example_dataset(filename, verbose=0):
     """ Return an example dataset from qtt
 
     Args:
@@ -34,7 +34,7 @@ def load_example_dataset(filename, verbose = 0):
     """
     exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
 
-    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose = verbose)
+    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose=verbose)
     return dataset
 
 
@@ -310,7 +310,7 @@ def drawCrosshair(ds, ax=None, ndim=None, **kwargs):
         kwargs['linestyle'] = ':'
     if not 'color' in kwargs:
         kwargs['color'] = 'c'
-             
+
     if ax is None:
         ax = plt.gca()
     ax.axvline(x=cc[0], **kwargs)
