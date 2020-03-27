@@ -11,7 +11,6 @@ import qtt.utilities.tools
 from qtt.utilities.visualization import plot_vertical_line
 from qtt.algorithms.generic import subpixelmax
 
-
 def gaussian(x, mean, std, amplitude=1, offset=0):
     """ Model for Gaussian function
 
@@ -337,20 +336,33 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
 
     """
 
-    def func(params): return cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
+    def gauss_ramsey_model(x, amplitude, decay_time, frequency, phase, offset):
+            """  """
+            y = gauss_ramsey(x, [amplitude, decay_time, frequency, phase, offset])
+            return y
+
+    if weight_power !=0:
+        raise NotImplementedError('weight_power !=0 not implemented' )
 
     if initial_params is None:
-        initial_params = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
+        initial_parameters = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
+    else:
+       initial_parameters=initial_params
+    lmfit_model = Model(gauss_ramsey_model)
+    lmfit_model.set_param_hint('amplitude', min=0)
+    lmfit_result = lmfit_model.fit(
+        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose>=2)
+    import qtt.algorithms.fitting.extract_lmfit_parameters
+    result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)
 
-    fit_parameters = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    result_dict['description']= 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = ' \
+                       'A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B'
 
-    result_dict = {
-        'description': 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = '
-                       'A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B',
-        'parameters fit': fit_parameters,
-        'parameters initial guess': initial_params}
+    # backwards compatibility
+    result_dict['parameters fit']=result_dict['fitted_parameters']
+    result_dict['parameters initial guess']=initial_parameters
 
-    return fit_parameters, result_dict
+    return result_dict['fitted_parameters'], result_dict
 
 
 def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
@@ -405,7 +417,7 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
     r""" Fermi distribution with linear function added
 
     Arguments:
-        x (numpy array): independent variable 
+        x (numpy array): independent variable
         a, b (float): coefficients of linear part
         cc (float): center of Fermi distribution
         A (float): amplitude of Fermi distribution
