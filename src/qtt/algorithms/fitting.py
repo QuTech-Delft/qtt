@@ -1,4 +1,4 @@
-""" Fitting of Fermi-Dirac distributions. """
+""" Fitting of various models. """
 
 import warnings
 
@@ -494,7 +494,6 @@ def fit_addition_line_array(x_data, y_data, trimborder=True):
         x_data = x_data[cut_index: -cut_index]
         y_data = y_data[cut_index: -cut_index]
 
-    # fitting of the FermiLinear function
     fit_parameters, extra_data = fitFermiLinear(x_data, y_data, verbose=1, fig=None)
     initial_parameters = extra_data['p0']
     m_addition_line = fit_parameters[2]
