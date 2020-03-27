@@ -349,6 +349,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
     else:
         diff_x = np.diff(x_data)
         weights =  np.hstack( (diff_x[0], diff_x) )  ** weight_power
+        print(weights)
 
     if initial_params is None:
         initial_parameters = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
