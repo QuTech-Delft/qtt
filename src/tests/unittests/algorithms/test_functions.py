@@ -139,9 +139,9 @@ class TestFunctions(unittest.TestCase):
 
         par_fit_test, _ = fit_gauss_ramsey(x_data, y_data)
 
-        self.assertTrue(np.abs(np.abs(par_fit_test[0]) - 0.21) < 0.1)
-        self.assertTrue(np.abs(par_fit_test[-2] - (-1.255)) < 0.1)
-        self.assertTrue(np.abs(par_fit_test[-1] - 0.38) < 0.1)
+        self.assertTrue(np.abs(np.abs(par_fit_test[0]) - 0.22) < 0.1)
+        self.assertTrue(np.abs(par_fit_test[-2] - (-1.275)) < 0.1)
+        self.assertTrue(np.abs(par_fit_test[-1] - 0.376) < 0.1)
 
         x_data = np.array([0.00000000e+00, 4.73333330e-07, 9.46666660e-07, 1.41999999e-06, 1.89333332e-06, 2.36666665e-06, 2.83333338e-06, 3.30666671e-06, 3.78000004e-06, 4.25333337e-06, 4.72666670e-06,
                            5.20000003e-06, 5.67333336e-06, 6.14666669e-06, 6.62000002e-06, 7.09333335e-06, 7.56666668e-06, 8.03333296e-06, 8.50666675e-06, 8.97999962e-06, 9.45333340e-06, 9.92666628e-06, 1.04000001e-05])
@@ -150,8 +150,8 @@ class TestFunctions(unittest.TestCase):
 
         par_fit_test, results = fit_gauss_ramsey(x_data, y_data)
 
-        self.assertAlmostEqual(par_fit_test[0], 0.33, places=1)
-        self.assertAlmostEqual(par_fit_test[1] * 1e6, 3.36, places=1)
+        self.assertAlmostEqual(par_fit_test[0], 0.303, places=1)
+        self.assertAlmostEqual(par_fit_test[1] * 1e6, 3.55, places=1)
         self.assertAlmostEqual(par_fit_test[2] * 1e-6, 0.36, places=1)
 
     def test_fit_gauss_ramsey_weights(self, fig=None):
