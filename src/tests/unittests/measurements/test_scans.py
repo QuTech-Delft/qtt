@@ -7,7 +7,6 @@ This is part of qtt.
 
 import sys
 import warnings
-import random
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 import tempfile
@@ -467,35 +466,36 @@ class TestScans(TestCase):
         station.gates = gates
 
         idx = 1
-        for idx in range(1, 100):
-            start = -random.randint(1, 20)
-            end = random.randint(1, 20)
-            step = random.randint(1, 40) / (idx * 10)
+        for idx in range(1, 5):
+            for start in range(-5, 1):
+                for end in range(1, 5):
+                    for step_in_range in range(1, 5):
+                        step = step_in_range / (idx * 10)
 
-            # exclusive end-value
-            scanjob = scanjob_t({'scantype': 'scan1Dfast',
-                                 'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
-            _, sweepvalues = scanjob._convert_scanjob_vec(station)
+                        # exclusive end-value
+                        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                                             'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
+                        _, sweepvalues = scanjob._convert_scanjob_vec(station)
 
-            scanjob = scanjob_t({'scantype': 'scan1Dfast',
-                                 'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
-            sweepvalues_old = self.ref_calculate_sweepvalues(p, scanjob['sweepdata'])
-            for actual_val, expected_val in zip(list(sweepvalues), list(sweepvalues_old)):
-                self.assertAlmostEqual(actual_val, expected_val, 12)
+                        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                                             'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
+                        sweepvalues_old = self.ref_calculate_sweepvalues(p, scanjob['sweepdata'])
+                        for actual_val, expected_val in zip(list(sweepvalues), list(sweepvalues_old)):
+                            self.assertAlmostEqual(actual_val, expected_val, 12)
 
-            # inclusive end-value
-            scanjob = scanjob_t({'scantype': 'scan1Dfast',
-                                 'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
-            # generate a sweeplength so that the step-value doesn't change
-            _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=((end-start)/step) + 1)
-            scanjob = scanjob_t({'scantype': 'scan1Dfast',
-                                 'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
-            sweepvalues_old = self.ref_calculate_sweepvalues(p, scanjob['sweepdata'], True)
-            for actual_val, expected_val in zip(list(sweepvalues), list(sweepvalues_old)):
-                self.assertAlmostEqual(actual_val, expected_val, 12)
+                        # inclusive end-value
+                        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                                             'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
+                        # generate a sweeplength so that the step-value doesn't change
+                        _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=((end-start)/step) + 1)
+                        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                                             'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
+                        sweepvalues_old = self.ref_calculate_sweepvalues(p, scanjob['sweepdata'], True)
+                        for actual_val, expected_val in zip(list(sweepvalues), list(sweepvalues_old)):
+                            self.assertAlmostEqual(actual_val, expected_val, 12)
 
         # all the conversions were successful
-        self.assertEqual(idx, 99)
+        self.assertEqual(idx, 4)
         gates.close()
 
     def test_convert_scanjob_vec_scan2Dfast(self):

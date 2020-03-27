@@ -901,7 +901,7 @@ class scanjob_t(dict):
                                                 stop=sweep_data['end'],
                                                 step=sweep_data['step'])
             else:
-                if steps_lo == 0:
+                if steps_hi == 0:
                     raise ValueError('start and end values may not be the same')
                 sweep_values = param[sweep_data['start']:sweep_data['end']:sweep_data['step']]
 
