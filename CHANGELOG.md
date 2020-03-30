@@ -6,15 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## \[1.2.2] - Unreleased
 ### Added
+- Add analysis results to notes (#712)
 
 ### Changed
+- Prevent tests from writing data to the user directory (#710)
+- Implement functionality for print_matrix argument (#714)
+- Bump bleach from 3.1.0 to 3.1.1 (#717)
+- scanjob_t uses SweepFixedValues (including 'end') instead of slices (excluding 'end') (#722)
 
 ### Removed
 - The ttrace code has been deprecated and is removed in this release (#709)
 
 ### Deprecated
+- Moved the deprecated loadOneDotPinchvalues to legacy.py (#722)
 
 ### Fixed
+- Fix bug in HDAWG8 driver where the gain was set to the range, whereas it should be gain = range/2 (#720)
+- Fix bug in generation of stepvalues for vector scans
+- Packages 'tests' are not installed anymore. These packages gave problems with loading similar named modules in other packages.
 
 ### Security
 
@@ -195,7 +204,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed parameter in widget (#384).
 
 [Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.2.1...HEAD
-[1.2.0]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...1.2.1
+[1.2.1]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/QuTech-Delft/qtt/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/QuTech-Delft/qtt/compare/v1.1.0...1.1.2
 [1.1.0]: https://github.com/QuTech-Delft/qtt/releases/v1.1.0

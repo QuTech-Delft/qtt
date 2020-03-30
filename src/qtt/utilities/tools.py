@@ -1137,13 +1137,14 @@ except ImportError:
 # %%
 
 
-def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, add_analysis_results=True, verbose=0):
     """ Reshape the metadata of a DataSet.
 
     Args:
         dataset (DataSet or qcodes.Station): a dataset of which the metadata will be reshaped.
         printformat (str): can be 'dict' or 'txt','fancy' (text format).
         add_scanjob (bool): If True, then add the scanjob at the beginning of the notes.
+        add_analysis_results (bool): If True, then add the analysis_results at the beginning of the notes.
         add_gates (bool): If True, then add the scanjob at the beginning of the notes.
         verbose (int): verbosity (0 == silent).
 
@@ -1178,6 +1179,11 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
     if scanjob is not None and add_scanjob:
         s = pprint.pformat(scanjob)
         header += '\n\nscanjob: ' + str(s) + '\n'
+
+    analysis_results = dataset.metadata.get('analysis_results', None)
+    if analysis_results is not None and add_analysis_results:
+        s = pprint.pformat(analysis_results)
+        header += '\n\analysis_results: ' + str(s) + '\n'
 
     metadata = OrderedDict()
     # make sure the gates instrument is in front
