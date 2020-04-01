@@ -154,14 +154,15 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(par_fit_test[1] * 1e6, 3.55, places=1)
         self.assertAlmostEqual(par_fit_test[2] * 1e-6, 0.36, places=1)
 
-    def test_fit_gauss_ramsey_weights(self, fig=None):
+    def test_fit_gauss_ramsey_weights(self):
+        fig=123
         x_data = np.hstack((np.linspace(0, 3 * np.pi, 20), np.linspace(3 * np.pi, 4 * np.pi, 100)))
         y_data = np.sin(x_data)
         y_data[21:] = 0
 
         fitted_parameters_unweighted, _ = fit_gauss_ramsey(x_data, y_data)
         fitted_parameters, _ = fit_gauss_ramsey(x_data, y_data, weight_power=10)
-        plt.figure(1)
+        plt.figure(fig)
         plt.clf()
         plt.plot(x_data, y_data, '.')
         plt.plot(x_data, gauss_ramsey(x_data, fitted_parameters_unweighted), 'b')
@@ -171,6 +172,7 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(fitted_parameters[2], 1 / (2 * np.pi), places=1)
         self.assertAlmostEqual(fitted_parameters[3], 0, places=6)
         self.assertAlmostEqual(fitted_parameters[4], 0, places=6)
+        plt.close(fig)
 
     def test_logistic_and_linear_function(self):
         x_data = np.arange(-10, 10, 0.1)
