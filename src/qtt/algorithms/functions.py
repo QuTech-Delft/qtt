@@ -348,8 +348,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
         weights = None
     else:
         diff_x = np.diff(x_data)
-        weights =  np.hstack( (diff_x[0], diff_x) )  ** weight_power
-        print(weights)
+        weights = np.hstack( (diff_x[0], diff_x) ) ** weight_power
 
     if initial_params is None:
         initial_parameters = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
@@ -363,8 +362,8 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
     import qtt.algorithms.fitting
     result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)
 
-    result_dict['description'] = 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = ' \
-        'A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B'
+    result_dict['description'] = 'Function to analyse the results of a Ramsey experiment, ' + \
+            'fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2*pi*ramseyfreq * x_data - angle) + B'
 
     # backwards compatibility
     result_dict['parameters fit'] = result_dict['fitted_parameters']
