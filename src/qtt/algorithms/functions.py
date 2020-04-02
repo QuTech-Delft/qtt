@@ -239,6 +239,8 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
         sample_rate (float): Sample rate of the data
         remove_dc (bool): If True, then do not estimate the DC component
         fig (int or None): Optionally plot the estimated frequency
+    Returns:
+        Estimated dominant frequency
     """
     w = np.fft.fft(signal)
     freqs = np.fft.fftfreq(len(signal), d=1. / sample_rate)
@@ -315,7 +317,7 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     return initial_params
 
 
-def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
+def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     """ Fit a gauss_ramsey. The function gauss_ramsey gives a model for the measurement result of a pulse Ramsey
     sequence while varying the free evolution time, the phase of the second pulse is made dependent on the free
     evolution time.
@@ -325,7 +327,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
     Args:
         x_data (array): the data for the independent variable
         y_data (array): the data for the measured variable
-        weight_power (float)
+        weight_power (float or None): If a float then weight all the residual errors with a scale factor
         maxiter (int): maximum number of iterations to perform
         maxfun (int): maximum number of function evaluations to make
         verbose (int): set to >0 to print convergence messages
@@ -337,20 +339,37 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=0, maxiter=None, maxfun=5000, 
 
     """
 
-    def func(params): return cost_gauss_ramsey(x_data, y_data, params, weight_power=weight_power)
+    def gauss_ramsey_model(x, amplitude, decay_time, frequency, phase, offset):
+        """  """
+        y = gauss_ramsey(x, [amplitude, decay_time, frequency, phase, offset])
+        return y
+
+    if weight_power is None:
+        weights = None
+    else:
+        diff_x = np.diff(x_data)
+        weights = np.hstack( (diff_x[0], diff_x) ) ** weight_power
 
     if initial_params is None:
-        initial_params = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
+        initial_parameters = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
+    else:
+        initial_parameters = initial_params
+    lmfit_model = Model(gauss_ramsey_model)
+    lmfit_model.set_param_hint('amplitude', min=0)
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)),
+                                   verbose=verbose >= 2, weights = weights)
 
-    fit_parameters = scipy.optimize.fmin(func, initial_params, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
+    import qtt.algorithms.fitting
+    result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)
 
-    result_dict = {
-        'description': 'Function to analyse the results of a Ramsey experiment, fitted function: gauss_ramsey = '
-                       'A * exp(-(x_data/t2s)**2) * sin(2pi*ramseyfreq * x_data - angle) +B',
-        'parameters fit': fit_parameters,
-        'parameters initial guess': initial_params}
+    result_dict['description'] = 'Function to analyse the results of a Ramsey experiment, ' + \
+            'fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2*pi*ramseyfreq * x_data - angle) + B'
 
-    return fit_parameters, result_dict
+    # backwards compatibility
+    result_dict['parameters fit'] = result_dict['fitted_parameters']
+    result_dict['parameters initial guess'] = initial_parameters
+
+    return result_dict['fitted_parameters'], result_dict
 
 
 def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
@@ -405,7 +424,7 @@ def FermiLinear(x, a, b, cc, A, T, l=1.16):
     r""" Fermi distribution with linear function added
 
     Arguments:
-        x (numpy array): independent variable 
+        x (numpy array): independent variable
         a, b (float): coefficients of linear part
         cc (float): center of Fermi distribution
         A (float): amplitude of Fermi distribution
