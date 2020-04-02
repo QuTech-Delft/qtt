@@ -887,22 +887,16 @@ class scanjob_t(dict):
             """ From parameter and sweep data create a SweepFixedValues object. """
             if sweep_data['step'] == 0.:
                 raise ValueError('step value may not be 0')
-            steps = abs((sweep_data['end'] - sweep_data['start']) / sweep_data['step'])
-            tolerance = 1e-10
-            steps_lo = int(np.floor(steps + tolerance))
-            steps_hi = int(np.ceil(steps - tolerance))
 
             if inclusive_end:
-                if steps_lo != steps_hi:
-                    sweep_data['end'] = sweep_data['start'] + steps_lo * sweep_data['step']
-
-                sweep_values = SweepFixedValues(param,
-                                                start=sweep_data['start'],
-                                                stop=sweep_data['end'],
-                                                step=sweep_data['step'])
+                epsilon = 1e-8
+                sweep_values = param[sweep_data['start']:(sweep_data['end'] + epsilon):sweep_data['step']]
             else:
-                if steps_hi == 0:
-                    raise ValueError('start and end values may not be the same')
+                diff = abs(sweep_data['end'] - sweep_data['start'])
+                tolerance = 1e-10
+                if int(np.ceil(diff - tolerance)) == 0:
+                    raise ValueError('start and end values must differ at least 1 step value')
+
                 sweep_values = param[sweep_data['start']:sweep_data['end']:sweep_data['step']]
 
             return sweep_values

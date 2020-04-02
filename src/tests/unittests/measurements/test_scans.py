@@ -314,16 +314,6 @@ class TestScans(TestCase):
 
         m4i_digitizer.close()
 
-    @staticmethod
-    def ref_calculate_sweepvalues(param, sweepdata, inclusive=False):
-        """ From parameter and sweep data create a SweepFixedValues object """
-        if inclusive:
-            epsilon = 1e-8
-            sweepvalues = param[sweepdata['start']:(sweepdata['end']+epsilon):sweepdata['step']]
-        else:
-            sweepvalues = param[sweepdata['start']:sweepdata['end']:sweepdata['step']]
-        return sweepvalues
-
     def test_convert_scanjob_vec_scan1Dfast(self):
         p = Parameter('p', set_cmd=None)
         gates = VirtualIVVI(
@@ -417,7 +407,7 @@ class TestScans(TestCase):
         actual_values = list(sweepvalues)
         self.assertEqual(actual_values[0], -20.0)
         self.assertAlmostEqual(actual_values[-1], 20.0-.0025, 10)
-        self.assertAlmostEqual(scanjob['sweepdata']['end'], actual_values[-1], 10)
+        self.assertAlmostEqual(scanjob['sweepdata']['end'], 20, 10)
         self.assertEqual(len(actual_values), 5334)
 
         # exclusive end-value
@@ -439,7 +429,7 @@ class TestScans(TestCase):
         actual_values = list(sweepvalues)
         self.assertEqual(actual_values[0], -500.0)
         self.assertAlmostEqual(actual_values[-1], 0.8, 10)
-        self.assertAlmostEqual(scanjob['sweepdata']['end'], actual_values[-1], 10)
+        self.assertAlmostEqual(scanjob['sweepdata']['end'], 1, 10)
         self.assertEqual(len(actual_values), 627)
 
         gates.close()
@@ -458,7 +448,7 @@ class TestScans(TestCase):
 
         gates.close()
 
-    def test_convert_scanjob_vec_adjust_values_randomly_will_never_raise_exception(self):
+    def test_convert_scanjob_vec_range_values_will_not_raise_exception(self):
         p = Parameter('p', set_cmd=None)
         gates = VirtualIVVI(
             name=qtt.measurements.scans.instrumentName('gates'), model=None)
@@ -479,9 +469,6 @@ class TestScans(TestCase):
 
                         scanjob = scanjob_t({'scantype': 'scan1Dfast',
                                              'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
-                        sweepvalues_old = self.ref_calculate_sweepvalues(p, scanjob['sweepdata'])
-                        for actual_val, expected_val in zip(list(sweepvalues), list(sweepvalues_old)):
-                            self.assertAlmostEqual(actual_val, expected_val, 12)
 
                         # inclusive end-value
                         scanjob = scanjob_t({'scantype': 'scan1Dfast',
@@ -490,9 +477,6 @@ class TestScans(TestCase):
                         _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=((end-start)/step) + 1)
                         scanjob = scanjob_t({'scantype': 'scan1Dfast',
                                              'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
-                        sweepvalues_old = self.ref_calculate_sweepvalues(p, scanjob['sweepdata'], True)
-                        for actual_val, expected_val in zip(list(sweepvalues), list(sweepvalues_old)):
-                            self.assertAlmostEqual(actual_val, expected_val, 12)
 
         # all the conversions were successful
         self.assertEqual(idx, 4)
