@@ -23,7 +23,7 @@ from qtt import pgeometry
 logger = logging.getLogger(__name__)
 
 
-def load_example_dataset(filename, verbose = 0):
+def load_example_dataset(filename, verbose=0):
     """ Return an example dataset from qtt
 
     Args:
@@ -34,7 +34,7 @@ def load_example_dataset(filename, verbose = 0):
     """
     exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
 
-    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose = verbose)
+    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose=verbose)
     return dataset
 
 
@@ -294,22 +294,28 @@ def datasetCentre(ds, ndim=None):
     return cc
 
 
-def drawCrosshair(ds, ax=None, ndim=None):
+def drawCrosshair(ds, ax=None, ndim=None, **kwargs):
     """ Draw a crosshair on the centre of the dataset
 
     Args:
         ds (DataSet):
         ax (None or matplotlib axis handle)
         ndim (None or int): dimension of dataset
+        kwargs: Arguments passed to the plotting command
     """
 
     cc = datasetCentre(ds, ndim=ndim)
 
+    if not 'linestyle' in kwargs:
+        kwargs['linestyle'] = ':'
+    if not 'color' in kwargs:
+        kwargs['color'] = 'c'
+
     if ax is None:
         ax = plt.gca()
-    ax.axvline(x=cc[0], linestyle=':', color='c')
+    ax.axvline(x=cc[0], **kwargs)
     if len(cc) == 2:
-        ax.axhline(y=cc[1], linestyle=':', color='c')
+        ax.axhline(y=cc[1], **kwargs)
 
 
 # %%
