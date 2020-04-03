@@ -4,10 +4,14 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 import qtt
-from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian
+from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian, sine
 from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear,\
-        fit_double_gaussian, refit_double_gaussian, fit_gaussian
+        fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
 
+class TestSineFitting(unittest.TestCase):
+    
+    def test_fit_sine(self):
+        pass
 
 class TestDoubleGaussianFitting(unittest.TestCase):
 
