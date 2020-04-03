@@ -251,10 +251,11 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
 
     return result_dict['fitted_parameters'], result_dict
 
-def fit_sine(x_data: np.ndarray, y_data: np.ndarray) -> Tuple[Dict[str, Any],Dict[str, Any]]:
+def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters = None) -> Tuple[Dict[str, Any],Dict[str, Any]]:
     """ Fit a sine wave for the inputted data; see sine function in functions.py for model
     """
-    initial_parameters = _estimate_initial_parameters_sine(x_data, y_data)
+    if initial_parameters is None:
+        initial_parameters = _estimate_initial_parameters_sine(x_data, y_data)
 
     def sine_model(x, amplitude, frequency, shift, offset) -> np.ndarray:
         y = sine(x, amplitude, frequency, shift, offset)
