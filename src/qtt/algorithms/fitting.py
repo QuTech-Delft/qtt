@@ -6,12 +6,14 @@ import operator
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+from scipy.signal import argrelextrema
+from typing import Tuple, Dict, Any
+
 from lmfit import Model
 
 import qtt.pgeometry
 from qcodes import DataArray
-from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian
-
+from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine
 
 def extract_lmfit_parameters(lmfit_model, lmfit_result):
     """ Convert lmfit results to a dictionary
@@ -249,6 +251,28 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
 
     return result_dict['fitted_parameters'], result_dict
 
+def fit_sine(x_data: np.ndarray, y_data: np.ndarray) -> Tuple[Dict[str, Any],Dict[str, Any]]:
+    """ Fit a sine wave for the inputted data; see sine function in functions.py for model
+    """
+    initial_parameters = _estimate_initial_parameters_sine(x_data, y_data)
+
+    def sine_model(x, amplitude, frequency, shift, offset) -> np.ndarray:
+        y = sine(x, amplitude, frequency, shift, offset)
+        return y
+
+    lmfit_model = Model(sine_model)
+    lmfit_result = lmfit_model.fit(y_data,x=x_data,**dict(zip(lmfit_model.param_names, initial_parameters)))
+    result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
+
+    return result_dict['fitted_parameters'], result_dict
+
+def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
+    amplitude = 1.0
+    frequency = 1.0
+    shift = 0.0
+    offset = 0.0
+    initial_parameters = np.array([amplitude, frequency, shift, offset])
+    return initial_parameters
 
 def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
     """ Estimates the following properties of a charge addition line; the center location
