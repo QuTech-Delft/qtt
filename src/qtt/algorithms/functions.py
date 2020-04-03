@@ -27,19 +27,19 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
     y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * std * std))
     return y
 
-def sine(x, amplitude, frequency, shift, offset):
+def sine(x, amplitude, frequency, phase, offset):
     """ Model for sine function
 
-        y = offset + amplitude * np.sin(x * frequency + phase_shift)
-    
+        y = offset + amplitude * np.sin(x * frequency + phase)
+
     Args:
         x (array): data points
-        frequency, phase_shift, amplitude, offest: parameters
+        frequency, phase, amplitude, offest: parameters
     Returns:
-        y (array)
+        Array with calculated sine
 
     """
-    y = amplitude * np.sin(x * frequency + shift) + offset
+    y = amplitude * np.sin(x * frequency + phase) + offset
     return y
 
 def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):

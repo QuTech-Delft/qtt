@@ -9,9 +9,24 @@ from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center
         fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
 
 class TestSineFitting(unittest.TestCase):
-    
+
     def test_fit_sine(self):
-        pass
+        x_data=np.linspace(0, 6, 30)
+        amplitude=2
+        frequency=1.3
+        phase = .1
+        offset = .1
+        y_data=sine(x_data, amplitude, frequency, phase, offset)+.2*(np.random.rand(x_data.size)-5)
+
+        fit_parameters, results = fit_sine(x_data, y_data)
+        self.assertAlmostEqual(fit_parameters[0], amplitude, places=1)
+        self.assertAlmostEqual(fit_parameters[1], frequency, places=1)
+        self.assertAlmostEqual(fit_parameters[2], phase, places=1)
+        self.assertAlmostEqual(fit_parameters[3], offset, places=1)
+
+        plt.figure(10); plt.clf()
+        plt.plot(x_data, y_data, '.b')
+        plt.plot(x_data, sine(x_data, *fit_parameters), '-m')
 
 class TestDoubleGaussianFitting(unittest.TestCase):
 
