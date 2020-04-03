@@ -27,6 +27,20 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
     y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * std * std))
     return y
 
+def sine(x, amplitude, frequency, shift, offset):
+    """ Model for sine function
+
+        y = offset + amplitude * np.sin(x * frequency + phase_shift)
+    
+    Args:
+        x (array): data points
+        frequency, phase_shift, amplitude, offest: parameters
+    Returns:
+        y (array)
+
+    """
+    y = amplitude * np.sin(x * frequency + shift) + offset
+    return y
 
 def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
     raise Exception('The fit_gaussian method has moved to qtt.algorithms.fitting')
