@@ -36,7 +36,7 @@ def sine(x, amplitude, frequency, phase, offset):
         x (array): data points
         frequency, phase, amplitude, offest: Arguments for the sine model
     Returns:
-        y (array)
+        Array with calculated sine
 
     """
     y = amplitude * np.sin(x * frequency + phase) + offset
