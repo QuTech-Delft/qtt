@@ -267,10 +267,10 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray) -> Tuple[Dict[str, Any],Dic
     return result_dict['fitted_parameters'], result_dict
 
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
-    amplitude = 1.0
+    amplitude = np.max(y_data)-np.min(y_data)
+    offset=np.mean(y_data)
     frequency = 1.0
     shift = 0.0
-    offset = 0.0
     initial_parameters = np.array([amplitude, frequency, shift, offset])
     return initial_parameters
 
