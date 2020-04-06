@@ -257,11 +257,7 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters = None) 
     if initial_parameters is None:
         initial_parameters = _estimate_initial_parameters_sine(x_data, y_data)
 
-    def sine_model(x, amplitude, frequency, shift, offset) -> np.ndarray:
-        y = sine(x, amplitude, frequency, shift, offset)
-        return y
-
-    lmfit_model = Model(sine_model)
+    lmfit_model = Model(sine)
     lmfit_result = lmfit_model.fit(y_data,x=x_data,**dict(zip(lmfit_model.param_names, initial_parameters)))
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
