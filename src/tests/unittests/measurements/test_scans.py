@@ -465,7 +465,7 @@ class TestScans(TestCase):
                         # exclusive end-value
                         scanjob = scanjob_t({'scantype': 'scan1Dfast',
                                              'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
-                        _, sweepvalues = scanjob._convert_scanjob_vec(station)
+                        _ = scanjob._convert_scanjob_vec(station)
 
                         scanjob = scanjob_t({'scantype': 'scan1Dfast',
                                              'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
@@ -474,7 +474,7 @@ class TestScans(TestCase):
                         scanjob = scanjob_t({'scantype': 'scan1Dfast',
                                              'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
                         # generate a sweeplength so that the step-value doesn't change
-                        _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=((end-start)/step) + 1)
+                        _ = scanjob._convert_scanjob_vec(station, sweeplength=((end-start)/step) + 1)
                         scanjob = scanjob_t({'scantype': 'scan1Dfast',
                                              'sweepdata': {'param': p, 'start': start, 'end': end, 'step': step}})
 
