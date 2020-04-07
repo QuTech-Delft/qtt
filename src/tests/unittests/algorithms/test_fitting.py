@@ -24,10 +24,6 @@ class TestSineFitting(unittest.TestCase):
         self.assertAlmostEqual(fit_parameters[2], phase, places=1)
         self.assertAlmostEqual(fit_parameters[3], offset, places=1)
 
-        plt.figure(10); plt.clf()
-        plt.plot(x_data, y_data, '.b')
-        plt.plot(x_data, sine(x_data, *fit_parameters), '-m')
-
 class TestDoubleGaussianFitting(unittest.TestCase):
 
     def test_refit_double_gaussian(self):
