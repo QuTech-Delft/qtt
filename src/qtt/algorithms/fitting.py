@@ -266,8 +266,8 @@ def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) ->
     amplitude = np.max(y_data)-np.min(y_data)
     offset=np.mean(y_data)
     frequency = 1.0
-    shift = 0.0
-    initial_parameters = np.array([amplitude, frequency, shift, offset])
+    phase = 0.0
+    initial_parameters = np.array([amplitude, frequency, phase, offset])
     return initial_parameters
 
 def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
