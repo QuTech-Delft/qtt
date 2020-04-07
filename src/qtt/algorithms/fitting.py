@@ -32,6 +32,7 @@ def extract_lmfit_parameters(lmfit_model, lmfit_result):
                'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name, 'fitted_parameter_dictionary': lmfit_result.best_values}
     return results
 
+
 def _integral(x_data, y_data):
     """ Calculate integral of function """
     d_xdata = np.diff(x_data)
