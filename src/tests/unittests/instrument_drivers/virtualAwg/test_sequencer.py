@@ -127,8 +127,8 @@ class TestSequencer(unittest.TestCase):
 
             # the value to compare to are calculated using qupulse 0.4 Sequencer class
             self.assertTrue(1000001 == len(voltages_new['sawtooth']))
-            self.assertAlmostEqual(-0.75, np.min(voltages_new['sawtooth']), 12)
-            self.assertAlmostEqual(0.75, np.max(voltages_new['sawtooth']), 12)
+            self.assertAlmostEqual(-amplitude/2, np.min(voltages_new['sawtooth']), 12)
+            self.assertAlmostEqual(amplitude/2, np.max(voltages_new['sawtooth']), 12)
 
     def test_raw_wave_HasCorrectProperties(self):
         with warnings.catch_warnings():
