@@ -6,7 +6,6 @@ import operator
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-from scipy.signal import argrelextrema
 from typing import Tuple, Dict, Any
 
 from lmfit import Model
