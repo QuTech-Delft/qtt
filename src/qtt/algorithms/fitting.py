@@ -250,25 +250,35 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
 
     return result_dict['fitted_parameters'], result_dict
 
+
 def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters = None) -> Tuple[Dict[str, Any],Dict[str, Any]]:
     """ Fit a sine wave for the inputted data; see sine function in functions.py for model
+
+    Args:
+        x_data: x data points
+        y_data: data to be fitted
+        initial_parameters: list of 4 floats with initial guesses for: amplitude, frequency, phase and offset
+    Returns:
+        result_dict
     """
     if initial_parameters is None:
         initial_parameters = _estimate_initial_parameters_sine(x_data, y_data)
 
     lmfit_model = Model(sine)
-    lmfit_result = lmfit_model.fit(y_data,x=x_data,**dict(zip(lmfit_model.param_names, initial_parameters)))
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)))
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     return result_dict['fitted_parameters'], result_dict
 
+
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
-    amplitude = np.max(y_data)-np.min(y_data)
-    offset=np.mean(y_data)
+    amplitude = ( np.max(y_data)-np.min(y_data) ) / 2
+    offset= np.mean(y_data)
     frequency = 1.0
     phase = 0.0
     initial_parameters = np.array([amplitude, frequency, phase, offset])
     return initial_parameters
+
 
 def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
     """ Estimates the following properties of a charge addition line; the center location

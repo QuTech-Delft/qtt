@@ -11,9 +11,9 @@ from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center
 class TestSineFitting(unittest.TestCase):
 
     def test_fit_sine(self):
-        x_data=np.linspace(0, 6, 30)
-        amplitude=2
-        frequency=1.3
+        x_data = np.linspace(0, 6, 30)
+        amplitude = 2
+        frequency = 1.3
         phase = .1
         offset = .5
         y_data=sine(x_data, amplitude, frequency, phase, offset)+.1*(np.random.rand(x_data.size))
