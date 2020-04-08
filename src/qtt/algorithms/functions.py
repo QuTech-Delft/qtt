@@ -29,7 +29,7 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
     return y
 
 
-def sine(x: Union[float, np.ndarray] , amplitude: float, frequency: float, 
+def sine(x: Union[float, np.ndarray] , amplitude: float, frequency: float,
         phase: float, offset: float) -> Union[float, np.ndarray]:
     """ Model for sine function
 
