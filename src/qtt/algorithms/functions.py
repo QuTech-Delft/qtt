@@ -25,13 +25,12 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
         y (array)
 
     """
-    y = offset + amplitude * \
-        np.exp(- (x - mean) * (x - mean) / (2 * std * std))
+    y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * std * std))
     return y
 
 
-def sine(x: Union[float, np.ndarray], amplitude: float, frequency: float,
-         phase: float, offset: float) -> Union[float, np.ndarray]:
+def sine(x: Union[float, np.ndarray] , amplitude: float, frequency: float,
+        phase: float, offset: float) -> Union[float, np.ndarray]:
     """ Model for sine function
 
         y = offset + amplitude * np.sin(x * frequency + phase)
@@ -47,10 +46,8 @@ def sine(x: Union[float, np.ndarray], amplitude: float, frequency: float,
     return y
 
 
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None,
-                 estimate_offset=True):
-    raise Exception(
-        'The fit_gaussian method has moved to qtt.algorithms.fitting')
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
+    raise Exception('The fit_gaussian method has moved to qtt.algorithms.fitting')
 
 
 def double_gaussian(x_data, params):
@@ -197,8 +194,7 @@ def fit_exp_decay(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_
     """
 
     if initial_params is None:
-        initial_params = _estimate_exp_decay_initial_parameters(
-            x_data, y_data, offset_parameter)
+        initial_params = _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter)
 
     if offset_parameter is None:
         def cost_function(params):
@@ -232,8 +228,7 @@ def gauss_ramsey(x_data, params):
         gauss_ramsey (array): model for the gauss_ramsey
     """
     [A, t2s, ramseyfreq, angle, B] = params
-    gauss_ramsey = A * np.exp(-(x_data / t2s) ** 2) * \
-        np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
+    gauss_ramsey = A * np.exp(-(x_data / t2s) ** 2) * np.sin(2 * np.pi * ramseyfreq * x_data - angle) + B
     return gauss_ramsey
 
 
@@ -250,8 +245,7 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
         cost (float): value which indicates the difference between the data and the fit
     """
     model = gauss_ramsey(x_data, params)
-    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:])
-                   ** 2 * (np.diff(x_data)) ** weight_power])
+    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:]) ** 2 * (np.diff(x_data)) ** weight_power])
     return cost
 
 
@@ -278,8 +272,7 @@ def estimate_dominant_frequency(signal, sample_rate=1, remove_dc=True, fig=None)
 
     if 0 < dominant_idx < freqs.size / 2 - 1:
         dominant_idx_subpixel, _ = subpixelmax(np.abs(w), [dominant_idx])
-        dominant_frequency = np.interp(
-            dominant_idx_subpixel, np.arange(freqs.size), freqs)[0]
+        dominant_frequency = np.interp(dominant_idx_subpixel, np.arange(freqs.size), freqs)[0]
 
     if fig:
         plt.figure(fig)
@@ -373,24 +366,22 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
         weights = None
     else:
         diff_x = np.diff(x_data)
-        weights = np.hstack((diff_x[0], diff_x)) ** weight_power
+        weights = np.hstack( (diff_x[0], diff_x) ) ** weight_power
 
     if initial_params is None:
-        initial_parameters = estimate_parameters_damped_sine_wave(
-            x_data, y_data, exponent=2)
+        initial_parameters = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
     else:
         initial_parameters = initial_params
     lmfit_model = Model(gauss_ramsey_model)
     lmfit_model.set_param_hint('amplitude', min=0)
     lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)),
-                                   verbose=verbose >= 2, weights=weights)
+                                   verbose=verbose >= 2, weights = weights)
 
     import qtt.algorithms.fitting
-    result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(
-        lmfit_model, lmfit_result)
+    result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['description'] = 'Function to analyse the results of a Ramsey experiment, ' + \
-        'fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2*pi*ramseyfreq * x_data - angle) + B'
+            'fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2*pi*ramseyfreq * x_data - angle) + B'
 
     # backwards compatibility
     result_dict['parameters fit'] = result_dict['fitted_parameters']
@@ -415,8 +406,7 @@ def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
     plt.clf()
     plt.plot(x_data * 1e6, y_data, 'o', label='Data')
     plt.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
-    plt.title(r'Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' %
-              (freq_fit, t2star_fit))
+    plt.title(r'Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
     plt.xlabel(r'time ($\mu$s)')
     plt.ylabel('Spin-up probability')
     plt.legend()
