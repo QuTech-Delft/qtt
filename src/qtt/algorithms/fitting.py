@@ -12,7 +12,8 @@ from lmfit import Model
 
 import qtt.pgeometry
 from qcodes import DataArray
-from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine
+from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
+
 
 
 def extract_lmfit_parameters(lmfit_model, lmfit_result):
@@ -277,7 +278,7 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None) ->
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
     amplitude = (np.max(y_data)-np.min(y_data)) / 2
     offset = np.mean(y_data)
-    frequency = 1.0
+    frequency = estimate_dominant_frequency(y_data, sample_rate=1/np.mean(np.diff(x_data)), remove_dc=True, fig=None)
     phase = 0.0
     initial_parameters = np.array([amplitude, frequency, phase, offset])
     return initial_parameters

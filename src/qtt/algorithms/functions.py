@@ -42,7 +42,7 @@ def sine(x: Union[float, np.ndarray], amplitude: float, frequency: float,
         y (array)
 
     """
-    y = amplitude * np.sin(x * frequency + phase) + offset
+    y = amplitude * np.sin(x * 2 * np.pi * frequency + phase) + offset
     return y
 
 
