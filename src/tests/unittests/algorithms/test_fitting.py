@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import qtt
 from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian, sine
 from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear,\
-        fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
+    fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
+
 
 class TestSineFitting(unittest.TestCase):
 
@@ -16,13 +17,15 @@ class TestSineFitting(unittest.TestCase):
         frequency = 1.3
         phase = .1
         offset = .5
-        y_data=sine(x_data, amplitude, frequency, phase, offset)+.1*(np.random.rand(x_data.size))
+        y_data = sine(x_data, amplitude, frequency, phase,
+                      offset)+.1*(np.random.rand(x_data.size))
 
         fit_parameters, _results = fit_sine(x_data, y_data)
         self.assertAlmostEqual(fit_parameters[0], amplitude, places=1)
         self.assertAlmostEqual(fit_parameters[1], frequency, places=1)
         self.assertAlmostEqual(fit_parameters[2], phase, places=1)
         self.assertAlmostEqual(fit_parameters[3], offset, places=1)
+
 
 class TestDoubleGaussianFitting(unittest.TestCase):
 
@@ -55,16 +58,20 @@ class TestGaussianFitting(unittest.TestCase):
         x_data = np.linspace(0, 10, 100)
         gauss_data = gaussian(x_data, mean=4, std=1, amplitude=5)
         noise = np.random.rand(100) - .5
-        parameters, result_dict = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise), estimate_offset=0)
-        np.testing.assert_array_almost_equal(result_dict['fitted_parameters'], np.array([4, 1, 5.]), decimal=1)
-        np.testing.assert_array_almost_equal(parameters, result_dict['fitted_parameters'])
+        parameters, result_dict = fit_gaussian(
+            x_data=x_data, y_data=(gauss_data + noise), estimate_offset=0)
+        np.testing.assert_array_almost_equal(
+            result_dict['fitted_parameters'], np.array([4, 1, 5.]), decimal=1)
+        np.testing.assert_array_almost_equal(
+            parameters, result_dict['fitted_parameters'])
         self.assertTrue(result_dict['reduced_chi_squared'] < .2)
 
     def test_fit_gaussian(self):
         x_data = np.linspace(0, 10, 100)
         gauss_data = 0.1 + gaussian(x_data, mean=4, std=1, amplitude=5)
         noise = np.random.rand(100) - .5
-        [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=(gauss_data + noise))
+        [mean, s, amplitude, offset], _ = fit_gaussian(
+            x_data=x_data, y_data=(gauss_data + noise))
         self.assertTrue(3.5 < mean < 4.5)
         self.assertTrue(0.5 < s < 1.5)
         self.assertTrue(4.5 < amplitude < 5.5)
@@ -74,7 +81,8 @@ class TestGaussianFitting(unittest.TestCase):
 class TestFermiFitting(unittest.TestCase):
 
     def test_initial_estimate_fermi_linear(self, fig=None):
-        expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
+        expected_parameters = [0.01000295,
+                               0.51806569, -4.88800525, 0.12838861, 0.25382811]
         x_data = np.arange(-20, 10, 0.1)
         y_data = FermiLinear(x_data, *expected_parameters)
         y_data += 0.005 * np.random.rand(y_data.size)
@@ -91,13 +99,16 @@ class TestFermiFitting(unittest.TestCase):
         plt.close('all')
 
     def test_fit_fermi_linear(self, fig=None, verbose=0):
-        expected_parameters = [0.01000295, 0.51806569, -4.88800525, 0.12838861, 0.25382811]
+        expected_parameters = [0.01000295,
+                               0.51806569, -4.88800525, 0.12838861, 0.25382811]
         x_data = np.arange(-20, 10, 0.1)
         y_data = FermiLinear(x_data, *expected_parameters)
         y_data += 0.005 * np.random.rand(y_data.size)
 
-        actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=verbose, fig=fig, use_lmfit=False)
-        absolute_difference_parameters = np.abs(actual_parameters - expected_parameters)
+        actual_parameters, _ = fitFermiLinear(
+            x_data, y_data, verbose=verbose, fig=fig, use_lmfit=False)
+        absolute_difference_parameters = np.abs(
+            actual_parameters - expected_parameters)
 
         y_data_fitted = FermiLinear(x_data, *actual_parameters)
         max_difference = np.max(np.abs(y_data_fitted - y_data))
@@ -106,7 +117,8 @@ class TestFermiFitting(unittest.TestCase):
             print('expected: %s' % expected_parameters)
             print('fitted:   %s' % actual_parameters)
             print('temperature: %.2f' % (actual_parameters[-1]))
-            print('max diff parameters: %.2f' % (absolute_difference_parameters.max()))
+            print('max diff parameters: %.2f' %
+                  (absolute_difference_parameters.max()))
             print('max diff values: %.4f' % (max_difference.max()))
 
         self.assertTrue(np.all(max_difference < 1.0e-2))
@@ -120,8 +132,10 @@ class TestFermiFitting(unittest.TestCase):
 
         if have_lmfit:
             self.assertIsNotNone(lmfit.__file__)
-            actual_parameters, _ = fitFermiLinear(x_data, y_data, verbose=1, fig=fig, use_lmfit=True)
-            absolute_difference_parameters = np.abs(actual_parameters - expected_parameters)
+            actual_parameters, _ = fitFermiLinear(
+                x_data, y_data, verbose=1, fig=fig, use_lmfit=True)
+            absolute_difference_parameters = np.abs(
+                actual_parameters - expected_parameters)
             self.assertTrue(np.all(absolute_difference_parameters < 0.1))
 
         # test with data from F006
@@ -148,5 +162,6 @@ class TestFermiFitting(unittest.TestCase):
         figx = fig if fig is None else fig + 100
         linear_part, fermi_part = initFermiLinear(x_data, y_data, fig=figx)
         np.testing.assert_almost_equal(linear_part, [0, 0], decimal=1)
-        np.testing.assert_almost_equal(fermi_part, [-16.7, 0.02755, 0.01731], decimal=2)
+        np.testing.assert_almost_equal(
+            fermi_part, [-16.7, 0.02755, 0.01731], decimal=2)
         plt.close('all')

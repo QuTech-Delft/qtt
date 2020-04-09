@@ -14,6 +14,7 @@ import qtt.pgeometry
 from qcodes import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine
 
+
 def extract_lmfit_parameters(lmfit_model, lmfit_result):
     """ Convert lmfit results to a dictionary
 
@@ -25,11 +26,14 @@ def extract_lmfit_parameters(lmfit_model, lmfit_result):
         Dictionary with fitting parameters
     """
     param_names = lmfit_model.param_names
-    fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
-    initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
+    fitted_parameters = np.array(
+        [lmfit_result.best_values[p] for p in param_names])
+    initial_parameters = np.array(
+        [lmfit_result.init_params[p] for p in param_names])
 
     results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
-               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name, 'fitted_parameter_dictionary': lmfit_result.best_values}
+               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name,
+               'fitted_parameter_dictionary': lmfit_result.best_values}
     return results
 
 
@@ -66,11 +70,13 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
         data_integral_right = _integral(x_data_right, data_right)
 
         sigma_left = data_integral_left / (np.sqrt(2 * np.pi) * amplitude_left)
-        sigma_right = data_integral_right / (np.sqrt(2 * np.pi) * amplitude_right)
+        sigma_right = data_integral_right / \
+            (np.sqrt(2 * np.pi) * amplitude_right)
 
         mean_left = np.sum(x_data_left * data_left) / np.sum(data_left)
         mean_right = np.sum(x_data_right * data_right) / np.sum(data_right)
-    initial_params = np.array([amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
+    initial_params = np.array(
+        [amplitude_left, amplitude_right, sigma_left, sigma_right, mean_left, mean_right])
     return initial_params
 
 
@@ -115,20 +121,24 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     double_gaussian_model = Model(_double_gaussian)
     delta_x = x_data.max() - x_data.min()
     bounds = [x_data.min() - .1 * delta_x, x_data.max() + .1 * delta_x]
-    double_gaussian_model.set_param_hint('mean_up', min=bounds[0], max=bounds[1])
-    double_gaussian_model.set_param_hint('mean_dn', min=bounds[0], max=bounds[1])
+    double_gaussian_model.set_param_hint(
+        'mean_up', min=bounds[0], max=bounds[1])
+    double_gaussian_model.set_param_hint(
+        'mean_dn', min=bounds[0], max=bounds[1])
     double_gaussian_model.set_param_hint('A_up', min=0)
     double_gaussian_model.set_param_hint('A_dn', min=0)
 
     param_names = double_gaussian_model.param_names
-    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=False)
+    result = double_gaussian_model.fit(
+        y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=False)
 
     par_fit = np.array([result.best_values[p] for p in param_names])
 
     if par_fit[4] > par_fit[5]:
         par_fit = np.take(par_fit, [1, 0, 3, 2, 5, 4])
     # separation is the difference between the max of the gaussians divided by the sum of the std of both gaussians
-    separation = (par_fit[5] - par_fit[4]) / (abs(par_fit[2]) + abs(par_fit[3]))
+    separation = (par_fit[5] - par_fit[4]) / \
+        (abs(par_fit[2]) + abs(par_fit[3]))
     # split equal distant to both peaks measured in std from the peak
     weigthed_distance_split = par_fit[4] + separation * abs(par_fit[2])
 
@@ -167,7 +177,8 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
     else:
         large_gaussian_parameters = result_dict['right']
         small_gaussian_parameters = result_dict['left']
-    gaussian_ratio = amplitude(large_gaussian_parameters) / amplitude(small_gaussian_parameters)
+    gaussian_ratio = amplitude(
+        large_gaussian_parameters) / amplitude(small_gaussian_parameters)
 
     if gaussian_ratio > gaussian_amplitude_ratio_threshold:
         # re-estimate by fitting a single gaussian to the data remaining after removing the main gaussian
@@ -177,8 +188,10 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
         y_residual[idx] = 0
         gauss_fit, _ = fit_gaussian(x_data, y_residual)
 
-        initial_parameters = _double_gaussian_parameters(large_gaussian_parameters, gauss_fit[:3])
-        _, result_dict_refit = fit_double_gaussian(x_data, y_data, initial_params=initial_parameters)
+        initial_parameters = _double_gaussian_parameters(
+            large_gaussian_parameters, gauss_fit[:3])
+        _, result_dict_refit = fit_double_gaussian(
+            x_data, y_data, initial_params=initial_parameters)
         if result_dict_refit['reduced_chi_squared'] < result_dict['reduced_chi_squared']:
             result_dict = result_dict_refit
     return result_dict
@@ -226,7 +239,8 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
         warnings.warn('argument maxfun is not used any more')
 
     if initial_parameters is None:
-        initial_parameters = _estimate_initial_parameters_gaussian(x_data, y_data, include_offset=estimate_offset)
+        initial_parameters = _estimate_initial_parameters_gaussian(
+            x_data, y_data, include_offset=estimate_offset)
 
     if estimate_offset:
         def gaussian_model(x, mean, sigma, amplitude, offset):
@@ -251,7 +265,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
     return result_dict['fitted_parameters'], result_dict
 
 
-def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters = None) -> Tuple[Dict[str, Any],Dict[str, Any]]:
+def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """ Fit a sine wave for the inputted data; see sine function in functions.py for model
 
     Args:
@@ -265,15 +279,16 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters = None) 
         initial_parameters = _estimate_initial_parameters_sine(x_data, y_data)
 
     lmfit_model = Model(sine)
-    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)))
+    lmfit_result = lmfit_model.fit(
+        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)))
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     return result_dict['fitted_parameters'], result_dict
 
 
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
-    amplitude = ( np.max(y_data)-np.min(y_data) ) / 2
-    offset= np.mean(y_data)
+    amplitude = (np.max(y_data) - np.min(y_data)) / 2
+    offset = np.mean(y_data)
     frequency = 1.0
     phase = 0.0
     initial_parameters = np.array([amplitude, frequency, phase, offset])
@@ -293,7 +308,8 @@ def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
         amplitude_step (float): Estimate of the amplitude of the step.
     """
     sigma = x_data.size / 250
-    y_derivative_filtered = scipy.ndimage.gaussian_filter(y_data_linearized, sigma, order=1)
+    y_derivative_filtered = scipy.ndimage.gaussian_filter(
+        y_data_linearized, sigma, order=1)
 
     # assume step is steeper than overall slope
     estimated_index = np.argmax(np.abs(y_derivative_filtered))
@@ -327,8 +343,10 @@ def _plot_fermi_model_estimate(x_data, y_data_linearized, estimated_center_xdata
     plt.figure(fig)
     plt.clf()
     plt.plot(x_data, y_data_linearized, '.b', label='y_data_linearized')
-    plt.plot(x_data, Fermi(x_data, *fermi_parameters), '-c', label='estimated model')
-    plt.plot(x_data[estimated_index], y_data_linearized[estimated_index], '.g', label='max slope')
+    plt.plot(x_data, Fermi(x_data, *fermi_parameters),
+             '-c', label='estimated model')
+    plt.plot(x_data[estimated_index],
+             y_data_linearized[estimated_index], '.g', label='max slope')
     vline = plt.axvline(estimated_center_xdata, label='estimated_center_xdata')
     vline.set_color('c')
     vline.set_alpha(.5)
@@ -465,7 +483,8 @@ def fitFermiLinear(x_data, y_data, verbose=0, fig=None, lever_arm=1.16, l=None, 
         params = gmodel.make_params(**param_init)
         lmfit_results = gmodel.fit(y_data, params, x_data=x_data)
         fitting_results = lmfit_results.fit_report()
-        fitted_parameters = np.array([lmfit_results.best_values[p] for p in gmodel.param_names])
+        fitted_parameters = np.array(
+            [lmfit_results.best_values[p] for p in gmodel.param_names])
     else:
         fitting_results = scipy.optimize.curve_fit(
             fermi_linear_fitting_function, x_data, y_data, p0=initial_parameters)
@@ -524,7 +543,8 @@ def fit_addition_line_array(x_data, y_data, trimborder=True):
         x_data = x_data[cut_index: -cut_index]
         y_data = y_data[cut_index: -cut_index]
 
-    fit_parameters, extra_data = fitFermiLinear(x_data, y_data, verbose=1, fig=None)
+    fit_parameters, extra_data = fitFermiLinear(
+        x_data, y_data, verbose=1, fig=None)
     initial_parameters = extra_data['p0']
     m_addition_line = fit_parameters[2]
 
@@ -559,12 +579,16 @@ def fit_addition_line(dataset, trimborder=True):
         y_data = y_data[cut_index: -cut_index]
         setarray = setarray[cut_index: -cut_index]
 
-    m_addition_line, result_dict = fit_addition_line_array(x_data, y_data, trimborder=False)
+    m_addition_line, result_dict = fit_addition_line_array(
+        x_data, y_data, trimborder=False)
 
-    y_initial_guess = FermiLinear(x_data, *list(result_dict['parameters initial guess']))
-    dataset_guess = DataArray(name='fit', label='fit', preset_data=y_initial_guess, set_arrays=(setarray,))
+    y_initial_guess = FermiLinear(
+        x_data, *list(result_dict['parameters initial guess']))
+    dataset_guess = DataArray(
+        name='fit', label='fit', preset_data=y_initial_guess, set_arrays=(setarray,))
 
     y_fit = FermiLinear(x_data, *list(result_dict['fit parameters']))
-    dataset_fit = DataArray(name='fit', label='fit', preset_data=y_fit, set_arrays=(setarray,))
+    dataset_fit = DataArray(name='fit', label='fit',
+                            preset_data=y_fit, set_arrays=(setarray,))
 
     return m_addition_line, {'dataset fit': dataset_fit, 'dataset initial guess': dataset_guess}
