@@ -29,8 +29,8 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
     return y
 
 
-def sine(x: Union[float, np.ndarray] , amplitude: float, frequency: float,
-        phase: float, offset: float) -> Union[float, np.ndarray]:
+def sine(x: Union[float, np.ndarray], amplitude: float, frequency: float,
+         phase: float, offset: float) -> Union[float, np.ndarray]:
     """ Model for sine function
 
         y = offset + amplitude * np.sin(x * frequency + phase)
@@ -46,7 +46,8 @@ def sine(x: Union[float, np.ndarray] , amplitude: float, frequency: float,
     return y
 
 
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None,
+                 estimate_offset=True):
     raise Exception('The fit_gaussian method has moved to qtt.algorithms.fitting')
 
 
@@ -366,7 +367,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
         weights = None
     else:
         diff_x = np.diff(x_data)
-        weights = np.hstack( (diff_x[0], diff_x) ) ** weight_power
+        weights = np.hstack((diff_x[0], diff_x)) ** weight_power
 
     if initial_params is None:
         initial_parameters = estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2)
@@ -375,13 +376,13 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
     lmfit_model = Model(gauss_ramsey_model)
     lmfit_model.set_param_hint('amplitude', min=0)
     lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)),
-                                   verbose=verbose >= 2, weights = weights)
+                                   verbose=verbose >= 2, weights=weights)
 
     import qtt.algorithms.fitting
     result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['description'] = 'Function to analyse the results of a Ramsey experiment, ' + \
-            'fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2*pi*ramseyfreq * x_data - angle) + B'
+        'fitted function: gauss_ramsey = A * exp(-(x_data/t2s)**2) * sin(2*pi*ramseyfreq * x_data - angle) + B'
 
     # backwards compatibility
     result_dict['parameters fit'] = result_dict['fitted_parameters']

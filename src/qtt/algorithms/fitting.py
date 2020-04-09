@@ -14,6 +14,7 @@ import qtt.pgeometry
 from qcodes import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine
 
+
 def extract_lmfit_parameters(lmfit_model, lmfit_result):
     """ Convert lmfit results to a dictionary
 
@@ -29,7 +30,8 @@ def extract_lmfit_parameters(lmfit_model, lmfit_result):
     initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
 
     results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
-               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name, 'fitted_parameter_dictionary': lmfit_result.best_values}
+               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name,
+               'fitted_parameter_dictionary': lmfit_result.best_values}
     return results
 
 
@@ -198,7 +200,8 @@ def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
     return initial_parameters
 
 
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None,
+                 estimate_offset=True):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
 
     Args:
@@ -251,7 +254,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
     return result_dict['fitted_parameters'], result_dict
 
 
-def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters = None) -> Tuple[Dict[str, Any],Dict[str, Any]]:
+def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """ Fit a sine wave for the inputted data; see sine function in functions.py for model
 
     Args:
@@ -272,8 +275,8 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters = None) 
 
 
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
-    amplitude = ( np.max(y_data)-np.min(y_data) ) / 2
-    offset= np.mean(y_data)
+    amplitude = (np.max(y_data)-np.min(y_data)) / 2
+    offset = np.mean(y_data)
     frequency = 1.0
     phase = 0.0
     initial_parameters = np.array([amplitude, frequency, phase, offset])

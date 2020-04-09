@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import qtt
 from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian, sine
 from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear,\
-        fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
+    fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
+
 
 class TestSineFitting(unittest.TestCase):
 
@@ -16,13 +17,14 @@ class TestSineFitting(unittest.TestCase):
         frequency = 1.3
         phase = .1
         offset = .5
-        y_data=sine(x_data, amplitude, frequency, phase, offset)+.1*(np.random.rand(x_data.size))
+        y_data = sine(x_data, amplitude, frequency, phase, offset)+.1*(np.random.rand(x_data.size))
 
         fit_parameters, _results = fit_sine(x_data, y_data)
         self.assertAlmostEqual(fit_parameters[0], amplitude, places=1)
         self.assertAlmostEqual(fit_parameters[1], frequency, places=1)
         self.assertAlmostEqual(fit_parameters[2], phase, places=1)
         self.assertAlmostEqual(fit_parameters[3], offset, places=1)
+
 
 class TestDoubleGaussianFitting(unittest.TestCase):
 
