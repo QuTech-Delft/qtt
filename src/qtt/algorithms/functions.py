@@ -36,10 +36,10 @@ def sine(x: Union[float, np.ndarray], amplitude: float, frequency: float,
         y = offset + amplitude * np.sin(2 * np.pi * frequency * x + phase)
 
     Args:
-        x (array): data points
-        frequency, phase, amplitude, offset: Arguments for the sine model
+        x : Independent data points
+        amplitude, frequency, phase, offset: Arguments for the sine model
     Returns:
-        y (array)
+        Calculated data points
 
     """
     y = amplitude * np.sin(2 * np.pi * frequency * x + phase) + offset
