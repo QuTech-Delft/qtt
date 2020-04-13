@@ -15,7 +15,6 @@ from qcodes import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
 
 
-
 def extract_lmfit_parameters(lmfit_model, lmfit_result):
     """ Convert lmfit results to a dictionary
 
@@ -255,7 +254,7 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
     return result_dict['fitted_parameters'], result_dict
 
 
-def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None, positive_amplitude =  True) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None, positive_amplitude=True) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """ Fit a sine wave for the inputted data; see sine function in functions.py for model
 
     Args:
@@ -279,9 +278,9 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None, po
 
 
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
-    amplitude = (np.max(y_data)-np.min(y_data)) / 2
+    amplitude = (np.max(y_data) - np.min(y_data)) / 2
     offset = np.mean(y_data)
-    frequency = estimate_dominant_frequency(y_data, sample_rate=1/np.mean(np.diff(x_data)), remove_dc=True, fig=None)
+    frequency = estimate_dominant_frequency(y_data, sample_rate=1 / np.mean(np.diff(x_data)), remove_dc=True, fig=None)
     phase = 0.0
     initial_parameters = np.array([amplitude, frequency, phase, offset])
     return initial_parameters
