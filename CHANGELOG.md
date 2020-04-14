@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement functionality for print_matrix argument (#714)
 - Bump bleach from 3.1.0 to 3.1.1 (#717)
 - scanjob_t uses SweepFixedValues (including 'end') instead of slices (excluding 'end') (#722)
+- Use lmfit in fit_gauss_ramsey. The first point of the data is now also used for fitting (#729)
 
 ### Removed
 
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix bug in HDAWG8 driver where the gain was set to the range, whereas it should be gain = range/2 (#720)
 - Fix bug in generation of stepvalues for vector scans
 - Packages 'tests' are not installed anymore. These packages gave problems with loading similar named modules in other packages.
+- Fix for deprecated old style qupulse Sequencer test (#733)
 
 ### Security
 
@@ -96,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Method to convert lmfit fitting result to dictionary (#686)
 
 ### Changed
-- makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
+- makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602).
 - Allow plotCallback to operate on datetime axis (#584).
 - VirtualDAC now has an option to set gate_map and instruments on VirtualDAC (#583).
 - All unit tests/integration tests are moved to a separated tests folder (#574, #600).
@@ -145,7 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix qilib for readthedocs build (#624).
 - Fix coulomb example notebook (#619).
 - VirtualDacInstrumentAdapter needs to set instead of append instruments (#605).
-- Fixes for transition of m4i to qcodes contrib (#692). 
+- Fixes for transition of m4i to qcodes contrib (#692).
 
 ## \[1.1.2] - 2019-04-12
 
