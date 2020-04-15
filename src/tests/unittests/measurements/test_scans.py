@@ -330,6 +330,16 @@ class TestScans(TestCase):
             self.assertAlmostEqual(actual_val, expected_val, 12)
         self.assertEqual(len(actual_values), 10)
 
+        # exclusive: end - start < step
+        scanjob = scanjob_t({'scantype': 'scan1Dfast',
+                             'sweepdata': {'param': p, 'start': 20, 'end': 20.0050, 'step': .0075}})
+        _, sweepvalues = scanjob._convert_scanjob_vec(station)
+        actual_values = list(sweepvalues)
+        expected_values = [20.0]
+        for actual_val, expected_val in zip(actual_values, expected_values):
+            self.assertAlmostEqual(actual_val, expected_val, 12)
+        self.assertEqual(len(actual_values), 1)
+
         # inclusive end-value
         scanjob = scanjob_t({'scantype': 'scan1Dfast', 'sweepdata': {'param': p, 'start': -2., 'end': 2., 'step': .4}})
         _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=11)
@@ -434,7 +444,7 @@ class TestScans(TestCase):
 
         gates.close()
 
-    def test_convert_scanjob_vec_end_equals_start_raises_exception(self):
+    def test_convert_scanjob_vec_values_raises_exception(self):
         p = Parameter('p', set_cmd=None)
         gates = VirtualIVVI(
             name=qtt.measurements.scans.instrumentName('gates'), model=None)

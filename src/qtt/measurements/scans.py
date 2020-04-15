@@ -895,7 +895,7 @@ class scanjob_t(dict):
                 diff = abs(sweep_data['end'] - sweep_data['start'])
                 tolerance = 1e-10
                 if int(np.ceil(diff - tolerance)) == 0:
-                    raise ValueError('start and end values must differ at least 1 step value')
+                    raise ValueError('start and end values may not be the same')
 
                 sweep_values = param[sweep_data['start']:sweep_data['end']:sweep_data['step']]
 
