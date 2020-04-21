@@ -14,7 +14,7 @@ import warnings
 import qcodes
 from qcodes import Instrument
 from qcodes.plots.pyqtgraph import QtPlot
-from qcodes import DataArray
+from qtt import DataArray
 import qtt
 import qtt.utilities.tools
 

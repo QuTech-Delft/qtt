@@ -17,12 +17,13 @@ import pyqtgraph
 import qcodes
 import skimage
 import skimage.filters
-from qcodes import DataArray, Instrument
+from qcodes import Instrument
 from qcodes.instrument.parameter import Parameter
 from qcodes.instrument.sweep_values import SweepFixedValues
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
 
+from qtt import DataArray
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.instrument_drivers.virtualAwg.virtual_awg

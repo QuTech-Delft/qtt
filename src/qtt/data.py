@@ -481,7 +481,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
     return alldata
 
 
-def plot_dataset(dataset: qcodes.DataSet, parameter_names: Optional[list] = None, fig: Optional[int] = 1) -> None:
+def plot_dataset(dataset: DataSet, parameter_names: Optional[list] = None, fig: Optional[int] = 1) -> None:
     """ Plot a dataset to matplotlib figure window
 
     Args:

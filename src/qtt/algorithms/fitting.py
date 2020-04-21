@@ -11,7 +11,7 @@ from typing import Tuple, Dict, Any
 from lmfit import Model
 
 import qtt.pgeometry
-from qcodes import DataArray
+from qtt import DataArray
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
 
 

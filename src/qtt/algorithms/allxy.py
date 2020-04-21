@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lmfit import Model
 
-from qcodes import DataSet, DataArray
+from qtt import DataSet, DataArray
 from qtt.utilities.visualization import plot_vertical_line
 
 
