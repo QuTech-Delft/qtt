@@ -67,7 +67,7 @@ def _dictionary_to_data_array(array_dictionary):
     array_full_name = array_dictionary['full_name']
     if array_full_name is None:
         array_full_name = array_name
-    data_array = qcodes.DataArray(name=array_name,
+    data_array = DataArray(name=array_name,
                                   full_name=array_dictionary['full_name'],
                                   label=array_dictionary['label'],
                                   unit=array_dictionary['unit'],
@@ -78,14 +78,14 @@ def _dictionary_to_data_array(array_dictionary):
     return data_array
 
 
-def dictionary_to_dataset(data_dictionary):
+def dictionary_to_dataset(data_dictionary : dict) -> DataSet:
     """ Convert dictionary to DataSet.
 
     Args:
-        data_dictionary (dict): data to convert
+        data_dictionary: data to convert
 
     Returns:
-        DataSet: converted data.
+        DataSet with converted data.
     """
     dataset = new_data()
     dataset.metadata.update(data_dictionary['metadata'])
@@ -102,16 +102,16 @@ def dictionary_to_dataset(data_dictionary):
     return dataset
 
 
-def dataset_to_dictionary(data_set, include_data=True, include_metadata=True):
+def dataset_to_dictionary(data_set : DataSet, include_data : bool =True, include_metadata : bool=True) -> dict:
     """ Convert DataSet to dictionary.
 
     Args:
-        data_set (DataSet): The data to convert.
-        include_data (bool): If True then include the ndarray field.
-        include_metadata (bool): If True then include the metadata.
+        data_set: The data to convert.
+        include_data: If True then include the ndarray field.
+        include_metadata: If True then include the metadata.
 
     Returns:
-        dict: dictionary containing the serialized data.
+        Dictionary containing the serialized data.
     """
     data_dictionary = {'extra': {}, 'metadata': None, 'arrays': {}}
 
@@ -465,7 +465,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
     imx = qtt.utilities.tools.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
-    data_arr = qcodes.DataArray(
+    data_arr = DataArray(
         name=name, label=name, array_id=name, set_arrays=meas_array.set_arrays, preset_data=imx)
 
     alldata.add_array(data_arr)
