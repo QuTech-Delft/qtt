@@ -32,7 +32,7 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
     if output_array_name is None:
         array.ndarray[:] = data
     else:
-        data_array = qcodes.DataArray(array_id=output_array_name, name=output_array_name, label=label,
+        data_array = qtt.DataArray(array_id=output_array_name, name=output_array_name, label=label,
                                       set_arrays=array.set_arrays, preset_data=data, unit=unit)
         dataset.add_array(data_array)
     return dataset

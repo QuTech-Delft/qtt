@@ -2311,23 +2311,21 @@ def plotData(alldata, diff_dir=None, fig=1):
         imx = qtt.utilities.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
-        data_arr = qcodes.DataArray(name=name, label=name, array_id=name,
+        data_arr = qtt.DataArray(name=name, label=name, array_id=name,
                                     set_arrays=alldata.measured.set_arrays, preset_data=imx)
         alldata.add_array(data_arr)
         plot = MatPlot(interval=0, num=figure.number)
         plot.add(alldata.arrays[name])
-        # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
         plot.fig.axes[1].autoscale(tight=True)
     else:
         plot = MatPlot(interval=0, num=figure.number)
         plot.add(alldata.default_parameter_array('measured'))
-        # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
         try:
             plot.fig.axes[1].autoscale(tight=True)
         except Exception as ex:
-            logging.debug('autoscaling failed')
+            logging.debug(f'autoscaling failed: {ex}')
 
 
 # %%
