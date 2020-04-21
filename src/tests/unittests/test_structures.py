@@ -3,6 +3,8 @@ import pickle
 import json
 import tempfile
 import qcodes
+import qcodes.data.io
+
 import qtt.simulation.virtual_dot_array
 from qtt.structures import onedot_t, MultiParameter, CombiParameter
 
@@ -10,7 +12,7 @@ from qtt.structures import onedot_t, MultiParameter, CombiParameter
 class TestStructures(unittest.TestCase):
 
     def setUp(self):
-        qtt.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        qtt.DataSet.default_io = qcodes.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     def test_spin_structures(self, verbose=0):
         o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)

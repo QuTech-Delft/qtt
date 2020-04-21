@@ -4,6 +4,7 @@ import numpy as np
 import qcodes
 import qcodes.tests.data_mocks
 
+from qtt import DataSet
 from qtt.utilities.json_serializer import decode_json, encode_json, qtt_serializer
 
 
@@ -21,7 +22,7 @@ class TestJSONSerializer(unittest.TestCase):
         json_data = encode_json(dataset)
         self.assertIsInstance(json_data, str)
         dataset2 = decode_json(json_data)
-        self.assertIsInstance(dataset2, qtt.DataSet)
+        self.assertIsInstance(dataset2, DataSet)
 
     def test_float_nan_inf(self):
         data = [np.NaN, np.Inf, 1.]

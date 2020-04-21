@@ -16,6 +16,7 @@ import qcodes
 from qcodes import Parameter, ManualParameter
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
+import qcodes.data.io
 
 import zhinst
 
@@ -39,7 +40,7 @@ del sys.modules['pyspcm']
 class TestScans(TestCase):
 
     def setUp(self):
-        qtt.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        qtt.DataSet.default_io = qcodes.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     def test_get_instrument_parameter(self):
         instrument = VirtualIVVI(instrumentName('test'), None)

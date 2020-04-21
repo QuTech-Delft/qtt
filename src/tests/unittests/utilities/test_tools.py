@@ -74,7 +74,7 @@ class TestTools(unittest.TestCase):
 
     def test_reshape_metadata(self, quiet=True):
         param = qcodes.ManualParameter('dummy')
-        data_set = qcodes.Loop(param[0:1:10]).each(param).run(quiet=quiet)
+        data_set = qcodes.loops.Loop(param[0:1:10]).each(param).run(quiet=quiet)
 
         metadata = reshape_metadata(data_set, printformat='dict')
         self.assertTrue(metadata.startswith('dataset'))

@@ -5,7 +5,7 @@ import logging
 import os
 import pickle
 from functools import wraps
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -102,7 +102,7 @@ def dictionary_to_dataset(data_dictionary : dict) -> DataSet:
     return dataset
 
 
-def dataset_to_dictionary(data_set : DataSet, include_data : bool =True, include_metadata : bool=True) -> dict:
+def dataset_to_dictionary(data_set : DataSet, include_data : bool =True, include_metadata : bool=True) -> Dict[str, Any]:
     """ Convert DataSet to dictionary.
 
     Args:
@@ -113,7 +113,7 @@ def dataset_to_dictionary(data_set : DataSet, include_data : bool =True, include
     Returns:
         Dictionary containing the serialized data.
     """
-    data_dictionary = {'extra': {}, 'metadata': None, 'arrays': {}}
+    data_dictionary : Dict[str, Any] = {'extra': {}, 'metadata': None, 'arrays': {}}
 
     for array_id, data_array in data_set.arrays.items():
         data_dictionary['arrays'][array_id] = _data_array_to_dictionary(data_array, include_data)
