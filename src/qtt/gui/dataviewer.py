@@ -38,7 +38,7 @@ class DataViewer(QtWidgets.QMainWindow):
         self.data_directories = [None] * 2
         self.directory_index = 0
         if data_directory is None:
-            data_directory = qcodes.DataSet.default_io.base_location
+            data_directory = qtt.DataSet.default_io.base_location
 
         self.extensions = extensions
 
@@ -234,7 +234,7 @@ class DataViewer(QtWidgets.QMainWindow):
                 while (index.child(i, 0).data() is not None):
                     filename = index.child(i, 3).data()
                     loc = '\\'.join(filename.split('\\')[:-1])
-                    tempdata = qcodes.DataSet(loc)
+                    tempdata = qtt.DataSet(loc)
                     tempdata.read_metadata()
                     infotxt = DataViewer.get_data_info(tempdata.metadata)
                     self._treemodel.setData(index.child(i, 1), infotxt)

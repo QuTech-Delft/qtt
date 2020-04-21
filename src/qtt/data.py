@@ -162,8 +162,8 @@ def load_dataset(location, io=None, verbose=0):
     """
 
     if io is None:
-        io = qcodes.DataSet.default_io
-    formatters = [qcodes.DataSet.default_formatter]
+        io = DataSet.default_io
+    formatters = [DataSet.default_formatter]
 
     from qcodes.data.hdf5_format import HDF5FormatMetadata
     from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
@@ -244,7 +244,7 @@ def store_latest_decorator(function, obj):
 
 def get_latest_dataset():
     """ Return latest dataset that was created """
-    return getattr(qcodes.DataSet._latest, None)
+    return getattr(DataSet._latest, None)
 
 
 def add_comment(txt, dataset=None, verbose=0):
@@ -256,9 +256,9 @@ def add_comment(txt, dataset=None, verbose=0):
 
     """
     if dataset is None:
-        if hasattr(qcodes.DataSet, '_latest_datasets'):
+        if hasattr(DataSet, '_latest_datasets'):
             try:
-                dataset = qcodes.DataSet._latest_datasets[0]
+                dataset = DataSet._latest_datasets[0]
             except BaseException:
                 pass
         else:
@@ -937,7 +937,7 @@ def write_data(mfile: str, data):
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
-    if isinstance(data, qcodes.DataSet):
+    if isinstance(data, DataSet):
         data = qtt.utilities.tools.stripDataset(data)
 
     with open(mfile, 'wb') as fid:

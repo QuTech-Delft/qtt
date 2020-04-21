@@ -287,7 +287,6 @@ def stripDataset(dataset):
     dataset.sync()
     dataset.data_manager = None
     dataset.background_functions = {}
-    # dataset.formatter = qcodes.DataSet.default_formatter
     try:
         dataset.formatter.close_file(dataset)
     except BaseException:
@@ -1022,7 +1021,7 @@ try:
                 notes = '\n' + extranotes + '\n' + notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
-        elif isinstance(notes, qcodes.DataSet):
+        elif isinstance(notes, qtt.DataSet):
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
         if not isinstance(notes, str):

@@ -39,7 +39,7 @@ del sys.modules['pyspcm']
 class TestScans(TestCase):
 
     def setUp(self):
-        qcodes.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        qtt.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     def test_get_instrument_parameter(self):
         instrument = VirtualIVVI(instrumentName('test'), None)

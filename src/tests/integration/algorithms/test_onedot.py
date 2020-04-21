@@ -17,7 +17,7 @@ from qtt.algorithms.onedot import onedotGetBalance, onedotGetBalanceFine, plot_o
 class TestOneDot(unittest.TestCase):
 
     def setUp(self):
-        qcodes.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        qtt.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     @staticmethod
     def one_dot(fig=100, verbose=1):

@@ -95,7 +95,7 @@ class TestVideoMode(unittest.TestCase):
             vm.close()
 
             self.assertIsInstance(data, list)
-            self.assertIsInstance(data[0], qcodes.DataSet)
+            self.assertIsInstance(data[0], qtt.DataSet)
             self.assertEqual(data[0].measured.shape, (12, 12))
 
             vm = VideoMode(station, ['P1', 'P2'], sweepranges=[20] * 2,
@@ -106,7 +106,7 @@ class TestVideoMode(unittest.TestCase):
             vm.close()
 
             self.assertIsInstance(data, list)
-            self.assertIsInstance(data[0], qcodes.DataSet)
+            self.assertIsInstance(data[0], qtt.DataSet)
             self.assertEqual(data[0].measured.shape, (32, 32))
 
             for _, instrument in station.components.items():

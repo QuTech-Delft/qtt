@@ -10,7 +10,7 @@ from qtt.structures import onedot_t, MultiParameter, CombiParameter
 class TestStructures(unittest.TestCase):
 
     def setUp(self):
-        qcodes.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        qtt.DataSet.default_io = qcodes.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     def test_spin_structures(self, verbose=0):
         o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)

@@ -49,7 +49,7 @@ class TestDataSet(unittest.TestCase):
     """
 
     def setUp(self):
-        dataset_class = qcodes.DataSet
+        dataset_class = qtt.DataSet
         self.dataset_class = dataset_class
         self.dataset1d = qcodes.tests.data_mocks.DataSet1D()
         self.dataset1d.metadata['hello'] = 'world'
@@ -72,7 +72,7 @@ class TestDataSet(unittest.TestCase):
     def test_load_legacy_dataset(self):
         """ We need to convert old datasets to the current dataset structure."""
         exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
-        qcodes.DataSet.default_io = qcodes.DiskIO(exampledatadir)
+        qcodes.data.data_set.DataSet.default_io = qcodes.DiskIO(exampledatadir)
         old_dataset = qtt.data.load_dataset(os.path.join('2017-09-04', '11-05-17_qtt_scan2Dfastvec'))
 
         def convert_legacy(old_dataset):
@@ -80,7 +80,7 @@ class TestDataSet(unittest.TestCase):
             return old_dataset
 
         new_dataset = convert_legacy(old_dataset)
-        self.assertIsInstance(new_dataset, qcodes.DataSet)
+        self.assertIsInstance(new_dataset, qcodes.data.data_set.DataSet)
 
     def test_metadata(self):
         """ Test a dataset has metadata that can be get and set."""
@@ -95,7 +95,7 @@ class TestDataSet(unittest.TestCase):
 
     def test_location_provider(self):
         """ The DataSet generated locations (or tags) for storage automatically. The format is user configurable."""
-        location = self.dataset2d.location_provider(qcodes.DataSet.default_io)
+        location = self.dataset2d.location_provider(qtt.DataSet.default_io)
         self.assertIsInstance(location, str)
 
     def test_serialization(self):

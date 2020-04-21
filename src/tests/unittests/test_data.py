@@ -155,7 +155,7 @@ class TestData(unittest.TestCase):
 
         disk_io = qcodes.data.io.DiskIO(tempfile.mkdtemp())
         dd = []
-        name = qcodes.DataSet.location_provider.base_record['name']
+        name = qtt.DataSet.location_provider.base_record['name']
         for jj, fmt in enumerate([g, h]):
             ds = qcodes.tests.data_mocks.DataSet2D(name='format%d' % jj)
             ds.formatter = fmt
@@ -164,7 +164,7 @@ class TestData(unittest.TestCase):
             ds.write(write_metadata=True)
             dd.append(ds.location)
             time.sleep(.1)
-        qcodes.DataSet.location_provider.base_record['name'] = name
+        qtt.DataSet.location_provider.base_record['name'] = name
 
         for _, location in enumerate(dd):
             if verbose:
