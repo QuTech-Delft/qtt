@@ -38,15 +38,13 @@ try:
     from qcodes.plots.pyqtgraph import QtPlot
 except BaseException:
     pass
-from qcodes import DataArray
+
+from qtt import DataArray
 
 import qtt.pgeometry
 from qtt.pgeometry import mpl2clipboard
 
 from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
-
-# tilefigs = rdeprecated(qtt.pgeometry.tilefigs, txt='Use qtt.pgeometry.tilefigs')
-# mkdirc = rdeprecated(qtt.pgeometry.mkdirc, txt='Use qtt.pgeometry.tilefigs')
 
 # do NOT load any other qtt submodules here
 
