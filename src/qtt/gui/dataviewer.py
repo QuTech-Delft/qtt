@@ -152,7 +152,7 @@ class DataViewer(QtWidgets.QMainWindow):
     def set_data_directory(self, data_directory, index=0):
         self.data_directories[index] = data_directory
         self.data_directory = data_directory
-        self.disk_io = qcodes.DiskIO(data_directory)
+        self.disk_io = qcodes.data.io.DiskIO(data_directory)
         logging.info('DataViewer: data directory %s' % data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
 
@@ -165,7 +165,7 @@ class DataViewer(QtWidgets.QMainWindow):
         index = (self.directory_index + 1) % len(self.data_directories)
         self.directory_index = index
         self.data_directory = self.data_directories[index]
-        self.disk_io = qcodes.DiskIO(self.data_directory)
+        self.disk_io = qcodes.data.io.DiskIO(self.data_directory)
         logging.info('DataViewer: data directory %s' % self.data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
         self.update_logs()

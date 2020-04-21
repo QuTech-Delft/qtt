@@ -156,7 +156,7 @@ def load_dataset(location, io=None, verbose=0):
 
     Args:
         location (str): either the relative or full location
-        io (None or qcodes.DiskIO):
+        io (None or qcodes.data.io.DiskIO):
     Returns:
         dataset (DataSet or None)
     """
