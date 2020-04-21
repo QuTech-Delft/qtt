@@ -87,7 +87,7 @@ def dictionary_to_dataset(data_dictionary):
     Returns:
         DataSet: converted data.
     """
-    dataset = qcodes.new_data()
+    dataset = new_data()
     dataset.metadata.update(data_dictionary['metadata'])
 
     for array_key, array_dict in data_dictionary['arrays'].items():
