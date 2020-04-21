@@ -22,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix bug in HDAWG8 driver where the gain was set to the range, whereas it should be gain = range/2 (#720)
-- Fix bug in generation of stepvalues for vector scans
-- Packages 'tests' are not installed anymore. These packages gave problems with loading similar named modules in other packages.
+- Fix bug in generation of step values for vector scans (#723)
+- Packages 'tests' are not installed anymore. These packages gave problems with loading similar named modules in other packages (#724)
 - Fix for deprecated old style qupulse Sequencer test (#733)
 
 ### Security

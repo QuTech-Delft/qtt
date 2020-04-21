@@ -870,22 +870,35 @@ class scanjob_t(dict):
         """
 
         def _update_step_size_from_length(data, length):
-            """ From desired number of data points determine the required step size """
+            """ From desired number of data points determine the required step size.
+            length > 1: to get 'inclusive' data with length = 1, start and end values must be the same and step value
+            must be 0 which are invalid values.
+            """
             if length is not None:
                 if length == 1:
-                    data['step'] = 0
+                    raise ValueError('length must be > 1')
                 else:
                     if 'range' in sweepdata:
                         data['step'] = data['range'] / (length-1)
                     else:
                         data['step'] = (data['end'] - data['start']) / (length-1)
 
-        def _calculate_sweepvalues(param, sweep_data) -> SweepFixedValues:
-            """ From parameter and sweep data create a SweepFixedValues object """
-            sweep_values = SweepFixedValues(param,
-                                            start=sweep_data['start'],
-                                            stop=sweep_data['end'],
-                                            step=sweep_data['step'])
+        def _calculate_sweepvalues(param, sweep_data, inclusive_end=False) -> SweepFixedValues:
+            """ From parameter and sweep data create a SweepFixedValues object. """
+            if sweep_data['step'] == 0.:
+                raise ValueError('step value may not be 0')
+
+            if inclusive_end:
+                epsilon = 1e-8
+                sweep_values = param[sweep_data['start']:(sweep_data['end'] + epsilon):sweep_data['step']]
+            else:
+                diff = abs(sweep_data['end'] - sweep_data['start'])
+                tolerance = 1e-10
+                if int(np.ceil(diff - tolerance)) == 0:
+                    raise ValueError('start and end values may not be the same')
+
+                sweep_values = param[sweep_data['start']:sweep_data['end']:sweep_data['step']]
+
             return sweep_values
 
         if self['scantype'][:6] == 'scan1D':
@@ -918,11 +931,12 @@ class scanjob_t(dict):
             if sweeplength is not None:
                 _update_step_size_from_length(sweepdata, sweeplength)
 
+            inclusive = sweeplength is not None
             if self['scantype'] in ['scan1Dvec', 'scan1Dfastvec']:
                 gates = station.gates
 
                 sweepdata['end'] = sweepdata['start'] + sweepdata['range']
-                sweepvalues = _calculate_sweepvalues(sweepparam, sweepdata)
+                sweepvalues = _calculate_sweepvalues(sweepparam, sweepdata, inclusive)
 
                 param_init = {param: gates.get(param)
                               for param in sweepdata['param']}
@@ -934,7 +948,7 @@ class scanjob_t(dict):
                     self['phys_gates_vals'][param] = param_init[param] + \
                                                      sweep_array * sweepdata['param'][param]
             else:
-                sweepvalues = _calculate_sweepvalues(sweepparam, sweepdata)
+                sweepvalues = _calculate_sweepvalues(sweepparam, sweepdata, inclusive)
 
             self['sweepdata'] = sweepdata
         elif self['scantype'][:6] == 'scan2D':
@@ -984,9 +998,11 @@ class scanjob_t(dict):
 
             _update_step_size_from_length(sweepdata, sweeplength)
             _update_step_size_from_length(stepdata, steplength)
-            sweepvalues = _calculate_sweepvalues(sweepparam, sweepdata)
+            inclusive = sweeplength is not None
+            sweepvalues = _calculate_sweepvalues(sweepparam, sweepdata, inclusive)
             if stepvalues is None:
-                stepvalues = _calculate_sweepvalues(stepparam, stepdata)
+                inclusive = steplength is not None
+                stepvalues = _calculate_sweepvalues(stepparam, stepdata, inclusive)
             if self['scantype'] in ['scan2Dvec', 'scan2Dfastvec', 'scan2Dturbovec']:
                 param_init = {param: gates.get(param)
                               for param in sweepdata['param']}
