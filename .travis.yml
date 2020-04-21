@@ -39,7 +39,7 @@ install:
   - pip install coveralls
   - pip install --upgrade pip
   - if [[ "$QCODES012" == "1" ]]; then
-      pip install qcodes==0.12
+      pip install qcodes==0.12;
     fi
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
