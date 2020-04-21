@@ -36,7 +36,7 @@ def get_dataset(ds):
     if ds is None:
         return None
     if isinstance(ds, str):
-        ds = qcodes.load_data(ds)
+        ds = qcodes.data.data_set.load_data(ds)
     return ds
 
 

@@ -186,7 +186,7 @@ def load_dataset(location, io=None, verbose=0):
             try:
                 if verbose:
                     print('%d: %s' % (ii, hformatter))
-                data = qcodes.load_data(location, formatter=hformatter, io=io)
+                data = qcodes.data.data_set.load_data(location, formatter=hformatter, io=io)
                 if len(data.arrays) == 0:
                     data = None
                     raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
@@ -951,7 +951,7 @@ def loadDataset(path):
     :param path: filename without extension
     :returns dateset, metadata:
     """
-    dataset = qcodes.load_data(path)
+    dataset = qcodes.data.data_set.load_data(path)
 
     mfile = os.path.join(path, 'qtt-metadata')
     metadata = load_data(mfile)
