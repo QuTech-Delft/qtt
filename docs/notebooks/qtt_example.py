@@ -27,7 +27,7 @@ import qtt.measurements.videomode
 import qtt.simulation.virtual_dot_array
 
 datadir = tempfile.mkdtemp(prefix='qtt_example')
-qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+qcodes.DataSet.default_io = qcodes.data.io.DiskIO(datadir)
 
 # %% Create a virtual model for testing
 #
