@@ -97,7 +97,7 @@ class TestDataSet(unittest.TestCase):
 
     def test_location_provider(self):
         """ The DataSet generated locations (or tags) for storage automatically. The format is user configurable."""
-        location = self.dataset2d.location_provider(qtt.DataSet.default_io)
+        location = self.dataset2d.location_provider(DataSet.default_io)
         self.assertIsInstance(location, str)
 
     def test_serialization(self):

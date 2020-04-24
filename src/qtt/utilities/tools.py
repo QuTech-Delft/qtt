@@ -41,7 +41,7 @@ try:
 except BaseException:
     pass
 
-from qtt import DataArray
+from qcodes.data.data_array import DataArray
 
 import qtt.pgeometry
 from qtt.pgeometry import mpl2clipboard

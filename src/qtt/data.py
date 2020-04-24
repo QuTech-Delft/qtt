@@ -12,8 +12,8 @@ import numpy as np
 import qcodes
 import scipy
 from qcodes.data.data_set import new_data
-from qtt import DataArray
-from qtt import DataSet
+from qcodes.data.data_array import DataArray
+from qcodes.data.data_set import DataSet
 from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.algorithms.generic
