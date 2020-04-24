@@ -9,6 +9,7 @@ import qcodes
 import qcodes.tests.data_mocks
 from qcodes.plots.qcmatplotlib import MatPlot
 import qcodes.data.io
+from qcodes.data.data_set import DataSet
 
 import qtt.data
 
@@ -50,7 +51,7 @@ class TestDataSet(unittest.TestCase):
     """
 
     def setUp(self):
-        dataset_class = qtt.DataSet
+        dataset_class = DataSet
         self.dataset_class = dataset_class
         self.dataset1d = qcodes.tests.data_mocks.DataSet1D()
         self.dataset1d.metadata['hello'] = 'world'

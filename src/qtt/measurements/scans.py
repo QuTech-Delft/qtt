@@ -22,8 +22,8 @@ from qcodes.instrument.parameter import Parameter
 from qcodes.instrument.sweep_values import SweepFixedValues
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
+from qcodes.data.data_array import DataArray
 
-from qtt import DataArray
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.instrument_drivers.virtualAwg.virtual_awg
@@ -2311,7 +2311,7 @@ def plotData(alldata, diff_dir=None, fig=1):
         imx = qtt.utilities.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
-        data_arr = qtt.DataArray(name=name, label=name, array_id=name,
+        data_arr = DataArray(name=name, label=name, array_id=name,
                                     set_arrays=alldata.measured.set_arrays, preset_data=imx)
         alldata.add_array(data_arr)
         plot = MatPlot(interval=0, num=figure.number)

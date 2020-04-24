@@ -10,6 +10,7 @@ import qtpy.QtWidgets as QtWidgets
 from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
+from qcodes.data.data_set import DataSet
 import qtt
 from qcodes.plots.pyqtgraph import QtPlot
 
@@ -38,7 +39,7 @@ class DataViewer(QtWidgets.QMainWindow):
         self.data_directories = [None] * 2
         self.directory_index = 0
         if data_directory is None:
-            data_directory = qtt.DataSet.default_io.base_location
+            data_directory = DataSet.default_io.base_location
 
         self.extensions = extensions
 
@@ -234,7 +235,7 @@ class DataViewer(QtWidgets.QMainWindow):
                 while (index.child(i, 0).data() is not None):
                     filename = index.child(i, 3).data()
                     loc = '\\'.join(filename.split('\\')[:-1])
-                    tempdata = qtt.DataSet(loc)
+                    tempdata = DataSet(loc)
                     tempdata.read_metadata()
                     infotxt = DataViewer.get_data_info(tempdata.metadata)
                     self._treemodel.setData(index.child(i, 1), infotxt)

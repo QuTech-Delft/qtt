@@ -22,8 +22,6 @@ import warnings
 import qcodes
 from qcodes import Instrument, ManualParameter, Parameter, Station
 from qcodes.data.location import FormatLocation
-from qcodes.data.data_array import DataArray
-from qcodes.data.data_set import DataSet
 import qcodes.loops
 
 from setuptools._vendor.packaging.version import Version

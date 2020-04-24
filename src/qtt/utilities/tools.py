@@ -24,6 +24,8 @@ import platform
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 
+from qcodes.data.data_set import DataSet
+
 try:
     from dulwich.repo import Repo, NotGitRepository
     from dulwich import porcelain
@@ -1021,7 +1023,7 @@ try:
                 notes = '\n' + extranotes + '\n' + notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
-        elif isinstance(notes, qtt.DataSet):
+        elif isinstance(notes, DataSet):
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
         if not isinstance(notes, str):

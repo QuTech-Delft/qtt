@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import tempfile
 import qcodes
 from qcodes import ManualParameter
+from qcodes.data.data_set import DataSet
 from qcodes.tests.data_mocks import DataSet2D
 import qtt.data
 from qtt.data import image_transform, dataset_to_dictionary, dictionary_to_dataset,\
@@ -155,7 +156,7 @@ class TestData(unittest.TestCase):
 
         disk_io = qcodes.data.io.DiskIO(tempfile.mkdtemp())
         dd = []
-        name = qtt.DataSet.location_provider.base_record['name']
+        name = DataSet.location_provider.base_record['name']
         for jj, fmt in enumerate([g, h]):
             ds = qcodes.tests.data_mocks.DataSet2D(name='format%d' % jj)
             ds.formatter = fmt
@@ -164,7 +165,7 @@ class TestData(unittest.TestCase):
             ds.write(write_metadata=True)
             dd.append(ds.location)
             time.sleep(.1)
-        qtt.DataSet.location_provider.base_record['name'] = name
+        DataSet.location_provider.base_record['name'] = name
 
         for _, location in enumerate(dd):
             if verbose:
