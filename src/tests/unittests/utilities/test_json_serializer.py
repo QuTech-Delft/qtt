@@ -4,7 +4,7 @@ import numpy as np
 import qcodes
 import qcodes.tests.data_mocks
 
-from qtt import DataSet
+from qcodes.data.data_set import DataSet
 from qtt.utilities.json_serializer import decode_json, encode_json, qtt_serializer
 
 

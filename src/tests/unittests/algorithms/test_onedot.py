@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import tempfile
 import qcodes
 import qcodes.data.io
-from qtt import DataSet
+from qcodes.data.data_set import DataSet
 from qtt.simulation.virtual_dot_array import initialize
 from qtt.measurements.scans import scan2D, scanjob_t
 from qtt.algorithms.onedot import onedotGetBalance, onedotGetBalanceFine, plot_onedot
