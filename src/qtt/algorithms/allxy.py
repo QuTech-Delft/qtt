@@ -78,14 +78,11 @@ def fit_allxy(dataset: DataSet, initial_parameters: Optional[np.ndarray] = None)
     param_names = lmfit_model.param_names
     result = lmfit_model.fit(allxy_data, indices=x_data, **dict(zip(param_names, initial_parameters)),
                              verbose=0, method='least_squares')
-    fitted_parameters = np.array([result.best_values[p] for p in param_names])
-    if result.covar is None:
-        fitted_parameters_covariance = result.covar
-    else:
-        fitted_parameters_covariance = np.diag(result.covar)
-    chi_squared = result.chisqr
 
-    return {'fitted_parameters': fitted_parameters, 'description': 'allxy fit', 'initial_parameters': initial_parameters, 'fitted_parameters_covariance': fitted_parameters_covariance, 'chi_squared': chi_squared}
+    analysis_results = extract_lmfit_parameters(lmfit_model, result)
+    analysis_results['description'] = 'allxy fit'
+
+    return analysis_results
 
 
 def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: int = 1, plot_initial_estimate: bool = False):
