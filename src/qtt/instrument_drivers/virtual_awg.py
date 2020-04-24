@@ -14,7 +14,7 @@ import warnings
 import qcodes
 from qcodes import Instrument
 from qcodes.plots.pyqtgraph import QtPlot
-from qtt import DataArray
+from qcodes.data.data_array import DataArray
 import qtt
 import qtt.utilities.tools
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class virtual_awg(Instrument):
-    """ 
+    """
 
     Attributes:
         _awgs (list): handles to instruments
@@ -272,7 +272,7 @@ class virtual_awg(Instrument):
             voltages (list of floats): voltage levels to be applied in the sequence
             waittimes (list of floats): duration of each pulse in the sequence
             reps (int): number of times to repeat the pulse sequence in the waveform
-            filtercutoff (float): cutoff frequency of a 1st order butterworth filter to make the pulse steps smoother 
+            filtercutoff (float): cutoff frequency of a 1st order butterworth filter to make the pulse steps smoother
 
         Returns:
             wave_raw (array): raw data which represents the waveform
@@ -346,7 +346,7 @@ class virtual_awg(Instrument):
         return waveform, sweep_info
 
     def sweep_gate_virt(self, gate_comb, sweeprange, period, width=.95, delete=True):
-        ''' Send a sawtooth signal with the AWG to a linear combination of 
+        ''' Send a sawtooth signal with the AWG to a linear combination of
         gates to sweep. Also send a marker to the measurement instrument.
 
         Arguments:
@@ -385,13 +385,13 @@ class virtual_awg(Instrument):
         return waveform, sweep_info
 
     def sweepandpulse_gate(self, sweepdata, pulsedata, wave_name=None, delete=True, shift_zero=True):
-        ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep 
-        a gate, with a pulse sequence. A marker is sent to the measurement instrument 
+        ''' Makes and outputs a waveform which overlays a sawtooth signal to sweep
+        a gate, with a pulse sequence. A marker is sent to the measurement instrument
         at the start of the waveform.
         IMPORTANT: The function offsets the voltages values so that the last point is 0 V on all gates (i.e. it centers the pulse sequence on the last point)
 
         Args:
-            sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width). 
+            sweepdata (dict): inputs for the sawtooth (gate, sweeprange, period, width).
                     See sweep_gate for more info.
             pulsedata (dict): inputs for the pulse sequence (gate_voltages, waittimes).
                     See pulse_gates for more info.
@@ -638,7 +638,7 @@ class virtual_awg(Instrument):
         return waveform, sweep_info
 
     def sweep_2D_process(self, data, waveform, diff_dir=None):
-        ''' Process data from sweep_2D 
+        ''' Process data from sweep_2D
 
         Arguments:
             data (list): the raw measured data
@@ -762,7 +762,7 @@ class virtual_awg(Instrument):
 
 
 def plot_wave_raw(wave_raw, samplerate=None, station=None):
-    ''' Plot the raw wave 
+    ''' Plot the raw wave
 
     Arguments:
         wave_raw (array): raw data which represents the waveform
@@ -787,7 +787,7 @@ def plot_wave_raw(wave_raw, samplerate=None, station=None):
 
 
 def sweep_2D_process(data, waveform, diff_dir=None):
-    ''' Process data from sweep_2D 
+    ''' Process data from sweep_2D
 
     Arguments:
         data (list): the raw measured data

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import warnings
 import numpy as np
 import qcodes
-from qtt import DataArray
+from qcodes.data.data_array import DataArray
 from qcodes.tests.data_mocks import DataSet2D
 from qtt.utilities import tools
 from qtt.utilities.tools import resampleImage, diffImage, diffImageSmooth, reshape_metadata, get_python_version, \
