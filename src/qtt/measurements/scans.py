@@ -17,11 +17,12 @@ import pyqtgraph
 import qcodes
 import skimage
 import skimage.filters
-from qcodes import DataArray, Instrument
+from qcodes import Instrument
 from qcodes.instrument.parameter import Parameter
 from qcodes.instrument.sweep_values import SweepFixedValues
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
+from qcodes.data.data_array import DataArray
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
@@ -879,9 +880,9 @@ class scanjob_t(dict):
                     raise ValueError('length must be > 1')
                 else:
                     if 'range' in sweepdata:
-                        data['step'] = data['range'] / (length-1)
+                        data['step'] = data['range'] / (length - 1)
                     else:
-                        data['step'] = (data['end'] - data['start']) / (length-1)
+                        data['step'] = (data['end'] - data['start']) / (length - 1)
 
         def _calculate_sweepvalues(param, sweep_data, inclusive_end=False) -> SweepFixedValues:
             """ From parameter and sweep data create a SweepFixedValues object. """
@@ -946,7 +947,7 @@ class scanjob_t(dict):
                                           sweepdata['range'] / 2, len(sweepvalues))
                 for param in sweepdata['param']:
                     self['phys_gates_vals'][param] = param_init[param] + \
-                                                     sweep_array * sweepdata['param'][param]
+                        sweep_array * sweepdata['param'][param]
             else:
                 sweepvalues = _calculate_sweepvalues(sweepparam, sweepdata, inclusive)
 
@@ -1014,11 +1015,11 @@ class scanjob_t(dict):
                 for param in sweepdata['param']:
                     if isinstance(stepvalues, np.ndarray):
                         self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * \
-                                                         sweepdata['param'][param]
+                            sweepdata['param'][param]
                     else:
                         self['phys_gates_vals'][param] = param_init[param] + step_array2d * \
-                                                         stepdata['param'][param] + sweep_array2d * \
-                                                         sweepdata['param'][param]
+                            stepdata['param'][param] + sweep_array2d * \
+                            sweepdata['param'][param]
             self['stepdata'] = stepdata
             self['sweepdata'] = sweepdata
 
@@ -1163,7 +1164,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
         stepvalues = stepdata['param'][list(stepvalues[:, 0])]
 
     alldata, (set_names, measure_names) = makeDataSet2D(stepvalues, sweepvalues, measure_names=mparams,
-              location=location, loc_record={'label': _dataset_record_label(scanjob)}, return_names=True)
+                                                        location=location, loc_record={'label': _dataset_record_label(scanjob)}, return_names=True)
 
     if verbose >= 2:
         print('scan2D: created dataset')
@@ -1189,7 +1190,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             t1_str = time.strftime('%H:%M:%S', time.gmtime(t1))
             if ix == 0:
                 time_est = len(sweepvalues) * len(stepvalues) * \
-                           scanjob['sweepdata'].get('wait_time', 0) * 2
+                    scanjob['sweepdata'].get('wait_time', 0) * 2
             else:
                 time_est = t1 / ix * len(stepvalues) - t1
             time_est_str = time.strftime(
@@ -2310,23 +2311,21 @@ def plotData(alldata, diff_dir=None, fig=1):
         imx = qtt.utilities.tools.diffImageSmooth(alldata.measured.ndarray, dy=diff_dir)
         name = 'diff_dir_%s' % diff_dir
         name = uniqueArrayName(alldata, name)
-        data_arr = qcodes.DataArray(name=name, label=name, array_id=name,
-                                    set_arrays=alldata.measured.set_arrays, preset_data=imx)
+        data_arr = DataArray(name=name, label=name, array_id=name,
+                             set_arrays=alldata.measured.set_arrays, preset_data=imx)
         alldata.add_array(data_arr)
         plot = MatPlot(interval=0, num=figure.number)
         plot.add(alldata.arrays[name])
-        # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
         plot.fig.axes[1].autoscale(tight=True)
     else:
         plot = MatPlot(interval=0, num=figure.number)
         plot.add(alldata.default_parameter_array('measured'))
-        # plt.axis('image')
         plot.fig.axes[0].autoscale(tight=True)
         try:
             plot.fig.axes[1].autoscale(tight=True)
         except Exception as ex:
-            logging.debug('autoscaling failed')
+            logging.debug(f'autoscaling failed: {ex}')
 
 
 # %%

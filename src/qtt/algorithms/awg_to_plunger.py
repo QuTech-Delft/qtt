@@ -25,7 +25,7 @@ def get_dataset(ds):
     """ Get a dataset from a results dict, a string or a dataset.
 
     Args:
-        ds (dict, str or qcodes.DataSet): the data to be put in the dataset.
+        ds (dict, str or DataSet): the data to be put in the dataset.
 
     Returns:
         ds (qcodes.DataSet) dataset made from the input data.
@@ -36,7 +36,7 @@ def get_dataset(ds):
     if ds is None:
         return None
     if isinstance(ds, str):
-        ds = qcodes.load_data(ds)
+        ds = qcodes.data.data_set.load_data(ds)
     return ds
 
 

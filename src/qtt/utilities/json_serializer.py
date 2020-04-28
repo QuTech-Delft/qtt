@@ -7,6 +7,7 @@ import qtt.data
 from typing import Any
 from qilib.utils.serialization import Serializer, JsonSerializeKey, serializer
 
+from qcodes.data.data_set import DataSet
 
 class QttSerializer(Serializer):
     def __init__(self):
@@ -14,7 +15,7 @@ class QttSerializer(Serializer):
 
         self.register(qcodes.Instrument, encode_qcodes_instrument, '__qcodes_instrument__',
                       decode_qcodes_instrument)
-        self.register(qcodes.DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
+        self.register(DataSet, encode_qcodes_dataset, '__qcodes_dataset__', decode_qcodes_dataset)
         self.register(np.ndarray, encode_numpy_array, np.array.__name__, decode_numpy_array)
         for numpy_integer_type in [np.int16, np.int32, np.int64, np.float16, np.float32, np.float64, np.bool_]:
             self.register(numpy_integer_type, encode_numpy_number, '__npnumber__', decode_numpy_number)
