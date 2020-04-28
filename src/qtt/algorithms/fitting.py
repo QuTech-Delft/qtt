@@ -8,7 +8,7 @@ import numpy as np
 import scipy
 from typing import Tuple, Dict, Any
 
-from lmfit import Model, ModelResult
+from lmfit.model import Model, ModelResult
 
 from qcodes.data.data_array import DataArray
 import qtt.pgeometry

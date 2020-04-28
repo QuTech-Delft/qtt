@@ -29,6 +29,8 @@ class TestAllxy(unittest.TestCase):
         dataset = makeDataSet1Dplain('index', np.arange(21), 'allxy',allxy_data)
         result = fit_allxy(dataset)
         self.assertTrue(result['fitted_parameters_covariance'] is not None)
+        self.assertAlmostEqual(result['reduced_chi_squared'], 0.000976, places=5 )
+        self.assertAlmostEqual(result['fitted_parameters_covariance'][0], 1.95305266e-04, places=5 )
 
     def test_allxy_model(self):
         offsets = [.0, .1, .2]
