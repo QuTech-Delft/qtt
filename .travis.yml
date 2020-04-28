@@ -27,20 +27,9 @@ matrix:
     env: FULL_INSTALL=1
     services:
     - xvfb
-  - name: QCoDeS 0.12 installation
-    python: 3.7
-    sudo: true
-    dist: bionic
-    env: QT_QPA_PLATFORM=offscreen
-    env: QCODES012=1
-    services:
-    - xvfb    
 install:
   - pip install coveralls
   - pip install --upgrade pip
-  - if [[ "$QCODES012" == "1" ]]; then
-      pip install qcodes==0.12;
-    fi
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
 script:

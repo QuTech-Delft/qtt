@@ -68,17 +68,17 @@ def _dictionary_to_data_array(array_dictionary):
     if array_full_name is None:
         array_full_name = array_name
     data_array = DataArray(name=array_name,
-                                  full_name=array_dictionary['full_name'],
-                                  label=array_dictionary['label'],
-                                  unit=array_dictionary['unit'],
-                                  is_setpoint=array_dictionary['is_setpoint'],
-                                  shape=tuple(array_dictionary['shape']),
-                                  array_id=array_id,
-                                  preset_data=preset_data)
+                           full_name=array_dictionary['full_name'],
+                           label=array_dictionary['label'],
+                           unit=array_dictionary['unit'],
+                           is_setpoint=array_dictionary['is_setpoint'],
+                           shape=tuple(array_dictionary['shape']),
+                           array_id=array_id,
+                           preset_data=preset_data)
     return data_array
 
 
-def dictionary_to_dataset(data_dictionary : dict) -> DataSet:
+def dictionary_to_dataset(data_dictionary: dict) -> DataSet:
     """ Convert dictionary to DataSet.
 
     Args:
@@ -102,7 +102,7 @@ def dictionary_to_dataset(data_dictionary : dict) -> DataSet:
     return dataset
 
 
-def dataset_to_dictionary(data_set : DataSet, include_data : bool =True, include_metadata : bool=True) -> Dict[str, Any]:
+def dataset_to_dictionary(data_set: DataSet, include_data: bool = True, include_metadata: bool = True) -> Dict[str, Any]:
     """ Convert DataSet to dictionary.
 
     Args:
@@ -113,7 +113,7 @@ def dataset_to_dictionary(data_set : DataSet, include_data : bool =True, include
     Returns:
         Dictionary containing the serialized data.
     """
-    data_dictionary : Dict[str, Any] = {'extra': {}, 'metadata': None, 'arrays': {}}
+    data_dictionary: Dict[str, Any] = {'extra': {}, 'metadata': None, 'arrays': {}}
 
     for array_id, data_array in data_set.arrays.items():
         data_dictionary['arrays'][array_id] = _data_array_to_dictionary(data_array, include_data)
