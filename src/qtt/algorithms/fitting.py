@@ -8,7 +8,7 @@ import numpy as np
 import scipy
 from typing import Tuple, Dict, Any
 
-from lmfit import Model
+from lmfit import Model, ModelResult
 
 from qcodes.data.data_array import DataArray
 import qtt.pgeometry
@@ -16,7 +16,7 @@ from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussi
 
 
 
-def extract_lmfit_parameters(lmfit_model, lmfit_result):
+def extract_lmfit_parameters(lmfit_model : Model, lmfit_result : ModelResult) -> Dict[str, Any]:
     """ Convert lmfit results to a dictionary
 
     Args:

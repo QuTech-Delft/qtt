@@ -6,7 +6,7 @@ from lmfit import Model
 from qcodes.data.data_set import DataSet
 from qcodes.data.data_array import DataArray
 from qtt.utilities.visualization import plot_vertical_line
-from qtt.fitting import extract_lmfit_parameters
+from qtt.algorithms.fitting import extract_lmfit_parameters
 
 def generate_allxy_combinations() -> List[Any]:
     """ Generate all combinations of the AllXY sequence from Reed 2013 """
