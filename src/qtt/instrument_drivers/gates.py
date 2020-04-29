@@ -355,7 +355,7 @@ class VirtualDAC(Instrument):
     def resettodataset(self, dataset):
         """ Reset gates to the values from a previous dataset
         Args:
-            dataset (qcodes.DataSet or str): the dataset or location to load from.
+            dataset (DataSet or str): the dataset or location to load from.
         """
         if isinstance(dataset, str):
             dataset = load_data(dataset)

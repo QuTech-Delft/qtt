@@ -4,24 +4,52 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## \[1.2.1] - Current
+## \[1.2.2] - Unreleased
 ### Added
-...
+- Add analysis results to notes (#712)
 
 ### Changed
-...
+- Prevent tests from writing data to the user directory (#710)
+- Implement functionality for print_matrix argument (#714)
+- Bump bleach from 3.1.0 to 3.1.1 (#717)
+- scanjob_t uses SweepFixedValues (including 'end') instead of slices (excluding 'end') (#722)
+- Use lmfit in fit_gauss_ramsey. The first point of the data is now also used for fitting (#729)
+
+### Removed
+
+### Deprecated
+- Moved the deprecated loadOneDotPinchvalues to legacy.py (#722)
+
+### Fixed
+- Fix bug in HDAWG8 driver where the gain was set to the range, whereas it should be gain = range/2 (#720)
+- Fix bug in generation of step values for vector scans (#723)
+- Packages 'tests' are not installed anymore. These packages gave problems with loading similar named modules in other packages (#724)
+- Fix for deprecated old style qupulse Sequencer test (#733)
+
+### Security
+
+
+## \[1.2.1] - 15-1-2020
+### Added
+- add representation method for virtual awg (#697)
+
+### Changed
+- Cleanup result selection of sensingdot_t (#694)
+- Update dataset processing (#701)
+- derive calibration exception from normal exception (#704)
+- use bionic as build env (#705)
 
 ### Removed
 - Removed the QCoDeS StandardParameter from QTT (#700).
 
 ### Deprecated
-...
+- Deprecated live.py, live_plotting.py and tools.py removed
 
 ### Fixed
 - Fixed the import of M4i driver in function get_sampling_frequency (#700).
-
-### Security
-...
+- fix for period argument of sensingdot_t (#696)
+- Fix create_vectorscan for the new virtual awg  (#702)
+- fix deprecation warnings (#703)
 
 ## \[1.2.0] - 2019-12-17
 
@@ -70,7 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Method to convert lmfit fitting result to dictionary (#686)
 
 ### Changed
-- makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602). 
+- makeDataSetxxx methods generic functionality split off. Added a warning for data shape differences (#598, #602).
 - Allow plotCallback to operate on datetime axis (#584).
 - VirtualDAC now has an option to set gate_map and instruments on VirtualDAC (#583).
 - All unit tests/integration tests are moved to a separated tests folder (#574, #600).
@@ -119,7 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix qilib for readthedocs build (#624).
 - Fix coulomb example notebook (#619).
 - VirtualDacInstrumentAdapter needs to set instead of append instruments (#605).
-- Fixes for transition of m4i to qcodes contrib (#692). 
+- Fixes for transition of m4i to qcodes contrib (#692).
 
 ## \[1.1.2] - 2019-04-12
 
@@ -176,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed problems with the scan2Dturbo function (#423).
 - Fixed parameter in widget (#384).
 
-[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.2.1...HEAD
+[1.2.1]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/QuTech-Delft/qtt/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/QuTech-Delft/qtt/compare/v1.1.0...1.1.2
 [1.1.0]: https://github.com/QuTech-Delft/qtt/releases/v1.1.0

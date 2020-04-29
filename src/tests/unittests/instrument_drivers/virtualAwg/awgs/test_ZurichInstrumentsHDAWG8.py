@@ -71,15 +71,15 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
 
     def test_update_gain(self):
         self.zi_hdawg8.update_gain(0.5)
-        calls = [call.set('sigouts_{}_range'.format(ch), 0.5) for ch in range(8)]
+        calls = [call.set('sigouts_{}_range'.format(ch), 1.0) for ch in range(8)]
         self.awg.assert_has_calls(calls)
 
     def test_retrieve_gain(self):
         self.awg.get.return_value = 0.2
-        self.assertEqual(0.2, self.zi_hdawg8.retrieve_gain())
+        self.assertEqual(0.1, self.zi_hdawg8.retrieve_gain())
 
         with self.assertRaises(ValueError):
-            self.awg.get.side_effect = lambda v: v
+            self.awg.get.side_effect = lambda v: int(v[8:9])
             self.zi_hdawg8.retrieve_gain()
 
     def test_upload_waveforms(self):

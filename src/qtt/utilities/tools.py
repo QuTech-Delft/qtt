@@ -24,6 +24,8 @@ import platform
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 
+from qcodes.data.data_set import DataSet
+
 try:
     from dulwich.repo import Repo, NotGitRepository
     from dulwich import porcelain
@@ -38,15 +40,13 @@ try:
     from qcodes.plots.pyqtgraph import QtPlot
 except BaseException:
     pass
-from qcodes import DataArray
+
+from qcodes.data.data_array import DataArray
 
 import qtt.pgeometry
 from qtt.pgeometry import mpl2clipboard
 
 from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
-
-# tilefigs = rdeprecated(qtt.pgeometry.tilefigs, txt='Use qtt.pgeometry.tilefigs')
-# mkdirc = rdeprecated(qtt.pgeometry.mkdirc, txt='Use qtt.pgeometry.tilefigs')
 
 # do NOT load any other qtt submodules here
 
@@ -289,7 +289,6 @@ def stripDataset(dataset):
     dataset.sync()
     dataset.data_manager = None
     dataset.background_functions = {}
-    # dataset.formatter = qcodes.DataSet.default_formatter
     try:
         dataset.formatter.close_file(dataset)
     except BaseException:
@@ -1024,7 +1023,7 @@ try:
                 notes = '\n' + extranotes + '\n' + notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
-        elif isinstance(notes, qcodes.DataSet):
+        elif isinstance(notes, DataSet):
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
         if not isinstance(notes, str):
@@ -1144,13 +1143,14 @@ except ImportError:
 # %%
 
 
-def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, add_analysis_results=True, verbose=0):
     """ Reshape the metadata of a DataSet.
 
     Args:
         dataset (DataSet or qcodes.Station): a dataset of which the metadata will be reshaped.
         printformat (str): can be 'dict' or 'txt','fancy' (text format).
         add_scanjob (bool): If True, then add the scanjob at the beginning of the notes.
+        add_analysis_results (bool): If True, then add the analysis_results at the beginning of the notes.
         add_gates (bool): If True, then add the scanjob at the beginning of the notes.
         verbose (int): verbosity (0 == silent).
 
@@ -1185,6 +1185,11 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
     if scanjob is not None and add_scanjob:
         s = pprint.pformat(scanjob)
         header += '\n\nscanjob: ' + str(s) + '\n'
+
+    analysis_results = dataset.metadata.get('analysis_results', None)
+    if analysis_results is not None and add_analysis_results:
+        s = pprint.pformat(analysis_results)
+        header += '\n\analysis_results: ' + str(s) + '\n'
 
     metadata = OrderedDict()
     # make sure the gates instrument is in front

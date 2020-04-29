@@ -16,6 +16,7 @@ import pyqtgraph
 _ = pyqtgraph.mkQApp()
 
 import qcodes
+from qcodes.data.data_set import DataSet
 import qtt
 from qtt.gui.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
@@ -27,7 +28,7 @@ import qtt.measurements.videomode
 import qtt.simulation.virtual_dot_array
 
 datadir = tempfile.mkdtemp(prefix='qtt_example')
-qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+DataSet.default_io = qcodes.data.io.DiskIO(datadir)
 
 # %% Create a virtual model for testing
 #
@@ -62,7 +63,7 @@ snapshotdata = station.snapshot()
 
 param_left = station.model.bottomgates[0]
 param_right = station.model.bottomgates[-1]
-scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 1,
+scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 0,
                                         'step': .8, 'wait_time': 3e-3}), 'minstrument': ['keithley3.amplitude']})
 data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 

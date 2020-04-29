@@ -16,6 +16,7 @@ from qtt.algorithms.coulomb import peakdataOrientation, coulombPeaks, findSensin
 from qtt.utilities.tools import freezeclass
 from qtt.dataset_processing import process_dataarray
 
+
 # %%
 
 
@@ -347,6 +348,15 @@ class sensingdot_t:
             qtt.measurements.scans.plotData(alldata, fig=fig)
         return alldata
 
+    def _select_results(self, goodpeaks):
+        if len(goodpeaks) > 0:
+            self.sdval[1] = float(goodpeaks[0]['xhalfl'])
+            self.targetvalue = float(goodpeaks[0]['yhalfl'])
+            self._selected_peak = goodpeaks[0]
+        else:
+            self._selected_peak = None
+            raise qtt.exceptions.CalibrationException('could not find good peak')
+
     def autoTune(sd, scanjob=None, fig=200, outputdir=None, step=-2.,
                  max_wait_time=1., scanrange=300, add_slopes=False):
         """ Automatically determine optimal value of plunger """
@@ -362,11 +372,7 @@ class sensingdot_t:
         alldata = sd._measurement_post_processing(alldata)
         goodpeaks = sd._process_scan(alldata, useslopes=add_slopes, fig=fig)
 
-        if len(goodpeaks) > 0:
-            sd.sdval[1] = goodpeaks[0]['xhalfl']
-            sd.targetvalue = goodpeaks[0]['yhalfl']
-        else:
-            print('autoTune: could not find good peak')
+        sd._select_results(goodpeaks)
 
         if sd.verbose:
             print('sensingdot_t: autotune complete: value %.1f [mV]' % sd.sdval[1])
@@ -389,9 +395,9 @@ class sensingdot_t:
             goodpeaks = coulombPeaks(
                 x, y, verbose=verbose, fig=fig, plothalf=True, sampling_rate=scan_sampling_rate)
         if fig is not None:
-            plt.xlabel('%s' % (self.tunegate(), ))
-            plt.ylabel('%s' % (self.minstrument, ))
-            plt.title('autoTune: %s' % (self.__repr__(), ), fontsize=14)
+            plt.xlabel('%s' % (self.tunegate(),))
+            plt.ylabel('%s' % (self.minstrument,))
+            plt.title('autoTune: %s' % (self.__repr__(),), fontsize=14)
 
         self.goodpeaks = goodpeaks
         self.data['tunex'] = x
@@ -428,7 +434,7 @@ class sensingdot_t:
 
         return dataset
 
-    def fastTune(self, Naverage=90, sweeprange=79, period=.5e-3, location=None,
+    def fastTune(self, Naverage=90, sweeprange=79, period=1e-3, location=None,
                  fig=201, sleeptime=2, delete=True, add_slopes=False, invert=False, verbose=1):
         """ Fast tuning of the sensing dot plunger.
 
@@ -436,8 +442,10 @@ class sensingdot_t:
         for the sweep.
 
         Args:
-            fig (int or None): window for plotting results
             Naverage (int): number of averages
+            scanrange (float): Range to be used for scanning
+            period (float): Period to be used in the scan sweep
+            fig (int or None): window for plotting results
 
         Returns:
             plungervalue (float): value of plunger
@@ -462,8 +470,9 @@ class sensingdot_t:
                 gate = self.gg[1]
                 cc = self.station.gates.get(gate)
                 scanjob['sweepdata'] = {'param': gate, 'start': cc -
-                                        sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
+                                                                sweeprange / 2, 'end': cc + sweeprange / 2, 'step': 4}
 
+            scanjob['sweepdata']['period'] = period
             scanjob['minstrument'] = channel
             scanjob['minstrumenthandle'] = instrument
             scanjob['wait_time_startscan'] = sleeptime
@@ -481,13 +490,7 @@ class sensingdot_t:
 
         goodpeaks = self._process_scan(alldata, useslopes=add_slopes, fig=fig, invert=invert)
 
-        if len(goodpeaks) > 0:
-            self.sdval[1] = float(goodpeaks[0]['xhalfl'])
-            self.targetvalue = float(goodpeaks[0]['yhalfl'])
-            self._selected_peak = goodpeaks[0]
-        else:
-            self._selected_peak = None
-            raise qtt.exceptions.CalibrationException('fastTune: could not find good peak')
+        self._select_results(goodpeaks)
 
         if self.verbose:
             print('sensingdot_t: autotune complete: value %.1f [mV]' % self.sdval[1])
@@ -531,6 +534,7 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
         val_diff = value - self.get()
         for (param, coeff) in self.comb_map:
             param.set(param.get() + coeff * val_diff / self.coeffs_sum)
+
 
 # %%
 
