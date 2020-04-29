@@ -1985,10 +1985,32 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
     return alldata
 
 
+from typing import Optional
+import contextlib
+@contextlib.contextmanager
+def logging_context(level : int =logging.INFO, logger : Optional[logging.Logger] = None):
+    """ A context manager that changes the logging level
+
+    Args:
+        level: Logging level to set in the context
+        logger: Logger to update, if None then update the default logger
+
+    """
+    if logger is None:
+        logger = logging.getLogger()
+    previous_level = logger.getEffectiveLevel()
+    logger.setLevel(level)
+
+    try:
+        yield
+    finally:
+        logger.setLevel(previous_level)
+
 def _is_m4i(instrument_handle: Any) -> bool:
     """ Returns True if the instrument handle is an M4i instance, else False."""
     try:
-        from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
+        with logging_context(logging.ERROR+10):
+            from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
     except Exception:
         return False
 
