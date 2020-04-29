@@ -16,6 +16,7 @@ import pyqtgraph
 _ = pyqtgraph.mkQApp()
 
 import qcodes
+from qcodes.data.data_set import DataSet
 import qtt
 from qtt.gui.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
@@ -27,7 +28,7 @@ import qtt.measurements.videomode
 import qtt.simulation.virtual_dot_array
 
 datadir = tempfile.mkdtemp(prefix='qtt_example')
-qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+DataSet.default_io = qcodes.data.io.DiskIO(datadir)
 
 # %% Create a virtual model for testing
 #
