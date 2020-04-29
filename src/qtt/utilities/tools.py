@@ -60,6 +60,27 @@ except BaseException:
 
 # %%
 
+from typing import Optional
+import contextlib
+@contextlib.contextmanager
+def logging_context(level : int =logging.INFO, logger : Optional[logging.Logger] = None):
+    """ A context manager that changes the logging level
+
+    Args:
+        level: Logging level to set in the context
+        logger: Logger to update, if None then update the default logger
+
+    """
+    if logger is None:
+        logger = logging.getLogger()
+    previous_level = logger.getEffectiveLevel()
+    logger.setLevel(level)
+
+    try:
+        yield
+    finally:
+        logger.setLevel(previous_level)
+
 def is_spyder_environment():
     """ Return True if the process is running in a Spyder environment """
     return 'SPY_TESTING' in os.environ

@@ -31,6 +31,7 @@ import qtt.utilities.tools
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 from qtt.pgeometry import plot2Dline
+from qtt.utilities.tools import logging_context
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset
@@ -1984,27 +1985,6 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
 
     return alldata
 
-
-from typing import Optional
-import contextlib
-@contextlib.contextmanager
-def logging_context(level : int =logging.INFO, logger : Optional[logging.Logger] = None):
-    """ A context manager that changes the logging level
-
-    Args:
-        level: Logging level to set in the context
-        logger: Logger to update, if None then update the default logger
-
-    """
-    if logger is None:
-        logger = logging.getLogger()
-    previous_level = logger.getEffectiveLevel()
-    logger.setLevel(level)
-
-    try:
-        yield
-    finally:
-        logger.setLevel(previous_level)
 
 def _is_m4i(instrument_handle: Any) -> bool:
     """ Returns True if the instrument handle is an M4i instance, else False."""
