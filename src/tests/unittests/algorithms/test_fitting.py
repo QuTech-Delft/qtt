@@ -4,9 +4,26 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 import qtt
-from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian
+from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian, sine
 from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear,\
-        fit_double_gaussian, refit_double_gaussian, fit_gaussian
+    fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
+
+
+class TestSineFitting(unittest.TestCase):
+
+    def test_fit_sine(self):
+        x_data = np.linspace(0, 6, 30)
+        amplitude = 2
+        frequency = 1.3
+        phase = .1
+        offset = .5
+        y_data = sine(x_data, amplitude, frequency, phase, offset)+.1*(np.random.rand(x_data.size))
+
+        fit_parameters, _results = fit_sine(x_data, y_data)
+        self.assertAlmostEqual(fit_parameters[0], amplitude, places=1)
+        self.assertAlmostEqual(fit_parameters[1], frequency, places=1)
+        self.assertAlmostEqual(fit_parameters[2], phase, places=1)
+        self.assertAlmostEqual(fit_parameters[3], offset, places=1)
 
 
 class TestDoubleGaussianFitting(unittest.TestCase):

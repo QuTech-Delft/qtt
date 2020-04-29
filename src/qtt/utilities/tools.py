@@ -24,6 +24,8 @@ import platform
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 
+from qcodes.data.data_set import DataSet
+
 try:
     from dulwich.repo import Repo, NotGitRepository
     from dulwich import porcelain
@@ -38,15 +40,13 @@ try:
     from qcodes.plots.pyqtgraph import QtPlot
 except BaseException:
     pass
-from qcodes import DataArray
+
+from qcodes.data.data_array import DataArray
 
 import qtt.pgeometry
 from qtt.pgeometry import mpl2clipboard
 
 from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
-
-# tilefigs = rdeprecated(qtt.pgeometry.tilefigs, txt='Use qtt.pgeometry.tilefigs')
-# mkdirc = rdeprecated(qtt.pgeometry.mkdirc, txt='Use qtt.pgeometry.tilefigs')
 
 # do NOT load any other qtt submodules here
 
@@ -289,7 +289,6 @@ def stripDataset(dataset):
     dataset.sync()
     dataset.data_manager = None
     dataset.background_functions = {}
-    # dataset.formatter = qcodes.DataSet.default_formatter
     try:
         dataset.formatter.close_file(dataset)
     except BaseException:
@@ -1017,7 +1016,7 @@ try:
                 notes = '\n' + extranotes + '\n' + notes
             if gates is not None:
                 notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
-        elif isinstance(notes, qcodes.DataSet):
+        elif isinstance(notes, DataSet):
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
         if not isinstance(notes, str):
