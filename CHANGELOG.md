@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump bleach from 3.1.0 to 3.1.1 (#717)
 - scanjob_t uses SweepFixedValues (including 'end') instead of slices (excluding 'end') (#722)
 - Use lmfit in fit_gauss_ramsey. The first point of the data is now also used for fitting (#729)
+- Replaced chi_squared with reduced chi_squared in allxy fit (#736)
 
 ### Removed
 
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix bug in generation of step values for vector scans (#723)
 - Packages 'tests' are not installed anymore. These packages gave problems with loading similar named modules in other packages (#724)
 - Fix for deprecated old style qupulse Sequencer test (#733)
+- Improved calculation of covariances (#736)
 
 ### Security
 
