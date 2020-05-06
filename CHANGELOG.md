@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced chi_squared with reduced chi_squared in allxy fit (#736)
 
 ### Removed
+- The ttrace code has been deprecated and is removed in this release (#709)
 
 ### Deprecated
 - Moved the deprecated loadOneDotPinchvalues to legacy.py (#722)
