@@ -22,6 +22,16 @@ class TestAllxy(unittest.TestCase):
         plot_allxy(dataset, result, fig=1, plot_initial_estimate=True)
         plt.close(1)
 
+    def test_allxy_covariance_regression(self):
+        allxy_data =[0.175, 0.24166666666666667, 0.23166666666666666, 0.2, 0.21, 0.49666666666666665,
+                     0.5316666666666666, 0.545, 0.53, 0.605, 0.5466666666666666, 0.58, 0.505, 0.5916666666666667, 0.6,
+                     0.53, 0.5716666666666667, 0.9016666666666666, 0.91, 0.905, 0.9033333333333333]
+        dataset = makeDataSet1Dplain('index', np.arange(21), 'allxy',allxy_data)
+        result = fit_allxy(dataset)
+        self.assertTrue(result['fitted_parameters_covariance'] is not None)
+        self.assertAlmostEqual(result['reduced_chi_squared'], 0.000976, places=5 )
+        self.assertAlmostEqual(result['fitted_parameters_covariance'][0], 1.95305266e-04, places=5 )
+
     def test_allxy_model(self):
         offsets = [.0, .1, .2]
         slopes = [-.1, 0, .1]

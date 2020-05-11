@@ -8,14 +8,14 @@ import numpy as np
 import scipy
 from typing import Tuple, Dict, Any
 
-from lmfit import Model
+from lmfit.model import Model, ModelResult
 
 from qcodes.data.data_array import DataArray
 import qtt.pgeometry
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
 
 
-def extract_lmfit_parameters(lmfit_model, lmfit_result):
+def extract_lmfit_parameters(lmfit_model : Model, lmfit_result : ModelResult) -> Dict[str, Any]:
     """ Convert lmfit results to a dictionary
 
     Args:
@@ -29,9 +29,15 @@ def extract_lmfit_parameters(lmfit_model, lmfit_result):
     fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
     initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
 
+    if lmfit_result.covar is None:
+        fitted_parameters_covariance = None
+    else:
+        fitted_parameters_covariance = np.diag(lmfit_result.covar)
+
     results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
                'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name,
-               'fitted_parameter_dictionary': lmfit_result.best_values}
+               'fitted_parameter_dictionary': lmfit_result.best_values,
+               'fitted_parameters_covariance': fitted_parameters_covariance}
     return results
 
 

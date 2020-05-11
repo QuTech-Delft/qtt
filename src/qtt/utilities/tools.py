@@ -943,7 +943,6 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        import qtt.measurements.ttrace  # should be moved to top when circular references are fixed
         from qtt.measurements.videomode import VideoMode  # import here, to prevent default imports of gui code
 
         if fig is not None:
@@ -953,10 +952,6 @@ try:
             elif isinstance(fig, int):
                 fig = plt.figure(fig)
                 fig.savefig(fname)
-            elif isinstance(fig, qtt.measurements.ttrace.MultiTracePlot) or \
-                    fig.__class__.__name__ == 'MultiTracePlot':
-                figtemp = fig.plotwin.grab()
-                figtemp.save(fname)
             elif isinstance(fig, VideoMode) or \
                     fig.__class__.__name__ == 'VideoMode':
                 if isinstance(fig.lp, list):
@@ -976,7 +971,6 @@ try:
                     figtemp.save(fname)
                     p.end()
                 else:
-                    # new Qt style
                     figtemp = fig.lp.plotwin.grab()
                     figtemp.save(fname)
             elif isinstance(fig, QtWidgets.QWidget):
@@ -987,7 +981,6 @@ try:
                 try:
                     figtemp = QtGui.QPixmap.grabWidget(fig)
                 except BaseException:
-                    # new Qt style
                     figtemp = fig.grab()
                 figtemp.save(fname)
             elif isinstance(fig, qcodes.plots.pyqtgraph.QtPlot):
