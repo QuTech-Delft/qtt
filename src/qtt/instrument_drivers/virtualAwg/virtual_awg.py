@@ -59,6 +59,9 @@ class VirtualAwg(Instrument):
         self._latest_sequence_data = {}
         self.enable_debug = False
 
+        self.settings.snapshot(update=True)
+        self.add_parameter('settings_snapshot', get_cmd = self.settings.snapshot, label='Settings snapshot')
+
     def _get_virtual_info(self):
         """ Returns the data needed for snapshot of instrument."""
         return {'awg_map': self._settings.awg_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
