@@ -8,13 +8,15 @@ import matplotlib.pyplot as plt
 
 class TestGeneric(unittest.TestCase):
 
-    @staticmethod
-    def test_subpixel(fig=None):
+    def test_subpixel(self, fig=None):
         np.random.seed(2019)
         ims = np.random.rand(40,)**2 + 1e1
         smooth_ims = smoothImage(ims)
 
         mpos = peak_local_max(smooth_ims, min_distance=3).flatten()
+        # make sure the local max are always ordered the same way (descending)
+        mpos[::-1].sort()
+        self.assertListEqual(list(mpos), [34, 20, 14, 7])
         subpos, subval = subpixelmax(smooth_ims, mpos)
 
         np.testing.assert_array_almost_equal(subpos, np.array([34.48945739, 19.7971219, 14.04429215, 7.17665281]),
@@ -39,5 +41,3 @@ class TestGeneric(unittest.TestCase):
         self.assertTrue(rescaled.size, 45000)
         self.assertSequenceEqual(s, (4, 1.0, 0.25, 1.0))
         plt.close('all')
-
-

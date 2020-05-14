@@ -4,16 +4,24 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## \[1.2.2] - Unreleased
+## \[1.2.2] - 14-5-2020
 ### Added
+- Add example notebook for mongodb (#679)
 - Add analysis results to notes (#712)
+- Update docstrings (#718)
+- Add numdifftools to requirements (#726)
+- Add fitting of sine wave (#731)
 
 ### Changed
 - Prevent tests from writing data to the user directory (#710)
 - Implement functionality for print_matrix argument (#714)
 - Bump bleach from 3.1.0 to 3.1.1 (#717)
 - scanjob_t uses SweepFixedValues (including 'end') instead of slices (excluding 'end') (#722)
+- Bump bleach from 3.1.1 to 3.1.2 (#727)
+- Allow plotting arguments to be passed in drawCrosshair (#728)
 - Use lmfit in fit_gauss_ramsey. The first point of the data is now also used for fitting (#729)
+- Bump bleach from 3.1.2 to 3.1.4 (#730)
+- Update to sine fitting (#734)
 - Replaced chi_squared with reduced chi_squared in allxy fit (#736)
 
 ### Removed
@@ -23,14 +31,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved the deprecated loadOneDotPinchvalues to legacy.py (#722)
 
 ### Fixed
+- Prevent tests from writing data to the user directory (#710)
+- Disable all output channels when restarting the videomode (#711)
 - Fix bug in HDAWG8 driver where the gain was set to the range, whereas it should be gain = range/2 (#720)
 - Fix bug in generation of step values for vector scans (#723)
 - Packages 'tests' are not installed anymore. These packages gave problems with loading similar named modules in other packages (#724)
 - Fix for deprecated old style qupulse Sequencer test (#733)
+- Update qtt to qcodes 0.13.0 (#735)
 - Improved calculation of covariances (#736)
-
-### Security
-
+- Fixed failing unit test depending on order of peak_local_max (#741)
 
 ## \[1.2.1] - 15-1-2020
 ### Added
