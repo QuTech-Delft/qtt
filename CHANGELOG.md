@@ -4,7 +4,7 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## \[1.2.2] - Unreleased
+## \[1.2.2] - 14-5-2020
 ### Added
 - Add example notebook for mongodb (#679)
 - Add analysis results to notes (#712)
@@ -40,9 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update qtt to qcodes 0.13.0 (#735)
 - Improved calculation of covariances (#736)
 - Fixed failing unit test depending on order of peak_local_max (#741)
-
-### Security
-
 
 ## \[1.2.1] - 15-1-2020
 ### Added
