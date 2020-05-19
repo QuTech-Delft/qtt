@@ -77,7 +77,7 @@ def generate_pink_noise(sample_rate: float, number_of_samples : int, A : float =
     w=s_scale[1:].copy()
     w[-1] *= (1 + (number_of_samples % 2)) / 2. # correct f = +-0.5
     sigma = 2 * np.sqrt(np.sum(w**2)) / number_of_samples
-    signal = irfft(fft)/sigma
+    signal = 3.5* np.sqrt(A) * irfft(fft)/sigma
 
     return signal
 
@@ -117,11 +117,24 @@ def fit_pink_noise(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=No
     Returns:
         result_dict
     """
+
+    def transform_from_loglog(x):
+        slope=x[0]
+        intercept=x[1]
+        A=np.exp(intercept)
+        alpha=-slope
+        return [A, alpha]
+    def transform_to_loglog(x):
+        intercept=np.log(x[0])
+        slope = -x[1]
+        return [slope, intercept]
+
     if initial_parameters is None:
         A0=y_data[0]
         alpha0=1
-        initial_parameters = [-alpha0, np.log(A0)]
+        initial_parameters = [A0, alpha0]
 
+    initial_parameters_log_log = transform_to_loglog(initial_parameters)
 
     if x_data[0]==0:
         y_data_log = np.log(y_data[1:])
@@ -131,7 +144,7 @@ def fit_pink_noise(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=No
         x_data_log = np.log(x_data)
 
     lmfit_model = LinearModel(independent_vars=['x'], name='Pink noise in loglog')
-    lmfit_result = lmfit_model.fit(y_data_log, x=x_data_log, **dict(zip(lmfit_model.param_names, initial_parameters)))
+    lmfit_result = lmfit_model.fit(y_data_log, x=x_data_log, **dict(zip(lmfit_model.param_names, initial_parameters_log_log)))
 
     inliers=None
     if remove_outliers:
@@ -143,18 +156,11 @@ def fit_pink_noise(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=No
 
     loglog_result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
-    def transform_from_loglog(x):
-        slope=x[0]
-        intercept=x[1]
-        A=np.exp(intercept)
-        alpha=-slope
-        return [A, alpha]
-
     fitted_parameters=transform_from_loglog(loglog_result_dict['fitted_parameters'])
-    result_dict = {'fitted_parameters':  fitted_parameters , 'initial_parameters': transform_from_loglog(loglog_result_dict['initial_parameters']),
+    result_dict = {'fitted_parameters':  fitted_parameters , 'initial_parameters': initial_parameters,
                     'inliers':inliers,
                     'fitted_parameter_dictionary' : dict(zip(['A', 'alpha'], fitted_parameters)),
-                    'results_logog_fit': loglog_result_dict}
+                    'results_loglog_fit': loglog_result_dict}
     return result_dict['fitted_parameters'], result_dict
 
 
