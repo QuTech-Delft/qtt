@@ -34,18 +34,12 @@ import logging
 import pkgutil
 from functools import wraps
 
+import numpy
 import numpy as np
 import scipy.io
-import numpy
 import scipy.ndimage.morphology as morphology
 import scipy.ndimage.filters as filters
-
-
-try:
-    import Polygon as polygon3
-except ImportError:
-    polygon3 = None
-    import shapely
+import shapely
 
 __version__ = '0.7.0'
 
@@ -1141,58 +1135,30 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-if polygon3 is None:
-    def polyintersect(x1 : np.ndaray, x2 : np.ndarray) -> np.ndarray:
-            """ Calcualte intersection of two polygons
-
-            Args:
-                x1: First polygon. Shape is (N, 2) with N the number of vertices
-                x2: Second polygon
-            Returns:
-                Intersection of both polygons
-
-            >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
-            >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-            >>> x=polyintersect(x1, x2)
-            >>> _=plt.figure(10); plt.clf()
-            >>> plotPoints(x1.T, '.:r' )
-            >>> plotPoints(x2.T, '.:b' )
-            >>> plotPoints(x.T, '.-g' , linewidth=2)
-            """
-
-            p1 = shapely.geometry.Polygon(x1)
-            p2 = shapely.geometry.Polygon(x2)
-            p = p1.intersection(p2)
-            if p.is_empty:
-                return np.zeros((0, 2))
-            x = np.array(p.exterior.coords)
-            return x
-else:
-    def polyintersect(x1, x2):
-        """ Intersection of two polygons
+def polyintersect(x1 : np.ndaray, x2 : np.ndarray) -> np.ndarray:
+        """ Calcualte intersection of two polygons
 
         Args:
-            x1 (array): First polygon
-            x2 (array): Second polygon
+            x1: First polygon. Shape is (N, 2) with N the number of vertices
+            x2: Second polygon
         Returns:
-            Array with points of the intersection
-
-       Example:
+            Intersection of both polygons
 
         >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
         >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
         >>> x=polyintersect(x1, x2)
         >>> _=plt.figure(10); plt.clf()
-        >>> plotPoints(x1.T, '.-r' )
-        >>> plotPoints(x2.T, '.-b' )
+        >>> plotPoints(x1.T, '.:r' )
+        >>> plotPoints(x2.T, '.:b' )
         >>> plotPoints(x.T, '.-g' , linewidth=2)
-
         """
-        p1 = polygon3.Polygon(x1)
-        p2 = polygon3.Polygon(x2)
-        p = p1 & p2
-        x = np.array(p)
-        x = x.reshape((-1, 2))
+
+        p1 = shapely.geometry.Polygon(x1)
+        p2 = shapely.geometry.Polygon(x2)
+        p = p1.intersection(p2)
+        if p.is_empty:
+            return np.zeros((0, 2))
+        x = np.array(p.exterior.coords)
         return x
 
 
