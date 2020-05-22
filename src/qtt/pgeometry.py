@@ -1135,7 +1135,7 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-def polyintersect(x1 : np.ndaray, x2 : np.ndarray) -> np.ndarray:
+def polyintersect(x1 : np.ndarray, x2 : np.ndarray) -> np.ndarray:
         """ Calcualte intersection of two polygons
 
         Args:
@@ -1958,7 +1958,7 @@ def robustCost(x, thr, method='L1'):
     """
     if thr is None:
         return x
-    if thr is 'auto':
+    if thr == 'auto':
         ax = np.abs(x)
         thr = np.percentile(ax, 95.)
         p50 = np.percentile(ax, 50)
