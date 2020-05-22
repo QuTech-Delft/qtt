@@ -85,8 +85,6 @@ check_version('0.1', 'redis', optional=True)
 check_version('0.8.0', qcodes)
 check_version('0.2', 'qupulse')
 
-check_version('3.0', 'Polygon', install_message="use command 'pip install Polygon3' to install the package")
-
 # %% Load often used constructions
 
 
