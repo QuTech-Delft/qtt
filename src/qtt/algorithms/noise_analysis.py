@@ -109,17 +109,18 @@ def outlier_detection(data: np.ndarray, threshold: Optional[float] = None,
     return inliers
 
 
-def fit_pink_noise(x_data: np.ndarray, y_data: np.ndarray, initial_parameters: Optional[np.ndarray] = None,
+def fit_pink_noise(frequencies: np.ndarray, signal_data: np.ndarray, initial_parameters: Optional[np.ndarray] = None,
                    remove_outliers: bool = False) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """ Fit a model to data with 1/f noise
 
     The model fitted is = A/f^alpha
 
     The fitting is performed in loglog coordinates.
+    The data points are weighted to have an equal contribution in the frequency log-space.
 
     Args:
-        x_data: Independent variable
-        y_data: Dependent variable
+        frequencies: Independent variable
+        signal_data: Dependent variable
         initial_parameters: Optional list with estimate of model parameters
         remove_outliers: If True, then remove outliers in the fitting
 
@@ -140,29 +141,30 @@ def fit_pink_noise(x_data: np.ndarray, y_data: np.ndarray, initial_parameters: O
         return [slope, intercept]
 
     if initial_parameters is None:
-        A0 = y_data[0]
+        A0 = signal_data[0]
         alpha0 = 1
         initial_parameters = [A0, alpha0]
 
     initial_parameters_log_log = transform_to_loglog(initial_parameters)
 
-    if x_data[0] == 0:
-        y_data_log = np.log(y_data[1:])
-        x_data_log = np.log(x_data[1:])
+    if np.any(frequencies == 0):
+        raise Exception('input frequencies cannot contain 0')
     else:
-        y_data_log = np.log(y_data)
-        x_data_log = np.log(x_data)
+        signal_data_log = np.log(signal_data)
+        frequencies_log = np.log(frequencies)
+
+    weights = np.sqrt(1/frequencies)
 
     lmfit_model = LinearModel(independent_vars=['x'], name='Pink noise in loglog')
-    lmfit_result = lmfit_model.fit(y_data_log, x=x_data_log, **
-                                   dict(zip(lmfit_model.param_names, initial_parameters_log_log)))
+    lmfit_result = lmfit_model.fit(signal_data_log, x=frequencies_log, **
+                                   dict(zip(lmfit_model.param_names, initial_parameters_log_log)), weights = weights)
 
     inliers = None
     if remove_outliers:
         inliers = outlier_detection(lmfit_result.residual)
 
         logging.info(f'fit_pink_noise: outlier detection: number of outliers: {(inliers==False).sum()}')
-        lmfit_result = lmfit_model.fit(y_data_log[inliers], x=x_data_log[inliers], **lmfit_result.best_values)
+        lmfit_result = lmfit_model.fit(signal_data_log[inliers], x=frequencies_log[inliers], **lmfit_result.best_values)
 
     loglog_result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
