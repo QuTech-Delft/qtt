@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import point_in_polygon, points_in_polygon
-from Polygon.cPolygon import Error as PolygonError
 
 
 class TestPGeometry(unittest.TestCase):
