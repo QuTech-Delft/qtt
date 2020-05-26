@@ -39,7 +39,7 @@ import numpy as np
 import scipy.io
 import scipy.ndimage.morphology as morphology
 import scipy.ndimage.filters as filters
-import shapely
+import shapely.geometry
 
 __version__ = '0.7.0'
 
@@ -1144,6 +1144,9 @@ def polyintersect(x1 : np.ndarray, x2 : np.ndarray) -> np.ndarray:
         Returns:
             Intersection of both polygons
 
+        Raises:
+            Exception is the intersection consists of multiple polygons
+
         >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
         >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
         >>> x=polyintersect(x1, x2)
@@ -1158,7 +1161,12 @@ def polyintersect(x1 : np.ndarray, x2 : np.ndarray) -> np.ndarray:
         p = p1.intersection(p2)
         if p.is_empty:
             return np.zeros((0, 2))
+        if isinstance(p, shapely.geometry.multipolygon.MultiPolygon):
+            raise Exception('intersection of polygons is not a simple polygon')
         x = np.array(p.exterior.coords)
+        if len(x)>1:
+            if np.all(x[0]==x[-1]):
+                x=x[:-1, ...]
         return x
 
 
