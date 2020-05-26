@@ -645,6 +645,7 @@ def directionMean(vec):
 
     """
     vec = np.array(vec)
+
     def dist(a, vec):
         phi = np.arctan2(vec[:, 0], vec[:, 1])
         x = a - phi
@@ -1135,39 +1136,36 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-def polyintersect(x1 : np.ndarray, x2 : np.ndarray) -> np.ndarray:
-        """ Calcualte intersection of two polygons
+def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
+    """ Calcualte intersection of two polygons
 
-        Args:
-            x1: First polygon. Shape is (N, 2) with N the number of vertices
-            x2: Second polygon
-        Returns:
-            Intersection of both polygons
+    Args:
+        x1: First polygon. Shape is (N, 2) with N the number of vertices
+        x2: Second polygon
+    Returns:
+        Intersection of both polygons
 
-        Raises:
-            Exception is the intersection consists of multiple polygons
+    Raises:
+        Exception is the intersection consists of multiple polygons
 
-        >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
-        >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
-        >>> x=polyintersect(x1, x2)
-        >>> _=plt.figure(10); plt.clf()
-        >>> plotPoints(x1.T, '.:r' )
-        >>> plotPoints(x2.T, '.:b' )
-        >>> plotPoints(x.T, '.-g' , linewidth=2)
-        """
+    >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
+    >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+    >>> x=polyintersect(x1, x2)
+    >>> _=plt.figure(10); plt.clf()
+    >>> plotPoints(x1.T, '.:r' )
+    >>> plotPoints(x2.T, '.:b' )
+    >>> plotPoints(x.T, '.-g' , linewidth=2)
+    """
 
-        p1 = shapely.geometry.Polygon(x1)
-        p2 = shapely.geometry.Polygon(x2)
-        p = p1.intersection(p2)
-        if p.is_empty:
-            return np.zeros((0, 2))
-        if isinstance(p, shapely.geometry.multipolygon.MultiPolygon):
-            raise Exception('intersection of polygons is not a simple polygon')
-        x = np.array(p.exterior.coords)
-        if len(x)>1:
-            if np.all(x[0]==x[-1]):
-                x=x[:-1, ...]
-        return x
+    p1 = shapely.geometry.Polygon(x1)
+    p2 = shapely.geometry.Polygon(x2)
+    p = p1.intersection(p2)
+    if p.is_empty:
+        return np.zeros((0, 2))
+    if isinstance(p, shapely.geometry.multipolygon.MultiPolygon):
+        raise Exception('intersection of polygons is not a simple polygon')
+    x = np.array(p.exterior.coords)
+    return x
 
 
 # %%
@@ -1210,7 +1208,7 @@ def enlargelims(factor=1.05):
 
     """
     if isinstance(factor, float):
-        factor=[factor]
+        factor = [factor]
     xl = plt.xlim()
     d = (factor[0] - 1) * (xl[1] - xl[0]) / 2
     xl = (xl[0] - d, xl[1] + d)
@@ -1679,7 +1677,7 @@ class plotCallback:
             scale = [1 / (1e-8 + np.ptp(xdata)), 1 / (1e-8 + np.ptp(ydata))]
         self.scale = scale
         if verbose:
-               print(f'plotCallback: scale {scale}')
+            print(f'plotCallback: scale {scale}')
         self.connection_ids = []
 
     def __call__(self, event):
@@ -1697,7 +1695,7 @@ class plotCallback:
                 xdata = np.array(self.xdata)
 
                 if isinstance(xdata[0], numpy.datetime64):
-                    xdata=matplotlib.dates.date2num(xdata)
+                    xdata = matplotlib.dates.date2num(xdata)
 
                 ydata = np.array(self.ydata)
                 pt = np.array([event.xdata, event.ydata])
@@ -1705,7 +1703,7 @@ class plotCallback:
                 dd = xx - pt
                 dd = np.multiply(np.array(self.scale).reshape((1, 2)), dd)
                 d = np.linalg.norm(dd, axis=1)
-                d[np.isnan(d)]=np.inf
+                d[np.isnan(d)] = np.inf
                 idx = np.argmin(d)
                 distance = d[idx]
                 if self.verbose:
@@ -1727,6 +1725,7 @@ class plotCallback:
         cid = fig.canvas.mpl_connect('button_press_event', self)
         self.connection_ids.append(cid)
         return cid
+
 
 def cfigure(*args, **kwargs):
     """ Create Matplotlib figure with copy to clipboard functionality
