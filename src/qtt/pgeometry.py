@@ -1137,7 +1137,7 @@ def polyarea(p):
 
 
 def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
-    """ Calcualte intersection of two polygons
+    """ Calculate intersection of two polygons
 
     Args:
         x1: First polygon. Shape is (N, 2) with N the number of vertices
