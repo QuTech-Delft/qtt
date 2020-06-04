@@ -1,6 +1,7 @@
 from typing import List
 import unittest
 
+from qcodes import Instrument
 from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg
 from unittest.mock import Mock, call
@@ -15,7 +16,7 @@ class TestVirtualAwg(unittest.TestCase):
         self.settings.close()
 
     @staticmethod
-    def __create_awg_drivers() -> List[Mock]:
+    def __create_awg_drivers():
         awg_driver1, awg_driver2 = Mock(), Mock()
         type(awg_driver2).__name__ = 'Tektronix_AWG5014'
         type(awg_driver1).__name__ = 'Tektronix_AWG5014'
