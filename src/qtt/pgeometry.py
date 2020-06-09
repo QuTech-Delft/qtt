@@ -1146,7 +1146,7 @@ def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
         Intersection of both polygons
 
     Raises:
-        Exception is the intersection consists of multiple polygons
+        ValueError if the intersection consists of multiple polygons
 
     >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
     >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
@@ -1163,9 +1163,9 @@ def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
     if p.is_empty:
         return np.zeros((0, 2))
     if isinstance(p, shapely.geometry.multipolygon.MultiPolygon):
-        raise Exception('intersection of polygons is not a simple polygon')
-    x = np.array(p.exterior.coords)
-    return x
+        raise ValueError('intersection of polygons is not a simple polygon')
+    intersection_polygon = np.array(p.exterior.coords)
+    return intersection_polygon
 
 
 # %%

@@ -98,7 +98,7 @@ class TestPolygonGeometry(unittest.TestCase):
         x1 = np.array([(-1, -1), (1, -1), (1, 1), (-1, 1)]) + np.array([shift, 0])
         x2 = np.array([(delta, 0), (5, 5), (-5, 5), (-delta, 0), (-5, -5), (5, -5), (delta, 0)])
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             intersection_polygon = pgeometry.polyintersect(x1, x2)
 
     def test_non_convex_intersection(self):
