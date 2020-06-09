@@ -511,7 +511,6 @@ class VectorParameter(qcodes.instrument.parameter.Parameter):
     def __init__(self, name, comb_map, **kwargs):
         """Initialize a linear combination parameter."""
         super().__init__(name, **kwargs)
-        self.name = name
         self.comb_map = comb_map
         self.unit = self.comb_map[0][0].unit
         self.coeffs_sum = sum([np.abs(coeff)
@@ -549,7 +548,6 @@ class MultiParameter(qcodes.instrument.parameter.Parameter):
 
     def __init__(self, name, params, label=None, unit=None, **kwargs):
         super().__init__(name, **kwargs)
-        self.name = name
         self.params = params
         self.vals = qcodes.utils.validators.Anything()
         self._instrument = 'dummy'
