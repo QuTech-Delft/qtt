@@ -170,7 +170,7 @@ def _copy_to_str(x, memo=None):
 
 
 def _setstate(self, d):
-    self.name = d
+    self._short_name = d
     self._instrument = None
 
     def _get():
