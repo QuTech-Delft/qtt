@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import qtt.pgeometry as pgeometry
 from qtt.pgeometry import point_in_polygon, points_in_polygon
-from Polygon.cPolygon import Error as PolygonError
 
 
 class TestPGeometry(unittest.TestCase):
@@ -27,12 +26,12 @@ class TestGeometryOperations(unittest.TestCase):
             self.assertAlmostEqual(Rx[2, 1], np.sin(phi))
 
     def test_pg_scaling(self):
-        H = pgeometry.pg_scaling([1,2])
-        np.testing.assert_array_equal(H, np.diag([1,2,1]))
+        H = pgeometry.pg_scaling([1, 2])
+        np.testing.assert_array_equal(H, np.diag([1, 2, 1]))
         H = pgeometry.pg_scaling([2], [1])
-        np.testing.assert_array_equal(H, np.array([[2,-1],[0,1.]]) )
+        np.testing.assert_array_equal(H, np.array([[2, -1], [0, 1.]]))
         with self.assertRaises(ValueError):
-            pgeometry.pg_scaling([1], [1,2])
+            pgeometry.pg_scaling([1], [1, 2])
 
     def test_pg_rotation2H(self):
         R = pgeometry.pg_rotx(0.12)
@@ -51,31 +50,32 @@ class TestGeometryOperations(unittest.TestCase):
         np.testing.assert_array_almost_equal(Hs @ Ha @ Hp, R)
 
     def test_directionMean(self):
-        directions = [[1,0],[1,.1], [1,-.1]]
+        directions = [[1, 0], [1, .1], [1, -.1]]
         angle = pgeometry.directionMean(directions)
         angle = np.mod(angle, np.pi)
-        self.assertAlmostEqual(angle, np.pi/2)
+        self.assertAlmostEqual(angle, np.pi / 2)
 
-        directions = [[1,0],[-1,0]]
+        directions = [[1, 0], [-1, 0]]
         angle = pgeometry.directionMean(directions)
         angle = np.mod(angle, np.pi)
-        self.assertAlmostEqual(angle, np.pi/2)
+        self.assertAlmostEqual(angle, np.pi / 2)
+
 
 class TestPolygonGeometry(unittest.TestCase):
 
     def assertEmptyPolygon(self, polygon):
-        self.assertTrue(len(polygon)==0)
+        self.assertTrue(len(polygon) == 0)
 
     def test_polyintersect(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
         intersection_polygon = pgeometry.polyintersect(x1, x2)
-        self.assertEqual(3, len(intersection_polygon))
+        self.assertEqual(4, len(intersection_polygon))
         self.assertEqual(0.25, np.abs(pgeometry.polyarea(intersection_polygon)))
 
     def test_polyintersect_empty_intersection(self):
         x1 = np.array([(0, 0), (1, 1), (1, 0)])
-        x2 = 100+np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
+        x2 = 100 + np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
         intersection_polygon = pgeometry.polyintersect(x1, x2)
         self.assertEmptyPolygon(intersection_polygon)
 
@@ -89,11 +89,26 @@ class TestPolygonGeometry(unittest.TestCase):
         x1 = np.array([(0, 0)])
         x2 = np.array([(1, 0), (1.5, 1.5)])
 
-        try:
+        with self.assertRaises(ValueError):
             intersection_polygon = pgeometry.polyintersect(x1, x2)
-            self.assertEmptyPolygon(intersection_polygon)
-        except PolygonError as ex: # the assertRaises does not work due to the ctypes error message
-            self.assertIn('Invalid polygon or contour for operation', str(ex))
+
+    def test_multi_polygon_intersection(self):
+        delta = .42
+        shift = 1.7
+        x1 = np.array([(-1, -1), (1, -1), (1, 1), (-1, 1)]) + np.array([shift, 0])
+        x2 = np.array([(delta, 0), (5, 5), (-5, 5), (-delta, 0), (-5, -5), (5, -5), (delta, 0)])
+
+        with self.assertRaises(ValueError):
+            intersection_polygon = pgeometry.polyintersect(x1, x2)
+
+    def test_non_convex_intersection(self):
+        delta = .5
+        x1 = np.array([(-1, -1), (1, -1), (1, 1), (-1, 1)])
+        x2 = np.array([(delta, 0), (5, 5), (-5, 5), (-delta, 0), (-5, -5), (5, -5), (delta, 0)])
+        intersection_polygon = pgeometry.polyintersect(x1, x2)
+
+        self.assertEqual(intersection_polygon.shape, (11, 2))
+        self.assertEqual(np.abs(pgeometry.polyarea(intersection_polygon)), 31 / 9)
 
     def test_geometry(self, fig=None):
         im = np.zeros((200, 100, 3))
@@ -127,5 +142,3 @@ class TestPolygonGeometry(unittest.TestCase):
         self.assertTrue(point_in_polygon([1, 1], pp) == 1)
         self.assertTrue(point_in_polygon([-1, 1], pp) == -1)
         self.assertTrue(np.all(points_in_polygon(np.array([[-1, 1], [1, 1], [.5, .5]]), pp) == np.array([-1, 1, 1])))
-
-
