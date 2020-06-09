@@ -32,15 +32,14 @@ import subprocess
 import re
 import logging
 import pkgutil
+from functools import wraps
 
-import numpy as np
-import Polygon as polygon3
-import scipy.io
 import numpy
+import numpy as np
+import scipy.io
 import scipy.ndimage.morphology as morphology
 import scipy.ndimage.filters as filters
-
-from functools import wraps
+import shapely.geometry
 
 __version__ = '0.7.0'
 
@@ -637,15 +636,16 @@ def directionMean(vec):
 
     Args:
         vec: List of directions
-        
+
     Returns
         Angle of mean of directions
-        
+
     >>> vv=np.array( [[1,0],[1,0.1], [-1,.1]])
     >>> a=directionMean(vv)
 
     """
     vec = np.array(vec)
+
     def dist(a, vec):
         phi = np.arctan2(vec[:, 0], vec[:, 1])
         x = a - phi
@@ -1136,32 +1136,37 @@ def polyarea(p):
     return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
 
 
-def polyintersect(x1, x2):
-    """ Intersection of two polygons
+def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
+    """ Calculate intersection of two polygons
 
     Args:
-        x1 (array): First polygon
-        x2 (array): Second polygon
+        x1: First polygon. Shape is (N, 2) with N the number of vertices
+        x2: Second polygon
     Returns:
-        Array with points of the intersection
+        Intersection of both polygons
 
-   Example:
-    
+    Raises:
+        ValueError if the intersection consists of multiple polygons
+
     >>> x1=np.array([(0, 0), (1, 1), (1, 0)] )
     >>> x2=np.array([(1, 0), (1.5, 1.5), (.5, 0.5)])
     >>> x=polyintersect(x1, x2)
     >>> _=plt.figure(10); plt.clf()
-    >>> plotPoints(x1.T, '.-r' )
-    >>> plotPoints(x2.T, '.-b' )
+    >>> plotPoints(x1.T, '.:r' )
+    >>> plotPoints(x2.T, '.:b' )
     >>> plotPoints(x.T, '.-g' , linewidth=2)
-
     """
-    p1 = polygon3.Polygon(x1)
-    p2 = polygon3.Polygon(x2)
-    p = p1 & p2
-    x = np.array(p)
-    x = x.reshape((-1, 2))
-    return x
+
+    p1 = shapely.geometry.Polygon(x1)
+    p2 = shapely.geometry.Polygon(x2)
+    p = p1.intersection(p2)
+    if p.is_empty:
+        return np.zeros((0, 2))
+    if isinstance(p, shapely.geometry.multipolygon.MultiPolygon):
+        raise ValueError('intersection of polygons is not a simple polygon')
+    intersection_polygon = np.array(p.exterior.coords)
+    return intersection_polygon
+
 
 # %%
 
@@ -1203,7 +1208,7 @@ def enlargelims(factor=1.05):
 
     """
     if isinstance(factor, float):
-        factor=[factor]
+        factor = [factor]
     xl = plt.xlim()
     d = (factor[0] - 1) * (xl[1] - xl[0]) / 2
     xl = (xl[0] - d, xl[1] + d)
@@ -1672,9 +1677,9 @@ class plotCallback:
             scale = [1 / (1e-8 + np.ptp(xdata)), 1 / (1e-8 + np.ptp(ydata))]
         self.scale = scale
         if verbose:
-               print(f'plotCallback: scale {scale}')
+            print(f'plotCallback: scale {scale}')
         self.connection_ids = []
-        
+
     def __call__(self, event):
         if self.verbose:
             print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
@@ -1688,9 +1693,9 @@ class plotCallback:
         try:
             if self.xdata is not None:
                 xdata = np.array(self.xdata)
-                
+
                 if isinstance(xdata[0], numpy.datetime64):
-                    xdata=matplotlib.dates.date2num(xdata)
+                    xdata = matplotlib.dates.date2num(xdata)
 
                 ydata = np.array(self.ydata)
                 pt = np.array([event.xdata, event.ydata])
@@ -1698,7 +1703,7 @@ class plotCallback:
                 dd = xx - pt
                 dd = np.multiply(np.array(self.scale).reshape((1, 2)), dd)
                 d = np.linalg.norm(dd, axis=1)
-                d[np.isnan(d)]=np.inf
+                d[np.isnan(d)] = np.inf
                 idx = np.argmin(d)
                 distance = d[idx]
                 if self.verbose:
@@ -1720,6 +1725,7 @@ class plotCallback:
         cid = fig.canvas.mpl_connect('button_press_event', self)
         self.connection_ids.append(cid)
         return cid
+
 
 def cfigure(*args, **kwargs):
     """ Create Matplotlib figure with copy to clipboard functionality
@@ -1959,7 +1965,7 @@ def robustCost(x, thr, method='L1'):
     """
     if thr is None:
         return x
-    if thr is 'auto':
+    if thr == 'auto':
         ax = np.abs(x)
         thr = np.percentile(ax, 95.)
         p50 = np.percentile(ax, 50)
