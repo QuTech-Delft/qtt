@@ -59,6 +59,9 @@ class VirtualAwg(Instrument):
         self._latest_sequence_data = {}
         self.enable_debug = False
 
+        self.add_parameter('settings_snapshot', get_cmd=self.settings.snapshot, label='Settings snapshot')
+        self.settings_snapshot()
+
     def _get_virtual_info(self):
         """ Returns the data needed for snapshot of instrument."""
         return {'awg_map': self._settings.awg_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
@@ -175,7 +178,7 @@ class VirtualAwg(Instrument):
             (awg_number, channel_number, *_) = self._settings.awg_map[name]
             self.awgs[awg_number].enable_outputs([channel_number])
 
-    def disable_outputs(self, gate_names = None):
+    def disable_outputs(self, gate_names=None):
         """ Sets the given gates output to disabled. The gate map translates the given gate
             names to the correct AWG and channels. The digitizer and awg marker channels
             are automatically disabled if the channels are provided by the setttings awg_map.

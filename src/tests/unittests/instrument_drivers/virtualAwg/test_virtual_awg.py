@@ -31,6 +31,17 @@ class TestVirtualAwg(unittest.TestCase):
         self.assertEqual(awg_driver2, virtual_awg.awgs[1].fetch_awg)
         virtual_awg.close()
 
+    def test_snapshot_includes_settings(self) -> None:
+        awgs = TestVirtualAwg.__create_awg_drivers()
+        awg_driver1, awg_driver2 = awgs
+        virtual_awg = VirtualAwg(awgs, settings=self.settings)
+        instrument_snapshot = virtual_awg.snapshot()
+
+        self.assertIn('settings_snapshot', instrument_snapshot['parameters'])
+        self.assertDictEqual(instrument_snapshot['parameters']['settings_snapshot']['value'],
+                             virtual_awg.settings_snapshot())
+        virtual_awg.close()
+
     def test_init_HasNoInstruments(self) -> None:
         virtual_awg = VirtualAwg(settings=self.settings)
 
