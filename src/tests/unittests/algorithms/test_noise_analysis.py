@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from qtt.algorithms.noise_analysis import (power_law_model, outlier_detection, calculate_psd_welch, plot_psd,
-    generate_pink_noise, fit_power_law, fit_power_law_loglog)
+                                           generate_pink_noise, fit_power_law, fit_power_law_loglog)
 
 
 class TestNoise(unittest.TestCase):
@@ -26,27 +26,26 @@ class TestNoise(unittest.TestCase):
         np.testing.assert_array_almost_equal(values, A / frequencies**alpha)
 
     def test_outlier_detection(self):
-        data=np.random.rand(16)
-        data[2]=10
-        data[14]=-4
+        data = np.random.rand(16)
+        data[2] = 10
+        data[14] = -4
         inliers = outlier_detection(data)
         self.assertSequenceEqual(list(np.logical_not(inliers).nonzero()[0]), [2, 14])
 
     def test_outlier_detection_threshold(self):
-        data=[0,1,-.2,-2]
+        data = [0, 1, -.2, -2]
         inliers = outlier_detection(data, threshold=.5)
-        self.assertListEqual(list(inliers), [ True, False,  True, False])
+        self.assertListEqual(list(inliers), [True, False, True, False])
 
     def test_outlier_detection_empty_data(self):
-        data=[]
+        data = []
         with self.assertRaises(IndexError):
             _ = outlier_detection(data)
 
     def test_outlier_detection_empty_data_threshold(self):
-        data=[]
+        data = []
         inliers = outlier_detection(data, threshold=1)
         self.assertListEqual(list(inliers), [])
-
 
     def test_calculate_psd_welch(self):
         f_welch, psd_welch = calculate_psd_welch(self.pink_noise, sample_rate=self.sample_rate, nperseg=512)
@@ -83,4 +82,3 @@ class TestNoise(unittest.TestCase):
 
         with self.assertRaises(Exception):
             fit_pink_noise(f_welch, psd_welch)
-

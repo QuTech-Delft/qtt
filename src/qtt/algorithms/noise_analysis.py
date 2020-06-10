@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 
 @author: eendebakpt
@@ -113,7 +111,7 @@ def outlier_detection(data: np.ndarray, threshold: Optional[float] = None,
 
 
 def fit_power_law(frequencies: np.ndarray, signal_data: np.ndarray, initial_parameters: Optional[np.ndarray] = None,
-                   remove_outliers: bool = False) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+                  remove_outliers: bool = False) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """ Fit a model to data with a power law distribution
 
     The model fitted is signal = A/f^alpha
@@ -136,24 +134,25 @@ def fit_power_law(frequencies: np.ndarray, signal_data: np.ndarray, initial_para
         raise Exception('input data cannot contain 0')
 
     lmfit_model = Model(power_law_model, name='Power law model')
-    lmfit_result = lmfit_model.fit(signal_data, frequency=frequencies, **dict(zip(lmfit_model.param_names, initial_parameters)))
+    lmfit_result = lmfit_model.fit(signal_data, frequency=frequencies, **
+                                   dict(zip(lmfit_model.param_names, initial_parameters)))
 
     inliers = None
     if remove_outliers:
         inliers = outlier_detection(lmfit_result.residual)
 
         logging.info(f'fit_power_law: outlier detection: number of outliers: {(inliers==False).sum()}')
-        lmfit_result = lmfit_model.fit(signal_data[inliers], x=frequencies[inliers], **lmfit_result.best_values)
+        lmfit_result = lmfit_model.fit(signal_data[inliers], frequency=frequencies[inliers], **lmfit_result.best_values)
 
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
-    result_dict['description'] ='fit of power law model'
+    result_dict['description'] = 'fit of power law model'
     result_dict['inliers'] = inliers
 
     return result_dict['fitted_parameters'], result_dict
 
 
 def fit_power_law_loglog(frequencies: np.ndarray, signal_data: np.ndarray, initial_parameters: Optional[np.ndarray] = None,
-                   remove_outliers: bool = False) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+                         remove_outliers: bool = False) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """ Fit a model to data with a power law distribution
 
     The model fitted is signal = A/f^alpha
@@ -196,11 +195,11 @@ def fit_power_law_loglog(frequencies: np.ndarray, signal_data: np.ndarray, initi
         signal_data_log = np.log(signal_data)
         frequencies_log = np.log(frequencies)
 
-    weights = np.sqrt(1/frequencies)
+    weights = np.sqrt(1 / frequencies)
 
     lmfit_model = LinearModel(independent_vars=['x'], name='Power law model in loglog coordinates')
     lmfit_result = lmfit_model.fit(signal_data_log, x=frequencies_log, **
-                                   dict(zip(lmfit_model.param_names, initial_parameters_log_log)), weights = weights)
+                                   dict(zip(lmfit_model.param_names, initial_parameters_log_log)), weights=weights)
 
     inliers = None
     if remove_outliers:
