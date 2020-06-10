@@ -75,6 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for python 3.8 added (#672)
 - Add virtual awg settings to snapshot (#739)
 
+### Added
+- Add functions for fitting power law distributions (#743)
+
 ### Changed
 - Replaced implementation of polyintersection from Polygon3 to shapely (#744)
 - Included exampledata in distribution (#715)
