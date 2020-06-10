@@ -1,12 +1,9 @@
-import io
 import unittest
-from unittest import mock
-from unittest.mock import call, patch
 
 import numpy as np
 
-from qtt.algorithms.noise_analysis import calculate_psd_welch, fit_pink_noise
-from qtt.algorithms.noise_analysis import pink_noise_model, outlier_detection, calculate_psd_welch, plot_psd, generate_pink_noise, fit_pink_noise
+from qtt.algorithms.noise_analysis import (power_law_model, outlier_detection, calculate_psd_welch, plot_psd,
+    generate_pink_noise, fit_power_law, fit_power_law_loglog)
 
 
 class TestNoise(unittest.TestCase):
@@ -20,13 +17,36 @@ class TestNoise(unittest.TestCase):
             np.sin(2 * np.pi * freq * np.arange(N) / sample_rate)
         self.sample_rate = sample_rate
 
-    def test_pink_noise_model(self):
+    def test_power_law_model(self):
         A = 2
         alpha = 1.1
         frequencies = np.arange(0.1, 100, 7)
-        values = pink_noise_model(frequencies, A, alpha)
+        values = power_law_model(frequencies, A, alpha)
         self.assertIsInstance(values, np.ndarray)
         np.testing.assert_array_almost_equal(values, A / frequencies**alpha)
+
+    def test_outlier_detection(self):
+        data=np.random.rand(16)
+        data[2]=10
+        data[14]=-4
+        inliers = outlier_detection(data)
+        self.assertSequenceEqual(list(np.logical_not(inliers).nonzero()[0]), [2, 14])
+
+    def test_outlier_detection_threshold(self):
+        data=[0,1,-.2,-2]
+        inliers = outlier_detection(data, threshold=.5)
+        self.assertListEqual(list(inliers), [ True, False,  True, False])
+
+    def test_outlier_detection_empty_data(self):
+        data=[]
+        with self.assertRaises(IndexError):
+            _ = outlier_detection(data)
+
+    def test_outlier_detection_empty_data_threshold(self):
+        data=[]
+        inliers = outlier_detection(data, threshold=1)
+        self.assertListEqual(list(inliers), [])
+
 
     def test_calculate_psd_welch(self):
         f_welch, psd_welch = calculate_psd_welch(self.pink_noise, sample_rate=self.sample_rate, nperseg=512)
@@ -34,17 +54,33 @@ class TestNoise(unittest.TestCase):
         self.assertEqual(f_welch[0], 0)
         self.assertEqual(f_welch[-1], 5000.)
 
-    def test_fit_pink_noise(self):
+    def test_fit_power_law(self):
         f_welch, psd_welch = calculate_psd_welch(self.pink_noise, sample_rate=self.sample_rate, nperseg=512)
-        fitted_parameters, results = fit_pink_noise(f_welch[1:], psd_welch[1:])
+        fitted_parameters, results = fit_power_law(f_welch[1:], psd_welch[1:])
         self.assertIsInstance(results, dict)
         np.testing.assert_array_equal(fitted_parameters, results['fitted_parameters'])
         self.assertIsNone(results['inliers'])
 
-        fitted_parameters, results = fit_pink_noise(f_welch[1:], psd_welch[1:], remove_outliers=True)
+        fitted_parameters, results = fit_power_law(f_welch[1:], psd_welch[1:], remove_outliers=True)
         self.assertIsInstance(results, dict)
         np.testing.assert_array_equal(fitted_parameters, results['fitted_parameters'])
         self.assertAlmostEqual(fitted_parameters[1], 1.2, places=1)
 
         with self.assertRaises(Exception):
             fit_pink_noise(f_welch, psd_welch)
+
+    def test_fit_power_law_loglog(self):
+        f_welch, psd_welch = calculate_psd_welch(self.pink_noise, sample_rate=self.sample_rate, nperseg=512)
+        fitted_parameters, results = fit_power_law_loglog(f_welch[1:], psd_welch[1:])
+        self.assertIsInstance(results, dict)
+        np.testing.assert_array_equal(fitted_parameters, results['fitted_parameters'])
+        self.assertIsNone(results['inliers'])
+
+        fitted_parameters, results = fit_power_law_loglog(f_welch[1:], psd_welch[1:], remove_outliers=True)
+        self.assertIsInstance(results, dict)
+        np.testing.assert_array_equal(fitted_parameters, results['fitted_parameters'])
+        self.assertAlmostEqual(fitted_parameters[1], 1.2, places=1)
+
+        with self.assertRaises(Exception):
+            fit_pink_noise(f_welch, psd_welch)
+
