@@ -111,7 +111,7 @@ def _polarization_fit_initial_guess(x_data, y_data, kT=0, padding_fraction=0.15,
 
 def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, verbose=1, par_guess=None,
                 method='fmin'):
-    """ Polarization line fitting. 
+    """ Polarization line fitting.
 
     The default value for the maxiter argument of scipy.optimize.fmin is N*200
     the number of variables, i.e. 1200 in our case.
@@ -128,10 +128,10 @@ def fit_pol_all(x_data, y_data, kT, model='one_ele', maxiter=None, maxfun=5000, 
         par_guess = _polarization_fit_initial_guess(x_data, y_data, kT, fig=None)
 
     fitdata = {}
-    if method is 'fmin':
+    if method == 'fmin':
         def func_fmin(par): return polweight_all_2slopes(x_data, y_data, par, kT, model=model)
         par_fit = scipy.optimize.fmin(func_fmin, par_guess, maxiter=maxiter, maxfun=maxfun, disp=verbose >= 2)
-    elif method is 'curve_fit':
+    elif method == 'curve_fit':
         def func_curve_fit(x_data, tc, x0, y0, ml, mr, h): return polmod_all_2slopes(
             x_data, (tc, x0, y0, ml, mr, h), kT, model=model)
         par_fit, par_cov = scipy.optimize.curve_fit(func_curve_fit, x_data, y_data, par_guess)
