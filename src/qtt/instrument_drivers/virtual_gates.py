@@ -10,7 +10,6 @@ from qcodes import Instrument
 from functools import partial
 from qcodes.utils.validators import Numbers
 import numpy as np
-#from collections import OrderedDict as ordered_dict
 ordered_dict = dict
 
 import warnings
@@ -41,7 +40,7 @@ def create_virtual_matrix_dict(virt_basis, physical_gates, c=None, verbose=1):
         virt_basis (list): containing all the virtual gates in the setup
         physical_gates (list): containing all the physical gates in the setup
         c (array or None): virtual gate matrix
-    Returns: 
+    Returns:
         virtual_matrix (dict): dictionary, mapping of the virtual gates
     """
     virtual_matrix = ordered_dict()
@@ -62,7 +61,7 @@ class VirtualGates(Instrument):
 
     The virtual gates can be defined, such that when changing one of the
     virtual gates, the others are not influenced. The virtual gates
-    can be used for changing only one physical parameter, e.g. a chemical 
+    can be used for changing only one physical parameter, e.g. a chemical
     potential or a tunnel coupling.
 
     Note: They do not (yet?) have an offset relative to the physical parameters.
@@ -312,7 +311,7 @@ class VirtualGates(Instrument):
 
         Args:
             replace_map (dict): Map containing replacing values. Uses an
-                    arbitrary part of the dict inside the full map. Order of 
+                    arbitrary part of the dict inside the full map. Order of
                     gates does not matter.
 
                     Example: {'VP2': {'P2': 0.4}, 'VP2': {'P1': 0.4, 'P3': 0.1}}
@@ -328,7 +327,7 @@ class VirtualGates(Instrument):
 
         Args:
             replace_map (dict): Map containing replacing values. Uses an
-                    arbitrary part of the dict inside the full map. Order of 
+                    arbitrary part of the dict inside the full map. Order of
                     gates does not matter.
 
                     Example: {'P1': {'VP2': -0.4}, 'P2': {'VP1': -0.4, 'VP3': -0.1}}

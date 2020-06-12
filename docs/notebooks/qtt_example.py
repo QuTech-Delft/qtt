@@ -21,7 +21,7 @@ import qtt
 from qtt.gui.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
-from qtt.instrument_drivers.virtual_gates import virtual_gates
+from qtt.instrument_drivers.virtual_gates import VirtualGates
 from qtt import save_state
 import qtt.measurements.videomode
 
@@ -101,7 +101,7 @@ crosscap_map = OrderedDict((
     ('VP2', OrderedDict((('P1', 0.62), ('P2', 1), ('P3', 0.593)))),
     ('VP3', OrderedDict((('P1', 0.14), ('P2', 0.62), ('P3', 1))))
 ))
-virts = virtual_gates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
+virts = VirtualGates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
 virts.print_matrix()
 
 gates.resetgates(gv, gv, verbose=0)
