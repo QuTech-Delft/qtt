@@ -62,8 +62,12 @@ def plot_psd(frequencies: np.ndarray, psd: np.ndarray, frequency_unit: str = 'Hz
     plt.ylabel(f'Power spectral density ({signal_unit}$^2$/{frequency_unit})')
 
 
-def generate_pink_noise(sample_rate: float, number_of_samples: int, A: float = 1, alpha: float = 1):
+def generate_powerlaw_noise(sample_rate: float, number_of_samples: int, A: float = 1, alpha: float = 1):
     """ Generate sampled data with 1/f noise
+
+    The method is based on "On generating power law noise.", J. Timmer and M. Konig, Astron. Astrophys. 300,
+    pp. 707-710 (1995). For alpha = 1 this method generates pink noise, for alpha = 2 brown noise and for
+    alpha = 0 white noise.
 
     Args:
         sample_rate: Rate of sampling
@@ -81,33 +85,33 @@ def generate_pink_noise(sample_rate: float, number_of_samples: int, A: float = 1
     s_scale = s_scale**(-alpha / 2.)
     size = s_scale.size
 
-    fft = normal(scale=s_scale, size=size) + 1J * normal(scale=s_scale, size=size)
-    fft[0] = 0
+    signal_fft = normal(scale=s_scale, size=size) + 1J * normal(scale=s_scale, size=size)
+    signal_fft[0] = 0
 
     w = s_scale[1:].copy()
     w[-1] *= (1 + (number_of_samples % 2)) / 2.
     sigma = 2 * np.sqrt(np.sum(w**2)) / number_of_samples
-    signal = 3.5 * np.sqrt(A) * irfft(fft) / sigma
+    signal = 3.5 * np.sqrt(A) * irfft(signal_fft) / sigma
 
     return signal
 
 
-def outlier_detection(data: np.ndarray, threshold: Optional[float] = None,
+def get_outlier_mask(data: np.ndarray, threshold: Optional[float] = None,
                       percentile: float = 90):
     """ Detect outliers in data using a threshold
 
     Args:
         data: Data from which to determine the outliers
         threshold: Threshold to use for outlier detection. If None, then use the percentile argument to automatically determine the threshold
-        percentile: Determine the threshold by setting it the the percentile specified
+        percentile: Determine the threshold by setting it to the percentile specified
     Returns:
         Boolean array with value True for the inliers
     """
     residuals = np.abs(data)
     if threshold is None:
         threshold = np.percentile(residuals, percentile)
-    inliers = residuals <= threshold
-    return inliers
+    inlier_mask = residuals <= threshold
+    return inlier_mask
 
 
 def fit_power_law(frequencies: np.ndarray, signal_data: np.ndarray, initial_parameters: Optional[np.ndarray] = None,
@@ -139,7 +143,7 @@ def fit_power_law(frequencies: np.ndarray, signal_data: np.ndarray, initial_para
 
     inliers = None
     if remove_outliers:
-        inliers = outlier_detection(lmfit_result.residual)
+        inliers = get_outlier_mask(lmfit_result.residual)
 
         logging.info(f'fit_power_law: outlier detection: number of outliers: {(inliers==False).sum()}')
         lmfit_result = lmfit_model.fit(signal_data[inliers], frequency=frequencies[inliers], **lmfit_result.best_values)
@@ -203,7 +207,7 @@ def fit_power_law_loglog(frequencies: np.ndarray, signal_data: np.ndarray, initi
 
     inliers = None
     if remove_outliers:
-        inliers = outlier_detection(lmfit_result.residual)
+        inliers = get_outlier_mask(lmfit_result.residual)
 
         logging.info(f'fit_power_law: outlier detection: number of outliers: {(inliers==False).sum()}')
         lmfit_result = lmfit_model.fit(signal_data_log[inliers], x=frequencies_log[inliers], **lmfit_result.best_values)
