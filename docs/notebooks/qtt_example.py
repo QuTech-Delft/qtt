@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import tempfile
 from collections import OrderedDict
 import pyqtgraph
-_ = pyqtgraph.mkQApp()
 
 import qcodes
 from qcodes.data.data_set import DataSet
@@ -27,6 +26,7 @@ import qtt.measurements.videomode
 
 import qtt.simulation.virtual_dot_array
 
+_ = pyqtgraph.mkQApp()
 datadir = tempfile.mkdtemp(prefix='qtt_example')
 DataSet.default_io = qcodes.data.io.DiskIO(datadir)
 
