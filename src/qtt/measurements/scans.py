@@ -31,6 +31,7 @@ import qtt.utilities.tools
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 from qtt.pgeometry import plot2Dline
+from qtt.utilities.tools import logging_context
 
 from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
 from qtt.data import diffDataset
@@ -1988,7 +1989,8 @@ def acquire_segments(station, parameters, average=True, mV_range=2000,
 def _is_m4i(instrument_handle: Any) -> bool:
     """ Returns True if the instrument handle is an M4i instance, else False."""
     try:
-        from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
+        with logging_context(logging.ERROR+10):
+            from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
     except Exception:
         return False
 

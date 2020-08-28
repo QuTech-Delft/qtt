@@ -393,7 +393,7 @@ class DataViewer(QtWidgets.QMainWindow):
     def get_plot_parameter(self):
         ''' Return parameter to be plotted '''
         param_name = self.outCombo.currentText()
-        if param_name is not '':
+        if param_name != '':
             return param_name
         parameters = self.dataset.arrays.keys()
         if self.default_parameter in parameters:

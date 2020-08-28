@@ -8,13 +8,15 @@ import matplotlib.pyplot as plt
 
 class TestGeneric(unittest.TestCase):
 
-    @staticmethod
-    def test_subpixel(fig=100):
+    def test_subpixel(self, fig=100):
         np.random.seed(2019)
         ims = np.random.rand(40,)**2 + 1e1
         smooth_ims = smoothImage(ims)
 
         mpos = peak_local_max(smooth_ims, min_distance=3).flatten()
+        # make sure the local max are always ordered the same way (descending)
+        mpos[::-1].sort()
+        self.assertListEqual(list(mpos), [34, 20, 14, 7])
         subpos, subval = subpixelmax(smooth_ims, mpos)
 
         np.testing.assert_array_almost_equal(subpos, np.array([34.48945739, 19.7971219, 14.04429215, 7.17665281]),
@@ -50,7 +52,7 @@ class TestBoxcarFilter(unittest.TestCase):
 
     _signal_1D = [1.25, 4.52, 46.36]
     _signal_2D = [[1.25, 4.52, 46.36],
-                 [3.45, 25.66, 6234.6]]
+                  [3.45, 25.66, 6234.6]]
 
     _known_inputs_outputs_1D = [
         ([],
@@ -78,7 +80,7 @@ class TestBoxcarFilter(unittest.TestCase):
          np.array([-1., -1.,  1, -1.,  1., 1.]) / 3.),
 
         (np.array([-0.5, 1.5, 2.5, 3.5, -2.5]),
-         np.array([ 0.5, 3.5, 7.5, 3.5, -1.5]) / 3.),
+         np.array([0.5, 3.5, 7.5, 3.5, -1.5]) / 3.),
     ]
 
     _known_inputs_outputs_2D = [
@@ -122,10 +124,9 @@ class TestBoxcarFilter(unittest.TestCase):
 
         (np.array([[-0.5, 1.5, 2.5, 3.5, -2.5],
                    [-0.5, 1.5, 2.5, 3.5, -2.5]]),
-         np.array([[ 0.5, 3.5, 7.5, 3.5, -1.5],
-                   [ 0.5, 3.5, 7.5, 3.5, -1.5]]) / 3.),
+         np.array([[0.5, 3.5, 7.5, 3.5, -1.5],
+                   [0.5, 3.5, 7.5, 3.5, -1.5]]) / 3.),
     ]
-
 
     def assertFilterOutput(self, signal, kernel, out_exp):
         """Assert that signal generates output close to expectation"""
@@ -140,7 +141,6 @@ class TestBoxcarFilter(unittest.TestCase):
 
             if msg:
                 self.fail(msg)
-
 
     def test_float_inputs(self):
         kernel_1D = TestBoxcarFilter._kernel_size_1D
@@ -164,7 +164,6 @@ class TestBoxcarFilter(unittest.TestCase):
             if np.allclose(int_signal, signal):
                 self.assertFilterOutput(int_signal, kernel_2D, out_exp)
 
-
     def test_wrong_kernel_dimensions(self):
         """
         If the number of dimensions in the kernel is not equal to the number of dimensions
@@ -183,7 +182,6 @@ class TestBoxcarFilter(unittest.TestCase):
         self.assertRaises(RuntimeError, boxcar_filter, signal_2D, kernel_1D)
         self.assertRaises(RuntimeError, boxcar_filter, signal_2D, kernel_3D)
 
-
     def test_invalid_kernel_size(self):
         """
         If any of the dimensions of the kernel has non-positive size, an exception should be raised
@@ -194,6 +192,3 @@ class TestBoxcarFilter(unittest.TestCase):
         self.assertRaises(RuntimeError, boxcar_filter, signal_1D, (-1,))
         self.assertRaises(RuntimeError, boxcar_filter, signal_2D, (3, 0))
         self.assertRaises(RuntimeError, boxcar_filter, signal_2D, (5, -1))
-
-
-

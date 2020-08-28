@@ -55,7 +55,7 @@ class TestSequencer(unittest.TestCase):
         uptime = 4e-9
         with patch('warnings.warn') as warn:
             marker = Sequencer.make_marker(period=period, offset=offset, uptime=uptime)
-            warn.assert_called_once_with('Marker rolls over to subsequent period.')
+            warn.assert_any_call('Marker rolls over to subsequent period.')
         self.assertEqual(offset, marker['offset'])
         self.assertEqual(uptime, marker['uptime'])
 

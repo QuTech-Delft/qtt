@@ -183,12 +183,12 @@ def _slice_dataset(dataset: DataSet, slice_objects: Sequence[slice], output_para
         print(f'slice_dataset: dimension {scan_dimension} slice_objects {slice_objects}')
 
     if is_1d_dataset:
-        signal_window = zarray[slice_objects]
+        signal_window = zarray[tuple(slice_objects)]
         dataset_window = qtt.data.makeDataSet1Dplain(yarray.name, yarray[slice_objects[0]], yname=output_parameter_name,
                                                      y=signal_window, xunit=yarray.unit, yunit=zarray.unit)
     elif is_2d_dataset:
         xarray = set_arrays[1]
-        signal_window = zarray[slice_objects]
+        signal_window = zarray[tuple(slice_objects)]
         dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][slice_objects[1]], yarray.name,
                                                      yarray[slice_objects[0]], zname=output_parameter_name,
                                                      z=signal_window, xunit=xarray.unit, yunit=yarray.unit,
