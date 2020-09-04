@@ -853,7 +853,7 @@ try:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
                     activate_slide=True, ppLayout=None, extranotes=None, background_color=None,
-                    maximum_notes_size: int = 10e3):
+                    maximum_notes_size: int = 10000):
         """ Add slide to current active Powerpoint presentation.
 
         Arguments:
@@ -1140,7 +1140,8 @@ try:
 except ImportError:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
+                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None,
+                    maximum_notes_size: int = 10000):
         """ Add slide to current active Powerpoint presentation.
 
         Dummy implementation.
