@@ -10,7 +10,7 @@ import qtt.data
 # %%
 
 
-def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name: str,
+def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name: Optional[str],
                       processing_function: Callable, label: Optional[str] = None,
                       unit: Optional[str] = None, ) -> DataSet:
     """ Apply a function to a DataArray in a DataSet
