@@ -853,7 +853,8 @@ try:
 
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
+                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None,
+                    maximum_notes_size : int = 10e3):
         """ Add slide to current active Powerpoint presentation.
 
         Arguments:
@@ -871,6 +872,7 @@ try:
             ppLayout (int): layout of PP-slide (TitleOnly = 11, Text = 2).
             extranotes (str): notes for slide.
             background_color (None or tuple): background color for the slide.
+            maximum_notes_size: Maximum size of the notes in number of characters
 
         Returns:
             ppt: PowerPoint presentation.
@@ -929,6 +931,8 @@ try:
 
         max_slides_count_warning = 750
         max_slides_count = 950
+        maximum_notes_size = int(maximum_notes_size)
+        
         if ppt.Slides.Count > max_slides_count_warning:
             warning_message = "Your presentation has more than {} slides! \
                 Please start a new measurement logbook.".format(max_slides_count_warning)
@@ -1047,6 +1051,10 @@ try:
         if notes is not None:
             if notes == '':
                 notes = ' '
+            if len(notes)> maximum_notes_size:
+                warnings.warn(f'notes for powerpoint are {len(notes)} characters, reducing to {maximum_notes_size}')
+                notes=notes[:maximum_notes_size]
+                
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
 
