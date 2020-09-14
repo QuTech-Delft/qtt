@@ -63,7 +63,7 @@ except BaseException:
 from typing import Optional
 import contextlib
 @contextlib.contextmanager
-def logging_context(level : int =logging.INFO, logger : Optional[logging.Logger] = None):
+def logging_context(level: int = logging.INFO, logger: Optional[logging.Logger] = None):
     """ A context manager that changes the logging level
 
     Args:
@@ -81,9 +81,11 @@ def logging_context(level : int =logging.INFO, logger : Optional[logging.Logger]
     finally:
         logger.setLevel(previous_level)
 
+
 def is_spyder_environment():
     """ Return True if the process is running in a Spyder environment """
     return 'SPY_TESTING' in os.environ
+
 
 def get_module_versions(modules, verbose=0):
     """ Returns the module version of the given pip packages.
@@ -483,7 +485,7 @@ def diffImageSmooth(im, dy='x', sigma=2):
     if dy is None:
         imx = im.copy()
     elif dy == 0 or dy == 'x':
-        if len(im.shape)==1:
+        if len(im.shape) == 1:
             raise Exception(f'invalid parameter dy={dy} for 1D image')
         else:
             imx = ndimage.gaussian_filter1d(im, axis=1, sigma=sigma, order=1, mode='nearest')
@@ -661,7 +663,6 @@ try:
     import qtpy.QtGui as QtGui
     import qtpy.QtWidgets as QtWidgets
 
-
     def monitorSizes(verbose=0):
         """ Return monitor sizes."""
         _qd = QtWidgets.QDesktopWidget()
@@ -691,7 +692,6 @@ except BaseException:
     def monitorSizes(verbose=0):
         """ Dummy function for monitor sizes."""
         return [[0, 0, 1600, 1200]]
-
 
     pass
 
@@ -850,10 +850,10 @@ try:
     import win32com
     import win32com.client
 
-
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
+                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None,
+                    maximum_notes_size: int = 10000):
         """ Add slide to current active Powerpoint presentation.
 
         Arguments:
@@ -871,6 +871,7 @@ try:
             ppLayout (int): layout of PP-slide (TitleOnly = 11, Text = 2).
             extranotes (str): notes for slide.
             background_color (None or tuple): background color for the slide.
+            maximum_notes_size: Maximum size of the notes in number of characters
 
         Returns:
             ppt: PowerPoint presentation.
@@ -929,6 +930,8 @@ try:
 
         max_slides_count_warning = 750
         max_slides_count = 950
+        maximum_notes_size = int(maximum_notes_size)
+
         if ppt.Slides.Count > max_slides_count_warning:
             warning_message = "Your presentation has more than {} slides! \
                 Please start a new measurement logbook.".format(max_slides_count_warning)
@@ -1047,6 +1050,10 @@ try:
         if notes is not None:
             if notes == '':
                 notes = ' '
+            if len(notes) > maximum_notes_size:
+                warnings.warn(f'notes for powerpoint are {len(notes)} characters, reducing to {maximum_notes_size}')
+                notes = notes[:maximum_notes_size]
+
             slide.notespage.shapes.placeholders[
                 2].textframe.textrange.insertafter(notes)
 
@@ -1056,7 +1063,6 @@ try:
                 print('addPPTslide: goto slide %d' % idx)
             Application.ActiveWindow.View.GotoSlide(idx)
         return ppt, slide
-
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
@@ -1134,14 +1140,14 @@ try:
 except ImportError:
     def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
                     subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None):
+                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None,
+                    maximum_notes_size: int = 10000):
         """ Add slide to current active Powerpoint presentation.
 
         Dummy implementation.
         """
         warnings.warn(
             'addPPTslide is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
-
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
