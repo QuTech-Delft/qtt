@@ -10,6 +10,7 @@ import qtpy.QtWidgets as QtWidgets
 from qtpy.QtWidgets import QFileDialog, QWidget
 
 import qcodes
+from qcodes.data.data_set import DataSet
 import qtt
 from qcodes.plots.pyqtgraph import QtPlot
 
@@ -38,7 +39,7 @@ class DataViewer(QtWidgets.QMainWindow):
         self.data_directories = [None] * 2
         self.directory_index = 0
         if data_directory is None:
-            data_directory = qcodes.DataSet.default_io.base_location
+            data_directory = DataSet.default_io.base_location
 
         self.extensions = extensions
 
@@ -152,7 +153,7 @@ class DataViewer(QtWidgets.QMainWindow):
     def set_data_directory(self, data_directory, index=0):
         self.data_directories[index] = data_directory
         self.data_directory = data_directory
-        self.disk_io = qcodes.DiskIO(data_directory)
+        self.disk_io = qcodes.data.io.DiskIO(data_directory)
         logging.info('DataViewer: data directory %s' % data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
 
@@ -165,7 +166,7 @@ class DataViewer(QtWidgets.QMainWindow):
         index = (self.directory_index + 1) % len(self.data_directories)
         self.directory_index = index
         self.data_directory = self.data_directories[index]
-        self.disk_io = qcodes.DiskIO(self.data_directory)
+        self.disk_io = qcodes.data.io.DiskIO(self.data_directory)
         logging.info('DataViewer: data directory %s' % self.data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
         self.update_logs()
@@ -234,7 +235,7 @@ class DataViewer(QtWidgets.QMainWindow):
                 while (index.child(i, 0).data() is not None):
                     filename = index.child(i, 3).data()
                     loc = '\\'.join(filename.split('\\')[:-1])
-                    tempdata = qcodes.DataSet(loc)
+                    tempdata = DataSet(loc)
                     tempdata.read_metadata()
                     infotxt = DataViewer.get_data_info(tempdata.metadata)
                     self._treemodel.setData(index.child(i, 1), infotxt)
@@ -392,7 +393,7 @@ class DataViewer(QtWidgets.QMainWindow):
     def get_plot_parameter(self):
         ''' Return parameter to be plotted '''
         param_name = self.outCombo.currentText()
-        if param_name is not '':
+        if param_name != '':
             return param_name
         parameters = self.dataset.arrays.keys()
         if self.default_parameter in parameters:

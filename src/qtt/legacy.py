@@ -2,46 +2,24 @@
 import copy
 
 import numpy as np
-import scipy
 import matplotlib
 import sys
 import os
-import logging
 import cv2
-import time
-import math
 import pickle
 import warnings
 
-import qcodes
-# explicit import
-from qcodes.plots.pyqtgraph import QtPlot
-from qcodes.plots.qcmatplotlib import MatPlot
-from qtt.algorithms.images import straightenImage
-
 import qtt.data
-from qtt.data import loadExperimentData
 import qtt.algorithms.onedot
-from qtt.measurements.scans import scanjob_t
-import matplotlib.pyplot as plt
 import datetime
-
-from qtt.measurements.scans import sample_data_t, enforce_boundaries
 
 # %%
 
-from qtt.data import dataset2Dmetadata, dataset2image
-
-from qtt.algorithms.onedot import onedotGetBalanceFine
-from qtt.measurements.scans import fixReversal
-from qtt.data import load_data, show2D
-from qtt.utilities.tools import diffImage, diffImageSmooth, rdeprecated
-from qtt.algorithms.generic import smoothImage
-#from qtt.measurements.scans import scanPinchValue
-
+from qtt.algorithms.gatesweep import analyseGateSweep
+from qtt.data import loadDataset
+from qtt.utilities.tools import diffImage, rdeprecated
 
 from qtt import pgeometry as pmatlab
-from qtt.pgeometry import plotPoints, tilefigs
 
 warnings.warn('please do not import this module')
 
@@ -335,6 +313,38 @@ def getPinchvalues(od, xdir, verbose=1):
         if verbose:
             print('getPinchvalues: gate %s : %.2f' % (g, adata['pinchoff_point']))
         od['pinchvalues'][jj] = adata['pinchoff_point']
+    return od
+
+
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='1 Sep 2018')
+def loadOneDotPinchvalues(od, outputdir, verbose=1):
+    """ Load the pinch-off values for a one-dot
+
+    Arguments
+    ---------
+        od : dict
+            one-dot structure
+        outputdir : string
+            location of the data
+
+    """
+    print('analyse data for 1-dot: %s' % od['name'])
+    gg = od['gates']
+    pv = np.zeros((3, 1))
+    for ii, g in enumerate(gg):
+        basename = pinchoffFilename(g, od=None)
+
+        pfile = os.path.join(outputdir, 'one_dot', basename)
+        alldata, _ = loadDataset(pfile)
+        if alldata is None:
+            raise Exception('could not load file %s' % pfile)
+        adata = analyseGateSweep(
+            alldata, fig=None, minthr=None, maxthr=None, verbose=1)
+        if verbose:
+            print('loadOneDotPinchvalues: pinchvalue for gate %s: %.1f' %
+                  (g, adata['pinchoff_point']))
+        pv[ii] = adata['pinchoff_point']
+    od['pinchvalues'] = pv
     return od
 
 

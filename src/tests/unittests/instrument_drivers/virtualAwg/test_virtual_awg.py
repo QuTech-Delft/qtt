@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 import unittest
 
 from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
@@ -15,7 +15,7 @@ class TestVirtualAwg(unittest.TestCase):
         self.settings.close()
 
     @staticmethod
-    def __create_awg_drivers() -> List[Mock]:
+    def __create_awg_drivers() -> List[Any]:
         awg_driver1, awg_driver2 = Mock(), Mock()
         type(awg_driver2).__name__ = 'Tektronix_AWG5014'
         type(awg_driver1).__name__ = 'Tektronix_AWG5014'
@@ -29,6 +29,17 @@ class TestVirtualAwg(unittest.TestCase):
         self.assertEqual(virtual_awg.settings, self.settings)
         self.assertEqual(awg_driver1, virtual_awg.awgs[0].fetch_awg)
         self.assertEqual(awg_driver2, virtual_awg.awgs[1].fetch_awg)
+        virtual_awg.close()
+
+    def test_snapshot_includes_settings(self) -> None:
+        awgs = TestVirtualAwg.__create_awg_drivers()
+        awg_driver1, awg_driver2 = awgs
+        virtual_awg = VirtualAwg(awgs, settings=self.settings)
+        instrument_snapshot = virtual_awg.snapshot()
+
+        self.assertIn('settings_snapshot', instrument_snapshot['parameters'])
+        self.assertDictEqual(instrument_snapshot['parameters']['settings_snapshot']['value'],
+                             virtual_awg.settings_snapshot())
         virtual_awg.close()
 
     def test_init_HasNoInstruments(self) -> None:

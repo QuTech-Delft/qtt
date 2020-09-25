@@ -47,12 +47,13 @@ $ source ./env/bin/activate
 or use the python3.7 equivalent to generate a python 3.7 environment.
 On Windows do:
 ```
-$ python -m venv env
+$ python -m pip install virtualenv
+$ python -m virtualenv --copies env
 $ env\Scripts\activate.bat
 ```
 Now we are ready to install QTT.
 ### Installation from Pypi
-To use QTT for Python 3.6.x or lower, install it as a pip package: 
+To use QTT for Python 3.6.x or lower, install it as a pip package:
 ```
 $ pip install qtt
 ```
@@ -66,14 +67,14 @@ $ cd qtt
 $ pip install wheel
 ```
 For QTT development install QTT in editable mode:
-``` 
+```
 $ pip install -e .
 ```
 For non-editable mode do:
-``` 
+```
 $ pip install .
 ```
-When (encountered on Linux) PyQt5 gives an error when installing try upgrading pip 
+When (encountered on Linux) PyQt5 gives an error when installing try upgrading pip
 ```
 $ pip install --upgrade pip
 ```
@@ -104,7 +105,7 @@ $ pip install -e .[rtd]
 ```
 The documentation generation process is dependent on pandoc. When you want to generate the
 documentation and pandoc is not yet installed on your system navigate
-to [Pandoc](https://pandoc.org/installing.html) and follow the instructions found there to install pandoc. 
+to [Pandoc](https://pandoc.org/installing.html) and follow the instructions found there to install pandoc.
 To build the 'readthedocs' documentation do:
 ```
 $ cd docs

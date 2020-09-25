@@ -6,7 +6,6 @@ from qtt.instrument_drivers.virtualAwg.templates import DataTypes
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 # warnings.filterwarnings('ignore', category=UserWarning, message="gmpy2 not found.")
 from qupulse.pulses.plotting import (PlottingNotPossibleException, render)
-from qupulse.pulses.sequencing import Sequencer as Sequencing
 
 
 class TestSequencer(unittest.TestCase):
@@ -15,6 +14,7 @@ class TestSequencer(unittest.TestCase):
         offset = 0
         uptime = 4e-9
         marker = Sequencer.make_marker(period=period, offset=offset, uptime=uptime)
+
         self.assertEqual(offset, marker['offset'])
         self.assertEqual(uptime, marker['uptime'])
 
@@ -55,7 +55,7 @@ class TestSequencer(unittest.TestCase):
         uptime = 4e-9
         with patch('warnings.warn') as warn:
             marker = Sequencer.make_marker(period=period, offset=offset, uptime=uptime)
-            warn.assert_called_once_with('Marker rolls over to subsequent period.')
+            warn.assert_any_call('Marker rolls over to subsequent period.')
         self.assertEqual(offset, marker['offset'])
         self.assertEqual(uptime, marker['uptime'])
 
@@ -108,7 +108,7 @@ class TestSequencer(unittest.TestCase):
             self.assertTrue(np.abs(np.min(raw_data) + amplitude / 2) <= epsilon)
             self.assertTrue(np.abs(np.max(raw_data) - amplitude / 2) <= epsilon)
 
-    def test_qupulse_template_to_array_new_style_vs_old_style(self):
+    def test_qupulse_template_to_array_new_style_vs_values_old_style(self):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning, message="qupulse")
             warnings.filterwarnings("ignore", category=DeprecationWarning, message="InstructionBlock API is deprecated")
@@ -118,24 +118,17 @@ class TestSequencer(unittest.TestCase):
             sequence = Sequencer.make_sawtooth_wave(amplitude, period)
             template = sequence['wave']
             channels = template.defined_channels
-            sequencer = Sequencing()
-            sequencer.push(template, dict(), channel_mapping={ch: ch for ch in channels},
-                           window_mapping={w: w for w in template.measurement_names})
-            instructions = sequencer.build()
-            if not sequencer.has_finished():
-                raise PlottingNotPossibleException(template)
-            (_, voltages_old, _) = render(instructions, sampling_rate / 1e9)
-
             loop = template.create_program(parameters=dict(),
                                            measurement_mapping={w: w for w in template.measurement_names},
                                            channel_mapping={ch: ch for ch in channels},
                                            global_transformation=None,
                                            to_single_waveform=set())
-
             (_, voltages_new, _) = render(loop, sampling_rate / 1e9)
-            self.assertTrue(len(voltages_old) == len(voltages_new))
-            self.assertTrue(np.min(voltages_old) == np.min(voltages_old))
-            self.assertTrue(np.max(voltages_old) == np.max(voltages_old))
+
+            # the value to compare to are calculated using qupulse 0.4 Sequencer class
+            self.assertTrue(1000001 == len(voltages_new['sawtooth']))
+            self.assertAlmostEqual(-amplitude/2, np.min(voltages_new['sawtooth']), 12)
+            self.assertAlmostEqual(amplitude/2, np.max(voltages_new['sawtooth']), 12)
 
     def test_raw_wave_HasCorrectProperties(self):
         with warnings.catch_warnings():

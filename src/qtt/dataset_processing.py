@@ -2,15 +2,15 @@ from typing import Sequence, Callable, Optional, Union, Tuple
 import numpy as np
 import copy
 
-import qcodes
+from qcodes.data.data_set import DataSet
+from qcodes.data.data_array import DataArray
 import qtt.data
-from qtt.data import DataSet
 
 
 # %%
 
 
-def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name: str,
+def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name: Optional[str],
                       processing_function: Callable, label: Optional[str] = None,
                       unit: Optional[str] = None, ) -> DataSet:
     """ Apply a function to a DataArray in a DataSet
@@ -32,7 +32,7 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
     if output_array_name is None:
         array.ndarray[:] = data
     else:
-        data_array = qcodes.DataArray(array_id=output_array_name, name=output_array_name, label=label,
+        data_array = DataArray(array_id=output_array_name, name=output_array_name, label=label,
                                       set_arrays=array.set_arrays, preset_data=data, unit=unit)
         dataset.add_array(data_array)
     return dataset
@@ -183,12 +183,12 @@ def _slice_dataset(dataset: DataSet, slice_objects: Sequence[slice], output_para
         print(f'slice_dataset: dimension {scan_dimension} slice_objects {slice_objects}')
 
     if is_1d_dataset:
-        signal_window = zarray[slice_objects]
+        signal_window = zarray[tuple(slice_objects)]
         dataset_window = qtt.data.makeDataSet1Dplain(yarray.name, yarray[slice_objects[0]], yname=output_parameter_name,
                                                      y=signal_window, xunit=yarray.unit, yunit=zarray.unit)
     elif is_2d_dataset:
         xarray = set_arrays[1]
-        signal_window = zarray[slice_objects]
+        signal_window = zarray[tuple(slice_objects)]
         dataset_window = qtt.data.makeDataSet2Dplain(xarray.name, xarray[0][slice_objects[1]], yarray.name,
                                                      yarray[slice_objects[0]], zname=output_parameter_name,
                                                      z=signal_window, xunit=xarray.unit, yunit=yarray.unit,

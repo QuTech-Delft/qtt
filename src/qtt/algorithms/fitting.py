@@ -1,4 +1,4 @@
-""" Fitting of Fermi-Dirac distributions. """
+""" Fitting of various models. """
 
 import warnings
 
@@ -6,14 +6,16 @@ import operator
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-from lmfit import Model
+from typing import Tuple, Dict, Any
 
+from lmfit.model import Model, ModelResult
+
+from qcodes.data.data_array import DataArray
 import qtt.pgeometry
-from qcodes import DataArray
-from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian
+from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
 
 
-def extract_lmfit_parameters(lmfit_model, lmfit_result):
+def extract_lmfit_parameters(lmfit_model : Model, lmfit_result : ModelResult) -> Dict[str, Any]:
     """ Convert lmfit results to a dictionary
 
     Args:
@@ -27,8 +29,15 @@ def extract_lmfit_parameters(lmfit_model, lmfit_result):
     fitted_parameters = np.array([lmfit_result.best_values[p] for p in param_names])
     initial_parameters = np.array([lmfit_result.init_params[p] for p in param_names])
 
+    if lmfit_result.covar is None:
+        fitted_parameters_covariance = None
+    else:
+        fitted_parameters_covariance = np.diag(lmfit_result.covar)
+
     results = {'fitted_parameters': fitted_parameters, 'initial_parameters': initial_parameters,
-               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name, 'fitted_parameter_dictionary': lmfit_result.best_values}
+               'reduced_chi_squared': lmfit_result.redchi, 'type': lmfit_model.name,
+               'fitted_parameter_dictionary': lmfit_result.best_values,
+               'fitted_parameters_covariance': fitted_parameters_covariance}
     return results
 
 
@@ -197,7 +206,8 @@ def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
     return initial_parameters
 
 
-def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None, estimate_offset=True):
+def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_parameters=None, initial_params=None,
+                 estimate_offset=True):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
 
     Args:
@@ -248,6 +258,39 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
     result_dict['parameters initial guess'] = result_dict['initial_parameters']
 
     return result_dict['fitted_parameters'], result_dict
+
+
+def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None,
+             positive_amplitude=True) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """ Fit a sine wave for the inputted data; see sine function in functions.py for model
+
+    Args:
+        x_data: x data points
+        y_data: data to be fitted
+        initial_parameters: list of 4 floats with initial guesses for: amplitude, frequency, phase and offset
+        positive_amplitude: If True, then enforce the amplitude to be positive
+    Returns:
+        result_dict
+    """
+    if initial_parameters is None:
+        initial_parameters = _estimate_initial_parameters_sine(x_data, y_data)
+
+    lmfit_model = Model(sine)
+    if positive_amplitude:
+        lmfit_model.set_param_hint('amplitude', min=0)
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)))
+    result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
+
+    return result_dict['fitted_parameters'], result_dict
+
+
+def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
+    amplitude = (np.max(y_data) - np.min(y_data)) / 2
+    offset = np.mean(y_data)
+    frequency = estimate_dominant_frequency(y_data, sample_rate=1 / np.mean(np.diff(x_data)), remove_dc=True, fig=None)
+    phase = 0.0
+    initial_parameters = np.array([amplitude, frequency, phase, offset])
+    return initial_parameters
 
 
 def _estimate_fermi_model_center_amplitude(x_data, y_data_linearized, fig=None):
@@ -494,7 +537,6 @@ def fit_addition_line_array(x_data, y_data, trimborder=True):
         x_data = x_data[cut_index: -cut_index]
         y_data = y_data[cut_index: -cut_index]
 
-    # fitting of the FermiLinear function
     fit_parameters, extra_data = fitFermiLinear(x_data, y_data, verbose=1, fig=None)
     initial_parameters = extra_data['p0']
     m_addition_line = fit_parameters[2]

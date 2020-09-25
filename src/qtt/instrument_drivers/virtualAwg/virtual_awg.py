@@ -59,6 +59,9 @@ class VirtualAwg(Instrument):
         self._latest_sequence_data = {}
         self.enable_debug = False
 
+        self.add_parameter('settings_snapshot', get_cmd=self.settings.snapshot, label='Settings snapshot')
+        self.settings_snapshot()
+
     def _get_virtual_info(self):
         """ Returns the data needed for snapshot of instrument."""
         return {'awg_map': self._settings.awg_map, 'awgs': [type(awg).__name__ for awg in self.awgs]}
@@ -175,22 +178,26 @@ class VirtualAwg(Instrument):
             (awg_number, channel_number, *_) = self._settings.awg_map[name]
             self.awgs[awg_number].enable_outputs([channel_number])
 
-    def disable_outputs(self, gate_names):
+    def disable_outputs(self, gate_names=None):
         """ Sets the given gates output to disabled. The gate map translates the given gate
             names to the correct AWG and channels. The digitizer and awg marker channels
             are automatically disabled if the channels are provided by the setttings awg_map.
             A start command is required to enable the outputs.
 
         Arguments:
-            gate_names (list) The names of the gates which needs to be disabled.
+            gate_names (list or None) The names of the gates which needs to be disabled. If None, then disable all gates
         """
-        if VirtualAwg.__digitizer_name in self._settings.awg_map:
-            gate_names.extend([VirtualAwg.__digitizer_name])
-        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
-            gate_names.extend([VirtualAwg.__awg_slave_name])
-        for name in gate_names:
-            (awg_number, channel_number, *_) = self._settings.awg_map[name]
-            self.awgs[awg_number].disable_outputs([channel_number])
+        if gate_names is None:
+            for awg in self.awgs:
+                awg.disable_outputs()
+        else:
+            if VirtualAwg.__digitizer_name in self._settings.awg_map:
+                gate_names.extend([VirtualAwg.__digitizer_name])
+            if VirtualAwg.__awg_slave_name in self._settings.awg_map:
+                gate_names.extend([VirtualAwg.__awg_slave_name])
+            for name in gate_names:
+                (awg_number, channel_number, *_) = self._settings.awg_map[name]
+                self.awgs[awg_number].disable_outputs([channel_number])
 
     def update_setting(self, awg_number, setting, value):
         """ Updates a setting of the underlying AWG. The default settings are set

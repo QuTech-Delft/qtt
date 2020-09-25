@@ -22,6 +22,8 @@ import warnings
 import qcodes
 from qcodes import Instrument, ManualParameter, Parameter, Station
 from qcodes.data.location import FormatLocation
+import qcodes.loops
+
 from setuptools._vendor.packaging.version import Version
 
 import qtt.algorithms
@@ -82,8 +84,6 @@ check_version('0.18', 'scipy')
 check_version('0.1', 'redis', optional=True)
 check_version('0.8.0', qcodes)
 check_version('0.2', 'qupulse')
-
-check_version('3.0', 'Polygon', install_message="use command 'pip install Polygon3' to install the package")
 
 # %% Load often used constructions
 
@@ -152,14 +152,14 @@ qcodes.loops.abort_measurements = _abort_measurement # type: ignore
 # %% Override default location formatter
 
 FormatLocation.default_fmt = '{date}/{time}_{name}_{label}'
-qcodes.DataSet.location_provider = FormatLocation(
+qcodes.data.data_set.DataSet.location_provider = FormatLocation(
     fmt='{date}/{time}_{name}_{label}', record={'name': 'qtt', 'label': 'generic'})
 
 
 def set_location_name(name, verbose=1):
     if verbose:
         print('setting location name tag to %s' % name)
-    qcodes.DataSet.location_provider.base_record['name'] = name
+    qcodes.data.data_set.DataSet.location_provider.base_record['name'] = name
 # %%
 
 
@@ -168,7 +168,7 @@ def _copy_to_str(x, memo=None):
 
 
 def _setstate(self, d):
-    self.name = d
+    self._short_name = d
     self._instrument = None
 
     def _get():

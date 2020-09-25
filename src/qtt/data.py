@@ -5,13 +5,13 @@ import logging
 import os
 import pickle
 from functools import wraps
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
 import scipy
-from qcodes import new_data
+from qcodes.data.data_set import new_data
 from qcodes.data.data_array import DataArray
 from qcodes.data.data_set import DataSet
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -23,7 +23,7 @@ from qtt import pgeometry
 logger = logging.getLogger(__name__)
 
 
-def load_example_dataset(filename, verbose = 0):
+def load_example_dataset(filename, verbose=0):
     """ Return an example dataset from qtt
 
     Args:
@@ -34,7 +34,7 @@ def load_example_dataset(filename, verbose = 0):
     """
     exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
 
-    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose = verbose)
+    dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose=verbose)
     return dataset
 
 
@@ -67,27 +67,27 @@ def _dictionary_to_data_array(array_dictionary):
     array_full_name = array_dictionary['full_name']
     if array_full_name is None:
         array_full_name = array_name
-    data_array = qcodes.DataArray(name=array_name,
-                                  full_name=array_dictionary['full_name'],
-                                  label=array_dictionary['label'],
-                                  unit=array_dictionary['unit'],
-                                  is_setpoint=array_dictionary['is_setpoint'],
-                                  shape=tuple(array_dictionary['shape']),
-                                  array_id=array_id,
-                                  preset_data=preset_data)
+    data_array = DataArray(name=array_name,
+                           full_name=array_dictionary['full_name'],
+                           label=array_dictionary['label'],
+                           unit=array_dictionary['unit'],
+                           is_setpoint=array_dictionary['is_setpoint'],
+                           shape=tuple(array_dictionary['shape']),
+                           array_id=array_id,
+                           preset_data=preset_data)
     return data_array
 
 
-def dictionary_to_dataset(data_dictionary):
+def dictionary_to_dataset(data_dictionary: dict) -> DataSet:
     """ Convert dictionary to DataSet.
 
     Args:
-        data_dictionary (dict): data to convert
+        data_dictionary: data to convert
 
     Returns:
-        DataSet: converted data.
+        DataSet with converted data.
     """
-    dataset = qcodes.new_data()
+    dataset = new_data()
     dataset.metadata.update(data_dictionary['metadata'])
 
     for array_key, array_dict in data_dictionary['arrays'].items():
@@ -102,18 +102,18 @@ def dictionary_to_dataset(data_dictionary):
     return dataset
 
 
-def dataset_to_dictionary(data_set, include_data=True, include_metadata=True):
+def dataset_to_dictionary(data_set: DataSet, include_data: bool = True, include_metadata: bool = True) -> Dict[str, Any]:
     """ Convert DataSet to dictionary.
 
     Args:
-        data_set (DataSet): The data to convert.
-        include_data (bool): If True then include the ndarray field.
-        include_metadata (bool): If True then include the metadata.
+        data_set: The data to convert.
+        include_data: If True then include the ndarray field.
+        include_metadata: If True then include the metadata.
 
     Returns:
-        dict: dictionary containing the serialized data.
+        Dictionary containing the serialized data.
     """
-    data_dictionary = {'extra': {}, 'metadata': None, 'arrays': {}}
+    data_dictionary: Dict[str, Any] = {'extra': {}, 'metadata': None, 'arrays': {}}
 
     for array_id, data_array in data_set.arrays.items():
         data_dictionary['arrays'][array_id] = _data_array_to_dictionary(data_array, include_data)
@@ -156,14 +156,14 @@ def load_dataset(location, io=None, verbose=0):
 
     Args:
         location (str): either the relative or full location
-        io (None or qcodes.DiskIO):
+        io (None or qcodes.data.io.DiskIO):
     Returns:
         dataset (DataSet or None)
     """
 
     if io is None:
-        io = qcodes.DataSet.default_io
-    formatters = [qcodes.DataSet.default_formatter]
+        io = DataSet.default_io
+    formatters = [DataSet.default_formatter]
 
     from qcodes.data.hdf5_format import HDF5FormatMetadata
     from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
@@ -186,7 +186,7 @@ def load_dataset(location, io=None, verbose=0):
             try:
                 if verbose:
                     print('%d: %s' % (ii, hformatter))
-                data = qcodes.load_data(location, formatter=hformatter, io=io)
+                data = qcodes.data.data_set.load_data(location, formatter=hformatter, io=io)
                 if len(data.arrays) == 0:
                     data = None
                     raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')
@@ -244,7 +244,7 @@ def store_latest_decorator(function, obj):
 
 def get_latest_dataset():
     """ Return latest dataset that was created """
-    return getattr(qcodes.DataSet._latest, None)
+    return getattr(DataSet._latest, None)
 
 
 def add_comment(txt, dataset=None, verbose=0):
@@ -256,9 +256,9 @@ def add_comment(txt, dataset=None, verbose=0):
 
     """
     if dataset is None:
-        if hasattr(qcodes.DataSet, '_latest_datasets'):
+        if hasattr(DataSet, '_latest_datasets'):
             try:
-                dataset = qcodes.DataSet._latest_datasets[0]
+                dataset = DataSet._latest_datasets[0]
             except BaseException:
                 pass
         else:
@@ -294,22 +294,28 @@ def datasetCentre(ds, ndim=None):
     return cc
 
 
-def drawCrosshair(ds, ax=None, ndim=None):
+def drawCrosshair(ds, ax=None, ndim=None, **kwargs):
     """ Draw a crosshair on the centre of the dataset
 
     Args:
         ds (DataSet):
         ax (None or matplotlib axis handle)
         ndim (None or int): dimension of dataset
+        kwargs: Arguments passed to the plotting command
     """
 
     cc = datasetCentre(ds, ndim=ndim)
 
+    if not 'linestyle' in kwargs:
+        kwargs['linestyle'] = ':'
+    if not 'color' in kwargs:
+        kwargs['color'] = 'c'
+
     if ax is None:
         ax = plt.gca()
-    ax.axvline(x=cc[0], linestyle=':', color='c')
+    ax.axvline(x=cc[0], **kwargs)
     if len(cc) == 2:
-        ax.axhline(y=cc[1], linestyle=':', color='c')
+        ax.axhline(y=cc[1], **kwargs)
 
 
 # %%
@@ -459,7 +465,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
     imx = qtt.utilities.tools.diffImageSmooth(meas_array.ndarray, dy=diff_dir, sigma=sigma)
     name = 'diff_dir_%s' % diff_dir
     name = uniqueArrayName(alldata, name)
-    data_arr = qcodes.DataArray(
+    data_arr = DataArray(
         name=name, label=name, array_id=name, set_arrays=meas_array.set_arrays, preset_data=imx)
 
     alldata.add_array(data_arr)
@@ -475,7 +481,7 @@ def diffDataset(alldata, diff_dir='y', sigma=2, fig=None, meas_arr_name='measure
     return alldata
 
 
-def plot_dataset(dataset: qcodes.DataSet, parameter_names: Optional[list] = None, fig: Optional[int] = 1) -> None:
+def plot_dataset(dataset: DataSet, parameter_names: Optional[list] = None, fig: Optional[int] = 1) -> None:
     """ Plot a dataset to matplotlib figure window
 
     Args:
@@ -931,7 +937,7 @@ def write_data(mfile: str, data):
     if ext is not None:
         if not mfile.endswith(ext):
             mfile = mfile + '.' + ext
-    if isinstance(data, qcodes.DataSet):
+    if isinstance(data, DataSet):
         data = qtt.utilities.tools.stripDataset(data)
 
     with open(mfile, 'wb') as fid:
@@ -945,7 +951,7 @@ def loadDataset(path):
     :param path: filename without extension
     :returns dateset, metadata:
     """
-    dataset = qcodes.load_data(path)
+    dataset = qcodes.data.data_set.load_data(path)
 
     mfile = os.path.join(path, 'qtt-metadata')
     metadata = load_data(mfile)

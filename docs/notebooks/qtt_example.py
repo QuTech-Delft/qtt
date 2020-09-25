@@ -13,21 +13,22 @@ import matplotlib.pyplot as plt
 import tempfile
 from collections import OrderedDict
 import pyqtgraph
-_ = pyqtgraph.mkQApp()
 
 import qcodes
+from qcodes.data.data_set import DataSet
 import qtt
 from qtt.gui.parameterviewer import createParameterWidget
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.measurements.scans import scanjob_t
-from qtt.instrument_drivers.virtual_gates import virtual_gates
+from qtt.instrument_drivers.virtual_gates import VirtualGates
 from qtt import save_state
 import qtt.measurements.videomode
 
 import qtt.simulation.virtual_dot_array
 
+_ = pyqtgraph.mkQApp()
 datadir = tempfile.mkdtemp(prefix='qtt_example')
-qcodes.DataSet.default_io = qcodes.DiskIO(datadir)
+DataSet.default_io = qcodes.data.io.DiskIO(datadir)
 
 # %% Create a virtual model for testing
 #
@@ -62,7 +63,7 @@ snapshotdata = station.snapshot()
 
 param_left = station.model.bottomgates[0]
 param_right = station.model.bottomgates[-1]
-scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 1,
+scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 0,
                                         'step': .8, 'wait_time': 3e-3}), 'minstrument': ['keithley3.amplitude']})
 data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 
@@ -100,7 +101,7 @@ crosscap_map = OrderedDict((
     ('VP2', OrderedDict((('P1', 0.62), ('P2', 1), ('P3', 0.593)))),
     ('VP3', OrderedDict((('P1', 0.14), ('P2', 0.62), ('P3', 1))))
 ))
-virts = virtual_gates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
+virts = VirtualGates(qtt.measurements.scans.instrumentName('vgates'), gates, crosscap_map)
 virts.print_matrix()
 
 gates.resetgates(gv, gv, verbose=0)

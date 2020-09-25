@@ -25,7 +25,7 @@ def get_dataset(ds):
     """ Get a dataset from a results dict, a string or a dataset.
 
     Args:
-        ds (dict, str or qcodes.DataSet): the data to be put in the dataset.
+        ds (dict, str or DataSet): the data to be put in the dataset.
 
     Returns:
         ds (qcodes.DataSet) dataset made from the input data.
@@ -36,7 +36,7 @@ def get_dataset(ds):
     if ds is None:
         return None
     if isinstance(ds, str):
-        ds = qcodes.load_data(ds)
+        ds = qcodes.data.data_set.load_data(ds)
     return ds
 
 
@@ -175,7 +175,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             if angle_pixel is not None:
                 for offset in [-40, -20, 0, 20, 40]:
                     label = None
-                    if offset is 0:
+                    if offset == 0:
                         label = 'detected angle'
                     qtt.pgeometry.plot2Dline(
                         [np.cos(angle_pixel), np.sin(angle_pixel), offset], 'm', label=label)
@@ -250,7 +250,7 @@ def plot_awg_to_plunger(result, fig=10):
 
         for offset in [-40, -20, 0, 20, 40]:
             label = None
-            if offset is 0:
+            if offset == 0:
                 label = 'detected angle'
             qtt.pgeometry.plot2Dline(
                 [np.cos(angle), -np.sin(angle), rho + offset], '--m', alpha=.6, label=label)

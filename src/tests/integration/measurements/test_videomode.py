@@ -2,7 +2,7 @@ import unittest
 import unittest.mock as mock
 import io
 
-import qcodes
+from qcodes.data.data_set import DataSet
 import qtt.data
 import qtt.measurements.scans
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
@@ -13,6 +13,9 @@ from qtt.measurements.videomode_processor import DummyVideoModeProcessor
 
 
 class TestVideoMode(unittest.TestCase):
+
+    def tearDown(self) -> None:
+        VideoMode.destruct()
 
     def test_video_mode_update_position(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
@@ -38,8 +41,6 @@ class TestVideoMode(unittest.TestCase):
         dummy_processor = DummyVideoModeProcessor(station)
         videomode = VideoMode(station, dorun=False, nplots=1, videomode_processor=dummy_processor)
         self.assertIn(videomode, VideoMode.all_instances())
-
-        VideoMode.stop_all_instances()
 
     def test_video_1d(self):
         with mock.patch('sys.stdout', new_callable=io.StringIO):
@@ -94,7 +95,7 @@ class TestVideoMode(unittest.TestCase):
             vm.close()
 
             self.assertIsInstance(data, list)
-            self.assertIsInstance(data[0], qcodes.DataSet)
+            self.assertIsInstance(data[0], DataSet)
             self.assertEqual(data[0].measured.shape, (12, 12))
 
             vm = VideoMode(station, ['P1', 'P2'], sweepranges=[20] * 2,
@@ -105,7 +106,7 @@ class TestVideoMode(unittest.TestCase):
             vm.close()
 
             self.assertIsInstance(data, list)
-            self.assertIsInstance(data[0], qcodes.DataSet)
+            self.assertIsInstance(data[0], DataSet)
             self.assertEqual(data[0].measured.shape, (32, 32))
 
             for _, instrument in station.components.items():
