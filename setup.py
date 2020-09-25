@@ -3,7 +3,6 @@ from inspect import getsourcefile
 from os.path import abspath
 import platform
 import re
-import glob
 
 from setuptools import find_packages, setup
 
