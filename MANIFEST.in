@@ -1,1 +1,2 @@
 recursive-include src/qtt/exampledata *
+recursive-exclude src/tests *
