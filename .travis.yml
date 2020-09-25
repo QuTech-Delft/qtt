@@ -15,6 +15,16 @@ matrix:
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
+
+  - name: Minimal installation 3.8
+    python: 3.8
+    sudo: true
+    dist: xenial
+    env: QT_QPA_PLATFORM=offscreen
+    services:
+    - xvfb
+
+
   - name: Full installation 3.6
     python: 3.6
     dist: bionic
@@ -27,6 +37,15 @@ matrix:
     env: FULL_INSTALL=1
     services:
     - xvfb
+
+  - name: Full installation 3.8
+    python: 3.8
+    dist: xenial
+    env: FULL_INSTALL=1
+    services:
+    - xvfb
+
+
 install:
   - pip install coveralls
   - pip install --upgrade pip

@@ -255,7 +255,7 @@ try:
 
     def setupMeasurementWindows(station=None, create_parameter_widget=True,
                                 ilist=None):
-        """ 
+        """
         Create liveplot window and parameter widget (optional)
 
         Args:
@@ -696,7 +696,7 @@ class livePlot(QtCore.QObject):
             self.maxidx = maxidx
         if callback is not None:
             self.datafunction = callback
-        self.timer.start(1000 * (1. / rate))
+        self.timer.start( int(1000 * (1. / rate)) )
         if self.verbose:
             print('live_plotting: start readout: rate %.1f Hz' % rate)
 
