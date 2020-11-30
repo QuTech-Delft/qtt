@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 import qcodes
 from qcodes.data.data_array import DataArray
-from qcodes.tests.data_mocks import DataSet2D
+from qcodes.tests.legacy.data_mocks import DataSet2D
 from qtt.utilities import tools
 from qtt.utilities.tools import resampleImage, diffImage, diffImageSmooth, reshape_metadata, get_python_version, \
     get_module_versions, \

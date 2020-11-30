@@ -308,7 +308,7 @@ class VideoMode:
             self.maxidx = maxidx
         if callback is not None:
             self.datafunction = callback
-        self.timer.start(1000 * (1. / rate))
+        self.timer.start(int(1000 * (1. / rate)))
         if self.verbose:
             print('%s: start readout' % (self.__class__.__name__,))
 

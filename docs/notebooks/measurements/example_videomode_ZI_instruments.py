@@ -3,7 +3,7 @@
 # 2. Checkout branch: feature/DEM-607/Update-generate-csv-sequence-program
 
 from qcodes import Instrument, ManualParameter
-from qcodes.instrument_drivers.ZI.ZIHDAWG8 import ZIHDAWG8
+from qcodes_contrib_drivers.drivers.ZurichInstruments.ZIHDAWG8 import ZIHDAWG8
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
 from qcodes.station import Station
 from qcodes.utils.validators import Numbers

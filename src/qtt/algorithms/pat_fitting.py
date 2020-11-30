@@ -41,7 +41,7 @@ def one_ele_pat_model(x_data, pp):
 def two_ele_pat_model(x_data, pp):
     r""" Model for two electron pat
 
-    This is \phi = \pm \frac{leverarm}{2} (x - x0) + 
+    This is \phi = \pm \frac{leverarm}{2} (x - x0) +
         \frac{1}{2} \sqrt{( leverarm (x - x0) )^2 + 8 t^2 }
 
     Args:
@@ -71,7 +71,7 @@ class pat_score():
         self.branch_reduction = branch_reduction
 
     def pat_one_ele_score(self, xd, yd, pp, weights=None, thr=2e9):
-        """ Calculate score for pat one electron model 
+        """ Calculate score for pat one electron model
 
         Args:
             xd (array): x coordinates of peaks in sensor signal
@@ -93,7 +93,7 @@ class pat_score():
         return sc
 
     def pat_two_ele_score(self, xd, yd, pp, weights=None, thr=2e9):
-        """ Calculate score for pat two electron model 
+        """ Calculate score for pat two electron model
 
         Args:
             xd (array): x coordinates of peaks in sensor signal
@@ -133,7 +133,7 @@ class pat_score():
 
 
 def pre_process_pat(x_data, y_data, background, z_data, fig=None):
-    """ Pre-process a pair of background and sensor signal from a pat scan. 
+    """ Pre-process a pair of background and sensor signal from a pat scan.
 
     Args:
         x_data (array): detuning (mV)
@@ -166,17 +166,17 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
         plt.figure(fig)
         plt.clf()
         plt.subplot(2, 2, 1)
-        plt.pcolormesh(x_data, y_data, z_data)
+        plt.pcolormesh(x_data, y_data, z_data, shading='auto')
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('Input data')
         plt.subplot(2, 2, 2)
-        plt.pcolormesh(x_data, y_data, imq)
+        plt.pcolormesh(x_data, y_data, imq, shading='auto')
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('imq')
         plt.subplot(2, 2, 3)
-        plt.pcolormesh(x_data, y_data, imx)
+        plt.pcolormesh(x_data, y_data, imx, shading='auto')
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
         plt.title('imx')
@@ -258,7 +258,7 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
     if fig is not None:
         plt.figure(fig)
         plt.clf()
-        plt.pcolormesh(x_data, y_data, imx)
+        plt.pcolormesh(x_data, y_data, imx, shading='auto')
         plt.plot(horz_vals[mm1[idx1]], y_data[idx1], '.b', markersize=14, label='idx1')
         plt.plot(horz_vals[mm2[idx2]], y_data[idx2], '.r', markersize=14, label='idx2')
         plt.xlabel('Detuning (mV)')
@@ -382,7 +382,7 @@ def plot_pat_fit(x_data, y_data, z_data, pp, trans='one_ele', fig=400, title='Fi
     if z_data is not None:
         plt.figure(fig)
         plt.clf()
-        plt.pcolormesh(x_data, y_data, z_data)
+        plt.pcolormesh(x_data, y_data, z_data, shading='auto')
         plt.title(title)
         plt.xlabel('Detuning (mV)')
         plt.ylabel('Frequency (Hz)')
