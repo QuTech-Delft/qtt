@@ -274,7 +274,7 @@ class Tektronix5014C_AWG(AwgCommon):
         self.__awg.set_sqel_goto_state(request_rows, 1)
 
     def _upload_waveforms(self, names: List[str], waveforms: List[np.ndarray],
-                          file_name: Optional[str] = 'default.awg') -> None:
+                          file_name: str = 'default.awg') -> None:
         """ Upload the waveforms to the AWG. Creates an AWG file and then uploads it to the AWG.
 
         Args:
