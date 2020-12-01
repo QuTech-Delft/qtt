@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Dev
 
 ### Added
-- Support for python 3.8 (#672)
+- Support for python 3.8 added (#672)
 
 ### Changed
 - Replaced implementation of polyintersection from Polygon3 to shapely (#744)
+
+### Removed
+- Support for python 3.6 and lower is removed.
 
 ## \[1.2.2] - 14-5-2020
 ### Added
