@@ -11,9 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Replaced implementation of polyintersection from Polygon3 to shapely (#744)
+- Included exampledata in distribution (#715)
+- Changed names of exampledata sets (#721)
+  - '17-57-24' renamed to 'addition_line_scan'
+  - '2017-01-10/09-45-15' renamed to 'charge_stability_diagram_anti_crossing'
+  - '2017-02-21/15-59-56' renamed to 'polarization_line'
+  - '2017-09-04/11-04-14_qtt_scan2Dturbovec' renamed to 'charge_stability_diagram_anti_crossing_virtual_gates'
+  - '2017-09-04/11-04-45_qtt_scan1Dfastvec' renamed to 'PAT_scan_background'
+  - '2017-09-04/11-05-17_qtt_scan2Dfastvec' renamed to 'PAT_scan'
+  - 'misc/13-13-16_qtt_sensingdot_t.fastTune' renamed to 'coulomb_peak'
+  - 'misc/Lever_arm_Charging_energy/10-06-59_qtt_scan2Dfast' renamed to 'charge_stability_diagram_double_dot_system'
+  - 'misc/Lever_arm_Charging_energy/14-28-52_qtt_scan2Dfast' renamed to 'charge_stability_diagram_double_dot_system_detail'
+  - 'misc/Lever_arm_Charging_energy/14-33-26_qtt_scan2Dfast' renamed to 'charge_stability_diagram_double_dot_system_bias_triangle'
+  - 'misc/pinchoff/2018-06-28/13-24-22_qtt_scan1D' renamed to 'pinchoff_scan_barrier_gate'
+  - 'misc/2electron_pat_26102017' renamed to '2electron_pat'
+  - 'elzerman_detuning_scan/2019-05-28_11-39-39_qtt_generic.json' renamed to 'elzerman_detuning_scan'
+  - 'misc/P5_y_P5_x.dat' renamed to 'charge_stability_diagram_dac_vs_awg'
+  - '2018-08-31/19-05-18_qtt_save_segments' renamed to 'rts_signal'
 
 ### Removed
 - Support for python 3.6 and lower is removed.
+- Removed dependency on Polygon3 (#579) solved by (#744)
+
+### Fixed
+- Update qtt to qcodes 0.17.0
+- Bump notebook from 6.0.3 to 6.1.5
 
 ## \[1.2.2] - 14-5-2020
 ### Added
