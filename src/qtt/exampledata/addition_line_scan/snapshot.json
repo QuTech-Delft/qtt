@@ -1,0 +1,2944 @@
+{
+    "__class__": "qcodes.data.data_set.DataSet",
+    "arrays": {
+        "gates_P4_set": {
+            "__class__": "qcodes.data.data_array.DataArray",
+            "action_indices": [],
+            "array_id": "gates_P4_set",
+            "instrument": "qtt.qtt_toymodel.virtual_gates",
+            "instrument_name": "gates",
+            "is_setpoint": true,
+            "label": "P4 (mV)",
+            "name": "P4",
+            "shape": [
+                800
+            ],
+            "units": "mV"
+        },
+        "keithley2_amplitude": {
+            "__class__": "qcodes.data.data_array.DataArray",
+            "action_indices": [
+                0
+            ],
+            "array_id": "keithley2_amplitude",
+            "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+            "instrument_name": "keithley2",
+            "is_setpoint": false,
+            "label": "keithley2",
+            "name": "amplitude",
+            "shape": [
+                800
+            ],
+            "units": "arb.unit"
+        }
+    },
+    "formatter": "qcodes.data.gnuplot_format.GNUPlotFormat",
+    "io": "<DiskIO, base_location='p:\\\\data'>",
+    "location": "addition_line_scan",
+    "loop": {
+        "__class__": "qcodes.loops.ActiveLoop",
+        "actions": [
+            {
+                "__class__": "qcodes.instrument.parameter.Parameter",
+                "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                "instrument_name": "keithley2",
+                "label": "keithley2",
+                "name": "amplitude",
+                "ts": "2016-11-21 17:53:51",
+                "units": "arb.unit",
+                "value": 0.526598692
+            }
+        ],
+        "background": false,
+        "delay": 0.1,
+        "sweep_values": {
+            "parameter": {
+                "__class__": "qcodes.instrument.parameter.Parameter",
+                "instrument": "qtt.qtt_toymodel.virtual_gates",
+                "instrument_name": "gates",
+                "label": "P4 (mV)",
+                "name": "P4",
+                "ts": "2016-11-21 17:57:24",
+                "units": "mV",
+                "value": -14.883689336158639
+            },
+            "values": [
+                {
+                    "first": -14.883689336158639,
+                    "last": 1.0963106638413613,
+                    "num": 800,
+                    "type": "linear"
+                }
+            ]
+        },
+        "then_actions": [],
+        "ts_end": "2016-11-21 18:17:08",
+        "ts_start": "2016-11-21 17:57:25",
+        "use_data_manager": false,
+        "use_threads": false
+    },
+    "station": {
+        "components": {},
+        "default_measurement": [],
+        "instruments": {
+            "awg": {
+                "__class__": "qtt.instrument_drivers.virtual_awg.virtual_awg",
+                "functions": {},
+                "name": "awg",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.virtual_awg.virtual_awg",
+                        "instrument_name": "awg",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": {
+                            "firmware": null,
+                            "model": "virtual_awg",
+                            "serial": null,
+                            "vendor": "QuTech"
+                        }
+                    }
+                }
+            },
+            "awg1": {
+                "__class__": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                "address": "GPIB0::5",
+                "functions": {
+                    "reset": {}
+                },
+                "name": "awg1",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": {
+                            "firmware": "SCPI:99.0 FW:3.1.141.647",
+                            "model": "AWG5014",
+                            "serial": "B010106",
+                            "vendor": "TEKTRONIX"
+                        }
+                    },
+                    "ch1_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Amplitude channel 1 (Vpp)",
+                        "name": "ch1_amp",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch1_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 1 Marker 1 delay (ns)",
+                        "name": "ch1_m1_del",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch1_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 1 Marker 1 high level (V)",
+                        "name": "ch1_m1_high",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch1_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 1 Marker 1 low level (V)",
+                        "name": "ch1_m1_low",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch1_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 1 Marker 2 delay (ns)",
+                        "name": "ch1_m2_del",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch1_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 1 Marker 2 high level (V)",
+                        "name": "ch1_m2_high",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch1_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 1 Marker 2 low level (V)",
+                        "name": "ch1_m2_low",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch1_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Offset channel 1 (V)",
+                        "name": "ch1_offset",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch1_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Status channel 1",
+                        "name": "ch1_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch1_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Waveform channel 1",
+                        "name": "ch1_waveform",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "",
+                        "value": ""
+                    },
+                    "ch2_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Amplitude channel 2 (Vpp)",
+                        "name": "ch2_amp",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch2_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 2 Marker 1 delay (ns)",
+                        "name": "ch2_m1_del",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 2 Marker 1 high level (V)",
+                        "name": "ch2_m1_high",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch2_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 2 Marker 1 low level (V)",
+                        "name": "ch2_m1_low",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 2 Marker 2 delay (ns)",
+                        "name": "ch2_m2_del",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 2 Marker 2 high level (V)",
+                        "name": "ch2_m2_high",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch2_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 2 Marker 2 low level (V)",
+                        "name": "ch2_m2_low",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Offset channel 2 (V)",
+                        "name": "ch2_offset",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch2_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Status channel 2",
+                        "name": "ch2_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch2_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Waveform channel 2",
+                        "name": "ch2_waveform",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": ""
+                    },
+                    "ch3_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Amplitude channel 3 (Vpp)",
+                        "name": "ch3_amp",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch3_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 3 Marker 1 delay (ns)",
+                        "name": "ch3_m1_del",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 3 Marker 1 high level (V)",
+                        "name": "ch3_m1_high",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch3_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 3 Marker 1 low level (V)",
+                        "name": "ch3_m1_low",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 3 Marker 2 delay (ns)",
+                        "name": "ch3_m2_del",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 3 Marker 2 high level (V)",
+                        "name": "ch3_m2_high",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch3_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 3 Marker 2 low level (V)",
+                        "name": "ch3_m2_low",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Offset channel 3 (V)",
+                        "name": "ch3_offset",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch3_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Status channel 3",
+                        "name": "ch3_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch3_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Waveform channel 3",
+                        "name": "ch3_waveform",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": ""
+                    },
+                    "ch4_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Amplitude channel 4 (Vpp)",
+                        "name": "ch4_amp",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch4_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 4 Marker 1 delay (ns)",
+                        "name": "ch4_m1_del",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch4_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 4 Marker 1 high level (V)",
+                        "name": "ch4_m1_high",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch4_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 4 Marker 1 low level (V)",
+                        "name": "ch4_m1_low",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch4_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 4 Marker 2 delay (ns)",
+                        "name": "ch4_m2_del",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch4_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 4 Marker 2 high level (V)",
+                        "name": "ch4_m2_high",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch4_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Channel 4 Marker 2 low level (V)",
+                        "name": "ch4_m2_low",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch4_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Offset channel 4 (V)",
+                        "name": "ch4_offset",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch4_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Status channel 4",
+                        "name": "ch4_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch4_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Waveform channel 4",
+                        "name": "ch4_waveform",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": ""
+                    },
+                    "clock_freq": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Clock frequency (Hz)",
+                        "name": "clock_freq",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 100000000.0
+                    },
+                    "event_impedance": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Event impedance (Ohm)",
+                        "name": "event_impedance",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": 1000.0
+                    },
+                    "event_jump_timing": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "event_jump_timing",
+                        "name": "event_jump_timing",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": "ASYN\n"
+                    },
+                    "event_level": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Event level (V)",
+                        "name": "event_level",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": 1.4
+                    },
+                    "event_polarity": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "event_polarity",
+                        "name": "event_polarity",
+                        "ts": "2016-11-21 17:12:02",
+                        "units": "",
+                        "value": "POS\n"
+                    },
+                    "numpoints": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Number of datapoints per wave",
+                        "name": "numpoints",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": 1000
+                    },
+                    "run_mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "run_mode",
+                        "name": "run_mode",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": "SEQ\n"
+                    },
+                    "setup_filename": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "setup_filename",
+                        "name": "setup_filename",
+                        "ts": "2016-11-21 17:12:05",
+                        "units": "",
+                        "value": "\"\",\"C:\"\n"
+                    },
+                    "state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "state",
+                        "name": "state",
+                        "ts": "2016-11-21 17:12:03",
+                        "units": "",
+                        "value": "Idle"
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 300.0
+                    },
+                    "trigger_impedance": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Trigger impedance (Ohm)",
+                        "name": "trigger_impedance",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "Ohm",
+                        "value": 50.0
+                    },
+                    "trigger_level": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "Trigger level (V)",
+                        "name": "trigger_level",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "V",
+                        "value": 1.4
+                    },
+                    "trigger_mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "trigger_mode",
+                        "name": "trigger_mode",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": "SEQ\n"
+                    },
+                    "trigger_slope": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "trigger_slope",
+                        "name": "trigger_slope",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": "POS\n"
+                    },
+                    "trigger_source": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg1",
+                        "label": "trigger_source",
+                        "name": "trigger_source",
+                        "ts": "2016-11-21 17:12:04",
+                        "units": "",
+                        "value": "EXT\n"
+                    }
+                },
+                "terminator": "",
+                "timeout": 300.0
+            },
+            "awg2": {
+                "__class__": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                "address": "GPIB0::26",
+                "functions": {
+                    "reset": {}
+                },
+                "name": "awg2",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": {
+                            "firmware": "SCPI:99.0 FW:3.1.141.647",
+                            "model": "AWG5014",
+                            "serial": "B010188",
+                            "vendor": "TEKTRONIX"
+                        }
+                    },
+                    "ch1_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Amplitude channel 1 (Vpp)",
+                        "name": "ch1_amp",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch1_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 1 Marker 1 delay (ns)",
+                        "name": "ch1_m1_del",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch1_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 1 Marker 1 high level (V)",
+                        "name": "ch1_m1_high",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch1_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 1 Marker 1 low level (V)",
+                        "name": "ch1_m1_low",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch1_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 1 Marker 2 delay (ns)",
+                        "name": "ch1_m2_del",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch1_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 1 Marker 2 high level (V)",
+                        "name": "ch1_m2_high",
+                        "ts": "2016-11-21 17:44:05",
+                        "units": "",
+                        "value": 2.6
+                    },
+                    "ch1_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 1 Marker 2 low level (V)",
+                        "name": "ch1_m2_low",
+                        "ts": "2016-11-21 17:44:05",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch1_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Offset channel 1 (V)",
+                        "name": "ch1_offset",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch1_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Status channel 1",
+                        "name": "ch1_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch1_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Waveform channel 1",
+                        "name": "ch1_waveform",
+                        "ts": "2016-11-21 17:44:06",
+                        "units": "",
+                        "value": "fpga_mk_P4"
+                    },
+                    "ch2_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Amplitude channel 2 (Vpp)",
+                        "name": "ch2_amp",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch2_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 2 Marker 1 delay (ns)",
+                        "name": "ch2_m1_del",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 2 Marker 1 high level (V)",
+                        "name": "ch2_m1_high",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch2_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 2 Marker 1 low level (V)",
+                        "name": "ch2_m1_low",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 2 Marker 2 delay (ns)",
+                        "name": "ch2_m2_del",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 2 Marker 2 high level (V)",
+                        "name": "ch2_m2_high",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch2_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 2 Marker 2 low level (V)",
+                        "name": "ch2_m2_low",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch2_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Offset channel 2 (V)",
+                        "name": "ch2_offset",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch2_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Status channel 2",
+                        "name": "ch2_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch2_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Waveform channel 2",
+                        "name": "ch2_waveform",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "",
+                        "value": ""
+                    },
+                    "ch3_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Amplitude channel 3 (Vpp)",
+                        "name": "ch3_amp",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch3_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 3 Marker 1 delay (ns)",
+                        "name": "ch3_m1_del",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 3 Marker 1 high level (V)",
+                        "name": "ch3_m1_high",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch3_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 3 Marker 1 low level (V)",
+                        "name": "ch3_m1_low",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 3 Marker 2 delay (ns)",
+                        "name": "ch3_m2_del",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 3 Marker 2 high level (V)",
+                        "name": "ch3_m2_high",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch3_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 3 Marker 2 low level (V)",
+                        "name": "ch3_m2_low",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch3_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Offset channel 3 (V)",
+                        "name": "ch3_offset",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch3_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Status channel 3",
+                        "name": "ch3_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch3_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Waveform channel 3",
+                        "name": "ch3_waveform",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "",
+                        "value": ""
+                    },
+                    "ch4_amp": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Amplitude channel 4 (Vpp)",
+                        "name": "ch4_amp",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "Vpp",
+                        "value": 4.0
+                    },
+                    "ch4_m1_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 4 Marker 1 delay (ns)",
+                        "name": "ch4_m1_del",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch4_m1_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 4 Marker 1 high level (V)",
+                        "name": "ch4_m1_high",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "ch4_m1_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 4 Marker 1 low level (V)",
+                        "name": "ch4_m1_low",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch4_m2_del": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 4 Marker 2 delay (ns)",
+                        "name": "ch4_m2_del",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "",
+                        "value": 0.0
+                    },
+                    "ch4_m2_high": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 4 Marker 2 high level (V)",
+                        "name": "ch4_m2_high",
+                        "ts": "2016-11-21 17:44:06",
+                        "units": "",
+                        "value": 2.6
+                    },
+                    "ch4_m2_low": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Channel 4 Marker 2 low level (V)",
+                        "name": "ch4_m2_low",
+                        "ts": "2016-11-21 17:44:06",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch4_offset": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Offset channel 4 (V)",
+                        "name": "ch4_offset",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "V",
+                        "value": 0.0
+                    },
+                    "ch4_state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Status channel 4",
+                        "name": "ch4_state",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "ch4_waveform": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Waveform channel 4",
+                        "name": "ch4_waveform",
+                        "ts": "2016-11-21 17:44:06",
+                        "units": "",
+                        "value": "awg_mk"
+                    },
+                    "clock_freq": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Clock frequency (Hz)",
+                        "name": "clock_freq",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "",
+                        "value": 100000000.0
+                    },
+                    "event_impedance": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Event impedance (Ohm)",
+                        "name": "event_impedance",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": 1000.0
+                    },
+                    "event_jump_timing": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "event_jump_timing",
+                        "name": "event_jump_timing",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "",
+                        "value": "ASYN\n"
+                    },
+                    "event_level": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Event level (V)",
+                        "name": "event_level",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": 1.4
+                    },
+                    "event_polarity": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "event_polarity",
+                        "name": "event_polarity",
+                        "ts": "2016-11-21 17:12:07",
+                        "units": "",
+                        "value": "POS\n"
+                    },
+                    "numpoints": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Number of datapoints per wave",
+                        "name": "numpoints",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "",
+                        "value": 1000
+                    },
+                    "run_mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "run_mode",
+                        "name": "run_mode",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "",
+                        "value": "CONT\n"
+                    },
+                    "setup_filename": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "setup_filename",
+                        "name": "setup_filename",
+                        "ts": "2016-11-21 17:12:10",
+                        "units": "",
+                        "value": "\"\",\"C:\"\n"
+                    },
+                    "state": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "state",
+                        "name": "state",
+                        "ts": "2016-11-21 17:12:08",
+                        "units": "",
+                        "value": "Idle"
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 300.0
+                    },
+                    "trigger_impedance": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Trigger impedance (Ohm)",
+                        "name": "trigger_impedance",
+                        "ts": "2016-11-21 17:12:06",
+                        "units": "Ohm",
+                        "value": 50.0
+                    },
+                    "trigger_level": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "Trigger level (V)",
+                        "name": "trigger_level",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "V",
+                        "value": 1.4
+                    },
+                    "trigger_mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "trigger_mode",
+                        "name": "trigger_mode",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": "CONT\n"
+                    },
+                    "trigger_slope": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "trigger_slope",
+                        "name": "trigger_slope",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": "POS\n"
+                    },
+                    "trigger_source": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.AWG5014.Tektronix_AWG5014",
+                        "instrument_name": "awg2",
+                        "label": "trigger_source",
+                        "name": "trigger_source",
+                        "ts": "2016-11-21 17:12:09",
+                        "units": "",
+                        "value": "EXT\n"
+                    }
+                },
+                "terminator": "",
+                "timeout": 300.0
+            },
+            "fpga": {
+                "__class__": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                "address": "ASRL4::INSTR",
+                "functions": {},
+                "name": "fpga",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": {
+                            "firmware": null,
+                            "model": "FPGA",
+                            "serial": null,
+                            "vendor": null
+                        }
+                    },
+                    "ch1_cycle_num": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "ch1_cycle_num",
+                        "name": "ch1_cycle_num",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 20
+                    },
+                    "ch1_data": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "ch1_data",
+                        "name": "ch1_data",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": false
+                    },
+                    "ch1_datapoint_num": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "ch1_datapoint_num",
+                        "name": "ch1_datapoint_num",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": 489
+                    },
+                    "ch2_cycle_num": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "ch2_cycle_num",
+                        "name": "ch2_cycle_num",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 20
+                    },
+                    "ch2_data": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "ch2_data",
+                        "name": "ch2_data",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": false
+                    },
+                    "ch2_datapoint_num": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "ch2_datapoint_num",
+                        "name": "ch2_datapoint_num",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": 489
+                    },
+                    "data": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "data",
+                        "name": "data",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": false
+                    },
+                    "measurement_done": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "measurement_done",
+                        "name": "measurement_done",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": false
+                    },
+                    "mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "mode",
+                        "name": "mode",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 0
+                    },
+                    "sampling_frequency": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "sampling_frequency",
+                        "name": "sampling_frequency",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": 1000000.0
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 5.0
+                    },
+                    "total_cycle_num": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.instrument_drivers.FPGA_ave.FPGA_ave",
+                        "instrument_name": "fpga",
+                        "label": "total_cycle_num",
+                        "name": "total_cycle_num",
+                        "ts": "2016-11-21 17:45:03",
+                        "units": "",
+                        "value": 20
+                    }
+                },
+                "terminator": "",
+                "timeout": 5.0
+            },
+            "gates": {
+                "__class__": "qtt.qtt_toymodel.virtual_gates",
+                "functions": {
+                    "get_D1": {},
+                    "get_D2": {},
+                    "get_D3": {},
+                    "get_L": {},
+                    "get_P1": {},
+                    "get_P1_fine": {},
+                    "get_P2": {},
+                    "get_P2_fine": {},
+                    "get_P3": {},
+                    "get_P3_fine": {},
+                    "get_P4": {},
+                    "get_P4_fine": {},
+                    "get_R": {},
+                    "get_SD1a": {},
+                    "get_SD1b": {},
+                    "get_SD1c": {},
+                    "get_SD2a": {},
+                    "get_SD2b": {},
+                    "get_SD2c": {},
+                    "get_SD3a": {},
+                    "get_SD3b": {},
+                    "get_SD3c": {},
+                    "get_SD4a": {},
+                    "get_SD4b": {},
+                    "get_SD4c": {},
+                    "get_T": {},
+                    "get_bias_1": {},
+                    "get_bias_2": {},
+                    "get_bias_3": {},
+                    "get_bias_4": {},
+                    "set_D1": {},
+                    "set_D2": {},
+                    "set_D3": {},
+                    "set_L": {},
+                    "set_P1": {},
+                    "set_P1_fine": {},
+                    "set_P2": {},
+                    "set_P2_fine": {},
+                    "set_P3": {},
+                    "set_P3_fine": {},
+                    "set_P4": {},
+                    "set_P4_fine": {},
+                    "set_R": {},
+                    "set_SD1a": {},
+                    "set_SD1b": {},
+                    "set_SD1c": {},
+                    "set_SD2a": {},
+                    "set_SD2b": {},
+                    "set_SD2c": {},
+                    "set_SD3a": {},
+                    "set_SD3b": {},
+                    "set_SD3c": {},
+                    "set_SD4a": {},
+                    "set_SD4b": {},
+                    "set_SD4c": {},
+                    "set_T": {},
+                    "set_bias_1": {},
+                    "set_bias_2": {},
+                    "set_bias_3": {},
+                    "set_bias_4": {}
+                },
+                "name": "gates",
+                "parameters": {
+                    "D1": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "D1 (mV)",
+                        "name": "D1",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -63.01976043335617
+                    },
+                    "D2": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "D2 (mV)",
+                        "name": "D2",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -530.0068665598535
+                    },
+                    "D3": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "D3 (mV)",
+                        "name": "D3",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -300.0228885328452
+                    },
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": {
+                            "firmware": null,
+                            "model": "virtual_gates",
+                            "serial": null,
+                            "vendor": "QuTech"
+                        }
+                    },
+                    "L": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "L (mV)",
+                        "name": "L",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -230.0144960708019
+                    },
+                    "P1": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P1 (mV)",
+                        "name": "P1",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 19.01274128328373
+                    },
+                    "P1_fine": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P1_fine (mV)",
+                        "name": "P1_fine",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "P2": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P2 (mV)",
+                        "name": "P2",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 19.01274128328373
+                    },
+                    "P2_fine": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P2_fine (mV)",
+                        "name": "P2_fine",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -1.0070954451819034
+                    },
+                    "P3": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P3 (mV)",
+                        "name": "P3",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -56.48889906157024
+                    },
+                    "P3_fine": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P3_fine (mV)",
+                        "name": "P3_fine",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "P4": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P4 (mV)",
+                        "name": "P4",
+                        "ts": "2016-11-21 17:57:24",
+                        "units": "mV",
+                        "value": -14.883689336158639
+                    },
+                    "P4_fine": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "P4_fine (mV)",
+                        "name": "P4_fine",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "R": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "R (mV)",
+                        "name": "R",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -410.00991836423304
+                    },
+                    "SD1a": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD1a (mV)",
+                        "name": "SD1a",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -300.0228885328452
+                    },
+                    "SD1b": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD1b (mV)",
+                        "name": "SD1b",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -50.01907377737098
+                    },
+                    "SD1c": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD1c (mV)",
+                        "name": "SD1c",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -300.0228885328452
+                    },
+                    "SD2a": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD2a (mV)",
+                        "name": "SD2a",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -282.01724269474335
+                    },
+                    "SD2b": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD2b (mV)",
+                        "name": "SD2b",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -50.01907377737098
+                    },
+                    "SD2c": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD2c (mV)",
+                        "name": "SD2c",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -405.0049591821164
+                    },
+                    "SD3a": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD3a (mV)",
+                        "name": "SD3a",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "SD3b": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD3b (mV)",
+                        "name": "SD3b",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "SD3c": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD3c (mV)",
+                        "name": "SD3c",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "SD4a": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD4a (mV)",
+                        "name": "SD4a",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "SD4b": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD4b (mV)",
+                        "name": "SD4b",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "SD4c": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "SD4c (mV)",
+                        "name": "SD4c",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "T": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "T (mV)",
+                        "name": "T",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -420.01983672846586
+                    },
+                    "bias_1": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "bias_1 (mV)",
+                        "name": "bias_1",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "bias_2": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "bias_2 (mV)",
+                        "name": "bias_2",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "bias_3": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "bias_3 (mV)",
+                        "name": "bias_3",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "bias_4": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qtt.qtt_toymodel.virtual_gates",
+                        "instrument_name": "gates",
+                        "label": "bias_4 (mV)",
+                        "name": "bias_4",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    }
+                }
+            },
+            "hardwareV2": {
+                "__class__": "stationV2.hardware.hardware",
+                "functions": {},
+                "name": "hardwareV2",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:11",
+                        "units": "",
+                        "value": {
+                            "firmware": null,
+                            "model": "hardwareV2",
+                            "serial": null,
+                            "vendor": "QuTech"
+                        }
+                    },
+                    "awg_to_P1": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "awg_to_P1 (factor)",
+                        "name": "awg_to_P1",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": 110.0
+                    },
+                    "awg_to_P3": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "awg_to_P3 (factor)",
+                        "name": "awg_to_P3",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": 40.303
+                    },
+                    "awg_to_P4": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "awg_to_P4 (factor)",
+                        "name": "awg_to_P4",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": 109.0
+                    },
+                    "awg_to_SD1b": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "awg_to_SD1b (factor)",
+                        "name": "awg_to_SD1b",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": 20.0
+                    },
+                    "awg_to_SD2b": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "awg_to_SD2b (factor)",
+                        "name": "awg_to_SD2b",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": 20.0
+                    },
+                    "delay_AWG": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "delay_AWG (time)",
+                        "name": "delay_AWG",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "s",
+                        "value": 2e-06
+                    },
+                    "filterbox_1": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "filterbox_1 (frequency)",
+                        "name": "filterbox_1",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "Hz",
+                        "value": 40000.0
+                    },
+                    "filterbox_2": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "filterbox_2 (frequency)",
+                        "name": "filterbox_2",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "Hz",
+                        "value": 500000.0
+                    },
+                    "filterbox_3": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "stationV2.hardware.hardware",
+                        "instrument_name": "hardwareV2",
+                        "label": "filterbox_3 (frequency)",
+                        "name": "filterbox_3",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "Hz",
+                        "value": 40000.0
+                    }
+                }
+            },
+            "ivvi1": {
+                "__class__": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                "address": "COM7",
+                "functions": {},
+                "name": "ivvi1",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": -1
+                    },
+                    "check_setpoints": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Check setpoints",
+                        "name": "check_setpoints",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": false
+                    },
+                    "dac voltages": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac voltages",
+                        "name": "dac voltages",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": [
+                            0.03051804379333589,
+                            0.03051804379333589,
+                            19.01274128328373,
+                            0.03051804379333589,
+                            19.01274128328373,
+                            -1.0070954451819034,
+                            1.0070954451819034,
+                            -230.0144960708019,
+                            -530.0068665598535,
+                            1.0070954451819034,
+                            -410.00991836423304,
+                            0.03051804379333589,
+                            -420.01983672846586,
+                            -300.0228885328452,
+                            -63.01976043335617,
+                            -300.0228885328452
+                        ]
+                    },
+                    "dac1": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 1 (mV)",
+                        "name": "dac1",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac10": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 10 (mV)",
+                        "name": "dac10",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "mV",
+                        "value": 1.0070954451819034
+                    },
+                    "dac11": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 11 (mV)",
+                        "name": "dac11",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -410.00991836423304
+                    },
+                    "dac12": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 12 (mV)",
+                        "name": "dac12",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac13": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 13 (mV)",
+                        "name": "dac13",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -420.01983672846586
+                    },
+                    "dac14": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 14 (mV)",
+                        "name": "dac14",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -300.0228885328452
+                    },
+                    "dac15": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 15 (mV)",
+                        "name": "dac15",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -63.01976043335617
+                    },
+                    "dac16": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 16 (mV)",
+                        "name": "dac16",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -300.0228885328452
+                    },
+                    "dac2": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 2 (mV)",
+                        "name": "dac2",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac3": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 3 (mV)",
+                        "name": "dac3",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 19.01274128328373
+                    },
+                    "dac4": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 4 (mV)",
+                        "name": "dac4",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac5": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 5 (mV)",
+                        "name": "dac5",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 19.01274128328373
+                    },
+                    "dac6": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 6 (mV)",
+                        "name": "dac6",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -1.0070954451819034
+                    },
+                    "dac7": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 7 (mV)",
+                        "name": "dac7",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "mV",
+                        "value": 1.0070954451819034
+                    },
+                    "dac8": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 8 (mV)",
+                        "name": "dac8",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -230.0144960708019
+                    },
+                    "dac9": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "Dac 9 (mV)",
+                        "name": "dac9",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -530.0068665598535
+                    },
+                    "dac_set_sleep": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "DAC set sleep",
+                        "name": "dac_set_sleep",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": 0.05
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi1",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 5.0
+                    }
+                },
+                "terminator": "",
+                "timeout": 5.0
+            },
+            "ivvi2": {
+                "__class__": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                "address": "COM8",
+                "functions": {},
+                "name": "ivvi2",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": -1
+                    },
+                    "check_setpoints": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Check setpoints",
+                        "name": "check_setpoints",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": false
+                    },
+                    "dac voltages": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac voltages",
+                        "name": "dac voltages",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": [
+                            -29.999237048905115,
+                            0.03051804379333589,
+                            -24.994277866788707,
+                            0.03051804379333589,
+                            0.03051804379333589,
+                            0.03051804379333589,
+                            -282.01724269474335,
+                            0.03051804379333589,
+                            -300.0228885328452,
+                            0.03051804379333589,
+                            0.03051804379333589,
+                            -405.0049591821164,
+                            0.03051804379333589,
+                            -50.01907377737098,
+                            0.03051804379333589,
+                            -50.01907377737098
+                        ]
+                    },
+                    "dac1": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 1 (mV)",
+                        "name": "dac1",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -56.48889906157024
+                    },
+                    "dac10": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 10 (mV)",
+                        "name": "dac10",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac11": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 11 (mV)",
+                        "name": "dac11",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac12": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 12 (mV)",
+                        "name": "dac12",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -405.0049591821164
+                    },
+                    "dac13": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 13 (mV)",
+                        "name": "dac13",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac14": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 14 (mV)",
+                        "name": "dac14",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -50.01907377737098
+                    },
+                    "dac15": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 15 (mV)",
+                        "name": "dac15",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac16": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 16 (mV)",
+                        "name": "dac16",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -50.01907377737098
+                    },
+                    "dac2": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 2 (mV)",
+                        "name": "dac2",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac3": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 3 (mV)",
+                        "name": "dac3",
+                        "ts": "2016-11-21 17:57:24",
+                        "units": "mV",
+                        "value": -14.883689336158639
+                    },
+                    "dac4": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 4 (mV)",
+                        "name": "dac4",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac5": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 5 (mV)",
+                        "name": "dac5",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac6": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 6 (mV)",
+                        "name": "dac6",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac7": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 7 (mV)",
+                        "name": "dac7",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -282.01724269474335
+                    },
+                    "dac8": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 8 (mV)",
+                        "name": "dac8",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": 0.03051804379333589
+                    },
+                    "dac9": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "Dac 9 (mV)",
+                        "name": "dac9",
+                        "ts": "2016-11-21 17:53:54",
+                        "units": "mV",
+                        "value": -300.0228885328452
+                    },
+                    "dac_set_sleep": {
+                        "__class__": "qcodes.instrument.parameter.ManualParameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "DAC set sleep",
+                        "name": "dac_set_sleep",
+                        "ts": "2016-11-21 17:11:56",
+                        "units": "",
+                        "value": 0.05
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.QuTech.IVVI.IVVI",
+                        "instrument_name": "ivvi2",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 5.0
+                    }
+                },
+                "terminator": "",
+                "timeout": 5.0
+            },
+            "keithley1": {
+                "__class__": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                "address": "GPIB0::9::INSTR",
+                "functions": {
+                    "reset": {}
+                },
+                "name": "keithley1",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": {
+                            "firmware": "B01  /A02",
+                            "model": "2000",
+                            "serial": "4045453",
+                            "vendor": "KEITHLEY INSTRUMENTS INC."
+                        }
+                    },
+                    "amplitude": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "amplitude",
+                        "name": "amplitude",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "arb.unit",
+                        "value": 0.422924152
+                    },
+                    "auto_range_enabled": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "auto_range_enabled",
+                        "name": "auto_range_enabled",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": false
+                    },
+                    "averaging_count": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "averaging_count",
+                        "name": "averaging_count",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 10
+                    },
+                    "averaging_enabled": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "averaging_enabled",
+                        "name": "averaging_enabled",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": false
+                    },
+                    "averaging_type": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "averaging_type",
+                        "name": "averaging_type",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": "repeat"
+                    },
+                    "digits": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "digits",
+                        "name": "digits",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 7
+                    },
+                    "display_enabled": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "display_enabled",
+                        "name": "display_enabled",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": true
+                    },
+                    "mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "mode",
+                        "name": "mode",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": "dc voltage"
+                    },
+                    "nplc": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "nplc",
+                        "name": "nplc",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "range": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "range",
+                        "name": "range",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 10.0
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 10.0
+                    },
+                    "trigger_continuous": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "trigger_continuous",
+                        "name": "trigger_continuous",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": true
+                    },
+                    "trigger_count": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "trigger_count",
+                        "name": "trigger_count",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 1
+                    },
+                    "trigger_delay": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "trigger_delay",
+                        "name": "trigger_delay",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "s",
+                        "value": 0.0
+                    },
+                    "trigger_source": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "trigger_source",
+                        "name": "trigger_source",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": "immediate"
+                    },
+                    "trigger_timer": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley1",
+                        "label": "trigger_timer",
+                        "name": "trigger_timer",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "s",
+                        "value": 0.1
+                    }
+                },
+                "terminator": "\n",
+                "timeout": 10.0
+            },
+            "keithley2": {
+                "__class__": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                "address": "GPIB0::16::INSTR",
+                "functions": {},
+                "name": "keithley2",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": {
+                            "firmware": "B03  /A02",
+                            "model": "2700",
+                            "serial": "0890442",
+                            "vendor": "KEITHLEY INSTRUMENTS INC."
+                        }
+                    },
+                    "amplitude": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "keithley2",
+                        "name": "amplitude",
+                        "ts": "2016-11-21 17:53:51",
+                        "units": "arb.unit",
+                        "value": 0.526598692
+                    },
+                    "averaging": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "averaging",
+                        "name": "averaging",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": false
+                    },
+                    "digits": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "digits",
+                        "name": "digits",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 7
+                    },
+                    "display": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "display",
+                        "name": "display",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": true
+                    },
+                    "integrationtime": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "integrationtime",
+                        "name": "integrationtime",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "s",
+                        "value": 0.02
+                    },
+                    "mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "mode",
+                        "name": "mode",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": "VOLT:DC"
+                    },
+                    "nplc": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "nplc",
+                        "name": "nplc",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "APER",
+                        "value": 1.0
+                    },
+                    "range": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "range",
+                        "name": "range",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "RANG",
+                        "value": 10.0
+                    },
+                    "readnext": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "keithley2",
+                        "name": "readnext",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "arb.unit",
+                        "value": -0.665097237
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 10.0
+                    },
+                    "trigger_continuous": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "trigger_continuous",
+                        "name": "trigger_continuous",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": true
+                    },
+                    "trigger_count": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "trigger_count",
+                        "name": "trigger_count",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "#",
+                        "value": 1
+                    },
+                    "trigger_delay": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2700.Keithley_2700",
+                        "instrument_name": "keithley2",
+                        "label": "trigger_delay",
+                        "name": "trigger_delay",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "s",
+                        "value": 0.0
+                    }
+                },
+                "terminator": "",
+                "timeout": 10.0
+            },
+            "keithley3": {
+                "__class__": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                "address": "GPIB0::20::INSTR",
+                "functions": {
+                    "reset": {}
+                },
+                "name": "keithley3",
+                "parameters": {
+                    "IDN": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "IDN",
+                        "name": "IDN",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": {
+                            "firmware": "A20  /A02",
+                            "model": "2000",
+                            "serial": "1264625",
+                            "vendor": "KEITHLEY INSTRUMENTS INC."
+                        }
+                    },
+                    "amplitude": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "amplitude",
+                        "name": "amplitude",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "arb.unit",
+                        "value": -0.00420480836
+                    },
+                    "auto_range_enabled": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "auto_range_enabled",
+                        "name": "auto_range_enabled",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": false
+                    },
+                    "averaging_count": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "averaging_count",
+                        "name": "averaging_count",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 10
+                    },
+                    "averaging_enabled": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "averaging_enabled",
+                        "name": "averaging_enabled",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": false
+                    },
+                    "averaging_type": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "averaging_type",
+                        "name": "averaging_type",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": "repeat"
+                    },
+                    "digits": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "digits",
+                        "name": "digits",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 7
+                    },
+                    "display_enabled": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "display_enabled",
+                        "name": "display_enabled",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": true
+                    },
+                    "mode": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "mode",
+                        "name": "mode",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": "dc voltage"
+                    },
+                    "nplc": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "nplc",
+                        "name": "nplc",
+                        "ts": "2016-11-21 17:12:00",
+                        "units": "",
+                        "value": 1.0
+                    },
+                    "range": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "range",
+                        "name": "range",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 10.0
+                    },
+                    "timeout": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "timeout",
+                        "name": "timeout",
+                        "ts": "2016-11-21 17:49:08",
+                        "units": "s",
+                        "value": 10.0
+                    },
+                    "trigger_continuous": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "trigger_continuous",
+                        "name": "trigger_continuous",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": true
+                    },
+                    "trigger_count": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "trigger_count",
+                        "name": "trigger_count",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": 1
+                    },
+                    "trigger_delay": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "trigger_delay",
+                        "name": "trigger_delay",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "s",
+                        "value": 0.0
+                    },
+                    "trigger_source": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "trigger_source",
+                        "name": "trigger_source",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "",
+                        "value": "immediate"
+                    },
+                    "trigger_timer": {
+                        "__class__": "qcodes.instrument.parameter.Parameter",
+                        "instrument": "qcodes.instrument_drivers.tektronix.Keithley_2000.Keithley_2000",
+                        "instrument_name": "keithley3",
+                        "label": "trigger_timer",
+                        "name": "trigger_timer",
+                        "ts": "2016-11-21 17:12:01",
+                        "units": "s",
+                        "value": 0.1
+                    }
+                },
+                "terminator": "\n",
+                "timeout": 10.0
+            }
+        },
+        "metadata": {
+            "image": null,
+            "sample": "test of V2"
+        },
+        "parameters": {}
+    },
+    "__dataset_metadata": {
+        "extra": {
+            "location": "addition_line_scan"
+        },
+        "metadata": null,
+        "arrays": {
+            "gates_P4_set": {
+                "label": "P4",
+                "name": "P4",
+                "unit": "mV",
+                "is_setpoint": true,
+                "full_name": null,
+                "array_id": "gates_P4_set",
+                "shape": [
+                    800
+                ],
+                "set_arrays": []
+            },
+            "keithley2_amplitude": {
+                "label": "keithley2",
+                "name": "amplitude",
+                "unit": "a.u.",
+                "is_setpoint": false,
+                "full_name": null,
+                "array_id": "keithley2_amplitude",
+                "shape": [
+                    800
+                ],
+                "set_arrays": [
+                    "gates_P4_set"
+                ]
+            }
+        }
+    }
+}

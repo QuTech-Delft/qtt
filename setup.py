@@ -1,6 +1,5 @@
 import os
-from inspect import getsourcefile
-from os.path import abspath
+from pathlib import Path
 import platform
 import re
 
@@ -24,13 +23,22 @@ def get_version(verbose=1, filename='src/qtt/version.py'):
     return version
 
 
+def get_package_data(root_dir):
+    """ Gather directories under root_dir with files in it """
+    package_data = []
+    for root_dir, dirs, files in os.walk(root_dir):
+        if len(files) > 0:
+            package_data.append(f'{os.path.join(Path(*Path(root_dir).parts[2:]), "*")}')
+    return package_data
+
+
 tests_require = ['coverage', 'jupyter', 'mypy', 'pytest']
 
 install_requires = [
-    'apscheduler', 'attrs', 'dulwich', 'h5py', 'hickle', 'IPython>=0.1', 'lmfit', 'matplotlib>=3.0',
-    'numpy>=1.15', 'opencv-python', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.8.0',
-    'qcodes-contrib-drivers', 'qilib', 'qtpy', 'qupulse', 'redis', 'scipy>=0.18', 'scikit-image', 'jupyter',
-    'coverage', 'sympy', 'numdifftools', 'shapely'
+    'apscheduler', 'attrs', 'dulwich', 'h5py<3.0', 'hickle', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
+    'numdifftools', 'numpy>=1.15', 'opencv-python', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.17.0',
+    'qcodes-contrib-drivers', 'qilib', 'qtpy', 'qupulse', 'redis', 'scipy>=0.18', 'scikit-image',
+    'shapely', 'sympy<1.7'
 ] + tests_require
 
 if platform.system() == 'Windows':
@@ -57,7 +65,6 @@ setup(name='qtt',
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
           'Topic :: Scientific/Engineering'
@@ -65,6 +72,7 @@ setup(name='qtt',
       license='MIT',
       package_dir={'': 'src'},
       packages=find_packages(where='./src', exclude=["*tests*"]),
+      package_data={'qtt': get_package_data('src/qtt/exampledata')},
       data_files=[],
       install_requires=install_requires,
       tests_require=tests_require,

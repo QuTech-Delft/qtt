@@ -1,15 +1,14 @@
 import sys
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import warnings
 import numpy as np
 import qcodes
 from qcodes.data.data_array import DataArray
-from qcodes.tests.data_mocks import DataSet2D
+from qcodes.tests.legacy.data_mocks import DataSet2D
 from qtt.utilities import tools
 from qtt.utilities.tools import resampleImage, diffImage, diffImageSmooth, reshape_metadata, get_python_version, \
-    get_module_versions, \
-    get_git_versions, code_version, rdeprecated
+    get_module_versions, get_git_versions, code_version, rdeprecated, in_ipynb, pythonVersion
 import qtt.measurements.scans
 
 
@@ -61,6 +60,19 @@ class TestTools(unittest.TestCase):
         if verbose:
             print('testing diffImage')
         _ = diffImage(ds.z, dy='x')
+
+    def test_in_ipynb(self):
+        running_in_ipynb = in_ipynb()
+        self.assertFalse(running_in_ipynb)
+
+    def test_pythonVersion(self):
+        with patch('builtins.print') as mock_print:
+            pythonVersion()
+
+        y = str(mock_print.call_args)
+        self.assertIn('python', y)
+        self.assertIn('ipython', y)
+        self.assertIn('notebook', y)
 
     def test_diffImageSmooth(self):
         image = np.arange(12.).reshape(4, 3)

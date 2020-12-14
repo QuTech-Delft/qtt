@@ -6,10 +6,10 @@ import unittest.mock
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
-import qcodes.tests.data_mocks
-from qcodes.plots.qcmatplotlib import MatPlot
 import qcodes.data.io
 from qcodes.data.data_set import DataSet
+from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes.tests.legacy.data_mocks import DataSet1D
 
 import qtt.data
 
@@ -17,7 +17,7 @@ import qtt.data
 class TestPlotting(unittest.TestCase):
 
     def test_plot_dataset_1d(self, fig=1):
-        dataset = qcodes.tests.data_mocks.DataSet1D()
+        dataset = DataSet1D()
         if fig is not None:
             qtt.data.plot_dataset(dataset, fig=fig)
             self.assertTrue(plt.fignum_exists(fig))
@@ -53,7 +53,7 @@ class TestDataSet(unittest.TestCase):
     def setUp(self):
         dataset_class = DataSet
         self.dataset_class = dataset_class
-        self.dataset1d = qcodes.tests.data_mocks.DataSet1D()
+        self.dataset1d = DataSet1D()
         self.dataset1d.metadata['hello'] = 'world'
         self.dataset2d = qtt.data.makeDataSet2Dplain('x', [0, 1, 2, 3.], 'y', [3, 4, 5, 6.], xunit='mV', yunit='a.u.',
                                                      zunit='a.u.')
@@ -75,7 +75,7 @@ class TestDataSet(unittest.TestCase):
         """ We need to convert old datasets to the current dataset structure."""
         exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
         qcodes.data.data_set.DataSet.default_io = qcodes.data.io.DiskIO(exampledatadir)
-        old_dataset = qtt.data.load_dataset(os.path.join('2017-09-04', '11-05-17_qtt_scan2Dfastvec'))
+        old_dataset = qtt.data.load_dataset('PAT_scan')
 
         def convert_legacy(old_dataset):
             """ Dummy converter """

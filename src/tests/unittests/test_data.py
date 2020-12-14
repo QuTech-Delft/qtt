@@ -1,16 +1,18 @@
 import io
+import logging
+import tempfile
+import time
 import sys
 import unittest
 from unittest.mock import patch
-import logging
-import time
-import numpy as np
+
 import matplotlib.pyplot as plt
-import tempfile
+import numpy as np
 import qcodes
 from qcodes import ManualParameter
 from qcodes.data.data_set import DataSet
-from qcodes.tests.data_mocks import DataSet2D
+from qcodes.tests.legacy.data_mocks import DataSet1D, DataSet2D
+
 import qtt.data
 from qtt.data import image_transform, dataset_to_dictionary, dictionary_to_dataset,\
     compare_dataset_metadata, diffDataset, add_comment, load_dataset, determine_parameter_unit
@@ -20,7 +22,7 @@ from qtt.data import logger
 class TestPlotting(unittest.TestCase):
 
     def test_plot_dataset_1d(self, fig=None):
-        dataset = qcodes.tests.data_mocks.DataSet1D()
+        dataset = DataSet1D()
         if fig is not None:
             qtt.data.plot_dataset(dataset, fig=fig)
             self.assertTrue(plt.fignum_exists(fig))
@@ -37,31 +39,32 @@ class TestPlotting(unittest.TestCase):
 class TestExampleDatasets(unittest.TestCase):
 
     def test_json_format(self):
-        dataset=qtt.data.load_example_dataset('elzerman_detuning_scan/2019-05-28_11-39-39_qtt_generic.json')
+        dataset=qtt.data.load_example_dataset('elzerman_detuning_scan.json')
         self.assertEqual(dataset.default_parameter_name(), 'signal')
         self.assertEqual(dataset.default_parameter_array().shape, (240, 1367))
         np.testing.assert_almost_equal(dataset.time[0, 0::500], np.array([0., 0.000512, 0.001024]))
 
     def test_qcodes_hdf5_format(self):
-        dataset=qtt.data.load_example_dataset('2017-02-21/15-59-56')
+        dataset=qtt.data.load_example_dataset('polarization_line')
         self.assertEqual(dataset.default_parameter_name(), 'signal')
         np.testing.assert_almost_equal(dataset.delta[0:3], np.array([-100.,  -99.79979706,  -99.59960175]))
+
 
 class TestData(unittest.TestCase):
 
     def test_transform(self):
-        dataset = qcodes.tests.data_mocks.DataSet2D()
+        dataset = DataSet2D()
         tr = qtt.data.image_transform(dataset, arrayname='z')
         resolution = tr.scan_resolution()
         self.assertEqual(resolution, 1)
 
     def test_dataset1Dmetadata(self):
-        dataset = qcodes.tests.data_mocks.DataSet1D(name='test1d')
+        dataset = DataSet1D(name='test1d')
         _, _, _, _, arrayname = qtt.data.dataset1Dmetadata(dataset)
         self.assertEqual(arrayname, 'y')
 
     def test_datasetCentre(self):
-        dataset = qcodes.tests.data_mocks.DataSet2D()
+        dataset = DataSet2D()
         cc = qtt.data.datasetCentre(dataset)
         self.assertEqual(cc[0], 1.5)
 
@@ -77,7 +80,7 @@ class TestData(unittest.TestCase):
         self.assertEqual(dependent_label, 'y')
 
     def test_dataset_labels_dataset_2d(self):
-        dataset = qcodes.tests.data_mocks.DataSet2D()
+        dataset = DataSet2D()
         zz = qtt.data.dataset_labels(dataset)
         self.assertEqual(zz, 'Z')
         zz = qtt.data.dataset_labels(dataset, add_unit=True)
@@ -100,7 +103,7 @@ class TestData(unittest.TestCase):
 
     def test_dataset_to_dictionary(self):
 
-        input_dataset = qcodes.tests.data_mocks.DataSet2D()
+        input_dataset = DataSet2D()
 
         data_dictionary = dataset_to_dictionary(input_dataset, include_data=False, include_metadata=False)
         self.assertIsNone(data_dictionary['metadata'])
@@ -113,7 +116,7 @@ class TestData(unittest.TestCase):
 
     @staticmethod
     def test_numpy_on_dataset(verbose=0):
-        all_data = qcodes.tests.data_mocks.DataSet2D()
+        all_data = DataSet2D()
         x = all_data.z
         _ = np.array(x)
         s = np.linalg.svd(x)
@@ -122,7 +125,7 @@ class TestData(unittest.TestCase):
 
     @staticmethod
     def test_compare():
-        ds = qcodes.tests.data_mocks.DataSet2D()
+        ds = DataSet2D()
         compare_dataset_metadata(ds, ds, verbose=0)
 
     @staticmethod
@@ -138,8 +141,8 @@ class TestData(unittest.TestCase):
             print('transform: im.shape %s' % (str(im.shape),))
 
     def test_add_comment(self):
-        ds0 = qcodes.tests.data_mocks.DataSet2D()
-        ds = qcodes.tests.data_mocks.DataSet2D()
+        ds0 = DataSet2D()
+        ds = DataSet2D()
         try:
             add_comment('hello world')
         except NotImplementedError:
@@ -158,7 +161,7 @@ class TestData(unittest.TestCase):
         dd = []
         name = DataSet.location_provider.base_record['name']
         for jj, fmt in enumerate([g, h]):
-            ds = qcodes.tests.data_mocks.DataSet2D(name='format%d' % jj)
+            ds = DataSet2D(name='format%d' % jj)
             ds.formatter = fmt
             ds.io = disk_io
             ds.add_metadata({'1': 1, '2': [2, 'x'], 'np': np.array([1, 2.])})

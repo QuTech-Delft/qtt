@@ -17,15 +17,11 @@ on [Qcodes](https://github.com/qdev-dk/Qcodes) (basic framework such as instrume
 
 ## Installation
 
-QTT is compatible with Python 3.5+. QTT can be installed as a pip package to be used in a (virtual) Python environment.
+QTT is compatible with Python 3.7+. QTT can be installed as a pip package to be used in a (virtual) Python environment.
 We assume that software packages like [git](https://git-scm.com/downloads) and [python](https://www.python.org/downloads/)
 are already installed on your system.
 
 Note: when running Ubuntu Linux, installing these packages is done via:
-```
-$ sudo apt install git gcc python3 python3-venv python3-dev
-```
-for Python 3.6.x or
 ```
 $ sudo apt install git gcc python3.7 python3.7-venv python3.7-dev
 ```
@@ -44,7 +40,6 @@ $ . ./env/bin/activate
  or
 $ source ./env/bin/activate
 ```
-or use the python3.7 equivalent to generate a python 3.7 environment.
 On Windows do:
 ```
 $ python -m pip install virtualenv
@@ -53,11 +48,11 @@ $ env\Scripts\activate.bat
 ```
 Now we are ready to install QTT.
 ### Installation from Pypi
-To use QTT for Python 3.6.x or lower, install it as a pip package:
+To use QTT, install it as a pip package:
 ```
 $ pip install qtt
 ```
-To use QTT for Python 3.7.x or higher, install QTT from source.
+or install QTT from source.
 ### Installing from source
 The source for QTT can be found at Github.
 For the default installation from the QTT source directory execute:

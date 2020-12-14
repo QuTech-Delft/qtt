@@ -2,9 +2,9 @@ import unittest
 
 import numpy as np
 import qcodes
-import qcodes.tests.data_mocks
-
 from qcodes.data.data_set import DataSet
+from qcodes.tests.legacy.data_mocks import DataSet2D
+
 from qtt.utilities.json_serializer import decode_json, encode_json, qtt_serializer
 
 
@@ -17,7 +17,7 @@ class TestJSONSerializer(unittest.TestCase):
         self.assertDictEqual(data, loaded_data)
 
     def test_qcodes_dataset_encoding(self):
-        dataset = qcodes.tests.data_mocks.DataSet2D()
+        dataset = DataSet2D()
 
         json_data = encode_json(dataset)
         self.assertIsInstance(json_data, str)

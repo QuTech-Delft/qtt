@@ -1,13 +1,6 @@
 language: python
 matrix:
   include:
-  - name: Minimal installation 3.6
-    python: 3.6
-    sudo: true
-    dist: bionic
-    env: QT_QPA_PLATFORM=offscreen
-    services:
-    - xvfb
   - name: Minimal installation 3.7
     python: 3.7
     sudo: true
@@ -24,13 +17,6 @@ matrix:
     services:
     - xvfb
 
-
-  - name: Full installation 3.6
-    python: 3.6
-    dist: bionic
-    env: FULL_INSTALL=1
-    services:
-    - xvfb
   - name: Full installation 3.7
     python: 3.7
     dist: bionic

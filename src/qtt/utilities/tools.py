@@ -1,5 +1,6 @@
 import copy
 from collections import OrderedDict
+from typing import Type
 import dateutil
 import sys
 import os
@@ -26,12 +27,15 @@ from matplotlib.widgets import Button
 
 from qcodes.data.data_set import DataSet
 
+NotGitRepositoryError: Type[Exception]
+
 try:
     from dulwich.repo import Repo, NotGitRepository
     from dulwich import porcelain
+    NotGitRepositoryError = NotGitRepository
 except ModuleNotFoundError:
     warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
-    NotGitRepository = Exception
+    NotGitRepositoryError = Exception
 
 # explicit import
 from qcodes.plots.qcmatplotlib import MatPlot
@@ -139,7 +143,7 @@ def get_git_versions(repos, get_dirty_status=False, verbose=0):
                 status = porcelain.status(repository)
                 is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 for item in status.staged.values())
                 dirty_stats[repo] = is_dirty
-        except (AttributeError, ModuleNotFoundError, NotGitRepository):
+        except (AttributeError, ModuleNotFoundError, NotGitRepositoryError):
             heads[repo] = 'none'
             if get_dirty_status:
                 dirty_stats[repo] = 'none'

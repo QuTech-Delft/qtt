@@ -616,7 +616,7 @@ class livePlot(QtCore.QObject):
                     self.vert_low = value_y - self.sweepranges[1] / 2
                     self.vert_range = self.sweepranges[1]
                     self.rect = QtCore.QRect(
-                        self.horz_low, self.vert_low, self.horz_range, self.vert_range)
+                        int(self.horz_low), int(self.vert_low), int(self.horz_range), int(self.vert_range))
                     self.plot.setRect(self.rect)
                     self.crosshair(show=None, pos=[value_x, value_y])
                     self._sweepvalues = [
