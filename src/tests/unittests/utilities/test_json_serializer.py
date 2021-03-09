@@ -44,7 +44,7 @@ class TestJSONSerializer(unittest.TestCase):
         for key, value in data.items():
             np.testing.assert_array_equal(value, loaded_data[key])
 
-        data = {'int32': np.int32(2.), 'float': np.float(3.), 'float64': np.float64(-1)}
+        data = {'int32': np.int32(2.), 'float': float(3.), 'float64': np.float64(-1)}
         serialized_data = encode_json(data)
         loaded_data = decode_json(serialized_data)
 
