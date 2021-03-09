@@ -4,7 +4,7 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Dev
+## \[1.2.3] - 11-3-2021
 
 ### Added
 - Support for python 3.8 added (#672)
@@ -35,8 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed dependency on Polygon3 (#579) solved by (#744)
 
 ### Fixed
-- Update qtt to qcodes 0.17.0
+- Update qtt to qcodes 0.23.0
+- Bump bleach from 3.1.5 to 3.3.0
 - Bump notebook from 6.0.3 to 6.1.5
+- fix deprecation warnings
 
 ## \[1.2.2] - 14-5-2020
 ### Added
