@@ -121,7 +121,7 @@ class GateTransform:
         """
         vals2Dout = {}
 
-        zz = np.zeros(nn, dtype=float)
+        zz = np.zeros(nn if nn is not None else (), dtype=float)
         if isinstance(vals2D, dict):
             xx = [vals2D.get(s, zz) for s in self.sourcenames]
             xx = [x.flatten() for x in xx]
@@ -134,7 +134,7 @@ class GateTransform:
         gate_values_out = pgeometry.projectiveTransformation(self.Vmatrix, gate_values)
 
         for j, n in enumerate(self.targetnames):
-            vals2Dout[n] = gate_values_out[j].reshape(nn).astype(np.float)
+            vals2Dout[n] = gate_values_out[j].reshape(nn).astype(float)
         return vals2Dout
 
 

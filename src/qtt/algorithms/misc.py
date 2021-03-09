@@ -34,7 +34,7 @@ def polyarea(p):
 
 
 def point_in_poly(x, y, poly):
-    """ Return true if a point is contained in a polygon 
+    """ Return true if a point is contained in a polygon
 
     Args:
         x (float)
@@ -127,7 +127,7 @@ def polyfit2d(x, y, z, order=3):
         z (array): 2D array with data
         order (int): order of polynomial to fit
     Returns:
-        m (array): order of the polynomial        
+        m (array): order of the polynomial
     """
     ncols = (order + 1)**2
     G = np.zeros((x.size, ncols))
@@ -154,7 +154,7 @@ def polyval2d(x, y, m):
     """
     order = int(np.sqrt(len(m))) - 1
     ij = itertools.product(range(order + 1), range(order + 1))
-    z = np.zeros_like(x).astype(np.float)
+    z = np.zeros_like(x).astype(float)
     for a, (i, j) in zip(m, ij):
         z += a * x**i * y**j
     return z

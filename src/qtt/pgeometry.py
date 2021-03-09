@@ -1014,7 +1014,7 @@ def scaleImage(image, display_min=None, display_max=None):
     image.clip(display_min, display_max, out=image)
     if image.dtype == np.uint8:
         image -= int(display_min)
-        image = image.astype(np.float)
+        image = image.astype(float)
         image //= (display_max - display_min) / 255.
     else:
         image -= display_min

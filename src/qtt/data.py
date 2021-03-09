@@ -1178,7 +1178,12 @@ def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location
     setpoint_data = np.array(x)
     preset_data = np.NaN * np.ones(setpoint_data.size)
     if y is not None:
-        y = np.array(y)
+        if isinstance(y, np.ndarray):
+            y = np.array(y, dtype=y.dtype)
+        elif isinstance(y, list):
+            y = np.array(y, dtype=type(y[0]))
+        else:
+            y = np.array(y)
 
     setpoint = DataArray(name=xname, array_id=xname, preset_data=setpoint_data, unit=xunit, is_setpoint=True)
 
