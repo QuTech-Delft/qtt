@@ -9,7 +9,7 @@ from qtt.algorithms.allxy import fit_allxy, plot_allxy, allxy_model
 
 class TestAllxy(unittest.TestCase):
 
-    def test_allxy(self, fig = None):
+    def test_allxy(self, fig = 1):
         dataset = makeDataSet1Dplain('index', np.arange(21), 'allxy', [0.12, 0.16533333, 0.136, 0.17066666, 0.20266667,
                                                                        0.452, 0.48133334, 0.58666666, 0.43199999, 0.52933334,
                                                                        0.44533333, 0.51066667, 0.46, 0.48133334, 0.47066667,
