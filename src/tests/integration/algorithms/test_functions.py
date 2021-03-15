@@ -7,10 +7,9 @@ from qtt.algorithms.functions import gaussian, double_gaussian, exp_function, \
     _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave
 
 
-
 class TestFunctions(unittest.TestCase):
 
-    def test_estimate_dominant_frequency(self, fig = 1):
+    def test_estimate_dominant_frequency(self, fig=1):
         y_data = np.array([0.122, 0.2, 0.308, 0.474, 0.534, 0.618, 0.564, 0.436, 0.318,
                            0.158, 0.13, 0.158, 0.336, 0.434, 0.51, 0.59, 0.592, 0.418,
                            0.286, 0.164, 0.156, 0.186, 0.25, 0.362, 0.524])
