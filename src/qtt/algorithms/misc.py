@@ -134,11 +134,7 @@ def polyfit2d(x, y, z, order=3):
     ij = itertools.product(range(order + 1), range(order + 1))
     for k, (i, j) in enumerate(ij):
         G[:, k] = x**i * y**j
-    rcond = None
-    from distutils.version import StrictVersion
-    if StrictVersion(np.__version__) < StrictVersion('1.14.0'):
-        rcond = -1
-    m, _, _, _ = np.linalg.lstsq(G, z, rcond=rcond)
+    m, _, _, _ = np.linalg.lstsq(G, z, rcond=None)
     return m
 
 
