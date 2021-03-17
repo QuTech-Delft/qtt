@@ -375,6 +375,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
         initial_parameters = initial_params
     lmfit_model = Model(gauss_ramsey_model)
     lmfit_model.set_param_hint('amplitude', min=0)
+    lmfit_model.set_param_hint('decay_time', min=0)
     lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)),
                                    verbose=verbose >= 2, weights=weights)
 

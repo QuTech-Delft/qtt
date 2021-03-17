@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 'elzerman_detuning_scan/2019-05-28_11-39-39_qtt_generic.json' renamed to 'elzerman_detuning_scan'
   - 'misc/P5_y_P5_x.dat' renamed to 'charge_stability_diagram_dac_vs_awg'
   - '2018-08-31/19-05-18_qtt_save_segments' renamed to 'rts_signal'
+- The decay time in the Gauss-Ramsey fit is now always positive (#754)
 
 ### Removed
 - Support for python 3.6 and lower is removed.
