@@ -13,12 +13,7 @@ import itertools
 
 
 def _solve_least_squares(a, b):
-    from distutils.version import StrictVersion
-    if StrictVersion(np.__version__) < StrictVersion('1.14.0'):
-        # legacy numpy versions
-        rcond = -1
-    else:
-        rcond = None
+    rcond = None
     solution = np.linalg.lstsq(a, b, rcond=rcond)[0]
     return solution
 
