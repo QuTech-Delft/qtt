@@ -43,7 +43,7 @@ def plot_vertical_line(x: float, color: str = 'c', alpha: float = .5, label: Opt
     return vline
 
 
-def plot_double_gaussian_fit(result_dict: dict, xdata: np.array) -> None:
+def plot_double_gaussian_fit(result_dict: dict, xdata: np.ndarray) -> None:
     """ Plot a two Gaussians from a double Gaussian fit
 
     Args:
