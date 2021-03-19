@@ -34,7 +34,8 @@ class TestStructures(unittest.TestCase):
         sensing_dot = qtt.structures.sensingdot_t(
             ['SD1a', 'SD1b', 'SD1c'], station=station, minstrument='keithley1.amplitude')
         sensing_dot.verbose = verbose
-        _ = sensing_dot.autoTune(step=-8, fig=fig)
+        if fig is not None:
+            _ = sensing_dot.autoTune(step=-8, fig=fig)
         qtt.simulation.virtual_dot_array.close(verbose=verbose)
 
     def test_multi_parameter(self):

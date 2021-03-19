@@ -68,6 +68,29 @@ class TestData(unittest.TestCase):
         cc = qtt.data.datasetCentre(dataset)
         self.assertEqual(cc[0], 1.5)
 
+    def test_dataset_no_measured_data(self):
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logger.addHandler(stream_handler)
+
+            dataset = qtt.data.makeDataSet1Dplain('x', [0, 1], 'y', [])
+
+            # Verify warning
+            print_string = mock_stdout.getvalue()
+            self.assertEqual(print_string, 'Shape of measured data (0,) does not match setpoint shape (2,)\n')
+            logger.removeHandler(stream_handler)
+
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            logger.addHandler(stream_handler)
+
+            dataset = qtt.data.makeDataSet1Dplain('x', [0, 1], 'y', None)
+
+            # Verify in this case we have no warning
+            print_string = mock_stdout.getvalue()
+            self.assertEqual(print_string, '')
+            logger.removeHandler(stream_handler)
+
     def test_dataset_labels_dataset_1d(self):
         dataset = qtt.data.makeDataSet1Dplain('x', [0, 1], 'y', [2, 3])
         independent_label = qtt.data.dataset_labels(dataset, 'x')

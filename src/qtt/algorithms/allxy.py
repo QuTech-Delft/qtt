@@ -49,13 +49,13 @@ def allxy_model(indices: Union[float, np.ndarray], offset0: float, slope0: float
     return v1 + v2 + v3
 
 
-def _estimate_allxy_parameters(allxy_data: np.ndarray) -> List[float]:
+def _estimate_allxy_parameters(allxy_data: np.ndarray) -> List[Any]:
     """ Return estimate of allxy model parameters """
     p = [np.mean(allxy_data[0:5]), 0, np.mean(allxy_data[5:17]), 0, np.mean(allxy_data[17:]), 0]
     return p
 
 
-def _default_measurement_array(dataset: DataSet) -> DataArray:
+def _default_measurement_array(dataset: DataSet) -> np.ndarray:
     mm = [name for (name, a) in dataset.arrays.items() if not a.is_setpoint]
     return dataset.arrays[mm[0]]
 
@@ -75,9 +75,12 @@ def fit_allxy(dataset: DataSet, initial_parameters: Optional[np.ndarray] = None)
     lmfit_model = Model(allxy_model)
 
     if initial_parameters is None:
-        initial_parameters = _estimate_allxy_parameters(allxy_data)
+        init_params = np.array(_estimate_allxy_parameters(allxy_data))
+    else:
+        init_params = initial_parameters
     param_names = lmfit_model.param_names
-    result = lmfit_model.fit(allxy_data, indices=x_data, **dict(zip(param_names, initial_parameters)),
+
+    result = lmfit_model.fit(allxy_data, indices=x_data, **dict(zip(param_names, init_params)),
                              verbose=0, method='least_squares')
 
     analysis_results = extract_lmfit_parameters(lmfit_model, result)

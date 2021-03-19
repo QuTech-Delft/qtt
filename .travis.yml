@@ -31,14 +31,13 @@ matrix:
     services:
     - xvfb
 
-
 install:
   - pip install coveralls
   - pip install --upgrade pip
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
 script:
-  - ls
+  - pip freeze
   - pytest --version
   - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/measurements/ttrace.py" -m pytest
   - mypy src --ignore-missing-imports

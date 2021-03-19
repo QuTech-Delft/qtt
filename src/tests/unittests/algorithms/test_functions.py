@@ -9,15 +9,15 @@ from qtt.algorithms.functions import gaussian, double_gaussian, exp_function, \
 
 class TestFunctions(unittest.TestCase):
 
-    def test_estimate_dominant_frequency(self):
+    def test_estimate_dominant_frequency(self, fig=None):
         y_data = np.array([0.122, 0.2, 0.308, 0.474, 0.534, 0.618, 0.564, 0.436, 0.318,
                            0.158, 0.13, 0.158, 0.336, 0.434, 0.51, 0.59, 0.592, 0.418,
                            0.286, 0.164, 0.156, 0.186, 0.25, 0.362, 0.524])
         sample_rate = 47368421
         estimated_frequency = qtt.algorithms.functions.estimate_dominant_frequency(
-            y_data, sample_rate=sample_rate, fig=1)
+            y_data, sample_rate=sample_rate, fig=fig)
         self.assertAlmostEqual(estimated_frequency, 4750425, places=-2)
-        plt.close(1)
+        plt.close(fig=fig)
 
     def test_estimate_parameters_damped_sine_wave_angle(self):
         omega = 1e6
@@ -129,7 +129,7 @@ class TestFunctions(unittest.TestCase):
         c = cost_exp_decay(x_data, y_data, params, threshold='auto')
         self.assertTrue(c < 10.0)
 
-    def test_fit_gauss_ramsey(self, fig=None):
+    def test_fit_gauss_ramsey(self):
         y_data = np.array([0.6019, 0.5242, 0.3619, 0.1888, 0.1969, 0.3461, 0.5276, 0.5361,
                            0.4261, 0.28, 0.2323, 0.2992, 0.4373, 0.4803, 0.4438, 0.3392,
                            0.3061, 0.3161, 0.3976, 0.4246, 0.398, 0.3757, 0.3615, 0.3723,
@@ -143,10 +143,14 @@ class TestFunctions(unittest.TestCase):
         self.assertTrue(np.abs(par_fit_test[-2] - (-1.275)) < 0.1)
         self.assertTrue(np.abs(par_fit_test[-1] - 0.376) < 0.1)
 
-        x_data = np.array([0.00000000e+00, 4.73333330e-07, 9.46666660e-07, 1.41999999e-06, 1.89333332e-06, 2.36666665e-06, 2.83333338e-06, 3.30666671e-06, 3.78000004e-06, 4.25333337e-06, 4.72666670e-06,
-                           5.20000003e-06, 5.67333336e-06, 6.14666669e-06, 6.62000002e-06, 7.09333335e-06, 7.56666668e-06, 8.03333296e-06, 8.50666675e-06, 8.97999962e-06, 9.45333340e-06, 9.92666628e-06, 1.04000001e-05])
-        y_data = np.array([0.59500003, 0.41499999, 0.12, 0.13166666, 0.35833332, 0.60500002, 0.48166665, 0.36166668, 0.28166667, 0.26333332, 0.28999999,
-                           0.32666665, 0.36666667, 0.37666667, 0.38499999, 0.38833332, 0.35166666, 0.31666666, 0.34, 0.30000001, 0.31999999, 0.33000001, 0.31666666])
+        x_data = np.array([0.00000000e+00, 4.73333330e-07, 9.46666660e-07, 1.41999999e-06, 1.89333332e-06,
+                           2.36666665e-06, 2.83333338e-06, 3.30666671e-06, 3.78000004e-06, 4.25333337e-06,
+                           4.72666670e-06, 5.20000003e-06, 5.67333336e-06, 6.14666669e-06, 6.62000002e-06,
+                           7.09333335e-06, 7.56666668e-06, 8.03333296e-06, 8.50666675e-06, 8.97999962e-06,
+                           9.45333340e-06, 9.92666628e-06, 1.04000001e-05])
+        y_data = np.array([0.59500003, 0.41499999, 0.12, 0.13166666, 0.35833332, 0.60500002, 0.48166665, 0.36166668,
+                           0.28166667, 0.26333332, 0.28999999, 0.32666665, 0.36666667, 0.37666667, 0.38499999,
+                           0.38833332, 0.35166666, 0.31666666, 0.34, 0.30000001, 0.31999999, 0.33000001, 0.31666666])
 
         par_fit_test, results = fit_gauss_ramsey(x_data, y_data)
 
@@ -154,25 +158,26 @@ class TestFunctions(unittest.TestCase):
         self.assertAlmostEqual(par_fit_test[1] * 1e6, 3.55, places=1)
         self.assertAlmostEqual(par_fit_test[2] * 1e-6, 0.36, places=1)
 
-    def test_fit_gauss_ramsey_weights(self):
-        fig=123
+    def test_fit_gauss_ramsey_weights(self, fig=None):
+
         x_data = np.hstack((np.linspace(0, 3 * np.pi, 20), np.linspace(3 * np.pi, 4 * np.pi, 100)))
         y_data = np.sin(x_data)
         y_data[21:] = 0
 
         fitted_parameters_unweighted, _ = fit_gauss_ramsey(x_data, y_data)
         fitted_parameters, _ = fit_gauss_ramsey(x_data, y_data, weight_power=10)
-        plt.figure(fig)
-        plt.clf()
-        plt.plot(x_data, y_data, '.')
-        plt.plot(x_data, gauss_ramsey(x_data, fitted_parameters_unweighted), 'b')
-        plt.plot(x_data, gauss_ramsey(x_data, fitted_parameters), 'm')
         self.assertAlmostEqual(fitted_parameters[0], 1, places=2)
         self.assertTrue(fitted_parameters[1] > 1e3)
         self.assertAlmostEqual(fitted_parameters[2], 1 / (2 * np.pi), places=1)
         self.assertAlmostEqual(fitted_parameters[3], 0, places=6)
         self.assertAlmostEqual(fitted_parameters[4], 0, places=6)
-        plt.close(fig)
+        if fig is not None:
+            plt.figure(fig)
+            plt.clf()
+            plt.plot(x_data, y_data, '.')
+            plt.plot(x_data, gauss_ramsey(x_data, fitted_parameters_unweighted), 'b')
+            plt.plot(x_data, gauss_ramsey(x_data, fitted_parameters), 'm')
+            plt.close(fig)
 
     def test_logistic_and_linear_function(self):
         x_data = np.arange(-10, 10, 0.1)

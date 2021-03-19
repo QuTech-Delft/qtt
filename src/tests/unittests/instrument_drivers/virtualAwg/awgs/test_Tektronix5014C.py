@@ -137,10 +137,10 @@ class TestTektronix5014C(TestCase):
         self.assertRaises(AwgCommonError, self.awg_backend.retrieve_gain)
 
     def test_upload_waveforms(self):
-        data_seq1 = np.array(range(10, 20), dtype=np.float)
-        data_seq2 = np.array(range(20, 30), dtype=np.float)
-        data_mark = np.array(range(30, 40), dtype=np.float)
-        data_zero = np.zeros(10, dtype=np.float)
+        data_seq1 = np.array(range(10, 20), dtype=float)
+        data_seq2 = np.array(range(20, 30), dtype=float)
+        data_mark = np.array(range(30, 40), dtype=float)
+        data_zero = np.zeros(10, dtype=float)
 
         sequence_names = ['wave1', 'wave2', 'mark']
         sequence_channels = [(1, ), (2, ), (1, 1)]
@@ -163,10 +163,10 @@ class TestTektronix5014C(TestCase):
         self.awg.set_sqel_goto_state.assert_called_once_with(1, 1)
 
     def test_create_waveform_data(self):
-        data_seq1 = np.array(range(10), dtype=np.float)
-        data_mark = np.array(range(1, 11), dtype=np.float)
-        data_seq2 = np.array(range(2, 12), dtype=np.float)
-        data_zero = np.zeros(10, dtype=np.float)
+        data_seq1 = np.array(range(10), dtype=float)
+        data_mark = np.array(range(1, 11), dtype=float)
+        data_seq2 = np.array(range(2, 12), dtype=float)
+        data_zero = np.zeros(10, dtype=float)
         names = ['seq1', 'mark', 'seq2']
         channels = [(1, 0), (1, 1), (2, 0)]
         items = [data_seq1, data_mark, data_seq2]

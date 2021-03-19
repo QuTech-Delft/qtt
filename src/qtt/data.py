@@ -1135,8 +1135,8 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
         if measured_data_list is not None and measured_data_list[idm] is not None:
             measured_array = np.array(measured_data_list[idm])
             if measured_array.shape != preset_data.shape:
-                logger.warning(f'Shape of measured data {preset_data.shape} does not match '
-                               f'setpoint shape {measured_array.shape}')
+                logger.warning(f'Shape of measured data {measured_array.shape} does not match '
+                               f'setpoint shape {preset_data.shape}')
 
             getattr(data_set, mname).ndarray = measured_array
 
@@ -1178,7 +1178,12 @@ def makeDataSet1Dplain(xname, x, yname, y=None, xunit=None, yunit=None, location
     setpoint_data = np.array(x)
     preset_data = np.NaN * np.ones(setpoint_data.size)
     if y is not None:
-        y = np.array(y)
+        if isinstance(y, np.ndarray):
+            y = np.array(y, dtype=y.dtype)
+        elif isinstance(y, list) and y:
+            y = np.array(y, dtype=type(y[0]))
+        else:
+            y = np.array(y)
 
     setpoint = DataArray(name=xname, array_id=xname, preset_data=setpoint_data, unit=xunit, is_setpoint=True)
 

@@ -30,7 +30,7 @@ class ProcessSawtooth2D(SignalProcessorInterface):
             samples_edge_x = int(sample_count / resolution_y * width_x)
 
             samples_egde_y = int(sample_count * width_y)
-            offsets = np.arange(0, samples_egde_y, samples_sawtooth_x, dtype=np.int)
+            offsets = np.arange(0, samples_egde_y, samples_sawtooth_x, dtype=int)
 
             identifier = f'{data_array.name}_SawtoothProcessed2D'
             sliced_data = np.array([data_array[o:o + samples_edge_x] for o in offsets])
