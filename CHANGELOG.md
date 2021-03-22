@@ -4,15 +4,16 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## \[1.2.3] - 11-3-2021
+## \[1.2.3] - 22-3-2021
 
 ### Added
 - Support for python 3.8 added (#672)
+- Add virtual awg settings to snapshot (#739)
 
 ### Changed
 - Replaced implementation of polyintersection from Polygon3 to shapely (#744)
 - Included exampledata in distribution (#715)
-- Changed names of exampledata sets (#721)
+- Changed names of exampledata sets (#721, #750)
   - '17-57-24' renamed to 'addition_line_scan'
   - '2017-01-10/09-45-15' renamed to 'charge_stability_diagram_anti_crossing'
   - '2017-02-21/15-59-56' renamed to 'polarization_line'
@@ -28,17 +29,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 'elzerman_detuning_scan/2019-05-28_11-39-39_qtt_generic.json' renamed to 'elzerman_detuning_scan'
   - 'misc/P5_y_P5_x.dat' renamed to 'charge_stability_diagram_dac_vs_awg'
   - '2018-08-31/19-05-18_qtt_save_segments' renamed to 'rts_signal'
+- Update installation notes to use virtualenv (#738)
 - The decay time in the Gauss-Ramsey fit is now always positive (#754)
 
 ### Removed
 - Support for python 3.6 and lower is removed.
-- Removed dependency on Polygon3 (#579) solved by (#744)
+- Removed dependency on Polygon3 (#579) to shapely solved by (#744)
+- Remove legacy requirement for scipy (#752)
 
 ### Fixed
-- Update qtt to qcodes 0.23.0
-- Bump bleach from 3.1.5 to 3.3.0
+- Prevent warnings when loading M4i driver (#737)
+- Fix Python 3.8 warnings (#745)
+- Update qtt to qcodes 0.23.0 (#746)
+- Fix for numpy deprecation (#747)
+- Fix ppt notes size (#748)
 - Bump notebook from 6.0.3 to 6.1.5
-- fix deprecation warnings
+- Bump bleach from 3.1.5 to 3.3.0 (#751)
+- Fix deprecation warnings (#753)
 
 ## \[1.2.2] - 14-5-2020
 ### Added

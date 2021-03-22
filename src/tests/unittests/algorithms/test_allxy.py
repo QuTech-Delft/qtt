@@ -22,7 +22,7 @@ class TestAllxy(unittest.TestCase):
             plot_allxy(dataset, result, fig=fig, plot_initial_estimate=True)
             plt.close(fig)
 
-    def test_allxy_with_init_params(self):
+    def test_allxy_with_init_params(self, fig=None):
         dataset = makeDataSet1Dplain('index', np.arange(21), 'allxy', [0.12, 0.16533333, 0.136, 0.17066666, 0.20266667,
                                                                        0.452, 0.48133334, 0.58666666, 0.43199999, 0.52933334,
                                                                        0.44533333, 0.51066667, 0.46, 0.48133334, 0.47066667,
@@ -32,9 +32,9 @@ class TestAllxy(unittest.TestCase):
         result = fit_allxy(dataset, init_params)
         self.assertIsInstance(result, dict)
         np.testing.assert_array_almost_equal([0.1, 0, .5, 0, .9, 0], result['fitted_parameters'], decimal=1)
-
-        plot_allxy(dataset, result, fig=1, plot_initial_estimate=True)
-        plt.close(1)
+        if fig is not None:
+            plot_allxy(dataset, result, fig=fig, plot_initial_estimate=True)
+            plt.close(fig)
 
     def test_allxy_covariance_regression(self):
         allxy_data = [0.175, 0.24166666666666667, 0.23166666666666666, 0.2, 0.21, 0.49666666666666665,
