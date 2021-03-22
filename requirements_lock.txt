@@ -26,12 +26,12 @@ entrypoints==0.3
 future==0.18.2
 google-api-core==1.26.1
 googleapis-common-protos==1.53.0
-google-auth==1.27.1
+google-auth==1.28.0
 h5py==2.10.0
 hickle==4.0.4
 idna==2.10
 imageio==2.9.0
-importlib-metadata==3.7.2
+importlib-metadata==3.7.3
 iniconfig==1.1.1
 ipykernel==5.5.0
 ipython==7.21.0
@@ -41,8 +41,8 @@ jedi==0.18.0
 Jinja2==2.11.3
 jsonschema==3.2.0
 jupyter==1.0.0
-jupyter-client==6.1.11
-jupyter-console==6.2.0
+jupyter-client==6.1.12
+jupyter-console==6.3.0
 jupyter-core==4.7.1
 jupyterlab-pygments==0.1.2
 jupyterlab-widgets==1.0.0
@@ -69,7 +69,7 @@ numpy==1.20.1
 opencensus==0.7.12
 opencensus-context==0.1.2
 opencensus-ext-azure==1.0.7
-opencv-python==4.5.1.48
+opencv-python==4.2.0.34
 packaging==20.9
 pandas==1.2.3
 pandocfilters==1.4.3
@@ -80,7 +80,7 @@ Pillow==8.1.2
 pluggy==0.13.1
 prometheus-client==0.9.0
 prompt-toolkit==3.0.17
-protobuf==3.15.5
+protobuf==3.15.6
 psutil==5.8.0
 ptyprocess==0.7.0
 py==1.10.0
@@ -107,7 +107,7 @@ pyzmqrpc==2.0.0
 qcodes==0.23.0
 qcodes-contrib-drivers==0.7.0
 qilib==0.3.7
-qtconsole==5.0.2
+qtconsole==5.0.3
 QtPy==1.9.0
 qupulse==0.5.1
 redis==3.5.3
@@ -127,9 +127,9 @@ spirack==0.2.4
 stringcase==1.2.0
 sympy==1.6.2
 tabulate==0.8.9
-terminado==0.9.2
+terminado==0.9.3
 testpath==0.4.4
-tifffile==2021.3.5
+tifffile==2021.3.17
 toml==0.10.2
 tornado==6.1
 tqdm==4.59.0
@@ -139,7 +139,7 @@ typing-extensions==3.7.4.3
 typing-inspect==0.6.0
 tzlocal==2.1
 uncertainties==3.1.5
-urllib3==1.26.3
+urllib3==1.26.4
 wcwidth==0.2.5
 webencodings==0.5.1
 websockets==8.1
