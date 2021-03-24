@@ -45,7 +45,7 @@ if platform.system() == 'Windows':
     install_requires.append('pywin32')
 
 rtd_requires = [
-    'sphinx>=1.7', 'sphinx_rtd_theme', 'nbsphinx', 'sphinx-automodapi'
+    'sphinx>=1.7', 'sphinx_rtd_theme', 'nbsphinx', 'sphinx-automodapi','sphinx_copybutton'
 ]
 
 extras_require = {"rtd": rtd_requires}
