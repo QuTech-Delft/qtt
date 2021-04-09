@@ -105,7 +105,7 @@ class GateTransform:
 
     def __init__(self, Vmatrix, sourcenames, targetnames):
         """ Class to describe a linear transformation between source and target gates."""
-        self.Vmatrix = np.array(Vmatrix).astype(np.float32)
+        self.Vmatrix = np.array(Vmatrix).astype(float)
         self.sourcenames = sourcenames
         self.targetnames = targetnames
 
@@ -125,11 +125,11 @@ class GateTransform:
         if isinstance(vals2D, dict):
             xx = [vals2D.get(s, zz) for s in self.sourcenames]
             xx = [x.flatten() for x in xx]
-            gate_values = np.vstack(xx).astype(np.float32)
+            gate_values = np.vstack(xx).astype(float)
 
         else:
             xx = vals2D
-            gate_values = np.array(xx).astype(np.float32)
+            gate_values = np.array(xx).astype(float)
 
         gate_values_out = pgeometry.projectiveTransformation(self.Vmatrix, gate_values)
 
