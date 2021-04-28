@@ -17,7 +17,7 @@ class TestSineFitting(unittest.TestCase):
         frequency = 1.3
         phase = .1
         offset = .5
-        y_data = sine(x_data, amplitude, frequency, phase, offset)+.1*(np.random.rand(x_data.size))
+        y_data = sine(x_data, amplitude, frequency, phase, offset)+.08*(np.random.rand(x_data.size))
 
         fit_parameters, _results = fit_sine(x_data, y_data)
         self.assertAlmostEqual(fit_parameters[0], amplitude, places=1)
