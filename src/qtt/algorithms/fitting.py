@@ -15,7 +15,7 @@ import qtt.pgeometry
 from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
 
 
-def extract_lmfit_parameters(lmfit_model : Model, lmfit_result : ModelResult) -> Dict[str, Any]:
+def extract_lmfit_parameters(lmfit_model: Model, lmfit_result: ModelResult) -> Dict[str, Any]:
     """ Convert lmfit results to a dictionary
 
     Args:
@@ -288,7 +288,7 @@ def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) ->
     amplitude = (np.max(y_data) - np.min(y_data)) / 2
     offset = np.mean(y_data)
     frequency = estimate_dominant_frequency(y_data, sample_rate=1 / np.mean(np.diff(x_data)), remove_dc=True, fig=None)
-    phase = 0.0
+    phase = np.pi/2 - 2*np.pi*frequency*x_data[np.argmax(y_data)]
     initial_parameters = np.array([amplitude, frequency, phase, offset])
     return initial_parameters
 
