@@ -36,7 +36,7 @@ class TestSineFitting(unittest.TestCase):
                            3.3069396, 3.63763356, 3.96832752, 4.29902172, 4.62971544,
                            4.96040964, 5.29110336, 5.62179756, 5.95249128, 6.28318548])
         fit_parameters, results = fit_sine(x_data, y_data)
-        results['fitted_parameter_dictionary']['phase']
+
         phase = np.mod(results['fitted_parameter_dictionary']['phase'], 2*np.pi)
         self.assertAlmostEqual(results['fitted_parameter_dictionary']['amplitude'], 0.524, places=2)
         self.assertAlmostEqual(results['fitted_parameter_dictionary']['frequency'], 0.1643, places=1)
