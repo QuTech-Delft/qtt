@@ -17,30 +17,30 @@ class TestSineFitting(unittest.TestCase):
         frequency = 1.3
         phase = .1
         offset = .5
-        y_data = sine(x_data, amplitude, frequency, phase, offset)+.1*(np.random.rand(x_data.size))
+        y_data = sine(x_data, amplitude, frequency, phase, offset)+.08*(np.random.rand(x_data.size))
 
         fit_parameters, _results = fit_sine(x_data, y_data)
         self.assertAlmostEqual(fit_parameters[0], amplitude, places=1)
         self.assertAlmostEqual(fit_parameters[1], frequency, places=1)
-        self.assertAlmostEqual(fit_parameters[2], phase, places=1)
+        self.assertAlmostEqual(np.mod(fit_parameters[2], 2*np.pi), phase, places=1)
         self.assertAlmostEqual(fit_parameters[3], offset, places=1)
 
     def test_fit_sine_regression(self):
-        x_data = np.array([0.60000002, 0.38999999, 0.25, 0.05, 0.,
+        y_data = np.array([0.60000002, 0.38999999, 0.25, 0.05, 0.,
                            0., 0., 0.15000001, 0.09, 0.44,
                            0.56, 0.76999998, 0.88999999, 0.93000001, 0.99000001,
                            1., 0.88999999, 0.86000001, 0.74000001, 0.38])
 
-        y_data = np.array([0., 0.33069396, 0.66138792, 0.99208188, 1.32277584,
+        x_data = np.array([0., 0.33069396, 0.66138792, 0.99208188, 1.32277584,
                            1.6534698, 1.98416376, 2.31485772, 2.64555168, 2.97624564,
                            3.3069396, 3.63763356, 3.96832752, 4.29902172, 4.62971544,
                            4.96040964, 5.29110336, 5.62179756, 5.95249128, 6.28318548])
         fit_parameters, results = fit_sine(x_data, y_data)
-        results['fitted_parameter_dictionary']['phase']
+
         phase = np.mod(results['fitted_parameter_dictionary']['phase'], 2*np.pi)
-        self.assertAlmostEqual(results['fitted_parameter_dictionary']['amplitude'], 1.045, places=2)
-        self.assertAlmostEqual(results['fitted_parameter_dictionary']['frequency'], 3.76, places=1)
-        self.assertAlmostEqual(phase, 4.1, places=1)
+        self.assertAlmostEqual(results['fitted_parameter_dictionary']['amplitude'], 0.524, places=2)
+        self.assertAlmostEqual(results['fitted_parameter_dictionary']['frequency'], 0.1643, places=1)
+        self.assertAlmostEqual(phase, 2.98, places=1)
 
 
 class TestDoubleGaussianFitting(unittest.TestCase):
