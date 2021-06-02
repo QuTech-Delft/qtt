@@ -1,6 +1,6 @@
 import copy
 from collections import OrderedDict
-from typing import Type
+from typing import Type, Optional, Tuple, Union
 import dateutil
 import sys
 import os
@@ -814,21 +814,22 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
     return left, top, width, height
 
 
-def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925, 0.075, 0.05)):
-    """ Create a callback on a matplotlib figure to copy data to PowerPoint slide.
+def create_figure_ppt_callback(fig : Optional[int] = None, title : Optional[str] = None,
+                       notes : Optional[Union[str, DataSet]]=None, position : Tuple =(0.9, 0.925, 0.075, 0.05)):
+    """ Create a button on a matplotlib figure to copy data to PowerPoint slide.
 
     The figure is copied to PowerPoint using @ref addPPTslide.
 
     Args:
-        fig (int): handle to matplotlib window.
-        title (None or str): title for the slide.
-        notes (None or str or DataSet): notes to add to the slide.
+        fig): Handle to matplotlib window. If None, then use the current figure
+        title: title for the slide.
+        notes: notes to add to the slide.
         position (list): position specified as fraction left, right, width, height.
 
     Example:
         >>> plt.figure(10)
         >>> plt.plot(np.arange(100), np.random.rand(100), 'o', label='input data')
-        >>> create_figure_ppt_callback(10, 'test')
+        >>> create_figure_ppt_callback(fig=10, title='test')
         >>> plt.show()
     """
     if fig is None:
