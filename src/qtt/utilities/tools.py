@@ -815,16 +815,17 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
 
 
 def create_figure_ppt_callback(fig : Optional[int] = None, title : Optional[str] = None,
-                       notes : Optional[Union[str, DataSet]]=None, position : Tuple =(0.9, 0.925, 0.075, 0.05)):
+                       notes : Optional[Union[str, DataSet]]=None,
+                       position : Tuple[float, float, float, float] = (0.9, 0.925, 0.075, 0.05)) -> None:
     """ Create a button on a matplotlib figure to copy data to PowerPoint slide.
 
     The figure is copied to PowerPoint using @ref addPPTslide.
 
     Args:
-        fig): Handle to matplotlib window. If None, then use the current figure
+        fig: Handle to matplotlib window. If None, then use the current figure
         title: title for the slide.
         notes: notes to add to the slide.
-        position (list): position specified as fraction left, right, width, height.
+        position: position specified as fraction left, right, width, height.
 
     Example:
         >>> plt.figure(10)
