@@ -997,8 +997,7 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        from qtt.measurements.videomode import \
-            VideoMode  # import here, to prevent default imports of gui code
+        from qtt.measurements.videomode import VideoMode  # import here, to prevent default imports of gui code
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
