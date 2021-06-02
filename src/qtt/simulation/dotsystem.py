@@ -84,7 +84,7 @@ def _simulate_row(i, ds, npointsy, usediag):
 
 # %%
 
-@qtt.utilities.tools.deprecated
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
 def defaultVmatrix(n):
     """ Helper function.
         >>> m=defaultVmatrix(2)
@@ -655,7 +655,7 @@ class DotSystem(BaseDotSystem):
             print(name + ' = ' + str(getattr(self, 'name')))
         print(' ')
 
-    @qtt.utilities.tools.deprecated
+    @qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
     def getHn(self, numberofelectrons):
         inds = np.where(self.number_of_electrons == numberofelectrons)[0]
         return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]

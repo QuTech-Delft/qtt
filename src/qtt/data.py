@@ -226,22 +226,7 @@ def default_setpoint_array(dataset, measured_name='measured'):
 # %% Monkey patch qcodes to store latest dataset
 
 
-@qtt.utilities.tools.deprecated
-def store_latest_decorator(function, obj):
-    """ Decorator to store latest result of a function in an object """
-    if not hasattr(obj, '_latest'):
-        obj._latest = None
-
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        ds = function(*args, **kwargs)
-        obj._latest = ds  # store the latest result
-        return ds
-
-    wrapper._special = 'yes'
-    return wrapper
-
-
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
 def get_latest_dataset():
     """ Return latest dataset that was created """
     return getattr(DataSet._latest, None)
@@ -771,7 +756,7 @@ class image_transform:
     def istep_step(self):
         return np.mean(np.diff(self.vstep))
 
-    @qtt.utilities.tools.deprecated
+    @qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
     def istep(self):
         return self.scan_resolution()
 
@@ -942,43 +927,6 @@ def write_data(mfile: str, data):
 
     with open(mfile, 'wb') as fid:
         pickle.dump(data, fid)
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2019')
-def loadDataset(path):
-    """ Wrapper function
-
-    :param path: filename without extension
-    :returns dateset, metadata:
-    """
-    dataset = qcodes.data.data_set.load_data(path)
-
-    mfile = os.path.join(path, 'qtt-metadata')
-    metadata = load_data(mfile)
-    return dataset, metadata
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2019')
-def writeDataset(path, dataset, metadata=None):
-    """ Wrapper function
-
-    :param path: filename without extension
-    """
-
-    dataset = qtt.utilities.tools.stripDataset(dataset)
-
-    print('write_copy to %s' % path)
-    dataset.write_copy(path=path)
-    print('write_copy to %s (done)' % path)
-
-    # already done in write_copy...
-    # dataset.save_metadata(path=path)
-
-    if metadata is None:
-        metadata = dataset.metadata
-
-    mfile = os.path.join(path, 'qtt-metadata')
-    write_data(mfile, metadata)
 
 
 def getTimeString(t=None):
