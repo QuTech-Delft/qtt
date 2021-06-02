@@ -64,10 +64,8 @@ except BaseException:
 
 # %%
 
-def measure_time(txt: str = 'dt:'):
-    """ Create context manager that measures execution time and prints to stdout """
-    class measure_time_context():
-        """ Context manager that provides times measurement """
+class measure_time():
+        """ Create context manager that measures execution time and prints to stdout """
 
         def __init__(self, message: Optional[str] = 'dt: '):
             self.message = message
@@ -91,7 +89,6 @@ def measure_time(txt: str = 'dt:'):
             if self.message is not None:
                 print(f'{self.message} {self.dt:.3f} [s]')
 
-    return measure_time_context(message=txt)
 
 
 @contextlib.contextmanager
