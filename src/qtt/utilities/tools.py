@@ -1019,7 +1019,7 @@ try:
                     raise TypeError('figure is of an unknown type %s' % (type(fig),))
             top = 120
 
-            left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=1)
+            left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=verbose>=2)
 
             if verbose >= 2:
                 print('fname %s' % fname)
