@@ -1,18 +1,33 @@
+import io
 import sys
+import time
 import unittest
-from unittest.mock import MagicMock, patch
 import warnings
+from contextlib import redirect_stdout
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import qcodes
 from qcodes.data.data_array import DataArray
 from qcodes.tests.legacy.data_mocks import DataSet2D
-from qtt.utilities import tools
-from qtt.utilities.tools import resampleImage, diffImage, diffImageSmooth, reshape_metadata, get_python_version, \
-    get_module_versions, get_git_versions, code_version, rdeprecated, in_ipynb, pythonVersion
+
 import qtt.measurements.scans
+from qtt.utilities import tools
+from qtt.utilities.tools import (code_version, diffImage, diffImageSmooth,
+                                 get_git_versions, get_module_versions,
+                                 get_python_version, in_ipynb, measure_time,
+                                 pythonVersion, rdeprecated, resampleImage,
+                                 reshape_metadata)
 
 
 class TestTools(unittest.TestCase):
+
+    def test_measure_time(self):
+        with redirect_stdout(io.StringIO()) as f:
+            with measure_time('hi') as m:
+                time.sleep(.1)
+        self.assertGreater(m.dt() > 0.1)
+        self.assertIn('hi', f.getvalue())
 
     def test_python_code_modules_and_versions(self):
         with warnings.catch_warnings():

@@ -1,62 +1,62 @@
+import contextlib
 import copy
-from collections import OrderedDict
-from typing import Type
-import dateutil
-import sys
-import os
-import numpy as np
-import pprint
-import matplotlib
-import uuid
-import logging
-import qcodes
-import warnings
-import functools
-import pickle
-import inspect
-import tempfile
-from itertools import chain
-import scipy.ndimage as ndimage
-from functools import wraps
 import datetime
-import time
+import functools
 import importlib
+import inspect
+import logging
+import os
+import pickle
 import platform
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
+import pprint
+import sys
+import tempfile
+import time
+import uuid
+import warnings
+from collections import OrderedDict
+from functools import wraps
+from itertools import chain
+from typing import Optional, Type
 
+import dateutil
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import qcodes
+import scipy.ndimage as ndimage
+from matplotlib.widgets import Button
+from qcodes.data.data_array import DataArray
 from qcodes.data.data_set import DataSet
+from qcodes.plots.qcmatplotlib import MatPlot
+
+import qtt.pgeometry
+from qtt.pgeometry import (mkdirc,  # import for backwards compatibility
+                           mpl2clipboard, tilefigs)
 
 NotGitRepositoryError: Type[Exception]
 
 try:
-    from dulwich.repo import Repo, NotGitRepository
     from dulwich import porcelain
+    from dulwich.repo import NotGitRepository, Repo
     NotGitRepositoryError = NotGitRepository
 except ModuleNotFoundError:
     warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
     NotGitRepositoryError = Exception
 
 # explicit import
-from qcodes.plots.qcmatplotlib import MatPlot
 
 try:
     from qcodes.plots.pyqtgraph import QtPlot
 except BaseException:
     pass
 
-from qcodes.data.data_array import DataArray
-
-import qtt.pgeometry
-from qtt.pgeometry import mpl2clipboard
-
-from qtt.pgeometry import tilefigs, mkdirc  # import for backwards compatibility
 
 # do NOT load any other qtt submodules here
 
 try:
-    import qtpy.QtGui as QtGui
     import qtpy.QtCore as QtCore
+    import qtpy.QtGui as QtGui
     import qtpy.QtWidgets as QtWidgets
 except BaseException:
     pass
@@ -64,8 +64,36 @@ except BaseException:
 
 # %%
 
-from typing import Optional
-import contextlib
+def measure_time(txt: str = 'dt:'):
+    """ Create context manager that measures execution time and prints to stdout """
+    class measure_time_context():
+        """ Context manager that provides times measurement """
+
+        def __init__(self, message: Optional[str] = 'dt: '):
+            self.message = message
+
+        def __enter__(self):
+            self.start_time = time.time()
+            return self
+
+        @property
+        def delta_time(self) -> float:
+            """ Return time spend in the context
+
+            Returns:
+                Time in seconds
+            """
+            return self.dt
+
+        def __exit__(self, exc_type, exc_value, exc_traceback):
+            self.dt = time.time() - self.start_time
+
+            if self.message is not None:
+                print(f'{self.message} {self.dt:.3f} [s]')
+
+    return measure_time_context(message=txt)
+
+
 @contextlib.contextmanager
 def logging_context(level: int = logging.INFO, logger: Optional[logging.Logger] = None):
     """ A context manager that changes the logging level
@@ -234,6 +262,7 @@ def rdeprecated(txt=None, expire=None):
         expire (str): date of expiration.
     """
     import datetime
+
     from dateutil import parser
     if expire is not None:
         now = datetime.datetime.now()
@@ -971,7 +1000,8 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        from qtt.measurements.videomode import VideoMode  # import here, to prevent default imports of gui code
+        from qtt.measurements.videomode import \
+            VideoMode  # import here, to prevent default imports of gui code
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
