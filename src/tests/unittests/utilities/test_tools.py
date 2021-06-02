@@ -17,8 +17,7 @@ from qtt.utilities.tools import (code_version, diffImage, diffImageSmooth,
                                  get_python_version, in_ipynb, measure_time,
                                  pythonVersion, rdeprecated, resampleImage,
                                  reshape_metadata, _convert_rgb_color_to_integer,
-                                 _covert_integer_to_rgb_color, set_ppt_slide_background,
-                                 code_version)
+                                 _covert_integer_to_rgb_color, set_ppt_slide_background)
 
 
 class TestTools(unittest.TestCase):
@@ -126,11 +125,11 @@ class TestTools(unittest.TestCase):
         self.assertIn(sys.version, result)
 
     def test_code_version(self):
-        code_version = code_version()
-        self.assertIsInstance(code_version, dict)
-        self.assertIn('python', code_version)
-        self.assertIn('version', code_version)
-        self.assertIn('numpy', code_version['version'])
+        code_version_string = code_version()
+        self.assertIsInstance(code_version_string, dict)
+        self.assertIn('python', code_version_string)
+        self.assertIn('version', code_version_string)
+        self.assertIn('numpy', code_version_string['version'])
 
     def test_rgb_tuple_to_integer(self):
         white_color = (0, 0, 0)
