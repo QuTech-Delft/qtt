@@ -17,7 +17,8 @@ from qtt.utilities.tools import (code_version, diffImage, diffImageSmooth,
                                  get_python_version, in_ipynb, measure_time,
                                  pythonVersion, rdeprecated, resampleImage,
                                  reshape_metadata, _convert_rgb_color_to_integer,
-                                 _covert_integer_to_rgb_color, set_ppt_slide_background)
+                                 _covert_integer_to_rgb_color, set_ppt_slide_background,
+                                 code_version)
 
 
 class TestTools(unittest.TestCase):
