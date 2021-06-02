@@ -1,4 +1,7 @@
 """ Legacy functions (do not use) """
+
+raise Exception('this legacy module has been removed from qtt')
+
 import copy
 
 import numpy as np
@@ -21,7 +24,6 @@ from qtt.utilities.tools import diffImage, rdeprecated
 
 from qtt import pgeometry as pmatlab
 
-warnings.warn('please do not import this module')
 
 # %%
 

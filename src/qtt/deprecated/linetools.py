@@ -6,6 +6,8 @@ Created on Wed Mar  4 12:40:53 2015
 """
 
 # %% Load packages
+raise Exception('the deprecated linetools module has been removed from qtt')
+
 from __future__ import division
 
 import numpy as np
