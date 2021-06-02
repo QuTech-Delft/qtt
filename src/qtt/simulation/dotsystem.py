@@ -270,9 +270,6 @@ class DotSystem(BaseDotSystem):
         self.ndots = ndots
         self.temperature = 0
 
-        self.makevars = qtt.utilities.tools.deprecated(self.make_variables)
-        self.makevarsM = qtt.utilities.tools.deprecated(self._make_variable_matrices)
-
     def get_chemical_potential(self, dot):
         return getattr(self, self.chemical_potential_name(dot))
 
