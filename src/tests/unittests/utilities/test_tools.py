@@ -26,7 +26,7 @@ class TestTools(unittest.TestCase):
         with redirect_stdout(io.StringIO()) as f:
             with measure_time('hi') as m:
                 time.sleep(.1)
-        self.assertGreater(m.delta_time >= 0.1)
+        self.assertGreater(m.delta_time, 0.1)
         self.assertIn('hi', f.getvalue())
 
     def test_python_code_modules_and_versions(self):
