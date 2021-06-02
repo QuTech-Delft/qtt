@@ -1033,23 +1033,6 @@ def experimentFile(outputdir: str = '', tag=None, dstr=None, bname=None):
     return pfile
 
 
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2020')
-def loadExperimentData(outputdir, tag, dstr):
-    path = experimentFile(outputdir, tag=tag, dstr=dstr)
-    logging.info('loadExperimentdata %s' % path)
-    dataset = pgeometry.load(path)
-
-    dataset = load_data(path)
-    return dataset
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1-1-2020')
-def saveExperimentData(outputdir, dataset, tag, dstr):
-    path = experimentFile(outputdir, tag=tag, dstr=dstr)
-    logging.info('saveExperimentData %s' % path)
-    write_data(path, dataset)
-
-
 def determine_parameter_unit(parameter):
     """ Determine unit associated with a parameter
 

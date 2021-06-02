@@ -683,22 +683,6 @@ class DotSystem(BaseDotSystem):
         showGraph(dot, fig=fig)
 
 
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Sep 1 2018')
-def setDotSystem(ds, gate_transform, gv):
-    """ Set dot system values using gate transform."""
-    tv = gate_transform.transformGateScan(gv)
-    for k, val in tv.items():
-        setattr(ds, k, val)
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Sep 1 2018')
-def defaultDotValues(ds):
-    for ii in range(ds.ndots):
-        setattr(ds, 'osC%d' % (ii + 1), 55)
-    for ii in range(ds.ndots - 1):
-        setattr(ds, 'isC%d' % (ii + 1), 3)
-
-
 # %% Example dot systems
 
 class OneDot(DotSystem):

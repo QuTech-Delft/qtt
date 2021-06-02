@@ -173,21 +173,6 @@ def get_param_name(gates, sweepgate):
         return sweepgate.name
 
 
-# %%
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt. Use qtt.data.plot_dataset',
-                                 expire='1 Sep 2018')
-def plot1D(data, fig=100, mstyle='-b'):
-    """ Show result of a 1D scan """
-
-    val = data.default_parameter_name()
-
-    if fig is not None:
-        plt.figure(fig)
-        plt.clf()
-        MatPlot(getattr(data, val), interval=None, num=fig)
-
 
 # %%
 
