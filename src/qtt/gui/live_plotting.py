@@ -539,11 +539,6 @@ class livePlot(QtCore.QObject):
         pyqtgraph.mkQApp().processEvents()
         self.win.close()
 
-    @qtt.utilities.tools.rdeprecated(txt='method not used any more', expire='1 Dec 2019')
-    def resetdata(self):
-        self.idx = 0
-        self.data = None
-
     def crosshair(self, show=None, pos=None):
         """ Enable or disable crosshair
 

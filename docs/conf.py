@@ -127,7 +127,7 @@ language = None
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'untitled.*py',
-                'notebooks/.ipynb_checkpoints', '../src/qtt/loggingGUI.py', '../src/qtt/debug.py', '../src/qtt/legacy.py',  'src/qtt/scans.py', '../src/qtt/deprecated/*']
+                'notebooks/.ipynb_checkpoints', '../src/qtt/deprecated/*']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
