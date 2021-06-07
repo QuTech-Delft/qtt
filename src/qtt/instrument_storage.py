@@ -6,38 +6,6 @@ import configparser
 import qtt.utilities.tools
 
 
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
-def save_instrument_json(instr, ifile, verbose=1):
-    """ Save instrument configuration to json """
-    jdict = dict()
-    for pname, p in instr.parameters.items():
-        if not hasattr(p, 'set'):
-            continue
-        if verbose:
-            print('%s: store %s' % (instr.name, pname))
-        val = p.get()
-        dd = '%s/%s' % (instr.name, pname)
-        jdict[dd] = val
-
-    json.dump(jdict, open(ifile, 'w'), sort_keys=True, indent=4)
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='1 Sep 2018')
-def load_instrument_json(instr, ifile, verbose=1):
-    """ Load instrument configuration from json """
-    with open(ifile, 'r') as fid:
-        jdict = json.load(fid)
-    for pname, p in instr.parameters.items():
-        if not hasattr(p, 'set'):
-            continue
-        if verbose:
-            print('%s: load %s' % (instr.name, pname))
-        dd = '%s/%s' % (instr.name, pname)
-        val = jdict[dd]
-        p.set(val)
-    return jdict
-
-
 def save_instrument_configparser(instr, ifile, verbose=1):
     """ Save instrument configuration to configparser structure
 
