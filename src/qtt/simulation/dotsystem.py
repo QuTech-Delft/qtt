@@ -84,7 +84,7 @@ def _simulate_row(i, ds, npointsy, usediag):
 
 # %%
 
-@qtt.utilities.tools.deprecated
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
 def defaultVmatrix(n):
     """ Helper function.
         >>> m=defaultVmatrix(2)
@@ -269,9 +269,6 @@ class DotSystem(BaseDotSystem):
         self.name = name
         self.ndots = ndots
         self.temperature = 0
-
-        self.makevars = qtt.utilities.tools.deprecated(self.make_variables)
-        self.makevarsM = qtt.utilities.tools.deprecated(self._make_variable_matrices)
 
     def get_chemical_potential(self, dot):
         return getattr(self, self.chemical_potential_name(dot))
@@ -658,7 +655,7 @@ class DotSystem(BaseDotSystem):
             print(name + ' = ' + str(getattr(self, 'name')))
         print(' ')
 
-    @qtt.utilities.tools.deprecated
+    @qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
     def getHn(self, numberofelectrons):
         inds = np.where(self.number_of_electrons == numberofelectrons)[0]
         return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]
@@ -681,22 +678,6 @@ class DotSystem(BaseDotSystem):
             dot.edge(str(ii), str(ii), label=self.chemical_potential_name(ii))
 
         showGraph(dot, fig=fig)
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Sep 1 2018')
-def setDotSystem(ds, gate_transform, gv):
-    """ Set dot system values using gate transform."""
-    tv = gate_transform.transformGateScan(gv)
-    for k, val in tv.items():
-        setattr(ds, k, val)
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Sep 1 2018')
-def defaultDotValues(ds):
-    for ii in range(ds.ndots):
-        setattr(ds, 'osC%d' % (ii + 1), 55)
-    for ii in range(ds.ndots - 1):
-        setattr(ds, 'isC%d' % (ii + 1), 3)
 
 
 # %% Example dot systems

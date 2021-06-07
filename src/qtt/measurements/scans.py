@@ -125,36 +125,6 @@ def createScanJob(g1, r1, g2=None, r2=None, step=-1, keithleyidx='keithley1'):
 
 # %%
 
-@qtt.utilities.tools.deprecated
-def _parse_stepdata(stepdata):
-    """ Helper function for legacy code """
-    if not isinstance(stepdata, dict):
-        raise Exception('stepdata should be dict structure')
-
-    v = stepdata.get('gates', None)
-    if v is not None:
-        raise Exception('please use param instead of gates')
-    v = stepdata.get('gate', None)
-    if v is not None:
-        warnings.warn('please use param instead of gates', DeprecationWarning)
-        stepdata['param'] = stepdata['gate']
-
-    v = stepdata.get('param', None)
-    if isinstance(v, (str, Parameter, dict)):
-        pass
-    elif isinstance(v, list):
-        warnings.warn('please use string or Instrument instead of list')
-        stepdata['param'] = stepdata['param'][0]
-
-    if 'range' in stepdata:
-        if 'end' in 'stepdata':
-            if stepdata['end'] != stepdata['start'] + stepdata['range']:
-                warnings.warn(
-                    'in scanjob the start, end and range arguments do not match')
-        stepdata['end'] = stepdata['start'] + stepdata['range']
-    return stepdata
-
-
 def get_param(gates, sweepgate):
     """ Get qcodes parameter from scanjob argument """
     if isinstance(sweepgate, str):
@@ -172,21 +142,6 @@ def get_param_name(gates, sweepgate):
         # assume the argument already is a parameter
         return sweepgate.name
 
-
-# %%
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt. Use qtt.data.plot_dataset',
-                                 expire='1 Sep 2018')
-def plot1D(data, fig=100, mstyle='-b'):
-    """ Show result of a 1D scan """
-
-    val = data.default_parameter_name()
-
-    if fig is not None:
-        plt.figure(fig)
-        plt.clf()
-        MatPlot(getattr(data, val), interval=None, num=fig)
 
 
 # %%
@@ -1628,7 +1583,7 @@ def measure_raw_segment_m4i(digitizer, period, read_ch, mV_range, Naverage=100, 
     return data
 
 
-@qtt.utilities.tools.deprecated
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
 def select_digitizer_memsize(digitizer, period, trigger_delay=None, nsegments=1, verbose=1):
     """ Select suitable memory size for a given period
 
