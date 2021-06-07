@@ -531,34 +531,6 @@ def scanTime(dd):
     return w
 
 
-@rdeprecated(txt='Use dataset.default_parameter_array instead', expire='1 Sep 2019')
-def plot_parameter(data, default_parameter='amplitude'):
-    """ Return parameter to be plotted."""
-    if 'main_parameter' in data.metadata.keys():
-        return data.metadata['main_parameter']
-    if default_parameter in data.arrays.keys():
-        return default_parameter
-    try:
-        key = next(iter(data.arrays.keys()))
-        return key
-    except BaseException:
-        return None
-
-
-@rdeprecated(txt='Use plot_dataset instead', expire='1 Sep 2019')
-def plot1D(dataset, fig=1):
-    """ Simple plot function."""
-    if isinstance(dataset, DataArray):
-        array = dataset
-        dataset = None
-    else:
-        # assume we have a dataset
-        arrayname = plot_parameter(dataset)
-        array = getattr(dataset, arrayname)
-
-    if fig is not None and array is not None:
-        MatPlot(array, num=fig)
-
 
 # %%
 
@@ -584,55 +556,8 @@ def showImage(im, extent=None, fig=None, title=None):
             plt.title(title)
 
 
-# %% Measurement tools
-
-@rdeprecated(txt='Use gates.resetgates instead', expire='1 Sep 2019')
-def resetgates(gates, activegates, basevalues=None, verbose=2):
-    """ Reset a set of gates to default values.
-
-    Args:
-        gates : list of gates.
-        activegates (list or dict): list of gates to reset.
-        basevalues (dict): new values for the gates.
-        verbose (int): output level.
-
-    """
-    if verbose:
-        print('resetgates: setting gates to default values')
-    for g in activegates:
-        if basevalues is None:
-            val = 0
-        else:
-            if g in basevalues.keys():
-                val = basevalues[g]
-            else:
-                val = 0
-        if verbose >= 2:
-            print('  setting gate %s to %.1f [mV]' % (g, val))
-        gates.set(g, val)
-
 
 # %% Tools from pgeometry
-
-
-@rdeprecated(txt='Use qtt.pgeometry.plot2Dline instead', expire='1 Sep 2019')
-def plot2Dline(line, *args, **kwargs):
-    """ Plot a 2D line in a matplotlib figure.
-
-    Args:
-        line (array): 3x1 array.
-
-    >>> plot2Dline([-1,1,0], 'b')
-    """
-    if np.abs(line[1]) > .001:
-        xx = plt.xlim()
-        xx = np.array(xx)
-        yy = (-line[2] - line[0] * xx) / line[1]
-        plt.plot(xx, yy, *args, **kwargs)
-    else:
-        yy = np.array(plt.ylim())
-        xx = (-line[2] - line[1] * yy) / line[0]
-        plt.plot(xx, yy, *args, **kwargs)
 
 
 def cfigure(*args, **kwargs):
@@ -1277,22 +1202,6 @@ def updatePlotTitle(qplot, basetxt='Live plot'):
     txt = basetxt + ' (%s)' % time.asctime()
     qplot.win.setWindowTitle(txt)
 
-
-@rdeprecated(txt='Method will be removed in future release of qtt.', expire='1 Sep 2018')
-def timeProgress(data):
-    """ Simple progress meter, should be integrated with either loop or data object."""
-    data.sync()
-    tt = data.arrays['timestamp']
-    vv = ~np.isnan(tt)
-    ttx = tt[vv]
-    t0 = ttx[0]
-    t1 = ttx[-1]
-
-    logging.debug('t0 %f t1 %f' % (t0, t1))
-
-    fraction = ttx.size / tt.size[0]
-    remaining = (t1 - t0) * (1 - fraction) / fraction
-    return fraction, remaining
 
 
 # %%

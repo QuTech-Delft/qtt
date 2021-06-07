@@ -85,16 +85,6 @@ check_version('0.1', 'redis', optional=True)
 check_version('0.8.0', qcodes)
 check_version('0.2', 'qupulse')
 
-# %% Load often used constructions
-
-
-
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt', expire='Aug 1 2018')
-def start_dataviewer():
-    from qtt.gui.dataviewer import DataViewer
-    dv = DataViewer()
-    dv.show()
-    return dv
 
 
 # %% Add hook to abort measurement

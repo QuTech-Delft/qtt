@@ -406,22 +406,6 @@ def extent2fullextent(extent0, im):
     return extent
 
 
-@qtt.utilities.tools.deprecated
-def show2Dimage(im, dd, **kwargs):
-    """ Show image in window
-
-    Arguments
-    ---------
-    im : array
-        image to show
-    dd : dict with scan data
-        data is used to scale the image to measurement resolution
-
-    """
-    _ = show2D(dd, im=im, **kwargs)
-    return None
-
-
 def getValuePixel(imx, pt):
     """ Return interpolated pixel value in an image
 
