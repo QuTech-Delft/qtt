@@ -71,7 +71,7 @@ def double_gaussian(x_data, params):
     return double_gauss
 
 
-@qtt.utilities.tools.rdeprecated(txt='Function will be removed from qtt')
+@qtt.utilities.tools.rdeprecated(txt='Function will be removed from qtt', expire='Jan 1 2020')
 def _cost_double_gaussian(x_data, y_data, params):
     """ Cost function for fitting of double Gaussian.
 
