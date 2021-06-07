@@ -1,18 +1,33 @@
+import io
 import sys
+import time
 import unittest
-from unittest.mock import MagicMock, patch
 import warnings
+from contextlib import redirect_stdout
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import qcodes
 from qcodes.data.data_array import DataArray
 from qcodes.tests.legacy.data_mocks import DataSet2D
-from qtt.utilities import tools
-from qtt.utilities.tools import resampleImage, diffImage, diffImageSmooth, reshape_metadata, get_python_version, \
-    get_module_versions, get_git_versions, code_version, rdeprecated, in_ipynb, pythonVersion
+
 import qtt.measurements.scans
+from qtt.utilities.tools import (code_version, diffImage, diffImageSmooth,
+                                 get_git_versions, get_module_versions,
+                                 get_python_version, in_ipynb, measure_time,
+                                 pythonVersion, rdeprecated, resampleImage,
+                                 reshape_metadata, _convert_rgb_color_to_integer,
+                                 _covert_integer_to_rgb_color, set_ppt_slide_background)
 
 
 class TestTools(unittest.TestCase):
+
+    def test_measure_time(self):
+        with redirect_stdout(io.StringIO()) as f:
+            with measure_time('hi') as m:
+                time.sleep(.1)
+        self.assertGreater(m.delta_time, 0.1)
+        self.assertIn('hi', f.getvalue())
 
     def test_python_code_modules_and_versions(self):
         with warnings.catch_warnings():
@@ -106,67 +121,67 @@ class TestTools(unittest.TestCase):
         self.assertFalse(')' in result)
 
     def test_get_python_version(self):
-        result = tools.get_python_version()
+        result = get_python_version()
         self.assertIn(sys.version, result)
 
     def test_code_version(self):
-        code_version = tools.code_version()
-        self.assertIsInstance(code_version, dict)
-        self.assertIn('python', code_version)
-        self.assertIn('version', code_version)
-        self.assertIn('numpy', code_version['version'])
+        code_version_string = code_version()
+        self.assertIsInstance(code_version_string, dict)
+        self.assertIn('python', code_version_string)
+        self.assertIn('version', code_version_string)
+        self.assertIn('numpy', code_version_string['version'])
 
     def test_rgb_tuple_to_integer(self):
         white_color = (0, 0, 0)
-        self.assertEqual(0, tools._convert_rgb_color_to_integer(white_color))
+        self.assertEqual(0, _convert_rgb_color_to_integer(white_color))
 
         light_red_color = (100, 0, 0)
-        self.assertEqual(100, tools._convert_rgb_color_to_integer(light_red_color))
+        self.assertEqual(100, _convert_rgb_color_to_integer(light_red_color))
 
         light_green_color = (0, 100, 0)
-        self.assertEqual(256 * 100, tools._convert_rgb_color_to_integer(light_green_color))
+        self.assertEqual(256 * 100, _convert_rgb_color_to_integer(light_green_color))
 
         light_blue_color = (0, 0, 100)
-        self.assertEqual(256 * 256 * 100, tools._convert_rgb_color_to_integer(light_blue_color))
+        self.assertEqual(256 * 256 * 100, _convert_rgb_color_to_integer(light_blue_color))
 
         black_color = (255, 255, 255)
-        self.assertEqual(256 * 256 * 256 - 1, tools._convert_rgb_color_to_integer(black_color))
+        self.assertEqual(256 * 256 * 256 - 1, _convert_rgb_color_to_integer(black_color))
 
     def test_rgb_tuple_to_integer_raises_error(self):
-        self.assertRaises(ValueError, tools._convert_rgb_color_to_integer, 'r')
-        self.assertRaises(ValueError, tools._convert_rgb_color_to_integer, (0, 0, 0, 0))
-        self.assertRaises(ValueError, tools._convert_rgb_color_to_integer, (-1, 0, 100))
-        self.assertRaises(ValueError, tools._convert_rgb_color_to_integer, (511, 0, 100))
+        self.assertRaises(ValueError, _convert_rgb_color_to_integer, 'r')
+        self.assertRaises(ValueError, _convert_rgb_color_to_integer, (0, 0, 0, 0))
+        self.assertRaises(ValueError, _convert_rgb_color_to_integer, (-1, 0, 100))
+        self.assertRaises(ValueError, _convert_rgb_color_to_integer, (511, 0, 100))
 
     def test_integer_to_rgb_tuple(self):
         white_color = 0
-        self.assertEqual((0, 0, 0), tools._covert_integer_to_rgb_color(white_color))
+        self.assertEqual((0, 0, 0), _covert_integer_to_rgb_color(white_color))
 
         red_color = 256 - 1
-        self.assertEqual((255, 0, 0), tools._covert_integer_to_rgb_color(red_color))
+        self.assertEqual((255, 0, 0), _covert_integer_to_rgb_color(red_color))
 
         green_color = (256 - 1) * 256
-        self.assertEqual((0, 255, 0), tools._covert_integer_to_rgb_color(green_color))
+        self.assertEqual((0, 255, 0), _covert_integer_to_rgb_color(green_color))
 
         blue_color = (256 - 1) * 256 * 256
-        self.assertEqual((0, 0, 255), tools._covert_integer_to_rgb_color(blue_color))
+        self.assertEqual((0, 0, 255), _covert_integer_to_rgb_color(blue_color))
 
         black_color = 256 * 256 * 256 - 1
-        self.assertEqual((255, 255, 255), tools._covert_integer_to_rgb_color(black_color))
+        self.assertEqual((255, 255, 255), _covert_integer_to_rgb_color(black_color))
 
     def test_integer_to_rgb_tuple_raises_error(self):
-        self.assertRaises(ValueError, tools._convert_rgb_color_to_integer, -1)
-        self.assertRaises(ValueError, tools._convert_rgb_color_to_integer, 256 * 256 * 256)
+        self.assertRaises(ValueError, _convert_rgb_color_to_integer, -1)
+        self.assertRaises(ValueError, _convert_rgb_color_to_integer, 256 * 256 * 256)
 
     def test_covert_rgb_and_back(self):
         expected_green_color = 256 * 256 * 256 - 1
-        rgb_green = tools._covert_integer_to_rgb_color(expected_green_color)
-        actual_color = tools._convert_rgb_color_to_integer(rgb_green)
+        rgb_green = _covert_integer_to_rgb_color(expected_green_color)
+        actual_color = _convert_rgb_color_to_integer(rgb_green)
         self.assertEqual(expected_green_color, actual_color)
 
         expected_black_color = 256 * 256 * 256 - 1
-        rgb_black = tools._covert_integer_to_rgb_color(expected_black_color)
-        actual_color = tools._convert_rgb_color_to_integer(rgb_black)
+        rgb_black = _covert_integer_to_rgb_color(expected_black_color)
+        actual_color = _convert_rgb_color_to_integer(rgb_black)
         self.assertEqual(expected_black_color, actual_color)
 
     def test_set_ppt_slide_background(self):
@@ -174,6 +189,6 @@ class TestTools(unittest.TestCase):
         slide.Background.Fill.ForeColor.RGB = 0
         color = (255, 0, 0)
 
-        tools.set_ppt_slide_background(slide, color)
+        set_ppt_slide_background(slide, color)
         self.assertEqual(0, slide.FollowMasterBackground)
         self.assertEqual(255, slide.Background.Fill.ForeColor.RGB)
