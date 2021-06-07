@@ -139,7 +139,7 @@ typing-extensions==3.7.4.3
 typing-inspect==0.6.0
 tzlocal==2.1
 uncertainties==3.1.5
-urllib3==1.26.4
+urllib3==1.26.5
 wcwidth==0.2.5
 webencodings==0.5.1
 websockets==8.1
