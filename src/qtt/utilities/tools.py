@@ -5,6 +5,8 @@ import functools
 import importlib
 import inspect
 import logging
+from typing import Type, Optional, Tuple, Union
+import dateutil
 import os
 import pickle
 import platform
@@ -17,9 +19,7 @@ import warnings
 from collections import OrderedDict
 from functools import wraps
 from itertools import chain
-from typing import Optional, Type
 
-import dateutil
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -765,21 +765,23 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
     return left, top, width, height
 
 
-def create_figure_ppt_callback(fig, title=None, notes=None, position=(0.9, 0.925, 0.075, 0.05)):
-    """ Create a callback on a matplotlib figure to copy data to PowerPoint slide.
+def create_figure_ppt_callback(fig : Optional[int] = None, title : Optional[str] = None,
+                       notes : Optional[Union[str, DataSet]]=None,
+                       position : Tuple[float, float, float, float] = (0.9, 0.925, 0.075, 0.05)) -> None:
+    """ Create a button on a matplotlib figure to copy data to PowerPoint slide.
 
     The figure is copied to PowerPoint using @ref addPPTslide.
 
     Args:
-        fig (int): handle to matplotlib window.
-        title (None or str): title for the slide.
-        notes (None or str or DataSet): notes to add to the slide.
-        position (list): position specified as fraction left, right, width, height.
+        fig: Handle to matplotlib window. If None, then use the current figure
+        title: title for the slide.
+        notes: notes to add to the slide.
+        position: position specified as fraction left, right, width, height.
 
     Example:
         >>> plt.figure(10)
         >>> plt.plot(np.arange(100), np.random.rand(100), 'o', label='input data')
-        >>> create_figure_ppt_callback(10, 'test')
+        >>> create_figure_ppt_callback(fig=10, title='test')
         >>> plt.show()
     """
     if fig is None:
@@ -969,7 +971,7 @@ try:
                     raise TypeError('figure is of an unknown type %s' % (type(fig),))
             top = 120
 
-            left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=1)
+            left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=verbose>=2)
 
             if verbose >= 2:
                 print('fname %s' % fname)
