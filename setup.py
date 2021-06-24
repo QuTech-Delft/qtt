@@ -32,7 +32,7 @@ def get_package_data(root_dir):
     return package_data
 
 
-tests_require = ['coverage', 'jupyter', 'mypy', 'pytest']
+tests_require = ['coverage', 'jupyter', 'mypy', 'types-redis', 'types-python-dateutil', 'pytest']
 
 install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'h5py<3.0', 'hickle', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
