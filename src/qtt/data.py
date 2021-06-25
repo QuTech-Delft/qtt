@@ -21,7 +21,7 @@ from qtt import pgeometry
 logger = logging.getLogger(__name__)
 
 
-def load_example_dataset(filename : str, verbose : int =0) -> Optional[DataSet]:
+def load_example_dataset(filename: str, verbose: int = 0) -> Optional[DataSet]:
     """ Return an example dataset from qtt
 
     Args:
@@ -383,19 +383,19 @@ def dataset1Ddata(alldata):
     return x, y
 
 
-def dataset_labels(alldata : Union[DataSet, DataArray], tag : Optional[Union[str, int]] =None, add_unit: bool=False):
+def dataset_labels(alldata: Union[DataSet, DataArray], tag: Optional[Union[str, int]] = None, add_unit: bool = False):
     """ Return label for axis of dataset
 
     Args:
         ds: dataset or dataarray
-        tag: can be 'x', 'y' or 'z' or the index of the axis
-        add_unit (bool): If True then add units
+        tag: can be 'x', 'y' or 'z' or the index of the axis. For DataArrays there is only a single axis.
+        add_unit: If True then add units
     Returns:
         String with label for the axis
     """
 
     if isinstance(alldata, DataArray):
-        array= alldata
+        array = alldata
     else:
         dataset_dimension = len(alldata.default_parameter_array().set_arrays)
         d = alldata.default_parameter_array()

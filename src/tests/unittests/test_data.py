@@ -1,8 +1,8 @@
 import io
 import logging
+import sys
 import tempfile
 import time
-import sys
 import unittest
 from unittest.mock import patch
 
@@ -10,13 +10,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
 from qcodes import ManualParameter
+from qcodes.data.data_array import DataArray
 from qcodes.data.data_set import DataSet
 from qcodes.tests.legacy.data_mocks import DataSet1D, DataSet2D
 
 import qtt.data
-from qtt.data import image_transform, dataset_to_dictionary, dictionary_to_dataset,\
-    compare_dataset_metadata, diffDataset, add_comment, load_dataset, determine_parameter_unit
-from qtt.data import logger
+from qtt.data import (add_comment, compare_dataset_metadata,
+                      dataset_to_dictionary, determine_parameter_unit,
+                      dictionary_to_dataset, diffDataset, image_transform,
+                      load_dataset, logger)
 
 
 class TestPlotting(unittest.TestCase):
@@ -36,18 +38,19 @@ class TestPlotting(unittest.TestCase):
             self.assertTrue(plt.fignum_exists(fig))
             plt.close(fig)
 
+
 class TestExampleDatasets(unittest.TestCase):
 
     def test_json_format(self):
-        dataset=qtt.data.load_example_dataset('elzerman_detuning_scan.json')
+        dataset = qtt.data.load_example_dataset('elzerman_detuning_scan.json')
         self.assertEqual(dataset.default_parameter_name(), 'signal')
         self.assertEqual(dataset.default_parameter_array().shape, (240, 1367))
         np.testing.assert_almost_equal(dataset.time[0, 0::500], np.array([0., 0.000512, 0.001024]))
 
     def test_qcodes_hdf5_format(self):
-        dataset=qtt.data.load_example_dataset('polarization_line')
+        dataset = qtt.data.load_example_dataset('polarization_line')
         self.assertEqual(dataset.default_parameter_name(), 'signal')
-        np.testing.assert_almost_equal(dataset.delta[0:3], np.array([-100.,  -99.79979706,  -99.59960175]))
+        np.testing.assert_almost_equal(dataset.delta[0:3], np.array([-100., -99.79979706, -99.59960175]))
 
 
 class TestData(unittest.TestCase):
@@ -90,6 +93,13 @@ class TestData(unittest.TestCase):
             print_string = mock_stdout.getvalue()
             self.assertEqual(print_string, '')
             logger.removeHandler(stream_handler)
+
+    def test_dataset_labels_dataarray(self):
+        da = DataArray(name='x', label='count', unit='Tesla')
+        label = qtt.data.dataset_labels(da)
+        self.assertEqual(label, 'count')
+        label = qtt.data.dataset_labels(da, add_unit=True)
+        self.assertEqual(label, 'count [Tesla]')
 
     def test_dataset_labels_dataset_1d(self):
         dataset = qtt.data.makeDataSet1Dplain('x', [0, 1], 'y', [2, 3])
@@ -270,7 +280,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_makedataset1dplain_type_yname_parameter(self):
@@ -304,7 +314,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_shape_measuredata_second_nok(self):
@@ -322,7 +332,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_right_shape(self):
@@ -345,7 +355,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_dataset1dplain_no_data(self):
@@ -366,7 +376,7 @@ class TestMakeDataSet(unittest.TestCase):
         dummy_parameter = ManualParameter('dummy')
         x = dummy_parameter[0:10:1]
         yname = 'measured'
-        y = np.arange(len(x)).reshape((len(x)))
+        y = np.arange(len(x)).reshape(len(x))
         data_set = qtt.data.makeDataSet1D(x, yname, y, return_names=False)
         # check attribute
         self.assertTrue(np.array_equal(data_set.measured, y))
@@ -395,7 +405,7 @@ class TestMakeDataSet(unittest.TestCase):
         dummy_parameter = ManualParameter('dummy')
         x = dummy_parameter[0:10:1]
         yname = ['measured1', 'measured2']
-        y = np.arange(len(x)).reshape((len(x)))
+        y = np.arange(len(x)).reshape(len(x))
         self.assertRaisesRegex(ValueError, 'The number of measurement names 2 does not match the number of measurements 10',
                                qtt.data.makeDataSet1D, x, yname, y, return_names=False)
 
@@ -403,7 +413,7 @@ class TestMakeDataSet(unittest.TestCase):
         dummy_parameter = ManualParameter('dummy')
         x = dummy_parameter[0:10:1]
         yname = 'measured'
-        y = [np.arange(len(x)).reshape((len(x))), np.arange(len(x)).reshape((len(x)))]
+        y = [np.arange(len(x)).reshape(len(x)), np.arange(len(x)).reshape(len(x))]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
             logger.addHandler(stream_handler)
@@ -414,13 +424,13 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_makedataset1d_shape_measuredata_nok(self):
         dummy_parameter = ManualParameter('dummy')
         x = dummy_parameter[0:10:1]
-        y = [np.arange(len(x)+1)]
+        y = [np.arange(len(x) + 1)]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
             logger.addHandler(stream_handler)
@@ -431,13 +441,13 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_makedataset1d_shape_second_item_measuredata_nok(self):
         dummy_parameter = ManualParameter('dummy')
         x = dummy_parameter[0:10:1]
-        y = [np.arange(len(x)), np.arange(len(x)+1)]
+        y = [np.arange(len(x)), np.arange(len(x) + 1)]
         with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
             stream_handler = logging.StreamHandler(sys.stdout)
             logger.addHandler(stream_handler)
@@ -449,7 +459,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_makedataset1d_no_data(self):
@@ -535,7 +545,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_dataset2dplain_shape_measuredata_second_nok(self):
@@ -549,7 +559,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_dataset2dplain_no_measuredata(self):
@@ -695,7 +705,7 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
 
     def test_makedataset2d_shape_measuredata_second_nok(self):
@@ -713,5 +723,5 @@ class TestMakeDataSet(unittest.TestCase):
 
             # Verify warning
             print_string = mock_stdout.getvalue()
-            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*' )
+            self.assertRegex(print_string, 'Shape of measured data .* does not match setpoint shape .*')
             logger.removeHandler(stream_handler)
