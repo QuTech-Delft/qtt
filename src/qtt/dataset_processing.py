@@ -1,11 +1,11 @@
-from typing import Sequence, Callable, Optional, Union, Tuple
-import numpy as np
 import copy
+from typing import Callable, Optional, Sequence, Tuple, Union
 
-from qcodes.data.data_set import DataSet
+import numpy as np
 from qcodes.data.data_array import DataArray
-import qtt.data
+from qcodes.data.data_set import DataSet
 
+import qtt.data
 
 # %%
 
@@ -40,7 +40,7 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
 
 def dataset_dimension(dataset: DataSet) -> int:
     """ Return dimension of DataSet """
-    return len(dataset.default_parameter_array().set_arrays)
+    return len(dataset.default_parameter_array(None).set_arrays)
 
 
 def average_dataset(dataset: qtt.data.DataSet, axis: Union[str, int] = 'vertical') -> qtt.data.DataSet:
@@ -218,6 +218,6 @@ def resample_dataset(dataset: DataSet, sample_rate: Tuple[int], copy_metadata: b
     if output_parameter_name is None:
         output_parameter_name = zarray.name
 
-    slice_objects = tuple([slice(0, size, sample_rate[jj]) for jj, size in enumerate(zarray.shape)])
+    slice_objects = tuple(slice(0, size, sample_rate[jj]) for jj, size in enumerate(zarray.shape))
 
     return _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata=copy_metadata, verbose=0)
