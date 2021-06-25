@@ -40,7 +40,7 @@ def process_dataarray(dataset: DataSet, input_array_name: str, output_array_name
 
 def dataset_dimension(dataset: DataSet) -> int:
     """ Return dimension of DataSet """
-    return len(dataset.default_parameter_array(None).set_arrays)
+    return len(dataset.default_parameter_array().set_arrays)
 
 
 def average_dataset(dataset: qtt.data.DataSet, axis: Union[str, int] = 'vertical') -> qtt.data.DataSet:
