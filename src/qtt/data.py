@@ -30,7 +30,7 @@ def load_example_dataset(filename: str, verbose: int = 0) -> Optional[DataSet]:
     Returns:
         Example dataset or None of no dataset can be found
     """
-    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')  # type: ignore # mypy issue #1422
+    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata') # type: ignore # mypy issue #1422
 
     dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose=verbose)
     return dataset
