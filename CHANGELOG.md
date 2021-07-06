@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Improve sine fitting (#762)
+- The 'dataset_labels' method can handle both DataSet's DataArray's (#771)
 
 ### Removed
 

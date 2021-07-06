@@ -1,11 +1,11 @@
-from typing import Sequence, Callable, Optional, Union, Tuple
-import numpy as np
 import copy
+from typing import Callable, Optional, Sequence, Tuple, Union
 
-from qcodes.data.data_set import DataSet
+import numpy as np
 from qcodes.data.data_array import DataArray
-import qtt.data
+from qcodes.data.data_set import DataSet
 
+import qtt.data
 
 # %%
 
@@ -218,6 +218,6 @@ def resample_dataset(dataset: DataSet, sample_rate: Tuple[int], copy_metadata: b
     if output_parameter_name is None:
         output_parameter_name = zarray.name
 
-    slice_objects = tuple([slice(0, size, sample_rate[jj]) for jj, size in enumerate(zarray.shape)])
+    slice_objects = tuple(slice(0, size, sample_rate[jj]) for jj, size in enumerate(zarray.shape))
 
     return _slice_dataset(dataset, slice_objects, output_parameter_name, copy_metadata=copy_metadata, verbose=0)

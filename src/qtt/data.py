@@ -4,16 +4,14 @@ import datetime
 import logging
 import os
 import pickle
-from functools import wraps
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
 import scipy
-from qcodes.data.data_set import new_data
 from qcodes.data.data_array import DataArray
-from qcodes.data.data_set import DataSet
+from qcodes.data.data_set import DataSet, new_data
 from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.algorithms.generic
@@ -23,7 +21,7 @@ from qtt import pgeometry
 logger = logging.getLogger(__name__)
 
 
-def load_example_dataset(filename, verbose=0):
+def load_example_dataset(filename: str, verbose: int = 0) -> Optional[DataSet]:
     """ Return an example dataset from qtt
 
     Args:
@@ -32,7 +30,7 @@ def load_example_dataset(filename, verbose=0):
     Returns:
         Example dataset or None of no dataset can be found
     """
-    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
+    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')  # type: ignore # mypy issue #1422
 
     dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose=verbose)
     return dataset
@@ -96,13 +94,14 @@ def dictionary_to_dataset(data_dictionary: dict) -> DataSet:
 
     for array_key, array_dict in data_dictionary['arrays'].items():
         set_arrays_names = array_dict['set_arrays']
-        set_arrays = tuple([dataset.arrays[name] for name in set_arrays_names])
+        set_arrays = tuple(dataset.arrays[name] for name in set_arrays_names)
         dataset.arrays[array_key].set_arrays = set_arrays
 
     return dataset
 
 
-def dataset_to_dictionary(data_set: DataSet, include_data: bool = True, include_metadata: bool = True) -> Dict[str, Any]:
+def dataset_to_dictionary(data_set: DataSet, include_data: bool = True,
+                          include_metadata: bool = True) -> Dict[str, Any]:
     """ Convert DataSet to dictionary.
 
     Args:
@@ -145,7 +144,7 @@ def get_dataset(dataset_handle):
     if isinstance(dataset_handle, DataSet):
         return dataset_handle
 
-    raise ValueError('Invalid dataset argument type ({})!'.format(type(dataset_handle)))
+    raise ValueError(f'Invalid dataset argument type ({type(dataset_handle)})!')
 
 
 def load_dataset(location, io=None, verbose=0):
@@ -385,39 +384,44 @@ def dataset1Ddata(alldata):
     return x, y
 
 
-def dataset_labels(alldata, tag=None, add_unit=False):
+def dataset_labels(alldata: Union[DataSet, DataArray], tag: Optional[Union[str, int]] = None, add_unit: bool = False):
     """ Return label for axis of dataset
 
     Args:
-        ds (DataSet): dataset
-        tag (str or int or None): can be 'x', 'y' or 'z' or the index of the axis
-        add_unit (bool): If True then add units
+        alldata: dataset or dataarray
+        tag: can be 'x', 'y' or 'z' or the index of the axis. For DataArrays there is only a single axis.
+        add_unit: If True then add units
+    Returns:
+        String with label for the axis
     """
 
-    dataset_dimension = len(alldata.default_parameter_array().set_arrays)
-    d = alldata.default_parameter_array()
-
-    if isinstance(tag, int):
-        array = d.set_arrays[0]
+    if isinstance(alldata, DataArray):
+        array = alldata
     else:
-        if dataset_dimension == 1:
-            if tag == 'x':
-                array = d.set_arrays[0]
-            elif tag is None or tag == 'z' or tag == 'y':
-                array = d
-            else:
-                raise Exception('invalid value %s for tag' % (tag,))
-        else:
-            if tag == 'y':
-                array = d.set_arrays[0]
-            elif tag == 'x':
-                array = d.set_arrays[1]
-            elif tag is None or tag == 'z':
-                array = d
-            else:
-                raise Exception('invalid value %s for tag' % (tag,))
-    label = array.label
+        dataset_dimension = len(alldata.default_parameter_array().set_arrays)
+        d = alldata.default_parameter_array()
 
+        if isinstance(tag, int):
+            array = d.set_arrays[0]
+        else:
+            if dataset_dimension == 1:
+                if tag == 'x':
+                    array = d.set_arrays[0]
+                elif tag is None or tag == 'z' or tag == 'y':
+                    array = d
+                else:
+                    raise Exception('invalid value %s for tag' % (tag,))
+            else:
+                if tag == 'y':
+                    array = d.set_arrays[0]
+                elif tag == 'x':
+                    array = d.set_arrays[1]
+                elif tag is None or tag == 'z':
+                    array = d
+                else:
+                    raise Exception('invalid value %s for tag' % (tag,))
+
+    label = array.label
     if add_unit:
         label += ' [' + str(array.unit) + ']'
     return label
