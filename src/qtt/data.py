@@ -387,7 +387,7 @@ def dataset_labels(alldata: Union[DataSet, DataArray], tag: Optional[Union[str, 
     """ Return label for axis of dataset
 
     Args:
-        ds: dataset or dataarray
+        alldata: dataset or dataarray
         tag: can be 'x', 'y' or 'z' or the index of the axis. For DataArrays there is only a single axis.
         add_unit: If True then add units
     Returns:
