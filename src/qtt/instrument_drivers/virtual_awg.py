@@ -1,27 +1,29 @@
-# -*- coding: utf-8 -*-
 """
 Created on Wed Aug 31 13:04:09 2016
 
 @author: diepencjv
 """
 
-# %%
-import numpy as np
-import scipy.signal
 import logging
 import warnings
 
+# %%
+import numpy as np
 import qcodes
+import scipy.signal
 from qcodes import Instrument
-from qcodes.plots.pyqtgraph import QtPlot
 from qcodes.data.data_array import DataArray
+from qcodes.plots.pyqtgraph import QtPlot
+
 import qtt
 import qtt.utilities.tools
+from qtt.utilities.tools import rdeprecated
 
 logger = logging.getLogger(__name__)
 # %%
 
 
+@rdeprecated(expire='1-1-2022')
 class virtual_awg(Instrument):
     """
 
@@ -238,7 +240,7 @@ class virtual_awg(Instrument):
         for sweep in sweep_info:
             self._awgs[sweep[0]].set('ch%i_state' % sweep[1], 1)
 
-        awgnrs = set([sweep[0] for sweep in sweep_info])
+        awgnrs = {sweep[0] for sweep in sweep_info}
         for nr in awgnrs:
             self._awgs[nr].run()
 
@@ -255,7 +257,7 @@ class virtual_awg(Instrument):
         '''
         samplerate = 1. / self.AWG_clock
         tt = np.arange(0, period * repetitionnr + samplerate, samplerate)
-        v_wave = float(sweeprange / ((self.ch_amp / 2.0)))
+        v_wave = float(sweeprange / (self.ch_amp / 2.0))
         wave_raw = (v_wave / 2) * scipy.signal.sawtooth(2 * np.pi * tt / period, width=width)
 #        idx_zero = np.argmin(np.abs(wave_raw))
 #        wave_raw = np.roll(wave_raw, wave_raw.size-idx_zero)

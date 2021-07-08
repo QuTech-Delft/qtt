@@ -1,11 +1,13 @@
 """ Interface for oscilloscopes or equivalent devices to acquire data."""
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 from qtt.measurements.acquisition.interfaces import AcquisitionInterface
+from qtt.utilities.tools import rdeprecated
 
 
+@rdeprecated(expire='1-1-2022')
 class AcquisitionScopeInterface(AcquisitionInterface, ABC):
     """ An interface which contains the functionality for a acquisition device as a oscilloscope."""
 

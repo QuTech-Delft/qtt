@@ -1,14 +1,19 @@
 from typing import Dict, Optional
 
-from qilib.configuration_helper import InstrumentAdapter, InstrumentAdapterFactory
+from qilib.configuration_helper import (InstrumentAdapter,
+                                        InstrumentAdapterFactory)
 from qilib.utils import PythonJsonStructure
 
+from qtt.instrument_drivers.adapters.constants import (ADAPTER_CLASS_NAME,
+                                                       ADDRESS, AWG_MAP,
+                                                       CONFIG, INSTRUMENTS,
+                                                       SETTINGS)
 from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 from qtt.instrument_drivers.virtualAwg.virtual_awg import VirtualAwg
-from qtt.instrument_drivers.adapters.constants import INSTRUMENTS, ADAPTER_CLASS_NAME, ADDRESS, CONFIG, SETTINGS, \
-    AWG_MAP
+from qtt.utilities.tools import rdeprecated
 
 
+@rdeprecated(expire='1-1-2022')
 class VirtualAwgInstrumentAdapter(InstrumentAdapter):
     def __init__(self, address: str, instrument_name: Optional[str] = None) -> None:
         super().__init__(address, instrument_name)
