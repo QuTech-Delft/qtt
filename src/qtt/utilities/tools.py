@@ -71,7 +71,7 @@ class measure_time():
             self.message = message
 
         def __enter__(self):
-            self.start_time = time.time()
+            self.start_time = time.perf_counter()
             return self
 
         @property
@@ -84,7 +84,7 @@ class measure_time():
             return self.dt
 
         def __exit__(self, exc_type, exc_value, exc_traceback):
-            self.dt = time.time() - self.start_time
+            self.dt = time.perf_counter() - self.start_time
 
             if self.message is not None:
                 print(f'{self.message} {self.dt:.3f} [s]')
