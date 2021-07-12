@@ -1,7 +1,7 @@
 import os
-from pathlib import Path
 import platform
 import re
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
@@ -14,7 +14,7 @@ def readme():
 def get_version(verbose=1, filename='src/qtt/version.py'):
     """ Extract version information from source code """
 
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         ln = f.readline()
         m = re.search('.* ''(.*)''', ln)
         version = (m.group(1)).strip('\'')
@@ -38,7 +38,7 @@ install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'h5py<3.0', 'hickle', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
     'numdifftools', 'numpy>=1.15', 'opencv-python', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.23.0',
     'qcodes-contrib-drivers', 'qilib', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
-    'shapely', 'sympy<1.7'
+    'shapely', 'sympy'
 ] + tests_require
 
 if platform.system() == 'Windows':
