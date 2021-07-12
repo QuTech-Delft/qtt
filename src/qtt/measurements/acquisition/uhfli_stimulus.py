@@ -7,10 +7,10 @@ from qilib.utils import PythonJsonStructure
 from qtt.utilities.tools import rdeprecated
 
 
-@rdeprecated(expire='1-1-2022')
 class UHFLIStimulus:
     """ A wrapper that provides methods to control Lock-in of Zurich instrument's UHF-LI devices."""
 
+    @rdeprecated(expire='1-1-2022')
     def __init__(self, address: str) -> None:
         """ Instantiate a LockInStimulus.
 

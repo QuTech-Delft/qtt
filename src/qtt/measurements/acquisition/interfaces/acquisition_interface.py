@@ -6,10 +6,7 @@ from typing import List
 from qilib.data_set import DataArray
 from qilib.utils import PythonJsonStructure
 
-from qtt.utilities.tools import rdeprecated
 
-
-@rdeprecated(expire='1-1-2022')
 class AcquisitionInterface(ABC):
     """ An interface which contains the functionality for collecting data using a acquisition device."""
 
