@@ -5,9 +5,9 @@ from qtt.measurements.post_processing.interfaces import \
 from qtt.utilities.tools import rdeprecated
 
 
-@rdeprecated(expire='1-1-2022')
 class ProcessSawtooth1D(SignalProcessorInterface):
 
+    @rdeprecated(expire='1-1-2022')
     def run_process(self, signal_data: DataSet) -> DataSet:
         """ Extracts a 1D image from a readout dot responce measured with an acquisition device
 
