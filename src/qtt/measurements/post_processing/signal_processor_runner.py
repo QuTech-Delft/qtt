@@ -3,8 +3,10 @@ from typing import List
 from qilib.data_set import DataSet
 
 from qtt.measurements.post_processing import SignalProcessorInterface
+from qtt.utilities.tools import rdeprecated
 
 
+@rdeprecated(expire='1-1-2022')
 class SignalProcessorRunner:
     """ A class for post-processing measurement data. """
 

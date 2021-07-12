@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
+- Deprecated instrument adapters. Deprecated post-processing tools in qtt.measurements.post_processing (#777)
 ### Fixed
 
 ## \[1.2.3] - 22-3-2021

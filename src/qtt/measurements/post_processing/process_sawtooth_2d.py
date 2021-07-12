@@ -1,9 +1,11 @@
 import numpy as np
-from qilib.data_set import DataSet, DataArray
+from qilib.data_set import DataArray, DataSet
 
 from qtt.measurements.post_processing import SignalProcessorInterface
+from qtt.utilities.tools import rdeprecated
 
 
+@rdeprecated(expire='1-1-2022')
 class ProcessSawtooth2D(SignalProcessorInterface):
 
     def run_process(self, signal_data: DataSet)-> DataSet:
