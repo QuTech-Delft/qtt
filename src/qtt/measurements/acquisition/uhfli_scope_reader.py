@@ -1,7 +1,7 @@
 """ Provides oscilloscope functionality for the Zurich Instruments UHFLI."""
 
 import time
-from typing import List, Tuple, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from qcodes import Parameter
@@ -10,11 +10,13 @@ from qilib.data_set import DataArray
 from qilib.utils import PythonJsonStructure
 
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
+from qtt.utilities.tools import rdeprecated
 
 
 class UHFLIScopeReader(AcquisitionScopeInterface):
     """ Represents an acquisition wrapper for acquiring data with the Zurich Instruments UHFLI."""
 
+    @rdeprecated(expire='1-1-2022')
     def __init__(self, address):
         """ Creates the connection to the UHFLI lock-in amplifier.
 

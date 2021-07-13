@@ -1,12 +1,18 @@
 from typing import Dict, Optional
 
-from qilib.configuration_helper import InstrumentAdapterFactory, InstrumentAdapter
+from qilib.configuration_helper import (InstrumentAdapter,
+                                        InstrumentAdapterFactory)
 from qilib.utils import PythonJsonStructure
-from qtt.instrument_drivers.adapters.constants import CONFIG, BOUNDARIES, GATE_MAP, INSTRUMENTS, ADDRESS, \
-    ADAPTER_CLASS_NAME
+
+from qtt.instrument_drivers.adapters.constants import (ADAPTER_CLASS_NAME,
+                                                       ADDRESS, BOUNDARIES,
+                                                       CONFIG, GATE_MAP,
+                                                       INSTRUMENTS)
 from qtt.instrument_drivers.gates import VirtualDAC
+from qtt.utilities.tools import rdeprecated
 
 
+@rdeprecated(expire='1-1-2022')
 class VirtualDACInstrumentAdapter(InstrumentAdapter):
     """ Adapter for the qtt VirtualDAC."""
 

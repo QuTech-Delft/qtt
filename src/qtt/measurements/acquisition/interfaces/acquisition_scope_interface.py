@@ -1,7 +1,7 @@
 """ Interface for oscilloscopes or equivalent devices to acquire data."""
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 from qtt.measurements.acquisition.interfaces import AcquisitionInterface
 

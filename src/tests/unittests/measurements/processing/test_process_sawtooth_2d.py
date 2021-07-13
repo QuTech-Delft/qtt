@@ -1,8 +1,9 @@
+from unittest import TestCase
+
 import numpy as np
+from qilib.data_set import DataArray, DataSet
 from scipy.signal import sawtooth
 
-from unittest import TestCase
-from qilib.data_set import DataArray, DataSet
 from qtt.measurements.post_processing import ProcessSawtooth2D
 
 
@@ -62,8 +63,8 @@ class  TestProcessSawtooth2D(TestCase):
 
     @staticmethod
     def __dummy_data_array(set_array: DataArray, scope_data: np.ndarray, channel_index: int = 1, trace_number: int = 1):
-        idenifier = 'ScopeTrace_{:03d}'.format(trace_number)
-        label = 'Channel_{}'.format(channel_index)
+        idenifier = f'ScopeTrace_{trace_number:03d}'
+        label = f'Channel_{channel_index}'
         return DataArray(idenifier, label, preset_data=scope_data, set_arrays=[set_array])
 
     @staticmethod

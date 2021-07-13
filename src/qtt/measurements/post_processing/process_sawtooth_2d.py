@@ -1,11 +1,13 @@
 import numpy as np
-from qilib.data_set import DataSet, DataArray
+from qilib.data_set import DataArray, DataSet
 
 from qtt.measurements.post_processing import SignalProcessorInterface
+from qtt.utilities.tools import rdeprecated
 
 
 class ProcessSawtooth2D(SignalProcessorInterface):
 
+    @rdeprecated(expire='1-1-2022')
     def run_process(self, signal_data: DataSet)-> DataSet:
         """ Extracts a 2D image from a readout dot responce measured with an acquisition device.
 
