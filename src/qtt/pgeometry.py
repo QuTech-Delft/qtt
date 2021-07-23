@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 
 pgeometry
@@ -20,25 +19,25 @@ Original code:
 @author: eendebakpt
 """
 
+import logging
+import math
 # %% Load necessary packages
 import os
+import pickle
+import pkgutil
+import re
+import subprocess
 import sys
 import tempfile
-import math
 import time
 import warnings
-import pickle
-import subprocess
-import re
-import logging
-import pkgutil
 from functools import wraps
 
 import numpy
 import numpy as np
 import scipy.io
-import scipy.ndimage.morphology as morphology
 import scipy.ndimage.filters as filters
+import scipy.ndimage.morphology as morphology
 import shapely.geometry
 
 __version__ = '0.7.0'
@@ -66,9 +65,7 @@ try:
         import qtpy.QtCore as QtCore
         import qtpy.QtGui as QtGui
         import qtpy.QtWidgets as QtWidgets
-        from qtpy.QtCore import QObject
-        from qtpy.QtCore import Slot
-        from qtpy.QtCore import Signal
+        from qtpy.QtCore import QObject, Signal, Slot
     except ImportError:
         _haveqtpy = False
         warnings.warn('could not import qtpy, not all functionality available')
@@ -123,8 +120,9 @@ except Exception as inst:
     pass
 
 try:
-    import matplotlib.pyplot as plt
     import matplotlib
+    import matplotlib.pyplot as plt
+
     # needed for 3d plot points, do not remove!
     try:
         from mpl_toolkits.mplot3d import Axes3D
@@ -147,9 +145,9 @@ except ModuleNotFoundError as ex:
 try:
     import cv2
     _haveOpenCV = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     _haveOpenCV = False
-    warnings.warn('could not find OpenCV, not all functionality is available')
+    warnings.warn('could not find or load OpenCV, not all functionality is available')
     pass
 
 # %% Utils
@@ -177,8 +175,9 @@ def memory():
     Returns:
             float: memory usage in mb
     """
-    import psutil
     import os
+
+    import psutil
     process = psutil.Process(os.getpid())
     mem = process.memory_info().rss / (1024. * 1024.)
     return mem
@@ -624,7 +623,7 @@ def RBE2euler(Rbe):
 
 def pg_rotation2H(R):
     """ Convert rotation matrix to homogenous transform matrix """
-    X = np.array(np.eye((R.shape[0] + 1)))
+    X = np.array(np.eye(R.shape[0] + 1))
     X[0:-1, 0:-1] = R
     return X
 
@@ -1547,9 +1546,7 @@ def deprecation(message):
 # %%
 try:
     import PIL
-    from PIL import ImageFont
-    from PIL import Image
-    from PIL import ImageDraw
+    from PIL import Image, ImageDraw, ImageFont
 
     def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
         """ Write text on image using PIL """
