@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add method to combine legends of multiple matplotlib axes (#782)
 - Functionality plot onto a matplotlib Axes object (#785)
 - Context manager 'restore_at_exit' in the 'VirtualDAC' object (#792)
+- Passes for Qiskit (##784)
 
 ### Changed
 
