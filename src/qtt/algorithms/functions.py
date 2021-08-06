@@ -1,16 +1,18 @@
 """ Mathematical functions and models """
 
+from typing import Union
+
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import scipy.constants
-from typing import Union
-import matplotlib.pyplot as plt
 from lmfit import Model
+from matplotlib.axes import Axes
 
 import qtt.pgeometry
 import qtt.utilities.tools
-from qtt.utilities.visualization import plot_vertical_line
 from qtt.algorithms.generic import subpixelmax
+from qtt.utilities.visualization import create_axis, plot_vertical_line
 
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
@@ -392,7 +394,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
     return result_dict['fitted_parameters'], result_dict
 
 
-def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
+def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig: Union[int, Axes]):
     """ Plot Gauss Ramsey fit
 
     Args:
@@ -404,14 +406,13 @@ def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig):
     freq_fit = abs(fit_parameters[2] * 1e-6)
     t2star_fit = fit_parameters[1] * 1e6
 
-    plt.figure(fig)
-    plt.clf()
-    plt.plot(x_data * 1e6, y_data, 'o', label='Data')
-    plt.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
-    plt.title(r'Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
-    plt.xlabel(r'time ($\mu$s)')
-    plt.ylabel('Spin-up probability')
-    plt.legend()
+    ax = create_axis(fig)
+    ax.plot(x_data * 1e6, y_data, 'o', label='Data')
+    ax.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
+    ax.set_title(r'Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))
+    ax.set_xlabel(r'time ($\mu$s)')
+    ax.set_ylabel('Spin-up probability')
+    ax.legend()
 
 
 def linear_function(x, a, b):
