@@ -1,10 +1,17 @@
 import unittest
+
 import matplotlib.pyplot as plt
 import numpy as np
+
 import qtt
-from qtt.algorithms.functions import gaussian, double_gaussian, exp_function, \
-    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
-    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave
+from qtt.algorithms.functions import (Fermi,
+                                      _estimate_exp_decay_initial_parameters,
+                                      cost_exp_decay, double_gaussian,
+                                      estimate_parameters_damped_sine_wave,
+                                      exp_function, fit_exp_decay,
+                                      fit_gauss_ramsey, gauss_ramsey, gaussian,
+                                      linear_function, logistic,
+                                      plot_gauss_ramsey_fit)
 
 
 class TestFunctions(unittest.TestCase):
@@ -29,7 +36,7 @@ class TestFunctions(unittest.TestCase):
 
         par_fit_test, _ = fit_gauss_ramsey(x_data * 1e-6, y_data)
 
-        plot_gauss_ramsey_fit(x_data, y_data, par_fit_test, fig=fig)
+        plot_gauss_ramsey_fit(x_data*1e-6, y_data, par_fit_test, fig=fig)
 
     def test_fit_gauss_ramsey_weights(self, fig=123):
         x_data = np.hstack((np.linspace(0, 3 * np.pi, 20), np.linspace(3 * np.pi, 4 * np.pi, 100)))
@@ -50,5 +57,3 @@ class TestFunctions(unittest.TestCase):
             plt.plot(x_data, gauss_ramsey(x_data, fitted_parameters_unweighted), 'b')
             plt.plot(x_data, gauss_ramsey(x_data, fitted_parameters), 'm')
             plt.close(fig)
-
-
