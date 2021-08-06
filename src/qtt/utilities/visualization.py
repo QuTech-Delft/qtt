@@ -48,7 +48,7 @@ def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: O
     """
     if ax is None:
         ax = plt.gca()
-    vline = plt.axhline(x, label=label)
+    vline = ax.axhline(x, label=label)
     vline.set_alpha(alpha)
     vline.set_color(color)
     vline.set_linestyle('--')

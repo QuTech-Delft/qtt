@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update docstrings (#718)
 - Add numdifftools to requirements (#726)
 - Add fitting of sine wave (#731)
+- Functionality plot onto a matplotlib Axes object (#785)
 
 ### Changed
 - Prevent tests from writing data to the user directory (#710)
