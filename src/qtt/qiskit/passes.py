@@ -206,3 +206,115 @@ class DecomposeCX(TransformationPass):
         for node in dag.op_nodes(self.gate):
             dag.substitute_node_with_dag(node, self._dag)
         return dag
+      
+ class SequentialPass(TransformationPass):
+    """Adds barriers between gates to make the circuit sequential."""
+    
+    def run(self, dag):
+        new_dag = DAGCircuit()
+        
+        for qreg in dag.qregs.values():
+            new_dag.add_qreg(qreg)
+        for creg in dag.cregs.values():
+            new_dag.add_creg(creg)
+        for node in dag.op_nodes():
+            if node.name in ['barrier', 'measure']:
+                continue
+            new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
+            new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+    
+        return new_dag
+    
+class LinearTopologyParallelPass(TransformationPass):
+    """Adds barriers between gates such that no two qubit gates are executed
+    at the same time and only single qubit gates on non-neighboring qubits can
+    be executed in parallel. It assumes a linear topology."""
+    
+    def run(self, dag):
+        new_dag = DAGCircuit()
+        
+        for qreg in dag.qregs.values():
+            new_dag.add_qreg(qreg)
+        for creg in dag.cregs.values():
+            new_dag.add_creg(creg)
+        
+        for layer in dag.layers():
+            gates_1q = []
+            gates_2q = []
+            for node in layer['graph'].op_nodes():
+                if len(node.qargs) == 2:
+                    gates_2q.append(node)
+                else:
+                    gates_1q.append(node)
+            
+            even = []
+            odd = []
+            for node in gates_1q:
+                if node.qargs[0].index % 2 == 0:
+                    even.append(node)
+                else:
+                    odd.append(node)
+
+            if len(even) > 0:
+                for node in even:
+                    new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
+                new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+
+            if len(odd) > 0:
+                for node in odd:
+                    new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
+                new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+            
+            for node in gates_2q:
+                new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
+                new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+
+        return new_dag    
+
+class DelayPass(TransformationPass):
+    """Adds delay gates when the qubits are idle.
+    For every layer of the circuit it finds the gate that 
+    lasts the longest and applies appropriate delays on the
+    other qubits.
+    """
+    
+    def __init__(self, gate_durations):
+        """
+        Args:
+            gate_durations (Dict): Gate durations in the units of dt
+        """
+        super().__init__()
+        self.gate_durations = gate_durations
+    
+    def run(self, dag):
+        new_dag = DAGCircuit()
+        
+        for qreg in dag.qregs.values():
+            new_dag.add_qreg(qreg)
+        for creg in dag.cregs.values():
+            new_dag.add_creg(creg)
+        for layer in dag.layers():
+            max_duration = 0
+            durations = {}
+            for node in layer['graph'].op_nodes():
+                if node.name in self.gate_durations:
+                    max_duration = max(max_duration, self.gate_durations[node.name])
+                    for q in node.qargs:
+                        durations[q] = self.gate_durations[node.name]
+                new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
+            
+            partition = layer['partition']
+            if len(partition) == 0:
+                continue
+            lst = list(dag.qubits)
+            for el in partition:
+                for q in el:
+                    if q in lst:
+                        lst.remove(q)
+            for el in lst:
+                new_dag.apply_operation_back(Delay(max_duration), [el], [])
+            for q in durations:
+                if max_duration - durations[q] > 0:
+                    new_dag.apply_operation_back(Delay(max_duration - durations[q]), q, [])
+            
+        return new_dag
