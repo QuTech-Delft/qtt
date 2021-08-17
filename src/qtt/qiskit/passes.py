@@ -1,8 +1,8 @@
-from typing import List, Sequence, Union
+from typing import List
 
 import numpy as np
 import qiskit
-from qiskit.circuit import Reset
+from qiskit.circuit import Barrier, Delay, Reset
 from qiskit.circuit.library import (CRXGate, CRYGate, CRZGate, CZGate,
                                     PhaseGate, RXGate, RYGate, RZGate, U1Gate,
                                     U2Gate, U3Gate, UGate)
@@ -10,11 +10,9 @@ from qiskit.circuit.library.standard_gates import (CU1Gate, RZZGate, SdgGate,
                                                    SGate, TdgGate, TGate,
                                                    ZGate)
 from qiskit.circuit.quantumcircuit import QuantumCircuit
-from qiskit.compiler import transpile
 from qiskit.converters.circuit_to_dag import circuit_to_dag
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
-from qiskit.transpiler.passmanager import PassManager
 
 
 class RemoveSmallRotations(TransformationPass):
@@ -45,17 +43,25 @@ class RemoveSmallRotations(TransformationPass):
             return np.mod(x + np.pi, 2 * np.pi) - np.pi
         for node in dag.op_nodes():
             if isinstance(node.op, (PhaseGate, RXGate, RYGate, RZGate)):
-                phi = float(node.op.params[0])
-                if self.mod2pi:
-                    phi = modulo_2pi(phi)
-                if np.abs(phi) <= self.epsilon:
-                    dag.substitute_node_with_dag(node, self._empty_dag1)
+                if node.op.is_parameterized():
+                    # for parameterized gates we do not optimize
+                    pass
+                else:
+                    phi = float(node.op.params[0])
+                    if self.mod2pi:
+                        phi = modulo_2pi(phi)
+                    if np.abs(phi) <= self.epsilon:
+                        dag.substitute_node_with_dag(node, self._empty_dag1)
             elif isinstance(node.op, (CRXGate, CRYGate, CRZGate)):
-                phi = float(node.op.params[0])
-                if self.mod2pi:
-                    phi = modulo_2pi(phi)
-                if np.abs(phi) <= self.epsilon:
-                    dag.substitute_node_with_dag(node, self._empty_dag2)
+                if node.op.is_parameterized():
+                    # for parameterized gates we do not optimize
+                    pass
+                else:
+                    phi = float(node.op.params[0])
+                    if self.mod2pi:
+                        phi = modulo_2pi(phi)
+                    if np.abs(phi) <= self.epsilon:
+                        dag.substitute_node_with_dag(node, self._empty_dag2)
         return dag
 
 
@@ -206,13 +212,14 @@ class DecomposeCX(TransformationPass):
         for node in dag.op_nodes(self.gate):
             dag.substitute_node_with_dag(node, self._dag)
         return dag
-      
- class SequentialPass(TransformationPass):
+
+
+class SequentialPass(TransformationPass):
     """Adds barriers between gates to make the circuit sequential."""
-    
+
     def run(self, dag):
         new_dag = DAGCircuit()
-        
+
         for qreg in dag.qregs.values():
             new_dag.add_qreg(qreg)
         for creg in dag.cregs.values():
@@ -222,22 +229,23 @@ class DecomposeCX(TransformationPass):
                 continue
             new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
             new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
-    
+
         return new_dag
-    
+
+
 class LinearTopologyParallelPass(TransformationPass):
     """Adds barriers between gates such that no two qubit gates are executed
     at the same time and only single qubit gates on non-neighboring qubits can
     be executed in parallel. It assumes a linear topology."""
-    
+
     def run(self, dag):
         new_dag = DAGCircuit()
-        
+
         for qreg in dag.qregs.values():
             new_dag.add_qreg(qreg)
         for creg in dag.cregs.values():
             new_dag.add_creg(creg)
-        
+
         for layer in dag.layers():
             gates_1q = []
             gates_2q = []
@@ -246,7 +254,7 @@ class LinearTopologyParallelPass(TransformationPass):
                     gates_2q.append(node)
                 else:
                     gates_1q.append(node)
-            
+
             even = []
             odd = []
             for node in gates_1q:
@@ -264,20 +272,21 @@ class LinearTopologyParallelPass(TransformationPass):
                 for node in odd:
                     new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
                 new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
-            
+
             for node in gates_2q:
                 new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
                 new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
-        return new_dag    
+        return new_dag
+
 
 class DelayPass(TransformationPass):
     """Adds delay gates when the qubits are idle.
-    For every layer of the circuit it finds the gate that 
+    For every layer of the circuit it finds the gate that
     lasts the longest and applies appropriate delays on the
     other qubits.
     """
-    
+
     def __init__(self, gate_durations):
         """
         Args:
@@ -285,10 +294,10 @@ class DelayPass(TransformationPass):
         """
         super().__init__()
         self.gate_durations = gate_durations
-    
+
     def run(self, dag):
         new_dag = DAGCircuit()
-        
+
         for qreg in dag.qregs.values():
             new_dag.add_qreg(qreg)
         for creg in dag.cregs.values():
@@ -302,7 +311,7 @@ class DelayPass(TransformationPass):
                     for q in node.qargs:
                         durations[q] = self.gate_durations[node.name]
                 new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
-            
+
             partition = layer['partition']
             if len(partition) == 0:
                 continue
@@ -316,5 +325,5 @@ class DelayPass(TransformationPass):
             for q in durations:
                 if max_duration - durations[q] > 0:
                     new_dag.apply_operation_back(Delay(max_duration - durations[q]), q, [])
-            
+
         return new_dag

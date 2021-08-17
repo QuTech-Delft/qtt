@@ -4,7 +4,6 @@ import numpy as np
 import qiskit.quantum_info as qi
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import CZGate, HGate, RXGate, RYGate, RZGate
-from qiskit.transpiler.passmanager import PassManager
 
 from qtt.qiskit.passes import (DecomposeCX, DecomposeU,
                                RemoveDiagonalGatesAfterInput,
@@ -113,4 +112,9 @@ class TestQiskitPasses(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    import qiskit
     unittest.main()
+
+    qc = QuantumCircuit(1)
+    qc.p(np.pi, 0)
+    dag = qiskit.converters.circuit_to_dag(qc)
