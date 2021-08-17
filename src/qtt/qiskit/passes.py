@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 import qiskit
@@ -234,7 +234,9 @@ class SequentialPass(TransformationPass):
 
 
 class LinearTopologyParallelPass(TransformationPass):
-    """Adds barriers between gates such that no two qubit gates are executed
+    """Adds barriers to enforce a linear topology
+
+    The barrier are placed between gates such that no two qubit gates are executed
     at the same time and only single qubit gates on non-neighboring qubits can
     be executed in parallel. It assumes a linear topology."""
 
@@ -287,10 +289,10 @@ class DelayPass(TransformationPass):
     other qubits.
     """
 
-    def __init__(self, gate_durations):
+    def __init__(self, gate_durations: Dict[str, float]):
         """
         Args:
-            gate_durations (Dict): Gate durations in the units of dt
+            gate_durations: Gate durations in the units of dt
         """
         super().__init__()
         self.gate_durations = gate_durations
