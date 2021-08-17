@@ -1,7 +1,22 @@
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
+import matplotlib.pyplot as plt
 
 import qtt.utilities.visualization
+
+
+class TestUtilities(unittest.TestCase):
+
+    def test_combine_legends(self):
+        plt.figure(1)
+        plt.clf()
+        ax1 = plt.gca()
+        ax1.plot([1, 2], [3, 4], label='a')
+        ax2 = ax1.twinx()
+        ax2.plot([1, 2], [4, 3], 'r', label='b')
+        qtt.utilities.visualization.combine_legends([ax1, ax2], target_ax=ax2)
+        plt.close(1)
 
 
 class TestVerticalHorizontalLine(unittest.TestCase):
