@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List
 
 import numpy as np
@@ -248,14 +249,19 @@ class LinearTopologyParallelPass(TransformationPass):
         for creg in dag.cregs.values():
             new_dag.add_creg(creg)
 
-        for layer in dag.layers():
+        for ii, layer in enumerate(dag.layers()):
             gates_1q = []
             gates_2q = []
+            other_gates = []
             for node in layer['graph'].op_nodes():
                 if len(node.qargs) == 2:
                     gates_2q.append(node)
-                else:
+                elif len(node.qargs) == 1:
                     gates_1q.append(node)
+                else:
+                    logging.info(f'layer {ii}: gate {node}')
+
+                    other_gates.append(node)
 
             even = []
             odd = []
@@ -264,6 +270,8 @@ class LinearTopologyParallelPass(TransformationPass):
                     even.append(node)
                 else:
                     odd.append(node)
+            logging.info(
+                f'layer {ii}: 2q gates {len(gates_2q)}, even {len(even)} odd {len(odd)}, other {len(other_gates)}')
 
             if len(even) > 0:
                 for node in even:
@@ -278,6 +286,15 @@ class LinearTopologyParallelPass(TransformationPass):
             for node in gates_2q:
                 new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
                 new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+
+            for node in other_gates:
+                logging.info(f'layer {ii}: node {node} {node.op}')
+
+                new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
+
+                if not isinstance(node.op, Barrier):
+                    print('add barrier for other')
+                    new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
         return new_dag
 
