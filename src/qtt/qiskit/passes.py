@@ -259,8 +259,7 @@ class LinearTopologyParallelPass(TransformationPass):
                 elif len(node.qargs) == 1:
                     gates_1q.append(node)
                 else:
-                    logging.info(f'layer {ii}: gate {node}')
-
+                    logging.info(f'layer {ii}: other type of node {node}')
                     other_gates.append(node)
 
             even = []
@@ -288,12 +287,9 @@ class LinearTopologyParallelPass(TransformationPass):
                 new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
             for node in other_gates:
-                logging.info(f'layer {ii}: node {node} {node.op}')
-
                 new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
 
                 if not isinstance(node.op, Barrier):
-                    print('add barrier for other')
                     new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
         return new_dag
