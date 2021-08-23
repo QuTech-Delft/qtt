@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import qiskit
@@ -14,6 +14,8 @@ from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.converters.circuit_to_dag import circuit_to_dag
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
+
+logger = logging.getLogger(__name__)
 
 
 class RemoveSmallRotations(TransformationPass):
@@ -302,13 +304,22 @@ class DelayPass(TransformationPass):
     other qubits.
     """
 
-    def __init__(self, gate_durations: Dict[str, float]):
+    def __init__(self, gate_durations: Dict[str, float], delay_quantum: Optional[float] = None):
         """
         Args:
             gate_durations: Gate durations in the units of dt
         """
         super().__init__()
         self.gate_durations = gate_durations
+        self.delay_quantum = delay_quantum
+
+    def add_delay_to_dag(self, duration, dag, qargs, cargs):
+        if self.delay_quantum:
+            number_of_delays = int(duration/self.delay_quantum)
+            for ii in range(number_of_delays):
+                dag.apply_operation_back(Delay(self.delay_quantum), qargs, cargs)
+        else:
+            dag.apply_operation_back(Delay(duration), qargs, cargs)
 
     def run(self, dag):
         new_dag = DAGCircuit()
@@ -317,7 +328,7 @@ class DelayPass(TransformationPass):
             new_dag.add_qreg(qreg)
         for creg in dag.cregs.values():
             new_dag.add_creg(creg)
-        for layer in dag.layers():
+        for layer_idx, layer in enumerate(dag.layers()):
             max_duration = 0
             durations = {}
             for node in layer['graph'].op_nodes():
@@ -325,20 +336,24 @@ class DelayPass(TransformationPass):
                     max_duration = max(max_duration, self.gate_durations[node.name])
                     for q in node.qargs:
                         durations[q] = self.gate_durations[node.name]
+                else:
+                    logger.info('layer {layer_idx}, could not find duration for node {node.name}')
                 new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
 
             partition = layer['partition']
             if len(partition) == 0:
                 continue
             lst = list(dag.qubits)
+            logger.info(f'layer: {layer_idx}: lst {lst}, durations {durations}')
             for el in partition:
                 for q in el:
                     if q in lst:
                         lst.remove(q)
             for el in lst:
-                new_dag.apply_operation_back(Delay(max_duration), [el], [])
+                logger.info(f'apply_operation_back: {[el]}')
+                self.add_delay_to_dag(max_duration, new_dag, [el], [])
             for q in durations:
                 if max_duration - durations[q] > 0:
-                    new_dag.apply_operation_back(Delay(max_duration - durations[q]), q, [])
+                    self.add_delay_to_dag(max_duration - durations[q], new_dag, [q], [])
 
         return new_dag

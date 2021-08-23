@@ -5,7 +5,7 @@ import qiskit.quantum_info as qi
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import CZGate, HGate, RXGate, RYGate, RZGate
 
-from qtt.qiskit.passes import (DecomposeCX, DecomposeU,
+from qtt.qiskit.passes import (DecomposeCX, DecomposeU, DelayPass,
                                RemoveDiagonalGatesAfterInput,
                                RemoveSmallRotations)
 
@@ -110,9 +110,38 @@ class TestQiskitPasses(unittest.TestCase):
         self.assertIsInstance(list(qcd)[3][0], RXGate)
         self.assertIsInstance(list(qcd)[4][0], RZGate)
 
+    def test_DelayPass(self, draw=False):
+        delay_pass = DelayPass(gate_durations={'x': 80, 'h': 40})
+
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qcd = delay_pass(qc)
+        node = list(qcd)[-1][0]
+        self.assertEqual(node.name, 'delay')
+        self.assertEqual(node.params, [40])
+
+        delay_pass = DelayPass(gate_durations={'x': 80, 'h': 40}, delay_quantum=40)
+        qc = QuantumCircuit(3)
+        qc.h(0)
+        qc.x(1)
+        qcd = delay_pass(qc)
+
+        qc0 = QuantumCircuit(3)
+        qc0.h(0)
+        qc0.delay(40, 0)
+        qc0.x(1)
+        qc0.delay(40, 2)
+        qc0.delay(40, 2)
+        qcd = delay_pass(qc)
+
+        self.assertEqual(qc0, qcd)
+        self.check_identical(qc0, qcd)
+
 
 if __name__ == '__main__':
     import qiskit
+
+    from qtt.utilities.tools import logging_context
     unittest.main()
 
     qc = QuantumCircuit(1)
