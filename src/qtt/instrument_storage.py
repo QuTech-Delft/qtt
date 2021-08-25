@@ -1,17 +1,21 @@
 """ Functionality to store instrument data in a configuration file """
-import numpy as np
+import configparser
 import json
 import numbers
-import configparser
+
+import numpy as np
+
 import qtt.utilities.tools
+from qtt.utilities.tools import rdeprecated
 
 
+@rdeprecated(txt='This method will be removed in a future release', expire='Sep 1 2021')
 def save_instrument_configparser(instr, ifile, verbose=1):
     """ Save instrument configuration to configparser structure
 
     Args:
         instr (Instrument): instrument to apply settings to
-        ifile (str): configuration file    
+        ifile (str): configuration file
     """
     jdict = configparser.ConfigParser()
     jdict.read(ifile)
@@ -30,12 +34,13 @@ def save_instrument_configparser(instr, ifile, verbose=1):
         jdict.write(fid)
 
 
+@rdeprecated(txt='This method will be removed in a future release', expire='Sep 1 2021')
 def load_instrument_configparser(instr, ifile, verbose=1):
     """ Load instrument configuration from configparser structure
 
     Args:
         instr (Instrument): instrument to apply settings to
-        ifile (str): configuration file    
+        ifile (str): configuration file
     """
     jdict = configparser.ConfigParser()
     jdict.read(ifile)
@@ -65,6 +70,7 @@ save_instrument = save_instrument_configparser
 
 if __name__ == '__main__':
     import os
+
     from stationV2.tools import V2hardware
     v2hardware = V2hardware(name='v2hardware', server_name=None)
 
