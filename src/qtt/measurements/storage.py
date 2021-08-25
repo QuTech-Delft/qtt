@@ -20,7 +20,7 @@ except ImportError:
 # %%
 
 
-@rdeprecated(txt='Method will be removed in a future version', expire='Jan 1 2020')
+@rdeprecated(txt='Method will be removed in a future version', expire='Jun 1 2022')
 def list_states(verbose=1):
     """ List available states of the system
 
@@ -56,7 +56,7 @@ def _get_statefile(statefile=None):
     return statefile
 
 
-@rdeprecated(txt='Method will be removed in a future version', expire='Jan 1 2020')
+@rdeprecated(txt='Method will be removed in a future version', expire='Jun 1 2022')
 def load_state(tag=None, station=None, verbose=1, statefile=None):
     """ Load state of the system from disk
 
@@ -98,7 +98,7 @@ def load_state(tag=None, station=None, verbose=1, statefile=None):
     return obj, virtual_gates
 
 
-@rdeprecated(txt='Method will be removed in a future version', expire='Jan 1 2020')
+@rdeprecated(txt='Method will be removed in a future version', expire='Jun 1 2022')
 def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None, verbose=1, statefile=None):
     """ Save current state of the system to disk
 
