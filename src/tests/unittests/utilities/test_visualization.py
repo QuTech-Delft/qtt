@@ -18,6 +18,14 @@ class TestUtilities(unittest.TestCase):
         qtt.utilities.visualization.combine_legends([ax1, ax2], target_ax=ax2)
         plt.close(1)
 
+    def test_combine_legends_empty_input(self):
+        plt.figure(1)
+        plt.clf()
+        ax1 = plt.gca()
+        ax1.plot([1, 2], [3, 4], label='a')
+        qtt.utilities.visualization.combine_legends([], target_ax=ax1)
+        plt.close(1)
+
 
 class TestVerticalHorizontalLine(unittest.TestCase):
 

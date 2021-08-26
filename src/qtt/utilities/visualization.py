@@ -7,12 +7,12 @@ import numpy as np
 import qtt.algorithms.functions
 
 
-def combine_legends(axis_list: List[matplotlib.axes.Axes], target_ax: Optional[matplotlib.axes.Axes]):
+def combine_legends(axis_list: List[matplotlib.axes.Axes], target_ax: Optional[matplotlib.axes.Axes] = None):
     """ Combine legends of a list of matplotlib axis objects into a single legend
 
     Args:
         axis_list: List of matplotlib axis containing legends
-        target_ax: Axis to add the combined legend to
+        target_ax: Axis to add the combined legend to. If None, use the first axis from the `axis_list`
 
     Example:
         import matplotlib.pyplot as plt
@@ -29,15 +29,17 @@ def combine_legends(axis_list: List[matplotlib.axes.Axes], target_ax: Optional[m
     labels: List[Any] = []
     for ax in axis_list:
         lines1, labels1 = ax.get_legend_handles_labels()
-        lines = lines + lines1
-        labels = labels + labels1
+        lines.extend(lines1)
+        labels.extend(labels1)
         legend = ax.get_legend()
         if legend is not None:
             legend.remove()
 
     if target_ax is None:
-        target_ax = axis_list[0]
-    target_ax.legend(lines, labels)
+        target_ax = next(iter(axis_list), None)
+
+    if target_ax is not None:
+        target_ax.legend(lines, labels)
 
 
 def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None) -> Any:
