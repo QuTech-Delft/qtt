@@ -1,4 +1,7 @@
 language: python
+
+cache: pip
+
 matrix:
   include:
   - name: Minimal installation 3.8
