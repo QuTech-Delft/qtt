@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - Deprecated instrument adapters. Deprecated post-processing tools in qtt.measurements.post_processing (#777)
+- Deprecated functionality to store system states with h5py (#780)
 - Deprecated methods in qtt.instrument_storage (#783)
 
 ### Fixed

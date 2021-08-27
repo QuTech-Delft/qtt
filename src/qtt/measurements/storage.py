@@ -1,12 +1,14 @@
 # %%
-from datetime import datetime
-import os
-import h5py
 import logging
+import os
 import warnings
+from datetime import datetime
 
+import h5py
 import qcodes
+
 import qtt.instrument_drivers.virtual_gates
+from qtt.utilities.tools import rdeprecated
 
 try:
     import hickle
@@ -18,6 +20,7 @@ except ImportError:
 # %%
 
 
+@rdeprecated(txt='Method will be removed in a future version', expire='Jun 1 2022')
 def list_states(verbose=1):
     """ List available states of the system
 
@@ -53,6 +56,7 @@ def _get_statefile(statefile=None):
     return statefile
 
 
+@rdeprecated(txt='Method will be removed in a future version', expire='Jun 1 2022')
 def load_state(tag=None, station=None, verbose=1, statefile=None):
     """ Load state of the system from disk
 
@@ -94,6 +98,7 @@ def load_state(tag=None, station=None, verbose=1, statefile=None):
     return obj, virtual_gates
 
 
+@rdeprecated(txt='Method will be removed in a future version', expire='Jun 1 2022')
 def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None, verbose=1, statefile=None):
     """ Save current state of the system to disk
 
@@ -119,7 +124,7 @@ def save_state(station, tag=None, overwrite=False, virtual_gates=None, data=None
     snapshot = station.snapshot()
     gv = station.gates.allvalues()
 
-    date_string = "{:%Y%m%d-%H%M%S}".format(datetime.now())
+    date_string = f"{datetime.now():%Y%m%d-%H%M%S}"
 
     if verbose >= 2:
         print(date_string)
