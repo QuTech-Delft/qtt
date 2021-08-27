@@ -28,7 +28,7 @@ class AverageDecreaseTermination:
         """ Reset the data """
         self.values = []
 
-    def __call__(self, parameters, value) -> bool:
+    def __call__(self, nfev, parameters, value, update, accepted) -> bool:
         """
         Returns:
             True if the optimization loop should be aborted
