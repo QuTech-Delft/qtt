@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add measure_time context for measuring exection time (#765)
-
+- Add method to combine legends of multiple matplotlib axes (#782)
 ### Changed
 
 - Improve sine fitting (#762)
