@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add measure_time context for measuring exection time (#765)
-
+- Add method to combine legends of multiple matplotlib axes (#782)
 ### Changed
 
 - Improve sine fitting (#762)
@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - Deprecated instrument adapters. Deprecated post-processing tools in qtt.measurements.post_processing (#777)
+- Deprecated functionality to store system states with h5py (#780)
+- Deprecated methods in qtt.instrument_storage (#783)
+
 ### Fixed
 
 ## \[1.2.3] - 22-3-2021

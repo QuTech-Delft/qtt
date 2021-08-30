@@ -1,5 +1,6 @@
-from typing import Any, Optional, Union
+from typing import Any, List, Optional, Union
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
@@ -31,6 +32,41 @@ def create_axis(handle: Union[int, Axes, Figure, None]):
         return plt.gca()
     else:
         raise NotImplementedError('handle {handle} of type {type(handle)}  is not implemented')
+
+
+def combine_legends(axis_list: List[matplotlib.axes.Axes], target_ax: Optional[matplotlib.axes.Axes] = None):
+    """ Combine legends of a list of matplotlib axis objects into a single legend
+
+    Args:
+        axis_list: List of matplotlib axis containing legends
+        target_ax: Axis to add the combined legend to. If None, use the first axis from the `axis_list`
+
+    Example:
+        import matplotlib.pyplot as plt
+        ax1=plt.gca()
+        plt.plot([1,2,3], [.1,.2,.3], '.b', label='X')
+        plt.legend()
+        ax2=ax1.twinx()
+        ax2.plot([1,2,3], [1, 2, 3], '-r', label='miliX' )
+        plt.legend()
+        combine_legends([ax1, ax2])
+
+    """
+    lines: List[Any] = []
+    labels: List[Any] = []
+    for ax in axis_list:
+        lines1, labels1 = ax.get_legend_handles_labels()
+        lines.extend(lines1)
+        labels.extend(labels1)
+        legend = ax.get_legend()
+        if legend is not None:
+            legend.remove()
+
+    if target_ax is None:
+        target_ax = next(iter(axis_list), None)
+
+    if target_ax is not None:
+        target_ax.legend(lines, labels)
 
 
 def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None, ax: Optional[Axes] = None) -> Any:

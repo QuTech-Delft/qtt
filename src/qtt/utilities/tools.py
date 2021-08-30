@@ -5,8 +5,6 @@ import functools
 import importlib
 import inspect
 import logging
-from typing import Type, Optional, Tuple, Union
-import dateutil
 import os
 import pickle
 import platform
@@ -19,7 +17,9 @@ import warnings
 from collections import OrderedDict
 from functools import wraps
 from itertools import chain
+from typing import Optional, Tuple, Type, Union
 
+import dateutil
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,8 +31,8 @@ from qcodes.data.data_set import DataSet
 from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.pgeometry
-from qtt.pgeometry import (mkdirc,  # import for backwards compatibility
-                           mpl2clipboard, tilefigs)
+from qtt.pgeometry import mkdirc  # import for backwards compatibility
+from qtt.pgeometry import mpl2clipboard, tilefigs
 
 NotGitRepositoryError: Type[Exception]
 
@@ -65,30 +65,29 @@ except BaseException:
 # %%
 
 class measure_time():
-        """ Create context manager that measures execution time and prints to stdout """
+    """ Create context manager that measures execution time and prints to stdout """
 
-        def __init__(self, message: Optional[str] = 'dt: '):
-            self.message = message
+    def __init__(self, message: Optional[str] = 'dt: '):
+        self.message = message
 
-        def __enter__(self):
-            self.start_time = time.perf_counter()
-            return self
+    def __enter__(self):
+        self.start_time = time.perf_counter()
+        return self
 
-        @property
-        def delta_time(self) -> float:
-            """ Return time spend in the context
+    @property
+    def delta_time(self) -> float:
+        """ Return time spend in the context
 
-            Returns:
-                Time in seconds
-            """
-            return self.dt
+        Returns:
+            Time in seconds
+        """
+        return self.dt
 
-        def __exit__(self, exc_type, exc_value, exc_traceback):
-            self.dt = time.perf_counter() - self.start_time
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.dt = time.perf_counter() - self.start_time
 
-            if self.message is not None:
-                print(f'{self.message} {self.dt:.3f} [s]')
-
+        if self.message is not None:
+            print(f'{self.message} {self.dt:.3f} [s]')
 
 
 @contextlib.contextmanager
@@ -136,7 +135,7 @@ def get_module_versions(modules, verbose=0):
         except ModuleNotFoundError:
             module_versions[module] = 'none'
         if verbose:
-            print('module {0} {1}'.format(package, version))
+            print(f'module {package} {version}')
     return module_versions
 
 
@@ -173,7 +172,7 @@ def get_git_versions(repos, get_dirty_status=False, verbose=0):
             if get_dirty_status:
                 dirty_stats[repo] = 'none'
         if verbose:
-            print('{0}: {1}'.format(repo, heads[repo]))
+            print(f'{repo}: {heads[repo]}')
     return heads, dirty_stats
 
 
@@ -202,7 +201,7 @@ def code_version(repository_names=None, package_names=None, get_dirty_status=Fal
 
     """
     _default_git_versions = ['qcodes', 'qtt', 'projects', 'pycqed']
-    _default_module_versions = ['numpy', 'scipy', 'qupulse', 'h5py', 'skimage']
+    _default_module_versions = ['numpy', 'scipy', 'qupulse', 'skimage']
     if not repository_names:
         repository_names = _default_git_versions
     if not package_names:
@@ -238,7 +237,7 @@ def deprecated(func):
         except BaseException:
             lineno = -1
         warnings.warn_explicit(
-            "Call to deprecated function {}.".format(func.__name__),
+            f"Call to deprecated function {func.__name__}.",
             category=UserWarning,
             filename=filename,
             lineno=lineno,
@@ -291,7 +290,7 @@ def rdeprecated(txt=None, expire=None):
 
             if expire is not None:
                 if expired:
-                    raise Exception("Call to deprecated function {}.{}".format(func.__name__, etxt))
+                    raise Exception(f"Call to deprecated function {func.__name__}.{etxt}")
                 else:
                     warnings.warn_explicit(
                         "Call to deprecated function {} (will expire on {}).{}".format(
@@ -302,7 +301,7 @@ def rdeprecated(txt=None, expire=None):
                     )
             else:
                 warnings.warn_explicit(
-                    "Call to deprecated function {}.{}".format(func.__name__, etxt),
+                    f"Call to deprecated function {func.__name__}.{etxt}",
                     category=UserWarning,
                     filename=filename,
                     lineno=lineno,
@@ -557,7 +556,6 @@ def scanTime(dd):
     return w
 
 
-
 # %%
 
 def showImage(im, extent=None, fig=None, title=None):
@@ -580,7 +578,6 @@ def showImage(im, extent=None, fig=None, title=None):
                 plt.gca().invert_xaxis()
         if title is not None:
             plt.title(title)
-
 
 
 # %% Tools from pgeometry
@@ -716,8 +713,8 @@ def set_ppt_slide_background(slide, color, verbose=0):
     ppt_color = _convert_rgb_color_to_integer(color)
     if verbose > 1:
         print('Setting PPT slide background color:')
-        print(' - Current color: {0}'.format(_covert_integer_to_rgb_color(fore_color.RGB)))
-        print(' - Setting to {0} -> {1}'.format(color, ppt_color))
+        print(f' - Current color: {_covert_integer_to_rgb_color(fore_color.RGB)}')
+        print(f' - Setting to {color} -> {ppt_color}')
 
     slide.FollowMasterBackground = 0
     fore_color.RGB = ppt_color
@@ -765,9 +762,9 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
     return left, top, width, height
 
 
-def create_figure_ppt_callback(fig : Optional[int] = None, title : Optional[str] = None,
-                       notes : Optional[Union[str, DataSet]]=None,
-                       position : Tuple[float, float, float, float] = (0.9, 0.925, 0.075, 0.05)) -> None:
+def create_figure_ppt_callback(fig: Optional[int] = None, title: Optional[str] = None,
+                               notes: Optional[Union[str, DataSet]] = None,
+                               position: Tuple[float, float, float, float] = (0.9, 0.925, 0.075, 0.05)) -> None:
     """ Create a button on a matplotlib figure to copy data to PowerPoint slide.
 
     The figure is copied to PowerPoint using @ref addPPTslide.
@@ -924,7 +921,8 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        from qtt.measurements.videomode import VideoMode  # import here, to prevent default imports of gui code
+        from qtt.measurements.videomode import \
+            VideoMode  # import here, to prevent default imports of gui code
 
         if fig is not None:
             fname = tempfile.mktemp(prefix='qcodesimageitem', suffix='.png')
@@ -971,7 +969,7 @@ try:
                     raise TypeError('figure is of an unknown type %s' % (type(fig),))
             top = 120
 
-            left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=verbose>=2)
+            left, top, width, height = _ppt_determine_image_position(ppt, figsize, fname, verbose=verbose >= 2)
 
             if verbose >= 2:
                 print('fname %s' % fname)
@@ -1155,7 +1153,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         gate_values = dataset.metadata.get('allgatevalues', None)
 
         if gate_values is not None:
-            gate_values = dict([(key, np.around(value, 3)) for key, value in gate_values.items()])
+            gate_values = {key: np.around(value, 3) for key, value in gate_values.items()}
             header += '\ngates: ' + str(gate_values) + '\n'
 
     scanjob = dataset.metadata.get('scanjob', None)
@@ -1229,7 +1227,6 @@ def updatePlotTitle(qplot, basetxt='Live plot'):
     qplot.win.setWindowTitle(txt)
 
 
-
 # %%
 
 
@@ -1281,7 +1278,7 @@ def smoothFourierFilter(fs=100, thr=6, omega=2, fig=None):
     >>> F=smoothFourierFilter([24,24], thr=6, omega=2)
     >>> _=plt.figure(10); plt.clf(); _=plt.imshow(F, interpolation='nearest')
     """
-    rr = np.meshgrid(*[range(f) for f in fs])
+    rr = np.meshgrid(*(range(f) for f in fs))
 
     x = np.dstack(rr)
     x = x - (np.array(fs) / 2 - .5)
