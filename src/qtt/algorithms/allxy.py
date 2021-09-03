@@ -91,13 +91,13 @@ def fit_allxy(dataset: DataSet, initial_parameters: Optional[np.ndarray] = None)
     return analysis_results
 
 
-def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: Union[int, Axes] = 1, plot_initial_estimate: bool = False):
+def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: Union[int, Axes, None] = 1, plot_initial_estimate: bool = False):
     """ Plot the results of an AllXY fit
 
     Args:
         dataset: Dataset containing the measurement data
         result: Fitting result of fit_allxy
-        int: Figure handle
+        fig: Figure or axis handle. Is passed on to `get_axis`
         plot_initial_guess: If True, then plot the initial estimate of the model
     """
     allxy_data = _default_measurement_array(dataset)

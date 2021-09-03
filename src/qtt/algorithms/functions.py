@@ -12,7 +12,7 @@ from matplotlib.axes import Axes
 import qtt.pgeometry
 import qtt.utilities.tools
 from qtt.algorithms.generic import subpixelmax
-from qtt.utilities.visualization import create_axis, plot_vertical_line
+from qtt.utilities.visualization import get_axis, plot_vertical_line
 
 
 def gaussian(x, mean, std, amplitude=1, offset=0):
@@ -394,19 +394,20 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
     return result_dict['fitted_parameters'], result_dict
 
 
-def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig: Union[int, Axes]):
+def plot_gauss_ramsey_fit(x_data, y_data, fit_parameters, fig: Union[int, Axes, None]):
     """ Plot Gauss Ramsey fit
 
     Args:
         x_data: Input array with time variable (in seconds)
         y_data: Input array with signal
         fit_parameters: Result of fit_gauss_ramsey (fitting units in seconds)
+        fig: Figure or axis handle. Is passed to `get_axis`
     """
     test_x = np.linspace(0, np.max(x_data), 200)
     freq_fit = abs(fit_parameters[2] * 1e-6)
     t2star_fit = fit_parameters[1] * 1e6
 
-    ax = create_axis(fig)
+    ax = get_axis(fig)
     ax.plot(x_data * 1e6, y_data, 'o', label='Data')
     ax.plot(test_x * 1e6, gauss_ramsey(test_x, fit_parameters), label='Fit')
     ax.set_title(r'Gauss Ramsey fit: %.2f MHz / $T_2^*$: %.1f $\mu$s' % (freq_fit, t2star_fit))

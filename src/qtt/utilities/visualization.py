@@ -9,13 +9,14 @@ from matplotlib.figure import Figure
 import qtt.algorithms.functions
 
 
-def create_axis(handle: Union[int, Axes, Figure, None]):
-    """ Create matplotlib axis object
+def get_axis(handle: Union[int, Axes, Figure, None]) -> Axes:
+    """ Create or return matplotlib axis object
 
     Args:
         handle: Specification of how to obtain the axis object. For an integer, generate a new figure.
             For an Axis object, return the handle.
             For a Figure, return the default axis of the figure.
+            For None, use the matplotlib current axis.
     Returns:
         Axis object
     """
@@ -69,7 +70,8 @@ def combine_legends(axis_list: List[matplotlib.axes.Axes], target_ax: Optional[m
         target_ax.legend(lines, labels)
 
 
-def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None, ax: Optional[Axes] = None) -> Any:
+def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None,
+                         ax: Optional[Axes] = None) -> Any:
     """ Plot vertical alignment line
 
     Args:
