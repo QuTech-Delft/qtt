@@ -7,7 +7,7 @@ from qcodes.data.data_array import DataArray
 from qcodes.data.data_set import DataSet
 
 from qtt.algorithms.fitting import extract_lmfit_parameters
-from qtt.utilities.visualization import create_axis, plot_vertical_line
+from qtt.utilities.visualization import get_axis, plot_vertical_line
 
 
 def generate_allxy_combinations() -> List[Any]:
@@ -104,7 +104,7 @@ def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: Union[int, Axes, N
     xy_pairs = generate_allxy_combinations()
     x_data = np.arange(21)
 
-    ax = create_axis(fig)
+    ax = get_axis(fig)
     fitted_parameters = result['fitted_parameters']
     xfine = np.arange(0, 21, 1e-3)
     ax.plot(xfine, allxy_model(xfine, *fitted_parameters), 'm', label='fitted allxy', alpha=.5)
