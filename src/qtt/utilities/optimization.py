@@ -5,6 +5,7 @@ from typing import Any, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 
 
 class AverageDecreaseTermination:
@@ -12,7 +13,8 @@ class AverageDecreaseTermination:
     def __init__(self, N: int, tolerance:  float = 0):
         """ Callback to terminate optimization based the average decrease
 
-        The average decrease over the last N data points is compared to the specified tolerance
+        The average decrease over the last N data points is compared to the specified tolerance.
+        The average decrease is determined by a linear fit (least squares) to the data.
 
         Args:
             N: Number of data points to use
@@ -30,6 +32,8 @@ class AverageDecreaseTermination:
 
     def __call__(self, nfev, parameters, value, update, accepted) -> bool:
         """
+        Args:
+
         Returns:
             True if the optimization loop should be aborted
         """
@@ -40,7 +44,7 @@ class AverageDecreaseTermination:
             pp = np.polyfit(range(self.N), last_values, 1)
             slope = pp[0] / self.N
 
-            self.logger.debug(f'AverageDecreaseTermination: slope {slope}, tolerance {self.tolerance}')
+            self.logger.debug(f'AverageDecreaseTermination(N={self.N}): slope {slope}, tolerance {self.tolerance}')
             if slope > self.tolerance:
                 self.logger.info(
                     f'AverageDecreaseTermination(N={self.N}): terminating with slope {slope}, tolerance {self.tolerance}')
@@ -55,17 +59,13 @@ class OptimizerCallback:
     def __init__(self, show_progress=False, store_data=True):
         """ Class to collect data of optimization procedures
 
-        The class contains methods that can be used as callbacks is several well-known packages.
+        The class contains methods that can be used as callbacks on several well-known optimization packages.
         """
         self.show_progress = show_progress
         self.store_data = store_data
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.clear()
-
-    def decorate(self, *args):
-        """  Decorate an objective function """
-        raise NotImplementedError('')
 
     @property
     def data(self) -> pd.DataFrame:
@@ -92,19 +92,19 @@ class OptimizerCallback:
         return len(self.data)
 
     def optimization_time(self) -> float:
-        """ Return time difference between the first and the last invocation of the callback"
+        """ Return time difference between the first and the last invocation of the callback
 
         Returns:
             Time in seconds
         """
-        if len(self.data) > 1:
+        if len(self.data) > 0:
             delta_t = self.data.iloc[-1]['timestamp']-self.data.iloc[0]['timestamp']
             dt = delta_t.total_seconds()
         else:
             dt = 0
         return dt
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Optional[Axes] = None, **kwargs):
         """ Plot optimization results """
         if ax is None:
             ax = plt.gca()
@@ -114,7 +114,14 @@ class OptimizerCallback:
         ax.set_title(f'Optimization total time {dt:.2f} [s]')
 
     def data_callback(self, iteration: int, parameters: Any, residual: float):
-        """ Callback used to store data """
+        """ Callback used to store data
+
+        Args:
+            iteration: Iteration on the optimization procedure
+            parameters: Current values of the parameters to be optimized
+            residual: Current resisual (value of the objective function)
+
+        """
         if self.store_data:
             self.logger.info('data_callback: {iteration} {parameters} {residual}')
             self.parameters.append(parameters)
@@ -131,9 +138,9 @@ class OptimizerCallback:
 
     def lmfit_callback(self, parameters, iteration, residual, *args, **kws):
         """ Callback method for lmfit optimizers """
+        residual = np.linalg.norm(residual)
         if self.show_progress:
             print(f'#{iteration}, {parameters}, {residual}')
-        residual = np.linalg.norm(residual)
         self.data_callback(iteration, parameters, residual)
 
     def scipy_callback(self, parameters):
