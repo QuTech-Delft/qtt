@@ -3,8 +3,36 @@ from typing import Any, List, Optional, Union
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 import qtt.algorithms.functions
+
+
+def get_axis(handle: Union[int, Axes, Figure, None]) -> Axes:
+    """ Create or return matplotlib axis object
+
+    Args:
+        handle: Specification of how to obtain the axis object. For an integer, generate a new figure.
+            For an Axis object, return the handle.
+            For a Figure, return the default axis of the figure.
+            For None, use the matplotlib current axis.
+    Returns:
+        Axis object
+    """
+    if handle is None:
+        return plt.gca()
+    elif isinstance(handle, Axes):
+        return handle
+    elif isinstance(handle, int):
+        plt.figure(handle)
+        plt.clf()
+        return plt.gca()
+    elif isinstance(handle, Figure):
+        plt.figure(handle)
+        return plt.gca()
+    else:
+        raise NotImplementedError('handle {handle} of type {type(handle)}  is not implemented')
 
 
 def combine_legends(axis_list: List[matplotlib.axes.Axes], target_ax: Optional[matplotlib.axes.Axes] = None):
@@ -42,7 +70,8 @@ def combine_legends(axis_list: List[matplotlib.axes.Axes], target_ax: Optional[m
         target_ax.legend(lines, labels)
 
 
-def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None) -> Any:
+def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None,
+                         ax: Optional[Axes] = None) -> Any:
     """ Plot vertical alignment line
 
     Args:
@@ -50,17 +79,21 @@ def plot_horizontal_line(x: float, color: str = 'c', alpha: float = .5, label: O
         color: Color specification of the line
         alpha: Value to use for the transparency of the line
         label: Label for the line
-    Return:
+        ax: Matplotlib axis handle to plot to. If None, select the default handle
+
+    Returns:
         Handle to the plotted line
     """
-    vline = plt.axhline(x, label=label)
+    if ax is None:
+        ax = plt.gca()
+    vline = ax.axhline(x, label=label)
     vline.set_alpha(alpha)
     vline.set_color(color)
     vline.set_linestyle('--')
     return vline
 
 
-def plot_vertical_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None) -> Any:
+def plot_vertical_line(x: float, color: str = 'c', alpha: float = .5, label: Optional[str] = None, ax: Optional[Axes] = None) -> Any:
     """ Plot vertical alignment line
 
     Args:
@@ -68,11 +101,15 @@ def plot_vertical_line(x: float, color: str = 'c', alpha: float = .5, label: Opt
         color: Color specification of the line
         alpha: Value to use for the transparency of the line
         label: Label for the line
-    Return:
+        ax: Matplotlib axis handle to plot to. If None, select the default handle
+
+    Returns:
         Handle to the plotted line
 
     """
-    vline = plt.axvline(x, label=label)
+    if ax is None:
+        ax = plt.gca()
+    vline = ax.axvline(x, label=label)
     vline.set_alpha(alpha)
     vline.set_color(color)
     vline.set_linestyle('--')

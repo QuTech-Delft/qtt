@@ -1,12 +1,14 @@
-from typing import Dict, Any, List, Union, Optional
-import numpy as np
-import matplotlib.pyplot as plt
-from lmfit import Model
+from typing import Any, Dict, List, Optional, Union
 
-from qcodes.data.data_set import DataSet
+import numpy as np
+from lmfit import Model
+from matplotlib.axes import Axes
 from qcodes.data.data_array import DataArray
-from qtt.utilities.visualization import plot_vertical_line
+from qcodes.data.data_set import DataSet
+
 from qtt.algorithms.fitting import extract_lmfit_parameters
+from qtt.utilities.visualization import get_axis, plot_vertical_line
+
 
 def generate_allxy_combinations() -> List[Any]:
     """ Generate all combinations of the AllXY sequence from Reed 2013 """
@@ -89,42 +91,43 @@ def fit_allxy(dataset: DataSet, initial_parameters: Optional[np.ndarray] = None)
     return analysis_results
 
 
-def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: int = 1, plot_initial_estimate: bool = False):
+def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: Union[int, Axes, None] = 1, plot_initial_estimate: bool = False):
     """ Plot the results of an AllXY fit
 
     Args:
         dataset: Dataset containing the measurement data
         result: Fitting result of fit_allxy
-        int: Figure handle
+        fig: Figure or axis handle. Is passed on to `get_axis`
         plot_initial_guess: If True, then plot the initial estimate of the model
     """
     allxy_data = _default_measurement_array(dataset)
     xy_pairs = generate_allxy_combinations()
     x_data = np.arange(21)
 
-    plt.figure(fig)
-    plt.clf()
+    ax = get_axis(fig)
     fitted_parameters = result['fitted_parameters']
     xfine = np.arange(0, 21, 1e-3)
-    plt.plot(xfine, allxy_model(xfine, *fitted_parameters), 'm', label='fitted allxy', alpha=.5)
+    ax.plot(xfine, allxy_model(xfine, *fitted_parameters), 'm', label='fitted allxy', alpha=.5)
 
-    plt.plot(x_data, allxy_data, '.b', label='allxy data')
+    ax.plot(x_data, allxy_data, '.b', label='allxy data')
 
     if plot_initial_estimate:
         p = [0, 0, .5, 0, 1, 0]
-        plt.plot(xfine, allxy_model(xfine, *p), 'c', label='baseline', alpha=.5)
+        ax.plot(xfine, allxy_model(xfine, *p), 'c', label='baseline', alpha=.5)
 
         initial_params = _estimate_allxy_parameters(allxy_data)
-        plt.plot(xfine, allxy_model(xfine, *initial_params), 'g', label='initial estimate', alpha=.35)
+        ax.plot(xfine, allxy_model(xfine, *initial_params), 'g', label='initial estimate', alpha=.35)
 
         initial_parameters = result['initial_parameters']
-        plt.plot(xfine, allxy_model(xfine, *initial_parameters), ':g', label='initial estimate', alpha=.35)
+        ax.plot(xfine, allxy_model(xfine, *initial_parameters), ':g', label='initial estimate', alpha=.35)
 
-    plt.xticks(x_data, [v[0] + "," + v[1] for v in xy_pairs], rotation='vertical')
+    ax.set_xticks(x_data)
+    ax.set_xticklabels([v[0] + "," + v[1] for v in xy_pairs], rotation='vertical')
+
     vl = plot_vertical_line(4.5)
     vl.set_linestyle(':')
     vl = plot_vertical_line(16.5)
     vl.set_linestyle(':')
-    plt.title('AllXY')
+    ax.set_title('AllXY')
 
-    plt.legend()
+    ax.legend()
