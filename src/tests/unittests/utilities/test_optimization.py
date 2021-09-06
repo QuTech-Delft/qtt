@@ -46,3 +46,7 @@ class TestOptimizationUtilities(unittest.TestCase):
         tc = AverageDecreaseTermination(4)
         results = [tc(0, None, value, None, None) for value in [4, 3, 2, 1, .1, 0, 0, 0, 0, 0.01, 0]]
         self.assertEqual(results, [False, False, False, False, False, False, False, False, False, True, True])
+
+        tc = AverageDecreaseTermination(4, tolerance=1.)
+        results = [tc(0, None, value, None, None) for value in [4, 3, 2, 1, .1, 0, 0, 0, 0, 0.01, 1., 20.]]
+        self.assertEqual(results, [False, False, False, False, False, False, False, False, False, False, False, True])

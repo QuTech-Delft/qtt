@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
