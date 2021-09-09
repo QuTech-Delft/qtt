@@ -16,6 +16,8 @@ class AverageDecreaseTermination:
         The average decrease over the last N data points is compared to the specified tolerance.
         The average decrease is determined by a linear fit (least squares) to the data.
 
+        This class can be used as an argument to the Qiskit SPSA optimizer.
+
         Args:
             N: Number of data points to use
             tolerance: Abort if the average decrease is smaller than the specified tolerance
@@ -26,21 +28,36 @@ class AverageDecreaseTermination:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.reset()
 
+    @property
+    def parameters(self):
+        return self._parameters
+
+    @property
+    def values(self):
+        return self._values
+
     def reset(self):
         """ Reset the data """
-        self.values = []
+        self._values = []
+        self._parameters = []
 
     def __call__(self, nfev, parameters, value, update, accepted) -> bool:
         """
         Args:
+            nfev: Number of evaluations
+            parameters: Current parameters in the optimization
+            value: Value of the objective function
+            update: Update step
+            accepted: Whether the update was accepted
 
         Returns:
             True if the optimization loop should be aborted
         """
-        self.values.append(value)
+        self._values.append(value)
+        self._parameters.append(parameters)
 
-        if len(self.values) > self.N:
-            last_values = self.values[-self.N:]
+        if len(self._values) > self.N:
+            last_values = self._values[-self.N:]
             pp = np.polyfit(range(self.N), last_values, 1)
             slope = pp[0] / self.N
 
@@ -64,7 +81,6 @@ class OptimizerCallback:
         self.show_progress = show_progress
         self.store_data = store_data
         self.logger = logging.getLogger(self.__class__.__name__)
-
         self.clear()
 
     @property
@@ -83,13 +99,14 @@ class OptimizerCallback:
         """ Clear the data from this instance """
         self.parameters = []
         self._data = []
+        self._number_of_evaluations = 0
 
     def number_of_evaluations(self) -> int:
         """ Return the number of callback evaluations
 
         Note: this can differ from the number of objective evaluations
         """
-        return len(self.data)
+        return self._number_of_evaluations
 
     def optimization_time(self) -> float:
         """ Return time difference between the first and the last invocation of the callback
@@ -122,6 +139,7 @@ class OptimizerCallback:
             residual: Current resisual (value of the objective function)
 
         """
+        self._number_of_evaluations = self._number_of_evaluations + 1
         if self.store_data:
             self.logger.info('data_callback: {iteration} {parameters} {residual}')
             self.parameters.append(parameters)
