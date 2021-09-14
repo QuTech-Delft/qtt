@@ -228,9 +228,10 @@ class SequentialPass(TransformationPass):
         for creg in dag.cregs.values():
             new_dag.add_creg(creg)
         for node in dag.op_nodes():
+            new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
+            logger.info('SequentialPass: adding node {node.name}')
             if node.name in ['barrier', 'measure']:
                 continue
-            new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
             new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
         return new_dag
@@ -277,16 +278,19 @@ class LinearTopologyParallelPass(TransformationPass):
             if len(even) > 0:
                 for node in even:
                     new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
-                new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+                if not isinstance(node.op, Barrier):
+                    new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
             if len(odd) > 0:
                 for node in odd:
                     new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
-                new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+                if not isinstance(node.op, Barrier):
+                    new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
             for node in gates_2q:
                 new_dag.apply_operation_back(node.op, node.qargs, node.cargs)
-                new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
+                if not isinstance(node.op, Barrier):
+                    new_dag.apply_operation_back(Barrier(new_dag.num_qubits()), list(new_dag.qubits), [])
 
             for node in other_gates:
                 new_dag.apply_operation_back(node.op, node.qargs, node.cargs)

@@ -6,8 +6,9 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import CZGate, HGate, RXGate, RYGate, RZGate
 
 from qtt.qiskit.passes import (DecomposeCX, DecomposeU, DelayPass,
+                               LinearTopologyParallelPass,
                                RemoveDiagonalGatesAfterInput,
-                               RemoveSmallRotations)
+                               RemoveSmallRotations, SequentialPass)
 
 
 class TestQiskitPasses(unittest.TestCase):
@@ -136,6 +137,36 @@ class TestQiskitPasses(unittest.TestCase):
 
         self.assertEqual(qc0, qcd)
         self.check_identical(qc0, qcd)
+
+    def test_SequentialPass(self):
+        qc = QuantumCircuit(2)
+        qc.p(np.pi, 0)
+        qc.x(1)
+
+        qc_target = QuantumCircuit(2)
+        qc_target.p(np.pi, 0)
+        qc_target.barrier()
+        qc_target.x(1)
+        qc_target.barrier()
+
+        qc_transpiled = SequentialPass()(qc)
+        self.check_identical(qc_transpiled, qc_target)
+
+    def test_LinearTopologyParallelPass(self):
+        qc = QuantumCircuit(3)
+        qc.h(0)
+        qc.x(1)
+        qc.x(2)
+
+        qc_target = QuantumCircuit(3)
+        qc_target.h(0)
+        qc_target.x(2)
+        qc_target.barrier()
+        qc_target.x(1)
+        qc_target.barrier()
+
+        qc_transpiled = LinearTopologyParallelPass()(qc)
+        self.check_identical(qc_transpiled, qc_target)
 
 
 if __name__ == '__main__':
