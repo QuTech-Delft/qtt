@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/qtt/badge/?version=latest)](https://qtt.readthedocs.io/en/latest/?badge=latest)
+
 # Welcome
 
 Welcome to the QTT framework. This README will shortly introduce the framework, and it will guide you through the structure, installation process and how to contribute. We look forward to working with you!
