@@ -1,4 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/qtt/badge/?version=latest)](https://qtt.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/qtt.svg)](https://badge.fury.io/py/qtt)
 
 # Welcome
 
