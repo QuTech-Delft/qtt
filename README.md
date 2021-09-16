@@ -1,3 +1,6 @@
+[![Documentation Status](https://readthedocs.org/projects/qtt/badge/?version=latest)](https://qtt.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/qtt.svg)](https://badge.fury.io/py/qtt)
+
 # Welcome
 
 Welcome to the QTT framework. This README will shortly introduce the framework, and it will guide you through the structure, installation process and how to contribute. We look forward to working with you!
