@@ -1,18 +1,19 @@
 """ Fitting of various models. """
 
-import warnings
-
 import operator
+import warnings
+from typing import Any, Dict, Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-from typing import Tuple, Dict, Any
-
 from lmfit.model import Model, ModelResult
-
 from qcodes.data.data_array import DataArray
+
 import qtt.pgeometry
-from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
+from qtt.algorithms.functions import (Fermi, FermiLinear,
+                                      estimate_dominant_frequency, gaussian,
+                                      linear_function, sine)
 
 
 def extract_lmfit_parameters(lmfit_model: Model, lmfit_result: ModelResult) -> Dict[str, Any]:
@@ -54,8 +55,8 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
 
-    data_left = y_data[:int((len(y_data) / 2))]
-    data_right = y_data[int((len(y_data) / 2)):]
+    data_left = y_data[:int(len(y_data) / 2)]
+    data_right = y_data[int(len(y_data) / 2):]
 
     amplitude_left = np.max(data_left)
     amplitude_right = np.max(data_right)
@@ -67,8 +68,8 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
         mean_left = minsignal + (alpha) * (maxsignal - minsignal)
         mean_right = minsignal + (1 - alpha) * (maxsignal - minsignal)
     else:
-        x_data_left = x_data[:int((len(y_data) / 2))]
-        x_data_right = x_data[int((len(y_data) / 2)):]
+        x_data_left = x_data[:int(len(y_data) / 2)]
+        x_data_right = x_data[int(len(y_data) / 2):]
 
         data_integral_left = _integral(x_data_left, data_left)
         data_integral_right = _integral(x_data_right, data_right)
@@ -248,10 +249,11 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
             y = gaussian(x, mean, sigma, amplitude)
             return y
 
+    lmfit_method = 'least_squares'
     lmfit_model = Model(gaussian_model)
     lmfit_model.set_param_hint('amplitude', min=0)
     lmfit_result = lmfit_model.fit(
-        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
+        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose, lmfit_method=lmfit_method)
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['parameters fitted gaussian'] = result_dict['fitted_parameters']
