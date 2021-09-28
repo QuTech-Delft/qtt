@@ -83,7 +83,7 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     return initial_params
 
 
-def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
+def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=1, initial_params=None):
     """ Fitting of double gaussian
 
     Fitting the Gaussians and finding the split between the up and the down state,
@@ -125,6 +125,7 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
         double_gauss = gauss_dn + gauss_up
         return double_gauss
 
+    lmfit_method = 'least_squares'
     double_gaussian_model = Model(_double_gaussian)
     delta_x = x_data.max() - x_data.min()
     bounds = [x_data.min() - .1 * delta_x, x_data.max() + .1 * delta_x]
@@ -134,7 +135,8 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     double_gaussian_model.set_param_hint('A_dn', min=0)
 
     param_names = double_gaussian_model.param_names
-    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=False)
+    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=False,
+                                       method=lmfit_method)
 
     par_fit = np.array([result.best_values[p] for p in param_names])
 
@@ -256,8 +258,8 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
     lmfit_method = 'least_squares'
     lmfit_model = Model(gaussian_model)
     lmfit_model.set_param_hint('amplitude', min=0)
-    lmfit_result = lmfit_model.fit(
-        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose, method=lmfit_method)
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)),
+                                   verbose=verbose, method=lmfit_method)
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['parameters fitted gaussian'] = result_dict['fitted_parameters']
