@@ -92,8 +92,8 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     Args:
         x_data (array): x values of the data
         y_data (array): y values of the data
-        maxiter (int): maximum number of iterations to perform
-        maxfun (int): maximum number of function evaluations to make
+        maxiter (int): Legacy argument, not used any more
+        maxfun (int): Legacy argument, not used any more
         verbose (int): set to >0 to print convergence messages
         initial_params (None or array): optional, initial guess for the fit parameters:
             [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
@@ -110,6 +110,10 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
             left (array), right (array): Parameters of the left and right fitted Gaussian
 
     """
+    if maxiter is not None:
+        warnings.warn('argument maxiter is not used any more')
+    if maxfun is not None:
+        warnings.warn('argument maxfun is not used any more')
 
     if initial_params is None:
         initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
