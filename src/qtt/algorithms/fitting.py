@@ -217,6 +217,9 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
                  estimate_offset=True):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
 
+    The final optimization of the fit is performed with `lmfit <https://lmfit.github.io/lmfit-py/>`
+    using the `least_squares` method.
+
     Args:
         x_data (array): x values of the data
         y_data (array): y values of the data
