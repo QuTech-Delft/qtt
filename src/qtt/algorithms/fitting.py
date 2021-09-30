@@ -1,18 +1,19 @@
 """ Fitting of various models. """
 
-import warnings
-
 import operator
+import warnings
+from typing import Any, Dict, Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-from typing import Tuple, Dict, Any
-
 from lmfit.model import Model, ModelResult
-
 from qcodes.data.data_array import DataArray
+
 import qtt.pgeometry
-from qtt.algorithms.functions import Fermi, FermiLinear, linear_function, gaussian, sine, estimate_dominant_frequency
+from qtt.algorithms.functions import (Fermi, FermiLinear,
+                                      estimate_dominant_frequency, gaussian,
+                                      linear_function, sine)
 
 
 def extract_lmfit_parameters(lmfit_model: Model, lmfit_result: ModelResult) -> Dict[str, Any]:
@@ -54,8 +55,8 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     maxsignal = np.percentile(x_data, 98)
     minsignal = np.percentile(x_data, 2)
 
-    data_left = y_data[:int((len(y_data) / 2))]
-    data_right = y_data[int((len(y_data) / 2)):]
+    data_left = y_data[:int(len(y_data) / 2)]
+    data_right = y_data[int(len(y_data) / 2):]
 
     amplitude_left = np.max(data_left)
     amplitude_right = np.max(data_right)
@@ -67,8 +68,8 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
         mean_left = minsignal + (alpha) * (maxsignal - minsignal)
         mean_right = minsignal + (1 - alpha) * (maxsignal - minsignal)
     else:
-        x_data_left = x_data[:int((len(y_data) / 2))]
-        x_data_right = x_data[int((len(y_data) / 2)):]
+        x_data_left = x_data[:int(len(y_data) / 2)]
+        x_data_right = x_data[int(len(y_data) / 2):]
 
         data_integral_left = _integral(x_data_left, data_left)
         data_integral_right = _integral(x_data_right, data_right)
@@ -82,7 +83,7 @@ def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     return initial_params
 
 
-def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
+def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=1, initial_params=None):
     """ Fitting of double gaussian
 
     Fitting the Gaussians and finding the split between the up and the down state,
@@ -91,8 +92,8 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     Args:
         x_data (array): x values of the data
         y_data (array): y values of the data
-        maxiter (int): maximum number of iterations to perform
-        maxfun (int): maximum number of function evaluations to make
+        maxiter (int): Legacy argument, not used any more
+        maxfun (int): Legacy argument, not used any more
         verbose (int): set to >0 to print convergence messages
         initial_params (None or array): optional, initial guess for the fit parameters:
             [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
@@ -109,6 +110,10 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
             left (array), right (array): Parameters of the left and right fitted Gaussian
 
     """
+    if maxiter is not None:
+        warnings.warn('argument maxiter is not used any more')
+    if maxfun is not None:
+        warnings.warn('argument maxfun is not used any more')
 
     if initial_params is None:
         initial_params = _estimate_double_gaussian_parameters(x_data, y_data)
@@ -120,6 +125,7 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
         double_gauss = gauss_dn + gauss_up
         return double_gauss
 
+    lmfit_method = 'least_squares'
     double_gaussian_model = Model(_double_gaussian)
     delta_x = x_data.max() - x_data.min()
     bounds = [x_data.min() - .1 * delta_x, x_data.max() + .1 * delta_x]
@@ -129,7 +135,8 @@ def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, in
     double_gaussian_model.set_param_hint('A_dn', min=0)
 
     param_names = double_gaussian_model.param_names
-    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=False)
+    result = double_gaussian_model.fit(y_data, x=x_data, **dict(zip(param_names, initial_params)), verbose=False,
+                                       method=lmfit_method)
 
     par_fit = np.array([result.best_values[p] for p in param_names])
 
@@ -210,6 +217,9 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
                  estimate_offset=True):
     """ Fitting of a gaussian, see function 'gaussian' for the model that is fitted
 
+    The final optimization of the fit is performed with `lmfit <https://lmfit.github.io/lmfit-py/>`
+    using the `least_squares` method.
+
     Args:
         x_data (array): x values of the data
         y_data (array): y values of the data
@@ -248,10 +258,11 @@ def fit_gaussian(x_data, y_data, maxiter=None, maxfun=None, verbose=0, initial_p
             y = gaussian(x, mean, sigma, amplitude)
             return y
 
+    lmfit_method = 'least_squares'
     lmfit_model = Model(gaussian_model)
     lmfit_model.set_param_hint('amplitude', min=0)
-    lmfit_result = lmfit_model.fit(
-        y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)), verbose=verbose)
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)),
+                                   verbose=verbose, method=lmfit_method)
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     result_dict['parameters fitted gaussian'] = result_dict['fitted_parameters']

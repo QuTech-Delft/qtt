@@ -1,12 +1,17 @@
 """ Test fitting of Fermi-Dirac distributions."""
 
 import unittest
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 import qtt
-from qtt.algorithms.functions import FermiLinear, linear_function, double_gaussian, gaussian, sine
-from qtt.algorithms.fitting import initFermiLinear, _estimate_fermi_model_center_amplitude, fitFermiLinear,\
-    fit_double_gaussian, refit_double_gaussian, fit_gaussian, fit_sine
+from qtt.algorithms.fitting import (_estimate_fermi_model_center_amplitude,
+                                    fit_double_gaussian, fit_gaussian,
+                                    fit_sine, fitFermiLinear, initFermiLinear,
+                                    refit_double_gaussian)
+from qtt.algorithms.functions import (FermiLinear, double_gaussian, gaussian,
+                                      linear_function, sine)
 
 
 class TestSineFitting(unittest.TestCase):
@@ -88,6 +93,27 @@ class TestGaussianFitting(unittest.TestCase):
         self.assertTrue(0.5 < s < 1.5)
         self.assertTrue(4.5 < amplitude < 5.5)
         self.assertAlmostEqual(offset, 0.1, places=0)
+
+    def test_fit_gaussian_regression(self):
+        x_data = np.array([-2.00000000e+07, -1.89473684e+07, -1.78947368e+07, -1.68421053e+07,
+                           -1.57894737e+07, -1.47368421e+07, -1.36842105e+07, -1.26315789e+07,
+                           -1.15789474e+07, -1.05263158e+07, -9.47368421e+06, -8.42105263e+06,
+                           -7.36842105e+06, -6.31578947e+06, -5.26315789e+06, -4.21052632e+06,
+                           -3.15789474e+06, -2.10526316e+06, -1.05263158e+06, -3.72529030e-09,
+                           1.05263158e+06,  2.10526316e+06,  3.15789474e+06,  4.21052632e+06,
+                           5.26315789e+06,  6.31578947e+06,  7.36842105e+06,  8.42105263e+06,
+                           9.47368421e+06,  1.05263158e+07,  1.15789474e+07,  1.26315789e+07,
+                           1.36842105e+07,  1.47368421e+07,  1.57894737e+07,  1.68421053e+07,
+                           1.78947368e+07,  1.89473684e+07,  2.00000000e+07])
+        y_data = np.array([0.275, 0.2475, 0.2425, 0.255, 0.24, 0.2925, 0.2275, 0.2275,
+                           0.2375, 0.27, 0.24, 0.2625, 0.235, 0.2675, 0.28, 0.27,
+                           0.26, 0.2025, 0.2725, 0.6775, 0.265, 0.26, 0.2275, 0.22,
+                           0.2325, 0.2375, 0.2525, 0.275, 0.285, 0.22, 0.245, 0.2175,
+                           0.2525, 0.2375, 0.2475, 0.2675, 0.2525, 0.2375, 0.21])
+        [mean, s, amplitude, offset], _ = fit_gaussian(x_data=x_data, y_data=y_data)
+        self.assertAlmostEqual(mean, -31006, places=-3)
+        self.assertAlmostEqual(amplitude+offset, 0.68, places=1)
+        self.assertAlmostEqual(offset, 0.25, places=1)
 
 
 class TestFermiFitting(unittest.TestCase):
