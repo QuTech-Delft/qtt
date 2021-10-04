@@ -133,7 +133,6 @@ class TestQiskitPasses(unittest.TestCase):
         qc0.x(1)
         qc0.delay(40, 2)
         qc0.delay(40, 2)
-        qcd = delay_pass(qc)
 
         self.assertEqual(qc0, qcd)
         self.check_identical(qc0, qcd)

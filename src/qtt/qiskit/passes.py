@@ -164,10 +164,10 @@ class DecomposeU(TransformationPass):
         """Run the Decompose pass on `dag`.
 
         Args:
-            dag: input dag.
+            dag: input DAG.
 
         Returns:
-            output dag where ``CX`` was expanded.
+            Output DAG where ``U`` gates have been decomposed.
         """
         # Walk through the DAG and expand each node if required
         for node in dag.op_nodes():
@@ -325,6 +325,17 @@ class DelayPass(TransformationPass):
         else:
             dag.apply_operation_back(Delay(duration), qargs, cargs)
 
+    @staticmethod
+    def _determine_delay_target_qubits(dag, layer):
+        """ Determine qubits in specified layer which require a delay gate """
+        partition = layer['partition']
+        lst = list(dag.qubits)
+        for el in partition:
+            for q in el:
+                if q in lst:
+                    lst.remove(q)
+        return lst
+
     def run(self, dag):
         new_dag = DAGCircuit()
 
@@ -347,12 +358,9 @@ class DelayPass(TransformationPass):
             partition = layer['partition']
             if len(partition) == 0:
                 continue
-            lst = list(dag.qubits)
+
+            lst = DelayPass._determine_delay_target_qubits(dag, layer)
             logger.info(f'layer: {layer_idx}: lst {lst}, durations {durations}')
-            for el in partition:
-                for q in el:
-                    if q in lst:
-                        lst.remove(q)
             for el in lst:
                 logger.info(f'apply_operation_back: {[el]}')
                 self.add_delay_to_dag(max_duration, new_dag, [el], [])
