@@ -13,7 +13,7 @@ from qiskit.circuit.library.standard_gates import (CU1Gate, RZZGate, SdgGate,
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.converters.circuit_to_dag import circuit_to_dag
 from qiskit.dagcircuit import DAGCircuit
-from qiskit.dagcircuit.dagnode import DAGInNode, DAGNode, DAGOpNode, DAGOutNode
+from qiskit.dagcircuit.dagnode import DAGInNode, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
 
 logger = logging.getLogger(__name__)
