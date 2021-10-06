@@ -26,6 +26,7 @@ install:
   - export QT_QPA_PLATFORM=offscreen
 script:
   - pip freeze
+  - python -c "import qiskit; print(qiskit); from qiskit.dagcircuit.dagnode import DAGInNode, DAGOpNode;"
   - pytest --version
   - xvfb-run -a coverage run --source="./src/qtt" --omit="./src/qtt/legacy.py","./src/qtt/measurements/ttrace.py" -m pytest
   - mypy src --ignore-missing-imports
