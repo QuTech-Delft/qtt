@@ -11,7 +11,20 @@ from qtt.qiskit.passes import (DecomposeCX, DecomposeU, DelayPass,
                                RemoveSmallRotations, SequentialPass)
 
 
+def circuit_instruction_names(qc):
+    return [i[0].name for i in qc]
+
+
 class TestQiskitPasses(unittest.TestCase):
+
+    def assert_circuit_equivalence(self, qc, qcd):
+        """ Raise exception if two circuits not equivalent """
+        I = qc.compose(qcd.inverse())
+        op = qi.Operator(I)
+
+        U = op.data/np.sqrt(complex(np.linalg.det(op.data)))
+        U *= U[0, 0]
+        np.testing.assert_almost_equal(U, np.eye(2**qc.num_qubits))
 
     def test_DecomposeCX(self):
         qc = QuantumCircuit(2)
@@ -20,20 +33,21 @@ class TestQiskitPasses(unittest.TestCase):
 
         qcd = DecomposeCX()(qc)
 
-        self.check_identical(qc, qcd)
+        self.assert_circuit_equivalence(qc, qcd)
         self.assertEqual(len(qcd), 4)
         self.assertIsInstance(list(qcd)[0][0], RYGate)
         self.assertIsInstance(list(qcd)[1][0], CZGate)
         self.assertIsInstance(list(qcd)[2][0], RYGate)
         self.assertIsInstance(list(qcd)[3][0], HGate)
 
-    def check_identical(self, qc, qcd):
-        I = qc.compose(qcd.inverse())
-        op = qi.Operator(I)
+    def test_DecomposeCXtwo(self):
+        qc = QuantumCircuit(3)
+        qc.cx(0, 1)
+        qc.cx(0, 2)
+        qcd = DecomposeCX()(qc)
 
-        U = op.data/np.sqrt(complex(np.linalg.det(op.data)))
-        U *= U[0, 0]
-        np.testing.assert_almost_equal(U, np.eye(2**qc.num_qubits))
+        self.assert_circuit_equivalence(qc, qcd)
+        self.assertTrue('cx' not in circuit_instruction_names(qcd))
 
     def test_RemoveDiagonalGatesAfterInput(self):
         c = QuantumCircuit(2)
@@ -61,18 +75,18 @@ class TestQiskitPasses(unittest.TestCase):
         remove_small_rotations = RemoveSmallRotations()
         qc = remove_small_rotations(c)
         self.assertEqual(len(qc), 0)
-        self.check_identical(qc, identity_circuit)
+        self.assert_circuit_equivalence(qc, identity_circuit)
 
     def test_RemoveSmallRotations_epsilon(self):
         remove_small_rotations = RemoveSmallRotations()
         c = QuantumCircuit(1)
         c.rz(1e-10, 0)
         qc = remove_small_rotations(c)
-        self.check_identical(qc, c)
+        self.assert_circuit_equivalence(qc, c)
 
         remove_small_rotations = RemoveSmallRotations(epsilon=1e-6)
         qc = remove_small_rotations(c)
-        self.check_identical(qc, QuantumCircuit(1))
+        self.assert_circuit_equivalence(qc, QuantumCircuit(1))
 
     def test_RemoveSmallRotations_modulo(self):
         c = QuantumCircuit(1)
@@ -80,11 +94,11 @@ class TestQiskitPasses(unittest.TestCase):
 
         remove_small_rotations = RemoveSmallRotations()
         qc = remove_small_rotations(c)
-        self.check_identical(qc, c)
+        self.assert_circuit_equivalence(qc, c)
 
         remove_small_rotations = RemoveSmallRotations(modulo2pi=True)
         qc = remove_small_rotations(c)
-        self.check_identical(qc, QuantumCircuit(1))
+        self.assert_circuit_equivalence(qc, QuantumCircuit(1))
 
     def test_DecomposeU(self, draw=False):
         decomposeU = DecomposeU()
@@ -92,19 +106,19 @@ class TestQiskitPasses(unittest.TestCase):
         qc = QuantumCircuit(1)
         qc.p(np.pi, 0)
         qcd = decomposeU(qc)
-        self.check_identical(qc, qcd)
+        self.assert_circuit_equivalence(qc, qcd)
 
         qc = QuantumCircuit(1)
         qc.u(np.pi/2, 0.1, 0., 0)
         qcd = decomposeU(qc)
-        self.check_identical(qc, qcd)
+        self.assert_circuit_equivalence(qc, qcd)
         self.assertEqual(len(qcd), 3)
         self.assertIsInstance(list(qcd)[1][0], RXGate)
 
         qc = QuantumCircuit(1)
         qc.u(0.1, 0.2, 0.3, 0)
         qcd = decomposeU(qc)
-        self.check_identical(qc, qcd)
+        self.assert_circuit_equivalence(qc, qcd)
         self.assertIsInstance(list(qcd)[0][0], RZGate)
         self.assertIsInstance(list(qcd)[1][0], RXGate)
         self.assertIsInstance(list(qcd)[2][0], RZGate)
@@ -135,7 +149,7 @@ class TestQiskitPasses(unittest.TestCase):
         qc0.delay(40, 2)
 
         self.assertEqual(qc0, qcd)
-        self.check_identical(qc0, qcd)
+        self.assert_circuit_equivalence(qc0, qcd)
 
     def test_SequentialPass(self):
         qc = QuantumCircuit(2)
@@ -149,7 +163,7 @@ class TestQiskitPasses(unittest.TestCase):
         qc_target.barrier()
 
         qc_transpiled = SequentialPass()(qc)
-        self.check_identical(qc_transpiled, qc_target)
+        self.assert_circuit_equivalence(qc_transpiled, qc_target)
 
     def test_LinearTopologyParallelPass(self):
         qc = QuantumCircuit(3)
@@ -165,7 +179,8 @@ class TestQiskitPasses(unittest.TestCase):
         qc_target.barrier()
 
         qc_transpiled = LinearTopologyParallelPass()(qc)
-        self.check_identical(qc_transpiled, qc_target)
+        self.assert_circuit_equivalence(qc_transpiled, qc_target)
+        self.assertEqual(circuit_instruction_names(qc_transpiled), circuit_instruction_names(qc_target))
 
 
 if __name__ == '__main__':
