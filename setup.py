@@ -38,14 +38,14 @@ install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'h5py<3.0', 'hickle', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
     'numdifftools', 'numpy>=1.15', 'opencv-python', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.23.0',
     'qcodes-contrib-drivers', 'qilib', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
-    'shapely', 'sympy'
+    'shapely', 'sympy', 'imageio'
 ] + tests_require
 
 if platform.system() == 'Windows':
     install_requires.append('pywin32')
 
 rtd_requires = [
-    'sphinx>=1.7', 'sphinx_rtd_theme', 'nbsphinx', 'sphinx-automodapi','sphinx_copybutton'
+    'sphinx>=1.7', 'sphinx_rtd_theme', 'nbsphinx', 'sphinx-automodapi', 'sphinx_copybutton'
 ]
 
 extras_require = {"rtd": rtd_requires}
