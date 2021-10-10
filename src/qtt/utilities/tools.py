@@ -749,11 +749,13 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
                 print(' image aspect ratio %.2f, slide aspect ratio %.2f' % (imratio, slideratio))
             if slideratio > imratio:
                 # wide slide, so make the image width smaller
-                print('adjust width %d->%d' % (width, height * imratio))
+                if verbose >= 2:
+                    print('adjust width %d->%d' % (width, height * imratio))
                 width = height * imratio
             else:
                 # wide image, so make the image height smaller
-                print('adjust height %d->%d' % (height, width / imratio))
+                if verbose >= 2:
+                    print('adjust height %d->%d' % (height, width / imratio))
                 height = int(width / imratio)
 
         if verbose:
