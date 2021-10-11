@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 """
 Created on Wed Feb  8 13:36:01 2017
 
-@author: diepencjv
+@author: diepencjv, eendebakpt
 """
 
 import logging
 import time
-# %%
 import warnings
 from functools import partial
+from typing import ContextManager
 
 import numpy as np
 from qcodes import Instrument
@@ -133,7 +132,7 @@ class VirtualDAC(Instrument):
         return IDN
 
     def get_all(self, verbose=0):
-        """ Returns all gate values. """
+        """ Gets all gate values. """
         for gate in sorted(self._gate_map.keys()):
             self.get(gate)
             if verbose:
@@ -179,8 +178,8 @@ class VirtualDAC(Instrument):
                            get_cmd=partial(self._get, gate=gate),
                            set_cmd=partial(self._set, gate=gate))
         self.add_function(
-            'get_{}'.format(gate), call_cmd=partial(self.get, param_name=gate))
-        self.add_function('set_{}'.format(gate), call_cmd=partial(
+            f'get_{gate}', call_cmd=partial(self.get, param_name=gate))
+        self.add_function(f'set_{gate}', call_cmd=partial(
             self._set_wrap, gate=gate), args=[Numbers()])
 
     def _remove_gates(self):
@@ -261,7 +260,7 @@ class VirtualDAC(Instrument):
         new_boundaries = {}
         for gate, bnds in gate_boundaries.items():
             new_boundaries[gate] = (
-            max(current_boundaries[gate][0], bnds[0]), min(current_boundaries[gate][1], bnds[1]))
+                max(current_boundaries[gate][0], bnds[0]), min(current_boundaries[gate][1], bnds[1]))
 
         self.set_boundaries(new_boundaries)
 
@@ -316,7 +315,7 @@ class VirtualDAC(Instrument):
     def set_overshoot(self, gate, value, extra_delay=0.02, overshoot=4):
         """ Set gate to a value with overshoot
 
-        This function can be used for gates with a slow RC value on the bias-T. 
+        This function can be used for gates with a slow RC value on the bias-T.
         The actual overshoot is determined by the rc_times in the object.
 
         Args:
@@ -405,6 +404,31 @@ class VirtualDAC(Instrument):
             dot.edge(str(g), str(ix))
 
         return dot
+
+    def restore_at_exit(self) -> ContextManager:
+        """ Create context that stores values of the parameters and restores on exit
+
+        Example:
+            >>> gate_map = {'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4)}
+            >>> ivvi = VirtualIVVI('ivvi', model=None)
+            >>> gates = VirtualDAC('gates', instruments=[ivvi], gate_map=gate_map)
+            >>>         with self.gates.restore_at_exit():
+                        gates.P1.increment(10)
+            >>> print(f"value after with block: {gates.P1()}")  # prints 0
+
+        """
+
+        class RestoreVirtualDACContext:
+            def __init__(self, gates):
+                self.virtual_dac = gates
+
+            def __enter__(self):
+                self.values = self.virtual_dac.allvalues()
+
+            def __exit__(self, type, value, traceback):
+                self.virtual_dac.resetgates(self.values, self.values, verbose=0)
+
+        return RestoreVirtualDACContext(self)
 
 
 virtual_IVVI = VirtualDAC

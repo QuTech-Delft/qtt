@@ -108,3 +108,20 @@ class TestVirtualDAC(TestCase):
         virtual_dac.close()
         ivvi1.close()
         ivvi2.close()
+
+    def test_restore_at_exit(self):
+        gates = self.gates
+        starting_value = self.gates.P1()
+
+        with self.gates.restore_at_exit():
+            gates.P1.increment(10)
+        self.assertEqual(gates.P1(), starting_value)
+
+    def test_restore_at_exit_with_exception(self):
+        gates = self.gates
+        starting_value = self.gates.P1()
+        with self.assertRaises(AttributeError):
+            with gates.restore_at_exit():
+                gates.P1.increment(10)
+                gates.non_existing_gate.increment(10)
+        self.assertEqual(gates.P1(), starting_value)
