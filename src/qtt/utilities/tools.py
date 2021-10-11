@@ -17,7 +17,7 @@ import warnings
 from collections import OrderedDict
 from functools import wraps
 from itertools import chain
-from typing import Any, Optional, Tuple, Type, Union
+from typing import Any, Dict, Optional, Tuple, Type, Union
 
 import dateutil
 import imageio
@@ -816,10 +816,12 @@ try:
             station = notes
             gates = getattr(station, 'gates', None)
             notes = reshape_metadata(station, printformat='s', add_scanjob=True)
-            if extranotes is not None:
-                notes = '\n' + extranotes + '\n' + notes
+            if extranotes is None:
+                pass
+            else:
+                notes = '\n' + extranotes + '\n' + notes  # type: ignore
             if gates is not None:
-                notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes
+                notes = 'gates: ' + str(gates.allvalues()) + '\n\n' + notes  # type: ignore
         elif isinstance(notes, DataSet):
             notes = reshape_metadata(notes, printformat='s', add_gates=True)
 
@@ -1103,16 +1105,18 @@ try:
         return ppt, slide
 
 except ImportError:
-    def addPPTslide(title=None, fig=None, txt=None, notes=None, figsize=None,
-                    subtitle=None, maintext=None, show=False, verbose=1,
-                    activate_slide=True, ppLayout=None, extranotes=None, background_color=None,
-                    maximum_notes_size: int = 10000):
+    def addPPTslide(title: Optional[str] = None, fig: Optional[Union[int, np.ndarray, plt.Figure, Any]] = None, txt: Optional[str] = None,
+                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Tuple[int, int] = None,
+                    subtitle: Optional[str] = None, maintext: Optional[str] = None, show: bool = False, verbose: int = 1,
+                    activate_slide: bool = True, ppLayout: int = None, extranotes: str = None, background_color: Optional[Tuple] = None,
+                    maximum_notes_size: int = 10000) -> Tuple[Any, Any]:
         """ Add slide to current active Powerpoint presentation.
 
         Dummy implementation.
         """
         warnings.warn(
             'addPPTslide is not available on your system. Install win32com from https://pypi.org/project/pypiwin32/.')
+        return None, None
 
     def addPPT_dataset(dataset, title=None, notes=None,
                        show=False, verbose=1, paramname='measured',
@@ -1128,7 +1132,7 @@ except ImportError:
 # %%
 
 
-def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, add_analysis_results=True, verbose=0):
+def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=True, add_analysis_results=True, verbose=0) -> str:
     """ Reshape the metadata of a DataSet.
 
     Args:
@@ -1140,13 +1144,13 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         verbose (int): verbosity (0 == silent).
 
     Returns:
-        str: the reshaped metadata.
+        The reshaped metadata.
 
     """
     if isinstance(dataset, qcodes.Station):
         station = dataset
         all_md = station.snapshot(update=False)['instruments']
-        header = None
+        header = ''
     else:
         tmp = dataset.metadata.get('station', None)
         if tmp is None:
@@ -1176,7 +1180,7 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         s = pprint.pformat(analysis_results)
         header += '\n\analysis_results: ' + str(s) + '\n'
 
-    metadata = {}
+    metadata: Dict[Any, Dict] = {}
     # make sure the gates instrument is in front
     all_md_keys = sorted(sorted(all_md), key=lambda x: x == 'gates', reverse=True)
     for x in all_md_keys:
@@ -1210,14 +1214,13 @@ def reshape_metadata(dataset, printformat='dict', add_scanjob=True, add_gates=Tr
         for k in metadata:
             if verbose:
                 print('--- %s' % k)
-            s = metadata[k]
+            element = metadata[k]
             ss += '\n## %s:\n' % k
-            for p in s:
-                pp = s[p]
+            for parameter in element:
+                pp = element[parameter]
                 if verbose:
-                    print('  --- %s: %s' % (p, pp.get('value', '??')))
-                ss += '%s: %s (%s)' % (pp['name'],
-                                       pp.get('value', '?'), pp.get('unit', ''))
+                    print('  --- %s: %s' % (parameter, pp.get('value', '??')))
+                ss += '%s: %s (%s)' % (pp['name'], pp.get('value', '?'), pp.get('unit', ''))
                 ss += '\n'
 
     if header is not None:
