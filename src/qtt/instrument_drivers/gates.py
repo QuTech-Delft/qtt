@@ -412,7 +412,7 @@ class VirtualDAC(Instrument):
             >>> gate_map = {'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4)}
             >>> ivvi = VirtualIVVI('ivvi', model=None)
             >>> gates = VirtualDAC('gates', instruments=[ivvi], gate_map=gate_map)
-            >>>         with self.gates.restore_values():
+            >>>         with self.gates.restore_at_exit():
                         gates.P1.increment(10)
             >>> print(f"value after with block: {gates.P1()}")  # prints 0
 
