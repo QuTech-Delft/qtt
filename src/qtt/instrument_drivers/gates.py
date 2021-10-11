@@ -1,14 +1,14 @@
 """
 Created on Wed Feb  8 13:36:01 2017
 
-@author: diepencjv
+@author: diepencjv, eendebakpt
 """
 
 import logging
 import time
-# %%
 import warnings
 from functools import partial
+from typing import ContextManager
 
 import numpy as np
 from qcodes import Instrument
@@ -405,8 +405,18 @@ class VirtualDAC(Instrument):
 
         return dot
 
-    def restore_values(self):
-        """ Create context that stores values of the parameters and restores on exit """
+    def restore_at_exit(self) -> ContextManager:
+        """ Create context that stores values of the parameters and restores on exit
+
+        Example:
+            >>> gate_map = {'T': (0, 15), 'P1': (0, 3), 'P2': (0, 4)}
+            >>> ivvi = VirtualIVVI('ivvi', model=None)
+            >>> gates = VirtualDAC('gates', instruments=[ivvi], gate_map=gate_map)
+            >>>         with self.gates.restore_values():
+                        gates.P1.increment(10)
+            >>> print(f"value after with block: {gates.P1()}")  # prints 0
+
+        """
 
         class RestoreVirtualDACContext:
             def __init__(self, gates):
