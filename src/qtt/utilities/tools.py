@@ -806,7 +806,7 @@ try:
     import win32com
     import win32com.client
 
-    def generate_powerpoint_notes(notes: Union[None, str, qcodes.Station, DataSet], extranotes: Optional[str], maximum_notes_size: int):
+    def generate_powerpoint_notes(notes: Optional[Union[str, qcodes.Station, DataSet]], extranotes: Optional[str], maximum_notes_size: int):
         """ Generate text to be added as notes to a PPT slide """
         if notes is None:
             warnings.warn(
@@ -829,12 +829,11 @@ try:
             warnings.warn(f'type of notes argument is {type(notes)}, converting to string')
             notes = str(notes)
 
-        if notes is not None:
-            if notes == '':
-                notes = ' '
-            if len(notes) > maximum_notes_size:
-                warnings.warn(f'notes for powerpoint are {len(notes)} characters, reducing to {maximum_notes_size}')
-                notes = notes[:maximum_notes_size]
+        if notes == '':
+            notes = ' '
+        if len(notes) > maximum_notes_size:
+            warnings.warn(f'notes for powerpoint are {len(notes)} characters, reducing to {maximum_notes_size}')
+            notes = notes[:maximum_notes_size]
         return notes
 
     def addPPTslide(title: Optional[str] = None, fig: Optional[Union[int, np.ndarray, plt.Figure, Any]] = None, txt: Optional[str] = None,
@@ -1003,7 +1002,6 @@ try:
             else:
                 if verbose:
                     raise TypeError('figure is of an unknown type %s' % (type(fig),))
-            slide_margin_top = 120
             slide_margin_left, slide_margin_top, width, height = _ppt_determine_image_position(
                 ppt, figsize, fname, verbose=verbose >= 2)
 
