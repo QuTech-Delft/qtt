@@ -42,7 +42,7 @@ class TestOptimizationUtilities(unittest.TestCase):
         oc.plot(logy=True)
         plt.close(100)
 
-    def test_AverageDecreaseTermination(self,):
+    def test_AverageDecreaseTermination(self):
         tc = AverageDecreaseTermination(4)
         results = [tc(0, None, value, None, None) for value in [4, 3, 2, 1, .1, 0, 0, 0, 0, 0.01, 0]]
         self.assertEqual(results, [False, False, False, False, False, False, False, False, False, True, True])
