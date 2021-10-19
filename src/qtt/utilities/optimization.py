@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Any, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -91,13 +91,22 @@ class OptimizerCallback:
 
         return df
 
+    @property
+    def parameters(self) -> List[Any]:
+        """ Returns list of parameters that have been used in evaluations
+
+        Returns:
+            The list of parameer
+        """
+        return self._parameters
+
     def _append(self, d: Tuple):
         """ Apppend a row of data """
         self._data.append(d)
 
     def clear(self):
         """ Clear the data from this instance """
-        self.parameters = []
+        self._parameters = []
         self._data = []
         self._number_of_evaluations = 0
 
@@ -142,10 +151,11 @@ class OptimizerCallback:
         self._number_of_evaluations = self._number_of_evaluations + 1
         if self.store_data:
             self.logger.info('data_callback: {iteration} {parameters} {residual}')
-            self.parameters.append(parameters)
 
             ts = datetime.datetime.now()  # .isoformat()
             d = (int(iteration), ts, float(residual))
+
+            self.parameters.append(parameters)
             self._append(d)
 
     def qiskit_callback(self, number_evaluations, parameters, value, stepsize, accepted):
@@ -166,5 +176,5 @@ class OptimizerCallback:
         number_evaluations = self.number_of_evaluations()
         value = np.NaN
         if self.show_progress:
-            print(f'#{number_evaluations}, {parameters}, {value}')
+            print(f'#{number_evaluations}, {parameters}')
         self.data_callback(number_evaluations, parameters, value)
