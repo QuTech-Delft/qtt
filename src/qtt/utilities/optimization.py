@@ -10,7 +10,7 @@ from matplotlib.axes import Axes
 
 class AverageDecreaseTermination:
 
-    def __init__(self, N: int, tolerance:  float = 0):
+    def __init__(self, N: int, tolerance: float = 0.):
         """ Callback to terminate optimization based the average decrease
 
         The average decrease over the last N data points is compared to the specified tolerance.
