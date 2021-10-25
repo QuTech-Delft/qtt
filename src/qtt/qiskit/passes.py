@@ -13,7 +13,6 @@ from qiskit.circuit.library.standard_gates import (CU1Gate, RZZGate, SdgGate,
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.converters.circuit_to_dag import circuit_to_dag
 from qiskit.dagcircuit import DAGCircuit
-from qiskit.dagcircuit.dagnode import DAGInNode, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
 
 logger = logging.getLogger(__name__)
@@ -95,17 +94,17 @@ class RemoveDiagonalGatesAfterInput(TransformationPass):
             except StopIteration:
                 continue
 
-            if isinstance(successor, DAGOpNode) and isinstance(successor.op, diagonal_1q_gates):
+            if successor.type == "op" and isinstance(successor.op, diagonal_1q_gates):
                 nodes_to_remove.add(successor)
 
             def valid_predecessor(s):
                 """ Return True of node is valid predecessor for removal """
-                if isinstance(s, DAGInNode):
+                if s.type == 'in':
                     return True
-                if isinstance(s, DAGOpNode) and isinstance(s.op, Reset):
+                if s.type == "op" and isinstance(s.op, Reset):
                     return True
                 return False
-            if isinstance(successor, DAGOpNode) and isinstance(successor.op, diagonal_2q_gates):
+            if successor.type == "op" and isinstance(successor.op, diagonal_2q_gates):
                 predecessors = dag.quantum_predecessors(successor)
                 if all(valid_predecessor(s) for s in predecessors):
                     nodes_to_remove.add(successor)
