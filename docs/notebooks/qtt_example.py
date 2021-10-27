@@ -47,7 +47,6 @@ model = station.model
 
 # %% Setup measurement windows
 
-
 mwindows = qtt.gui.live_plotting.setupMeasurementWindows(station, create_parameter_widget=False, qtplot_remote=False)
 pv = createParameterWidget([gates, ])
 
