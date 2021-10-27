@@ -169,8 +169,8 @@ def load_dataset(location, io=None, verbose=0):
     try:
         from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
         formatters += [HDF5FormatHickle()]
-    except ImportError:
-        logging.info('hickle not available')
+    except ImportError as ex:
+        logging.info(f'HDF5FormatHickle not available {ex}')
 
     from qcodes.data.hdf5_format import HDF5Format
     formatters += [HDF5Format()]
@@ -916,7 +916,6 @@ def _data_extension():
 
 def load_data(mfile: str):
     """ Load data from specified file """
-    # return hickle.load(mfile)
     ext = _data_extension()
     if ext is not None:
         if not mfile.endswith(ext):
