@@ -6,11 +6,13 @@ An event loop should be running for the GUI elements.
 @author: eendebakpt
 """
 
+# %% Load packages
+
 import tempfile
+import time
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
-# %% Load packages
 import numpy as np
 import pyqtgraph
 import qcodes
@@ -19,7 +21,6 @@ from qcodes.data.data_set import DataSet
 import qtt
 import qtt.measurements.videomode
 import qtt.simulation.virtual_dot_array
-from qtt import save_state
 from qtt.algorithms.gatesweep import analyseGateSweep
 from qtt.gui.parameterviewer import createParameterWidget
 from qtt.instrument_drivers.virtual_gates import VirtualGates
@@ -47,7 +48,7 @@ model = station.model
 # %% Setup measurement windows
 
 
-mwindows = qtt.gui.live_plotting.setupMeasurementWindows(station, create_parameter_widget=False)
+mwindows = qtt.gui.live_plotting.setupMeasurementWindows(station, create_parameter_widget=False, qtplot_remote=False)
 pv = createParameterWidget([gates, ])
 
 logviewer = qtt.gui.dataviewer.DataViewer()
@@ -63,13 +64,14 @@ snapshotdata = station.snapshot()
 param_left = station.model.bottomgates[0]
 param_right = station.model.bottomgates[-1]
 scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'end': 0,
-                                        'step': .8, 'wait_time': 3e-3}), 'minstrument': ['keithley3.amplitude']})
+                                        'step': .8, 'wait_time': 2.2e-3}), 'minstrument': ['keithley3.amplitude']})
 data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 
 
 # %% Print the scanned data
 
-print(data1d.default_parameter_name())
+print(data1d)
+print(f'default parameter name in dataset: {data1d.default_parameter_name()}')
 
 # %% Make a 2D scan
 start = -500
@@ -153,7 +155,8 @@ vm_virtual.updatebg()
 
 # %% Close all GUI elements
 if not qtt.utilities.tools.is_spyder_environment():
-    print('close all GUI elements')
+    print('closing all GUI elements')
+    time.sleep(.5)
     vm.close()
     vm_virtual.close()
     plt.close('all')
@@ -161,4 +164,7 @@ if not qtt.utilities.tools.is_spyder_environment():
     logviewer.close()
 
     qtt.gui.live_plotting.liveplotwindow.win.close()
-    print('close all GUI elements: done')
+    pyqtgraph.mkQApp().processEvents()
+
+    print('closed all GUI elements: done')
+    time.sleep(.5)
