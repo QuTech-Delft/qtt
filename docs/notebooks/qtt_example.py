@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Example script to show QTT capabilities
 
 The script should be executed from an interactive environment such as Spyder.
@@ -7,24 +6,24 @@ An event loop should be running for the GUI elements.
 @author: eendebakpt
 """
 
-# %% Load packages
-import numpy as np
-import matplotlib.pyplot as plt
 import tempfile
 from collections import OrderedDict
-import pyqtgraph
 
+import matplotlib.pyplot as plt
+# %% Load packages
+import numpy as np
+import pyqtgraph
 import qcodes
 from qcodes.data.data_set import DataSet
-import qtt
-from qtt.gui.parameterviewer import createParameterWidget
-from qtt.algorithms.gatesweep import analyseGateSweep
-from qtt.measurements.scans import scanjob_t
-from qtt.instrument_drivers.virtual_gates import VirtualGates
-from qtt import save_state
-import qtt.measurements.videomode
 
+import qtt
+import qtt.measurements.videomode
 import qtt.simulation.virtual_dot_array
+from qtt import save_state
+from qtt.algorithms.gatesweep import analyseGateSweep
+from qtt.gui.parameterviewer import createParameterWidget
+from qtt.instrument_drivers.virtual_gates import VirtualGates
+from qtt.measurements.scans import scanjob_t
 
 _ = pyqtgraph.mkQApp()
 datadir = tempfile.mkdtemp(prefix='qtt_example')
@@ -67,10 +66,6 @@ scanjob = scanjob_t({'sweepdata': dict({'param': param_right, 'start': -500, 'en
                                         'step': .8, 'wait_time': 3e-3}), 'minstrument': ['keithley3.amplitude']})
 data1d = qtt.measurements.scans.scan1D(station, scanjob, location=None, verbose=1)
 
-
-# %% Save the current state of the system to disk
-
-save_state(station)
 
 # %% Print the scanned data
 
