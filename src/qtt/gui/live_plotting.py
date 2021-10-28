@@ -1,18 +1,20 @@
 # %% Load packages
-import time
 import logging
-import numpy as np
+import time
 from functools import partial
-import qtpy.QtWidgets as QtWidgets
-import qtpy.QtCore as QtCore
-from qtpy.QtCore import Signal
-import pyqtgraph as pg
+
+import numpy as np
 import pyqtgraph
+import pyqtgraph as pg
 import pyqtgraph.multiprocess as mp
 import qcodes
+import qtpy.QtCore as QtCore
+import qtpy.QtWidgets as QtWidgets
+from qtpy.QtCore import Signal
+
 import qtt
-from qtt import pgeometry
 import qtt.algorithms.generic
+from qtt import pgeometry
 
 # %% Static variables
 
@@ -247,14 +249,14 @@ def start_measurement_control(doexec=False):
 
 
 try:
-    import qtt.gui.parameterviewer
-    import qtt.gui
-    from qtt.utilities.tools import monitorSizes
     from qcodes.plots.pyqtgraph import QtPlot
 
+    import qtt.gui
+    import qtt.gui.parameterviewer
+    from qtt.utilities.tools import monitorSizes
 
     def setupMeasurementWindows(station=None, create_parameter_widget=True,
-                                ilist=None):
+                                ilist=None, qtplot_remote=True):
         """
         Create liveplot window and parameter widget (optional)
 
@@ -262,6 +264,7 @@ try:
             station (QCoDeS station): station with instruments
             create_parameter_widget (bool): if True create ParameterWidget
             ilist (None or list): list of instruments to add to ParameterWidget
+            qtplot_remote (bool): If True, then use remote plotting
         Returns:
             dict: created gui objects
         """
@@ -277,7 +280,7 @@ try:
             w.setGeometry(vv[0] + vv[2] - 400 - 300, vv[1], 300, 600)
             windows['parameterviewer'] = w
 
-        plotQ = QtPlot(window_title='Live plot', interval=.5)
+        plotQ = QtPlot(window_title='Live plot', interval=.5, remote=qtplot_remote)
         plotQ.setGeometry(vv[0] + vv[2] - 600, vv[1] + vv[3] - 400, 600, 400)
         plotQ.update()
 
@@ -430,7 +433,7 @@ class livePlot(QtCore.QObject):
         self.fps = pgeometry.fps_t(nn=6)
         self.datafunction = datafunction
         self.datafunction_result = None
-        self.plot_dimension=plot_dimension
+        self.plot_dimension = plot_dimension
         self.alpha = alpha
         if is1dscan is None:
             is1dscan = (
@@ -691,7 +694,7 @@ class livePlot(QtCore.QObject):
             self.maxidx = maxidx
         if callback is not None:
             self.datafunction = callback
-        self.timer.start( int(1000 * (1. / rate)) )
+        self.timer.start(int(1000 * (1. / rate)))
         if self.verbose:
             print('live_plotting: start readout: rate %.1f Hz' % rate)
 
@@ -722,6 +725,3 @@ class MockCallback_2d(qcodes.Instrument):
         lt.semiLine(data_reshaped, [self.nx / 2, self.nx / 2],
                     np.deg2rad(self.q()), w=2, l=self.nx / 4, H=3)
         return data_reshaped
-
-
-
