@@ -35,7 +35,7 @@ def get_package_data(root_dir):
 tests_require = ['coverage', 'jupyter', 'mypy', 'types-redis', 'types-python-dateutil', 'pytest']
 
 install_requires = [
-    'apscheduler', 'attrs', 'dulwich', 'h5py<3.0', 'hickle', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
+    'apscheduler', 'attrs', 'dulwich', 'h5py', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
     'numdifftools', 'numpy>=1.15', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.23.0',
     'qcodes-contrib-drivers', 'qilib', 'qiskit-terra', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
     'shapely', 'sympy', 'imageio'
@@ -67,6 +67,7 @@ setup(name='qtt',
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
           'Topic :: Scientific/Engineering'
       ],
       license='MIT',

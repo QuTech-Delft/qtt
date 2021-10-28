@@ -30,7 +30,7 @@ def load_example_dataset(filename: str, verbose: int = 0) -> Optional[DataSet]:
     Returns:
         Example dataset or None of no dataset can be found
     """
-    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata') # type: ignore # mypy issue #1422
+    exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')  # type: ignore # mypy issue #1422
 
     dataset = qtt.data.load_dataset(os.path.join(exampledatadir, filename), verbose=verbose)
     return dataset
@@ -165,8 +165,12 @@ def load_dataset(location, io=None, verbose=0):
     formatters = [DataSet.default_formatter]
 
     from qcodes.data.hdf5_format import HDF5FormatMetadata
-    from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
-    formatters += [HDF5FormatHickle(), HDF5FormatMetadata()]
+    formatters += [HDF5FormatMetadata()]
+    try:
+        from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
+        formatters += [HDF5FormatHickle()]
+    except ImportError as ex:
+        logging.info(f'HDF5FormatHickle not available {ex}')
 
     from qcodes.data.hdf5_format import HDF5Format
     formatters += [HDF5Format()]
@@ -912,7 +916,6 @@ def _data_extension():
 
 def load_data(mfile: str):
     """ Load data from specified file """
-    # return hickle.load(mfile)
     ext = _data_extension()
     if ext is not None:
         if not mfile.endswith(ext):
