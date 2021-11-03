@@ -20,6 +20,7 @@ There are virtual instruments for
 import logging
 import threading
 from functools import partial
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import qcodes
@@ -27,16 +28,18 @@ from qcodes import Instrument
 
 import qtt
 from qtt.instrument_drivers.gates import VirtualDAC
-from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer, SimulationAWG
-from qtt.instrument_drivers.virtual_instruments import VirtualMeter, VirtualIVVI
-from qtt.simulation.classicaldotsystem import DoubleDot, TripleDot, MultiDot
-from qtt.simulation.dotsystem import GateTransform
-from qtt.simulation.dotsystem import OneDot
+from qtt.instrument_drivers.simulation_instruments import (SimulationAWG,
+                                                           SimulationDigitizer)
+from qtt.instrument_drivers.virtual_instruments import (VirtualIVVI,
+                                                        VirtualMeter)
+from qtt.simulation.classicaldotsystem import DoubleDot, MultiDot, TripleDot
+from qtt.simulation.dotsystem import GateTransform, OneDot
 from qtt.structures import onedot_t
 
 logger = logging.getLogger(__name__)
 
 # %% Data for the model
+
 
 def gate_settle(gate):
     """ Return gate settle times """
@@ -44,13 +47,13 @@ def gate_settle(gate):
     return 0  # the virtual gates have no latency
 
 
-def gate_boundaries(gate_map):
+def gate_boundaries(gate_map: Dict[str, Any]) -> Dict[str, Tuple[float, float]]:
     """ Return gate boundaries
 
     Args:
-        gate_map (dict)
+        gate_map: Map from gate names to instrument handle
     Returns:
-        gate_boundaries (dict)
+        Dictionary with gate boundaries
     """
     gate_boundaries = {}
     for g in gate_map:
@@ -67,7 +70,7 @@ def gate_boundaries(gate_map):
     return gate_boundaries
 
 
-def generate_configuration(ndots):
+def generate_configuration(ndots: int):
     """ Generate configuration for a standard linear dot array sample
 
     Args:
@@ -105,18 +108,19 @@ def generate_configuration(ndots):
 class DotModel(Instrument):
     """ Simulation model for linear dot array
 
-    The model is intended for testing the code and learning. It does _not simulate any meaningful physics.
+    The model is intended for testing the code and learning. It does _not_ simulate any meaningful physics.
 
     """
 
-    def __init__(self, name, verbose=0, nr_dots=3, maxelectrons=2, sdplunger=None, **kwargs):
+    def __init__(self, name, verbose: int = 0, nr_dots: int = 3, maxelectrons: int = 2, sdplunger: Optional[str] = None, **kwargs):
         """ The model is for a linear arrays of dots with a single sensing dot
 
             Args:
-                name (str): name for the instrument
-                verbose (int): verbosity level
-                nr_dots (int): number of dots in the linear array
-                maxelectrons (int): maximum number of electrons in each dot
+                name  name for the instrument
+                verbose : verbosity level
+                nr_dots: number of dots in the linear array
+                sdplunger: Optional used for pinchoff of sensing dot plunger
+                maxelectrons: maximum number of electrons in each dot
 
         """
 
@@ -131,7 +135,7 @@ class DotModel(Instrument):
         self._sdplunger = sdplunger
 
         # dictionary to hold the data of the model
-        self._data = dict()
+        self._data = {}
         self.lock = threading.Lock()
 
         self.sdnoise = .001  # noise for the sensing dot
@@ -153,19 +157,21 @@ class DotModel(Instrument):
             g = 'ivvi%d_dac%d' % (i + 1, idx)
             logging.debug('add gate %s' % g)
             self.add_parameter(g,
-                               label='Gate {} (mV)'.format(g),
+                               label='Gate {g} ',
                                get_cmd=partial(self._data_get, g),
                                set_cmd=partial(self._data_set, g),
+                               unit='mV'
                                )
 
         # make entries for keithleys
         for instr in ['keithley1', 'keithley2', 'keithley3', 'keithley4']:
             if not instr in self._data:
-                self._data[instr] = dict()
+                self._data[instr] = {}
             g = instr + '_amplitude'
             self.add_parameter(g,
-                               label=f'Amplitude {g} (pA)',
+                               label=f'Amplitude {g}',
                                get_cmd=partial(getattr(self, instr + '_get'), 'amplitude'),
+                               unit='pA'
                                )
 
         # initialize the actual dot system
@@ -225,16 +231,16 @@ class DotModel(Instrument):
         self._data[param] = value
         return
 
-    def gate2ivvi(self, g):
+    def gate2ivvi(self, g: str) -> Tuple[str, str]:
         i, j = self.gate_map[g]
         return 'ivvi%d' % (i + 1), 'dac%d' % j
 
-    def gate2ivvi_value(self, g):
+    def gate2ivvi_value(self, g: str) -> float:
         i, j = self.gate2ivvi(g)
         value = self._data.get(i + '_' + j, 0)
         return value
 
-    def get_gate(self, g):
+    def get_gate(self, g: str) -> float:
         return self.gate2ivvi_value(g)
 
     def _calculate_pinchoff(self, gates, offset=-200., random=0):
@@ -278,7 +284,7 @@ class DotModel(Instrument):
 
         return sd1
 
-    def compute(self, random=0.02):
+    def compute(self, random: float = 0.02) -> float:
         """ Compute output of the model """
 
         try:
@@ -293,22 +299,22 @@ class DotModel(Instrument):
             val = 0
         return val
 
-    def keithley1_get(self, param):
+    def keithley1_get(self, param: str) -> float:
         with self.lock:
             sd1 = self.computeSD()
             self._data['keithley1_amplitude'] = sd1
         return sd1
 
-    def keithley2_get(self, param):
+    def keithley2_get(self, param: str) -> float:
         return self.keithley1_get(param)
 
-    def keithley4_get(self, param):
+    def keithley4_get(self, param: str) -> float:
         with self.lock:
             k = 4e-3 * self.get_gate('O1')
             self._data['keithley4_amplitude'] = k
         return k
 
-    def keithley3_get(self, param):
+    def keithley3_get(self, param: str) -> float:
         with self.lock:
             val = self.compute()
             self._data['keithley3_amplitude'] = val
@@ -442,8 +448,6 @@ def initialize(reinit=False, nr_dots=2, maxelectrons=2,
     return station
 
 # %%
-
-
 
 
 def _getModel():
