@@ -157,7 +157,7 @@ class DotModel(Instrument):
             g = 'ivvi%d_dac%d' % (i + 1, idx)
             logging.debug('add gate %s' % g)
             self.add_parameter(g,
-                               label='Gate {g} ',
+                               label='Gate {g}',
                                get_cmd=partial(self._data_get, g),
                                set_cmd=partial(self._data_set, g),
                                unit='mV'
