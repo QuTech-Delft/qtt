@@ -20,7 +20,7 @@ There are virtual instruments for
 import logging
 import threading
 from functools import partial
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 import numpy as np
 import qcodes
@@ -33,7 +33,7 @@ from qtt.instrument_drivers.simulation_instruments import (SimulationAWG,
 from qtt.instrument_drivers.virtual_instruments import (VirtualIVVI,
                                                         VirtualMeter)
 from qtt.simulation.classicaldotsystem import DoubleDot, MultiDot, TripleDot
-from qtt.simulation.dotsystem import GateTransform, OneDot
+from qtt.simulation.dotsystem import DotSystem, GateTransform, OneDot
 from qtt.structures import onedot_t
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def gate_settle(gate):
     return 0  # the virtual gates have no latency
 
 
-def gate_boundaries(gate_map: Dict[str, Any]) -> Dict[str, Tuple[float, float]]:
+def gate_boundaries(gate_map: Mapping[str, Any]) -> Mapping[str, Tuple[float, float]]:
     """ Return gate boundaries
 
     Args:
@@ -135,7 +135,7 @@ class DotModel(Instrument):
         self._sdplunger = sdplunger
 
         # dictionary to hold the data of the model
-        self._data = {}
+        self._data: Dict = {}
         self.lock = threading.Lock()
 
         self.sdnoise = .001  # noise for the sensing dot
@@ -176,25 +176,19 @@ class DotModel(Instrument):
 
         # initialize the actual dot system
         if nr_dots == 1:
-            self.ds = OneDot(maxelectrons=maxelectrons)
-            self.ds.alpha = np.eye(self.ds.ndots)
-            self.sourcenames = bottomgates
+            self.ds: DotSystem = OneDot(maxelectrons=maxelectrons)
         elif nr_dots == 2:
             self.ds = DoubleDot(maxelectrons=maxelectrons)
-            self.ds.alpha = np.eye(self.ds.ndots)
-            self.sourcenames = bottomgates
         elif nr_dots == 3:
             self.ds = TripleDot(maxelectrons=maxelectrons)
-            self.ds.alpha = np.eye(self.ds.ndots)
-            self.sourcenames = bottomgates
         elif nr_dots == 6 or nr_dots == 4 or nr_dots == 5:
             self.ds = MultiDot(name='dotmodel', ndots=nr_dots, maxelectrons=maxelectrons)
             if verbose:
                 print('ndots: %s maxelectrons %s' % (self.ds.ndots, maxelectrons))
-            self.ds.alpha = np.eye(self.ds.ndots)
-            self.sourcenames = bottomgates
         else:
             raise Exception('number of dots %d not implemented yet...' % nr_dots)
+        self.ds.alpha = np.eye(self.ds.ndots)  # type: ignore
+        self.sourcenames = bottomgates
         self.targetnames = ['det%d' % (i + 1) for i in range(self.ds.ndots)]
 
         Vmatrix = np.zeros((len(self.targetnames) + 1, len(self.sourcenames) + 1))
