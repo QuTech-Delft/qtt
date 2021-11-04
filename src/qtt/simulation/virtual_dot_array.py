@@ -33,7 +33,7 @@ from qtt.instrument_drivers.simulation_instruments import (SimulationAWG,
 from qtt.instrument_drivers.virtual_instruments import (VirtualIVVI,
                                                         VirtualMeter)
 from qtt.simulation.classicaldotsystem import DoubleDot, MultiDot, TripleDot
-from qtt.simulation.dotsystem import DotSystem, GateTransform, OneDot
+from qtt.simulation.dotsystem import BaseDotSystem, GateTransform, OneDot
 from qtt.structures import onedot_t
 
 logger = logging.getLogger(__name__)
@@ -176,7 +176,7 @@ class DotModel(Instrument):
 
         # initialize the actual dot system
         if nr_dots == 1:
-            self.ds: DotSystem = OneDot(maxelectrons=maxelectrons)
+            self.ds: BaseDotSystem = OneDot(maxelectrons=maxelectrons)
         elif nr_dots == 2:
             self.ds = DoubleDot(maxelectrons=maxelectrons)
         elif nr_dots == 3:
