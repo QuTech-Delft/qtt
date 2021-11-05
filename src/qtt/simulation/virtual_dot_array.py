@@ -112,7 +112,7 @@ class DotModel(Instrument):
 
     """
 
-    def __init__(self, name, verbose: int = 0, nr_dots: int = 3, maxelectrons: int = 2, sdplunger: Optional[str] = None, **kwargs):
+    def __init__(self, name: str, verbose: int = 0, nr_dots: int = 3, maxelectrons: int = 2, sdplunger: Optional[str] = None, **kwargs):
         """ The model is for a linear arrays of dots with a single sensing dot
 
             Args:
