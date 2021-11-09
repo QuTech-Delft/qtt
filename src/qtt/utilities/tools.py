@@ -764,7 +764,7 @@ def _ppt_determine_image_position(ppt, figsize, fname, verbose=1):
     return left, top, width, height
 
 
-def create_figure_ppt_callback(fig: Optional[Union[int,matplotlib.figure.Figure]] = None, title: Optional[str] = None,
+def create_figure_ppt_callback(fig: Optional[Union[int, matplotlib.figure.Figure]] = None, title: Optional[str] = None,
                                notes: Optional[Union[str, DataSet]] = None,
                                position: Tuple[float, float, float, float] = (0.9, 0.925, 0.075, 0.05)) -> None:
     """ Create a button on a matplotlib figure to copy data to PowerPoint slide.
@@ -787,7 +787,7 @@ def create_figure_ppt_callback(fig: Optional[Union[int,matplotlib.figure.Figure]
         fig = plt.gcf()
     if isinstance(fig, int):
         fig = plt.figure(fig)
-    
+
     ax = fig.gca()
     ppt_axis = fig.add_axes(position, label=f'figure_ppt_callback_axis {uuid.uuid1()}')
     ppt_button = Button(ppt_axis, 'ppt')
@@ -953,8 +953,7 @@ try:
         else:
             slide.shapes.title.textframe.textrange.text = 'QCoDeS measurement'
 
-        from qtt.measurements.videomode import \
-            VideoMode  # import here, to prevent default imports of gui code
+        from qtt.measurements.videomode import VideoMode  # import here, to prevent default imports of gui code
 
         def add_figure_to_slide(fig, slide, figsize, verbose):
             """ Add figure to PPT slide """
