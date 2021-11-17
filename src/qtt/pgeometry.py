@@ -19,9 +19,10 @@ Original code:
 @author: eendebakpt
 """
 
+# %% Load necessary packages
+
 import logging
 import math
-# %% Load necessary packages
 import os
 import pickle
 import pkgutil
@@ -32,6 +33,7 @@ import tempfile
 import time
 import warnings
 from functools import wraps
+from typing import Optional
 
 import numpy
 import numpy as np
@@ -366,16 +368,17 @@ def plotCostFunction(fun, x0, fig=None, marker='.', scale=1, c=None):
 
 class fps_t:
 
-    def __init__(self, nn=40):
+    def __init__(self, nn: int = 40):
         """ Class for framerate measurements
 
         Args:
-            nn (int): number of time measurements to store
+            nn: number of time measurements to store
+
         Example usage:
 
         >>> fps = fps_t(nn=8)
         >>> for kk in range(12):
-        ...       fps.addtime(.2*kk )
+        ...       fps.addtime(.2*kk)
         >>> fps.show()
         framerate: 5.000
         """
@@ -389,22 +392,29 @@ class fps_t:
             self.n, self.framerate())
         return ss
 
-    def addtime(self, t, x=0):
-        """ Add a timestamp to the object """
+    def addtime(self, t: Optional[float] = None, x: float = 0):
+        """ Add a timestamp to the object
+
+        Args:
+            t: Timestamp. If None, use `time.perf_counter`
+            x: Optional value to store with the timestamp
+        """
+        if t is None:
+            t = time.perf_counter()
         self.ii = self.ii + 1
         iim = self.ii % self.n
         self.tt[iim] = t
         self.x[iim] = x
 
-    def value(self):
+    def value(self) -> float:
         """ Return mean of current values """
         return self.x.mean()
 
-    def iim(self):
+    def iim(self) -> float:
         """ Return index modulo number of elements """
         return self.ii % self.n
 
-    def framerate(self):
+    def framerate(self) -> float:
         """ Return the current framerate """
         iim = self.ii % self.n
         iimn = (self.ii + 1) % self.n
@@ -414,13 +424,16 @@ class fps_t:
         fps = float(self.n - 1) / dt
         return fps
 
-    def loop(self, s=''):
+    def loop(self, s: str = ''):
         """ Helper function """
         self.addtime(time.time())
         self.showloop(s='')
 
-    def showloop(self, dt=2, s=''):
-        """ Print current framerate """
+    def showloop(self, dt: float = 2, s: str = ''):
+        """ Print current framerate in a loop
+
+        The print statement is only executed once every `dt` seconds
+        """
         fps = self.framerate()
         if len(s) == 0:
             tprint('loop %d: framerate: %.1f [fps]' % (self.ii, fps), dt=dt)
