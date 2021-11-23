@@ -165,6 +165,18 @@ class BaseDotSystem:
         nstates (array): for each state the number of electrons.
 
     """
+    def __init__(self, name='basedotsystem', ndots=3, maxelectrons=2):
+        """
+        Args:
+            name (str): name of the system.
+            ndots (int): number of dots to simulate.
+            maxelectrons (int): maximum occupancy per dot.
+        """
+        self.name = name
+        self.ndots = ndots
+        self.maxelectrons = maxelectrons
+
+        self.makebasis(self.ndots, self.maxelectrons)
 
     @abstractmethod
     def calculate_ground_state(self, gatevalues):
@@ -231,10 +243,13 @@ class BaseDotSystem:
         The basis consists of vectors of length (ndots) where each entry in the vector indicates
         the number of electrons in a dot. The number of electrons in the total system is specified
         in `nbasis`.
-        """
-        self.maxelectrons = maxelectrons
-        self.ndots = ndots
 
+        Args:
+            ndots (int): number of dots to simulate.
+            maxelectrons (int): maximum occupancy per dot.
+        """
+        assert(self.ndots == ndots)
+        assert(self.maxelectrons == maxelectrons)
         basis = list(itertools.product(range(maxelectrons + 1), repeat=ndots))
         basis = np.asarray(sorted(basis, key=lambda x: sum(x)))
         self.basis = np.ndarray.astype(basis, int)
@@ -248,26 +263,27 @@ class BaseDotSystem:
 
 class DotSystem(BaseDotSystem):
 
+    """ Class to simulate a system of interacting quantum dots.
+
+    For a full model see "Quantum simulation of a Fermi-Hubbard model using a semiconductor quantum dot array":
+        https://arxiv.org/pdf/1702.07511.pdf
+
+    Args:
+        name (str): name of the system.
+        ndots (int): number of dots to simulate.
+        maxelectrons (int): maximum occupancy per dot.
+
+    Attributes:
+
+    For the chemical potential, on site charging energy and inter site charging energy there are
+    variables in the object. The names are given by the functions chemical_potential_name, etc.
+
+    """
     _matrix_prefix = '_M'
 
-    def __init__(self, name='dotsystem', ndots=3, **kwargs):
-        """ Class to simulate a system of interacting quantum dots.
+    def __init__(self, name='dotsystem', ndots=3, maxelectrons=2, **kwargs):
+        super().__init__(name=name, ndots=ndots, maxelectrons=maxelectrons)
 
-        For a full model see "Quantum simulation of a Fermi-Hubbard model using a semiconductor quantum dot array":
-            https://arxiv.org/pdf/1702.07511.pdf
-
-        Args:
-            name (str): name of the system.
-            ndots (int): number of dots to simulate.
-
-        Attributes:
-
-        For the chemical potential, on site charging energy and inter site charging energy there are
-        variables in the object. The names are given by the functions chemical_potential_name, etc.
-
-        """
-        self.name = name
-        self.ndots = ndots
         self.temperature = 0
 
     def get_chemical_potential(self, dot):
@@ -684,10 +700,10 @@ class DotSystem(BaseDotSystem):
 
 class OneDot(DotSystem):
 
-    def __init__(self, name='doubledot', maxelectrons=3):
+    def __init__(self, name='onedot', maxelectrons=3):
         """ Simulation of a single quantum dot."""
-        super().__init__(name=name, ndots=1)
-        self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
+        super().__init__(name=name, ndots=1, maxelectrons=maxelectrons)
+
         self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)] \
             + [self.on_site_charging_name(i + 1) for i in range(self.ndots)]
         self.make_variables()
@@ -702,12 +718,10 @@ class DoubleDot(DotSystem):
 
     def __init__(self, name='doubledot', maxelectrons=3):
         """ Simulation of double-dot system.
-
-        See: DotSytem.
-
+        See: DotSystem.
         """
-        super().__init__(name=name, ndots=2)
-        self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
+        super().__init__(name=name, ndots=2, maxelectrons=maxelectrons)
+
         self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)] \
             + [self.on_site_charging_name(i + 1) for i in range(self.ndots)] \
             + [self.inter_site_charging_name(i + 1, i + 2) for i in range(self.ndots - 1)] + \
@@ -724,8 +738,8 @@ class TripleDot(DotSystem):
 
     def __init__(self, name='tripledot', maxelectrons=3):
         """ Simulation of triple-dot system."""
-        super().__init__(name=name, ndots=3)
-        self.makebasis(ndots=self.ndots, maxelectrons=maxelectrons)
+        super().__init__(name=name, ndots=3, maxelectrons=maxelectrons)
+
         self.varnames = [self.chemical_potential_name(dot + 1) for dot in range(self.ndots)] \
             + [self.on_site_charging_name(i + 1) for i in range(self.ndots)] \
             + [self.inter_site_charging_name(i + 1, i + 2) for i in range(self.ndots - 1)] \
@@ -740,12 +754,11 @@ class TripleDot(DotSystem):
 
 class FourDot(DotSystem):
 
-    def __init__(self, name='fourdot', use_tunneling=True, **kwargs):
+    def __init__(self, name='fourdot', use_tunneling=True, maxelectrons=2, **kwargs):
         """ Simulation of 4-dot system."""
-        super().__init__(name=name, ndots=4, **kwargs)
+        super().__init__(name=name, ndots=4, maxelectrons=maxelectrons, **kwargs)
 
         self.use_tunneling = use_tunneling
-        self.makebasis(ndots=self.ndots, maxelectrons=2)
         self.varnames = [self.chemical_potential_name(i + 1) for i in range(self.ndots)]
         self.varnames += [self.on_site_charging_name(i + 1) for i in range(self.ndots)]
         self.varnames += [self.inter_site_charging_name(i + 1) for i in range(4)]
@@ -760,10 +773,10 @@ class FourDot(DotSystem):
 
 
 class TwoXTwo(DotSystem):
-    def __init__(self, name='2x2'):
+    def __init__(self, name='2x2', maxelectrons=2):
         self.is2x2 = True
-        super().__init__(name=name, ndots=4)
-        self.makebasis(ndots=self.ndots, maxelectrons=2)
+        super().__init__(name=name, ndots=4, maxelectrons=maxelectrons)
+
         self.varnames = [self.chemical_potential_name(i + 1) for i in range(self.ndots)] + \
                         [self.on_site_charging_name(i + 1) for i in range(self.ndots)] + \
                         [self.inter_site_charging_name(dot1, dot2)

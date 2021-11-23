@@ -25,7 +25,7 @@ class TestTools(unittest.TestCase):
     def test_measure_time(self):
         with redirect_stdout(io.StringIO()) as f:
             with measure_time('hi') as m:
-                time.sleep(.1)
+                time.sleep(.101)
         self.assertGreater(m.delta_time, 0.1)
         self.assertIn('hi', f.getvalue())
 
