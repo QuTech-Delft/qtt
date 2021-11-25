@@ -27,6 +27,7 @@ class TestDotSystem(unittest.TestCase):
         dot_system = FourDot(maxelectrons=2)
         self.assertEqual(dot_system.ndots, 4)
         dot_system = TwoXTwo()
+        self.assertEqual(dot_system.ndots, 4)
 
     def test_triple_dot_basics(self, verbose=0):
         dot_system = TripleDot(maxelectrons=2)

@@ -35,28 +35,28 @@ def ncr(n, r):
 
 class ClassicalDotSystem(BaseDotSystem):
 
-    def __init__(self, name='dotsystem', ndots=3, ngates=3, maxelectrons=3, **kwargs):
-        """ Classical Quantum Dot Simulator
+    """ Classical Quantum Dot Simulator
 
-        This class aims to be a generic classical simulator for calculating energy levels and occupancy of quantum dots.
-        Note: interaction between the dots is treated completely classically (no tunnel coupling) resulting in faster simulations.
+    This class aims to be a generic classical simulator for calculating energy levels and occupancy of quantum dots.
+    Note: interaction between the dots is treated completely classically (no tunnel coupling) resulting in faster simulations.
 
-        Args:
-            ndots (int): number of dots
-            ngates (int): number of voltage gates
-            maxelectrons (int): maximum occupancy per dot:
+    Args:
+        name (str): name of the system
+        ndots (int): number of dots
+        ngates (int): number of voltage gates
+        maxelectrons (int): maximum occupancy per dot
 
-        The user should set variables on the object :
-            - capacitances and cross-capacitances between dots and gates: alphas
-            - chemical potential (at zero gate voltage): mu0
-            - addition energy: Eadd
-            - coulomb repulsion: W
+    The user should set variables on the object :
+        - capacitances and cross-capacitances between dots and gates: alphas
+        - chemical potential (at zero gate voltage): mu0
+        - addition energy: Eadd
+        - coulomb repulsion: W
 
-        """
-        self.name = name
+    """
+    def __init__(self, name='classicaldotsystem', ndots=3, ngates=3, maxelectrons=3, **kwargs):
+        super().__init__(name=name, ndots=ndots, maxelectrons=maxelectrons)
 
         logging.info('ClassicalDotSystem: max number of electrons %d' % maxelectrons)
-        self.makebasis(ndots=ndots, maxelectrons=maxelectrons)
         self.ngates = ngates
 
         # initialize characterizing dot variables
@@ -178,8 +178,6 @@ class TripleDot(ClassicalDotSystem):
 
         logging.info('TripleDot: maxelectrons %d' % maxelectrons)
 
-        self.makebasis(ndots=3, maxelectrons=maxelectrons)
-
         vardict = {}
 
         vardict["mu0_values"] = np.array([-27.0, -20.0, -25.0])  # chemical potential at zero gate voltage
@@ -199,8 +197,6 @@ class MultiDot(ClassicalDotSystem):
     def __init__(self, name='multidot', ndots=6, maxelectrons=3, **kwargs):
         """ Classical simulation of multi dot """
         super().__init__(name=name, ndots=ndots, ngates=ndots, maxelectrons=maxelectrons, **kwargs)
-
-        self.makebasis(ndots=ndots, maxelectrons=maxelectrons)
 
         vardict = {}
 
@@ -222,10 +218,8 @@ class MultiDot(ClassicalDotSystem):
 class DoubleDot(ClassicalDotSystem):
     """ Classical simulation of double dot """
 
-    def __init__(self, name='doubledot', **kwargs):
-        super().__init__(name=name, ndots=2, ngates=2, **kwargs)
-
-        self.makebasis(ndots=2)
+    def __init__(self, name='doubledot', maxelectrons=2, **kwargs):
+        super().__init__(name=name, ndots=2, ngates=2, maxelectrons=maxelectrons, **kwargs)
 
         vardict = {}
 
@@ -241,11 +235,9 @@ class DoubleDot(ClassicalDotSystem):
 
 class SquareDot(ClassicalDotSystem):
 
-    def __init__(self, name='squaredot', **kwargs):
+    def __init__(self, name='squaredot', maxelectrons=2, **kwargs):
         """ Classical simulation of a 2x2 dot configuration """
-        super().__init__(name=name, ndots=4, ngates=4, **kwargs)
-
-        self.makebasis(ndots=4)
+        super().__init__(name=name, ndots=4, ngates=4, maxelectrons=maxelectrons, **kwargs)
 
         vardict = {}
 
