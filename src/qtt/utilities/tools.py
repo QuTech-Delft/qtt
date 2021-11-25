@@ -796,7 +796,7 @@ def create_figure_ppt_callback(fig: Optional[Union[int, matplotlib.figure.Figure
     plt.sca(ax)
 
     def figure_ppt_callback(event):
-        print('creating PowerPoint slide for figure %d' % fig)
+        print(f'creating PowerPoint slide for figure {fig}')
         ppt_axis.set_visible(False)
         addPPTslide(fig=fig, title=title, notes=notes)
         ppt_axis.set_visible(True)
