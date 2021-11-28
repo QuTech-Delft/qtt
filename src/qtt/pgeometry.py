@@ -1493,7 +1493,6 @@ def save(pkl_file, *args):
     """
 
     # save data to disk
-    # pdb.set_trace()
     output = open(pkl_file, 'wb')
     pickle.dump(args, output, protocol=2)
     output.close()
@@ -1510,7 +1509,6 @@ def load(pkl_file):
             # if pickle file was saved in python2 we might fix issues with a different encoding
             output = open(pkl_file, 'rb')
             data2 = pickle.load(output, encoding='latin')
-            # pickle.load(pkl_file, fix_imports=True, encoding="ASCII", errors="strict")
             output.close()
         else:
             data2 = None
