@@ -21,6 +21,7 @@ Original code:
 
 # %% Load necessary packages
 
+import copy
 import logging
 import math
 import os
@@ -33,7 +34,7 @@ import tempfile
 import time
 import warnings
 from functools import wraps
-from typing import Optional
+from typing import Optional, Union
 
 import numpy
 import numpy as np
@@ -1587,7 +1588,7 @@ except BaseException:
 
 # %% Copy mplimage to clipboard
 
-def mpl2clipboard(event=None, verbose=1, fig=None):
+def mpl2clipboard(event=None, verbose: int = 1, fig: Optional[Union[int, plt.Figure]] = None):
     """ Copy current Matplotlib figure to clipboard
 
     Args:
