@@ -1587,56 +1587,31 @@ except BaseException:
 
 # %% Copy mplimage to clipboard
 
-try:
-    _usegtk = 0
-    try:
-        import matplotlib.pyplot
-        _usegtk = 0
-    except BaseException:
-        import pygtk
-        pygtk.require('2.0')
-        import gtk
-        _usegtk = 1
-        pass
+def mpl2clipboard(event=None, verbose=1, fig=None):
+    """ Copy current Matplotlib figure to clipboard
 
-    def mpl2clipboard(event=None, verbose=1, fig=None):
-        """ Copy current Matplotlib figure to clipboard """
-        if verbose:
-            print('copy current Matplotlib figure to clipboard')
-        if fig is None:
-            fig = matplotlib.pyplot.gcf()
-        else:
-            print('mpl2clipboard: figure %s' % fig)
-        w, h = fig.canvas.get_width_height()
-        buf = np.fromstring(fig.canvas.tostring_argb(), dtype=np.uint8)
-        buf.shape = (h, w, 4)
-        im = np.roll(buf, 3, axis=2)
-        im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
+    Args:
+        event: Unused argument
+        verbose: Verbosity level
+        fig: Figure handle. If None, select the current figure
+    """
+    if fig is None:
+        fig = matplotlib.pyplot.gcf()
+    elif isinstance(fig, int):
+        fig = plt.figure(fig)
+    if verbose:
+        print('mpl2clipboard: copy figure %s to clipboard' % fig)
+    w, h = fig.canvas.get_width_height()
+    buf = np.fromstring(fig.canvas.tostring_argb(), dtype=np.uint8)
+    buf.shape = (h, w, 4)
+    im = np.roll(buf, 3, axis=2)
+    im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
 
-        if _usegtk:
-            r, tmpfile = tempfile.mkstemp(suffix='.png')
-            cv2.imwrite(tmpfile, im)
-            image = gtk.gdk.pixbuf_new_from_file(tmpfile)
-            clipboard = gtk.clipboard_get()
-            clipboard.set_image(image)
-            clipboard.store()
-        else:
-            cb = QtWidgets.QApplication.clipboard()
-            r, tmpfile = tempfile.mkstemp(suffix='.bmp')
-            cv2.imwrite(tmpfile, im)
-            qim = QtGui.QPixmap(tmpfile)
-            cb.setPixmap(qim)
-
-except BaseException:
-    def mpl2clipboard(event=None, verbose=1, fig=None):
-        """ Copy current Matplotlib figure to clipboard
-
-        Dummy implementation
-        """
-        if verbose:
-            print('copy current Matplotlib figure to clipboard not available')
-
-    pass
+    cb = QtWidgets.QApplication.clipboard()
+    r, tmpfile = tempfile.mkstemp(suffix='.bmp')
+    cv2.imwrite(tmpfile, im)
+    qim = QtGui.QPixmap(tmpfile)
+    cb.setPixmap(qim)
 
 
 def addfigurecopy(fig=None):
