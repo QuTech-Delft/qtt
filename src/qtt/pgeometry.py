@@ -1600,8 +1600,8 @@ def mpl2clipboard(event=None, verbose: int = 0, fig: Optional[Union[int, plt.Fig
         fig = plt.figure(fig)
     if verbose:
         print('mpl2clipboard: copy figure %s to clipboard' % fig)
-    w, h = fig.canvas.get_width_height()
-    buf = np.fromstring(fig.canvas.tostring_argb(), dtype=np.uint8)
+    w, h = fig.canvas.get_width_height()  # type: ignore
+    buf = np.fromstring(fig.canvas.tostring_argb(), dtype=np.uint8)  # type: ignore
     buf.shape = (h, w, 4)
     im = np.roll(buf, 3, axis=2)
     im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
