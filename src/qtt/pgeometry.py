@@ -1755,9 +1755,11 @@ def cfigure(*args, **kwargs):
 # %%
 
 
-def monitorSizes(verbose=0) -> List[List[int, int, int, int]]:
+def monitorSizes(verbose: int = 0) -> List[List[int]]:
     """ Return monitor sizes
 
+    Args:
+        verbose: Verbosity level
     Returns:
         List with for each screen a list x, y, width, height
     """
