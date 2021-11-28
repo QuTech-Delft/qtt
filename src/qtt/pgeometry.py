@@ -1586,7 +1586,7 @@ except BaseException:
 
 # %% Copy mplimage to clipboard
 
-def mpl2clipboard(event=None, verbose: int = 1, fig: Optional[Union[int, plt.Figure]] = None):
+def mpl2clipboard(event=None, verbose: int = 0, fig: Optional[Union[int, plt.Figure]] = None):
     """ Copy current Matplotlib figure to clipboard
 
     Args:
