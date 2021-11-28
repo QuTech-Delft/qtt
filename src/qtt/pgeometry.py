@@ -33,7 +33,7 @@ import tempfile
 import time
 import warnings
 from functools import wraps
-from typing import Optional
+from typing import List, Optional
 
 import numpy
 import numpy as np
@@ -1755,37 +1755,36 @@ def cfigure(*args, **kwargs):
 # %%
 
 
-try:
-    def monitorSizes(verbose=0):
-        """ Return monitor sizes """
-        _qd = QtWidgets.QDesktopWidget()
-        if sys.platform == 'win32' and _qd is None:
-            import ctypes
-            user32 = ctypes.windll.user32
-            wa = [
-                [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
+def monitorSizes(verbose=0) -> List[List[int, int, int, int]]:
+    """ Return monitor sizes
+
+    Returns:
+        List with for each screen a list x, y, width, height
+    """
+    _qd = QtWidgets.QDesktopWidget()
+    if sys.platform == 'win32' and _qd is None:
+        import ctypes
+        user32 = ctypes.windll.user32
+        wa = [
+            [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
+    else:
+        _applocalqt = QtWidgets.QApplication.instance()
+
+        if _applocalqt is None:
+            _applocalqt = QtWidgets.QApplication([])
+            _qd = QtWidgets.QDesktopWidget()
         else:
-            _applocalqt = QtWidgets.QApplication.instance()
+            _qd = QtWidgets.QDesktopWidget()
 
-            if _applocalqt is None:
-                _applocalqt = QtWidgets.QApplication([])
-                _qd = QtWidgets.QDesktopWidget()
-            else:
-                _qd = QtWidgets.QDesktopWidget()
+        nmon = _qd.screenCount()
+        wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
+        wa = [[w.x(), w.y(), w.width(), w.height()] for w in wa]
 
-            nmon = _qd.screenCount()
-            wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
-            wa = [[w.x(), w.y(), w.width(), w.height()] for w in wa]
+    if verbose:
+        for ii, w in enumerate(wa):
+            print('monitor %d: %s' % (ii, str(w)))
+    return wa
 
-        if verbose:
-            for ii, w in enumerate(wa):
-                print('monitor %d: %s' % (ii, str(w)))
-        return wa
-except BaseException:
-    def monitorSizes(verbose=0):
-        """ Dummy function for monitor sizes """
-        return [[0, 0, 1600, 1200]]
-    pass
 
 # %%
 
