@@ -1763,10 +1763,8 @@ def monitorSizes(verbose: int = 0) -> List[List[int]]:
     Returns:
         List with for each screen a list x, y, width, height
     """
-    _applocalqt = QtWidgets.QApplication.instance()
+    _ = QtWidgets.QApplication.instance()
 
-    if _applocalqt is None:
-        _applocalqt = QtWidgets.QApplication([])
     _qd = QtWidgets.QDesktopWidget()
 
     nmon = _qd.screenCount()
