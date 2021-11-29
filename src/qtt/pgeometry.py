@@ -1763,24 +1763,15 @@ def monitorSizes(verbose: int = 0) -> List[List[int]]:
     Returns:
         List with for each screen a list x, y, width, height
     """
+    _applocalqt = QtWidgets.QApplication.instance()
+
+    if _applocalqt is None:
+        _applocalqt = QtWidgets.QApplication([])
     _qd = QtWidgets.QDesktopWidget()
-    if sys.platform == 'win32' and _qd is None:
-        import ctypes
-        user32 = ctypes.windll.user32
-        wa = [
-            [0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]]
-    else:
-        _applocalqt = QtWidgets.QApplication.instance()
 
-        if _applocalqt is None:
-            _applocalqt = QtWidgets.QApplication([])
-            _qd = QtWidgets.QDesktopWidget()
-        else:
-            _qd = QtWidgets.QDesktopWidget()
-
-        nmon = _qd.screenCount()
-        wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
-        wa = [[w.x(), w.y(), w.width(), w.height()] for w in wa]
+    nmon = _qd.screenCount()
+    wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
+    wa = [[w.x(), w.y(), w.width(), w.height()] for w in wa]
 
     if verbose:
         for ii, w in enumerate(wa):
