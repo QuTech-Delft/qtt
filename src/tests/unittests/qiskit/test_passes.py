@@ -5,10 +5,8 @@ import qiskit.quantum_info as qi
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import CZGate, HGate, RXGate, RYGate, RZGate
 
-from qtt.qiskit.passes import (DecomposeCX, DecomposeU, DelayPass,
-                               LinearTopologyParallelPass,
-                               RemoveDiagonalGatesAfterInput,
-                               RemoveSmallRotations, SequentialPass)
+from qtt.qiskit.passes import (DecomposeCX, DecomposeU, DelayPass, LinearTopologyParallelPass,
+                               RemoveDiagonalGatesAfterInput, RemoveSmallRotations, SequentialPass)
 
 
 def circuit_instruction_names(qc):
@@ -25,6 +23,11 @@ class TestQiskitPasses(unittest.TestCase):
         U = op.data/np.sqrt(complex(np.linalg.det(op.data)))
         U *= U[0, 0]
         np.testing.assert_almost_equal(U, np.eye(2**qc.num_qubits))
+
+    def assert_equal_circuit_gates(self, qc, qc2):
+        self.assertEqual(len(qc), len(qc2))
+        for ii, gate in enumerate(qc):
+            self.assertEqual(gate[0].name, qc2[ii][0].name)
 
     def test_DecomposeCX(self):
         qc = QuantumCircuit(2)
@@ -164,6 +167,22 @@ class TestQiskitPasses(unittest.TestCase):
 
         qc_transpiled = SequentialPass()(qc)
         self.assert_circuit_equivalence(qc_transpiled, qc_target)
+        self.assert_equal_circuit_gates(qc_transpiled, qc_target)
+
+    def test_SequentialPass_parallel_gates(self):
+        qc = QuantumCircuit(2)
+        qc.x(0)
+        qc.x(1)
+
+        qc_target = QuantumCircuit(2)
+        qc_target.x(0)
+        qc_target.barrier()
+        qc_target.x(1)
+        qc_target.barrier()
+
+        qc_transpiled = SequentialPass()(qc)
+        self.assert_circuit_equivalence(qc_transpiled, qc_target)
+        self.assert_equal_circuit_gates(qc_transpiled, qc_target)
 
     def test_LinearTopologyParallelPass(self):
         qc = QuantumCircuit(3)
@@ -184,11 +203,4 @@ class TestQiskitPasses(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    import qiskit
-
-    from qtt.utilities.tools import logging_context
     unittest.main()
-
-    qc = QuantumCircuit(1)
-    qc.p(np.pi, 0)
-    dag = qiskit.converters.circuit_to_dag(qc)
