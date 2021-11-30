@@ -26,8 +26,11 @@ class TestQiskitPasses(unittest.TestCase):
 
     def assert_equal_circuit_gates(self, qc, qc2):
         self.assertEqual(len(qc), len(qc2))
-        for ii, gate in enumerate(qc):
-            self.assertEqual(gate[0].name, qc2[ii][0].name)
+        for ii, item in enumerate(qc):
+            gate = item[0]
+            gate2 = qc2[ii][0]
+            self.assertEqual(gate.name, gate2.name)
+            self.assertEqual(gate.params, gate2.params)
 
     def test_DecomposeCX(self):
         qc = QuantumCircuit(2)
