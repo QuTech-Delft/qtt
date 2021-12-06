@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Functionality to fit PAT models
 
 For more details see: https://arxiv.org/abs/1803.10352
@@ -6,12 +5,14 @@ For more details see: https://arxiv.org/abs/1803.10352
 @author: diepencjv / eendebakpt
 """
 
+import matplotlib.pyplot as plt
 # %% Load packages
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy.ndimage
-from qtt.pgeometry import robustCost
 import scipy.constants
+import scipy.ndimage
+import scipy.signal
+
+from qtt.pgeometry import robustCost
 
 # %%
 ueV2Hz = scipy.constants.e / scipy.constants.h * 1e-6
