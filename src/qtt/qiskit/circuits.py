@@ -10,7 +10,7 @@ def integrate_circuit(
     number_of_qubits: int = 5,
     add_measurements: bool = True,
 ) -> QuantumCircuit:
-    """ Integrate circuit at specfied qubits in a larger qubit system
+    """ Integrate circuit at specified qubits in a larger qubit system
 
     This can be used for example to integrate a single-qubit experiment in
     a 5-qubit circuit to be executed on a 5-qubit device.
