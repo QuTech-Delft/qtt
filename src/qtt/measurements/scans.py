@@ -9,7 +9,7 @@ import logging
 import re
 import time
 import warnings
-from typing import Any, Type, Tuple
+from typing import Any, Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,28 +18,22 @@ import qcodes
 import skimage
 import skimage.filters
 from qcodes import Instrument
+from qcodes.data.data_array import DataArray
 from qcodes.instrument.parameter import Parameter
 from qcodes.instrument.sweep_values import SweepFixedValues
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
-from qcodes.data.data_array import DataArray
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.instrument_drivers.virtualAwg.virtual_awg
 import qtt.utilities.tools
+from qtt.data import diffDataset, makeDataSet1D, makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain, uniqueArrayName
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 from qtt.pgeometry import plot2Dline
-from qtt.utilities.tools import logging_context
-
-from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset
-from qtt.data import uniqueArrayName
-
-from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
-
+from qtt.utilities.tools import logging_context, update_dictionary
 
 # %%
 
@@ -141,7 +135,6 @@ def get_param_name(gates, sweepgate):
     else:
         # assume the argument already is a parameter
         return sweepgate.name
-
 
 
 # %%
@@ -529,7 +522,8 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                 waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweeprange, period, delete=delete)
 
     time.sleep(wait_time_startscan)
-    data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
+    device_parameters = {'trigger_re_arm_compensation': True}
+    data = measuresegment(waveform, Naverage, minstrhandle, read_ch, device_parameters=device_parameters)
     _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data[0].shape[0])
 
     if len(read_ch) == 1:
@@ -1710,7 +1704,7 @@ def get_uhfli_scope_records(device, daq, scopeModule, number_of_records=1, timeo
     data = scopeModule.read(True)
     # Stop the module; to use it again we need to call execute().
     scopeModule.finish()
-    wave_nodepath = '/{}/scopes/0/wave'.format(device)
+    wave_nodepath = f'/{device}/scopes/0/wave'
     return data[wave_nodepath][:number_of_records]
 
 
@@ -2109,7 +2103,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             else:
                 waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'].name, sweeprange, period)
 
-    data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
+    device_parameters = {'trigger_re_arm_compensation': True}
+    data = measuresegment(waveform, Naverage, minstrhandle, read_ch, device_parameters)
     if len(read_ch) == 1:
         measure_names = ['measured']
     else:
@@ -2239,7 +2234,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     if sweeporstepdata is not None:
         raise Exception('parameter sweeporstepdata is not used')
     if hasattr(virtual_parameter, 'comb_map'):
-        active_parameters = dict([(p.name, r) for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
+        active_parameters = {p.name: r for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0}
         if remove_slow_gates:
             try:
                 if 'awg' in station.components:
