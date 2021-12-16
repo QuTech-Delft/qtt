@@ -123,7 +123,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         outputs.
 
         Args:
-            wave_name: Name of the CSV file, is used by a sequence program.
+            wave_name: Name of the wave file, is used by a sequence program.
             waveforms: One or more waveforms that are to be written to a
                 CSV file. Note if there are more than one waveforms then they
                 have to be of equal length, if not the longer ones will be
