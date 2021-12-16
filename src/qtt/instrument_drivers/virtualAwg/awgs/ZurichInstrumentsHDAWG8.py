@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class ZurichInstrumentsHDAWG8(AwgCommon):
     __sampling_rate_map = {ii: 2.4e9 / 2**ii for ii in range(0, 14)}
 
-    def __init__(self, awg, awg_number=0):
+    def __init__(self, awg, awg_number=0, use_binary_waves=True):
         """ Implements the common functionality of the AwgCommon for the Zurich Instruments HDAWG8 to be controlled by
         the virtual AWG.
 
@@ -27,6 +27,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             awg (ZIHDAWG8): Instance of the QCoDeS ZIHDAWG8 driver.
             awg_number (int): The number of the AWG that is to be controlled. The ZI HDAWG8 has 4 AWGs and the default
                               one is the first one (index 0).
+            use_binary_waves (bool): If True, use binary waves otherwise use .csv format
         """
         super().__init__('ZIHDAWG8', channel_numbers=list(range(0, 8)),
                          marker_numbers=list(range(0, 8)))
@@ -38,7 +39,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
                                                       set_cmd=self.update_sampling_rate,
                                                       get_cmd=self.retrieve_sampling_rate)}
 
-        self._use_binary_waves = True
+        self._use_binary_waves = use_binary_waves
 
     def __str__(self):
         class_name = self.__class__.__name__
@@ -118,16 +119,11 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
     def waveform_to_wave(awg_driver, wave_name: str, waveform: np.ndarray) -> None:
         """
         Write waveforms to a .wave file in the modules data directory so that it
-        can be referenced and used in a sequence program. If more than one
-        waveform is provided they will be played simultaneously but on separate
-        outputs.
+        can be referenced and used in a sequence program.
 
         Args:
             wave_name: Name of the wave file, is used by a sequence program.
-            waveforms: One or more waveforms that are to be written to a
-                CSV file. Note if there are more than one waveforms then they
-                have to be of equal length, if not the longer ones will be
-                truncated.
+            waveforms: Waveforms that is to be written to a .wave file.
         """
         data_dir = awg_driver.awg_module.getString('awgModule/directory')
         wave_dir = os.path.join(data_dir, "awg", "waves")
