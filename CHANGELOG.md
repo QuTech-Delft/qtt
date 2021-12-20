@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Context manager 'restore_at_exit' in the 'VirtualDAC' object (#792)
 - Added python 3.9 support (#773)
 - Passes for Qiskit (##784)
+- Improve HDAWG8 upload times and M4i re-arm time (#806)
 
 ### Changed
 
