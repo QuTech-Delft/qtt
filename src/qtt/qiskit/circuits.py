@@ -42,6 +42,4 @@ def integrate_circuit(
         for qubit_index in range(number_of_qubits):
             if qubit_index not in target_qubits:
                 output_qc.measure(qubit_index, qubit_index)
-            else:
-                continue
     return output_qc
