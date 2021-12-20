@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, call
 
 import numpy as np
 
-from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommonError
+from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 
 
 class TestZurichInstrumentsHDAWG8(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             pass
 
         self.awg = ZIHDAWG8()
-        self.zi_hdawg8 = ZurichInstrumentsHDAWG8(self.awg, 0)
+        self.zi_hdawg8 = ZurichInstrumentsHDAWG8(self.awg, 0, use_binary_waves=False)
 
     def test_initialize_raises_awg_error(self):
         awg = MagicMock(name='fake')
@@ -71,7 +71,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
 
     def test_update_gain(self):
         self.zi_hdawg8.update_gain(0.5)
-        calls = [call.set('sigouts_{}_range'.format(ch), 1.0) for ch in range(8)]
+        calls = [call.set(f'sigouts_{ch}_range', 1.0) for ch in range(8)]
         self.awg.assert_has_calls(calls)
 
     def test_retrieve_gain(self):
@@ -82,7 +82,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             self.awg.get.side_effect = lambda v: int(v[8:9])
             self.zi_hdawg8.retrieve_gain()
 
-    def test_upload_waveforms(self):
+    def test_upload_waveforms_csv(self):
         sequence_names = ['seq1', 'mark', 'seq2']
         sequence_channels = [(1, 1), (1, 0, 1), (2, 0)]
         sequence_items = [np.array(range(10)), np.array(range(1, 11)).astype(float), np.array(range(2, 12))]
