@@ -522,7 +522,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                 waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweeprange, period, delete=delete)
 
     time.sleep(wait_time_startscan)
-    device_parameters = {'trigger_re_arm_compensation': True}
+    device_parameters = scanjob.get('device_parameters', None)
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch, device_parameters=device_parameters)
     _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data[0].shape[0])
 
@@ -2103,7 +2103,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             else:
                 waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'].name, sweeprange, period)
 
-    device_parameters = {'trigger_re_arm_compensation': True}
+    device_parameters = scanjob.get('device_parameters', None)
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch, device_parameters)
     if len(read_ch) == 1:
         measure_names = ['measured']
