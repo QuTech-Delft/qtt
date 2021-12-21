@@ -39,7 +39,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
                                                       set_cmd=self.update_sampling_rate,
                                                       get_cmd=self.retrieve_sampling_rate)}
 
-        self._use_binary_waves = use_binary_waves
+        self.__use_binary_waves = use_binary_waves
 
     def __str__(self):
         class_name = self.__class__.__name__
@@ -128,10 +128,8 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
         data_dir = awg_driver.awg_module.getString('awgModule/directory')
         wave_dir = os.path.join(data_dir, "awg", "waves")
         if not os.path.isdir(wave_dir):
-            raise Exception(
-                "AWG module wave directory {} does not exist or is not a "
-                "directory".format(
-                    wave_dir))
+            raise Exception(f"AWG module wave directory {wave_dir} does not exist or is not a directory")
+
         wave_file = os.path.join(wave_dir, wave_name + '.wave')
 
         wave_array = zhinst.utils.convert_awg_waveform(waveform)
@@ -144,7 +142,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
                 sequence = sequence.astype(int)
             channel = channel[0] + 1
             logger.info(f'writing wave {name}')
-            if self._use_binary_waves:
+            if self.__use_binary_waves:
                 self.waveform_to_wave(self.__awg, waveform=sequence, wave_name=name)
             else:
                 self.__awg.waveform_to_csv(name, sequence)
