@@ -1067,16 +1067,16 @@ def _make_data_set(measured_data_list, measurement_list, measurement_unit, locat
             raise TypeError('Type of measurement names must be str or qcodes.Parameter')
 
     for idm, mname in enumerate(measure_names):
-        preset_data_array = DataArray(name=mname, array_id=mname, label=mname, unit=measure_units[idm],
-                                      preset_data=np.copy(preset_data), set_arrays=set_arrays)
-        data_set.add_array(preset_data_array)
         if measured_data_list is not None and measured_data_list[idm] is not None:
             measured_array = np.array(measured_data_list[idm])
             if measured_array.shape != preset_data.shape:
                 logger.warning(f'Shape of measured data {measured_array.shape} does not match '
                                f'setpoint shape {preset_data.shape}')
-
-            getattr(data_set, mname).ndarray = measured_array
+        else:
+            measured_array = np.copy(preset_data)
+        preset_data_array = DataArray(name=mname, array_id=mname, label=mname, unit=measure_units[idm],
+                                      preset_data=measured_array, set_arrays=set_arrays)
+        data_set.add_array(preset_data_array)
 
     if len(setpoints) > 1:
         data_set.add_array(setpoints[1])
