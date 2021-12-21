@@ -1,9 +1,10 @@
 import unittest
 
 import numpy as np
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import ClassicalRegister, QuantumCircuit, QuantumRegister
 
 from qtt.qiskit.circuits import integrate_circuit
+
 
 class TestCircuits(unittest.TestCase):
 
@@ -32,3 +33,8 @@ class TestCircuits(unittest.TestCase):
             self.assertEqual(new[0].name, old[0].name)
             self.assertEqual(new[0].params, old[0].params)
 
+    def test_integrate_circuit_multiple_registers(self):
+        qc = QuantumCircuit(QuantumRegister(1), QuantumRegister(1), ClassicalRegister(2))
+        qc.barrier()
+        new_qc = integrate_circuit(qc, target_qubits=[0, 3], number_of_qubits=4)
+        self.assertEqual(len(new_qc), 3)
