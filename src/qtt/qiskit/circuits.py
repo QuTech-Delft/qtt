@@ -36,7 +36,8 @@ def integrate_circuit(
     if target_classical_bits is None:
         cbits = [output_qc.cregs[0][i] for i in target_qubits]
     else:
-        cbits = target_classical_bits
+        cbits = [output_qc.cregs[0][i] for i in target_classical_bits]
+
     output_qc = output_qc.compose(qc, qubits=qbits, clbits=cbits)
 
     if add_measurements:
