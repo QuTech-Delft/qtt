@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, call
@@ -95,3 +97,28 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
                  call.upload_sequence_program(0, 'program')]
         self.awg.assert_has_calls(calls)
         self.assertListEqual(list(range(2, 12)), list(self.awg.waveform_to_csv.call_args[0][1]))
+
+    def test_upload_waveforms_wave(self):
+        class ZIHDAWG8(MagicMock):
+            awg_module = MagicMock()
+        temp_dir = tempfile.mkdtemp()
+        os.mkdir(os.path.join(temp_dir, 'awg'))
+        wave_dir = os.path.join(temp_dir, 'awg', 'waves')
+        os.mkdir(wave_dir)
+        awg = ZIHDAWG8()
+        awg.awg_module.getString = MagicMock(return_value=temp_dir)
+        zi_hdawg8 = ZurichInstrumentsHDAWG8(awg, 0, use_binary_waves=True)
+        sequence_names = ['seq1', 'mark', 'seq2']
+        sequence_channels = [(1, 1), (1, 0, 1), (2, 0)]
+        seq1 = np.array(range(10))
+        seq2 = np.array(range(1, 11)).astype(float)
+        mark = np.array(range(2, 12))
+        sequence_items = [seq1, mark, seq2]
+        zi_hdawg8.upload_waveforms(sequence_names, sequence_channels, sequence_items)
+        self.assertListEqual(os.listdir(wave_dir), ['mark.wave', 'seq1.wave', 'seq2.wave'])
+        seq1_created = np.fromfile(os.path.join(wave_dir, 'seq1.wave'), dtype=np.uint16)
+        seq2_created = np.fromfile(os.path.join(wave_dir, 'seq2.wave'), dtype=np.uint16)
+        mark_created = np.fromfile(os.path.join(wave_dir, 'mark.wave'), dtype=np.uint16)
+        np.testing.assert_array_equal(seq1, seq1_created)
+        np.testing.assert_array_equal(seq2, seq2_created)
+        np.testing.assert_array_equal(mark, mark_created)

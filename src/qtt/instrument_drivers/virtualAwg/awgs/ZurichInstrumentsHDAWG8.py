@@ -143,7 +143,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             channel = channel[0] + 1
             logger.info(f'writing wave {name}')
             if self.__use_binary_waves:
-                self.waveform_to_wave(self.__awg, waveform=sequence, wave_name=name)
+                self.waveform_to_wave(self.__awg, wave_name=name, waveform=sequence)
             else:
                 self.__awg.waveform_to_csv(name, sequence)
             if channel in channel_map:
