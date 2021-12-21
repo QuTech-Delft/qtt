@@ -26,7 +26,7 @@ class TestCircuits(unittest.TestCase):
             self.assertEqual(new[0].params, old[0].params)
 
         new_qc = integrate_circuit(
-            self.circuit, target_qubits=[2], target_control_bits=[1], number_of_qubits=5, add_measurements=False)
+            self.circuit, target_qubits=[2], target_classical_bits=[1], number_of_qubits=5, add_measurements=False)
         self.assertEqual(new_qc.width(), 5*self.circuit.width())
         self.assertEqual(new_qc.depth(), self.circuit.depth())
         for new, old in zip(new_qc, self.circuit):
