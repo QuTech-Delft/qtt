@@ -115,26 +115,6 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             raise ValueError(f'Not all channel gains {gains} are equal. Please reset!')
         return gains[0]
 
-    @staticmethod
-    def waveform_to_wave(awg_driver, wave_name: str, waveform: np.ndarray) -> None:
-        """
-        Write waveforms to a .wave file in the modules data directory so that it
-        can be referenced and used in a sequence program.
-
-        Args:
-            wave_name: Name of the wave file, is used by a sequence program.
-            waveforms: Waveforms that is to be written to a .wave file.
-        """
-        data_dir = awg_driver.awg_module.getString('awgModule/directory')
-        wave_dir = os.path.join(data_dir, "awg", "waves")
-        if not os.path.isdir(wave_dir):
-            raise Exception(f"AWG module wave directory {wave_dir} does not exist or is not a directory")
-
-        wave_file = os.path.join(wave_dir, wave_name + '.wave')
-
-        wave_array = zhinst.utils.convert_awg_waveform(waveform)
-        wave_array.tofile(wave_file)
-
     def upload_waveforms(self, sequence_names, sequence_channels, sequence_items, reload=True):
         channel_map = {}
         for name, channel, sequence in zip(sequence_names, sequence_channels, sequence_items):
@@ -143,7 +123,7 @@ class ZurichInstrumentsHDAWG8(AwgCommon):
             channel = channel[0] + 1
             logger.info(f'writing wave {name}')
             if self.__use_binary_waves:
-                self.waveform_to_wave(self.__awg, wave_name=name, waveform=sequence)
+                self.__awg.waveform_to_wave(wave_name=name, waveform=sequence)
             else:
                 self.__awg.waveform_to_csv(name, sequence)
             if channel in channel_map:
