@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Functionality plot onto a matplotlib Axes object (#785)
 - Context manager 'restore_at_exit' in the 'VirtualDAC' object (#792)
 - Added python 3.9 support (#773)
-- Passes for Qiskit (##784)
+- Passes for Qiskit (#784)
+- Added method to integrate qiskit circuits into larger circuits (#805)
 - Improve HDAWG8 upload times and M4i re-arm time (#806)
 
 ### Changed
