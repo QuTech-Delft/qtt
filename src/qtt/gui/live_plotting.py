@@ -2,6 +2,7 @@
 import logging
 import time
 from functools import partial
+from typing import Any, Optional
 
 import numpy as np
 import pyqtgraph
@@ -43,16 +44,21 @@ except BaseException:
 
 class rda_t:
 
-    def __init__(self):
+    def __init__(self, host: str = '127.0.0.1', port: int = 6379, password: Optional[str] = None):
         """ Class for simple real-time data access
 
         Every object has a `get` and `set` method to access simple parameters
         globally (e.g. across different python sessions).
 
+        Args:
+            host: Hostname for connection
+            port: Port for connection
+            password: Password for connection
+
         """
 
         # we use redis as backend now
-        self.r = redis.Redis(host='127.0.0.1', port=6379)  # , password='test')
+        self.r = redis.Redis(host=host, port=port, password=password)
         try:
             self.set('dummy_rda_t', -3141592)
             v = self.get_float('dummy_rda_t')
@@ -69,25 +75,29 @@ class rda_t:
             return v
         return float(v)
 
-    def get_int(self, key, default_value=None):
+    def get_int(self, key: str, default_value: Optional[int] = None) -> Optional[int]:
         """ Get value by key and convert to an int
 
+        Args:
+            key: Key to retrieve
+            default_value: Value to return when the key is not present
+
         Returns:
-            value (int)
+            Value retrieved
         """
         v = self.get(key, default_value)
         if v is None:
             return v
         return int(float(v))
 
-    def get(self, key, default_value=None):
+    def get(self, key: str, default_value: Optional[Any] = None) -> Any:
         """ Get a value
 
         Args:
-            key (str): value to be retrieved
-            default_value (Anything): value to return if the key is not present
+            key: value to be retrieved
+            default_value: value to return if the key is not present
         Returns:
-            value (str)
+            Value retrieved
         """
         value = self.r.get(key)
         if value is None:
@@ -95,15 +105,14 @@ class rda_t:
         else:
             return value
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any):
         """ Set a value
 
         Args:
-            key (str): key
-            value (str): the value to be set
+            key: key
+            value: the value to be set
         """
         self.r.set(key, value)
-        pass
 
 
 class MeasurementControl(QtWidgets.QMainWindow):
