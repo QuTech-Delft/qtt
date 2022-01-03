@@ -68,8 +68,16 @@ class rda_t:
             print('rda_t: check whether redis is installed and the server is running')
             raise e
 
-    def get_float(self, key, default_value=None):
-        """ Get value by key and convert to a float """
+    def get_float(self, key: str, default_value: Optional[float] = None) -> Optional[float]:
+        """ Get value by key and convert to a float
+
+        Args:
+            key: Key to retrieve
+            default_value: Value to return when the key is not present
+
+        Returns:
+            Value retrieved
+        """
         v = self.get(key, default_value)
         if v is None:
             return v
