@@ -29,8 +29,8 @@ class TestTools(unittest.TestCase):
 
     def test_measure_time_current_time(self):
         with measure_time(None) as m:
-            self.assertIsInstance(measure_time.current_time, float)
-            self.assertTrue(measure_time.current_time >= 0, 'current time must always be positive')
+            self.assertIsInstance(m.current_time, float)
+            self.assertTrue(m.current_time >= 0, 'current time must always be positive')
 
     def test_python_code_modules_and_versions(self):
         with warnings.catch_warnings():
