@@ -113,10 +113,9 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
         mark = np.array(range(2, 12))
         sequence_items = [seq1, mark, seq2]
         zi_hdawg8.upload_waveforms(sequence_names, sequence_channels, sequence_items)
-        self.assertSetEqual(set(os.listdir(wave_dir)), {'mark.wave', 'seq1.wave', 'seq2.wave'})
-        seq1_created = np.fromfile(os.path.join(wave_dir, 'seq1.wave'), dtype=np.uint16)
-        seq2_created = np.fromfile(os.path.join(wave_dir, 'seq2.wave'), dtype=np.uint16)
-        mark_created = np.fromfile(os.path.join(wave_dir, 'mark.wave'), dtype=np.uint16)
-        np.testing.assert_array_equal(seq1, seq1_created)
-        np.testing.assert_array_equal(seq2, seq2_created)
-        np.testing.assert_array_equal(mark, mark_created)
+        calls = [call.waveform_to_wave(wave_name='seq1', waveform=mock.ANY),
+                 call.waveform_to_wave(wave_name='mark', waveform=mock.ANY),
+                 call.waveform_to_wave(wave_name='seq2', waveform=mock.ANY),
+                 call.generate_csv_sequence_program([(2, 'seq1', 'mark'), (3, 'seq2', None)]),
+                 call.upload_sequence_program(0, mock.ANY)]
+        self.awg.assert_has_calls(calls)
