@@ -69,15 +69,26 @@ class measure_time():
 
     def __init__(self, message: Optional[str] = 'dt: '):
         self.message = message
+        self.dt = -1
 
     def __enter__(self):
         self.start_time = time.perf_counter()
         return self
 
     @property
+    def current_time(self) -> float:
+        """ Return time since start of the context
+
+        Returns:
+            Time in seconds
+        """
+        return time.perf_counter() - self.start_time
+
+    @property
     def delta_time(self) -> float:
         """ Return time spend in the context
 
+        If still in the context, return -1.
         Returns:
             Time in seconds
         """
