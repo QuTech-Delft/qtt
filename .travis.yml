@@ -4,8 +4,8 @@ cache: pipv2
 
 matrix:
   include:
-  - name: Minimal installation 3.9
-    python: 3.9
+  - name: Minimal installation 3.10
+    python: 3.10
     sudo: true
     dist: xenial
     env: QT_QPA_PLATFORM=offscreen
