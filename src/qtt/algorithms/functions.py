@@ -73,26 +73,6 @@ def double_gaussian(x_data, params):
     return double_gauss
 
 
-@qtt.utilities.tools.rdeprecated(txt='Function will be removed from qtt', expire='Jan 1 2020')
-def _cost_double_gaussian(x_data, y_data, params):
-    """ Cost function for fitting of double Gaussian.
-
-    Args:
-        x_data (array): x values of the data
-        y_data (array): y values of the data
-        params (array): parameters of the two gaussians, [A_dn, A_up, sigma_dn, sigma_up, mean_dn, mean_up]
-            amplitude of first (second) gaussian = A_dn (A_up)
-            standard deviation of first (second) gaussian = sigma_dn (sigma_up)
-            average value of the first (second) gaussian = mean_dn (mean_up)
-
-    Returns:
-        cost (float): value which indicates the difference between the data and the fit
-    """
-    model = double_gaussian(x_data, params)
-    cost = np.linalg.norm(y_data - model)
-    return cost
-
-
 def fit_double_gaussian(x_data, y_data, maxiter=None, maxfun=5000, verbose=1, initial_params=None):
     raise Exception('fit_double_gaussian was moved to qtt.algorithms.fitting')
 
