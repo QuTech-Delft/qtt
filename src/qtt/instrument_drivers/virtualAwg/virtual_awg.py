@@ -73,7 +73,7 @@ class VirtualAwg(Instrument):
         Arguments:
             awgs (list): A list with the QCoDeS driver instances.
         """
-        self._awgs = list()
+        self._awgs = []
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
                 self.awgs.append(Tektronix5014C_AWG(awg))
@@ -237,7 +237,7 @@ class VirtualAwg(Instrument):
             period (float): The period of the markers in seconds.
             repetitions (int): The number of markers in the sequence.
         """
-        marker_properties = dict()
+        marker_properties = {}
         uptime = self.digitizer_marker_uptime()
         delay = self.digitizer_marker_delay()
 
@@ -301,7 +301,7 @@ class VirtualAwg(Instrument):
             >> waiting_times = [1e-4, 1e-4, 1e-4]
             >> pulse_data = virtual_awg.pulse_gates(gate_voltages, waiting_times)
         """
-        sequences = dict()
+        sequences = {}
         period = sum(waiting_times)
         sequences.update(self.make_markers(period, repetitions))
 
@@ -319,7 +319,7 @@ class VirtualAwg(Instrument):
 
         return sweep_data
 
-    def sweep_gates(self, gates, sweep_range, period, width=0.9375, do_upload=True):
+    def sweep_gates(self, gates, sweep_range, period, width=0.9375, do_upload=True, zero_padding=0):
         """ Supplies a sawtooth wave to the given gates and returns the settings required
             for processing and constructing the readout times for the digitizer.
 
@@ -331,6 +331,7 @@ class VirtualAwg(Instrument):
                            Needs a value between 0 and 1. The value 1 producing a rising ramp,
                            while 0 produces a falling ramp.
             do_upload (bool, Optional): Does not upload the waves to the AWG's when set to False.
+            zero_padding (float): Amount of zero padding to add (in seconds)
 
         Returns:
             A dictionary with the properties of the pulse waves; the original sawtooth sequence,
@@ -342,12 +343,12 @@ class VirtualAwg(Instrument):
             >> gates = {'P4': 1, 'P7': 0.1}
             >> sweep_data = virtual_awg.sweep_gates(gates, 100, 1e-3)
         """
-        sequences = dict()
-        sequences.update(self.make_markers(period))
+        sequences = {}
+        sequences.update(self.make_markers(period + zero_padding))
 
         for gate_name, rel_amplitude in gates.items():
             amplitude = rel_amplitude * sweep_range
-            sweep_wave = Sequencer.make_sawtooth_wave(amplitude, period, width)
+            sweep_wave = Sequencer.make_sawtooth_wave(amplitude, period, width, zero_padding=zero_padding)
             sequences.setdefault(gate_name, []).append(sweep_wave)
 
         sweep_data = self.sequence_gates(sequences, do_upload)
@@ -355,6 +356,7 @@ class VirtualAwg(Instrument):
                            'period': period,
                            'width': width,
                            'start_zero': True,
+                           'zero_padding': zero_padding,
                            '_gates': gates})
 
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
@@ -389,7 +391,7 @@ class VirtualAwg(Instrument):
             >> gates = [{'P4': 1}, {'P7': 0.1}]
             >> sweep_data = virtual_awg.sweep_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
-        sequences = dict()
+        sequences = {}
         base_period = period / np.prod(resolution)
         sequences.update(self.make_markers(period, repetitions=1))
 
@@ -441,7 +443,7 @@ class VirtualAwg(Instrument):
             >> gates = [{'P4': 1}, {'P7': 0.1}]
             >> sweep_data = virtual_awg.pulse_gates_2d(gates, mV_sweep_ranges, period, resolution)
         """
-        sequences = dict()
+        sequences = {}
         sequences.update(self.make_markers(period))
 
         period_x = resolution[0] * period
@@ -488,9 +490,9 @@ class VirtualAwg(Instrument):
             _ = [awg.delete_waveforms() for awg in self.awgs]
 
         for number in self.__awg_range:
-            sequence_channels = list()
-            sequence_names = list()
-            sequence_items = list()
+            sequence_channels = []
+            sequence_names = []
+            sequence_items = []
 
             gain_factor = self.awgs[number].retrieve_gain()
             vpp_amplitude = 2 * gain_factor

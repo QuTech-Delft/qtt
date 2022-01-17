@@ -1,4 +1,4 @@
-from qupulse.pulses import TablePT, FunctionPT
+from qupulse.pulses import FunctionPT, TablePT
 
 
 class DataTypes:
@@ -21,8 +21,9 @@ class Templates:
                      Parameters of the pulse template are the `duration` (in the same unit as time),
                      `omega_0` (in Hz), `delta_omega` (in Hz), `amplitude` and `phase`. Time is in ns.
                      """
-        linear_chirp_template = FunctionPT('amplitude*cos(2*pi*(omega_0+(t/(2*duration))*delta_omega) *t*1e-9+phase)', 'duration', channel=name)
-        linear_chirp_template.__doc__='Template for linear chirp\nAlso see https://en.wikipedia.org/wiki/Chirp\n\n'+linear_chirp_template.__doc__
+        linear_chirp_template = FunctionPT(
+            'amplitude*cos(2*pi*(omega_0+(t/(2*duration))*delta_omega) *t*1e-9+phase)', 'duration', channel=name)
+        linear_chirp_template.__doc__ = 'Template for linear chirp\nAlso see https://en.wikipedia.org/wiki/Chirp\n\n'+linear_chirp_template.__doc__
         return linear_chirp_template
 
     @staticmethod
@@ -39,18 +40,22 @@ class Templates:
                                ('period*3/4', 0), ('period', 0)]})
 
     @staticmethod
-    def sawtooth(name):
+    def sawtooth(name, padding=0):
         """ Creates a sawtooth qupulse template for sequencing.
 
         Args:
             name (str): The user defined name of the sequence.
+            padding (float): Padding to add at the end of the sawtooth
 
         Returns:
             TablePT: The sequence with the sawtooth wave.
         """
-        return TablePT({name: [(0, 0), ('period*(1-width)/2', '-amplitude', 'linear'),
-                               ('period*(1-(1-width)/2)', 'amplitude', 'linear'),
-                               ('period', 0, 'linear')]})
+        tbl = [(0, 0), ('period*(1-width)/2', '-amplitude', 'linear'),
+               ('period*(1-(1-width)/2)', 'amplitude', 'linear'),
+               ('period', 0, 'linear')]
+        if padding > 0:
+            tbl += [(f'period+{padding}', 0, 'hold')]
+        return TablePT({name: tbl})
 
     @staticmethod
     def hold(name):
