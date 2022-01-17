@@ -1050,7 +1050,7 @@ try:
             slide: PowerPoint slide.
 
         Example:
-        -------
+        --------
         >>> notes = 'some additional information'
         >>> addPPT_dataset(dataset,notes)
         """

@@ -229,12 +229,6 @@ def default_setpoint_array(dataset, measured_name='measured'):
 # %% Monkey patch qcodes to store latest dataset
 
 
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
-def get_latest_dataset():
-    """ Return latest dataset that was created """
-    return getattr(DataSet._latest, None)
-
-
 def add_comment(txt, dataset=None, verbose=0):
     """ Add a comment to a DataSet
 
@@ -763,10 +757,6 @@ class image_transform:
 
     def istep_step(self):
         return np.mean(np.diff(self.vstep))
-
-    @qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
-    def istep(self):
-        return self.scan_resolution()
 
     def scan_resolution(self):
         """ Return the scan resolution in [units]/pixel """
