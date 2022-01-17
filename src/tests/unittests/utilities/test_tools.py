@@ -12,12 +12,10 @@ from qcodes.data.data_array import DataArray
 from qcodes.tests.legacy.data_mocks import DataSet2D
 
 import qtt.measurements.scans
-from qtt.utilities.tools import (code_version, diffImage, diffImageSmooth,
-                                 get_git_versions, get_module_versions,
-                                 get_python_version, in_ipynb, measure_time,
-                                 pythonVersion, rdeprecated, resampleImage,
-                                 reshape_metadata, _convert_rgb_color_to_integer,
-                                 _covert_integer_to_rgb_color, set_ppt_slide_background)
+from qtt.utilities.tools import (_convert_rgb_color_to_integer, _covert_integer_to_rgb_color, code_version, diffImage,
+                                 diffImageSmooth, get_git_versions, get_module_versions, get_python_version, in_ipynb,
+                                 measure_time, pythonVersion, rdeprecated, resampleImage, reshape_metadata,
+                                 set_ppt_slide_background)
 
 
 class TestTools(unittest.TestCase):
@@ -28,6 +26,11 @@ class TestTools(unittest.TestCase):
                 time.sleep(.101)
         self.assertGreater(m.delta_time, 0.1)
         self.assertIn('hi', f.getvalue())
+
+    def test_measure_time_current_delta_time(self):
+        with measure_time(None) as m:
+            self.assertIsInstance(m.current_delta_time, float)
+            self.assertTrue(m.current_delta_time >= 0, 'current time must always be positive')
 
     def test_python_code_modules_and_versions(self):
         with warnings.catch_warnings():
