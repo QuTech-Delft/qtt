@@ -98,7 +98,7 @@ class rda_t:
             return v
         return int(float(v))
 
-    def get(self, key: str, default_value: Optional[Any] = None) -> Any:
+    def get(self, key: str, default_value: Optional[Any] = None) -> Optional[Any]:
         """ Get a value
 
         Args:
