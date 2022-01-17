@@ -84,22 +84,6 @@ def _simulate_row(i, ds, npointsy, usediag):
 
 # %%
 
-@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
-def defaultVmatrix(n):
-    """ Helper function.
-        >>> m=defaultVmatrix(2)
-    """
-    Vmatrix = np.eye(n)
-    vals = [1, .25, .07, .02, .001, 0, 0]
-    for x in range(1, n):
-        for i in range(n - x):
-            Vmatrix[i, i + x] = vals[x]
-            Vmatrix[i + x, i] = vals[x]
-
-    VmatrixF = np.eye(n + 1)
-    VmatrixF[0:n, 0:n] = Vmatrix
-    return VmatrixF
-
 
 class GateTransform:
 
@@ -670,11 +654,6 @@ class DotSystem(BaseDotSystem):
         for name in self.varnames:
             print(name + ' = ' + str(getattr(self, 'name')))
         print(' ')
-
-    @qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jan 1 2021')
-    def getHn(self, numberofelectrons):
-        inds = np.where(self.number_of_electrons == numberofelectrons)[0]
-        return self.H[inds[0]:inds[-1] + 1, inds[0]:inds[-1] + 1]
 
     def visualize(self, fig=1):
         """ Create a graphical representation of the system (needs graphviz).
