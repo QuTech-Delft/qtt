@@ -10,28 +10,28 @@ Quantum Technology Toolbox (QTT) is a Python-based framework developed initialy 
 QuTech is an advanced research center based in Delft, the Netherlands, for quantum computing and quantum internet.
 It is a collaboration founded by the Delft University of Technology (`TU Delft <https://www.tudelft.nl/en>`_) and the Netherlands Organisation for Applied Scientific Research (`TNO <https://www.tno.nl/en>`_).
 
-The experiments done on spin-qubits at QuTech make use of the QTT framework to add automated funcionalities and algorithms to their measurement code. 
+The experiments done on spin-qubits at QuTech make use of the QTT framework to add automated funcionalities and algorithms to their measurement code.
 This paves the way to a more time-efficient, user-friendly and robust code, making more complex research on larger systems possible.
 We invite you to use and contribute to QTT. Below we will guide you through the installation.
 
-QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on `Qcodes <https://github.com/qdev-dk/Qcodes>`_. 
+QTT is the framework on which you can base your measurement and analysis scripts, and QTT itself is based on `Qcodes <https://github.com/qdev-dk/Qcodes>`_.
 
- 
+
 Installation
 ------------
 
-QTT is compatible with Python 3.5+.
+QTT is compatible with Python 3.7+.
 
 QTT can be installed as a pip package:
 
 .. code-block:: console
 
-    $ pip install --upgrade qtt 
+    $ pip install --upgrade qtt
 
 For development we advice to install from source. First retrieve the source code using git, and then install from the qtt source directory using the command:
 
 .. code-block:: console
-   
+
    $ python setup.py develop
 
 For for Vandersypen research group there are more detailed instructions, read the file `INSTALL-spinqubits.md <https://github.com/VandersypenQutech/spin-projects/blob/master/INSTALL.md>`_ in the spin-projects repository.
@@ -68,7 +68,7 @@ Testing
 -------
 
 Tests for the qtt packages are contained in the subdirectory ``tests`` and as test functions (``test_*``) in
-the code. To run the tests you can run one of the commands below.
+the code. To run the tests you can run the command below.
 
 .. code-block:: console
 
