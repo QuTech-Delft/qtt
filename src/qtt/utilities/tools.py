@@ -76,7 +76,7 @@ class measure_time():
         return self
 
     @property
-    def current_time(self) -> float:
+    def current_delta_time(self) -> float:
         """ Return time since start of the context
 
         Returns:

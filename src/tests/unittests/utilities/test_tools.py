@@ -27,10 +27,10 @@ class TestTools(unittest.TestCase):
         self.assertGreater(m.delta_time, 0.1)
         self.assertIn('hi', f.getvalue())
 
-    def test_measure_time_current_time(self):
+    def test_measure_time_current_delta_time(self):
         with measure_time(None) as m:
-            self.assertIsInstance(m.current_time, float)
-            self.assertTrue(m.current_time >= 0, 'current time must always be positive')
+            self.assertIsInstance(m.current_delta_time, float)
+            self.assertTrue(m.current_delta_time >= 0, 'current time must always be positive')
 
     def test_python_code_modules_and_versions(self):
         with warnings.catch_warnings():
