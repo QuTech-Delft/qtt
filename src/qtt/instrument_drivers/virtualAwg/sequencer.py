@@ -1,10 +1,11 @@
 import warnings
+
 import numpy as np
 from matplotlib import pyplot as plt
-
 from qupulse.pulses import SequencePT
 from qupulse.pulses.plotting import plot, render
-from qupulse.serialization import JSONSerializableEncoder, JSONSerializableDecoder
+from qupulse.serialization import JSONSerializableDecoder, JSONSerializableEncoder
+
 from qtt.instrument_drivers.virtualAwg.templates import DataTypes, Templates
 
 
@@ -43,7 +44,7 @@ class Sequencer:
                 'type': DataTypes.RAW_DATA}
 
     @staticmethod
-    def make_sawtooth_wave(amplitude, period, width=0.95, repetitions=1, name='sawtooth'):
+    def make_sawtooth_wave(amplitude, period, width=0.95, repetitions=1, name='sawtooth', zero_padding=0):
         """ Creates a sawtooth waveform of the type qupulse template.
 
         Args:
@@ -52,6 +53,7 @@ class Sequencer:
             period (float): The period of the waveform in seconds.
             repetitions (int): The number of oscillations in the sequence.
             name (str): The name of the returned sequence.
+            zero_padding (float): Amount in seconds of zero padding to add
 
         Returns:
             Dict: *NAME*, *TYPE*, *WAVE* keys containing values; sequence name,
@@ -61,7 +63,7 @@ class Sequencer:
             raise ValueError('Invalid argument value (0 < width < 1)!')
         input_variables = {'period': period * Sequencer.__sec_to_ns, 'amplitude': amplitude / 2.0,
                            'width': width}
-        sequence_data = (Templates.sawtooth(name), input_variables)
+        sequence_data = (Templates.sawtooth(name, padding=Sequencer.__sec_to_ns*zero_padding), input_variables)
         return {'name': name, 'wave': SequencePT(*((sequence_data,) * repetitions)),
                 'type': DataTypes.QU_PULSE}
 
@@ -103,7 +105,7 @@ class Sequencer:
             raise ValueError('Arguments have invalid lengths! (amplitudes={}, waiting_times={}'.format(
                              len(amplitudes), len(waiting_times)))
         time_in_ns = 0.0
-        entry_list = list()
+        entry_list = []
         for waiting_time, amplitude in zip(waiting_times, amplitudes):
             time_in_ns += waiting_time * Sequencer.__sec_to_ns
             entry_list.append((time_in_ns, amplitude, 'jump'))
@@ -126,9 +128,9 @@ class Sequencer:
                   sequence data type and the actual qupulse sequencePT respectively.
         """
         if abs(offset) > period:
-            raise ValueError('Invalid argument value for offset: |{}| > {}!'.format(offset, period))
+            raise ValueError(f'Invalid argument value for offset: |{offset}| > {period}!')
         if not 0 < uptime < period:
-            raise ValueError("Invalid argument value for uptime '{}'!".format(uptime))
+            raise ValueError(f"Invalid argument value for uptime '{uptime}'!")
         updated_offset = period + offset if offset < 0 else offset
         input_variables = {'period': period * Sequencer.__sec_to_ns,
                            'uptime': uptime * Sequencer.__sec_to_ns,

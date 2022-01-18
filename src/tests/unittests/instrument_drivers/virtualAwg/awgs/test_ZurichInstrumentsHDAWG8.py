@@ -1,11 +1,13 @@
+import os
+import tempfile
 import unittest
 from unittest import mock
 from unittest.mock import MagicMock, call
 
 import numpy as np
 
-from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommonError
+from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 
 
 class TestZurichInstrumentsHDAWG8(unittest.TestCase):
@@ -14,7 +16,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             pass
 
         self.awg = ZIHDAWG8()
-        self.zi_hdawg8 = ZurichInstrumentsHDAWG8(self.awg, 0)
+        self.zi_hdawg8 = ZurichInstrumentsHDAWG8(self.awg, 0, use_binary_waves=False)
 
     def test_initialize_raises_awg_error(self):
         awg = MagicMock(name='fake')
@@ -71,7 +73,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
 
     def test_update_gain(self):
         self.zi_hdawg8.update_gain(0.5)
-        calls = [call.set('sigouts_{}_range'.format(ch), 1.0) for ch in range(8)]
+        calls = [call.set(f'sigouts_{ch}_range', 1.0) for ch in range(8)]
         self.awg.assert_has_calls(calls)
 
     def test_retrieve_gain(self):
@@ -82,7 +84,7 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
             self.awg.get.side_effect = lambda v: int(v[8:9])
             self.zi_hdawg8.retrieve_gain()
 
-    def test_upload_waveforms(self):
+    def test_upload_waveforms_csv(self):
         sequence_names = ['seq1', 'mark', 'seq2']
         sequence_channels = [(1, 1), (1, 0, 1), (2, 0)]
         sequence_items = [np.array(range(10)), np.array(range(1, 11)).astype(float), np.array(range(2, 12))]
@@ -95,3 +97,25 @@ class TestZurichInstrumentsHDAWG8(unittest.TestCase):
                  call.upload_sequence_program(0, 'program')]
         self.awg.assert_has_calls(calls)
         self.assertListEqual(list(range(2, 12)), list(self.awg.waveform_to_csv.call_args[0][1]))
+
+    def test_upload_waveforms_wave(self):
+        temp_dir = tempfile.mkdtemp()
+        os.mkdir(os.path.join(temp_dir, 'awg'))
+        wave_dir = os.path.join(temp_dir, 'awg', 'waves')
+        os.mkdir(wave_dir)
+        awg = self.awg
+        awg.awg_module.getString = MagicMock(return_value=temp_dir)
+        zi_hdawg8 = ZurichInstrumentsHDAWG8(awg, 0, use_binary_waves=True)
+        sequence_names = ['seq1', 'mark', 'seq2']
+        sequence_channels = [(1, 1), (1, 0, 1), (2, 0)]
+        seq1 = np.array(range(10))
+        seq2 = np.array(range(1, 11)).astype(float)
+        mark = np.array(range(2, 12))
+        sequence_items = [seq1, mark, seq2]
+        zi_hdawg8.upload_waveforms(sequence_names, sequence_channels, sequence_items)
+        calls = [call.waveform_to_wave(wave_name='seq1', waveform=mock.ANY),
+                 call.waveform_to_wave(wave_name='mark', waveform=mock.ANY),
+                 call.waveform_to_wave(wave_name='seq2', waveform=mock.ANY),
+                 call.generate_csv_sequence_program([(2, 'seq1', 'mark'), (3, 'seq2', None)]),
+                 call.upload_sequence_program(0, mock.ANY)]
+        self.awg.assert_has_calls(calls)
