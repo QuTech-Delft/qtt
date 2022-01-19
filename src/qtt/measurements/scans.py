@@ -483,10 +483,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     is_m4i = _is_m4i(minstrhandle)
     if is_m4i:
-        device_parameters['trigger_re_arm_compensation'] = True
         dt = period*(1-sawtooth_width)/2
         zero_padding = (40+32)/get_sampling_frequency(minstrhandle) - dt
-        print(f'period {period} zero_padding {zero_padding}')
+        logging.info(f'm4i: adding zero_padding to eliminate re-arm time: period {period} zero_padding {zero_padding}')
     else:
         zero_padding = 0
 
@@ -851,7 +850,7 @@ class scanjob_t(dict):
                 raise ValueError('step value may not be 0')
 
             if inclusive_end:
-                epsilon = 1e-8
+                epsilon = np.sign(sweep_data['step'])*1e-8
                 sweep_values = param[sweep_data['start']:(sweep_data['end'] + epsilon):sweep_data['step']]
             else:
                 diff = abs(sweep_data['end'] - sweep_data['start'])
@@ -1812,6 +1811,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     """
     if device_parameters is None:
         device_parameters = {}
+
+    import qcodes.instrument_drivers.ZI.ZIUHFLI  # delayed import
 
     is_m4i = _is_m4i(minstrhandle)
     is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
