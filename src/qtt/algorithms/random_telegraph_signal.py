@@ -109,7 +109,9 @@ def two_level_threshold(data: np.ndarray, number_of_bins: int = 40) -> dict:
     return result
 
 
-def plot_two_level_threshold(results, fig=100, plot_initial_estimate=False):
+def plot_two_level_threshold(results: dict, fig: int = 100, plot_initial_estimate: bool = False):
+    separation = results['separation']
+    threshold = results['signal_threshold']
 
     ax = get_axis(fig)
     bin_centres = results['histogram']['bin_centres']
@@ -117,9 +119,10 @@ def plot_two_level_threshold(results, fig=100, plot_initial_estimate=False):
     ax.bar(bin_centres, counts, width=bin_centres[1] - bin_centres[0], label='histogram')
     ax.set_ylabel('Counts')
     ax.set_xlabel('Signal [a.u.]')
-    plot_vertical_line(results['signal_threshold'], label='threshold')
+    plot_vertical_line(threshold, label='threshold')
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
-    ax.set_title('Result of two level threshold processing')
+
+    ax.set_title(f'Two-level signal: separation {separation:.3f}, threshold {threshold:.3g}')
 
     if plot_initial_estimate:
         xdata = np.linspace(bin_centres[0], bin_centres[-1], 300)
