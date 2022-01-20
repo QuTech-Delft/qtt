@@ -9,7 +9,6 @@ from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qcodes
 from qcodes.plots.qcmatplotlib import MatPlot
 
 import qtt.algorithms.images
