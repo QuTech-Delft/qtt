@@ -5,9 +5,9 @@ pieter.eendebak@tno.nl
 """
 
 import copy
+from typing import Optional
 
 import matplotlib.pyplot as plt
-# %% Load packages
 import numpy as np
 import qcodes
 from qcodes.plots.qcmatplotlib import MatPlot
