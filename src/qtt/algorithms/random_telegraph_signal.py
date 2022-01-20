@@ -151,7 +151,7 @@ def _create_integer_histogram(durations):
 
 
 def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], samplerate: Optional[float] = None, min_sep: float = 2.0, max_sep: float = 7.0, min_duration: int = 5,
-                    num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None, verbose: int = 0) -> Tuple[float, float, dict]:
+                    num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None, verbose: int = 0) -> Tuple[Optional[float], Optional[float], dict]:
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
     determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
