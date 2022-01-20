@@ -484,7 +484,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     is_m4i = _is_m4i(minstrhandle)
     if is_m4i:
         dt = period*(1-sawtooth_width)/2
-        zero_padding = (40+32)/get_sampling_frequency(minstrhandle) - dt
+        zero_padding = max((40+32)/get_sampling_frequency(minstrhandle) - dt, 0)
         logging.info(f'm4i: adding zero_padding to eliminate re-arm time: period {period} zero_padding {zero_padding}')
     else:
         zero_padding = 0
