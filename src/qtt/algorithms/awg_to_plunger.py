@@ -162,7 +162,7 @@ def analyse_awg_to_plunger(result: dict, method: str = 'hough', fig: Optional[in
                     qtt.pgeometry.plot2Dline(
                         [np.cos(angle_pixel), np.sin(angle_pixel), offset], 'm', label=label)
             if angle is not None:
-                plt.title(f'Detected line direction: angle {angle_deg:%.2f} [deg]')
+                plt.title(f'Detected line direction: angle {angle_deg:.2f} [deg]')
 
             plt.figure(fig + 2)
             plt.clf()
@@ -236,4 +236,4 @@ def plot_awg_to_plunger(result, fig=10):
             qtt.pgeometry.plot2Dline(
                 [np.cos(angle), -np.sin(angle), rho + offset], '--m', alpha=.6, label=label)
         angle_deg = np.rad2deg(angle)
-        plt.title(f'Detected line direction: angle {angle_deg:%.2f} [deg]')
+        plt.title(f'Detected line direction: angle {angle_deg:.2f} [deg]')
