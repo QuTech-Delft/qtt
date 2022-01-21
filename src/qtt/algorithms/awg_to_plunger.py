@@ -145,7 +145,7 @@ def analyse_awg_to_plunger(result: dict, method: str = 'hough', fig: Optional[in
                 return np.arctan2(v[0], v[1])
             angle = vec2angle(xscan[:, 1] - xscan[:, 0])
             correction = -1 / np.tan(angle)
-            angle_deg = angle / (2 * np.pi) * 360
+            angle_deg = np.rad2deg(angle)
 
         # plotting the analysis steps of the data
         if fig is not None:
