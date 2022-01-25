@@ -5,8 +5,8 @@ Created on Wed Feb 28 10:20:46 2018
 @author: riggelenfv
 """
 
+import operator
 import warnings
-# %%
 from typing import Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -73,8 +73,10 @@ def _plot_rts_histogram(data, num_bins, double_gaussian_fit, split, figure_title
     _, bins, _ = plt.hist(data, bins=num_bins)
     bincentres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
 
-    left_gaussian = [double_gaussian_fit[i] for i in [4, 2, 0]]
-    right_gaussian = [double_gaussian_fit[i] for i in [5, 3, 1]]
+    get_left_mean_std_amplitude = operator.itemgetter(4, 2, 0)
+    get_right_mean_std_amplitude = operator.itemgetter(5, 3, 1)
+    left_gaussian = list(get_left_mean_std_amplitude(double_gaussian_fit))
+    right_gaussian = list(get_right_mean_std_amplitude(double_gaussian_fit))
 
     plt.plot(bincentres, double_gaussian(bincentres, double_gaussian_fit), '-m', label='Fitted double gaussian')
     plt.plot(bincentres, gaussian(bincentres, *left_gaussian), 'g', label='Left Gaussian', alpha=.85, linewidth=.75)
@@ -150,8 +152,10 @@ def _create_integer_histogram(durations):
     return counts, bin_edges, bin_size
 
 
-def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], samplerate: Optional[float] = None, min_sep: float = 2.0, max_sep: float = 7.0, min_duration: int = 5,
-                    num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None, verbose: int = 0) -> Tuple[Optional[float], Optional[float], dict]:
+def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], samplerate: Optional[float] = None,
+                    min_sep: float = 2.0, max_sep: float = 7.0, min_duration: int = 5,
+                    num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None,
+                    verbose: int = 0) -> Tuple[Optional[float], Optional[float], dict]:
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
     determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
