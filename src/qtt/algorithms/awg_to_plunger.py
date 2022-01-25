@@ -155,12 +155,12 @@ def analyse_awg_to_plunger(result: dict, method: str = 'hough', fig: Optional[in
             plt.axis('image')
 
             if angle_pixel is not None:
-                for offset in [-40, -20, 0, 20, 40]:
+                for offset_in_pixels in [-40, -20, 0, 20, 40]:
                     label = None
-                    if offset == 0:
+                    if offset_in_pixels == 0:
                         label = 'detected angle'
                     qtt.pgeometry.plot2Dline(
-                        [np.cos(angle_pixel), np.sin(angle_pixel), offset], 'm', label=label)
+                        [np.cos(angle_pixel), np.sin(angle_pixel), offset_in_pixels], 'm', label=label)
             if angle is not None:
                 plt.title(f'Detected line direction: angle {angle_deg:.2f} [deg]')
 
