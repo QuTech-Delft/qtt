@@ -9,7 +9,7 @@ import logging
 import re
 import time
 import warnings
-from typing import Any, Type, Tuple
+from typing import Any, Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,28 +18,22 @@ import qcodes
 import skimage
 import skimage.filters
 from qcodes import Instrument
+from qcodes.data.data_array import DataArray
 from qcodes.instrument.parameter import Parameter
 from qcodes.instrument.sweep_values import SweepFixedValues
 from qcodes.plots.qcmatplotlib import MatPlot
 from qcodes.utils.helpers import tprint
-from qcodes.data.data_array import DataArray
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
 import qtt.instrument_drivers.virtualAwg.virtual_awg
 import qtt.utilities.tools
+from qtt.data import diffDataset, makeDataSet1D, makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain, uniqueArrayName
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
 from qtt.pgeometry import plot2Dline
-from qtt.utilities.tools import logging_context
-
-from qtt.data import makeDataSet1D, makeDataSet2D, makeDataSet1Dplain, makeDataSet2Dplain
-from qtt.data import diffDataset
-from qtt.data import uniqueArrayName
-
-from qtt.utilities.tools import update_dictionary
 from qtt.structures import VectorParameter
-
+from qtt.utilities.tools import logging_context, rdeprecated, update_dictionary
 
 # %%
 
@@ -141,7 +135,6 @@ def get_param_name(gates, sweepgate):
     else:
         # assume the argument already is a parameter
         return sweepgate.name
-
 
 
 # %%
@@ -415,7 +408,7 @@ def scan1D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             alldata.add_array(arr)
 
     if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
+        alldata.metadata = {}
 
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
@@ -453,9 +446,6 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     gates = station.gates
     gatevals = gates.allvalues()
 
-    if 'sd' in scanjob:
-        warnings.warn('sd argument is not supported in scan1Dfast')
-
     if type(scanjob) is dict:
         warnings.warn('Use the scanjob_t class.', DeprecationWarning)
         scanjob = scanjob_t(scanjob)
@@ -487,7 +477,18 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
     Naverage = scanjob.get('Naverage', 20)
     period = scanjob['sweepdata'].get('period', 1e-3)
     t0 = time.time()
+    sawtooth_width = 0.9375
     wait_time_startscan = scanjob.get('wait_time_startscan', 0)
+    device_parameters = scanjob.get('device_parameters', {})
+
+    is_m4i = _is_m4i(minstrhandle)
+    if is_m4i:
+        device_parameters['trigger_re_arm_compensation'] = True
+        dt = period*(1-sawtooth_width)/2
+        zero_padding = (40+32)/get_sampling_frequency(minstrhandle) - dt
+        print(f'period {period} zero_padding {zero_padding}')
+    else:
+        zero_padding = 0
 
     if scanjob['scantype'] == 'scan1Dfast':
         if 'range' in sweepdata:
@@ -497,20 +498,23 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
             sweepgate_value = (sweepdata['start'] + sweepdata['end']) / 2
             gates.set(sweepdata['param'], float(sweepgate_value))
         if 'pulsedata' in scanjob:
+            warnings.warn('pulsing during sweep has been deprecated', DeprecationWarning)
             waveform, sweep_info = station.awg.sweepandpulse_gate({'gate': sweepdata['param'].name,
                                                                    'sweeprange': sweeprange, 'period': period},
                                                                   scanjob['pulsedata'])
         else:
             if virtual_awg:
                 measure_gates = {sweepdata['param']: 1}
-                waveform = virtual_awg.sweep_gates(measure_gates, sweeprange, period, do_upload=delete)
+                waveform = virtual_awg.sweep_gates(measure_gates, sweeprange, period, do_upload=delete,
+                                                   width=sawtooth_width, zero_padding=zero_padding)
                 virtual_awg.enable_outputs(list(measure_gates.keys()))
                 virtual_awg.run()
             else:
-                waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'], sweeprange, period, delete=delete)
+                raise NotImplementedError('support for old virtual awg has been removed')
     else:
         sweeprange = sweepdata['range']
         if 'pulsedata' in scanjob:
+            warnings.warn('pulsing during sweep has been deprecated', DeprecationWarning)
             sg = []
             for g, v in fast_sweep_gates.items():
                 if v != 0:
@@ -522,14 +526,15 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
         else:
             if virtual_awg:
                 sweep_range = sweeprange
-                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period, do_upload=delete)
+                waveform = virtual_awg.sweep_gates(fast_sweep_gates, sweep_range, period, do_upload=delete,
+                                                   width=sawtooth_width, zero_padding=zero_padding)
                 virtual_awg.enable_outputs(list(fast_sweep_gates.keys()))
                 virtual_awg.run()
             else:
-                waveform, sweep_info = station.awg.sweep_gate_virt(fast_sweep_gates, sweeprange, period, delete=delete)
+                raise NotImplementedError('support for old virtual awg has been removed')
 
     time.sleep(wait_time_startscan)
-    data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
+    data = measuresegment(waveform, Naverage, minstrhandle, read_ch, device_parameters=device_parameters)
     _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data[0].shape[0])
 
     if len(read_ch) == 1:
@@ -550,7 +555,7 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     dt = time.time() - t0
     if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
+        alldata.metadata = {}
 
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
@@ -1221,7 +1226,7 @@ def scan2D(station, scanjob, location=None, liveplotwindow=None, plotparam='meas
             alldata.add_array(arr)
 
     if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
+        alldata.metadata = {}
 
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
@@ -1681,6 +1686,7 @@ def measuresegment_m4i(digitizer, waveform, read_ch, mV_range, Naverage=100, pro
     return data
 
 
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jun 1 2022')
 def get_uhfli_scope_records(device, daq, scopeModule, number_of_records=1, timeout=30):
     """
     Obtain scope records from the device using an instance of the Scope Module.
@@ -1710,10 +1716,11 @@ def get_uhfli_scope_records(device, daq, scopeModule, number_of_records=1, timeo
     data = scopeModule.read(True)
     # Stop the module; to use it again we need to call execute().
     scopeModule.finish()
-    wave_nodepath = '/{}/scopes/0/wave'.format(device)
+    wave_nodepath = f'/{device}/scopes/0/wave'
     return data[wave_nodepath][:number_of_records]
 
 
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jun 1 2022')
 def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100, **kwargs):
     """ Measure block data with Zurich Instruments UHFLI
 
@@ -1748,6 +1755,7 @@ def measure_segment_uhfli(zi, waveform, channels, number_of_averages=100, **kwar
     return [avarage]
 
 
+@qtt.utilities.tools.rdeprecated(txt='Method will be removed in future release of qtt.', expire='Jun 1 2022')
 def measure_segment_scope_reader(scope_reader, waveform, number_of_averages, process=True, **kwargs):
     """ Measure block data with scope reader.
 
@@ -2109,7 +2117,8 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
             else:
                 waveform, sweep_info = station.awg.sweep_gate(sweepdata['param'].name, sweeprange, period)
 
-    data = measuresegment(waveform, Naverage, minstrhandle, read_ch)
+    device_parameters = scanjob.get('device_parameters', None)
+    data = measuresegment(waveform, Naverage, minstrhandle, read_ch, device_parameters)
     if len(read_ch) == 1:
         measure_names = ['measured']
     else:
@@ -2207,7 +2216,7 @@ def scan2Dfast(station, scanjob, location=None, liveplotwindow=None, plotparam='
                                   fig=None, meas_arr_name=mname)
 
     if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
+        alldata.metadata = {}
 
     if extra_metadata is not None:
         update_dictionary(alldata.metadata, **extra_metadata)
@@ -2239,7 +2248,7 @@ def create_vectorscan(virtual_parameter, g_range=1, sweeporstepdata=None, remove
     if sweeporstepdata is not None:
         raise Exception('parameter sweeporstepdata is not used')
     if hasattr(virtual_parameter, 'comb_map'):
-        active_parameters = dict([(p.name, r) for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0])
+        active_parameters = {p.name: r for p, r in virtual_parameter.comb_map if round(r, ndigits=5) != 0}
         if remove_slow_gates:
             try:
                 if 'awg' in station.components:
@@ -2412,7 +2421,7 @@ def scan2Dturbo(station, scanjob, location=None, liveplotwindow=None, delete=Tru
     liveplotwindow = _initialize_live_plotting(alldata, plotparam=None, liveplotwindow=liveplotwindow)
 
     if not hasattr(alldata, 'metadata'):
-        alldata.metadata = dict()
+        alldata.metadata = {}
 
     update_dictionary(alldata.metadata, scanjob=dict(scanjob),
                       dt=dt, station=station.snapshot(), allgatevalues=gatevals)

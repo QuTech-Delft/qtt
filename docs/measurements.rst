@@ -26,14 +26,14 @@ For plotting a `qcodes.DataSet` one can use
 .. autosummary::
 
     qtt.data.plot_dataset
-    
 
-To automatically copy a plotted figure to PowerPoint one can add a button:    
+
+To automatically copy a plotted figure to PowerPoint one can add a button:
 
 .. autosummary::
-    
+
     qtt.utilities.tools.create_figure_ppt_callback
-    
+
 
 Parameter viewer
 ----------------
@@ -57,7 +57,7 @@ ParameterViewer pass the instruments to be monitored as the first argument.
     :figclass: align-center
 
     ParameterViewer widget
-    
+
 VideoMode
 ---------
 
@@ -75,16 +75,16 @@ For more information see the code or the example notebooks.
     </video>
     <br/>
 
- 
+
 
 Data browser
 ------------
 
-The data browser can be used to inspect recorded data. 
+The data browser can be used to inspect recorded data.
 
 .. autosummary::
     qtt.gui.dataviewer.DataViewer
-    
+
 .. figure:: images/databrowser.png
     :width: 500px
     :align: center
@@ -92,7 +92,7 @@ The data browser can be used to inspect recorded data.
     :figclass: align-center
 
     DataViewer widget
-        
+
 Live plotting
 -------------
 
@@ -120,7 +120,7 @@ A simple GUI to abort running measurements without interfering with the instrume
 
 .. autosummary::
     qtt.gui.live_plotting.MeasurementControl
-   
+
 
 .. figure:: images/measurement_control.png
     :width: 320px
@@ -129,7 +129,7 @@ A simple GUI to abort running measurements without interfering with the instrume
     :figclass: align-center
 
     Measurement control widget
-    
+
 Virtual gates
 -------------
 
@@ -151,7 +151,7 @@ it is often sufficient for spin-qubits to restore the DAC values.
 For example:
 
 .. code-block:: python
-    
+
     import qtt.simulation.virtual_dot_array
     station = qtt.simulation.virtual_dot_array.initialize(reinit=True, nr_dots=2, maxelectrons=2, verbose=0)
 
@@ -164,11 +164,7 @@ Copying data to Powerpoint
 --------------------------
 
 To copy a dataset or a figure window to Powerpoint, including the scan metadata one can use:
- 
+
 .. autosummary::
- 	qtt.utilties.tools.addPPT_dataset(dataset)
- 	qtt.utilties.tools.addPPTslide(figure)
-
- 	
-
-
+    qtt.utilities.tools.addPPT_dataset(dataset)
+    qtt.utilities.tools.addPPTslide(figure)
