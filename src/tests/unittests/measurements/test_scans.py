@@ -19,7 +19,6 @@ from qcodes import ManualParameter, Parameter
 from qcodes.data.data_set import DataSet
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
-from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
@@ -33,6 +32,7 @@ from qtt.measurements.scans import (fastScan, get_instrument_parameter, get_samp
 from qtt.structures import MultiParameter
 
 sys.modules['pyspcm'] = MagicMock()
+from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
 del sys.modules['pyspcm']
 
 
