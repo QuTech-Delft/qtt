@@ -359,7 +359,7 @@ def fit_gauss_ramsey(x_data, y_data, weight_power=None, maxiter=None, maxfun=500
     lmfit_model.set_param_hint('amplitude', min=0)
     lmfit_model.set_param_hint('decay_time', min=0)
     lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)),
-                                   verbose=verbose >= 2, weights=weights)
+                                   verbose=verbose >= 2, weights=weights, method='least_squares')
 
     import qtt.algorithms.fitting
     result_dict = qtt.algorithms.fitting.extract_lmfit_parameters(lmfit_model, lmfit_result)

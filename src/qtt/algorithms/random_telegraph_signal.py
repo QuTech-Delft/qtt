@@ -5,35 +5,35 @@ Created on Wed Feb 28 10:20:46 2018
 @author: riggelenfv
 """
 
-# %%
+import operator
 import warnings
+from typing import Optional, Tuple, Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
 
-from qtt.utilities.tools import addPPTslide
-from qtt.algorithms.functions import double_gaussian, exp_function, fit_exp_decay, gaussian
 from qtt.algorithms.fitting import fit_double_gaussian, refit_double_gaussian
-
+from qtt.algorithms.functions import double_gaussian, exp_function, fit_exp_decay, gaussian
 from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
-from qtt.utilities.visualization import plot_vertical_line, plot_double_gaussian_fit
-
+from qtt.utilities.tools import addPPTslide
+from qtt.utilities.visualization import get_axis, plot_double_gaussian_fit, plot_vertical_line
 
 # %% calculate durations of states
 
 
-def transitions_durations(data, split):
+def transitions_durations(data: np.ndarray, split: float) -> Tuple[np.ndarray, np.ndarray]:
     """ For data of a two level system (up and down), this funtion determines which datapoints belong to which
     level and finds the transitions, in order to determines
     how long the system stays in these levels.
 
     Args:
-        data (numpy array): data from the two level system
-        split (float): value that separates the up and down level
+        data : data from the two level system
+        split: value that separates the up and down level
 
     Returns:
-        duration_dn (numpy array): array of the durations (unit: data points) in the down level
-        duration_up (numpy array): array of durations (unit: data points) in the up level
+        duration_dn:  array of the durations (unit: data points) in the down level
+        duration_up: array of durations (unit: data points) in the up level
     """
 
     # split the data and find the index of the transitions, transitions from
@@ -73,7 +73,14 @@ def _plot_rts_histogram(data, num_bins, double_gaussian_fit, split, figure_title
     _, bins, _ = plt.hist(data, bins=num_bins)
     bincentres = np.array([(bins[i] + bins[i + 1]) / 2 for i in range(0, len(bins) - 1)])
 
-    plt.plot(bincentres, double_gaussian(bincentres, double_gaussian_fit), 'r', label='Fitted double gaussian')
+    get_left_mean_std_amplitude = operator.itemgetter(4, 2, 0)
+    get_right_mean_std_amplitude = operator.itemgetter(5, 3, 1)
+    left_gaussian = list(get_left_mean_std_amplitude(double_gaussian_fit))
+    right_gaussian = list(get_right_mean_std_amplitude(double_gaussian_fit))
+
+    plt.plot(bincentres, double_gaussian(bincentres, double_gaussian_fit), '-m', label='Fitted double gaussian')
+    plt.plot(bincentres, gaussian(bincentres, *left_gaussian), 'g', label='Left Gaussian', alpha=.85, linewidth=.75)
+    plt.plot(bincentres, gaussian(bincentres, *right_gaussian), 'r', label='Right Gaussian', alpha=.85, linewidth=.75)
     plt.plot(split, double_gaussian(split, double_gaussian_fit), 'ro', markersize=8, label='split: %.3f' % split)
     plt.xlabel('Measured value (a.u.)')
     plt.ylabel('Data points per bin')
@@ -81,13 +88,13 @@ def _plot_rts_histogram(data, num_bins, double_gaussian_fit, split, figure_title
     plt.title(figure_title)
 
 
-def two_level_threshold(data, number_of_bins=40) -> dict:
+def two_level_threshold(data: np.ndarray, number_of_bins: int = 40) -> dict:
     """ Determine threshold for separation of two-level signal
 
     Typical examples of such a signal are an RTS signal or Elzerman readout.
 
     Args:
-        traces: Two dimensional array with single traces
+        data: Two dimensional array with single traces
         number_of_bins: Number of bins to use for calculation of double histogram
 
     Returns:
@@ -104,25 +111,28 @@ def two_level_threshold(data, number_of_bins=40) -> dict:
     return result
 
 
-def plot_two_level_threshold(results, fig=100, plot_initial_estimate=False):
-    plt.figure(fig)
-    plt.clf()
+def plot_two_level_threshold(results: dict, fig: int = 100, plot_initial_estimate: bool = False):
+    separation = results['separation']
+    threshold = results['signal_threshold']
+
+    ax = get_axis(fig)
     bin_centres = results['histogram']['bin_centres']
     counts = results['histogram']['counts']
-    plt.bar(bin_centres, counts, width=bin_centres[1] - bin_centres[0], label='histogram')
-    plt.ylabel('Counts')
-    plt.xlabel('Signal [a.u.]')
-    plot_vertical_line(results['signal_threshold'], label='threshold')
+    ax.bar(bin_centres, counts, width=bin_centres[1] - bin_centres[0], label='histogram')
+    ax.set_ylabel('Counts')
+    ax.set_xlabel('Signal [a.u.]')
+    plot_vertical_line(threshold, label='threshold')
     plot_double_gaussian_fit(results['double_gaussian_fit'], bin_centres)
-    plt.title('Result of two level threshold processing')
+
+    ax.set_title(f'Two-level signal: separation {separation:.3f}, threshold {threshold:.3g}')
 
     if plot_initial_estimate:
         xdata = np.linspace(bin_centres[0], bin_centres[-1], 300)
         initial_estimate = results['double_gaussian_fit']['parameters initial guess']
         left0 = initial_estimate[::2][::-1]
         right0 = initial_estimate[1::2][::-1]
-        plt.plot(xdata, gaussian(xdata, *left0), ':g', label='initial estimate left')
-        plt.plot(xdata, gaussian(xdata, *right0), ':r', label='initial estimate right')
+        ax.plot(xdata, gaussian(xdata, *left0), ':g', label='initial estimate left')
+        ax.plot(xdata, gaussian(xdata, *right0), ':r', label='initial estimate right')
 
 
 def _create_integer_histogram(durations):
@@ -142,8 +152,10 @@ def _create_integer_histogram(durations):
     return counts, bin_edges, bin_size
 
 
-def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duration=5,
-                    num_bins=None, plungers=None, fig=None, ppt=None, verbose=0):
+def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], samplerate: Optional[float] = None,
+                    min_sep: float = 2.0, max_sep: float = 7.0, min_duration: int = 5,
+                    num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None,
+                    verbose: int = 0) -> Tuple[Optional[float], Optional[float], dict]:
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
     determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
@@ -153,34 +165,31 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
     parameters['down_segments'] and parameters['up_segments'].
 
     Args:
-        data (array): qcodes DataSet (or 1d data array) with the RTS data
-        samplerate (float): sampling rate of the acquisition device, optional if given in the metadata
+        data: qcodes DataSet (or 1d data array) with the RTS data
+        samplerate: sampling rate of the acquisition device, optional if given in the metadata
                                    of the measured data
-        min_sep (float): if the separation found for the fit of the double gaussian is less then this value, the
+        min_sep: if the separation found for the fit of the double gaussian is less then this value, the
                          fit probably failed and a FittingException is raised
-        max_sep (float): if the separation found for the fit of the double gaussian is more then this value, the
+        max_sep: if the separation found for the fit of the double gaussian is more then this value, the
                          fit probably failed and a FittingException is raised
-        min_duration (int): minimal number of datapoints a duration should last to be taking into account for the
+        min_duration: minimal number of datapoints a duration should last to be taking into account for the
                             analysis
-        num_bins (int or None) : number of bins for the histogram of signal values. If None, then determine based
+        num_bins: number of bins for the histogram of signal values. If None, then determine based
                             on the size of the data
-        fig (None or int): shows figures and sends them to the ppt when is not None
-        ppt (None or int): determines if the figures are send to a powerpoint presentation
-        verbose (int): prints info to the console when > 0
+        fig: shows figures and sends them to the ppt when is not None
+        ppt: determines if the figures are send to a powerpoint presentation
+        verbose: prints info to the console when > 0
 
     Returns:
-        tunnelrate_dn (numpy.float64): tunneling rate of the down level to the up level (kHz) or None in case of
+        tunnelrate_dn: tunneling rate of the down level to the up level (kHz) or None in case of
                                        not enough datapoints
-        tunnelrate_up (numpy.float64): tunneling rate of the up level to the down level (kHz) or None in case of
+        tunnelrate_up: tunneling rate of the up level to the down level (kHz) or None in case of
                                        not enough datapoints
-        parameters (dict): dictionary with relevent (fit) parameters. this includes:
+        parameters: dictionary with relevent (fit) parameters. this includes:
                 tunnelrate_down (float): tunnel rate in Hz
                 tunnelrate_up (float): tunnel rate up in Hz
 
     """
-    if plungers is not None:
-        raise Exception('argument plungers is not used any more')
-
     if isinstance(data, qcodes.data.data_set.DataSet):
         if samplerate is None:
             samplerate = data.metadata.get('samplerate', None)
@@ -226,10 +235,11 @@ def tunnelrates_RTS(data, samplerate=None, min_sep=2.0, max_sep=7.0, min_duratio
 
     # plotting the data in a histogram, the fitted two gaussian model and the split
     if fig:
-        figure_title = 'Histogram of two levels RTS'
+        figure_title = 'Histogram of two level signal' + f'\nseparation: {separation:.1f} [std]'
         Fig = plt.figure(fig + 1)
         plt.clf()
         _plot_rts_histogram(data, num_bins, double_gaussian_fit_parameters, split, figure_title)
+
         if ppt:
             addPPTslide(title=title, fig=Fig, notes='Fit parameters double gaussian:\n mean down: %.3f counts' %
                                                     double_gaussian_fit_parameters[4] + ', mean up:%.3f counts' %
