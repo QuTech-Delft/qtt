@@ -45,7 +45,7 @@ class TestFunctions(unittest.TestCase):
         self.assertTrue(fitted_parameters[1] > 200)
         self.assertAlmostEqual(fitted_parameters[2], 1 / (2 * np.pi), places=1)
         self.assertAlmostEqual(fitted_parameters[3], 0, places=5)
-        self.assertAlmostEqual(fitted_parameters[4], 0, places=5)
+        self.assertAlmostEqual(fitted_parameters[4], 0, places=4)
         if fig is not None:
             plt.figure(fig)
             plt.clf()
