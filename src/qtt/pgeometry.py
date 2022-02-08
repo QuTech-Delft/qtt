@@ -41,7 +41,6 @@ import numpy as np
 import scipy.io
 import scipy.ndimage.filters as filters
 import scipy.ndimage.morphology as morphology
-import shapely.geometry
 
 __version__ = '0.7.0'
 
@@ -1169,6 +1168,7 @@ def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
     >>> plotPoints(x2.T, '.:b' )
     >>> plotPoints(x.T, '.-g' , linewidth=2)
     """
+    import shapely.geometry
 
     p1 = shapely.geometry.Polygon(x1)
     p2 = shapely.geometry.Polygon(x2)
