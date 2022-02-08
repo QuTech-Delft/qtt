@@ -41,7 +41,6 @@ import numpy as np
 import scipy.io
 import scipy.ndimage.filters as filters
 import scipy.ndimage.morphology as morphology
-import shapely.geometry
 
 __version__ = '0.7.0'
 
@@ -136,14 +135,6 @@ except ModuleNotFoundError as ex:
         'could not find matplotlib, not all functionality available...')
     plt = None
     pass
-
-try:
-    import skimage.filters
-except ModuleNotFoundError as ex:
-    warnings.warn(
-        'could not find skimage.filters, not all functionality is available')
-    pass
-
 
 try:
     import cv2
@@ -1169,6 +1160,7 @@ def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
     >>> plotPoints(x2.T, '.:b' )
     >>> plotPoints(x.T, '.-g' , linewidth=2)
     """
+    import shapely.geometry
 
     p1 = shapely.geometry.Polygon(x1)
     p2 = shapely.geometry.Polygon(x2)
@@ -1989,7 +1981,6 @@ def robustCost(x, thr, method='L1'):
         for m in mm:
             plt.plot(x, robustCost(x, thr, m), label=m)
         plt.legend()
-        # print('robustCost: %s'  % mm)
         y = mm
     else:
         raise Exception('no such method')
@@ -2033,6 +2024,7 @@ def otsu(im, fig=None):
     >>> thr = otsu(np.random.rand( 2000), fig=100)
 
     """
+    import skimage.filters
     thr = skimage.filters.threshold_otsu(im)
 
     if fig is not None:

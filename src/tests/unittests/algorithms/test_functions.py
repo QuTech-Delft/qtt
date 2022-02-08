@@ -1,10 +1,13 @@
 import unittest
+
 import matplotlib.pyplot as plt
 import numpy as np
+
 import qtt
-from qtt.algorithms.functions import gaussian, double_gaussian, exp_function, \
-    fit_gauss_ramsey, gauss_ramsey, cost_exp_decay, logistic, linear_function, Fermi, fit_exp_decay, \
-    _estimate_exp_decay_initial_parameters, plot_gauss_ramsey_fit, estimate_parameters_damped_sine_wave
+from qtt.algorithms.functions import (Fermi, _estimate_exp_decay_initial_parameters, cost_exp_decay, double_gaussian,
+                                      estimate_parameters_damped_sine_wave, exp_function, fit_exp_decay,
+                                      fit_gauss_ramsey, gauss_ramsey, gaussian, linear_function, logistic,
+                                      plot_gauss_ramsey_fit)
 
 
 class TestFunctions(unittest.TestCase):
@@ -167,10 +170,10 @@ class TestFunctions(unittest.TestCase):
         fitted_parameters_unweighted, _ = fit_gauss_ramsey(x_data, y_data)
         fitted_parameters, _ = fit_gauss_ramsey(x_data, y_data, weight_power=10)
         self.assertAlmostEqual(fitted_parameters[0], 1, places=2)
-        self.assertTrue(fitted_parameters[1] > 1e3)
+        self.assertTrue(fitted_parameters[1] > 100, "decay must not be high")
         self.assertAlmostEqual(fitted_parameters[2], 1 / (2 * np.pi), places=1)
-        self.assertAlmostEqual(fitted_parameters[3], 0, places=6)
-        self.assertAlmostEqual(fitted_parameters[4], 0, places=6)
+        self.assertAlmostEqual(fitted_parameters[3], 0, places=5)
+        self.assertAlmostEqual(fitted_parameters[4], 0, places=4)
         if fig is not None:
             plt.figure(fig)
             plt.clf()
