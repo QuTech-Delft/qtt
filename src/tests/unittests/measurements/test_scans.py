@@ -23,7 +23,7 @@ from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
-import qtt.simulation.virtual_dot_array
+import qtt.instrument_drivers.gates
 import qtt.utilities.tools
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
@@ -522,12 +522,16 @@ class TestScans(TestCase):
         gates.close()
 
     def test_convert_scanjob_vec_regression(self):
-        station = qtt.simulation.virtual_dot_array.initialize()
-
+        station = qcodes.Station()
+        ivvi = VirtualIVVI(name='ivvi', model=None)
+        gates = qtt.instrument_drivers.gates.VirtualDAC(
+            'gates', instruments=[ivvi], gate_map={'P1': (0, 1), 'P2': (0, 2)})
+        station.add_component(gates)
         num = 566
         scanjob = scanjob_t({'minstrument': [1], 'minstrumenthandle': ('m4i', [1]), 'wait_time_startscan': 0.04, 'stepdata': {'wait_time': 0.2}, 'Naverage': 2000, 'sweepdata': {
                             'period': 0.0005, 'param': 'P1', 'range': -5, 'step': -0.01098901098901099, 'start': 714.84130859375, 'end': 709.84130859375}, 'scantype': 'scan1Dfast'})
         _, s = scanjob._convert_scanjob_vec(station=station, sweeplength=num)
         self.assertEqual(len(s), num)
 
-        qtt.simulation.virtual_dot_array.close()
+        gates.close()
+        ivvi.close()
