@@ -5,7 +5,7 @@ pieter.eendebak@tno.nl
 """
 
 import copy
-from typing import Optional
+from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,12 +22,11 @@ from qtt.utilities.imagetools import cleanSensingImage
 # %% Helper functions
 
 
-def click_line(fig=None):
+def click_line(fig: Optional[int], show_points: bool = False) -> Tuple[float, float]:
     """ Define a line through two points. The points are choosen by clicking on a position in a plot, two times.
-
     Args:
-        fig (int or None): number of figure to plot the points in, when None it will plot a figure.
-
+        fig: number of figure to plot the points in, when None it will plot a figure.
+        showpoints: If True, then plot the selected points in the figure
     Returns:
         offset (float): offset of the line.
         slope (float): slope of the line.
@@ -40,6 +39,9 @@ def click_line(fig=None):
     slope = (pts1[1] - pts0[1]) / (pts1[0] - pts0[0])
     offset = (pts0[1] - slope * pts0[0])
 
+    pts = np.array([pts0, pts1]).T
+    if show_points:
+        plt.plot(pts[0], pts[1], '.-g')
     return offset, slope
 
 # %% Main functions
