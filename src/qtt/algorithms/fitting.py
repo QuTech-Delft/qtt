@@ -11,9 +11,7 @@ from lmfit.model import Model, ModelResult
 from qcodes.data.data_array import DataArray
 
 import qtt.pgeometry
-from qtt.algorithms.functions import (Fermi, FermiLinear,
-                                      estimate_dominant_frequency, gaussian,
-                                      linear_function, sine)
+from qtt.algorithms.functions import Fermi, FermiLinear, estimate_dominant_frequency, gaussian, linear_function, sine
 
 
 def extract_lmfit_parameters(lmfit_model: Model, lmfit_result: ModelResult) -> Dict[str, Any]:
@@ -289,7 +287,8 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None,
     lmfit_model = Model(sine)
     if positive_amplitude:
         lmfit_model.set_param_hint('amplitude', min=0)
-    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names, initial_parameters)))
+    lmfit_result = lmfit_model.fit(y_data, x=x_data, **dict(zip(lmfit_model.param_names,
+                                   initial_parameters)), method='least_squares')
     result_dict = extract_lmfit_parameters(lmfit_model, lmfit_result)
 
     return result_dict['fitted_parameters'], result_dict
