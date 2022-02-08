@@ -15,8 +15,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph
 import qcodes
-import skimage
-import skimage.filters
 from qcodes import Instrument
 from qcodes.data.data_array import DataArray
 from qcodes.instrument.parameter import Parameter
@@ -31,7 +29,7 @@ import qtt.utilities.tools
 from qtt.data import diffDataset, makeDataSet1D, makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain, uniqueArrayName
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
-from qtt.pgeometry import plot2Dline
+from qtt.pgeometry import otsu, plot2Dline
 from qtt.structures import VectorParameter
 from qtt.utilities.tools import logging_context, rdeprecated, update_dictionary
 
@@ -49,10 +47,9 @@ def checkReversal(im0, verbose=0):
     Returns
         bool
     """
-    thr = skimage.filters.threshold_otsu(im0)
+    thr = otsu(im0)
     mval = np.mean(im0)
 
-    # meanopen = np.mean(im0[:,:])
     fr = thr < mval
     if verbose:
         print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))

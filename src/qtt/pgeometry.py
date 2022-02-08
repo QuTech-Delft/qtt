@@ -137,14 +137,6 @@ except ModuleNotFoundError as ex:
     pass
 
 try:
-    import skimage.filters
-except ModuleNotFoundError as ex:
-    warnings.warn(
-        'could not find skimage.filters, not all functionality is available')
-    pass
-
-
-try:
     import cv2
     _haveOpenCV = True
 except (ModuleNotFoundError, ImportError):
@@ -1989,7 +1981,6 @@ def robustCost(x, thr, method='L1'):
         for m in mm:
             plt.plot(x, robustCost(x, thr, m), label=m)
         plt.legend()
-        # print('robustCost: %s'  % mm)
         y = mm
     else:
         raise Exception('no such method')
@@ -2033,6 +2024,7 @@ def otsu(im, fig=None):
     >>> thr = otsu(np.random.rand( 2000), fig=100)
 
     """
+    import skimage.filters
     thr = skimage.filters.threshold_otsu(im)
 
     if fig is not None:
