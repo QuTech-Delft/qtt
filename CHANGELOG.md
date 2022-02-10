@@ -4,28 +4,45 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## \[x.y.z] Unreleased
+## \[1.3.0] - 11-2-2022
 
 ### Added
 
-- Add measure_time context for measuring exection time (#765)
+- Add measure_time context for measuring execution time (#765)
+- Added python 3.9 support (#773)
+- Added optimizer callback functionality (#779)
 - Add method to combine legends of multiple matplotlib axes (#782)
+- Passes for Qiskit (#784)
 - Functionality plot onto a matplotlib Axes object (#785)
 - Context manager 'restore_at_exit' in the 'VirtualDAC' object (#792)
-- Added python 3.9 support (#773)
-- Passes for Qiskit (#784)
+- Removed legacy construction for monitorSizes (#802)
 - Added method to integrate qiskit circuits into larger circuits (#805)
 - Improve HDAWG8 upload times and M4i re-arm time (#806)
 
 ### Changed
 
-- Improve sine fitting (#762)
+- Improve sine fitting by estimating the phase (#762)
+- Added default value for fig argument of create_figure_ppt_callback (#766)
 - The 'dataset_labels' method can handle both DataSet's DataArray's (#771)
 - Hickle is now optional for installation (#773)
+- update lmfit_method (least_squares) for double gaussian fit and warn if legacy arguments are used (#791)
+- Allow create_figure_ppt_callback to operate on a figure handle (#797)
+- Added option to show selected points in click_line method (#804)
+- Allow hostname to be set in rda_t (#812)
+- Add parameter results to plots of RTS and two-level threshold (#818)
+- Update default method (least_squares) for lmfit in gauss_ramsey fitting and fit_sine (#821)
 
 ### Removed
 
 - Removed deprecated code (#764)
+- Removed gtk branch in mpl2clipboard (#803)
+- Removed deprecated methods from data.py (get_latest_dataset, istep) (#814)
+- Removed deprecated methods from instrument_storage.py (load_instrument_configparser, save_instrument_configparser) (#814)
+- Removed deprecated methods from dotsystem.py (defaultVmatrix, getHn) (#814)
+- Removed some docs/notebooks/unfinished/examples (#814)
+- Removed deprecated classes (UHFLIScopeReader, UHFLIStimulus, ProcessSawtooth1D, ProcessSawtooth2D) (#814)
+- Removed deprecated classes (SignalProcessorRunner, TimeStampInstrumentAdapter) (#814)
+- Removed deprecated classes VirtualAwgInstrumentAdapter, VirtualDACInstrumentAdapter) (#814)
 
 ### Deprecated
 
@@ -34,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated methods in qtt.instrument_storage (#783)
 
 ### Fixed
+
+- Fixed numpy deprecation errors for np.float32 (#760)
+- Fixed issue dotsystems makebasis (#801)
+- Fix scanjob_t parsing for negative scan direction (#817)
+
 
 ## \[1.2.3] - 22-3-2021
 
