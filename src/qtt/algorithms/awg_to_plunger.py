@@ -39,8 +39,8 @@ def click_line(fig: Optional[int], show_points: bool = False) -> Tuple[float, fl
     slope = (pts1[1] - pts0[1]) / (pts1[0] - pts0[0])
     offset = (pts0[1] - slope * pts0[0])
 
-    pts = np.array([pts0, pts1]).T
     if show_points:
+        pts = np.array([pts0, pts1]).T
         plt.plot(pts[0], pts[1], '.-g')
     return offset, slope
 
