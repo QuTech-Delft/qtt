@@ -196,8 +196,8 @@ class DotModel(Instrument):
         Vmatrix[-1, -1] = 1
         for ii in range(self.ds.ndots):
             ns = len(self.sourcenames)
-            v = np.arange(ns) - (1 + 2 * ii)
-            v = 1 / (1 + .08 * np.abs(v)**3)
+            v_temp = np.arange(ns) - (1 + 2 * ii)
+            v = 1 / (1 + .08 * np.abs(v_temp)**3)
             Vmatrix[ii, 0:ns] = v
             # compensate for the barriers
             Vmatrix[0:self.ds.ndots, -1] = (Vmatrix[ii, [2 * ii, 2 * ii + 2]].sum()) * -self.gate_pinchoff

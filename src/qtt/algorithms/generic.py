@@ -30,8 +30,7 @@ except:
 
 # %%
 
-import scipy.ndimage
-import scipy.ndimage.filters as filters
+import scipy.ndimage as filters
 
 
 def nonmaxsuppts(v, d, minval=None):
@@ -446,7 +445,7 @@ def smoothImage(im, k=3):
     """
     ndim = len(im.shape)
     kernel = np.ones((k,) * ndim) / k ** ndim
-    ims = scipy.ndimage.filters.convolve(im, kernel, mode='nearest')
+    ims = scipy.ndimage.convolve(im, kernel, mode='nearest')
     return ims
 
 
@@ -573,6 +572,6 @@ def boxcar_filter(signal, kernel_size):
         filtered_signal = signal
 
     boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
-    filtered_signal = scipy.ndimage.filters.convolve(filtered_signal, boxcar_kernel, mode='nearest')
+    filtered_signal = scipy.ndimage.convolve(filtered_signal, boxcar_kernel, mode='nearest')
 
     return filtered_signal

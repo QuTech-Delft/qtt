@@ -78,7 +78,7 @@ def _polarization_fit_initial_guess(x_data, y_data, kT=0, padding_fraction=0.15,
     linear_fit = np.polyfit(x_data[-number_points_padding:], y_data[-number_points_padding:], 1)
     slope_guess = linear_fit[0]
     data_noslope = y_data - slope_guess * (x_data - x_data[0])
-    data_noslope_1der = scipy.ndimage.filters.gaussian_filter(data_noslope, sigma=20, order=1)
+    data_noslope_1der = scipy.ndimage.gaussian_filter(data_noslope, sigma=20, order=1)
 
     data_noslope_1der[:number_points_padding] = 0
     data_noslope_1der[number_points_padding:0] = 0

@@ -9,7 +9,7 @@ import logging
 import re
 import time
 import warnings
-from typing import Any, Tuple, Type
+from typing import Any, Tuple, Type, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -968,7 +968,7 @@ class scanjob_t(dict):
                     (len(stepvalues), len(sweepvalues))) for param in sweepdata['param']}
                 step_array2d = np.tile(
                     np.array(stepvalues).reshape(-1, 1), (1, len(sweepvalues)))
-                sweep_array2d = np.tile(sweepvalues, (len(stepvalues), 1))
+                sweep_array2d = np.tile(cast(Any, sweepvalues), (len(stepvalues), 1))
                 for param in sweepdata['param']:
                     if isinstance(stepvalues, np.ndarray):
                         self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * \

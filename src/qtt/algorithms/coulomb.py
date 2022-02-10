@@ -6,7 +6,6 @@ import copy
 import numpy as np
 import scipy.optimize as opt
 import scipy.ndimage
-import scipy.ndimage.measurements
 
 import qtt.measurements.scans
 import qtt.data
@@ -115,8 +114,8 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
     """ Plot detected peaks
 
     Args:
-        x (array): independent variable data    
-        y (array): dependent variable data    
+        x (array): independent variable data
+        y (array): dependent variable data
         peaks (list): list of peaks to plot
         showPeaks, plotLabels, plotScore, plothalf (bool): plotting options
 
@@ -125,7 +124,7 @@ def plotPeaks(x, y, peaks, showPeaks=True, plotLabels=False, fig=10, plotScore=F
 
     """
     kk = np.ones(3) / 3.
-    ys = scipy.ndimage.filters.correlate1d(y, kk, mode='nearest')
+    ys = scipy.ndimage.correlate1d(y, kk, mode='nearest')
     stdY = np.std(y)
     pgeometry.cfigure(fig)
     plt.clf()
@@ -253,7 +252,7 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
         verbose (int): verbosity level
     """
     kk = np.ones(3) / 3.
-    ys = scipy.ndimage.filters.correlate1d(y, kk, mode='nearest')
+    ys = scipy.ndimage.correlate1d(y, kk, mode='nearest')
     peaks = copy.deepcopy(peaks)
 
     dy = np.diff(ys, n=1)
@@ -418,7 +417,7 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
     kk = np.ones(3) / 3.
     ys = y
     for ki in range(8):
-        ys = scipy.ndimage.filters.correlate1d(ys, kk, mode='nearest')
+        ys = scipy.ndimage.correlate1d(ys, kk, mode='nearest')
     noise = np.std(ys - y)
     stn2 = np.log2((highvalue - lowvalue) / noise)
 
@@ -668,9 +667,9 @@ def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
         minimal_derivative = (highvalue - lowvalue) / 100
 
     k = np.array([1, 0, -1])
-    dy = scipy.ndimage.filters.convolve(y, k, mode='nearest')
+    dy = scipy.ndimage.convolve(y, k, mode='nearest')
 
-    labeled_array, num_features = scipy.ndimage.measurements.label(
+    labeled_array, num_features = scipy.ndimage.label(
         dy >= minimal_derivative)
 
     slopes = []

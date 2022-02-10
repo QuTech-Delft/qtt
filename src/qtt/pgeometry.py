@@ -39,7 +39,7 @@ from typing import List, Optional, Union
 import numpy
 import numpy as np
 import scipy.io
-import scipy.ndimage.filters as filters
+import scipy.ndimage as filters
 import scipy.ndimage.morphology as morphology
 
 __version__ = '0.7.0'
@@ -1413,11 +1413,11 @@ def detect_local_minima(arr, thr=None):
     # http://stackoverflow.com/questions/3684484/peak-detection-in-a-2d-array/3689710#3689710
 
     # define an connected neighborhood
-    # http://www.scipy.org/doc/api_docs/SciPy.ndimage.morphology.html#generate_binary_structure
+    # https://scipy.github.io/devdocs/reference/generated/scipy.ndimage.generate_binary_structure.html#scipy.ndimage.generate_binary_structure
     neighborhood = morphology.generate_binary_structure(len(arr.shape), 2)
     # apply the local minimum filter; all locations of minimum value
     # in their neighborhood are set to 1
-    # http://www.scipy.org/doc/api_docs/SciPy.ndimage.filters.html#minimum_filter
+    # https://scipy.github.io/devdocs/reference/generated/scipy.ndimage.minimum_filter.html
     local_min = (filters.minimum_filter(arr, footprint=neighborhood) == arr)
     # local_min is a mask that contains the peaks we are
     # looking for, but also the background.
@@ -1429,7 +1429,7 @@ def detect_local_minima(arr, thr=None):
     # a little technicality: we must erode the background in order to
     # successfully subtract it from local_min, otherwise a line will
     # appear along the background border (artifact of the local minimum filter)
-    # http://www.scipy.org/doc/api_docs/SciPy.ndimage.morphology.html#binary_erosion
+    # https://scipy.github.io/devdocs/reference/generated/scipy.ndimage.binary_erosion.html#scipy.ndimage.binary_erosion
     eroded_background = morphology.binary_erosion(
         background, structure=neighborhood, border_value=1)
     #
@@ -1536,15 +1536,6 @@ def choose(n, k):
     for t in range(min(k, n - k)):
         ntok = ntok * (n - t) // (t + 1)
     return ntok
-
-
-# %%
-
-
-def deprecation(message):
-    """ Issue a deprecation warning message """
-    raise Exception('Method has been removed from this module. Use the warnings package directly.')
-    warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
 # %%
