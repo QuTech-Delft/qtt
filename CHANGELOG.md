@@ -312,7 +312,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed problems with the scan2Dturbo function (#423).
 - Fixed parameter in widget (#384).
 
-[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.2.3...HEAD
+[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/QuTech-Delft/qtt/compare/1.2.3...1.3.0
 [1.2.3]: https://github.com/QuTech-Delft/qtt/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/QuTech-Delft/qtt/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/QuTech-Delft/qtt/compare/1.2.0...1.2.1
