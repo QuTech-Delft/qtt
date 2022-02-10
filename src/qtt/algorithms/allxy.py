@@ -115,9 +115,6 @@ def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: Union[int, Axes, N
         p = [0, 0, .5, 0, 1, 0]
         ax.plot(xfine, allxy_model(xfine, *p), 'c', label='baseline', alpha=.5)
 
-        initial_params = _estimate_allxy_parameters(allxy_data)
-        ax.plot(xfine, allxy_model(xfine, *initial_params), 'g', label='initial estimate', alpha=.35)
-
         initial_parameters = result['initial_parameters']
         ax.plot(xfine, allxy_model(xfine, *initial_parameters), ':g', label='initial estimate', alpha=.35)
 
@@ -128,6 +125,6 @@ def plot_allxy(dataset: DataSet, result: Dict[str, Any], fig: Union[int, Axes, N
     vl.set_linestyle(':')
     vl = plot_vertical_line(16.5)
     vl.set_linestyle(':')
-    ax.set_title('AllXY')
+    ax.set_title(f'AllXY: {dataset.location}')
 
     ax.legend()
