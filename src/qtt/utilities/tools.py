@@ -884,7 +884,7 @@ try:
             >>> fig = plt.figure(10)
             >>> txt = 'Some comments on the figure'
             >>> notes = 'some additional information'
-            >>> addPPTslide(title,fig, subtitle = txt,notes = notes)
+            >>> addPPTslide(title, fig, subtitle=txt, notes=notes)
         """
         Application = win32com.client.Dispatch("PowerPoint.Application")
 
@@ -1061,9 +1061,8 @@ try:
             slide: PowerPoint slide.
 
         Example:
-        --------
-        >>> notes = 'some additional information'
-        >>> addPPT_dataset(dataset,notes)
+            >>> notes = 'some additional information'
+            >>> addPPT_dataset(dataset, notes)
         """
         if len(dataset.arrays) < 2:
             raise IndexError('The dataset contains less than two data arrays')

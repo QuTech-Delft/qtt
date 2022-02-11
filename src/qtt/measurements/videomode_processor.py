@@ -68,7 +68,7 @@ class VideoModeProcessor(ABC):
                     data_processed)
 
             if videomode.laplace:
-                data_processed = ndimage.filters.laplace(
+                data_processed = ndimage.laplace(
                     data_processed, mode='nearest')
             dd.append(data_processed)
         return dd

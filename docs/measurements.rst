@@ -166,5 +166,5 @@ Copying data to Powerpoint
 To copy a dataset or a figure window to Powerpoint, including the scan metadata one can use:
 
 .. autosummary::
-    qtt.utilities.tools.addPPT_dataset(dataset)
-    qtt.utilities.tools.addPPTslide(figure)
+    qtt.utilities.tools.addPPT_dataset
+    qtt.utilities.tools.addPPTslide

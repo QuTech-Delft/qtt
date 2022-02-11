@@ -433,7 +433,7 @@ class livePlot(QtCore.QObject):
             topLayout.addWidget(win.stop_button)
             topLayout.addWidget(win.averaging_box)
             vertLayout.addLayout(topLayout)
-        plotwin = pg.GraphicsWindow(title="Live view")
+        plotwin = pg.GraphicsLayoutWidget(title="Live view")
         vertLayout.addWidget(plotwin)
         win.setLayout(vertLayout)
         self.setGeometry = win.setGeometry

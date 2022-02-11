@@ -74,7 +74,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
     kk = np.ones(3) / 3.
     smoothed_data = value
     for ii in range(4):
-        smoothed_data = scipy.ndimage.filters.correlate1d(smoothed_data, kk, mode='nearest')
+        smoothed_data = scipy.ndimage.correlate1d(smoothed_data, kk, mode='nearest')
     midvalue = .7 * lowvalue + .3 * highvalue
     if scandirection >= 0:
         mp = (smoothed_data >= (.7 * lowvalue + .3 * highvalue)).nonzero()[0][0]
