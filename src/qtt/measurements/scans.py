@@ -9,14 +9,12 @@ import logging
 import re
 import time
 import warnings
-from typing import Any, Tuple, Type
+from typing import Any, Tuple, Type, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph
 import qcodes
-import skimage
-import skimage.filters
 from qcodes import Instrument
 from qcodes.data.data_array import DataArray
 from qcodes.instrument.parameter import Parameter
@@ -31,7 +29,7 @@ import qtt.utilities.tools
 from qtt.data import diffDataset, makeDataSet1D, makeDataSet1Dplain, makeDataSet2D, makeDataSet2Dplain, uniqueArrayName
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.measurements.acquisition.interfaces import AcquisitionScopeInterface
-from qtt.pgeometry import plot2Dline
+from qtt.pgeometry import otsu, plot2Dline
 from qtt.structures import VectorParameter
 from qtt.utilities.tools import logging_context, rdeprecated, update_dictionary
 
@@ -49,10 +47,9 @@ def checkReversal(im0, verbose=0):
     Returns
         bool
     """
-    thr = skimage.filters.threshold_otsu(im0)
+    thr = otsu(im0)
     mval = np.mean(im0)
 
-    # meanopen = np.mean(im0[:,:])
     fr = thr < mval
     if verbose:
         print(' checkReversal: %d (mval %.1f, thr %.1f)' % (fr, mval, thr))
@@ -483,10 +480,9 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
 
     is_m4i = _is_m4i(minstrhandle)
     if is_m4i:
-        device_parameters['trigger_re_arm_compensation'] = True
         dt = period*(1-sawtooth_width)/2
-        zero_padding = (40+32)/get_sampling_frequency(minstrhandle) - dt
-        print(f'period {period} zero_padding {zero_padding}')
+        zero_padding = max((40+32)/get_sampling_frequency(minstrhandle) - dt, 0)
+        logging.info(f'm4i: adding zero_padding to eliminate re-arm time: period {period} zero_padding {zero_padding}')
     else:
         zero_padding = 0
 
@@ -851,7 +847,7 @@ class scanjob_t(dict):
                 raise ValueError('step value may not be 0')
 
             if inclusive_end:
-                epsilon = 1e-8
+                epsilon = np.sign(sweep_data['step'])*1e-8
                 sweep_values = param[sweep_data['start']:(sweep_data['end'] + epsilon):sweep_data['step']]
             else:
                 diff = abs(sweep_data['end'] - sweep_data['start'])
@@ -972,7 +968,7 @@ class scanjob_t(dict):
                     (len(stepvalues), len(sweepvalues))) for param in sweepdata['param']}
                 step_array2d = np.tile(
                     np.array(stepvalues).reshape(-1, 1), (1, len(sweepvalues)))
-                sweep_array2d = np.tile(sweepvalues, (len(stepvalues), 1))
+                sweep_array2d = np.tile(cast(Any, sweepvalues), (len(stepvalues), 1))
                 for param in sweepdata['param']:
                     if isinstance(stepvalues, np.ndarray):
                         self['phys_gates_vals'][param] = param_init[param] + sweep_array2d * \
@@ -1812,6 +1808,8 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     """
     if device_parameters is None:
         device_parameters = {}
+
+    import qcodes.instrument_drivers.ZI.ZIUHFLI  # delayed import
 
     is_m4i = _is_m4i(minstrhandle)
     is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)

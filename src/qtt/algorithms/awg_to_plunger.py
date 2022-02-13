@@ -4,48 +4,29 @@ pieter.eendebak@tno.nl
 
 """
 
-# %% Load packages
-import numpy as np
-import qtt.pgeometry
-import qcodes
 import copy
-import matplotlib.pyplot as plt
+from typing import Optional, Tuple
 
+import matplotlib.pyplot as plt
+import numpy as np
 from qcodes.plots.qcmatplotlib import MatPlot
+
 import qtt.algorithms.images
+import qtt.pgeometry
 import qtt.utilities.imagetools
+from qtt.algorithms.images import straightenImage
+from qtt.data import get_dataset, plot_dataset
 from qtt.measurements.scans import scan2Dfast, scanjob_t
 from qtt.utilities.imagetools import cleanSensingImage
-from qtt.algorithms.images import straightenImage
 
 # %% Helper functions
 
 
-def get_dataset(ds):
-    """ Get a dataset from a results dict, a string or a dataset.
-
-    Args:
-        ds (dict, str or DataSet): the data to be put in the dataset.
-
-    Returns:
-        ds (qcodes.DataSet) dataset made from the input data.
-
-    """
-    if isinstance(ds, dict):
-        ds = ds.get('dataset', None)
-    if ds is None:
-        return None
-    if isinstance(ds, str):
-        ds = qcodes.data.data_set.load_data(ds)
-    return ds
-
-
-def click_line(fig=None):
+def click_line(fig: Optional[int], show_points: bool = False) -> Tuple[float, float]:
     """ Define a line through two points. The points are choosen by clicking on a position in a plot, two times.
-
     Args:
-        fig (int or None): number of figure to plot the points in, when None it will plot a figure.
-
+        fig: number of figure to plot the points in, when None it will plot a figure.
+        showpoints: If True, then plot the selected points in the figure
     Returns:
         offset (float): offset of the line.
         slope (float): slope of the line.
@@ -58,6 +39,9 @@ def click_line(fig=None):
     slope = (pts1[1] - pts0[1]) / (pts1[0] - pts0[0])
     offset = (pts0[1] - slope * pts0[0])
 
+    if show_points:
+        pts = np.array([pts0, pts1]).T
+        plt.plot(pts[0], pts[1], '.-g')
     return offset, slope
 
 # %% Main functions
@@ -95,19 +79,19 @@ def measure_awg_to_plunger(station, gate, minstrument, scanrange=30, step=0.5):
     return result
 
 
-def analyse_awg_to_plunger(result, method='hough', fig=None):
+def analyse_awg_to_plunger(result: dict, method: str = 'hough', fig: Optional[int] = None) -> dict:
     """ Determine the awg_to_plunger conversion factor from a 2D scan, two possible methods: 'hough' it fits the slope
         of the addition line and calculates the correction to the awg_to_plunger conversion factor from there. if this
         doesn't work for some reason, method 'click' can be used to find the addition lines by hand/eye.
 
     Args:
-        result (dic): result dictionary of the function measure_awg_to_plunger,
+        result: result dictionary of the function measure_awg_to_plunger,
             shape: result = {'type': 'awg_to_plunger', 'awg_to_plunger': None, 'dataset': ds.location}.
-        method (str): either 'hough' or 'click'.
-        fig (int or None): determines of the analysis staps and the result is plotted.
+        method: either 'hough' or 'click'.
+        fig : determines of the analysis staps and the result is plotted.
 
     Returns:
-        result (dict): including to following entries:
+        result: including to following entries:
             angle (float): angle in radians.
             angle_degrees (float): angle in degrees.
             correction of awg_to_plunger (float): correction factor.
@@ -152,7 +136,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             correction = None
         else:
             angles = lines[:, 0, 1]
-            angle_pixel = angles[0] # take most voted line
+            angle_pixel = angles[0]  # take most voted line
 
             fac = 2
             xpix = np.array([[0, 0], [-fac * np.sin(angle_pixel), fac * np.cos(angle_pixel)]]).T
@@ -163,7 +147,7 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
                 return np.arctan2(v[0], v[1])
             angle = vec2angle(xscan[:, 1] - xscan[:, 0])
             correction = -1 / np.tan(angle)
-            angle_deg = angle / (2 * np.pi) * 360
+            angle_deg = np.rad2deg(angle)
 
         # plotting the analysis steps of the data
         if fig is not None:
@@ -173,14 +157,14 @@ def analyse_awg_to_plunger(result, method='hough', fig=None):
             plt.axis('image')
 
             if angle_pixel is not None:
-                for offset in [-40, -20, 0, 20, 40]:
+                for offset_in_pixels in [-40, -20, 0, 20, 40]:
                     label = None
-                    if offset == 0:
+                    if offset_in_pixels == 0:
                         label = 'detected angle'
                     qtt.pgeometry.plot2Dline(
-                        [np.cos(angle_pixel), np.sin(angle_pixel), offset], 'm', label=label)
+                        [np.cos(angle_pixel), np.sin(angle_pixel), offset_in_pixels], 'm', label=label)
             if angle is not None:
-                plt.title('Detected line direction: angle %.2f' % (angle_deg,))
+                plt.title(f'Detected line direction: angle {angle_deg:.2f} [deg]')
 
             plt.figure(fig + 2)
             plt.clf()
@@ -239,19 +223,19 @@ def plot_awg_to_plunger(result, fig=10):
     angle = result['angle']
 
     ds = get_dataset(result)
-    _, tr = qtt.data.dataset2image(ds)
-    xscan = tr.pixel2scan(np.array([[0], [0]]))
+    v = ds.default_parameter_array()
+    dy = v.set_arrays[0][-1]-v.set_arrays[0][0]
+    centre = [np.mean(v.set_arrays[1]), np.mean(v.set_arrays[0])]
 
-    plt.figure(fig)
-    plt.clf()
-    MatPlot(ds.default_parameter_array(), num=fig)
+    plot_dataset(ds, fig=fig)
     if angle is not None:
-        rho = -(xscan[0] * np.cos(angle) - np.sin(angle) * xscan[1])
+        rho = -(centre[0] * np.cos(angle) - np.sin(angle) * centre[1])
 
-        for offset in [-40, -20, 0, 20, 40]:
+        for offset in dy*np.linspace(-1, 1, 7):
             label = None
             if offset == 0:
                 label = 'detected angle'
             qtt.pgeometry.plot2Dline(
                 [np.cos(angle), -np.sin(angle), rho + offset], '--m', alpha=.6, label=label)
-    plt.title('Detected line direction')
+        angle_deg = np.rad2deg(angle)
+        plt.title(f'Detected line direction: angle {angle_deg:.2f} [deg]')

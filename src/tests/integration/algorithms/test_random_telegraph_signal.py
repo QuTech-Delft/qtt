@@ -1,10 +1,13 @@
 """ Functionality to test analyse random telegraph signals."""
 
 import unittest
-import numpy as np
-import matplotlib.pyplot as plt
-from qtt.algorithms.random_telegraph_signal import tunnelrates_RTS, generate_RTS_signal
 import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from qtt.algorithms.random_telegraph_signal import (generate_RTS_signal, plot_two_level_threshold, tunnelrates_RTS,
+                                                    two_level_threshold)
 
 
 class TestRandomTelegraphSignal(unittest.TestCase):
@@ -35,3 +38,11 @@ class TestRandomTelegraphSignal(unittest.TestCase):
         self.assertTrue(np.abs(tunnelrate_dn - rate_up * 1e-3) < 100)
         self.assertTrue(np.abs(tunnelrate_up - rate_down * 1e-3) < 10)
         plt.close('all')
+
+
+class TestTwoLevelThreshold(unittest.TestCase):
+    def test_two_level_threshold(data):
+        data = generate_RTS_signal(100000, std_gaussian_noise=0.24, rate_up=10e3, rate_down=20e3)
+        result = two_level_threshold(data)
+        plot_two_level_threshold(result, fig=1)
+        plt.close(1)

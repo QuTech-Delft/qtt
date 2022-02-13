@@ -154,7 +154,7 @@ def pre_process_pat(x_data, y_data, background, z_data, fig=None):
 
     ks = 5
     w = np.ones((1, ks)) / ks
-    imx = scipy.ndimage.filters.convolve(imq, w, mode='nearest')
+    imx = scipy.ndimage.convolve(imq, w, mode='nearest')
 
     qq = np.percentile(imx, [5, 50, 95])
     imx = imx - qq[1]
@@ -221,7 +221,7 @@ def detect_peaks(x_data, y_data, imx, sigmamv=.25, fig=400, period=1e-3, model='
     # smooth input image
     kern = scipy.signal.gaussian(71, std=sigmamv / scalefac)
     kern = kern / kern.sum()
-    imx2 = scipy.ndimage.filters.convolve(z_data, kern.reshape((1, -1)), mode='nearest')
+    imx2 = scipy.ndimage.convolve(z_data, kern.reshape((1, -1)), mode='nearest')
 
     # get maximum value for each row
     mm1 = np.argmax(imx2, axis=1)

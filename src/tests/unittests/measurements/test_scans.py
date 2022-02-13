@@ -6,32 +6,30 @@ This is part of qtt.
 """
 
 import sys
+import tempfile
 import warnings
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
-import tempfile
 
 import numpy as np
 import qcodes
-from qcodes import Parameter, ManualParameter
+import qcodes.data.io
+import zhinst
+from qcodes import ManualParameter, Parameter
+from qcodes.data.data_set import DataSet
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
-import qcodes.data.io
-from qcodes.data.data_set import DataSet
-
-import zhinst
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
+import qtt.instrument_drivers.gates
 import qtt.utilities.tools
-from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
-from qtt.measurements.scans import (get_instrument_parameter, instrumentName,
-                                    measure_segment_scope_reader, fastScan,
-                                    sample_data_t, scan1D, scan2D, scanjob_t,
-                                    get_sampling_frequency)
-from qtt.structures import MultiParameter
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
-from qtt.measurements.scans import measuresegment
+from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
+from qtt.measurements.scans import (fastScan, get_instrument_parameter, get_sampling_frequency, instrumentName,
+                                    measure_segment_scope_reader, measuresegment, sample_data_t, scan1D, scan2D,
+                                    scanjob_t)
+from qtt.structures import MultiParameter
 
 sys.modules['pyspcm'] = MagicMock()
 from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
@@ -522,3 +520,18 @@ class TestScans(TestCase):
         self.assertEqual(expected_sweepvalues, actual_sweepvalues)
         self.assertEqual(len(actual_sweepvalues), 5)
         gates.close()
+
+    def test_convert_scanjob_vec_regression(self):
+        station = qcodes.Station()
+        ivvi = VirtualIVVI(name='ivvi', model=None)
+        gates = qtt.instrument_drivers.gates.VirtualDAC(
+            'gates', instruments=[ivvi], gate_map={'P1': (0, 1), 'P2': (0, 2)})
+        station.add_component(gates)
+        num = 566
+        scanjob = scanjob_t({'minstrument': [1], 'minstrumenthandle': ('m4i', [1]), 'wait_time_startscan': 0.04, 'stepdata': {'wait_time': 0.2}, 'Naverage': 2000, 'sweepdata': {
+                            'period': 0.0005, 'param': 'P1', 'range': -5, 'step': -0.01098901098901099, 'start': 714.84130859375, 'end': 709.84130859375}, 'scantype': 'scan1Dfast'})
+        _, s = scanjob._convert_scanjob_vec(station=station, sweeplength=num)
+        self.assertEqual(len(s), num)
+
+        gates.close()
+        ivvi.close()

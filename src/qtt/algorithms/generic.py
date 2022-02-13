@@ -1,9 +1,10 @@
 """ Various functions """
 
-import warnings
 import copy
-import numpy as np
+import warnings
+
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy
 
 try:
@@ -14,11 +15,13 @@ except:
     warnings.warn('could not find opencv, not all functionality available',
                   qtt.exceptions.MissingOptionalPackageWarning)
 
+import warnings
+
 import qtt.utilities.tools
 from qtt import pgeometry
+
 # %%
 
-import warnings
 
 try:
     import pylab
@@ -27,8 +30,7 @@ except:
 
 # %%
 
-import scipy.ndimage.filters as filters
-import scipy.ndimage
+import scipy.ndimage as filters
 
 
 def nonmaxsuppts(v, d, minval=None):
@@ -54,7 +56,7 @@ def disk(radius):
 def localMaxima(arr, radius=1, thr=None):
     """ Calculate local maxima in a 2D array
     """
-    strel = disk(radius)  # skimage.morphology.disk(radius)
+    strel = disk(radius)
     local_max = (filters.maximum_filter(arr, footprint=strel) == arr)
 
     if thr is not None:
@@ -155,8 +157,8 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
         # opencv cannot handle int32 or int64 in resize
         im = im.astype(np.float32)
     # scale factors
-    fw = np.abs((float(mvx0) / mvx))
-    fh = np.abs((float(mvy0) / mvy))
+    fw = np.abs(float(mvx0) / mvx)
+    fh = np.abs(float(mvy0) / mvy)
     if verbose:
         print('rescaleImage: scale factorf x %.4f, factor y %.4f' % (fw, fh))
         print('rescaleImage: result unit/pixel x %.4f y %.4f' % (mvx, mvy))
@@ -422,7 +424,7 @@ def getValuePixel(imx, pt):
             imx.astype(np.float32), (1, 1), (ptf[0], ptf[1]))
     else:
         imx = imx.astype(np.float32)
-        vv = np.zeros((imx.shape[2]))
+        vv = np.zeros(imx.shape[2])
         for ii in range(imx.shape[2]):
             vv[ii] = cv2.getRectSubPix(imx[:, :, ii], (1, 1), (ptf[0], ptf[1]))
     return vv
@@ -443,7 +445,7 @@ def smoothImage(im, k=3):
     """
     ndim = len(im.shape)
     kernel = np.ones((k,) * ndim) / k ** ndim
-    ims = scipy.ndimage.filters.convolve(im, kernel, mode='nearest')
+    ims = scipy.ndimage.convolve(im, kernel, mode='nearest')
     return ims
 
 
@@ -570,6 +572,6 @@ def boxcar_filter(signal, kernel_size):
         filtered_signal = signal
 
     boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
-    filtered_signal = scipy.ndimage.filters.convolve(filtered_signal, boxcar_kernel, mode='nearest')
+    filtered_signal = scipy.ndimage.convolve(filtered_signal, boxcar_kernel, mode='nearest')
 
     return filtered_signal

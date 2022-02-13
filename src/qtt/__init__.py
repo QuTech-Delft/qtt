@@ -51,7 +51,7 @@ except ImportError:
 
 
 def check_version(version, module=qcodes, optional=False, install_message=None):
-    """ Check whether a module has the corret version """
+    """ Check whether a module has the correct version """
     if isinstance(module, str):
         try:
             m = importlib.import_module(module)
@@ -82,7 +82,7 @@ def check_version(version, module=qcodes, optional=False, install_message=None):
 check_version('1.0', 'qtpy')
 check_version('0.18', 'scipy')
 check_version('0.1', 'redis', optional=True)
-check_version('0.8.0', qcodes)
+check_version('0.23.0', qcodes)
 check_version('0.2', 'qupulse')
 
 
