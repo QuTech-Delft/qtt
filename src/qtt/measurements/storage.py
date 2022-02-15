@@ -4,11 +4,17 @@ import os
 import warnings
 from datetime import datetime
 
-import h5py
 import qcodes
 
 import qtt.instrument_drivers.virtual_gates
 from qtt.utilities.tools import rdeprecated
+
+try:
+    import h5py
+except ImportError:
+    import qtt.exceptions
+    warnings.warn('could not import h5py, not all functionality available',
+                  qtt.exceptions.MissingOptionalPackageWarning)
 
 try:
     import hickle
