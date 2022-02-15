@@ -14,9 +14,8 @@ the Netherlands Organisation for Applied Scientific Research ([TNO](https://www.
 
 For usage of QTT see the detailed [documentation](https://qtt.readthedocs.io/en/latest/) on readthedocs.io.
 
-
 QTT is the framework on which you can base your measurement and analysis scripts. QTT is based
-on [Qcodes](https://github.com/qdev-dk/Qcodes) (basic framework such as instrument drivers, DataSet) and the [SciPy](https://www.scipy.org/) ecosystem.
+on [QCoDeS](https://github.com/qdev-dk/Qcodes) (basic framework such as instrument drivers, DataSet) and the [SciPy](https://www.scipy.org/) ecosystem.
 
 ## Installation
 
@@ -31,6 +30,7 @@ sudo apt install git gcc python3.7 python3.7-venv python3.7-dev
 for Python 3.7.x. Other Linux distributions require similar steps.
 
 ### Setting up a virtual environment
+
 To create a clean virtual Python environment for your QTT development do:
 ```
 mkdir qtt
@@ -41,7 +41,7 @@ Now activate the virtual environment. On Linux do:
 python3 -m venv env
 . ./env/bin/activate
 ```
- or
+or
 ```
 source ./env/bin/activate
 ```
@@ -52,7 +52,9 @@ python -m virtualenv --copies env
 env\Scripts\activate.bat
 ```
 Now we are ready to install QTT.
-### Installation from Pypi
+
+### Installation from PyPI
+
 To use QTT, install it as a pip package:
 ```
 pip install qtt
@@ -60,6 +62,7 @@ pip install qtt
 or install QTT from source.
 
 ### Installing from source
+
 The source for QTT can be found at Github.
 For the default installation from the QTT source directory execute:
 ```
@@ -79,8 +82,10 @@ When (encountered on Linux) PyQt5 gives an error when installing try upgrading p
 ```
 pip install --upgrade pip
 ```
- and rerun the respective install command.
+and rerun the respective install command.
+
 ### When incompatibility problems arise
+
 Sometimes the default installation does not work because of incompatible dependencies between the used packages
 on your system. To be sure you use all the right versions of the packages used by QTT and its dependencies do:
 ```
@@ -106,6 +111,7 @@ pip install opencv-python==4.2.0.34
 ```
 
 ### Installing for generating documentation
+
 To install the necessary packages to perform documentation activities for QTT do:
 ```
 pip install -e .[rtd]
@@ -118,6 +124,7 @@ To build the 'readthedocs' documentation do:
 cd docs
 make html
 ```
+
 ### Vandersypen research group
 
 For the Vandersypen research group there are more detailed instructions, read the file INSTALL.md in the spin-projects
