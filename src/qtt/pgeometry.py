@@ -34,7 +34,7 @@ import tempfile
 import time
 import warnings
 from functools import wraps
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy
 import numpy as np
@@ -163,11 +163,11 @@ except BaseException:
         print('Memory usage: ? (mb)')
 
 
-def memory():
+def memory() -> float:
     """ Return the memory usage in MB
 
     Returns:
-            float: memory usage in mb
+            Memory usage in MB
     """
     import os
 
@@ -204,7 +204,7 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
     return ll
 
 
-def package_versions(verbose=1):
+def package_versions(verbose: int = 1):
     """ Report package versions installed """
     print('numpy.__version__ %s' % numpy.__version__)
     print('scipy.__version__ %s' % scipy.__version__)
@@ -256,12 +256,12 @@ def freezeclass(cls):
     return cls
 
 
-def static_var(varname, value):
-    """ Helper function to create a static variable
+def static_var(varname: str, value: Any):
+    """ Helper function to create a static variable on a method
 
     Args:
-        varname (str)
-        value (anything)
+        varname: Variable to create
+        value: Initial value to set
     """
     def decorate(func):
         setattr(func, varname, value)
@@ -270,14 +270,14 @@ def static_var(varname, value):
 
 
 @static_var("time", {'default': 0})
-def tprint(string, dt=1, output=False, tag='default'):
+def tprint(string: str, dt: float = 1, output: bool = False, tag: str = 'default'):
     """ Print progress of a loop every dt seconds
 
     Args:
-        string (str): text to print
-        dt (float): delta time in seconds
-        output (bool): if True return whether output was printed or not
-        tag (str): optional tag for time
+        string: text to print
+        dt: delta time in seconds
+        output: if True return whether output was printed or not
+        tag: optional tag for time
     Returns:
         output (bool)
 
@@ -294,15 +294,6 @@ def tprint(string, dt=1, output=False, tag='default'):
             return False
         else:
             return
-
-
-def partiala(method, **kwargs):
-    """ Function to perform functools.partial on named arguments """
-    raise Exception('Use functools.partial instead')
-
-    def t(x):
-        return method(x, **kwargs)
-    return t
 
 
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
@@ -439,16 +430,16 @@ class fps_t:
         print('framerate: %.3f' % fps)
 
 
-def mkdirc(d):
+def mkdirc(d: str):
     """ Similar to mkdir, but no warnings if the directory already exists """
     try:
         os.mkdir(d)
-    except BaseException:
+    except FileExistsError:
         pass
     return d
 
 
-def projectiveTransformation(H, x):
+def projectiveTransformation(H: np.ndarray, x: np.ndarray) -> np.ndarray:
     """ Apply a projective transformation to a kxN array
 
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))
@@ -489,7 +480,7 @@ def breakLoop(wk=None, dt=0.001, verbose=0):
     return False
 
 
-def hom(x):
+def hom(x: np.ndarray) -> np.ndarray:
     """ Create affine to homogeneous coordinates
 
     Args:
@@ -501,7 +492,7 @@ def hom(x):
     return np.vstack((x, np.ones(nx)))
 
 
-def dehom(x):
+def dehom(x: np.ndarray) -> np.ndarray:
     """ Convert homogeneous points to affine coordinates """
     return x[0:-1, :] / x[-1, :]
 
@@ -539,6 +530,7 @@ def angleDiff(x, y):
 
     >>> d=angleDiff( 0.01, np.pi+0.02)
     >>> d=angleDiff( 0.01, 2*np.pi+0.02)
+    >>> d=angleDiff(np.array([0,0,0]), np.array([2,3,4]))
     """
     return np.abs(((x - y + np.pi) % (2 * np.pi)) - np.pi)
 
@@ -578,7 +570,7 @@ def opencv2T(rvec, tvec):
     return T
 
 
-def T2opencv(T):
+def T2opencv(T: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """ Convert transformation to OpenCV rvec, tvec pair
 
     Example
@@ -1093,8 +1085,8 @@ def plotPoints3D(xx, *args, **kwargs):
     else:
         fig = p.figure(fig)
         ax = fig.gca(projection='3d')
-    r = ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]),
-                np.ravel(xx[2, :]), *args, **kwargs)
+    ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]),
+            np.ravel(xx[2, :]), *args, **kwargs)
     p.draw()
     return ax
 
