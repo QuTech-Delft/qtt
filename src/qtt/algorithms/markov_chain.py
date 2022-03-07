@@ -7,8 +7,7 @@
 import itertools
 import random
 from dataclasses import dataclass
-# %%
-from typing import List, Mapping, Optional, Sequence, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import scipy.linalg
@@ -76,7 +75,7 @@ class ChoiceGenerator:
 
 class ContinuousTimeMarkovModel:
 
-    def __init__(self, states: List[str], holding_parameters: Sequence[float], jump_chain: np.ndarray):
+    def __init__(self, states: List[str], holding_parameters: Union[List[float], np.ndarray], jump_chain: np.ndarray):
         """ Class that represents a continuous-time Markov chain
 
         Args:
@@ -93,7 +92,7 @@ class ContinuousTimeMarkovModel:
 
         """
         self.states = states
-        self.update_model(holding_parameters, jump_chain)
+        self.update_model(np.asarray(holding_parameters), jump_chain)
 
     def update_model(self, holding_parameters: np.ndarray, jump_chain: np.ndarray):
         """ Update the model of the markov chain
@@ -179,7 +178,7 @@ class ContinuousTimeMarkovModel:
         return pi
 
     def generate_sequence(self, length: int, delta_time: float,
-                          initial_state: Union[None, int, List] = None) -> np.ndarray:
+                          initial_state: Union[None, int, np.ndarray] = None) -> np.ndarray:
         """ Generate a random sequence with the model
 
         Args:
@@ -207,9 +206,9 @@ class ContinuousTimeMarkovModel:
         sequence[0] = initial_state
 
         # pre-calculate cumulative weights
-        generators = [None] * number_of_states
+        generators: List[Optional[ChoiceGenerator]] = [None] * number_of_states
         for jj in range(number_of_states):
-            cum_weights = list(itertools.accumulate(P[:, jj]))
+            cum_weights = np.array(list(itertools.accumulate(P[:, jj])))
             generators[jj] = ChoiceGenerator(number_of_states, cum_weights)
 
         for i in range(1, sequence.size):
