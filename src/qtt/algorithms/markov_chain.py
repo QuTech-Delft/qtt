@@ -61,7 +61,7 @@ class ChoiceGenerator:
         if self._idx == self._block.size:
             self._idx = 0
             self._block = self._generate_block()
-        return self._block[self._idx]
+        return int(self._block[self._idx])
 
     def generate_choices(self, size: int) -> np.ndarray:
         """ Generate a specified number of choice
@@ -195,7 +195,7 @@ class ContinuousTimeMarkovModel:
         """
         number_of_states = self.number_of_states()
         if initial_state is None:
-            initial_state = self.stationary_distribution().tolist()
+            initial_state = self.stationary_distribution().flatten().tolist()
             initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]  # type: ignore
         elif isinstance(initial_state, (list, np.ndarray, tuple)):
             initial_state = np.asarray(initial_state).tolist()
