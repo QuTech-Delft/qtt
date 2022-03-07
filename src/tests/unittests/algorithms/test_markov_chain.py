@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
 """ Classes to test generate signals with continuous-time Markov chains."""
 
-import unittest
 import numbers
+import unittest
+
 import numpy as np
+
 from qtt.algorithms.markov_chain import ChoiceGenerator, ContinuousTimeMarkovModel, generate_traces
 
 
@@ -34,17 +35,25 @@ class TestMarkovChain(unittest.TestCase):
         self.assertEqual(self.rts_model.number_of_states(), 2)
 
     def test_update_model(self):
-        holding_parameters=np.array([[1],[1.]])
-        jump_chain=np.array([[0., 1], [1, 0]])
+        holding_parameters = np.array([[1], [1.]])
+        jump_chain = np.array([[0., 1], [1, 0]])
         self.rts_model.update_model(holding_parameters, jump_chain)
         np.testing.assert_array_almost_equal(self.rts_model.jump_chain, jump_chain)
         np.testing.assert_array_almost_equal(self.rts_model.holding_parameters, holding_parameters)
-        np.testing.assert_array_almost_equal(self.rts_model.generator_matrix, np.array([[-1.,  1.],[ 1., -1.]]))
+        np.testing.assert_array_almost_equal(self.rts_model.generator_matrix, np.array([[-1.,  1.], [1., -1.]]))
 
     def test_generate_sequence(self):
         length = 30
         sequence = self.rts_model.generate_sequence(length, delta_time=1)
         self.assertEqual(len(sequence), length)
+
+    def test_generate_sequence_initial_state(self):
+        sequence = self.rts_model.generate_sequence(2, delta_time=1, initial_state=[1., 0])
+        self.assertEqual(sequence[0], 0)
+        sequence = self.rts_model.generate_sequence(2, delta_time=1, initial_state=[0., 1.])
+        self.assertEqual(sequence[0], 1)
+        sequence = self.rts_model.generate_sequence(2, delta_time=1, initial_state=np.array([0., 1.]))
+        self.assertEqual(sequence[0], 1)
 
     def test_generate_sequences(self):
         length = 30
