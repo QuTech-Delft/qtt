@@ -195,10 +195,11 @@ class ContinuousTimeMarkovModel:
         """
         number_of_states = self.number_of_states()
         if initial_state is None:
-            initial_state = self.stationary_distribution()
-            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]
+            initial_state = self.stationary_distribution().tolist()
+            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]  # type: ignore
         elif isinstance(initial_state, (list, np.ndarray, tuple)):
-            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]
+            initial_state = np.asarray(initial_state).tolist()
+            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]  # type: ignore
 
         P = self.transition_matrix(delta_time)
 
@@ -215,7 +216,7 @@ class ContinuousTimeMarkovModel:
             sequence[i] = generators[sequence[i - 1]].generate_choice()
         return sequence
 
-    def generate_sequences(self, length: int, delta_time: float = 1, initial_state: Union[None, int, List] = None,
+    def generate_sequences(self, length: int, delta_time: float = 1, initial_state: Union[None, int, np.ndarray] = None,
                            number_of_sequences: int = 1) -> np.ndarray:
         """ Generate multiple random sequences with the model
 
@@ -229,7 +230,7 @@ class ContinuousTimeMarkovModel:
             Array with generated sequences
         """
         if initial_state is None:
-            initial_state = self.stationary_distribution()
+            initial_state = self.stationary_distribution().tolist()
         sequences = np.zeros((number_of_sequences, length), dtype=int)
         for n in range(number_of_sequences):
             sequences[n] = self.generate_sequence(length, delta_time, initial_state)
