@@ -6,7 +6,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import CZGate, HGate, RXGate, RYGate, RZGate
 
 from qtt.qiskit.passes import (DecomposeCX, DecomposeU, DelayPass, LinearTopologyParallelPass,
-                               RemoveDiagonalGatesAfterInput, RemoveSmallRotations, SequentialPass)
+                               RemoveDiagonalGatesAfterInput, RemoveGateByName, RemoveSmallRotations, SequentialPass)
 
 
 def circuit_instruction_names(qc):
@@ -203,6 +203,18 @@ class TestQiskitPasses(unittest.TestCase):
         qc_transpiled = LinearTopologyParallelPass()(qc)
         self.assert_circuit_equivalence(qc_transpiled, qc_target)
         self.assertEqual(circuit_instruction_names(qc_transpiled), circuit_instruction_names(qc_target))
+
+    def test_RemoveGateByName(self):
+        qc = QuantumCircuit(3)
+        qc.h(0)
+        qc.x(1)
+
+        qc_transpiled = RemoveGateByName('none')(qc)
+        self.assertEqual(circuit_instruction_names(qc_transpiled), circuit_instruction_names(qc))
+
+        for name in ['x', 'h', 'dummy']:
+            qc_transpiled = RemoveGateByName('h')(qc)
+            self.assertNotIn('h', circuit_instruction_names(qc_transpiled))
 
 
 if __name__ == '__main__':

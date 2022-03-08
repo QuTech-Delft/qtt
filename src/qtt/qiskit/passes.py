@@ -4,19 +4,34 @@ from typing import Dict, List, Optional
 import numpy as np
 import qiskit
 from qiskit.circuit import Barrier, Delay, Reset
-from qiskit.circuit.library import (CRXGate, CRYGate, CRZGate, CZGate,
-                                    PhaseGate, RXGate, RYGate, RZGate, U1Gate,
+from qiskit.circuit.library import (CRXGate, CRYGate, CRZGate, CZGate, PhaseGate, RXGate, RYGate, RZGate, U1Gate,
                                     U2Gate, U3Gate, UGate)
-from qiskit.circuit.library.standard_gates import (CU1Gate, RZZGate, SdgGate,
-                                                   SGate, TdgGate, TGate,
-                                                   ZGate)
+from qiskit.circuit.library.standard_gates import CU1Gate, RZZGate, SdgGate, SGate, TdgGate, TGate, ZGate
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.converters.circuit_to_dag import circuit_to_dag
 from qiskit.dagcircuit import DAGCircuit
-from qiskit.dagcircuit.dagnode import DAGInNode, DAGNode, DAGOpNode, DAGOutNode
+from qiskit.dagcircuit.dagnode import DAGInNode, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
 
 logger = logging.getLogger(__name__)
+
+
+class RemoveGateByName(TransformationPass):
+    """Return a circuit with all gates with specified name removed.
+
+    This transformation is not semantics preserving.
+    """
+
+    def __init__(self, gate_name: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._gate_name = gate_name
+
+    def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the RemoveGateByName pass on `dag`."""
+
+        dag.remove_all_ops_named(self._gate_name)
+
+        return dag
 
 
 class RemoveSmallRotations(TransformationPass):
