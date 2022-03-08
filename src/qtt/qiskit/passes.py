@@ -23,6 +23,10 @@ class RemoveGateByName(TransformationPass):
     """
 
     def __init__(self, gate_name: str, *args, **kwargs):
+        """Remove all gates with specified name from a DAG
+        Args:
+            gate_name: Name of the gate to be removed from a DAG
+        """
         super().__init__(*args, **kwargs)
         self._gate_name = gate_name
 
