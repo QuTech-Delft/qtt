@@ -1,3 +1,9 @@
+import keyword
+
+raise DeprecationWarning(
+    'this modue has been deprecated. the functionality can be found at https://pypi.org/project/markup.py/')
+
+
 # This code is in the public domain, it comes
 # with absolutely no warranty and you can do
 # absolutely whatever you want with it.
@@ -24,7 +30,6 @@ Installation: drop markup.py somewhere into your Python path.
 
 # tags which are reserved python keywords will be referred
 # to by a leading underscore otherwise we end up with a syntax error
-import keyword
 
 
 class element:
