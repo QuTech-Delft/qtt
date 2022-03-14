@@ -37,6 +37,10 @@ class RemoveGateByName(TransformationPass):
 
         return dag
 
+    def __repr__(self) -> str:
+        name = self.__class__.__module__ + '.'+self.__class__.__name__
+        return f"<{name} at 0x{id(self):x}: gate {self._gate_name}"
+
 
 class RemoveSmallRotations(TransformationPass):
     """Return a circuit with small rotation gates removed."""
