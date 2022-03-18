@@ -1894,10 +1894,10 @@ def robustCost(x: np.ndarray, thr: Optional[Union[float, str]], method: str = 'L
 
     if thr == 'auto':
         ax = np.abs(x)
-        thr = float(np.percentile(ax, 95.))
-        p50 = np.percentile(ax, 50)
+        p50, thr, p99 = np.percentile(ax, [50, 95., 99])
+
         if thr == p50:
-            thr = float(np.percentile(ax, 99.))
+            thr = p99
         if thr <= 0:
             warnings.warn('estimation of robust cost threshold failed (p50 %f, thr %f' % (p50, thr))
 
