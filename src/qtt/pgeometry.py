@@ -756,7 +756,7 @@ def rot2D(phi: float) -> np.ndarray:
 
 
 def pg_rotx(phi: float) -> np.ndarray:
-    """ Create rotation around the x-axis with specifed angle """
+    """ Create rotation around the x-axis with specified angle """
     c = cos(phi)
     s = sin(phi)
     R = np.zeros((3, 3))
@@ -801,7 +801,7 @@ def imshowz(im, *args, **kwargs):
     ax.format_coord = format_coord
 
 
-def pg_scaling(scale: float, cc: Optional[np.ndarrays] = None) -> np.ndarray:
+def pg_scaling(scale: float, cc: Optional[np.ndarray] = None) -> np.ndarray:
     """ Create scale transformation with specified centre
 
     Args:
