@@ -722,14 +722,13 @@ def dir2R(d, a=None):
 
 def frame2T(f):
     """ Convert frame into 4x4 transformation matrix """
-    T = np.array(np.eye(4))
+    T = np.eye(4)
     T[0:3, 0:3] = euler2RBE(f[3:7])
     T[0:3, 3] = f[0:3].reshape(3, 1)
     return T
 
 
-@static_var("b", np.array(np.zeros((2, 2))))
-def rot2D(phi):
+def rot2D(phi: float) -> np.ndarray:
     """ Return 2x2 rotation matrix from angle
 
     Arguments
@@ -746,7 +745,7 @@ def rot2D(phi):
     >>> R = rot2D(np.pi)
 
     """
-    r = rot2D.b.copy()
+    r = np.zeros((2, 2))
     c = cos(phi)
     s = sin(phi)
     r.itemset(0, c)
@@ -756,8 +755,8 @@ def rot2D(phi):
     return r
 
 
-def pg_rotx(phi):
-    """ Rotate around the x-axis with angle """
+def pg_rotx(phi: float) -> np.ndarray:
+    """ Create rotation around the x-axis with specifed angle """
     c = cos(phi)
     s = sin(phi)
     R = np.zeros((3, 3))
@@ -802,9 +801,15 @@ def imshowz(im, *args, **kwargs):
     ax.format_coord = format_coord
 
 
-def pg_scaling(scale, cc=None):
-    """ Create scaling with specified centre
+def pg_scaling(scale: float, cc: Optional[np.ndarrays] = None) -> np.ndarray:
+    """ Create scale transformation with specified centre
 
+    Args:
+        scale: Scaling vector
+        cc: Centre for the scale transformation. If None, then take the origin
+
+    Returns:
+        Scale transformation
 
     Example
     -------
@@ -814,7 +819,7 @@ def pg_scaling(scale, cc=None):
            [ 0.,  0.,  1.]])
 
     """
-    scale = np.array(scale)
+    scale = np.asarray(scale)
     scale = np.hstack((scale, 1))
     H = np.diag(scale)
     if cc is not None:
@@ -833,10 +838,9 @@ def pg_transl2H(tr):
             [ 0.,  0.,  1.]])
 
     """
-    sh = np.array(tr)
+    sh = np.asarray(tr)
     H = np.eye(sh.size + 1)
     H[0:-1, -1] = sh.flatten()
-    H = np.array(H)
     return H
 
 
