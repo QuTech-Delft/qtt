@@ -760,7 +760,7 @@ def pg_rotx(phi: float) -> np.ndarray:
     c = cos(phi)
     s = sin(phi)
     R = np.zeros((3, 3))
-    R.flat = [1, 0, 0, 0, c, -s, 0, s, c]
+    R[:] = [1, 0, 0, 0, c, -s, 0, s, c]
     return R
 
 
