@@ -2,7 +2,7 @@
 
 import copy
 import warnings
-from typing import Tuple
+from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -541,7 +541,7 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
     return xyw
 
 
-def boxcar_filter(signal: np.ndarray, kernel_size: Tuple[int]) -> np.ndarray:
+def boxcar_filter(signal: np.ndarray, kernel_size: Union[np.ndarray, Tuple[int]]) -> np.ndarray:
     """ Perform boxcar filtering on an array.
     At the edges, the edge value is replicated beyond the edge as needed by the size of the kernel.
     This is the 'nearest' mode of scipy.ndimage.convolve. For details, see
