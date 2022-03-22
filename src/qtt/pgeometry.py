@@ -801,7 +801,7 @@ def imshowz(im, *args, **kwargs):
     ax.format_coord = format_coord
 
 
-def pg_scaling(scale: float, cc: Optional[np.ndarray] = None) -> np.ndarray:
+def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None) -> np.ndarray:
     """ Create scale transformation with specified centre
 
     Args:
@@ -819,7 +819,6 @@ def pg_scaling(scale: float, cc: Optional[np.ndarray] = None) -> np.ndarray:
            [ 0.,  0.,  1.]])
 
     """
-    scale = np.asarray(scale)
     scale = np.hstack((scale, 1))
     H = np.diag(scale)
     if cc is not None:
