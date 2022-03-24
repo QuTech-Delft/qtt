@@ -25,6 +25,7 @@ import copy
 import logging
 import math
 import os
+import pathlib
 import pickle
 import pkgutil
 import re
@@ -432,11 +433,9 @@ class fps_t:
 
 def mkdirc(d: str):
     """ Similar to mkdir, but no warnings if the directory already exists """
-    try:
-        os.mkdir(d)
-    except FileExistsError:
-        pass
-    return d
+    p = pathlib.Path(d)
+    p.mkdir(exist_ok=True, parents=True)
+    return str(p)
 
 
 def projectiveTransformation(H: np.ndarray, x: np.ndarray) -> np.ndarray:
