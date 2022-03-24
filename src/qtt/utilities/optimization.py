@@ -73,15 +73,22 @@ class OptimizerCallback:
 
     _column_names = ['iteration', 'timestamp', 'residual']
 
-    def __init__(self, show_progress=False, store_data=True):
+    def __init__(self, show_progress: bool = False, store_data: bool = True, residual_fitting: bool = True):
         """ Class to collect data of optimization procedures
 
         The class contains methods that can be used as callbacks on several well-known optimization packages.
+
+        Args:
+            show_progress: If True, then print output for each iteration
+            store_data: If True, store the callback data inside the object
+            residual_fitting: If True, assume the optimizer is minimizing a residual
+
         """
         self.show_progress = show_progress
         self.store_data = store_data
         self.logger = logging.getLogger(self.__class__.__name__)
         self.clear()
+        self._residual_fitting = residual_fitting
 
     @property
     def data(self) -> pd.DataFrame:
@@ -96,7 +103,7 @@ class OptimizerCallback:
         """ Returns list of parameters that have been used in evaluations
 
         Returns:
-            The list of parameer
+            The list of parameters
         """
         return self._parameters
 
@@ -138,6 +145,10 @@ class OptimizerCallback:
         self.data.plot('iteration', 'residual', ax=ax, **kwargs)
         dt = self.optimization_time()
         ax.set_title(f'Optimization total time {dt:.2f} [s]')
+        if self._residual_fitting:
+            ax.set_ylabel('Residual')
+        else:
+            ax.set_ylabel('Value')
 
     def data_callback(self, iteration: int, parameters: Any, residual: float):
         """ Callback used to store data
@@ -166,7 +177,9 @@ class OptimizerCallback:
 
     def lmfit_callback(self, parameters, iteration, residual, *args, **kws):
         """ Callback method for lmfit optimizers """
-        residual = np.linalg.norm(residual)
+        if self._residual_fitting:
+            residual = np.linalg.norm(residual)
+
         if self.show_progress:
             print(f'#{iteration}, {parameters}, {residual}')
         self.data_callback(iteration, parameters, residual)
