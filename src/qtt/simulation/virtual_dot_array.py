@@ -28,10 +28,8 @@ from qcodes import Instrument
 
 import qtt
 from qtt.instrument_drivers.gates import VirtualDAC
-from qtt.instrument_drivers.simulation_instruments import (SimulationAWG,
-                                                           SimulationDigitizer)
-from qtt.instrument_drivers.virtual_instruments import (VirtualIVVI,
-                                                        VirtualMeter)
+from qtt.instrument_drivers.simulation_instruments import SimulationAWG, SimulationDigitizer
+from qtt.instrument_drivers.virtual_instruments import VirtualIVVI, VirtualMeter
 from qtt.simulation.classicaldotsystem import DoubleDot, MultiDot, TripleDot
 from qtt.simulation.dotsystem import BaseDotSystem, GateTransform, OneDot
 from qtt.structures import onedot_t
@@ -165,8 +163,6 @@ class DotModel(Instrument):
 
         # make entries for keithleys
         for instr in ['keithley1', 'keithley2', 'keithley3', 'keithley4']:
-            if not instr in self._data:
-                self._data[instr] = {}
             g = instr + '_amplitude'
             self.add_parameter(g,
                                label=f'Amplitude {g}',
@@ -313,24 +309,6 @@ class DotModel(Instrument):
             val = self.compute()
             self._data['keithley3_amplitude'] = val
         return val
-
-    def honeycomb(self, p1, p2, nx=50, ny=50, scanrange=300, multiprocess=False):
-        raise Exception('code not tested')
-        test_dot = self.ds
-        test2Dparams = np.zeros((test_dot.ngates, ny, nx))
-        logging.info('honeycomb: %s %s' % (p1, p2))
-        sweepx = self.get_gate(p1) + np.linspace(-scanrange, scanrange, nx)
-        sweepy = self.get_gate(p2) + np.linspace(-scanrange, scanrange, ny)
-        xv, yv = np.meshgrid(sweepx, sweepy)
-        test2Dparams[0] = xv  # +yv
-        test2Dparams[1] = yv
-
-        # run the honeycomb simulation
-        test_dot.simulate_honeycomb(test2Dparams, multiprocess=multiprocess, verbose=0)
-
-        if self.sdnoise > 0:
-            test_dot.honeycomb += self.sdnoise * (np.random.rand(*test_dot.honeycomb.shape) - .5)
-        return test_dot.honeycomb
 
 
 def close(verbose=1):
