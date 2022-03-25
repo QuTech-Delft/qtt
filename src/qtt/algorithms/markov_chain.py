@@ -38,7 +38,8 @@ class ChoiceGenerator:
     def __post_init__(self):
         if not self.number_of_states == len(self.cum_weights):
             raise Exception(
-                f'specification of cumulative weights {len(self.cum_weights)} does not match number of states {self.number_of_states}')
+                f'specification of cumulative weights (len {len(self.cum_weights)})'
+                + ' does not match number of states {self.number_of_states}')
         self._idx = 0
         self._block = self._generate_block()
 
@@ -83,8 +84,8 @@ class ContinuousTimeMarkovModel:
             holding_parameters: List with the holding parameters. The holding parameters determine the average
                 time before the system will make a jump to a new state
             jump_chain: The jump chain or transition matrix. This matrix gives the probability for the system
-                        to jump from a state to one of the other states. The sum of the probabilities in each column must
-                        equal one.
+                        to jump from a state to one of the other states. The sum of the probabilities in each
+                        column must equal one.
 
         For an introduction to Markov chains see https://www.probabilitycourse.com/chapter11/11_3_1_introduction.php
 
@@ -187,7 +188,7 @@ class ContinuousTimeMarkovModel:
             initial_state: This parameter determines how the first element of the generated
                 sequence is chosen. If an int, then use that state is initial state. If None then take
                 a random state weighted by the stationary distribution. If the initial_state is a list, then the list
-                is interpreted as a probability distribution and the first element is samples from all possible states
+                is interpreted as a probability distribution and the first element is sampled from all possible states
                 according to the distribution specified.
         Returns:
             Array with generated sequence
