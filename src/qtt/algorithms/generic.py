@@ -2,6 +2,7 @@
 
 import copy
 import warnings
+from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -540,7 +541,7 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
     return xyw
 
 
-def boxcar_filter(signal, kernel_size):
+def boxcar_filter(signal: np.ndarray, kernel_size: Union[np.ndarray, Tuple[int]]) -> np.ndarray:
     """ Perform boxcar filtering on an array.
     At the edges, the edge value is replicated beyond the edge as needed by the size of the kernel.
     This is the 'nearest' mode of scipy.ndimage.convolve. For details, see
@@ -548,15 +549,14 @@ def boxcar_filter(signal, kernel_size):
 
 
     Args:
-        signal (array): An array containing the signal to be filtered.
-        kernel_size (tuple): Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
+        signal: An array containing the signal to be filtered.
+        kernel_size: Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
 
     Returns:
-        a numpy array containing the filtered signal.
+        Array containing the filtered signal.
     """
 
-    if not isinstance(signal, np.ndarray):
-        signal = np.array(signal)
+    signal = np.asarray(signal)
     if not isinstance(kernel_size, np.ndarray):
         kernel_size = np.array(kernel_size, dtype=np.int_)
 
@@ -571,7 +571,10 @@ def boxcar_filter(signal, kernel_size):
     else:
         filtered_signal = signal
 
-    boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
-    filtered_signal = scipy.ndimage.convolve(filtered_signal, boxcar_kernel, mode='nearest')
+    if np.prod(kernel_size) == 1:
+        filtered_signal = np.array(signal)
+    else:
+        boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
+        filtered_signal = scipy.ndimage.convolve(filtered_signal, boxcar_kernel, mode='nearest')
 
     return filtered_signal
