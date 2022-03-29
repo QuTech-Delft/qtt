@@ -213,8 +213,8 @@ class TestQiskitPasses(unittest.TestCase):
         self.assertEqual(circuit_instruction_names(qc_transpiled), circuit_instruction_names(qc))
 
         for name in ['x', 'h', 'dummy']:
-            qc_transpiled = RemoveGateByName('h')(qc)
-            self.assertNotIn('h', circuit_instruction_names(qc_transpiled))
+            qc_transpiled = RemoveGateByName(name)(qc)
+            self.assertNotIn(name, circuit_instruction_names(qc_transpiled))
 
 
 if __name__ == '__main__':
