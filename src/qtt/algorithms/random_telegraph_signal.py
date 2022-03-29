@@ -375,19 +375,19 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
     return tunnelrate_dn, tunnelrate_up, parameters
 
 
-def generate_RTS_signal(number_of_samples=100000, std_gaussian_noise=0.1,
-                        uniform_noise=0.05, rate_up=10e3, rate_down=15e3, samplerate=1e6):
+def generate_RTS_signal(number_of_samples: int = 100000, std_gaussian_noise: float = 0.1,
+                        uniform_noise: float = 0.05, rate_up: float = 10e3, rate_down: float = 15e3, samplerate: float = 1e6) -> np.ndarray:
     """ Generate a RTS signal
 
     Args:
-        number_of_samples (int): Length the the trace to be generated
-        std_normal_noise (float): std of Gaussian noise added to the signal
-        uniform_noise (float): uniform noise in the range +- uniform_noise/2 is added to the signal
-        rate_up (float): rate from down to up
-        rate_down (float): rate from up to down
-        samplerate (float): The samplerate of the signal to be generated
+        number_of_samples: Length the the trace to be generated
+        std_normal_noise: std of Gaussian noise added to the signal
+        uniform_noise: uniform noise in the range +- uniform_noise/2 is added to the signal
+        rate_up: rate from down to up
+        rate_down: rate from up to down
+        samplerate: The samplerate of the signal to be generated
     Returns:
-        array: generated signal (0 is down, 1 is up)
+        Array with generated signal (0 is down, 1 is up)
 
     """
 

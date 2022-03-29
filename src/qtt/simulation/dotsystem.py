@@ -1,14 +1,15 @@
 """ Simulation of a coupled dot system."""
 # %% Load packages
+import copy
+import itertools
+import logging
+import sys
+import time
+from abc import abstractmethod
+
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy import linalg as la
-import itertools
-import matplotlib.pyplot as plt
-import time
-import copy
-from abc import abstractmethod
-import sys
-import logging
 
 try:
     import graphviz
@@ -112,8 +113,7 @@ class GateTransform:
             gate_values = np.vstack(xx).astype(float)
 
         else:
-            xx = vals2D
-            gate_values = np.array(xx).astype(float)
+            gate_values = np.array(vals2D).astype(float)
 
         gate_values_out = pgeometry.projectiveTransformation(self.Vmatrix, gate_values)
 
@@ -149,6 +149,7 @@ class BaseDotSystem:
         nstates (array): for each state the number of electrons.
 
     """
+
     def __init__(self, name='basedotsystem', ndots=3, maxelectrons=2):
         """
         Args:
@@ -668,7 +669,6 @@ class DotSystem(BaseDotSystem):
         dot = graphviz.Digraph(name=self.name)
 
         for ii in range(self.ndots):
-            # dot.node('%d'% ii)
             dot.node(str(ii), label='dot %d' % ii)
             dot.edge(str(ii), str(ii), label=self.chemical_potential_name(ii))
 
