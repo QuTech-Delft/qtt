@@ -641,18 +641,13 @@ def directionMean(vec):
 
     mod = np.mod
     norm = np.linalg.norm
-
-    def dist(a, vector_angles):
-        x = a - vector_angles
-        x = mod(x + np.pi / 2, np.pi) - np.pi / 2
+    def cost_function(a):
+        x = mod(a - vector_angles + np.pi / 2, np.pi) - np.pi / 2
         cost = norm(x)
         return cost
 
     m = vec.mean(axis=0)
     angle_initial_guess = np.arctan2(m[0], m[1])
-
-    def cost_function(a):
-        return dist(a, vector_angles)
 
     r = scipy.optimize.minimize(cost_function, angle_initial_guess, callback=None, options=dict({'disp': False}))
     angle = r.x[0]
@@ -664,8 +659,9 @@ def circular_mean(weights, angles):
     x = y = 0.
     radians = math.radians
     for angle, weight in zip(angles, weights):
-        x += cos(radians(angle)) * weight
-        y += sin(radians(angle)) * weight
+        angle_rad = radians(angle)
+        x += cos(angle_rad) * weight
+        y += sin(angle_rad) * weight
 
     mean = math.degrees(math.atan2(y, x))
     return mean
@@ -1362,7 +1358,6 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
 
     xt = 2 * np.pi / Lambda * x_theta
     if cut is not None:
-        pass
         xt = np.minimum(xt, cut)
         xt = np.maximum(xt, -cut)
 
