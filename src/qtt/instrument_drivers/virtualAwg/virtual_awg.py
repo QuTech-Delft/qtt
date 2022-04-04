@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from typing import List
 
 import numpy as np
@@ -10,6 +11,13 @@ from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
 from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
+
+
+@dataclass
+class Marker:
+    gate: str
+    update: float
+    delay: float
 
 
 class VirtualAwgError(Exception):
@@ -59,6 +67,7 @@ class VirtualAwg(Instrument):
         self._latest_sequence_data = {}
         self.enable_debug = False
 
+        self.custom_markers
         self.add_parameter('settings_snapshot', get_cmd=self.settings.snapshot, label='Settings snapshot')
         self.settings_snapshot()
 
@@ -240,6 +249,10 @@ class VirtualAwg(Instrument):
         marker_properties = {}
         uptime = self.digitizer_marker_uptime()
         delay = self.digitizer_marker_delay()
+
+        for marker in self.custom_markers:
+            marker_data = Sequencer.make_marker(period, marker.uptime, marker.delay, repetitions)
+            marker_properties[marker.gate] = [marker_data]
 
         if VirtualAwg.__digitizer_name in self._settings.awg_map:
             digitizer_marker = Sequencer.make_marker(period, uptime, delay, repetitions)
