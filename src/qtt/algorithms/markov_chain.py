@@ -40,13 +40,14 @@ class ChoiceGenerator:
             raise Exception(
                 f'specification of cumulative weights (len {len(self.cum_weights)})'
                 + ' does not match number of states {self.number_of_states}')
+        self.rng = np.random.Generator(np.random.SFC64())
         self._idx = 0
-        self._block = self._generate_block().tolist()
+        self._block: List[int] = self._generate_block().tolist()
 
     def _generate_block(self, size: Optional[int] = None) -> np.ndarray:
         if size is None:
             size = self.block_size
-        values = np.random.rand(size, )
+        values = self.rng.random(size)
         counts, _ = np.histogram(values, [0] + list(self.cum_weights))
         block = np.hstack(tuple(choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)))
         np.random.shuffle(block)
@@ -62,7 +63,7 @@ class ChoiceGenerator:
         if self._idx == len(self._block):
             self._idx = 0
             self._block = self._generate_block().tolist()
-        return int(self._block[self._idx])
+        return self._block[self._idx]
 
     def generate_choices(self, size: int) -> np.ndarray:
         """ Generate a specified number of choice
