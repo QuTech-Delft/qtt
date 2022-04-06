@@ -47,10 +47,12 @@ class ChoiceGenerator:
     def _generate_block(self, size: Optional[int] = None) -> np.ndarray:
         if size is None:
             size = self.block_size
-        values = self.rng.random(size)
-        counts, _ = np.histogram(values, [0] + list(self.cum_weights))
+        else:
+            self.block_size = size
+        weights = np.insert(np.diff(self.cum_weights), 0, self.cum_weights[0])
+        counts = np.random.multinomial(size, weights)
         block = np.hstack(tuple(choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)))
-        np.random.shuffle(block)
+        self.rng.shuffle(block)
         return block
 
     def generate_choice(self) -> int:
@@ -60,7 +62,7 @@ class ChoiceGenerator:
             Integer in the range 0 to the number of states
         """
         self._idx = self._idx + 1
-        if self._idx == len(self._block):
+        if self._idx == self.block_size:
             self._idx = 0
             self._block = self._generate_block().tolist()
         return self._block[self._idx]
