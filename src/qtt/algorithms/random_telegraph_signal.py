@@ -22,14 +22,18 @@ from qtt.utilities.visualization import get_axis, plot_double_gaussian_fit, plot
 # %% calculate durations of states
 
 
-def transitions_durations(data: np.ndarray, split: float) -> Tuple[np.ndarray, np.ndarray]:
-    """ For data of a two level system (up and down), this funtion determines which datapoints belong to which
+def transitions_durations(data: np.ndarray, split: float, add_start: bool = False, add_end: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+    """ For data of a two level system (up and down) determine durations of segments
+
+    This function determines which datapoints belong to which
     level and finds the transitions, in order to determines
     how long the system stays in these levels.
 
     Args:
         data : data from the two level system
         split: value that separates the up and down level
+        add_start: If True, then include the segments at the start of the data
+        add_end:: If True, then include the segments at the end of the data
 
     Returns:
         duration_dn:  array of the durations (unit: data points) in the down level
@@ -38,30 +42,79 @@ def transitions_durations(data: np.ndarray, split: float) -> Tuple[np.ndarray, n
 
     # split the data and find the index of the transitions, transitions from
     # up to down are marked with -1 and from down to up with 1
-    b = data > split
+    b = np.asarray(data) > split
     d = np.diff(b.astype(int))
-    transitions_dn = (d == -1).nonzero()[0]
-    transitions_up = (d == 1).nonzero()[0]
+    transitions_down_to_up = (d == 1).nonzero()[0]
+    transitions_up_to_down = (d == -1).nonzero()[0]
+    size = len(data)
+    if size == 0:
+        return np.array([], dtype=int), np.array([], dtype=int)
 
     # durations are calculated by taking the difference in data points between
-    # the transitions, first and last duration are ignored
+    # the transitions
+    endpoints_dn = []
+    endpoints_up = []
     if data[0] <= split and data[-1] <= split:
-        duration_up = transitions_dn - transitions_up
-        duration_dn = transitions_up[1:] - transitions_dn[:-1]
+        duration_up = transitions_up_to_down - transitions_down_to_up
+        duration_dn = transitions_down_to_up[1:] - transitions_up_to_down[:-1]
 
-    elif data[0] < split and data[-1] > split:
-        duration_up = transitions_dn - transitions_up[:-1]
-        duration_dn = transitions_up[1:] - transitions_dn
+        if len(transitions_up_to_down) == 0:
+            if add_start or add_end:
+                endpoints_dn.append(size)
+        else:
+            if add_start:
+                endpoints_dn.append(transitions_down_to_up[0]+1)
+            if add_end:
+                endpoints_dn.append(size - transitions_up_to_down[-1]-1)
 
-    elif data[0] > split and data[-1] < split:
-        duration_up = transitions_dn[1:] - transitions_up
-        duration_dn = transitions_up - transitions_dn[:-1]
+    elif data[0] <= split and data[-1] > split:
+        duration_up = transitions_up_to_down - transitions_down_to_up[:-1]
+        duration_dn = transitions_down_to_up[1:]-transitions_up_to_down
 
-    elif data[0] >= split and data[-1] >= split:
-        duration_up = transitions_dn[1:] - transitions_up[:-1]
-        duration_dn = transitions_up - transitions_dn
+        if add_start:
+            endpoints_dn.append(transitions_down_to_up[0]+1)
+        if add_end:
+            endpoints_up.append(size-transitions_down_to_up[-1]-1)
+
+    elif data[0] > split and data[-1] <= split:
+        duration_up = transitions_up_to_down[1:] - transitions_down_to_up
+        duration_dn = transitions_down_to_up - transitions_up_to_down[:-1]
+
+        if add_start:
+            endpoints_up.append(transitions_up_to_down[0]+1)
+        if add_end:
+            endpoints_dn.append(size-transitions_up_to_down[-1]-1)
+
+    elif data[0] > split and data[-1] > split:
+        duration_up = transitions_up_to_down[1:] - transitions_down_to_up[:-1]
+        duration_dn = transitions_down_to_up - transitions_up_to_down
+
+        if len(transitions_up_to_down) == 0:
+            if add_start or add_end:
+                endpoints_up.append(size)
+        else:
+            if add_start:
+                endpoints_up.append(transitions_up_to_down[0]+1)
+            if add_end:
+                endpoints_up.append(size-transitions_down_to_up[-1]-1)
+
+    duration_dn = np.concatenate((duration_dn, np.asarray(endpoints_dn, dtype=int)), dtype=int)
+    duration_up = np.concatenate((duration_up, np.asarray(endpoints_up, dtype=int)), dtype=int)
 
     return duration_dn, duration_up
+
+
+data = [0, 0]
+r = transitions_durations(data, split=.5)
+print(r[0].tolist(), r[1].tolist())
+
+r = transitions_durations(data=data, split=.5, add_start=True)
+print(r[0].tolist(), r[1].tolist())
+
+r = transitions_durations(data=data, split=.5, add_end=True)
+print(r[0].tolist(), r[1].tolist())
+
+# %%
 
 
 class FittingException(Exception):
