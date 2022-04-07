@@ -36,6 +36,7 @@ import time
 import warnings
 from functools import wraps
 from typing import Any, List, Optional, Tuple, Union
+from math import cos, sin
 
 import numpy
 import numpy as np
@@ -168,9 +169,8 @@ def memory() -> float:
     """ Return the memory usage in MB
 
     Returns:
-            Memory usage in MB
+          Memory usage in MB
     """
-    import os
 
     import psutil
     process = psutil.Process(os.getpid())
@@ -271,7 +271,7 @@ def static_var(varname: str, value: Any):
 
 
 @static_var("time", {'default': 0})
-def tprint(string: str, dt: float = 1, output: bool = False, tag: str = 'default'):
+def tprint(string: str, dt: float = 1, output: bool = False, tag: str = 'default') -> Optional[bool]:
     """ Print progress of a loop every dt seconds
 
     Args:
@@ -279,22 +279,19 @@ def tprint(string: str, dt: float = 1, output: bool = False, tag: str = 'default
         dt: delta time in seconds
         output: if True return whether output was printed or not
         tag: optional tag for time
+
     Returns:
-        output (bool)
+        Output (bool) or None
 
     """
-    if (time.time() - tprint.time.get(tag, 0)) > dt:
+    if (time.perf_counter() - tprint.time.get(tag, 0)) > dt:
         print(string)
-        tprint.time[tag] = time.time()
+        tprint.time[tag] = time.perf_counter()
         if output:
             return True
-        else:
-            return
-    else:
-        if output:
-            return False
-        else:
-            return
+    elif output:
+        return False
+    return None
 
 
 def setFontSizes(labelsize=20, fsize=17, titlesize=None, ax=None,):
@@ -594,12 +591,12 @@ def euler2RBE(theta):
              [-0.,  0.,  1.]])
 
     """
-    cr = math.cos(theta[0])
-    sr = math.sin(theta[0])
-    cp = math.cos(theta[1])
-    sp = math.sin(theta[1])
-    cy = math.cos(theta[2])
-    sy = math.sin(theta[2])
+    cr = cos(theta[0])
+    sr = sin(theta[0])
+    cp = cos(theta[1])
+    sp = sin(theta[1])
+    cy = cos(theta[2])
+    sy = sin(theta[2])
 
     out = np.array([cp * cy, sr * sp * cy - cr * sy, cr * sp * cy + sr * sy,
                     cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - sr * cy, -sp, sr * cp, cr * cp])
@@ -639,28 +636,25 @@ def directionMean(vec):
     >>> a=directionMean(vv)
 
     """
-    vec = np.array(vec)
+    vec = np.asarray(vec)
+    vector_angles = np.arctan2(vec[:, 0], vec[:, 1])
 
-    def dist(a, vec):
-        phi = np.arctan2(vec[:, 0], vec[:, 1])
-        x = a - phi
-        x = np.mod(x + np.pi / 2, np.pi) - np.pi / 2
-        cost = np.linalg.norm(x)
+    mod = np.mod
+    norm = np.linalg.norm
+
+    def dist(a, vector_angles):
+        x = a - vector_angles
+        x = mod(x + np.pi / 2, np.pi) - np.pi / 2
+        cost = norm(x)
         return cost
-    Nfeval = 1
-
-    def callbackF(Xi):
-        global Nfeval
-        print(Xi)
-        print(f'{Nfeval:4d}   {Xi[0]: 3.6f}: distance {dist(Xi[0], vec)}')
-        Nfeval += 1
 
     m = vec.mean(axis=0)
-    a0 = np.arctan2(m[0], m[1])
+    angle_initial_guess = np.arctan2(m[0], m[1])
 
-    def cost_function(a): return dist(a, vec)
+    def cost_function(a):
+        return dist(a, vector_angles)
 
-    r = scipy.optimize.minimize(cost_function, a0, callback=None, options=dict({'disp': False}))
+    r = scipy.optimize.minimize(cost_function, angle_initial_guess, callback=None, options=dict({'disp': False}))
     angle = r.x[0]
     return angle
 
@@ -668,9 +662,10 @@ def directionMean(vec):
 def circular_mean(weights, angles):
     """ Calculate circular mean of a set of 2D vectors """
     x = y = 0.
+    radians = math.radians
     for angle, weight in zip(angles, weights):
-        x += math.cos(math.radians(angle)) * weight
-        y += math.sin(math.radians(angle)) * weight
+        x += cos(radians(angle)) * weight
+        y += sin(radians(angle)) * weight
 
     mean = math.degrees(math.atan2(y, x))
     return mean
@@ -752,8 +747,8 @@ def rot2D(phi):
 
     """
     r = rot2D.b.copy()
-    c = math.cos(phi)
-    s = math.sin(phi)
+    c = cos(phi)
+    s = sin(phi)
     r.itemset(0, c)
     r.itemset(1, -s)
     r.itemset(2, s)
@@ -763,8 +758,8 @@ def rot2D(phi):
 
 def pg_rotx(phi):
     """ Rotate around the x-axis with angle """
-    c = math.cos(phi)
-    s = math.sin(phi)
+    c = cos(phi)
+    s = sin(phi)
     R = np.zeros((3, 3))
     R.flat = [1, 0, 0, 0, c, -s, 0, s, c]
     return R
@@ -983,15 +978,16 @@ def plot2Dline(line, *args, **kwargs):
 
 # %%
 
-def scaleImage(image, display_min=None, display_max=None):
+def scaleImage(image: np.ndarray, display_min: Optional[float] = None,
+               display_max: Optional[float] = None) -> np.ndarray:
     """ Scale any image into uint8 range
 
     Args:
-        image (numpy array): input image
-        display_min (float): value to map to min output range
-        display_max (float): value to map to max output range
+        image: input image
+        display_min: value to map to min output range
+        display_max: value to map to max output range
     Returns:
-        image (numpy array): the scaled image
+        The scaled image
 
     Example:
         >>> im=scaleImage(255*np.random.rand( 30,40), 40, 100)
@@ -1010,15 +1006,15 @@ def scaleImage(image, display_min=None, display_max=None):
     if image.dtype == np.uint8:
         image -= int(display_min)
         image = image.astype(float)
-        image //= (display_max - display_min) / 255.
+        image //= (display_max - display_min) / 255.  # type: ignore
     else:
         image -= display_min
-        image //= (display_max - display_min) / 255.
+        image //= (display_max - display_min) / 255.  # type: ignore
     image = image.astype(np.uint8)
     return image
 
 
-def auto_canny(image, sigma=0.33):
+def auto_canny(image: np.ndarray, sigma: float = 0.33) -> np.ndarray:
     """ Canny edge detection with automatic parameter detection
 
     >>> imc=auto_canny(np.zeros( (200,300)).astype(np.uint8))
@@ -1092,7 +1088,7 @@ def plotPoints3D(xx, *args, **kwargs):
 # %%
 
 
-def polyarea(p):
+def polyarea(p: Union[List[List[float]], np.ndarray]) -> float:
     """ Return signed area of polygon
 
     Arguments
@@ -1109,26 +1105,12 @@ def polyarea(p):
     """
     if len(p) <= 1:
         return 0
-    if isinstance(p, numpy.ndarray):
-        val = 0
-        for x in range(len(p)):
-            x0 = p[x, 0]
-            y0 = p[x, 1]
-            xp = x + 1
-            if xp >= len(p):
-                xp = 0
-            x1 = p[xp, 0]
-            y1 = p[xp, 1]
-            val += 0.5 * (x0 * y1 - x1 * y0)
-        return val
 
-    def polysegments(p):
-        """ Helper functions """
-        if isinstance(p, list):
-            return zip(p, p[1:] + [p[0]])
-        else:
-            return zip(p, np.vstack((p[1:], p[0:1])))
-    return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in polysegments(p)))
+    if isinstance(p, np.ndarray):
+        p = p.tolist()
+
+    segments = zip(p, p[1:] + [p[0]])
+    return 0.5 * abs(sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in segments))
 
 
 def polyintersect(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
@@ -1373,7 +1355,6 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
     h = ((ksize - 1) // 2)
     x, y = np.meshgrid(range(-h, h + 1), range(-h, h + 1))
     sigma_x = sigma
-    # print('gamma %s' % gamma)
     sigma_y = float(sigma) / gamma
     # Rotation
     x_theta = x * np.cos(theta) + y * np.sin(theta)
@@ -1476,23 +1457,20 @@ def save(pkl_file, *args):
     """
 
     # save data to disk
-    output = open(pkl_file, 'wb')
-    pickle.dump(args, output, protocol=2)
-    output.close()
+    with open(pkl_file, 'wb') as output:
+        pickle.dump(args, output, protocol=2)
 
 
 def load(pkl_file):
     """ Load objects from file """
     try:
-        output = open(pkl_file, 'rb')
-        data2 = pickle.load(output)
-        output.close()
+        with open(pkl_file, 'rb') as output:
+            data2 = pickle.load(output)
     except BaseException:
         if sys.version_info.major >= 3:
             # if pickle file was saved in python2 we might fix issues with a different encoding
-            output = open(pkl_file, 'rb')
-            data2 = pickle.load(output, encoding='latin')
-            output.close()
+            with open(pkl_file, 'rb') as output:
+                data2 = pickle.load(output, encoding='latin')
         else:
             data2 = None
     return data2
@@ -1697,7 +1675,7 @@ def cfigure(*args, **kwargs):
         fig = plt.figure(*args, facecolor='w', **kwargs)
 
     def ff(xx, figx=fig): return mpl2clipboard(fig=figx)
-    fig.canvas.mpl_connect('key_press_event', ff)  # mpl2clipboard)
+    fig.canvas.mpl_connect('key_press_event', ff)
     return fig
 
 # %%
@@ -1738,14 +1716,12 @@ def getWindowRectangle():
         (w, h) = mngr.canvas.manager.window.GetSize()
     elif be == 'TkAgg':
         print('getWindowRectangle: not implemented...')
-        #_=mngr.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w,h,x,y))
     elif be == 'module://IPython.kernel.zmq.pylab.backend_inline':
         pass
     else:
         # assume Qt canvas
         g = mngr.canvas.manager.window.geometry()
         x, y, w, h = g.left(), g.top(), g.width(), g.height()
-        # mngr.window.setGeometry(x,y,w,h)
     return (x, y, w, h)
 
 
@@ -1831,8 +1807,6 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
     w = ww[2] / geometry[0]
     h = ww[3] / geometry[1]
 
-    # wm=plt.get_current_fig_manager()
-
     if isinstance(lst, int):
         lst = [lst]
     if isinstance(lst, numpy.ndarray):
@@ -1895,17 +1869,21 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
 # %%
 
 
-def robustCost(x, thr, method='L1'):
+def robustCost(x: np.ndarray, thr: Optional[Union[float, str]], method: str = 'L1') -> Union[np.ndarray, List[str]]:
     """ Robust cost function
 
     Args:
-       x (array): data to be transformed
-       thr (float or 'auto' or None): threshold. If None then the input x is returned unmodified. If 'auto' then use automatic detection (at 95th percentile)
-       method (str): method to be used. use 'show' to show the options
+       x: data to be transformed
+       thr: threshold. If None then the input x is returned unmodified. If 'auto' then use automatic detection
+            (at 95th percentile)
+       method : method to be used. use 'show' to show the options
+
+    Returns:
+        Cost for each element in the input array
 
     Example
     -------
-    >>> robustCost([2,3,4],thr=2.5)
+    >>> robustCost([2, 3, 4], thr=2.5)
     array([ 2. ,  2.5,  2.5])
     >>> robustCost(2, thr=1)
     1
@@ -1913,17 +1891,20 @@ def robustCost(x, thr, method='L1'):
     """
     if thr is None:
         return x
+
     if thr == 'auto':
         ax = np.abs(x)
-        thr = np.percentile(ax, 95.)
+        thr = float(np.percentile(ax, 95.))
         p50 = np.percentile(ax, 50)
         if thr == p50:
-            thr = np.percentile(ax, 99.)
+            thr = float(np.percentile(ax, 99.))
         if thr <= 0:
             warnings.warn('estimation of robust cost threshold failed (p50 %f, thr %f' % (p50, thr))
 
         if method == 'L2' or method == 'square':
             thr = thr * thr
+
+    assert isinstance(thr, float)
 
     if method == 'L1':
         y = np.minimum(np.abs(x), thr)
@@ -1934,7 +1915,6 @@ def robustCost(x, thr, method='L1'):
         epsilon = np.exp(-alpha)
         y = -np.log(np.exp(-x * x) + epsilon)
     elif method == 'BZ0':
-        # print('BZ0')
         alpha = thr * thr
         epsilon = np.exp(-alpha)
         y = -np.log(np.exp(-x * x) + epsilon) + np.log(1 + epsilon)
@@ -1959,13 +1939,13 @@ def robustCost(x, thr, method='L1'):
     elif method == 'show':
         plt.figure(10)
         plt.clf()
-        mm = ['L1', 'L2', 'BZ', 'cauchy', 'huber', 'cg']
-        for m in mm:
+        method_names = ['L1', 'L2', 'BZ', 'cauchy', 'huber', 'cg']
+        for m in method_names:
             plt.plot(x, robustCost(x, thr, m), label=m)
         plt.legend()
-        y = mm
+        return method_names
     else:
-        raise Exception('no such method')
+        raise Exception(f'no such method {method}')
     return y
 
 
@@ -2136,7 +2116,7 @@ def point_in_polygon(pt, pp):
     return r
 
 
-def minAlg_5p4(A):
+def minAlg_5p4(A: np.ndarray) -> np.ndarray:
     """ Algebraic minimization function
 
     Function computes the vector x that minimizes ||Ax|| subject to the
@@ -2160,7 +2140,7 @@ def minAlg_5p4(A):
     return x
 
 
-def fitPlane(X):
+def fitPlane(X: np.ndarray) -> np.ndarray:
     """ Determine plane going through a set of points
 
     Args:
