@@ -104,19 +104,6 @@ def transitions_durations(data: np.ndarray, split: float, add_start: bool = Fals
     return duration_dn, duration_up
 
 
-data = [0, 0]
-r = transitions_durations(data, split=.5)
-print(r[0].tolist(), r[1].tolist())
-
-r = transitions_durations(data=data, split=.5, add_start=True)
-print(r[0].tolist(), r[1].tolist())
-
-r = transitions_durations(data=data, split=.5, add_end=True)
-print(r[0].tolist(), r[1].tolist())
-
-# %%
-
-
 class FittingException(Exception):
     """ Fitting exception in RTS code """
     pass
