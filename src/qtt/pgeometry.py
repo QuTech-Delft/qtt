@@ -35,8 +35,8 @@ import tempfile
 import time
 import warnings
 from functools import wraps
-from typing import Any, List, Optional, Tuple, Union
 from math import cos, sin
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy
 import numpy as np
@@ -1904,7 +1904,7 @@ def robustCost(x: np.ndarray, thr: Optional[Union[float, str]], method: str = 'L
         if method == 'L2' or method == 'square':
             thr = thr * thr
 
-    assert isinstance(thr, float)
+    assert not isinstance(thr, str)
 
     if method == 'L1':
         y = np.minimum(np.abs(x), thr)
