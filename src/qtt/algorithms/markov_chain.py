@@ -213,6 +213,7 @@ class ContinuousTimeMarkovModel:
         sequence = np.zeros(length, dtype=int)
         sequence[0] = value = initial_state
         for i in range(1, sequence.size):
+            # value points to the genererator of the previous element in the sequence, and is then updated directly
             sequence[i] = value = generators[value].generate_choice()
         return sequence
 

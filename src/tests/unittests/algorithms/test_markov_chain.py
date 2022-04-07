@@ -11,7 +11,7 @@ from qtt.algorithms.markov_chain import ChoiceGenerator, ContinuousTimeMarkovMod
 class TestChoiceGenerator(unittest.TestCase):
 
     def test_ChoiceGenerator(self):
-        generator = ChoiceGenerator(3, [0, .5, 1.])
+        generator = ChoiceGenerator(3, [0, .5, 1.], block_size=200)
         self.assertIsInstance(generator.generate_choice(), numbers.Integral)
 
         choices = [generator.generate_choice() for _ in range(1000)]
