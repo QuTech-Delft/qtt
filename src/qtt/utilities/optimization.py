@@ -73,7 +73,7 @@ class OptimizerCallback:
 
     _column_names = ['iteration', 'timestamp', 'residual']
 
-    def __init__(self, show_progress: bool = False, store_data: bool = True, residual_fitting: bool = True):
+    def __init__(self, show_progress: bool = False, store_data: bool = True, residual_fitting: bool = True) -> None:
         """ Class to collect data of optimization procedures
 
         The class contains methods that can be used as callbacks on several well-known optimization packages.
@@ -108,7 +108,7 @@ class OptimizerCallback:
         return self._parameters
 
     def _append(self, d: Tuple):
-        """ Apppend a row of data """
+        """ Append a row of data """
         self._data.append(d)
 
     def clear(self):
@@ -137,7 +137,7 @@ class OptimizerCallback:
             dt = 0
         return dt
 
-    def plot(self, ax: Optional[Axes] = None, **kwargs):
+    def plot(self, ax: Optional[Axes] = None, **kwargs) -> None:
         """ Plot optimization results """
         if ax is None:
             ax = plt.gca()
@@ -150,13 +150,13 @@ class OptimizerCallback:
         else:
             ax.set_ylabel('Value')
 
-    def data_callback(self, iteration: int, parameters: Any, residual: float):
+    def data_callback(self, iteration: int, parameters: Any, residual: float) -> None:
         """ Callback used to store data
 
         Args:
             iteration: Iteration on the optimization procedure
             parameters: Current values of the parameters to be optimized
-            residual: Current resisual (value of the objective function)
+            residual: Current residual (value of the objective function)
 
         """
         self._number_of_evaluations = self._number_of_evaluations + 1
