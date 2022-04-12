@@ -49,7 +49,7 @@ class ChoiceGenerator:
             size = self.block_size
         else:
             self.block_size = size
-        weights = np.concatenate(([self.cum_weights[0]], np.diff(self.cum_weights)))
+        weights = np.concatenate(([self.cum_weights[0]], np.diff(self.cum_weights)))  # type: ignore
         counts = np.random.multinomial(size, weights)
         block = np.concatenate(tuple(choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)))
         self.rng.shuffle(block)
