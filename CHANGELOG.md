@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Removed qtt.utilities.markup.py. The functionility is available on https://pypi.org/project/markup.py/ (#836)
+- Removed the Keysight virtual awg (#846)
 
 ### Deprecated
 
