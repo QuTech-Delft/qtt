@@ -19,7 +19,33 @@ from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 from qtt.utilities.tools import addPPTslide
 from qtt.utilities.visualization import get_axis, plot_double_gaussian_fit, plot_vertical_line
 
-# %% calculate durations of states
+
+def rts2tunnel_ratio(binary_signal: np.ndarray) -> float:
+    """ Calculate ratio between tunnelrate down and up
+
+    From the mean and standard deviation of the RTS data we can determine the ratio between
+    the two tunnel rates. See equations on https://en.wikipedia.org/wiki/Telegraph_process
+
+    Args:
+        binary_signal: RTS signal with two levels
+
+    Returns:
+        Ratio of tunnelrate up to down and down to up
+    """
+
+    c1 = np.min(binary_signal)
+    c2 = np.max(binary_signal)
+    if c1 == c2:
+        raise Exception(f'binary signal contains only a single value {c1}')
+
+    if c1 != 0 or c2 != 1:
+        raise NotImplementedError('signal must only contain 0 and 1')
+    m = np.mean(binary_signal)
+    var = np.var(binary_signal)
+
+    ratio_l2_over_l1 = var/m**2
+
+    return ratio_l2_over_l1
 
 
 def transitions_durations(data: np.ndarray, split: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -258,8 +284,9 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
             'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (
                 separation, max_sep))
 
-    fraction_down = np.sum(data < split) / data.size
-    fraction_up = 1 - fraction_down
+    thresholded_data = data > split
+    fraction_up = np.sum(thresholded_data) / data.size
+    fraction_down = 1 - fraction_up
 
     # count the number of transitions and their duration
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
@@ -321,6 +348,8 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
 
     parameters['fraction_down'] = fraction_down
     parameters['fraction_up'] = fraction_up
+
+    parameters['tunnelrate_ratio'] = rts2tunnel_ratio(thresholded_data)
 
     if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
