@@ -1,9 +1,10 @@
 import math
-import numpy as np
 import warnings
-import scipy
+
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy
 
 try:
     import cv2
@@ -13,12 +14,10 @@ except ImportError:
                   qtt.exceptions.MissingOptionalPackageWarning)
 
 import qtt.pgeometry as pgeometry
-
-from qtt.measurements.scans import fixReversal
-from qtt.utilities.tools import diffImage, diffImageSmooth
-
 from qtt.algorithms.generic import smoothImage
 from qtt.algorithms.misc import polyfit2d, polyval2d
+from qtt.measurements.scans import fixReversal
+from qtt.utilities.tools import diffImage, diffImageSmooth
 
 # %%
 
@@ -189,9 +188,6 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
         dd = patch - modelpatch
 
     if usemask:
-        # near model mask
-        # mask = (modelpatch>1).astype(int)
-
         # distance centre mask
         imtmp = 10 + 0 * modelpatch.copy()
         imtmp[int(imtmp.shape[1] / 2), int(imtmp.shape[0] / 2)] = 0
@@ -293,7 +289,6 @@ def evaluateCross(param, im, verbose=0, fig=None, istep=1, istepmodel=1, linewid
 
     if verbose:
         print('evaluateCross: cost %.4f' % cost)
-        # print('evaluateCross: param %s' % (str(param), ))
     return cost, patch, cdata, (H, )
     pass
 
@@ -332,8 +327,6 @@ def createCross(param, samplesize, l=20, w=2.5, lsegment=10, H=100, scale=None,
     if samplesize is None:
         cc = param[0:2].reshape((2, 1))
     else:
-        # if scale is None:
-        #    scale = np.mean(samplesize)
         samplesize = np.array(samplesize).flatten()
         if centermodel:
             cc = np.array(samplesize).reshape((2, 1)) / 2 - .5
@@ -403,12 +396,10 @@ def fitModel(param0, imx, verbose=1, cfig=None, ksizemv=41, istep=None,
         def cb_funcion(x):
             return fmCallback(x, None)
         cb = cb_funcion
-        # cb= lambda param0: evaluateCross(param0, imx, ksize, fig=cfig)[0]
-        # cb = lambda param0: print('fitModel: cost %.3f' % evaluateCross(param0, imx, ksize, fig=None)[0] )
 
     if 1:
         # simple brute force
-        ranges = list([slice(x, x + .1, 1) for x in param0])
+        ranges = list(slice(x, x + .1, 1) for x in param0)
         for ii in range(2):
             ranges[ii] = slice(param0[ii] - 13, param0[ii] + 13, 1)
         ranges = tuple(ranges)
