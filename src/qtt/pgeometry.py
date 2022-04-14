@@ -33,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import typing
 import warnings
 from functools import wraps
 from math import cos, sin
@@ -641,6 +642,7 @@ def directionMean(vec):
 
     mod = np.mod
     norm = np.linalg.norm
+
     def cost_function(a):
         x = mod(a - vector_angles + np.pi / 2, np.pi) - np.pi / 2
         cost = norm(x)
@@ -1861,9 +1863,8 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         if tofront:
             plt.figure(f)
 
-# %%
 
-
+@typing.no_type_check
 def robustCost(x: np.ndarray, thr: Optional[Union[float, str]], method: str = 'L1') -> Union[np.ndarray, List[str]]:
     """ Robust cost function
 
@@ -1890,6 +1891,7 @@ def robustCost(x: np.ndarray, thr: Optional[Union[float, str]], method: str = 'L
     if thr == 'auto':
         ax = np.abs(x)
         p50, thr, p99 = np.percentile(ax, [50, 95., 99])
+        assert isinstance(thr, float)
 
         if thr == p50:
             thr = p99
