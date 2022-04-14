@@ -327,7 +327,7 @@ def rdeprecated(txt=None, expire=None):
 # %%
 
 
-def update_dictionary(alldata, **kwargs):
+def update_dictionary(alldata: dict, **kwargs: dict):
     """ Update elements of a dictionary.
 
     Args:
@@ -335,8 +335,7 @@ def update_dictionary(alldata, **kwargs):
         kwargs (dict): keyword arguments.
 
     """
-    for k in kwargs:
-        alldata[k] = kwargs[k]
+    alldata.update(kwargs)
 
 
 def stripDataset(dataset):
@@ -368,7 +367,8 @@ def stripDataset(dataset):
 # %%
 
 
-def negfloat(x):
+@rdeprecated(txt='method will be removed from qtt', expire='Jul 1 2022')
+def negfloat(x) -> float:
     """ Helper function """
     return -float(x)
 

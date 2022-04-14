@@ -1,10 +1,13 @@
-import logging
 import functools
+import logging
 import time
-from qcodes.instrument.visa import VisaInstrument
-from qcodes.instrument.visa import visa
+
+from qcodes.instrument.visa import VisaInstrument, visa
+
+from qtt.utilities.tools import rdeprecated
 
 
+@rdeprecated(txt='FPGA_ave driver will removed from qtt', expire='Jul 1 2022')
 class FPGA_ave(VisaInstrument):
     '''
     This is the python driver for the FPGA averaging, it communicates with the FPGA to get an average of a pulse
@@ -110,7 +113,7 @@ class FPGA_ave(VisaInstrument):
 
     def read_raw_bytes(self, size=None):
         '''
-        Returns the values that are in the FPGA buffer. Replacement for 
+        Returns the values that are in the FPGA buffer. Replacement for
         read_raw in messagebased.py, also see:
         https://github.com/hgrecco/pyvisa/issues/93
         https://github.com/hgrecco/pyvisa/issues/190
@@ -353,6 +356,3 @@ class FPGA_ave(VisaInstrument):
         totalpoints = max(len(DataRead_ch1), len(DataRead_ch2))
 
         return totalpoints, DataRead_ch1, DataRead_ch2
-
-
-
