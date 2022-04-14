@@ -78,7 +78,7 @@ def transitions_durations(data: np.ndarray, split: float, add_start: bool = Fals
         if add_end:
             endpoints_up.append(size-transitions_down_to_up[-1]-1)
 
-    elif data[0] > split and data[-1] <= split:
+    elif data[0] > split >= data[-1]:
         duration_up = transitions_up_to_down[1:] - transitions_down_to_up
         duration_dn = transitions_down_to_up - transitions_up_to_down[:-1]
 
