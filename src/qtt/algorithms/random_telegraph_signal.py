@@ -22,7 +22,8 @@ from qtt.utilities.visualization import get_axis, plot_double_gaussian_fit, plot
 # %% calculate durations of states
 
 
-def transitions_durations(data: np.ndarray, split: float, add_start: bool = False, add_end: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+def transitions_durations(data: np.ndarray, split: float, add_start: bool = False,
+                          add_end: bool = False) -> Tuple[np.ndarray, np.ndarray]:
     """ For data of a two level system (up and down) determine durations of segments
 
     This function determines which datapoints belong to which
@@ -40,15 +41,16 @@ def transitions_durations(data: np.ndarray, split: float, add_start: bool = Fals
         duration_up: array of durations (unit: data points) in the up level
     """
 
+    size = len(data)
+    if size == 0:
+        return np.array([], dtype=int), np.array([], dtype=int)
+
     # split the data and find the index of the transitions, transitions from
     # up to down are marked with -1 and from down to up with 1
     b = np.asarray(data) > split
     d = np.diff(b.astype(int))
     transitions_down_to_up = (d == 1).nonzero()[0]
     transitions_up_to_down = (d == -1).nonzero()[0]
-    size = len(data)
-    if size == 0:
-        return np.array([], dtype=int), np.array([], dtype=int)
 
     # durations are calculated by taking the difference in data points between
     # the transitions
@@ -85,7 +87,7 @@ def transitions_durations(data: np.ndarray, split: float, add_start: bool = Fals
         if add_end:
             endpoints_dn.append(size-transitions_up_to_down[-1]-1)
 
-    elif data[0] > split and data[-1] > split:
+    else:  # case: data[0] > split and data[-1] > split:
         duration_up = transitions_up_to_down[1:] - transitions_down_to_up[:-1]
         duration_dn = transitions_down_to_up - transitions_up_to_down
 
