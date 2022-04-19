@@ -322,8 +322,8 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
     parameters['fraction_down'] = fraction_down
     parameters['fraction_up'] = fraction_up
 
-    parameters['bins_dn'] = {'number': len(bins_dn), 'size': np.diff(bins_dn).mean()}
-    parameters['bins_up'] = {'number': len(bins_up), 'size': np.diff(bins_up).mean()}
+    parameters['bins_dn'] = {'number': len(bins_dn), 'size': np.diff(bins_dn).mean(), 'start': bins_dn[0]}
+    parameters['bins_up'] = {'number': len(bins_up), 'size': np.diff(bins_up).mean(), 'start': bins_up[0]}
 
     if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
