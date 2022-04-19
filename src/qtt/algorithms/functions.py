@@ -292,8 +292,8 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
         Estimated parameters for damped sine wave (see the gauss_ramsey method)
     """
     y_data = np.asarray(y_data)
-    A = (np.max(y_data) - np.min(y_data)) / 2
-    B = (np.min(y_data) + A)
+    A = (y_data.max() - y_data.min()) / 2
+    B = y_data.min() + A
 
     n = int(x_data.size / 2)
     mean_left = np.mean(np.abs(y_data[:n] - B))
