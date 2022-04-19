@@ -2,7 +2,7 @@
 
 Created on Wed Feb 28 10:20:46 2018
 
-@author: riggelenfv
+@author: riggelenfv /eendebakpt
 """
 
 import operator
@@ -27,21 +27,27 @@ def rts2tunnel_ratio(binary_signal: np.ndarray) -> float:
     the two tunnel rates. See equations on https://en.wikipedia.org/wiki/Telegraph_process
 
     Args:
-        binary_signal: RTS signal with two levels
+        binary_signal: RTS signal with two levels 0 and 1
 
     Returns:
         Ratio of tunnelrate up to down and down to up
     """
 
-    c1 = np.min(binary_signal)
-    c2 = np.max(binary_signal)
+    binary_signal = np.asarray(binary_signal)
+    c1 = binary_signal.min()
+    c2 = binary_signal.max()
+
+    number_of_transitions = np.diff(binary_signal).sum()
+    if number_of_transitions < 40:
+        warnings.warn(f'number of transitions {number_of_transitions} is low, estimate can be inaccurate')
+
     if c1 == c2:
-        raise Exception(f'binary signal contains only a single value {c1}')
+        raise ValueError(f'binary signal contains only a single value {c1}')
 
     if c1 != 0 or c2 != 1:
-        raise NotImplementedError('signal must only contain 0 and 1')
-    m = np.mean(binary_signal)
-    var = np.var(binary_signal)
+        raise ValueError('signal must only contain 0 and 1')
+    m = binary_signal.mean()
+    var = binary_signal.var()
 
     ratio_l2_over_l1 = var/m**2
 
