@@ -361,7 +361,7 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
         tunnelrate_dn, fit_parameters_down = _fit_and_plot_decay(
             bincentres_dn, counts_dn, label='down', fig_label=fig_label)
 
-        bincentres_up = (bins_dn[:-1]+bins_dn[1:])/2
+        bincentres_up = (bins_up[:-1]+bins_up[1:])/2
         fig_label = None if fig is None else fig + 3
         tunnelrate_up, fit_parameters_up = _fit_and_plot_decay(
             bincentres_up, counts_up, label='up', fig_label=fig_label)
