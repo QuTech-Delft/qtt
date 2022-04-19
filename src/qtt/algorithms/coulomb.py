@@ -1,21 +1,18 @@
 """ Functions to fit and analyse Coulomb peaks """
 
-import warnings
 import copy
+import warnings
 
-import numpy as np
-import scipy.optimize as opt
-import scipy.ndimage
-
-import qtt.measurements.scans
-import qtt.data
-
-import qtt.pgeometry as pgeometry
 import matplotlib.pyplot as plt
-from qtt.algorithms.generic import issorted
-from qtt.algorithms.functions import logistic
-from qtt.algorithms.generic import nonmaxsuppts
+import numpy as np
+import scipy.ndimage
+import scipy.optimize as opt
 
+import qtt.data
+import qtt.measurements.scans
+import qtt.pgeometry as pgeometry
+from qtt.algorithms.functions import logistic
+from qtt.algorithms.generic import issorted, nonmaxsuppts
 
 # %% Functions related to detection of Coulumb peaks
 
@@ -75,17 +72,19 @@ def fitCoulombPeaks(x_data, y_data, lowvalue=None, verbose=1, fig=None, sampling
         x_data (1D array): The data of varied parameter.
         y_data (1D array): The signal data.
         sampling_rate (float): The sampling rate in mV/pixel.
-
+        lowvalue (float or None): If None, select the 1st percentile of the dependent variable
+        
     Returns:
         (list): A list with detected peaks.
     """
-    minval = np.percentile(y_data, 5) + 0.1 * (np.percentile(y_data, 95) - np.percentile(y_data, 5))
+    p1, p5, p95, p99 = np.percentile(y_data, [1, 5, 95, 99])
+    minval = p5 + 0.1 * (p95 - p5)
     local_maxima, _ = nonmaxsuppts(y_data, d=int(12 / sampling_rate), minval=minval)
     fit_data = fitPeaks(x_data, y_data, local_maxima, verbose=verbose >= 2, fig=fig)
 
     if lowvalue is None:
-        lowvalue = np.percentile(y_data, 1)
-    highvalue = np.percentile(y_data, 99)
+        lowvalue = p1
+    highvalue = p99
     peaks = []
     for ii, f in enumerate(fit_data):
         p = local_maxima[ii]
@@ -257,8 +256,8 @@ def peakFindBottom(x, y, peaks, fig=None, verbose=1):
 
     dy = np.diff(ys, n=1)
     dy = np.hstack((dy, [0]))
-    kernel_size= [int(np.max([2, dy.size / 100])), ]
-    dy = qtt.algorithms.generic.boxcar_filter(dy, kernel_size = kernel_size)
+    kernel_size = [int(np.max([2, dy.size / 100])), ]
+    dy = qtt.algorithms.generic.boxcar_filter(dy, kernel_size=kernel_size)
     for ii, peak in enumerate(peaks):
         if verbose:
             print('peakFindBottom: peak %d' % ii)
@@ -411,8 +410,7 @@ def peakScores(peaksx, x, y, hwtypical=10, verbose=1, fig=None):
         peaksx (list): list with detected peaks
 
     """
-    lowvalue = np.percentile(y, 5)
-    highvalue = np.percentile(y, 99)
+    lowvalue, highvalue = np.percentile(y, [5, 99])
 
     kk = np.ones(3) / 3.
     ys = y
@@ -659,8 +657,8 @@ def findBestSlope(x, y, minimal_derivative=None, fig=None, verbose=1):
         slopes (...)
         results (object): additional data
     """
-    lowvalue = np.percentile(y, 1)
-    highvalue = np.percentile(y, 99)
+    lowvalue, highvalue = np.percentile(y, [1, 99])
+
     H = highvalue - lowvalue
 
     if minimal_derivative is None:

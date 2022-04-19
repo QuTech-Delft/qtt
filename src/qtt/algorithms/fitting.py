@@ -50,8 +50,7 @@ def _integral(x_data, y_data):
 
 def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     """ Estimate of double gaussian model parameters."""
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
+    minsignal, maxsignal = np.percentile(x_data, [2, 98])
 
     data_left = y_data[:int(len(y_data) / 2)]
     data_right = y_data[int(len(y_data) / 2):]
@@ -198,8 +197,7 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
 
 
 def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
+    minsignal, maxsignal = np.percentile(x_data, [2, 98])
     amplitude = np.max(y_data) - np.min(y_data)
     s = (maxsignal - minsignal) * 1 / 20
     mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
@@ -295,8 +293,9 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None,
 
 
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
-    amplitude = (np.max(y_data) - np.min(y_data)) / 2
-    offset = np.mean(y_data)
+    y_data = np.asarray(y_data)
+    amplitude = (y_data.max() - y_data.min()) / 2
+    offset = y_data.mean()
     frequency = estimate_dominant_frequency(y_data, sample_rate=1 / np.mean(np.diff(x_data)), remove_dc=True, fig=None)
     phase = np.pi/2 - 2*np.pi*frequency*x_data[np.argmax(y_data)]
     initial_parameters = np.array([amplitude, frequency, phase, offset])

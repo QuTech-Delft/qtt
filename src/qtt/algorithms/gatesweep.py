@@ -2,16 +2,16 @@
 
 # %% Load packages
 
+import matplotlib.pyplot as plt
+import numpy as np
+import qcodes
 import scipy
 import scipy.ndimage
-from qtt.pgeometry import plot2Dline
-import qcodes
 from qcodes.plots.qcmatplotlib import MatPlot
-import numpy as np
-import matplotlib.pyplot as plt
 
 import qtt.data
 import qtt.pgeometry
+from qtt.pgeometry import plot2Dline
 
 # %%
 
@@ -113,8 +113,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         if verbose:
             print(
                 'analyseGateSweep: gate not good: gate is not closed (or fully closed)')
-        midpoint1 = np.percentile(x, .5)
-        midpoint2 = np.percentile(x, .5)
+        midpoint2 = midpoint1 = np.percentile(x, .5)
         goodgate = False
 
     # fit a polynomial to the left side
@@ -128,8 +127,7 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
             print('analyseGateSweep: p0 %.1f, pmid %.1f, leftval[0] %.1f' % (p0, pmid, leftval[0]))
 
         if pmid + (pmid - p0) * .25 > leftval[0]:
-            midpoint1 = np.percentile(x, .5)
-            midpoint2 = np.percentile(x, .5)
+            midpoint2 = midpoint1 = np.percentile(x, .5)
             goodgate = False
             if verbose:
                 print(
@@ -154,16 +152,14 @@ def analyseGateSweep(dd, fig=None, minthr=None, maxthr=None, verbose=1, drawsmoo
         fitL = np.polyfit(xleft0, leftval0, 1)
         nd = fitL[0] / (highvalue - lowvalue)
         if goodgate and (nd * 750 > 1):
-            midpoint1 = np.percentile(x, .5)
-            midpoint2 = np.percentile(x, .5)
+            midpoint2 = midpoint1 = np.percentile(x, .5)
             goodgate = False
             if verbose:
                 print('analyseGateSweep: gate not good: gate is not closed (or fully closed) (slope check)')
             pass
 
     if np.mean(leftval - leftpred) > noise:
-        midpoint1 = np.percentile(x, .5)
-        midpoint2 = np.percentile(x, .5)
+        midpoint2 = midpoint1 = np.percentile(x, .5)
         goodgate = False
         if verbose:
             print(
