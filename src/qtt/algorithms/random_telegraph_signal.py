@@ -312,15 +312,18 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
                   'separations between peaks gaussians': separation,
                   'split between the two levels': split}
 
-    parameters['down_segments'] = {'mean': np.mean(durations_dn_idx) / samplerate, 'p50': np.percentile(
-        durations_dn_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_dn_idx)}
-    parameters['up_segments'] = {'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
-        durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up_idx)}
+    parameters['down_segments'] = {'number': len(durations_dn_idx), 'mean': np.mean(durations_dn_idx) / samplerate, 'p50': np.percentile(
+        durations_dn_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_dn)}
+    parameters['up_segments'] = {'number': len(durations_up_idx), 'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
+        durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up)}
     parameters['tunnelrate_down_to_up'] = 1. / parameters['down_segments']['mean']
     parameters['tunnelrate_up_to_down'] = 1. / parameters['up_segments']['mean']
 
     parameters['fraction_down'] = fraction_down
     parameters['fraction_up'] = fraction_up
+
+    parameters['bins_dn'] = {'number': len(bins_dn), 'size': np.diff(bins_dn).mean()}
+    parameters['bins_up'] = {'number': len(bins_up), 'size': np.diff(bins_up).mean()}
 
     if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
@@ -353,12 +356,12 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
             fit_parameters = [A_fit, B_fit, gamma_fit]
             return tunnelrate, fit_parameters
 
-        bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
+        bincentres_dn = (bins_dn[:-1]+bins_dn[1:])/2
         fig_label = None if fig is None else fig + 2
         tunnelrate_dn, fit_parameters_down = _fit_and_plot_decay(
             bincentres_dn, counts_dn, label='down', fig_label=fig_label)
 
-        bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
+        bincentres_up = (bins_dn[:-1]+bins_dn[1:])/2
         fig_label = None if fig is None else fig + 3
         tunnelrate_up, fit_parameters_up = _fit_and_plot_decay(
             bincentres_up, counts_up, label='up', fig_label=fig_label)
