@@ -146,7 +146,8 @@ def plot_single_traces(traces: np.ndarray, time: Optional[np.ndarray] = None, tr
     if offset is False:
         offset = 0
     if offset is None:
-        offset = (np.percentile(traces, 99) - np.percentile(traces, 1)) * 1.95
+        p1, p99 = np.percentile(traces, [1, 99])
+        offset = (p99-p1) * 1.95
     maximum_number_of_traces = min(maximum_number_of_traces, traces.shape[0])
 
     color_map = {0: 'b', 1: 'r', 2: 'm'}

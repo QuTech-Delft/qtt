@@ -33,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import typing
 import warnings
 from functools import wraps
 from math import cos, sin
@@ -642,17 +643,13 @@ def directionMean(vec):
     mod = np.mod
     norm = np.linalg.norm
 
-    def dist(a, vector_angles):
-        x = a - vector_angles
-        x = mod(x + np.pi / 2, np.pi) - np.pi / 2
+    def cost_function(a):
+        x = mod(a - vector_angles + np.pi / 2, np.pi) - np.pi / 2
         cost = norm(x)
         return cost
 
     m = vec.mean(axis=0)
     angle_initial_guess = np.arctan2(m[0], m[1])
-
-    def cost_function(a):
-        return dist(a, vector_angles)
 
     r = scipy.optimize.minimize(cost_function, angle_initial_guess, callback=None, options=dict({'disp': False}))
     angle = r.x[0]
@@ -664,8 +661,9 @@ def circular_mean(weights, angles):
     x = y = 0.
     radians = math.radians
     for angle, weight in zip(angles, weights):
-        x += cos(radians(angle)) * weight
-        y += sin(radians(angle)) * weight
+        angle_rad = radians(angle)
+        x += cos(angle_rad) * weight
+        y += sin(angle_rad) * weight
 
     mean = math.degrees(math.atan2(y, x))
     return mean
@@ -722,14 +720,13 @@ def dir2R(d, a=None):
 
 def frame2T(f):
     """ Convert frame into 4x4 transformation matrix """
-    T = np.array(np.eye(4))
+    T = np.eye(4)
     T[0:3, 0:3] = euler2RBE(f[3:7])
     T[0:3, 3] = f[0:3].reshape(3, 1)
     return T
 
 
-@static_var("b", np.array(np.zeros((2, 2))))
-def rot2D(phi):
+def rot2D(phi: float) -> np.ndarray:
     """ Return 2x2 rotation matrix from angle
 
     Arguments
@@ -746,7 +743,7 @@ def rot2D(phi):
     >>> R = rot2D(np.pi)
 
     """
-    r = rot2D.b.copy()
+    r = np.zeros((2, 2))
     c = cos(phi)
     s = sin(phi)
     r.itemset(0, c)
@@ -756,12 +753,12 @@ def rot2D(phi):
     return r
 
 
-def pg_rotx(phi):
-    """ Rotate around the x-axis with angle """
+def pg_rotx(phi: float) -> np.ndarray:
+    """ Create rotation around the x-axis with specified angle """
     c = cos(phi)
     s = sin(phi)
     R = np.zeros((3, 3))
-    R.flat = [1, 0, 0, 0, c, -s, 0, s, c]
+    R.ravel()[:] = [1, 0, 0, 0, c, -s, 0, s, c]
     return R
 
 
@@ -802,9 +799,15 @@ def imshowz(im, *args, **kwargs):
     ax.format_coord = format_coord
 
 
-def pg_scaling(scale, cc=None):
-    """ Create scaling with specified centre
+def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None) -> np.ndarray:
+    """ Create scale transformation with specified centre
 
+    Args:
+        scale: Scaling vector
+        cc: Centre for the scale transformation. If None, then take the origin
+
+    Returns:
+        Scale transformation
 
     Example
     -------
@@ -814,7 +817,6 @@ def pg_scaling(scale, cc=None):
            [ 0.,  0.,  1.]])
 
     """
-    scale = np.array(scale)
     scale = np.hstack((scale, 1))
     H = np.diag(scale)
     if cc is not None:
@@ -833,10 +835,9 @@ def pg_transl2H(tr):
             [ 0.,  0.,  1.]])
 
     """
-    sh = np.array(tr)
+    sh = np.asarray(tr)
     H = np.eye(sh.size + 1)
     H[0:-1, -1] = sh.flatten()
-    H = np.array(H)
     return H
 
 
@@ -1362,7 +1363,6 @@ def gaborFilter(ksize, sigma, theta, Lambda=1, psi=0, gamma=1, cut=None):
 
     xt = 2 * np.pi / Lambda * x_theta
     if cut is not None:
-        pass
         xt = np.minimum(xt, cut)
         xt = np.maximum(xt, -cut)
 
@@ -1866,9 +1866,8 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         if tofront:
             plt.figure(f)
 
-# %%
 
-
+@typing.no_type_check
 def robustCost(x: np.ndarray, thr: Optional[Union[float, str]], method: str = 'L1') -> Union[np.ndarray, List[str]]:
     """ Robust cost function
 
@@ -1894,10 +1893,11 @@ def robustCost(x: np.ndarray, thr: Optional[Union[float, str]], method: str = 'L
 
     if thr == 'auto':
         ax = np.abs(x)
-        thr = float(np.percentile(ax, 95.))
-        p50 = np.percentile(ax, 50)
+        p50, thr, p99 = np.percentile(ax, [50, 95., 99])
+        assert isinstance(thr, float)
+
         if thr == p50:
-            thr = float(np.percentile(ax, 99.))
+            thr = p99
         if thr <= 0:
             warnings.warn('estimation of robust cost threshold failed (p50 %f, thr %f' % (p50, thr))
 

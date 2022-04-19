@@ -125,8 +125,7 @@ def _estimate_exp_decay_initial_parameters(x_data, y_data, offset_parameter):
     Returns:
         Array with initial parameters
     """
-    maxsignal = np.percentile(y_data, 98)
-    minsignal = np.percentile(y_data, 2)
+    minsignal, maxsignal = np.percentile(y_data, [2, 98])
     midpoint = int(len(x_data) / 2)
     gamma = 1 / (x_data[midpoint] - x_data[0])
 

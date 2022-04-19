@@ -50,8 +50,7 @@ def _integral(x_data, y_data):
 
 def _estimate_double_gaussian_parameters(x_data, y_data, fast_estimate=False):
     """ Estimate of double gaussian model parameters."""
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
+    minsignal, maxsignal = np.percentile(x_data, [2, 98])
 
     data_left = y_data[:int(len(y_data) / 2)]
     data_right = y_data[int(len(y_data) / 2):]
@@ -198,8 +197,7 @@ def refit_double_gaussian(result_dict, x_data, y_data, gaussian_amplitude_ratio_
 
 
 def _estimate_initial_parameters_gaussian(x_data, y_data, include_offset):
-    maxsignal = np.percentile(x_data, 98)
-    minsignal = np.percentile(x_data, 2)
+    minsignal, maxsignal = np.percentile(x_data, [2, 98])
     amplitude = np.max(y_data) - np.min(y_data)
     s = (maxsignal - minsignal) * 1 / 20
     mean = x_data[int(np.where(y_data == np.max(y_data))[0][0])]
