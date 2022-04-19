@@ -30,7 +30,7 @@ def rts2tunnel_ratio(binary_signal: np.ndarray) -> float:
         binary_signal: RTS signal with two levels
 
     Returns:
-        Ratio of tunnelrate up to down and down to up
+        Ratio of tunnelrate up to down (l2) and down to up (l1)
     """
 
     c1 = np.min(binary_signal)
