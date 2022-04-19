@@ -27,7 +27,8 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
         y (array)
 
     """
-    y = offset + amplitude * np.exp(- (x - mean) * (x - mean) / (2 * std * std))
+    x0 = (x - mean)
+    y = offset + amplitude * np.exp(- x0 * x0 / (2 * std * std))
     return y
 
 
@@ -227,7 +228,7 @@ def cost_gauss_ramsey(x_data, y_data, params, weight_power=0):
         cost (float): value which indicates the difference between the data and the fit
     """
     model = gauss_ramsey(x_data, params)
-    cost = np.sum([(np.array(y_data)[1:] - np.array(model)[1:]) ** 2 * (np.diff(x_data)) ** weight_power])
+    cost = np.sum([(np.asarray(y_data)[1:] - np.asarray(model)[1:]) ** 2 * (np.diff(x_data)) ** weight_power])
     return cost
 
 
@@ -290,8 +291,9 @@ def estimate_parameters_damped_sine_wave(x_data, y_data, exponent=2):
     Returns:
         Estimated parameters for damped sine wave (see the gauss_ramsey method)
     """
-    A = (np.max(y_data) - np.min(y_data)) / 2
-    B = (np.min(y_data) + A)
+    y_data = np.asarray(y_data)
+    A = (y_data.max() - y_data.min()) / 2
+    B = y_data.min() + A
 
     n = int(x_data.size / 2)
     mean_left = np.mean(np.abs(y_data[:n] - B))

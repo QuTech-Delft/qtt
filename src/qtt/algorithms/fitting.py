@@ -293,8 +293,9 @@ def fit_sine(x_data: np.ndarray, y_data: np.ndarray, initial_parameters=None,
 
 
 def _estimate_initial_parameters_sine(x_data: np.ndarray, y_data: np.ndarray) -> np.ndarray:
-    amplitude = (np.max(y_data) - np.min(y_data)) / 2
-    offset = np.mean(y_data)
+    y_data = np.asarray(y_data)
+    amplitude = (y_data.max() - y_data.min()) / 2
+    offset = y_data.mean()
     frequency = estimate_dominant_frequency(y_data, sample_rate=1 / np.mean(np.diff(x_data)), remove_dc=True, fig=None)
     phase = np.pi/2 - 2*np.pi*frequency*x_data[np.argmax(y_data)]
     initial_parameters = np.array([amplitude, frequency, phase, offset])
