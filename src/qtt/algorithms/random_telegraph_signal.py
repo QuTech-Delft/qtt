@@ -37,7 +37,8 @@ def rts2tunnel_ratio(binary_signal: np.ndarray) -> float:
     c1 = binary_signal.min()
     c2 = binary_signal.max()
 
-    number_of_transitions = np.diff(binary_signal).sum()
+    number_of_transitions = np.abs(np.diff(binary_signal)).sum()
+
     if number_of_transitions < 40:
         warnings.warn(f'number of transitions {number_of_transitions} is low, estimate can be inaccurate')
 
