@@ -4,21 +4,21 @@ For more details see https://arxiv.org/abs/1603.02274
 """
 # %%
 
+import logging
+import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import qcodes
 import scipy
 import scipy.ndimage
-import numpy as np
-import matplotlib.pyplot as plt
-import warnings
-import logging
-
-import qcodes
 from qcodes.plots.qcmatplotlib import MatPlot
-from qtt.data import dataset2Dmetadata, dataset2image, show2D
+
 import qtt.data
 import qtt.pgeometry as pgeometry
-from qtt.pgeometry import plot2Dline
-
 from qtt.algorithms.generic import detect_blobs_binary, weightedCentroid
+from qtt.data import dataset2Dmetadata, dataset2image, show2D
+from qtt.pgeometry import plot2Dline
 
 try:
     import cv2
@@ -81,8 +81,7 @@ def _onedotSelectBlob(im, xx, fimg=None, verbose=0):
     """ Select the best blob from a list of blob positions """
     ims = qtt.algorithms.generic.smoothImage(im)
 
-    lowvalue = np.percentile(ims, 5)
-    highvalue = np.percentile(ims, 95)
+    lowvalue, highvalue = np.percentile(ims, [5, 95])
     thrvalue = lowvalue + (highvalue - lowvalue) * .1
 
     goodidx = np.ones(len(xx))
@@ -92,8 +91,6 @@ def _onedotSelectBlob(im, xx, fimg=None, verbose=0):
             print('_onedotSelectBlob %d: v %.2f/%.2f' % (jj, v, thrvalue))
         if v < thrvalue:
             goodidx[jj] = 0
-    lowvalue = np.percentile(im, 5)
-    highvalue = np.percentile(im, 95)
 
     if verbose:
         print('_onedotSelectBlob: good %s' % goodidx)
@@ -118,7 +115,7 @@ def onedotGetBalanceFine(impixel=None, dd=None, verbose=1, fig=None, baseangle=-
     The image should be in pixel coordinates
 
 
-    Returns:    
+    Returns:
         pt (array): detected point
         results (dict): dictionary with all results
     """
