@@ -312,10 +312,10 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
                   'separations between peaks gaussians': separation,
                   'split between the two levels': split}
 
-    parameters['down_segments'] = {'number': len(durations_dn), 'mean': np.mean(durations_dn_idx) / samplerate, 'p50': np.percentile(
-        durations_dn_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_dn)}
-    parameters['up_segments'] = {'number': len(durations_up), 'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
-        durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up)}
+    parameters['down_segments'] = {'number': len(durations_dn_idx), 'mean': np.mean(durations_dn_idx) / samplerate, 'p50': np.percentile(
+        durations_dn_idx, 50) / samplerate, 'number_filtered': len(durations_dn), 'mean_filtered': np.mean(durations_dn)}
+    parameters['up_segments'] = {'number': len(durations_up_idx), 'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
+        durations_up_idx, 50) / samplerate, 'number_filtered': len(durations_up), 'mean_filtered': np.mean(durations_up)}
     parameters['tunnelrate_down_to_up'] = 1. / parameters['down_segments']['mean']
     parameters['tunnelrate_up_to_down'] = 1. / parameters['up_segments']['mean']
 
