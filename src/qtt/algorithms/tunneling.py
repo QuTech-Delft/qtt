@@ -3,11 +3,11 @@
 @author: diepencjv
 """
 
-# %%
-import scipy.optimize
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.ndimage
-import matplotlib.pyplot as plt
+# %%
+import scipy.optimize
 
 
 def polmod_all_2slopes(x_data, par, kT, model=None):
@@ -83,8 +83,9 @@ def _polarization_fit_initial_guess(x_data, y_data, kT=0, padding_fraction=0.15,
     data_noslope_1der[:number_points_padding] = 0
     data_noslope_1der[number_points_padding:0] = 0
     transition_idx = np.abs(data_noslope_1der).argmax()
+    p10, p90 = np.percentile(data_noslope, [10, 90])
     sensitivity_guess = np.sign(x_data[-1] - x_data[0]) * np.sign(data_noslope_1der[transition_idx]) * \
-                        (np.percentile(data_noslope, 90) - np.percentile(data_noslope, 10))
+        (p90 - p10)
     x_offset_guess = x_data[transition_idx]
     y_offset_guess = y_data[transition_idx] - sensitivity_guess / 2
     par_guess = np.array([t_guess, x_offset_guess, y_offset_guess, slope_guess, slope_guess, sensitivity_guess])
@@ -217,5 +218,3 @@ def data_to_exc_ch(x_data, y_data, pol_fit):
         (pol_fit[5] + (pol_fit[4] - pol_fit[3]) * x_center)
 
     return x_center, y_data_exc_ch
-
-
