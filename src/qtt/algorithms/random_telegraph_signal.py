@@ -243,9 +243,11 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
 
     # plotting a 2d histogram of the RTS
     if fig is not None:
-        xdata = np.arange(len(data)) / (samplerate / 1000)
-        ny = min(int(np.sqrt(len(data))/2), 800)
-        nx = min(int(np.sqrt(len(data))/2), 1200)
+        max_num_bins_time_domain = 1200
+        max_num_bins_signal_domain = 800
+        xdata = np.arange(len(data)) / (samplerate / 1_000)
+        ny = min(int(np.sqrt(len(data))/2), max_num_bins_signal_domain)
+        nx = min(int(np.sqrt(len(xdata))/2), max_num_bins_time_domain)
         Z, xedges, yedges = np.histogram2d(xdata, data, bins=[nx, ny])
         title = '2d histogram RTS'
         Fig = plt.figure(fig)
@@ -261,7 +263,8 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
 
     # binning the data and determining the bincentres
     if num_bins is None:
-        num_bins = min(int(np.sqrt(len(data))), 1200)
+        max_num_bins_fitting = 1200
+        num_bins = min(int(np.sqrt(len(data))), max_num_bins_fitting)
 
     fit_results = two_level_threshold(data, number_of_bins=num_bins)
     separation = fit_results['separation']
