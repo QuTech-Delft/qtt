@@ -1,76 +1,94 @@
-# -*- coding: utf-8 -*-
 """ Class to generate signals with continous-time Markov chains
 
 
 @author: pieter.eendebak@gmail.com
 """
 
-# %%
-import numpy as np
-import random
-import scipy.linalg
 import itertools
+import random
+from dataclasses import dataclass
+from typing import List, Optional, Union
+
+import numpy as np
+import scipy.linalg
 
 
-def _solve_least_squares(a, b):
+def _solve_least_squares(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     rcond = None
     solution = np.linalg.lstsq(a, b, rcond=rcond)[0]
     return solution
 
 
+@dataclass
 class ChoiceGenerator:
-    """ Class to generate random elements with weighted selection """
+    """ Class to generate random elements with weighted selection
 
-    def __init__(self, number_of_states, cum_weights, block_size=5000):
-        """ Class to generate random elements with weighted selection
+    This is a replacement for random.choices that is efficient when a large number of choices has to be generated.
 
-        This is a replacement for random.choices that is efficient when a large number of choices has to be generated.
+    Args:
+        number_of_states: number of choices that has to be generated
+        cum_weights (array[float]): cumulative probabilities of the choices
+        block_size: size of blocks of choices to generate
+    """
 
-        Args:
-            number_of_states (int): number of choices that has to be generated
-            cum_weights (array[float]): cummulative probabilities of the choices
-            block_size (int): size of blocks of choices to generate
-        """
-        if not number_of_states == len(cum_weights):
-            raise Exception('specification of cummulative weights does not match number of states')
+    number_of_states: int
+    cum_weights: np.ndarray
+    block_size: int = 5000
 
-        self.number_of_states = number_of_states
+    def __post_init__(self):
+        if not self.number_of_states == len(self.cum_weights):
+            raise Exception(
+                f'specification of cumulative weights (len {len(self.cum_weights)})'
+                + ' does not match number of states {self.number_of_states}')
+        self.rng = np.random.Generator(np.random.SFC64())
         self._idx = 0
-        self._block_size = block_size
-        self.cum_weights = cum_weights
-        self._generate_block()
+        self._block: List[int] = self._generate_block().tolist()
 
-    def _generate_block(self):
-        values = np.random.rand(self._block_size, )
-        counts, _ = np.histogram(values, [0] + list(self.cum_weights))
-        self._block = np.hstack(tuple([choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)]))
-        np.random.shuffle(self._block)
+    def _generate_block(self, size: Optional[int] = None) -> np.ndarray:
+        if size is None:
+            size = self.block_size
+        else:
+            self.block_size = size
+        weights = np.concatenate(([self.cum_weights[0]], np.diff(self.cum_weights)))  # type: ignore
+        counts = np.random.multinomial(size, weights)
+        block = np.concatenate(tuple(choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)))
+        self.rng.shuffle(block)
+        return block
 
-    def generate_choice(self):
-        """ Generate a choice
+    def generate_choice(self) -> int:
+        """ Generate a single choice
 
         Returns:
-            int: integer in the range 0 to the number of states
+            Integer in the range 0 to the number of states
         """
         self._idx = self._idx + 1
-        if self._idx == self._block_size:
+        if self._idx == self.block_size:
             self._idx = 0
-            self._generate_block()
+            self._block = self._generate_block().tolist()
         return self._block[self._idx]
+
+    def generate_choices(self, size: int) -> np.ndarray:
+        """ Generate a specified number of choice
+
+        Returns:
+            Array with elements in the range 0 to the number of states
+        """
+        data = self._generate_block(size)
+        return data
 
 
 class ContinuousTimeMarkovModel:
 
-    def __init__(self, states, holding_parameters, jump_chain):
-        """ Class that represents a continous-time Markov chain
+    def __init__(self, states: List[str], holding_parameters: Union[List[float], np.ndarray], jump_chain: np.ndarray):
+        """ Class that represents a continuous-time Markov chain
 
         Args:
-            states (str[]): list with names for the states
-            holding_parameters(float[]): List with the holding parameters. The holding parameters determine the average
+            states: list with names for the states
+            holding_parameters: List with the holding parameters. The holding parameters determine the average
                 time before the system will make a jump to a new state
-            jump_chain (array): The jump chain or transition matrix. This matrix gives the probability for the system
-                        to jump from a state to one of the other states. The sum of the probabilities in each column must
-                        equal one.
+            jump_chain: The jump chain or transition matrix. This matrix gives the probability for the system
+                        to jump from a state to one of the other states. The sum of the probabilities in each
+                        column must equal one.
 
         For an introduction to Markov chains see https://www.probabilitycourse.com/chapter11/11_3_1_introduction.php
 
@@ -78,9 +96,9 @@ class ContinuousTimeMarkovModel:
 
         """
         self.states = states
-        self.update_model(holding_parameters, jump_chain)
+        self.update_model(np.asarray(holding_parameters), jump_chain)
 
-    def update_model(self, holding_parameters, jump_chain):
+    def update_model(self, holding_parameters: np.ndarray, jump_chain: np.ndarray):
         """ Update the model of the markov chain
 
         Args:
@@ -105,7 +123,7 @@ class ContinuousTimeMarkovModel:
             raise AssertionError('Not all holding parameter are bigger than zero!')
 
     @staticmethod
-    def _create_generator_matrix(holding_parameters, jump_chain):
+    def _create_generator_matrix(holding_parameters: np.ndarray, jump_chain: np.ndarray) -> np.ndarray:
         generator_matrix = np.array(jump_chain, copy=True)
         for ii in range(generator_matrix.shape[0]):
             generator_matrix[:, ii] = holding_parameters[ii] * jump_chain[:, ii]
@@ -113,11 +131,11 @@ class ContinuousTimeMarkovModel:
             generator_matrix[ii, ii] = -holding_parameters[ii]
         return generator_matrix
 
-    def number_of_states(self):
+    def number_of_states(self) -> int:
         """ Return the number of states in the model """
         return len(self.states)
 
-    def transition_matrix(self, delta_time):
+    def transition_matrix(self, delta_time: float) -> np.ndarray:
         """ Return the transition matrix for a specified amount of time """
         transition_matrix = scipy.linalg.expm(delta_time * self.generator_matrix)
         return transition_matrix
@@ -126,7 +144,7 @@ class ContinuousTimeMarkovModel:
         return "%s(id=0x%x, states=%s, generator=%s)" % (self.__class__.__name__,
                                                          id(self), self.states, self.generator_matrix)
 
-    def stationary_distribution_direct(self):
+    def stationary_distribution_direct(self) -> np.ndarray:
         """ Return the stationary distribution of the model
 
         The calculation method is taken from:
@@ -134,11 +152,11 @@ class ContinuousTimeMarkovModel:
 
         """
         pi_tilde = self.stationary_distribution_discrete(self.jump_chain)
-        norm = np.sum((pi_tilde / self.holding_parameters))
+        norm = np.sum(pi_tilde / self.holding_parameters)
         stationary_distribution = (pi_tilde / self.holding_parameters) / norm
         return stationary_distribution
 
-    def stationary_distribution(self):
+    def stationary_distribution(self) -> np.ndarray:
         """ Return the stationary distribution of the model
 
         The calculation method is taken from:
@@ -153,7 +171,7 @@ class ContinuousTimeMarkovModel:
         return stationary_distribution
 
     @staticmethod
-    def stationary_distribution_discrete(jump_chain):
+    def stationary_distribution_discrete(jump_chain) -> np.ndarray:
         """ Return the stationary distrubution for a Markov chain """
 
         n = jump_chain.shape[0]
@@ -163,73 +181,85 @@ class ContinuousTimeMarkovModel:
         pi = _solve_least_squares(A, B)
         return pi
 
-    def generate_sequence(self, length, delta_time, initial_state=None):
+    def generate_sequence(self, length: int, delta_time: float,
+                          initial_state: Union[None, int, np.ndarray] = None,
+                          generators: Optional[List[ChoiceGenerator]] = None) -> np.ndarray:
         """ Generate a random sequence with the model
 
         Args:
-            length (int): number of elements in the sequence
-            delta_time (float): time step to be used. This is equal to one over the samplerate.
-            initial_state (None or int or list): This parameter determines how the first element of the generated
+            length: number of elements in the sequence
+            delta_time: time step to be used. This is equal to one over the samplerate.
+            initial_state: This parameter determines how the first element of the generated
                 sequence is chosen. If an int, then use that state is initial state. If None then take
                 a random state weighted by the stationary distribution. If the initial_state is a list, then the list
-                is interpreted as a probability distribution and the first element is samples from all possible states
+                is interpreted as a probability distribution and the first element is sampled from all possible states
                 according to the distribution specified.
+            generators: Optional list of generators to use
         Returns:
-            array : generated sequence
+            Array with generated sequence
 
         """
         number_of_states = self.number_of_states()
         if initial_state is None:
-            initial_state = self.stationary_distribution()
-            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]
+            initial_state = self.stationary_distribution().flatten().tolist()
+            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]  # type: ignore
         elif isinstance(initial_state, (list, np.ndarray, tuple)):
-            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]
+            initial_state = np.asarray(initial_state).flatten().tolist()
+            initial_state = random.choices(range(number_of_states), weights=initial_state, k=1)[0]  # type: ignore
 
-        P = self.transition_matrix(delta_time)
+        if generators is None:
+            generators = self._create_generators(delta_time)
 
         sequence = np.zeros(length, dtype=int)
-        sequence[0] = initial_state
-
-        # pre-calculate cummulative weights
-        generators = [None] * number_of_states
-        for jj in range(number_of_states):
-            cum_weights = list(itertools.accumulate(P[:, jj]))
-            generators[jj] = ChoiceGenerator(number_of_states, cum_weights)
-
+        sequence[0] = value = initial_state
         for i in range(1, sequence.size):
-            sequence[i] = generators[sequence[i - 1]].generate_choice()
+            # value points to the genererator of the previous element in the sequence, and is then updated directly
+            sequence[i] = value = generators[value].generate_choice()
         return sequence
 
-    def generate_sequences(self, length, delta_time=1, initial_state=None, number_of_sequences=1):
+    def _create_generators(self, delta_time: float):
+        number_of_states = self.number_of_states()
+        P = self.transition_matrix(delta_time)
+        generators: List[Optional[ChoiceGenerator]] = [None] * number_of_states
+        # pre-calculate cumulative weights
+        for jj in range(number_of_states):
+            cum_weights = np.array(list(itertools.accumulate(P[:, jj])))
+            generators[jj] = ChoiceGenerator(number_of_states, cum_weights)
+        return generators
+
+    def generate_sequences(self, length: int, delta_time: float = 1, initial_state: Union[None, int, np.ndarray] = None,
+                           number_of_sequences: int = 1) -> np.ndarray:
         """ Generate multiple random sequences with the model
 
         Args:
-            length (int): number of elements in the sequence
-            delta_time (float): time step to be used
-            initial_state (None or int or list): This parameter determines how the first element of the generated
+            length: number of elements in the sequence
+            delta_time: time step to be used
+            initial_state: This parameter determines how the first element of the generated
                 sequences are chosen. The parameter is passed to the :func:`generate_sequence` method.
-            number_of_sequences (int): Specified the number of sequences to generate
+            number_of_sequences : Specified the number of sequences to generate
         Returns:
-            array : generated sequences
+            Array with generated sequences
         """
         if initial_state is None:
             initial_state = self.stationary_distribution()
         sequences = np.zeros((number_of_sequences, length), dtype=int)
+        generators = self._create_generators(delta_time)
         for n in range(number_of_sequences):
-            sequences[n] = self.generate_sequence(length, delta_time, initial_state)
+            sequences[n] = self.generate_sequence(length, delta_time, initial_state, generators=generators)
         return sequences
 
 
-def generate_traces(markov_model, std_gaussian_noise=1, state_mapping=None, *args, **kwargs):
+def generate_traces(markov_model: ContinuousTimeMarkovModel, std_gaussian_noise: float = 1,
+                    state_mapping: Optional[np.ndarray] = None, *args, **kwargs):
     """ Generate traces for a continuous-time Markov model with added noise
 
     Args:
-        markov_model (ContinuousTimeMarkovModel): model to use for generation of traces
-        std_gaussian_noise (float): standard deviation of Gaussian noise to add to the output signal
-        state_mapping (None or array): If not None, replace each state in the generated trace by the corresponding element in the array
+        markov_model: model to use for generation of traces
+        std_gaussian_noise: standard deviation of Gaussian noise to add to the output signal
+        state_mapping: If not None, replace each state in the generated trace by the corresponding element in the array
         *args, **kwargs: passed to the `generate_sequences` function of the model
 
-    The traces are generated by the generate_sequences method from the model.
+    The traces are generated by the `generate_sequences` method from the model.
     """
 
     traces = np.array(markov_model.generate_sequences(*args, **kwargs))

@@ -2,6 +2,7 @@
 
 import copy
 import warnings
+from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +20,7 @@ import warnings
 
 import qtt.utilities.tools
 from qtt import pgeometry
+from qtt.pgeometry import scaleImage
 
 # %%
 
@@ -191,36 +193,6 @@ def rescaleImage(im, imextent, mvx=None, mvy=None, verbose=0, interpolation=None
         plt.imshow(ims, interpolation='nearest')
         plt.title('scaled')
     return ims, H, (mvx, mvy, fw, fh)
-
-
-def scaleImage(image, display_min=None, display_max=None):
-    """ Scale any image into uint8 range
-
-        image (numpy array): input image
-        display_min (float): value to map to min output range
-        display_max (float): value to map to max output range
-    """
-    # Here I set copy=True in order to ensure the original image is not
-    # modified. If you don't mind modifying the original image, you can
-    # set copy=False or skip this step.
-    image = np.array(image, copy=True)
-
-    if display_min is None:
-        display_min = np.percentile(image, .15)
-    if display_max is None:
-        display_max = np.percentile(image, 99.85)
-        if display_max == display_min:
-            display_max = np.max(image)
-    image.clip(display_min, display_max, out=image)
-    if image.dtype == np.uint8:
-        image -= int(display_min)
-        image = image.astype(float)
-        image //= (display_max - display_min) / 255.
-    else:
-        image -= display_min
-        image //= (display_max - display_min) / 255.
-    image = image.astype(np.uint8)
-    return image
 
 
 def flowField(im, fig=None, blocksize=11, ksize=3, resizefactor=1, eigenvec=1):
@@ -540,7 +512,7 @@ def weightedCentroid(im, contours, contourIdx, fig=None):
     return xyw
 
 
-def boxcar_filter(signal, kernel_size):
+def boxcar_filter(signal: np.ndarray, kernel_size: Union[np.ndarray, Tuple[int]]) -> np.ndarray:
     """ Perform boxcar filtering on an array.
     At the edges, the edge value is replicated beyond the edge as needed by the size of the kernel.
     This is the 'nearest' mode of scipy.ndimage.convolve. For details, see
@@ -548,15 +520,14 @@ def boxcar_filter(signal, kernel_size):
 
 
     Args:
-        signal (array): An array containing the signal to be filtered.
-        kernel_size (tuple): Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
+        signal: An array containing the signal to be filtered.
+        kernel_size: Multidimensional size of the filter box. Must have the same number of dimensions as the signal.
 
     Returns:
-        a numpy array containing the filtered signal.
+        Array containing the filtered signal.
     """
 
-    if not isinstance(signal, np.ndarray):
-        signal = np.array(signal)
+    signal = np.asarray(signal)
     if not isinstance(kernel_size, np.ndarray):
         kernel_size = np.array(kernel_size, dtype=np.int_)
 
@@ -571,7 +542,10 @@ def boxcar_filter(signal, kernel_size):
     else:
         filtered_signal = signal
 
-    boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
-    filtered_signal = scipy.ndimage.convolve(filtered_signal, boxcar_kernel, mode='nearest')
+    if np.prod(kernel_size) == 1:
+        filtered_signal = np.array(signal)
+    else:
+        boxcar_kernel = np.ones(kernel_size, dtype=np.float64) / np.float64(np.prod(kernel_size))
+        filtered_signal = scipy.ndimage.convolve(filtered_signal, boxcar_kernel, mode='nearest')
 
     return filtered_signal

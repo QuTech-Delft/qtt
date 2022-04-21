@@ -7,10 +7,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from qtt.algorithms.random_telegraph_signal import (FittingException, _create_integer_histogram, generate_RTS_signal,
-                                                    tunnelrates_RTS)
+                                                    rts2tunnel_ratio, transitions_durations, tunnelrates_RTS)
 
 
 class TestRandomTelegraphSignal(unittest.TestCase):
+
+    def test_rts2tunnel_ratio(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertEqual(rts2tunnel_ratio([1, 0, 0, 0, 1]), 1.5)
+
+        with self.assertRaises(ValueError):
+            rts2tunnel_ratio([2, 0, 0, 0, 1])
+
+        self.assertEqual(rts2tunnel_ratio([0, 1]*10_000), 1.)
 
     def test_RTS(self, fig=None, verbose=0):
         data = np.random.rand(10000, )
@@ -78,3 +88,66 @@ class TestRandomTelegraphSignal(unittest.TestCase):
 
         with self.assertRaises(Exception):
             _ = _create_integer_histogram([])
+
+    def test_transitions_durations(self):
+        def check_transitions_equal(result, values):
+            self.assertListEqual(results[0].tolist(), values[0])
+            self.assertListEqual(results[1].tolist(), values[1])
+
+        data = np.array([0, 0, 0, 1, 1, 1, 0, 0, 0])
+        results = transitions_durations(data, split=.5)
+
+        check_transitions_equal(results, ([], [3]))
+        results = transitions_durations(data, split=.5, add_start=True)
+        check_transitions_equal(results, ([3], [3]))
+        results = transitions_durations(data, split=.5, add_end=True)
+        check_transitions_equal(results, ([3], [3]))
+        results = transitions_durations(data, split=.5, add_start=True, add_end=True)
+        check_transitions_equal(results, ([3, 3], [3]))
+
+        data = np.array([0, 0, 0, 1, 1, 0, 0, 0, 0])
+        results = transitions_durations(data, split=.5)
+
+        check_transitions_equal(results, ([], [2]))
+        results = transitions_durations(data, split=.5, add_start=True)
+        check_transitions_equal(results, ([3], [2]))
+        results = transitions_durations(data, split=.5, add_end=True)
+        check_transitions_equal(results, ([4], [2]))
+        results = transitions_durations(data, split=.5, add_start=True, add_end=True)
+        check_transitions_equal(results, ([3, 4], [2]))
+
+        results = transitions_durations([], split=.5)
+        check_transitions_equal(results, ([], []))
+
+        results = transitions_durations([0], split=.5)
+        check_transitions_equal(results, ([], []))
+
+        results = transitions_durations([0], split=.5, add_end=True)
+        check_transitions_equal(results, ([1], []))
+
+    def test_transitions_durations_regression(self):
+        def check_transitions_equal(result, values):
+            self.assertListEqual(results[0].tolist(), values[0])
+            self.assertListEqual(results[1].tolist(), values[1])
+
+        data = [0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1]
+        results = transitions_durations(data, split=.5)
+        check_transitions_equal(results, ([3, 1, 1, 1], [1, 3, 2, 3]))
+
+        data = [0, 0, 0]
+        results = transitions_durations(data, split=.5)
+        check_transitions_equal(results, ([], []))
+        results = transitions_durations(data, split=.5, add_end=True)
+        check_transitions_equal(results, ([3], []))
+        results = transitions_durations(data, split=.5, add_start=True, add_end=True)
+        check_transitions_equal(results, ([3], []))
+
+        data = [1, 1]
+        results = transitions_durations(data, split=.5)
+        check_transitions_equal(results, ([], []))
+        results = transitions_durations(data, split=.5, add_end=True)
+        check_transitions_equal(results, ([], [2]))
+
+
+if __name__ == '__main__':
+    unittest.main()
