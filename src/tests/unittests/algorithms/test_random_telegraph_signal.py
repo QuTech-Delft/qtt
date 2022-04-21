@@ -7,10 +7,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from qtt.algorithms.random_telegraph_signal import (FittingException, _create_integer_histogram, generate_RTS_signal,
-                                                    transitions_durations, tunnelrates_RTS)
+                                                    rts2tunnel_ratio, transitions_durations, tunnelrates_RTS)
 
 
 class TestRandomTelegraphSignal(unittest.TestCase):
+
+    def test_rts2tunnel_ratio(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertEqual(rts2tunnel_ratio([1, 0, 0, 0, 1]), 1.5)
+
+        with self.assertRaises(ValueError):
+            rts2tunnel_ratio([2, 0, 0, 0, 1])
+
+        self.assertEqual(rts2tunnel_ratio([0, 1]*10_000), 1.)
 
     def test_RTS(self, fig=None, verbose=0):
         data = np.random.rand(10000, )
