@@ -242,7 +242,7 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
         raise ValueError('samplerate should be set to the data samplerate in Hz')
 
     # plotting a 2d histogram of the RTS
-    if fig:
+    if fig is not None:
         xdata = np.arange(len(data)) / (samplerate / 1000)
         ny = min(int(np.sqrt(len(data))/2), 800)
         nx = min(int(np.sqrt(len(data))/2), 1200)
