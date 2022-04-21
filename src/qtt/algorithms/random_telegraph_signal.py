@@ -2,7 +2,7 @@
 
 Created on Wed Feb 28 10:20:46 2018
 
-@author: riggelenfv
+@author: riggelenfv /eendebakpt
 """
 
 import operator
@@ -19,7 +19,40 @@ from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 from qtt.utilities.tools import addPPTslide
 from qtt.utilities.visualization import get_axis, plot_double_gaussian_fit, plot_vertical_line
 
-# %% calculate durations of states
+
+def rts2tunnel_ratio(binary_signal: np.ndarray) -> float:
+    """ Calculate ratio between tunnelrate down and up
+
+    From the mean and standard deviation of the RTS data we can determine the ratio between
+    the two tunnel rates. See equations on https://en.wikipedia.org/wiki/Telegraph_process
+
+    Args:
+        binary_signal: RTS signal with two levels 0 and 1
+
+    Returns:
+        Ratio of tunnelrate up to down (l2) and down to up (l1)
+    """
+
+    binary_signal = np.asarray(binary_signal)
+    c1 = binary_signal.min()
+    c2 = binary_signal.max()
+
+    number_of_transitions = np.abs(np.diff(binary_signal)).sum()
+
+    if number_of_transitions < 40:
+        warnings.warn(f'number of transitions {number_of_transitions} is low, estimate can be inaccurate')
+
+    if c1 == c2:
+        raise ValueError(f'binary signal contains only a single value {c1}')
+
+    if c1 != 0 or c2 != 1:
+        raise ValueError('signal must only contain 0 and 1')
+    m = binary_signal.mean()
+    var = binary_signal.var()
+
+    ratio_l2_over_l1 = var/m**2
+
+    return ratio_l2_over_l1
 
 
 def transitions_durations(data: np.ndarray, split: float, add_start: bool = False,
@@ -197,7 +230,8 @@ def _create_integer_histogram(durations):
 def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], samplerate: Optional[float] = None,
                     min_sep: float = 2.0, max_sep: float = 7.0, min_duration: int = 5,
                     num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None,
-                    verbose: int = 0) -> Tuple[Optional[float], Optional[float], dict]:
+                    verbose: int = 0,
+                    offset_parameter: Optional[float] = None) -> Tuple[Optional[float], Optional[float], dict]:
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
     determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
@@ -221,6 +255,7 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
         fig: shows figures and sends them to the ppt when is not None
         ppt: determines if the figures are send to a powerpoint presentation
         verbose: prints info to the console when > 0
+        offset_parameter: Offset parameter for fitting of exponential decay
 
     Returns:
         tunnelrate_dn: tunneling rate of the down level to the up level (kHz) or None in case of
@@ -300,8 +335,9 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
             'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (
                 separation, max_sep))
 
-    fraction_down = np.sum(data < split) / data.size
-    fraction_up = 1 - fraction_down
+    thresholded_data = data > split
+    fraction_up = np.sum(thresholded_data) / data.size
+    fraction_down = 1 - fraction_up
 
     # count the number of transitions and their duration
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
@@ -366,12 +402,13 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
 
     parameters['bins_dn'] = {'number': len(bins_dn), 'size': np.diff(bins_dn).mean(), 'start': bins_dn[0]}
     parameters['bins_up'] = {'number': len(bins_up), 'size': np.diff(bins_up).mean(), 'start': bins_up[0]}
+    parameters['tunnelrate_ratio'] = rts2tunnel_ratio(thresholded_data)
 
     if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
         def _fit_and_plot_decay(bincentres, counts, label, fig_label):
             """ Fitting and plotting of exponential decay for level """
-            A_fit, B_fit, gamma_fit = fit_exp_decay(bincentres, counts)
+            A_fit, B_fit, gamma_fit = fit_exp_decay(bincentres, counts, offset_parameter=offset_parameter)
             tunnelrate = gamma_fit / 1000
 
             other_label = 'up' if label == 'down' else 'down'
