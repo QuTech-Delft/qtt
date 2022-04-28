@@ -2,7 +2,7 @@
 
 Created on Wed Feb 28 10:20:46 2018
 
-@author: riggelenfv
+@author: riggelenfv /eendebakpt
 """
 
 import operator
@@ -19,47 +19,122 @@ from qtt.algorithms.markov_chain import ContinuousTimeMarkovModel
 from qtt.utilities.tools import addPPTslide
 from qtt.utilities.visualization import get_axis, plot_double_gaussian_fit, plot_vertical_line
 
-# %% calculate durations of states
+
+def rts2tunnel_ratio(binary_signal: np.ndarray) -> float:
+    """ Calculate ratio between tunnelrate down and up
+
+    From the mean and standard deviation of the RTS data we can determine the ratio between
+    the two tunnel rates. See equations on https://en.wikipedia.org/wiki/Telegraph_process
+
+    Args:
+        binary_signal: RTS signal with two levels 0 and 1
+
+    Returns:
+        Ratio of tunnelrate up to down (l2) and down to up (l1)
+    """
+
+    binary_signal = np.asarray(binary_signal)
+    c1 = binary_signal.min()
+    c2 = binary_signal.max()
+
+    number_of_transitions = np.abs(np.diff(binary_signal)).sum()
+
+    if number_of_transitions < 40:
+        warnings.warn(f'number of transitions {number_of_transitions} is low, estimate can be inaccurate')
+
+    if c1 == c2:
+        raise ValueError(f'binary signal contains only a single value {c1}')
+
+    if c1 != 0 or c2 != 1:
+        raise ValueError('signal must only contain 0 and 1')
+    m = binary_signal.mean()
+    var = binary_signal.var()
+
+    ratio_l2_over_l1 = var/m**2
+
+    return ratio_l2_over_l1
 
 
-def transitions_durations(data: np.ndarray, split: float) -> Tuple[np.ndarray, np.ndarray]:
-    """ For data of a two level system (up and down), this funtion determines which datapoints belong to which
+def transitions_durations(data: np.ndarray, split: float, add_start: bool = False,
+                          add_end: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+    """ For data of a two level system (up and down) determine durations of segments
+
+    This function determines which datapoints belong to which
     level and finds the transitions, in order to determines
     how long the system stays in these levels.
 
     Args:
         data : data from the two level system
         split: value that separates the up and down level
+        add_start: If True, then include the segments at the start of the data
+        add_end:: If True, then include the segments at the end of the data
 
     Returns:
         duration_dn:  array of the durations (unit: data points) in the down level
         duration_up: array of durations (unit: data points) in the up level
     """
 
+    size = len(data)
+    if size == 0:
+        return np.array([], dtype=int), np.array([], dtype=int)
+
     # split the data and find the index of the transitions, transitions from
     # up to down are marked with -1 and from down to up with 1
-    b = data > split
+    b = np.asarray(data) > split
     d = np.diff(b.astype(int))
-    transitions_dn = (d == -1).nonzero()[0]
-    transitions_up = (d == 1).nonzero()[0]
+    transitions_down_to_up = (d == 1).nonzero()[0]
+    transitions_up_to_down = (d == -1).nonzero()[0]
 
     # durations are calculated by taking the difference in data points between
-    # the transitions, first and last duration are ignored
+    # the transitions
+    endpoints_dn = []
+    endpoints_up = []
     if data[0] <= split and data[-1] <= split:
-        duration_up = transitions_dn - transitions_up
-        duration_dn = transitions_up[1:] - transitions_dn[:-1]
+        duration_up = transitions_up_to_down - transitions_down_to_up
+        duration_dn = transitions_down_to_up[1:] - transitions_up_to_down[:-1]
 
-    elif data[0] < split and data[-1] > split:
-        duration_up = transitions_dn - transitions_up[:-1]
-        duration_dn = transitions_up[1:] - transitions_dn
+        if len(transitions_up_to_down) == 0:
+            if add_start or add_end:
+                endpoints_dn.append(size)
+        else:
+            if add_start:
+                endpoints_dn.append(transitions_down_to_up[0]+1)
+            if add_end:
+                endpoints_dn.append(size - transitions_up_to_down[-1]-1)
 
-    elif data[0] > split and data[-1] < split:
-        duration_up = transitions_dn[1:] - transitions_up
-        duration_dn = transitions_up - transitions_dn[:-1]
+    elif data[0] <= split < data[-1]:
+        duration_up = transitions_up_to_down - transitions_down_to_up[:-1]
+        duration_dn = transitions_down_to_up[1:]-transitions_up_to_down
 
-    elif data[0] >= split and data[-1] >= split:
-        duration_up = transitions_dn[1:] - transitions_up[:-1]
-        duration_dn = transitions_up - transitions_dn
+        if add_start:
+            endpoints_dn.append(transitions_down_to_up[0]+1)
+        if add_end:
+            endpoints_up.append(size-transitions_down_to_up[-1]-1)
+
+    elif data[0] > split >= data[-1]:
+        duration_up = transitions_up_to_down[1:] - transitions_down_to_up
+        duration_dn = transitions_down_to_up - transitions_up_to_down[:-1]
+
+        if add_start:
+            endpoints_up.append(transitions_up_to_down[0]+1)
+        if add_end:
+            endpoints_dn.append(size-transitions_up_to_down[-1]-1)
+
+    else:  # case: data[0] > split and data[-1] > split:
+        duration_up = transitions_up_to_down[1:] - transitions_down_to_up[:-1]
+        duration_dn = transitions_down_to_up - transitions_up_to_down
+
+        if len(transitions_up_to_down) == 0:
+            if add_start or add_end:
+                endpoints_up.append(size)
+        else:
+            if add_start:
+                endpoints_up.append(transitions_up_to_down[0]+1)
+            if add_end:
+                endpoints_up.append(size-transitions_down_to_up[-1]-1)
+
+    duration_dn = np.concatenate((duration_dn, np.asarray(endpoints_dn, dtype=int)), dtype=int)
+    duration_up = np.concatenate((duration_up, np.asarray(endpoints_up, dtype=int)), dtype=int)
 
     return duration_dn, duration_up
 
@@ -155,7 +230,8 @@ def _create_integer_histogram(durations):
 def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], samplerate: Optional[float] = None,
                     min_sep: float = 2.0, max_sep: float = 7.0, min_duration: int = 5,
                     num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None,
-                    verbose: int = 0) -> Tuple[Optional[float], Optional[float], dict]:
+                    verbose: int = 0,
+                    offset_parameter: Optional[float] = None) -> Tuple[Optional[float], Optional[float], dict]:
     """
     This function takes an RTS dataset, fits a double gaussian, finds the split between the two levels,
     determines the durations in these two levels, fits a decaying exponential on two arrays of durations,
@@ -179,6 +255,7 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
         fig: shows figures and sends them to the ppt when is not None
         ppt: determines if the figures are send to a powerpoint presentation
         verbose: prints info to the console when > 0
+        offset_parameter: Offset parameter for fitting of exponential decay
 
     Returns:
         tunnelrate_dn: tunneling rate of the down level to the up level (kHz) or None in case of
@@ -200,10 +277,13 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
         raise ValueError('samplerate should be set to the data samplerate in Hz')
 
     # plotting a 2d histogram of the RTS
-    if fig:
-        xdata = np.array(range(0, len(data))) / samplerate * 1000
-        Z, xedges, yedges = np.histogram2d(xdata, data, bins=[int(
-            np.sqrt(len(xdata)) / 2), int(np.sqrt(len(data)) / 2)])
+    if fig is not None:
+        max_num_bins_time_domain = 1200
+        max_num_bins_signal_domain = 800
+        xdata = np.arange(len(data)) / (samplerate / 1_000)
+        ny = min(int(np.sqrt(len(data))/2), max_num_bins_signal_domain)
+        nx = min(int(np.sqrt(len(xdata))/2), max_num_bins_time_domain)
+        Z, xedges, yedges = np.histogram2d(xdata, data, bins=[nx, ny])
         title = '2d histogram RTS'
         Fig = plt.figure(fig)
         plt.clf()
@@ -218,7 +298,8 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
 
     # binning the data and determining the bincentres
     if num_bins is None:
-        num_bins = int(np.sqrt(len(data)))
+        max_num_bins_fitting = 1200
+        num_bins = min(int(np.sqrt(len(data))), max_num_bins_fitting)
 
     fit_results = two_level_threshold(data, number_of_bins=num_bins)
     separation = fit_results['separation']
@@ -258,8 +339,9 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
             'Separation between the peaks of the gaussian %.1f is more then %.1f std, indicating that the fit was not succesfull.' % (
                 separation, max_sep))
 
-    fraction_down = np.sum(data < split) / data.size
-    fraction_up = 1 - fraction_down
+    thresholded_data = data > split
+    fraction_up = np.sum(thresholded_data) / data.size
+    fraction_down = 1 - fraction_up
 
     # count the number of transitions and their duration
     durations_dn_idx, durations_up_idx = transitions_durations(data, split)
@@ -312,21 +394,25 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
                   'separations between peaks gaussians': separation,
                   'split between the two levels': split}
 
-    parameters['down_segments'] = {'mean': np.mean(durations_dn_idx) / samplerate, 'p50': np.percentile(
-        durations_dn_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_dn_idx)}
-    parameters['up_segments'] = {'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
-        durations_up_idx, 50) / samplerate, 'mean_filtered': np.mean(durations_up_idx)}
+    parameters['down_segments'] = {'number': len(durations_dn_idx), 'mean': np.mean(durations_dn_idx) / samplerate, 'p50': np.percentile(
+        durations_dn_idx, 50) / samplerate, 'number_filtered': len(durations_dn), 'mean_filtered': np.mean(durations_dn)}
+    parameters['up_segments'] = {'number': len(durations_up_idx), 'mean': np.mean(durations_up_idx) / samplerate, 'p50': np.percentile(
+        durations_up_idx, 50) / samplerate, 'number_filtered': len(durations_up), 'mean_filtered': np.mean(durations_up)}
     parameters['tunnelrate_down_to_up'] = 1. / parameters['down_segments']['mean']
     parameters['tunnelrate_up_to_down'] = 1. / parameters['up_segments']['mean']
 
     parameters['fraction_down'] = fraction_down
     parameters['fraction_up'] = fraction_up
 
+    parameters['bins_dn'] = {'number': len(bins_dn), 'size': np.diff(bins_dn).mean(), 'start': bins_dn[0]}
+    parameters['bins_up'] = {'number': len(bins_up), 'size': np.diff(bins_up).mean(), 'start': bins_up[0]}
+    parameters['tunnelrate_ratio'] = rts2tunnel_ratio(thresholded_data)
+
     if (counts_dn[0] > minimal_count_number) and (counts_up[0] > minimal_count_number):
 
         def _fit_and_plot_decay(bincentres, counts, label, fig_label):
             """ Fitting and plotting of exponential decay for level """
-            A_fit, B_fit, gamma_fit = fit_exp_decay(bincentres, counts)
+            A_fit, B_fit, gamma_fit = fit_exp_decay(bincentres, counts, offset_parameter=offset_parameter)
             tunnelrate = gamma_fit / 1000
 
             other_label = 'up' if label == 'down' else 'down'
@@ -353,12 +439,12 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
             fit_parameters = [A_fit, B_fit, gamma_fit]
             return tunnelrate, fit_parameters
 
-        bincentres_dn = np.array([(bins_dn[i] + bins_dn[i + 1]) / 2 for i in range(0, len(bins_dn) - 1)])
+        bincentres_dn = (bins_dn[:-1]+bins_dn[1:])/2
         fig_label = None if fig is None else fig + 2
         tunnelrate_dn, fit_parameters_down = _fit_and_plot_decay(
             bincentres_dn, counts_dn, label='down', fig_label=fig_label)
 
-        bincentres_up = np.array([(bins_up[i] + bins_up[i + 1]) / 2 for i in range(0, len(bins_up) - 1)])
+        bincentres_up = (bins_up[:-1]+bins_up[1:])/2
         fig_label = None if fig is None else fig + 3
         tunnelrate_up, fit_parameters_up = _fit_and_plot_decay(
             bincentres_up, counts_up, label='up', fig_label=fig_label)
