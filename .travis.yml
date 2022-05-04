@@ -1,6 +1,6 @@
 language: python
 
-cache: pipv2
+cache: pipv3
 
 matrix:
   include:
