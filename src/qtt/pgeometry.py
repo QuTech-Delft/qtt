@@ -1681,7 +1681,7 @@ def cfigure(*args, **kwargs):
 # %%
 
 
-def monitorSizes(verbose: int = 0) -> List[Sequence[int]]:
+def monitorSizes(verbose: int = 0) -> List[List[int]]:
     """ Return monitor sizes
 
     Args:
@@ -1695,7 +1695,7 @@ def monitorSizes(verbose: int = 0) -> List[Sequence[int]]:
 
     nmon = _qd.screenCount()
     monitor_rectangles = [_qd.screenGeometry(ii) for ii in range(nmon)]
-    monitor_sizes = [[w.x(), w.y(), w.width(), w.height()] for w in monitor_rectangles]
+    monitor_sizes: List[List[int]] = [[w.x(), w.y(), w.width(), w.height()] for w in monitor_rectangles]
 
     if verbose:
         for ii, w in enumerate(monitor_sizes):
