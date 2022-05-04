@@ -1,8 +1,5 @@
 import logging
-import os
 
-import numpy as np
-import zhinst
 from qcodes import Parameter
 
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon, AwgCommonError
