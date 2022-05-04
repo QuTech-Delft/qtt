@@ -12,13 +12,14 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
 import qcodes
 import qcodes.data.io
-import zhinst
 from qcodes import ManualParameter, Parameter
 from qcodes.data.data_set import DataSet
 from qcodes.instrument_drivers.devices import VoltageDivider
 from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
+from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
@@ -32,7 +33,6 @@ from qtt.measurements.scans import (fastScan, get_instrument_parameter, get_samp
 from qtt.structures import MultiParameter
 
 sys.modules['pyspcm'] = MagicMock()
-from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
 del sys.modules['pyspcm']
 
 
@@ -248,8 +248,10 @@ class TestScans(TestCase):
 
             m4i_digitizer.close()
 
-    @staticmethod
-    def test_measure_segment_uhfli_has_correct_output():
+    @pytest.mark.skipif(sys.version_info >= (3, 10))
+    def test_measure_segment_uhfli_has_correct_output(self):
+        import zhinst
+
         expected_data = np.array([1, 2, 3, 4])
         waveform = {'bla': 1, 'ble': 2, 'blu': 3}
         number_of_averages = 100
