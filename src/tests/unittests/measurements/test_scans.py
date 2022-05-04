@@ -18,8 +18,6 @@ import qcodes.data.io
 from qcodes import ManualParameter, Parameter
 from qcodes.data.data_set import DataSet
 from qcodes.instrument_drivers.devices import VoltageDivider
-from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
-from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
@@ -32,8 +30,11 @@ from qtt.measurements.scans import (fastScan, get_instrument_parameter, get_samp
                                     scanjob_t)
 from qtt.structures import MultiParameter
 
-sys.modules['pyspcm'] = MagicMock()
-del sys.modules['pyspcm']
+if 1:  # prevent auto-formatting
+    # mock to allow M4i import
+    sys.modules['pyspcm'] = MagicMock()
+    from qcodes_contrib_drivers.drivers.Spectrum.M4i import M4i
+    del sys.modules['pyspcm']
 
 
 class TestScans(TestCase):
@@ -257,6 +258,7 @@ class TestScans(TestCase):
         number_of_averages = 100
         read_channels = [0, 1]
 
+        from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
         with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)), \
                 patch('qtt.measurements.scans.measure_segment_uhfli') as measure_segment_mock:
 
