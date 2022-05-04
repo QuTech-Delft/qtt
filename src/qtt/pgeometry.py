@@ -37,7 +37,7 @@ import typing
 import warnings
 from functools import wraps
 from math import cos, sin
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 import numpy
 import numpy as np
@@ -1681,7 +1681,7 @@ def cfigure(*args, **kwargs):
 # %%
 
 
-def monitorSizes(verbose: int = 0) -> List[List[int, int, int, int]]:
+def monitorSizes(verbose: int = 0) -> List[Sequence[int]]:
     """ Return monitor sizes
 
     Args:
