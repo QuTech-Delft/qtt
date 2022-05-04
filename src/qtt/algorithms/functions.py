@@ -471,3 +471,60 @@ def logistic(x, x0=0, alpha=1):
     """
     f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
     return f
+
+
+def raised_cosine_frequency_domain(f: np.ndarray, beta: float, T: float) -> np.ndarray:
+    """ Raised cosine frequency domain function
+
+    See https://en.wikipedia.org/wiki/Raised-cosine_filter
+
+    Args:
+        t: Frequency
+        beta: Roll-off factor
+        T: Symbol period
+
+    Returns:
+        Calculated values of the raised cosine
+    """
+    two_T = 2*T
+    if beta == 0:
+        return np.abs(f) < 1/(two_T)
+    ww = np.abs(f)-(1-beta)/(two_T)
+    value = .5*(1+np.cos((np.pi*T/beta)*ww))
+    idx = np.abs(f) <= (1-beta)/two_T
+    value[idx] = 1
+    idx = np.abs(f) >= (1+beta)/two_T
+    value[idx] = 0
+    return value
+
+
+def raised_cosine(t: np.ndarray, beta: float, T: float) -> np.ndarray:
+    """ Raised cosine impulse response function
+
+    See https://en.wikipedia.org/wiki/Raised-cosine_filter
+
+    Args:
+        t: Independent variable
+        beta: Roll-off factor
+        T: Symbol period
+
+    Returns:
+        Calculated values of the raised cosine
+    """
+    t = np.asarray(t)
+    t_div_T = t / T
+    if beta == 0:
+        return (1 / T) * np.sinc(t_div_T)
+
+    idx = np.abs(t) == T / (2 * beta)
+    t_div_T[idx] = 0
+    limit_value = (np.pi / (4 * T)) * np.sinc(1 / (2 * beta))
+
+    def sinc(x):
+        pi_x = np.pi*x
+        return np.sin(pi_x)/(pi_x)
+
+    rc = (1 / T) * np.sinc(t_div_T) * np.cos(np.pi * beta * t_div_T) / (1 - (2 * beta * t_div_T)**2)
+
+    rc[idx] = limit_value
+    return rc

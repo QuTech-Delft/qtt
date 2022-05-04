@@ -7,7 +7,7 @@ import qtt
 from qtt.algorithms.functions import (Fermi, _estimate_exp_decay_initial_parameters, cost_exp_decay, double_gaussian,
                                       estimate_parameters_damped_sine_wave, exp_function, fit_exp_decay,
                                       fit_gauss_ramsey, gauss_ramsey, gaussian, linear_function, logistic,
-                                      plot_gauss_ramsey_fit)
+                                      plot_gauss_ramsey_fit, raised_cosine, raised_cosine_frequency_domain)
 
 
 class TestFunctions(unittest.TestCase):
@@ -191,3 +191,11 @@ class TestFunctions(unittest.TestCase):
         _ = linear_function(x_data, 1, 2)
         self.assertTrue(linear_function(0, 1, 2) == 2)
         self.assertTrue(linear_function(3, 1, 2) == 5)
+
+    def test_raised_cosine():
+        np.testing.assert_equal(raised_cosine(0, 0, 1), 1.0)
+        np.testing.assert_array_almost_equal(raised_cosine([0, .5, 1], 1, 1), [1, .5, 0])
+
+        np.testing.assert_equal(raised_cosine_frequency_domain(0, 0, 1), 1.0)
+        np.testing.assert_array_almost_equal(raised_cosine_frequency_domain(np.linspace(-1, 1, 11), 0.5, .5),
+                                             np.array([0.5, 0.793893, 0.975528, 1., 1., 1.,              1., 1., 0.975528, 0.793893, 0.5]))
