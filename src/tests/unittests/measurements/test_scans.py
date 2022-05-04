@@ -249,7 +249,7 @@ class TestScans(TestCase):
 
             m4i_digitizer.close()
 
-    @pytest.mark.skipif(sys.version_info >= (3, 10))
+    @pytest.mark.skipif(sys.version_info >= (3, 10), reason='legacy zhinst package not available on python 3.10+')
     def test_measure_segment_uhfli_has_correct_output(self):
         import zhinst
 
