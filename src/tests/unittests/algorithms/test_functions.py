@@ -192,7 +192,7 @@ class TestFunctions(unittest.TestCase):
         self.assertTrue(linear_function(0, 1, 2) == 2)
         self.assertTrue(linear_function(3, 1, 2) == 5)
 
-    def test_raised_cosine():
+    def test_raised_cosine(self):
         np.testing.assert_equal(raised_cosine(0, 0, 1), 1.0)
         np.testing.assert_array_almost_equal(raised_cosine([0, .5, 1], 1, 1), [1, .5, 0])
 
