@@ -23,7 +23,6 @@ install:
   - sudo apt-get install libhdf5-dev
   - pip install coveralls
   - pip install --upgrade pip pytest
-  - pip install git+https://github.com/QuTech-Delft/qilib.git#egg=qilib
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
 script:
