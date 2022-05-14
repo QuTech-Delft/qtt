@@ -1809,10 +1809,13 @@ def measuresegment(waveform, Naverage, minstrhandle, read_ch, mV_range=2000, pro
     if device_parameters is None:
         device_parameters = {}
 
-    import qcodes.instrument_drivers.ZI.ZIUHFLI  # delayed import
-
     is_m4i = _is_m4i(minstrhandle)
-    is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
+
+    try:
+        import qcodes.instrument_drivers.ZI.ZIUHFLI  # delayed import
+        is_uhfli = _is_measurement_device(minstrhandle, qcodes.instrument_drivers.ZI.ZIUHFLI.ZIUHFLI)
+    except ImportError:
+        is_uhfli = False
     is_scope_reader = _is_measurement_device(minstrhandle, AcquisitionScopeInterface)
     is_simulator = _is_measurement_device(minstrhandle, SimulationDigitizer)
 

@@ -1,13 +1,13 @@
 language: python
 
-cache: pipv2
+cache: pip
 
 matrix:
   include:
-  - name: Minimal installation 3.9
-    python: 3.9
+  - name: Minimal installation 3.10
+    python: 3.10.1
     sudo: true
-    dist: xenial
+    dist: focal
     env: QT_QPA_PLATFORM=offscreen
     services:
     - xvfb
@@ -22,7 +22,7 @@ matrix:
 install:
   - sudo apt-get install libhdf5-dev
   - pip install coveralls
-  - pip install --upgrade pip
+  - pip install --upgrade pip pytest
   - pip install -e .
   - export QT_QPA_PLATFORM=offscreen
 script:
