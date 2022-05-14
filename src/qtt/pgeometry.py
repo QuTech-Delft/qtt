@@ -37,7 +37,7 @@ import typing
 import warnings
 from functools import wraps
 from math import cos, sin
-from typing import Any, List, Optional, Sequence, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy
 import numpy as np
