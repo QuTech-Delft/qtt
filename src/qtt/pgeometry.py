@@ -37,7 +37,7 @@ import typing
 import warnings
 from functools import wraps
 from math import cos, sin
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 import numpy
 import numpy as np
@@ -1694,13 +1694,13 @@ def monitorSizes(verbose: int = 0) -> List[List[int]]:
     _qd = QtWidgets.QDesktopWidget()
 
     nmon = _qd.screenCount()
-    wa = [_qd.screenGeometry(ii) for ii in range(nmon)]
-    wa = [[w.x(), w.y(), w.width(), w.height()] for w in wa]
+    monitor_rectangles = [_qd.screenGeometry(ii) for ii in range(nmon)]
+    monitor_sizes: List[List[int]] = [[w.x(), w.y(), w.width(), w.height()] for w in monitor_rectangles]
 
     if verbose:
-        for ii, w in enumerate(wa):
+        for ii, w in enumerate(monitor_sizes):
             print('monitor %d: %s' % (ii, str(w)))
-    return wa
+    return monitor_sizes
 
 
 # %%
