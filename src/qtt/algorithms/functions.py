@@ -473,58 +473,65 @@ def logistic(x, x0=0, alpha=1):
     return f
 
 
-def raised_cosine_frequency_domain(f: np.ndarray, beta: float, T: float) -> np.ndarray:
+def raised_cosine_frequency_domain(frequency: np.ndarray, roll_off_factor: float, symbol_period: float) -> np.ndarray:
     """ Raised cosine frequency domain function
 
     See https://en.wikipedia.org/wiki/Raised-cosine_filter
 
     Args:
-        t: Frequency
-        beta: Roll-off factor
-        T: Symbol period
+        frequency: Frequency
+        roll_off_factor: Roll-off factor
+        symbol_period: Symbol period
 
     Returns:
-        Calculated values of the raised cosine
+        Calculated values of the raised cosine filter in frequency domain
     """
-    two_T = 2*T
-    if beta == 0:
-        return np.abs(f) < 1/(two_T)
-    ww = np.abs(f)-(1-beta)/(two_T)
-    value = .5*(1+np.cos((np.pi*T/beta)*ww))
-    idx = np.abs(f) <= (1-beta)/two_T
+    f = np.asarray(frequency)
+    if symbol_period == 0:
+        raise ValueError('argument symbol_period should be positive')
+    two_symbol_period = 2*symbol_period
+    if roll_off_factor == 0:
+        return np.abs(f) < 1/(two_symbol_period)
+    f_abs = np.abs(f)
+    ww = f_abs-(1-roll_off_factor)/(two_symbol_period)
+    value = .5*(1+np.cos((np.pi*symbol_period/roll_off_factor)*ww))
+    idx = f_abs <= (1-roll_off_factor)/two_symbol_period
     value[idx] = 1
-    idx = np.abs(f) >= (1+beta)/two_T
+    idx = f_abs >= (1+roll_off_factor)/two_symbol_period
     value[idx] = 0
     return value
 
 
-def raised_cosine(t: np.ndarray, beta: float, T: float) -> np.ndarray:
+def raised_cosine(t: np.ndarray, roll_off_factor: float, symbol_period: float) -> np.ndarray:
     """ Raised cosine impulse response function
 
     See https://en.wikipedia.org/wiki/Raised-cosine_filter
 
     Args:
         t: Independent variable
-        beta: Roll-off factor
-        T: Symbol period
+        roll_off_factor: Roll-off factor
+        symbol_period: Symbol period
 
     Returns:
         Calculated values of the raised cosine
     """
     t = np.asarray(t)
-    t_div_T = t / T
-    if beta == 0:
-        return (1 / T) * np.sinc(t_div_T)
+    if symbol_period == 0:
+        raise ValueError('argument symbol_period should be positive')
+    t_div_T = t / symbol_period
+    if roll_off_factor == 0:
+        return (1 / symbol_period) * np.sinc(t_div_T)
 
-    idx = np.abs(t) == T / (2 * beta)
-    t_div_T[idx] = 0
-    limit_value = (np.pi / (4 * T)) * np.sinc(1 / (2 * beta))
+    # special points where the usual formula has a division by zero
+    idx_limit = np.abs(t) == symbol_period / (2 * roll_off_factor)
+    t_div_T[idx_limit] = 0  # exclude in calculation
 
     def sinc(x):
         pi_x = np.pi*x
         return np.sin(pi_x)/(pi_x)
 
-    rc = (1 / T) * np.sinc(t_div_T) * np.cos(np.pi * beta * t_div_T) / (1 - (2 * beta * t_div_T)**2)
+    rc = (1 / symbol_period) * np.sinc(t_div_T) * np.cos(np.pi *
+                                                         roll_off_factor * t_div_T) / (1 - (2 * roll_off_factor * t_div_T)**2)
 
-    rc[idx] = limit_value
+    rc[idx_limit] = (np.pi / (4 * symbol_period)) * np.sinc(1 / (2 * roll_off_factor))
     return rc
