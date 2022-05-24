@@ -471,3 +471,67 @@ def logistic(x, x0=0, alpha=1):
     """
     f = 1 / (1 + np.exp(-2 * alpha * (x - x0)))
     return f
+
+
+def raised_cosine_frequency_domain(frequency: np.ndarray, roll_off_factor: float, symbol_period: float) -> np.ndarray:
+    """ Raised cosine frequency domain function
+
+    See https://en.wikipedia.org/wiki/Raised-cosine_filter
+
+    Args:
+        frequency: Frequency
+        roll_off_factor: Roll-off factor
+        symbol_period: Symbol period
+
+    Returns:
+        Calculated values of the raised cosine filter in frequency domain
+    """
+    f = np.asarray(frequency)
+    if symbol_period == 0:
+        raise ValueError('argument symbol_period should be positive')
+    two_symbol_period = 2*symbol_period
+    if roll_off_factor == 0:
+        return np.abs(f) < 1/(two_symbol_period)
+    f_abs = np.abs(f)
+    ww = f_abs-(1-roll_off_factor)/(two_symbol_period)
+    value = .5*(1+np.cos((np.pi*symbol_period/roll_off_factor)*ww))
+    idx = f_abs <= (1-roll_off_factor)/two_symbol_period
+    value[idx] = 1
+    idx = f_abs >= (1+roll_off_factor)/two_symbol_period
+    value[idx] = 0
+    return value
+
+
+def raised_cosine(t: np.ndarray, roll_off_factor: float, symbol_period: float) -> np.ndarray:
+    """ Raised cosine impulse response function
+
+    See https://en.wikipedia.org/wiki/Raised-cosine_filter
+
+    Args:
+        t: Independent variable
+        roll_off_factor: Roll-off factor
+        symbol_period: Symbol period
+
+    Returns:
+        Calculated values of the raised cosine
+    """
+    t = np.asarray(t)
+    if symbol_period == 0:
+        raise ValueError('argument symbol_period should be positive')
+    t_div_T = t / symbol_period
+    if roll_off_factor == 0:
+        return (1 / symbol_period) * np.sinc(t_div_T)
+
+    # special points where the usual formula has a division by zero
+    idx_limit = np.abs(t) == symbol_period / (2 * roll_off_factor)
+    t_div_T[idx_limit] = 0  # exclude in calculation
+
+    def sinc(x):
+        pi_x = np.pi*x
+        return np.sin(pi_x)/(pi_x)
+
+    rc = (1 / symbol_period) * np.sinc(t_div_T) * np.cos(np.pi *
+                                                         roll_off_factor * t_div_T) / (1 - (2 * roll_off_factor * t_div_T)**2)
+
+    rc[idx_limit] = (np.pi / (4 * symbol_period)) * np.sinc(1 / (2 * roll_off_factor))
+    return rc
