@@ -186,28 +186,6 @@ class TestScans(TestCase):
 
             m4i_digitizer.close()
 
-    @pytest.mark.skipif(sys.version_info >= (3, 10), reason='legacy zhinst package not available on python 3.10+')
-    def test_measure_segment_uhfli_has_correct_output(self):
-        import zhinst
-
-        expected_data = np.array([1, 2, 3, 4])
-        waveform = {'bla': 1, 'ble': 2, 'blu': 3}
-        number_of_averages = 100
-        read_channels = [0, 1]
-
-        from qcodes.instrument_drivers.ZI.ZIUHFLI import ZIUHFLI
-        with patch.object(zhinst.utils, 'create_api_session', return_value=3 * (MagicMock(),)), \
-                patch('qtt.measurements.scans.measure_segment_uhfli') as measure_segment_mock:
-
-            uhfli_digitizer = ZIUHFLI('test', 'dev1234')
-            measure_segment_mock.return_value = expected_data
-
-            actual_data = measuresegment(waveform, number_of_averages, uhfli_digitizer, read_channels)
-            np.testing.assert_array_equal(actual_data, expected_data)
-            measure_segment_mock.assert_called_with(uhfli_digitizer, waveform, read_channels, number_of_averages)
-
-            uhfli_digitizer.close()
-
     @staticmethod
     def test_measure_segment_simulator_has_correct_output():
         expected_data = np.array([1, 2, 3, 4])
