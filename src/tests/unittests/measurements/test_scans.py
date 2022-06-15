@@ -26,8 +26,7 @@ import qtt.utilities.tools
 from qtt.instrument_drivers.simulation_instruments import SimulationDigitizer
 from qtt.instrument_drivers.virtual_instruments import VirtualIVVI
 from qtt.measurements.scans import (fastScan, get_instrument_parameter, get_sampling_frequency, instrumentName,
-                                    measure_segment_scope_reader, measuresegment, sample_data_t, scan1D, scan2D,
-                                    scanjob_t)
+                                    measuresegment, sample_data_t, scan1D, scan2D, scanjob_t)
 from qtt.structures import MultiParameter
 
 if 1:  # prevent auto-formatting
@@ -156,57 +155,6 @@ class TestScans(TestCase):
         self.assertRaises(Exception, scan2D, station, scanjob, liveplotwindow=False, verbose=0)
         gates.close()
 
-    def test_measure_segment_scope_reader_2D(self):
-        period = 1e-3
-        width = [0.9, 0.9]
-        resolution = [96, 96]
-        sample_rate = 1e6
-        mock_data_arrays = MagicMock(T=[2, 3, 4])
-
-        mock_scope = MagicMock(sample_rate=sample_rate)
-        mock_scope.acquire.return_value = mock_data_arrays
-
-        raw_data_mock = MagicMock()
-        data_mock = MagicMock()
-        waveform = dict(period=period, width_horz=width[0], width_vert=width[1], resolution=resolution)
-        average_count = 123
-
-        with patch('qtt.measurements.scans.process_2d_sawtooth', return_value=(data_mock, None)) as process_mock:
-            with patch('numpy.array') as array_mock:
-                array_mock.return_value.T = raw_data_mock
-                result_data = measure_segment_scope_reader(mock_scope, waveform, average_count)
-
-                array_mock.assert_called_once_with(mock_data_arrays)
-                mock_scope.acquire.assert_called_once_with(average_count)
-                process_mock.assert_called_with(raw_data_mock, period, sample_rate,
-                                                resolution, width, fig=None, start_zero=False)
-                self.assertEqual(data_mock, result_data)
-
-    def test_measure_segment_scope_reader_1D(self):
-        period = 1e-3
-        width = 0.9
-        sample_rate = 1e6
-        mock_data_arrays = MagicMock(T=[2, 3, 4])
-
-        mock_scope = MagicMock(sample_rate=sample_rate)
-        mock_scope.acquire.return_value = mock_data_arrays
-
-        raw_data_mock = MagicMock()
-        data_mock = MagicMock()
-        waveform = dict(period=period, width=width)
-        average_count = 123
-
-        with patch('qtt.measurements.scans.process_1d_sawtooth', return_value=(data_mock, None)) as process_mock:
-            with patch('numpy.array') as array_mock:
-                array_mock.return_value.T = raw_data_mock
-                result_data = measure_segment_scope_reader(mock_scope, waveform, average_count)
-
-                array_mock.assert_called_once_with(mock_data_arrays)
-                mock_scope.acquire.assert_called_once_with(average_count)
-                process_mock.assert_called_with(raw_data_mock, [width], period, sample_rate,
-                                                resolution=None, start_zero=False, fig=None)
-                self.assertEqual(data_mock, result_data)
-
     def test_fastScan_no_awg(self):
         station = MagicMock()
         station.awg = None
@@ -218,17 +166,6 @@ class TestScans(TestCase):
                              'minstrument': []})
 
         self.assertEqual(fastScan(scanjob, station), 0)
-
-    def test_measure_segment_scope_reader_no_processing(self):
-        mock_scope = MagicMock()
-        mock_scope.acquire.return_value = MagicMock()
-
-        average_count = 123
-        numpy_array_mock = MagicMock()
-        with patch('numpy.array', return_value=numpy_array_mock):
-            result_data = measure_segment_scope_reader(mock_scope, {}, average_count, process=False)
-            mock_scope.acquire.assert_called_once_with(average_count)
-            self.assertEqual(numpy_array_mock, result_data)
 
     @staticmethod
     def test_measure_segment_m4i_has_correct_output():
