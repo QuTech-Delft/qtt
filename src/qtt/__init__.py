@@ -20,10 +20,9 @@ import importlib
 import warnings
 
 import qcodes
+import qcodes.loops
 from qcodes import Instrument, ManualParameter, Parameter, Station
 from qcodes.data.location import FormatLocation
-import qcodes.loops
-
 from setuptools._vendor.packaging.version import Version
 
 import qtt.algorithms
@@ -32,16 +31,15 @@ import qtt.exceptions
 import qtt.measurements
 import qtt.utilities.tools
 from qtt.gui.live_plotting import start_measurement_control
-from qtt.measurements.storage import load_state, save_state
 from qtt.version import __version__
 
 try:
     import pyqtgraph
+
     import qtt.gui.live_plotting
     import qtt.gui.parameterviewer
-    from qtt.gui.parameterviewer import createParameterWidget
-
     from qtt.gui.dataviewer import DataViewer
+    from qtt.gui.parameterviewer import createParameterWidget
 except ImportError:
     # no gui available
     warnings.warn('pyqtgraph could not be imported, gui elements not available')
@@ -84,7 +82,6 @@ check_version('0.18', 'scipy')
 check_version('0.1', 'redis', optional=True)
 check_version('0.23.0', qcodes)
 check_version('0.2', 'qupulse')
-
 
 
 # %% Add hook to abort measurement
@@ -134,10 +131,10 @@ def _redisStrSet(value, var='qtt_live_value1'):
 liveValue = _redisStrValue
 liveValueSet = _redisStrSet
 
-abort_measurements = _abort_measurement # type: ignore
+abort_measurements = _abort_measurement  # type: ignore
 
 # patch the qcodes abort function
-qcodes.loops.abort_measurements = _abort_measurement # type: ignore
+qcodes.loops.abort_measurements = _abort_measurement  # type: ignore
 
 # %% Override default location formatter
 
@@ -167,6 +164,7 @@ def _setstate(self, d):
 
     self.get = _get
 
+
 # black magic to make qcodes objects work with deepcopy
 for c in [Parameter, Instrument, ManualParameter, Station]:
     copy._deepcopy_dispatch[c] = _copy_to_str  # type: ignore
@@ -179,9 +177,9 @@ qcodes.Parameter.__setstate__ = _setstate  # type: ignore
 # %% Enhance the qcodes functionality
 
 try:
-    from qtpy.QtCore import Qt
-    from qtpy import QtWidgets
     from qcodes.plots.pyqtgraph import QtPlot
+    from qtpy import QtWidgets
+    from qtpy.QtCore import Qt
 
     def _qtt_keyPressEvent(self, e):
         ''' Patch to add a callback to the QtPlot figure window '''
