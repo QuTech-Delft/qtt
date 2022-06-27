@@ -1832,7 +1832,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         fig = plt.figure(fignum)
         iim = ii % np.prod(geometry)
         ix = iim % geometry[0]
-        iy = np.floor(float(iim) / geometry[0])
+        iy = int(np.floor(float(iim) / geometry[0]))
         x = ww[0] + ix * w
         y = ww[1] + iy * h
         if verbose:
