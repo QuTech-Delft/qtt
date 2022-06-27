@@ -1833,8 +1833,8 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         iim = ii % np.prod(geometry)
         ix = iim % geometry[0]
         iy = int(np.floor(float(iim) / geometry[0]))
-        x = ww[0] + ix * w
-        y = ww[1] + iy * h
+        x = ww[0] + int(ix * w)
+        y = ww[1] + int(iy * h)
         if verbose:
             print('ii %d: %d %d: f %d: %d %d %d %d' %
                   (ii, ix, iy, fignum, x, y, w, h))
@@ -1853,9 +1853,8 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
             # assume Qt canvas
             try:
                 fig.canvas.manager.window.move(x, y)
-                fig.canvas.manager.window.resize(w, h)
-                fig.canvas.manager.window.setGeometry(x, y, w, h)
-                # mngr.window.setGeometry(x,y,w,h)
+                fig.canvas.manager.window.resize(int(w), int(h))
+                fig.canvas.manager.window.setGeometry(x, y, int(w), int(h))
             except Exception as e:
                 print('problem with window manager: ', )
                 print(be)
