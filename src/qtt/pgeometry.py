@@ -37,7 +37,7 @@ import typing
 import warnings
 from functools import wraps
 from math import cos, sin
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 import numpy
 import numpy as np
@@ -1725,14 +1725,15 @@ def getWindowRectangle():
     return (x, y, w, h)
 
 
-def setWindowRectangle(x, y=None, w=None, h=None, fig=None, mngr=None):
+def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
+                       w: Optional[int] = None, h: Optional[int] = None, fig=None, mngr=None):
     """ Position the current Matplotlib figure at the specified position
 
     Args:
         x: position in format (x,y,w,h)
         fig (None or int): specification of figure window. Use None for the current active window
 
-    Usage: setWindowRectangle([x,y,w,h])
+    Usage: setWindowRectangle([x, y, w, h]) or setWindowRectangle(x, y, w, h)
     """
     if y is None:
         y = x[1]
