@@ -1738,10 +1738,7 @@ def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
     Usage: setWindowRectangle([x, y, w, h]) or setWindowRectangle(x, y, w, h)
     """
     if y is None:
-        y = x[1]
-        w = x[2]
-        h = x[3]
-        x = x[0]
+        x, y, w, h = x  # type: ignore
     if mngr is None:
         mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
@@ -1749,7 +1746,7 @@ def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
         mngr.canvas.manager.window.SetPosition((x, y))
         mngr.canvas.manager.window.SetSize((w, h))
     elif be == 'TkAgg':
-        _ = mngr.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w, h, x, y))
+        _ = mngr.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w, h, x, y))  # type: ignore
     elif be == 'module://IPython.kernel.zmq.pylab.backend_inline':
         pass
     else:
