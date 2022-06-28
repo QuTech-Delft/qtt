@@ -1726,11 +1726,13 @@ def getWindowRectangle():
 
 
 def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
-                       w: Optional[int] = None, h: Optional[int] = None, fig=None, mngr=None):
+                       w: Optional[int] = None, h: Optional[int] = None,
+                       fig: Optional[int] = None,  mngr=None):
     """ Position the current Matplotlib figure at the specified position
 
     Args:
         x: position in format (x,y,w,h)
+        y, w, h: y position, width, height
         fig (None or int): specification of figure window. Use None for the current active window
 
     Usage: setWindowRectangle([x, y, w, h]) or setWindowRectangle(x, y, w, h)
