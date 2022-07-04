@@ -530,6 +530,10 @@ def scan1Dfast(station, scanjob, location=None, liveplotwindow=None, delete=True
                 raise NotImplementedError('support for old virtual awg has been removed')
 
     time.sleep(wait_time_startscan)
+    pre_measurement_callback = scanjob.get('pre_measurement_callback', None)
+    if pre_measurement_callback is not None:
+        pre_measurement_callback()
+
     data = measuresegment(waveform, Naverage, minstrhandle, read_ch, device_parameters=device_parameters)
     _, sweepvalues = scanjob._convert_scanjob_vec(station, sweeplength=data[0].shape[0])
 

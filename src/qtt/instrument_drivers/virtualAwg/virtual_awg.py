@@ -1,3 +1,4 @@
+import copy
 import logging
 from dataclasses import dataclass
 from typing import List
@@ -16,7 +17,7 @@ from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 @dataclass
 class Marker:
     gate: str
-    update: float
+    uptime: float
     delay: float
 
 
@@ -67,7 +68,7 @@ class VirtualAwg(Instrument):
         self._latest_sequence_data = {}
         self.enable_debug = False
 
-        self.custom_markers
+        self.custom_markers = []
         self.add_parameter('settings_snapshot', get_cmd=self.settings.snapshot, label='Settings snapshot')
         self.settings_snapshot()
 
@@ -179,10 +180,9 @@ class VirtualAwg(Instrument):
         Arguments;
             gate_names (list[str]): The names of the gates which needs to be enabled.
         """
-        if VirtualAwg.__digitizer_name in self._settings.awg_map:
-            gate_names.extend([VirtualAwg.__digitizer_name])
-        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
-            gate_names.extend([VirtualAwg.__awg_slave_name])
+        markers = self._get_all_markers()
+        gate_names = gate_names + [marker.gate for marker in markers]
+
         for name in gate_names:
             (awg_number, channel_number, *_) = self._settings.awg_map[name]
             self.awgs[awg_number].enable_outputs([channel_number])
@@ -200,10 +200,9 @@ class VirtualAwg(Instrument):
             for awg in self.awgs:
                 awg.disable_outputs()
         else:
-            if VirtualAwg.__digitizer_name in self._settings.awg_map:
-                gate_names.extend([VirtualAwg.__digitizer_name])
-            if VirtualAwg.__awg_slave_name in self._settings.awg_map:
-                gate_names.extend([VirtualAwg.__awg_slave_name])
+            markers = self._get_all_markers()
+            gate_names = gate_names + [marker.gate for marker in markers]
+
             for name in gate_names:
                 (awg_number, channel_number, *_) = self._settings.awg_map[name]
                 self.awgs[awg_number].disable_outputs([channel_number])
@@ -238,6 +237,19 @@ class VirtualAwg(Instrument):
             return False
         return True if gate_names in self._settings.awg_map else False
 
+    def _get_all_markers(self):
+        uptime = self.digitizer_marker_uptime()
+        delay = self.digitizer_marker_delay()
+
+        markers = copy.copy(self.custom_markers)
+        if VirtualAwg.__digitizer_name in self._settings.awg_map:
+            markers.append(Marker(VirtualAwg.__digitizer_name, uptime, delay))
+
+        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
+            markers.append(Marker(VirtualAwg.__awg_slave_name, uptime, delay))
+
+        return markers
+
     def make_markers(self, period, repetitions=1):
         """ Constructs the markers for triggering the digitizer readout and the slave AWG
             start sequence. The sequence length equals the period x repetitions.
@@ -246,21 +258,12 @@ class VirtualAwg(Instrument):
             period (float): The period of the markers in seconds.
             repetitions (int): The number of markers in the sequence.
         """
-        marker_properties = {}
-        uptime = self.digitizer_marker_uptime()
-        delay = self.digitizer_marker_delay()
+        markers = self._get_all_markers()
 
-        for marker in self.custom_markers:
+        marker_properties = {}
+        for marker in markers:
             marker_data = Sequencer.make_marker(period, marker.uptime, marker.delay, repetitions)
             marker_properties[marker.gate] = [marker_data]
-
-        if VirtualAwg.__digitizer_name in self._settings.awg_map:
-            digitizer_marker = Sequencer.make_marker(period, uptime, delay, repetitions)
-            marker_properties[VirtualAwg.__digitizer_name] = [digitizer_marker]
-
-        if VirtualAwg.__awg_slave_name in self._settings.awg_map:
-            awg_marker = Sequencer.make_marker(period, uptime, delay, repetitions)
-            marker_properties[VirtualAwg.__awg_slave_name] = [awg_marker]
 
         return marker_properties
 
