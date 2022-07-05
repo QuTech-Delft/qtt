@@ -37,7 +37,7 @@ import typing
 import warnings
 from functools import wraps
 from math import cos, sin
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 import numpy
 import numpy as np
@@ -1725,20 +1725,20 @@ def getWindowRectangle():
     return (x, y, w, h)
 
 
-def setWindowRectangle(x, y=None, w=None, h=None, fig=None, mngr=None):
+def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
+                       w: Optional[int] = None, h: Optional[int] = None,
+                       fig: Optional[int] = None,  mngr=None):
     """ Position the current Matplotlib figure at the specified position
 
     Args:
         x: position in format (x,y,w,h)
+        y, w, h: y position, width, height
         fig (None or int): specification of figure window. Use None for the current active window
 
-    Usage: setWindowRectangle([x,y,w,h])
+    Usage: setWindowRectangle([x, y, w, h]) or setWindowRectangle(x, y, w, h)
     """
     if y is None:
-        y = x[1]
-        w = x[2]
-        h = x[3]
-        x = x[0]
+        x, y, w, h = x  # type: ignore
     if mngr is None:
         mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
@@ -1746,7 +1746,7 @@ def setWindowRectangle(x, y=None, w=None, h=None, fig=None, mngr=None):
         mngr.canvas.manager.window.SetPosition((x, y))
         mngr.canvas.manager.window.SetSize((w, h))
     elif be == 'TkAgg':
-        _ = mngr.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w, h, x, y))
+        _ = mngr.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w, h, x, y))  # type: ignore
     elif be == 'module://IPython.kernel.zmq.pylab.backend_inline':
         pass
     else:
@@ -1809,7 +1809,7 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
 
     if isinstance(lst, int):
         lst = [lst]
-    if isinstance(lst, numpy.ndarray):
+    elif isinstance(lst, numpy.ndarray):
         lst = lst.flatten().astype(int)
 
     if verbose:
@@ -1820,7 +1820,6 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         elif isinstance(f, (int, numpy.int32, numpy.int64)):
             fignum = f
         else:
-            # try
             try:
                 fignum = f.fig.number
             except BaseException:
@@ -1832,35 +1831,33 @@ def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
         fig = plt.figure(fignum)
         iim = ii % np.prod(geometry)
         ix = iim % geometry[0]
-        iy = np.floor(float(iim) / geometry[0])
-        x = ww[0] + ix * w
-        y = ww[1] + iy * h
+        iy = int(np.floor(float(iim) / geometry[0]))
+        x: int = int(ww[0]) + int(ix * w)
+        y: int = int(ww[1]) + int(iy * h)
         if verbose:
             print('ii %d: %d %d: f %d: %d %d %d %d' %
                   (ii, ix, iy, fignum, x, y, w, h))
-            if verbose >= 2:
-                print('  window %s' % mngr.get_window_title())
         if be == 'WXAgg':
             fig.canvas.manager.window.SetPosition((x, y))
             fig.canvas.manager.window.SetSize((w, h))
-        if be == 'WX':
+        elif be == 'WX':
             fig.canvas.manager.window.SetPosition((x, y))
             fig.canvas.manager.window.SetSize((w, h))
-        if be == 'agg':
+        elif be == 'agg':
             fig.canvas.manager.window.SetPosition((x, y))
             fig.canvas.manager.window.resize(w, h)
-        if be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg' or be == 'Qt5Agg':
+        elif be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg' or be == 'Qt5Agg':
             # assume Qt canvas
             try:
                 fig.canvas.manager.window.move(x, y)
-                fig.canvas.manager.window.resize(w, h)
-                fig.canvas.manager.window.setGeometry(x, y, w, h)
-                # mngr.window.setGeometry(x,y,w,h)
+                fig.canvas.manager.window.resize(int(w), int(h))
+                fig.canvas.manager.window.setGeometry(x, y, int(w), int(h))
             except Exception as e:
                 print('problem with window manager: ', )
                 print(be)
                 print(e)
-                pass
+        else:
+            raise NotImplementedError(f'unknown backend {be}')
         if raisewindows:
             mngr.window.raise_()
         if tofront:

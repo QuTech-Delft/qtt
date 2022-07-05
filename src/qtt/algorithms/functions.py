@@ -28,7 +28,9 @@ def gaussian(x, mean, std, amplitude=1, offset=0):
 
     """
     x0 = (x - mean)
-    y = offset + amplitude * np.exp(- x0 * x0 / (2 * std * std))
+    y = amplitude * np.exp(- x0 * x0 / (2 * std * std))
+    if offset:
+        return offset + y
     return y
 
 

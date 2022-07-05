@@ -5,7 +5,7 @@ from qtt.instrument_drivers.virtualAwg.settings import SettingsInstrument
 
 class TestSettingsInstrument(TestCase):
     def test_simple(self):
-        settings = SettingsInstrument('')
+        settings = SettingsInstrument('test_settings')
         settings.awg_gates = {'P1': (0, 4)}
         settings.awg_markers = {'m4i_mk': (0, 4, 0)}
         settings.create_map()
