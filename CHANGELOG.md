@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Convert `ChoiceGenerator` into a dataclass. Add `ChoiceGenerator.generate_choices` (#831)
 - Qiskit pass to remove a gate by name (#833)
 - Remove legacy virtual awg (#845)
+- Added raised cosine function (#851)
 
 ### Changed
 
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed qtt.utilities.markup.py. The functionility is available on https://pypi.org/project/markup.py/ (#836)
 - Removed the Keysight virtual awg (#846)
+- Remove qtt.measurements.storage (#853)
 
 ### Deprecated
 
