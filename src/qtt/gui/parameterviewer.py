@@ -68,8 +68,8 @@ class ParameterViewer(QtWidgets.QTreeWidget):
         self._fields = fields
         self._update_counter = 0
         self._timer: Optional[QCodesTimer] = None
-        self.update_field_signal.connect(self._set_field)
-        self._create_gui_signal.connect(self._create_gui)
+        self.update_field_signal.connect(self._set_field)  # type: ignore
+        self._create_gui_signal.connect(self._create_gui)  # type: ignore
         self._itemsdict: dict = dict()
         self._default_sizehints = [200, 140]
 

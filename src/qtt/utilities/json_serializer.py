@@ -1,13 +1,12 @@
-import base64
 import numpy as np
 import qcodes
-from qilib.data_set.mongo_data_set_io import NumpyKeys
 
 import qtt.data
 from typing import Any
-from qilib.utils.serialization import Serializer, JsonSerializeKey, serializer
+from qilib.utils.serialization import NumpyKeys, Serializer, JsonSerializeKey, serializer
 
 from qcodes.data.data_set import DataSet
+
 
 class QttSerializer(Serializer):
     def __init__(self):
