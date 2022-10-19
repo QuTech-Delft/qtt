@@ -36,8 +36,8 @@ tests_require = ['coverage', 'jupyter', 'mypy', 'types-redis', 'types-python-dat
 
 install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
-    'numdifftools', 'numpy>=1.15', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.23.0',
-    'qcodes-contrib-drivers', 'qilib', 'qiskit-terra>=0.19', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
+    'numdifftools', 'numpy>=1.22', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.23.0',
+    'qcodes-contrib-drivers', 'qilib==0.3.9', 'qiskit-terra>=0.19', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
     'shapely', 'sympy', 'imageio'
 ] + tests_require
 
@@ -50,7 +50,7 @@ rtd_requires = [
 
 extras_require = {"rtd": rtd_requires}
 
-setup(name='qtt',
+setup(name='qttpte',
       version=get_version(),
       use_2to3=False,
       author='Pieter Eendebak',
@@ -69,6 +69,7 @@ setup(name='qtt',
           'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
           'Programming Language :: Python :: 3.10',
+          'Programming Language :: Python :: 3.11',
           'Topic :: Scientific/Engineering'
       ],
       license='MIT',
