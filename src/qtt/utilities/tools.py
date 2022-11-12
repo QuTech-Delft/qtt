@@ -366,11 +366,17 @@ def stripDataset(dataset):
 
 # %%
 
+def interruptable_sleep(seconds: float, step: float = .2) -> None:
+    """ Alternative to time.sleep that can be interrupted
 
-@rdeprecated(txt='method will be removed from qtt', expire='Jul 1 2022')
-def negfloat(x) -> float:
-    """ Helper function """
-    return -float(x)
+    Args:
+        second: Number of seconds to sleep
+        step: Step size in seconds
+    """
+    t0 = time.perf_counter()
+
+    while (sleep_time := seconds-(time.perf_counter()-t0)) > 0:
+        time.sleep(min(sleep_time, step))
 
 
 def checkPickle(obj, verbose=0):
