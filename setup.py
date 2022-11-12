@@ -38,7 +38,7 @@ install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
     'numdifftools', 'numpy>=1.22', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.23.0',
     'qcodes-contrib-drivers', 'qilib==0.3.9', 'qiskit-terra>=0.19', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
-    'shapely', 'sympy', 'imageio'
+    'shapely', 'sympy', 'imageio', 'rich'
 ] + tests_require
 
 if platform.system() == 'Windows':
@@ -65,8 +65,6 @@ setup(name='qttpte',
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.7',
-          'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
           'Programming Language :: Python :: 3.10',
           'Programming Language :: Python :: 3.11',
