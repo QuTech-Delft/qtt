@@ -1,11 +1,12 @@
+from typing import Any
+
 import numpy as np
 import qcodes
+from qcodes.data.data_set import DataSet
+from qilib.data_set.mongo_data_set_io import NumpyKeys
+from qilib.utils.serialization import JsonSerializeKey, Serializer, serializer
 
 import qtt.data
-from typing import Any
-from qilib.utils.serialization import NumpyKeys, Serializer, JsonSerializeKey, serializer
-
-from qcodes.data.data_set import DataSet
 
 
 class QttSerializer(Serializer):
@@ -117,7 +118,7 @@ def load_json(filename: str) -> object:
     Returns:
         object: object loaded from JSON file
     """
-    with open(filename, 'rt') as fid:
+    with open(filename) as fid:
         data = fid.read()
     return decode_json(data)
 
