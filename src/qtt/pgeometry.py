@@ -44,6 +44,7 @@ import numpy as np
 import scipy.io
 import scipy.ndimage as filters
 import scipy.ndimage.morphology as morphology
+from numpy.typing import ArrayLike
 
 __version__ = '0.7.0'
 
@@ -958,11 +959,16 @@ def plotPoints(xx, *args, **kwargs):
     return h
 
 
-def plot2Dline(line, *args, **kwargs):
+def plot2Dline(line: ArrayLike, *args: Any, **kwargs: Any) -> Any:
     """ Plot a 2D line in a matplotlib figure
 
     Args:
         line (3x1 array): line to plot
+        args: Passed to matplotlib plot method
+        kwargs: Passed to matplotlib plot method
+
+    Returns:
+        Handle to plotted line
 
     >>> plot2Dline([-1,1,0], 'b')
     """
@@ -970,14 +976,15 @@ def plot2Dline(line, *args, **kwargs):
         xx = plt.xlim()
         xx = np.array(xx)
         yy = (-line[2] - line[0] * xx) / line[1]
-        plt.plot(xx, yy, *args, **kwargs)
+        h = plt.plot(xx, yy, *args, **kwargs)
     else:
         yy = np.array(plt.ylim())
         xx = (-line[2] - line[1] * yy) / line[0]
-        plt.plot(xx, yy, *args, **kwargs)
-
+        h = plt.plot(xx, yy, *args, **kwargs)
+    return h
 
 # %%
+
 
 def scaleImage(image: np.ndarray, display_min: Optional[float] = None,
                display_max: Optional[float] = None) -> np.ndarray:
