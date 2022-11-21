@@ -963,16 +963,16 @@ def plot2Dline(line: ArrayLike, *args: Any, **kwargs: Any) -> Any:
     """ Plot a 2D line in a matplotlib figure
 
     Args:
-        line (3x1 array): line to plot
+        line: Line to plot in homogeneous coordinates
         args: Passed to matplotlib plot method
         kwargs: Passed to matplotlib plot method
 
     Returns:
         Handle to plotted line
 
-    >>> plot2Dline([-1,1,0], 'b')
+    >>> plot2Dline([-1, 1, 0], 'b')
     """
-    if np.abs(line[1]) > .001:
+    if np.abs(line[1]) > np.abs(line[0]):
         xx = plt.xlim()
         xx = np.array(xx)
         yy = (-line[2] - line[0] * xx) / line[1]
