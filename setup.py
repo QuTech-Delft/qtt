@@ -35,9 +35,9 @@ def get_package_data(root_dir):
 tests_require = ['coverage', 'jupyter', 'mypy', 'types-redis', 'types-python-dateutil', 'pytest']
 
 install_requires = [
-    'apscheduler', 'attrs', 'dulwich', 'IPython>=0.1', 'jupyter', 'lmfit', 'matplotlib>=3.0',
-    'numdifftools', 'numpy>=1.22', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.23.0',
-    'qcodes-contrib-drivers', 'qilib==0.3.9', 'qiskit-terra>=0.19', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
+    'apscheduler', 'attrs', 'dulwich', 'IPython', 'jupyter', 'lmfit', 'matplotlib',
+    'numdifftools', 'numpy>=1.22', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.30.0',
+    'qcodes-contrib-drivers', 'qilib==0.3.9', 'qiskit-terra>=0.22', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
     'shapely', 'sympy', 'imageio', 'rich'
 ] + tests_require
 
@@ -45,7 +45,7 @@ if platform.system() == 'Windows':
     install_requires.append('pywin32')
 
 rtd_requires = [
-    'sphinx>=1.7', 'sphinx_rtd_theme', 'nbsphinx', 'sphinx-automodapi', 'sphinx_copybutton'
+    'sphinx', 'sphinx_rtd_theme', 'nbsphinx', 'sphinx-automodapi', 'sphinx_copybutton'
 ]
 
 extras_require = {"rtd": rtd_requires}
