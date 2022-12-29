@@ -46,6 +46,8 @@ import scipy.ndimage as filters
 import scipy.ndimage.morphology as morphology
 from numpy.typing import ArrayLike
 
+FloatArray = numpy.typing.NDArray[np.float_]
+
 __version__ = '0.7.0'
 
 # %% Load qt functionality
@@ -495,21 +497,37 @@ def dehom(x: np.ndarray) -> np.ndarray:
     return x[0:-1, :] / x[-1, :]
 
 
-def null(a, rtol=1e-5):
-    """ Calculate null space of a matrix """
+def null(a: FloatArray, rtol: float = 1e-7) -> tuple[int, FloatArray]:
+    """ Calculate null space of a matrix
+
+    Args:
+        a: Input matrix
+        rtol: Relative tolerance on the eigenvalues
+
+    Returns:
+        Tuple with the dimension of the null space and a set of vectors spanning the null space
+
+    Example:
+        >>> a = np.array([[1, 0, 0], [0, 1,0], [0, 0, 0]])
+        >>> null(a)
+        (2,
+         array([[0.],
+                [0.],
+                [1.]]))
+    """
     u, s, v = np.linalg.svd(a)
     rank = (s > rtol * s[0]).sum()
-    return rank, v[rank:].T.copy()
+    return rank, v[rank:].T
 
 
-def intersect2lines(l1, l2):
+def intersect2lines(l1: FloatArray, l2: FloatArray) -> FloatArray:
     """ Calculate intersection between 2 lines
 
     Args:
-        l1 (array): first line in homogeneous format
-        l2 (array): first line in homogeneous format
+        l1: first line in homogeneous coordinates
+        l2: second line in homogeneous coordinates
     Returns:
-        array: intersection in homogeneous format. To convert to affine coordinates use `dehom`
+        Intersection in homogeneous coordinates. To convert to affine coordinates use `dehom`
     """
     r = null(np.vstack((l1, l2)))
     return r[1]
@@ -2120,22 +2138,23 @@ def point_in_polygon(pt, pp):
     return r
 
 
-def minAlg_5p4(A: np.ndarray) -> np.ndarray:
+def minAlg_5p4(A: FloatArray) -> FloatArray:
     """ Algebraic minimization function
 
     Function computes the vector x that minimizes ||Ax|| subject to the
     condition ||x||=1.
+
     Implementation of Hartley and Zisserman A5.4 on p593 (2nd Ed)
 
-    Usage:   [x,V] = minAlg_5p4(A)
-    Arguments:
-             A (numpy array) : The constraint matrix, ||Ax|| to be minimized
+    Example:
+        >>> [x,V] = minAlg_5p4(A)
+
+    Args:
+             A : The constraint matrix, ||Ax|| to be minimized
     Returns:
-              x - The vector that minimizes ||Ax|| subject to the
-                  condition ||x||=1
+             The vector x that minimizes ||Ax|| subject to the condition ||x||=1
 
     """
-
     # Compute the SVD of A
     (_, _, V) = np.linalg.svd(A)
 

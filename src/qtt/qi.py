@@ -9,7 +9,7 @@ import datetime
 from rich import print as rprint
 
 
-def qi_backend_online(name: str, verbose: bool = True) -> bool:
+def qi_backend_online(backend_name: str, verbose: bool = True) -> bool:
     """ Return True if the specified QI backend is online
 
     Example:
@@ -36,12 +36,12 @@ def qi_backend_online(name: str, verbose: bool = True) -> bool:
             else:
                 print(f'  backend {name}: {status} ')
 
-    lst = [b for b in bb if b['name'] == name]
+    lst = [b for b in bb if b['name'] == backend_name]
     if lst:
         backend = lst[0]
         return not backend['status'] == 'OFFLINE'
     else:
-        raise ValueError(f'backend {name} is not a QI backend')
+        raise ValueError(f'backend {backend_name} is not a QI backend')
 
 
 if __name__ == '__main__':
