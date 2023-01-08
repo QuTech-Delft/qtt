@@ -39,6 +39,9 @@ from functools import wraps
 from math import cos, sin
 from typing import Any, List, Optional, Sequence, Tuple, Union
 
+import matplotlib
+import matplotlib.pylab as pylab
+import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import scipy.io
@@ -68,14 +71,11 @@ try:
     try:
         # by default use qtpy to import Qt
         import qtpy
-        _haveqtpy = True
-
         import qtpy.QtCore as QtCore
         import qtpy.QtGui as QtGui
         import qtpy.QtWidgets as QtWidgets
         from qtpy.QtCore import QObject, Signal, Slot
     except ImportError:
-        _haveqtpy = False
         warnings.warn('could not import qtpy, not all functionality available')
         pass
 
@@ -118,28 +118,11 @@ except Exception as ex:
     print('pgeometry: no Qt found')
 
 # %% Load other modules
+
+# needed for 3d plot points, do not remove!
 try:
-    import pylab
-    import pylab as p
-
-except Exception as inst:
-    print(inst)
-    print('could not import pylab, not all functionality available...')
-    pass
-
-try:
-    import matplotlib
-    import matplotlib.pyplot as plt
-
-    # needed for 3d plot points, do not remove!
-    try:
-        from mpl_toolkits.mplot3d import Axes3D
-    except BaseException:
-        pass
-except ModuleNotFoundError as ex:
-    warnings.warn(
-        'could not find matplotlib, not all functionality available...')
-    plt = None
+    from mpl_toolkits.mplot3d import Axes3D
+except BaseException:
     pass
 
 try:
@@ -636,7 +619,7 @@ def RBE2euler(Rbe):
 
 def pg_rotation2H(R):
     """ Convert rotation matrix to homogenous transform matrix """
-    X = np.array(np.eye(R.shape[0] + 1))
+    X = np.eye(R.shape[0] + 1)
     X[0:-1, 0:-1] = R
     return X
 
@@ -781,6 +764,15 @@ def pg_rotx(phi: float) -> np.ndarray:
     return R
 
 
+def pg_rotz(phi: float) -> np.ndarray:
+    """ Create rotation around the z-axis with specified angle """
+    c = cos(phi)
+    s = sin(phi)
+    R = np.zeros((3, 3))
+    R.ravel()[:] = [c, -s, 0, s, c, 0, 0, 0, 1]
+    return R
+
+
 def pcolormesh_centre(x, y, im, *args, **kwargs):
     """ Wrapper for pcolormesh to plot pixel centres at data points """
     dx = np.diff(x)
@@ -839,9 +831,30 @@ def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None)
     scale = np.hstack((scale, 1))
     H = np.diag(scale)
     if cc is not None:
-        cc = np.array(cc).flatten()
+        cc = np.asarray(cc).flatten()
         H = pg_transl2H(cc).dot(H).dot(pg_transl2H(-cc))
 
+    return H
+
+
+def pg_affine2hom(U: np.ndarray) -> np.ndarray:
+    """ Create homogeneous transformation from affine transformation
+
+    Args:
+        U: Affine transformation
+
+    Returns:
+        Homogeneous transformation
+
+    Example
+    -------
+    >>> pg_affine2hom(np.array([[2.]]))
+    array([[ 2.,  0.],
+           [ 0.,  1.]])
+
+    """
+    H = np.eye(U.shape[0]+1, dtype=U.dtype)
+    H[:-1, :-1] = U
     return H
 
 
@@ -1102,13 +1115,13 @@ def plotPoints3D(xx, *args, **kwargs):
         print('plotPoints3D: using fig %s' % fig)
         print('plotPoints3D: using args %s' % args)
     if fig is None:
-        ax = p.gca()
+        ax = pylab.gca()
     else:
-        fig = p.figure(fig)
+        fig = pylab.figure(fig)
         ax = fig.gca(projection='3d')
     ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]),
             np.ravel(xx[2, :]), *args, **kwargs)
-    p.draw()
+    pylab.draw()
     return ax
 
 # %%
@@ -1534,7 +1547,6 @@ def choose(n, k):
 
 # %%
 try:
-    import PIL
     from PIL import Image, ImageDraw, ImageFont
 
     def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
