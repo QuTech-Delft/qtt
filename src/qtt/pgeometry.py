@@ -1,3 +1,4 @@
+#type: ignore
 """
 
 pgeometry
@@ -1004,12 +1005,11 @@ def plot2Dline(line: ArrayLike, *args: Any, **kwargs: Any) -> Any:
     >>> plot2Dline([-1, 1, 0], 'b')
     """
     if np.abs(line[1]) > np.abs(line[0]):
-        xx = plt.xlim()
-        xx = np.array(xx)
+        xx = np.asarray(plt.xlim())
         yy = (-line[2] - line[0] * xx) / line[1]
         h = plt.plot(xx, yy, *args, **kwargs)
     else:
-        yy = np.array(plt.ylim())
+        yy = np.asarray(plt.ylim())
         xx = (-line[2] - line[1] * yy) / line[0]
         h = plt.plot(xx, yy, *args, **kwargs)
     return h

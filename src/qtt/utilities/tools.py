@@ -856,9 +856,9 @@ try:
         return notes
 
     def addPPTslide(title: Optional[str] = None, fig: Optional[Union[int, np.ndarray, plt.Figure, Any]] = None, txt: Optional[str] = None,
-                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Tuple[int, int] = None,
+                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Optional[Tuple[int, int]] = None,
                     subtitle: Optional[str] = None, maintext: Optional[str] = None, show: bool = False, verbose: int = 1,
-                    activate_slide: bool = True, ppLayout: int = None, extranotes: str = None, background_color: Optional[Tuple] = None,
+                    activate_slide: bool = True, ppLayout: Optional[int] = None, extranotes: Optional[str] = None, background_color: Optional[Tuple] = None,
                     maximum_notes_size: int = 10000) -> Tuple[Any, Any]:
         """ Add slide to current active Powerpoint presentation.
 
@@ -1121,9 +1121,9 @@ try:
 
 except ImportError:
     def addPPTslide(title: Optional[str] = None, fig: Optional[Union[int, np.ndarray, plt.Figure, Any]] = None, txt: Optional[str] = None,
-                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Tuple[int, int] = None,
+                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Optional[Tuple[int, int]] = None,
                     subtitle: Optional[str] = None, maintext: Optional[str] = None, show: bool = False, verbose: int = 1,
-                    activate_slide: bool = True, ppLayout: int = None, extranotes: str = None, background_color: Optional[Tuple] = None,
+                    activate_slide: bool = True, ppLayout: Optional[int] = None, extranotes: Optional[str] = None, background_color: Optional[Tuple] = None,
                     maximum_notes_size: int = 10000) -> Tuple[Any, Any]:
         """ Add slide to current active Powerpoint presentation.
 
