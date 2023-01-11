@@ -1,3 +1,4 @@
+#type: ignore
 """
 
 pgeometry
@@ -39,11 +40,17 @@ from functools import wraps
 from math import cos, sin
 from typing import Any, List, Optional, Sequence, Tuple, Union
 
+import matplotlib
+import matplotlib.pylab as pylab
+import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import scipy.io
 import scipy.ndimage as filters
 import scipy.ndimage.morphology as morphology
+from numpy.typing import ArrayLike
+
+FloatArray = numpy.typing.NDArray[np.float_]
 
 __version__ = '0.7.0'
 
@@ -65,14 +72,11 @@ try:
     try:
         # by default use qtpy to import Qt
         import qtpy
-        _haveqtpy = True
-
         import qtpy.QtCore as QtCore
         import qtpy.QtGui as QtGui
         import qtpy.QtWidgets as QtWidgets
         from qtpy.QtCore import QObject, Signal, Slot
     except ImportError:
-        _haveqtpy = False
         warnings.warn('could not import qtpy, not all functionality available')
         pass
 
@@ -115,28 +119,11 @@ except Exception as ex:
     print('pgeometry: no Qt found')
 
 # %% Load other modules
+
+# needed for 3d plot points, do not remove!
 try:
-    import pylab
-    import pylab as p
-
-except Exception as inst:
-    print(inst)
-    print('could not import pylab, not all functionality available...')
-    pass
-
-try:
-    import matplotlib
-    import matplotlib.pyplot as plt
-
-    # needed for 3d plot points, do not remove!
-    try:
-        from mpl_toolkits.mplot3d import Axes3D
-    except BaseException:
-        pass
-except ModuleNotFoundError as ex:
-    warnings.warn(
-        'could not find matplotlib, not all functionality available...')
-    plt = None
+    from mpl_toolkits.mplot3d import Axes3D
+except BaseException:
     pass
 
 try:
@@ -494,21 +481,37 @@ def dehom(x: np.ndarray) -> np.ndarray:
     return x[0:-1, :] / x[-1, :]
 
 
-def null(a, rtol=1e-5):
-    """ Calculate null space of a matrix """
+def null(a: FloatArray, rtol: float = 1e-7) -> tuple[int, FloatArray]:
+    """ Calculate null space of a matrix
+
+    Args:
+        a: Input matrix
+        rtol: Relative tolerance on the eigenvalues
+
+    Returns:
+        Tuple with the dimension of the null space and a set of vectors spanning the null space
+
+    Example:
+        >>> a = np.array([[1, 0, 0], [0, 1,0], [0, 0, 0]])
+        >>> null(a)
+        (2,
+         array([[0.],
+                [0.],
+                [1.]]))
+    """
     u, s, v = np.linalg.svd(a)
     rank = (s > rtol * s[0]).sum()
-    return rank, v[rank:].T.copy()
+    return rank, v[rank:].T
 
 
-def intersect2lines(l1, l2):
+def intersect2lines(l1: FloatArray, l2: FloatArray) -> FloatArray:
     """ Calculate intersection between 2 lines
 
     Args:
-        l1 (array): first line in homogeneous format
-        l2 (array): first line in homogeneous format
+        l1: first line in homogeneous coordinates
+        l2: second line in homogeneous coordinates
     Returns:
-        array: intersection in homogeneous format. To convert to affine coordinates use `dehom`
+        Intersection in homogeneous coordinates. To convert to affine coordinates use `dehom`
     """
     r = null(np.vstack((l1, l2)))
     return r[1]
@@ -617,7 +620,7 @@ def RBE2euler(Rbe):
 
 def pg_rotation2H(R):
     """ Convert rotation matrix to homogenous transform matrix """
-    X = np.array(np.eye(R.shape[0] + 1))
+    X = np.eye(R.shape[0] + 1)
     X[0:-1, 0:-1] = R
     return X
 
@@ -762,6 +765,15 @@ def pg_rotx(phi: float) -> np.ndarray:
     return R
 
 
+def pg_rotz(phi: float) -> np.ndarray:
+    """ Create rotation around the z-axis with specified angle """
+    c = cos(phi)
+    s = sin(phi)
+    R = np.zeros((3, 3))
+    R.ravel()[:] = [c, -s, 0, s, c, 0, 0, 0, 1]
+    return R
+
+
 def pcolormesh_centre(x, y, im, *args, **kwargs):
     """ Wrapper for pcolormesh to plot pixel centres at data points """
     dx = np.diff(x)
@@ -820,9 +832,30 @@ def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None)
     scale = np.hstack((scale, 1))
     H = np.diag(scale)
     if cc is not None:
-        cc = np.array(cc).flatten()
+        cc = np.asarray(cc).flatten()
         H = pg_transl2H(cc).dot(H).dot(pg_transl2H(-cc))
 
+    return H
+
+
+def pg_affine2hom(U: np.ndarray) -> np.ndarray:
+    """ Create homogeneous transformation from affine transformation
+
+    Args:
+        U: Affine transformation
+
+    Returns:
+        Homogeneous transformation
+
+    Example
+    -------
+    >>> pg_affine2hom(np.array([[2.]]))
+    array([[ 2.,  0.],
+           [ 0.,  1.]])
+
+    """
+    H = np.eye(U.shape[0]+1, dtype=U.dtype)
+    H[:-1, :-1] = U
     return H
 
 
@@ -958,26 +991,31 @@ def plotPoints(xx, *args, **kwargs):
     return h
 
 
-def plot2Dline(line, *args, **kwargs):
+def plot2Dline(line: ArrayLike, *args: Any, **kwargs: Any) -> Any:
     """ Plot a 2D line in a matplotlib figure
 
     Args:
-        line (3x1 array): line to plot
+        line: Line to plot in homogeneous coordinates
+        args: Passed to matplotlib plot method
+        kwargs: Passed to matplotlib plot method
 
-    >>> plot2Dline([-1,1,0], 'b')
+    Returns:
+        Handle to plotted line
+
+    >>> plot2Dline([-1, 1, 0], 'b')
     """
-    if np.abs(line[1]) > .001:
-        xx = plt.xlim()
-        xx = np.array(xx)
+    if np.abs(line[1]) > np.abs(line[0]):
+        xx = np.asarray(plt.xlim())
         yy = (-line[2] - line[0] * xx) / line[1]
-        plt.plot(xx, yy, *args, **kwargs)
+        h = plt.plot(xx, yy, *args, **kwargs)
     else:
-        yy = np.array(plt.ylim())
+        yy = np.asarray(plt.ylim())
         xx = (-line[2] - line[1] * yy) / line[0]
-        plt.plot(xx, yy, *args, **kwargs)
-
+        h = plt.plot(xx, yy, *args, **kwargs)
+    return h
 
 # %%
+
 
 def scaleImage(image: np.ndarray, display_min: Optional[float] = None,
                display_max: Optional[float] = None) -> np.ndarray:
@@ -1077,13 +1115,13 @@ def plotPoints3D(xx, *args, **kwargs):
         print('plotPoints3D: using fig %s' % fig)
         print('plotPoints3D: using args %s' % args)
     if fig is None:
-        ax = p.gca()
+        ax = pylab.gca()
     else:
-        fig = p.figure(fig)
+        fig = pylab.figure(fig)
         ax = fig.gca(projection='3d')
     ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]),
             np.ravel(xx[2, :]), *args, **kwargs)
-    p.draw()
+    pylab.draw()
     return ax
 
 # %%
@@ -1509,7 +1547,6 @@ def choose(n, k):
 
 # %%
 try:
-    import PIL
     from PIL import Image, ImageDraw, ImageFont
 
     def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
@@ -2113,22 +2150,23 @@ def point_in_polygon(pt, pp):
     return r
 
 
-def minAlg_5p4(A: np.ndarray) -> np.ndarray:
+def minAlg_5p4(A: FloatArray) -> FloatArray:
     """ Algebraic minimization function
 
     Function computes the vector x that minimizes ||Ax|| subject to the
     condition ||x||=1.
+
     Implementation of Hartley and Zisserman A5.4 on p593 (2nd Ed)
 
-    Usage:   [x,V] = minAlg_5p4(A)
-    Arguments:
-             A (numpy array) : The constraint matrix, ||Ax|| to be minimized
+    Example:
+        >>> [x,V] = minAlg_5p4(A)
+
+    Args:
+             A : The constraint matrix, ||Ax|| to be minimized
     Returns:
-              x - The vector that minimizes ||Ax|| subject to the
-                  condition ||x||=1
+             The vector x that minimizes ||Ax|| subject to the condition ||x||=1
 
     """
-
     # Compute the SVD of A
     (_, _, V) = np.linalg.svd(A)
 
