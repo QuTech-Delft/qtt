@@ -4,20 +4,15 @@ cache: pip
 
 matrix:
   include:
-  - name: Minimal installation 3.10
+  - name: Full installation 3.10
     python: 3.10.1
     sudo: true
     dist: focal
-    env: QT_QPA_PLATFORM=offscreen
-    services:
-    - xvfb
-
-  - name: Full installation 3.8
-    python: 3.8
-    dist: xenial
+#    env: QT_QPA_PLATFORM=offscreen
     env: FULL_INSTALL=1
     services:
     - xvfb
+
 
 install:
   - sudo apt-get install libhdf5-dev
@@ -37,12 +32,3 @@ script:
   - python docs/notebooks/qtt_example.py
 after_success:
   - coveralls
-deploy:
-  provider: pypi
-  user: qutech.sdst
-  password:
-    secure: RwTnD4RBnErHXF8umOlLmePlXSwbRlF7F6Mw7OVgvFVCu7cs8AJORYclCDjcVhCxqTNTPiSp3PnTpHJrC32EV6zyI2D9aFB+CjDHYgsbWO45lknP7X3QLr+cbWd2ApgZk3h8WOn+LyXtH8+YLl46ujAApES2K04Tp3DPqFDkdlzDjhSp3FyvQ1RYx84YlROSxAsUrvWiGfVc1BoF7lSqknvxomHmGUrQlatSpmoJ0JvMuz+8o6zHLOWyXQDSiHkAg+kkRYuJY+eJBQRdpKwa5ZH0O00WKSuwEMQl3d+wQJL5GTiqbBBhYWmakARX6OQToMbKKxUZ+VZsv2N6CwuhmSgGYmzl9b6UK2o5kiPDcFqfqmwiSOJFH7Eg4D8xAZCJyrbeeKzGzddq+STBgAEK59zAq7Vx3Lqsqv81vQlbIatBIZxQtvkwxsqnaGib0Xvu7p3TDjkXX4kZVOdEDx1+mwJgkIVAcTJSq/ILjIQIP3cOYWDTzVS4VFm6OrWuiXNllyzzfKNTjhoJnwea4QHqkqLTwUYMxr6qighXSiP6mBB1uyNMoKXBypD7pHMyZvrlWjxoV5UnGCGl0v8oGURzzUXqPIaNtcFnIgGCaabtkE+gyPyVVnOQyjJYW5aVEFDKIyARPhu8IrMLBefdnWKpQTJW7wXCDiRvTqa03AgE6Rg=
-  on:
-    tags: true
-    branch: master
-  skip_existing: true
