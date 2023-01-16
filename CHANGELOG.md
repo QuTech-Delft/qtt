@@ -4,6 +4,18 @@ All notable changes to the Quantum Technology Toolbox will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[x.y.z] - Unreleased
+
+### Added
+
+### Changed
+
+### Removed
+
+### Deprecated
+
+### Fixed
+
 ## \[1.3.1] - 19-9-2022
 
 ### Added
@@ -22,10 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed qtt.utilities.markup.py. The functionality is available on https://pypi.org/project/markup.py/ (#836)
 - Removed the Keysight virtual awg (#846)
 - Remove qtt.measurements.storage (#853)
-
-### Deprecated
-
-### Fixed
 
 ## \[1.3.0] - 11-2-2022
 
@@ -334,7 +342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed problems with the scan2Dturbo function (#423).
 - Fixed parameter in widget (#384).
 
-[1.3.1]: https://github.com/QuTech-Delft/qtt/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/QuTech-Delft/qtt/compare/1.3.1...HEAD
+[1.3.1]: https://github.com/QuTech-Delft/qtt/compare/1.3.0...1.3.1
 [1.3.0]: https://github.com/QuTech-Delft/qtt/compare/1.2.3...1.3.0
 [1.2.3]: https://github.com/QuTech-Delft/qtt/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/QuTech-Delft/qtt/compare/1.2.1...1.2.2
