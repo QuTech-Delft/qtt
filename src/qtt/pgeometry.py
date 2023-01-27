@@ -427,6 +427,7 @@ def projectiveTransformation(H: FloatArray, x: FloatArray) -> FloatArray:
 
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))
     """
+    import cv2
     k = x.shape[0]
     kout = H.shape[0] - 1
     xx = x.transpose().reshape((-1, 1, k))
