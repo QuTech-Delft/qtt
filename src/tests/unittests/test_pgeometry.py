@@ -1,8 +1,10 @@
 import unittest
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 import qtt.pgeometry as pgeometry
-from qtt.pgeometry import point_in_polygon, points_in_polygon
+from qtt.pgeometry import pg_transl2H, point_in_polygon, points_in_polygon, projectiveTransformation
 
 
 class TestPGeometry(unittest.TestCase):
@@ -15,6 +17,28 @@ class TestPGeometry(unittest.TestCase):
 
 
 class TestGeometryOperations(unittest.TestCase):
+
+    def test_projectiveTransformation(self):
+        x = np.array([[1., 0], [0, 2]])
+
+        H = pg_transl2H([1., -1])
+        y = projectiveTransformation(H, x)
+        expected = np.array([[2.,  1.],
+                             [-1.,  1.]])
+        np.testing.assert_array_almost_equal(y, expected)
+
+        y = projectiveTransformation(np.eye(3), x)
+        np.testing.assert_array_almost_equal(y, y)
+
+        with self.assertRaises(Exception):
+            y = projectiveTransformation(np.eye(2), x)
+
+        H = np.eye(3)
+        H[2, 0] = -1
+        y = projectiveTransformation(H, x)
+        expected = np.array([[2.,  1.],
+                             [-1.,  1.]])
+        np.testing.assert_array_almost_equal(y, expected)
 
     def test_pg_rotx(self):
         I = pgeometry.pg_rotx(90).dot(pgeometry.pg_rotx(-90))
