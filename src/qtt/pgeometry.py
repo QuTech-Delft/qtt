@@ -1,4 +1,3 @@
-#type: ignore
 """
 
 pgeometry
@@ -423,8 +422,8 @@ def mkdirc(d: str):
     return str(p)
 
 
-def projectiveTransformation(H: np.ndarray, x: np.ndarray) -> np.ndarray:
-    """ Apply a projective transformation to a kxN array
+def projectiveTransformation(H: FloatArray, x: FloatArray) -> FloatArray:
+    """ Apply a projective transformation to a k x N array
 
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))
     """
@@ -464,16 +463,15 @@ def breakLoop(wk=None, dt=0.001, verbose=0):
     return False
 
 
-def hom(x: np.ndarray) -> np.ndarray:
-    """ Create affine to homogeneous coordinates
+def hom(x: FloatArray) -> FloatArray:
+    """ Convert affine to homogeneous coordinates
 
     Args:
-        x (kxN array): affine coordinates
+        x: k x N array in affine coordinates
     Returns:
-        h ( (k+1xN) array): homogeneous coordinates
+        An (k+1xN) arrayin homogeneous coordinates
     """
-    nx = x.shape[1]
-    return np.vstack((x, np.ones(nx)))
+    return np.vstack((x, np.ones_like(x)))
 
 
 def dehom(x: np.ndarray) -> np.ndarray:
@@ -729,7 +727,7 @@ def frame2T(f):
     return T
 
 
-def rot2D(phi: float) -> np.ndarray:
+def rot2D(phi: float) -> FloatArray:
     """ Return 2x2 rotation matrix from angle
 
     Arguments
@@ -756,7 +754,7 @@ def rot2D(phi: float) -> np.ndarray:
     return r
 
 
-def pg_rotx(phi: float) -> np.ndarray:
+def pg_rotx(phi: float) -> FloatArray:
     """ Create rotation around the x-axis with specified angle """
     c = cos(phi)
     s = sin(phi)
@@ -765,7 +763,7 @@ def pg_rotx(phi: float) -> np.ndarray:
     return R
 
 
-def pg_rotz(phi: float) -> np.ndarray:
+def pg_rotz(phi: float) -> FloatArray:
     """ Create rotation around the z-axis with specified angle """
     c = cos(phi)
     s = sin(phi)
@@ -811,7 +809,7 @@ def imshowz(im, *args, **kwargs):
     ax.format_coord = format_coord
 
 
-def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None) -> np.ndarray:
+def pg_scaling(scale: Union[float, FloatArray], cc: Optional[FloatArray] = None) -> FloatArray:
     """ Create scale transformation with specified centre
 
     Args:
@@ -838,7 +836,7 @@ def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None)
     return H
 
 
-def pg_affine2hom(U: np.ndarray) -> np.ndarray:
+def pg_affine2hom(U: FloatArray) -> FloatArray:
     """ Create homogeneous transformation from affine transformation
 
     Args:
@@ -859,10 +857,10 @@ def pg_affine2hom(U: np.ndarray) -> np.ndarray:
     return H
 
 
-def pg_transl2H(tr):
+def pg_transl2H(tr: FloatArray) -> FloatArray:
     """ Convert translation to homogeneous transform matrix
 
-    >>> pg_transl2H( [1,2])
+    >>> pg_transl2H([1, 2])
     array([[ 1.,  0.,  1.],
             [ 0.,  1.,  2.],
             [ 0.,  0.,  1.]])
@@ -2057,8 +2055,9 @@ def histogram(x, nbins=30, fig=1):
 
 
 # %%
-def decomposeProjectiveTransformation(H, verbose=0):
+def decomposeProjectiveTransformation(H: FloatArray, verbose=0) -> tuple[FloatArray, FloatArray, FloatArray, tuple[float]]:
     """ Decompose projective transformation
+
     H is decomposed as H = Hs*Ha*Hp with
 
      Hs = [sR t]
@@ -2076,12 +2075,12 @@ def decomposeProjectiveTransformation(H, verbose=0):
 
     >>> Ha, Hs, Hp, rest = decomposeProjectiveTransformation( np.eye(3) )
     """
-    H = np.array(H)
+    H = np.asarray(H)
     k = H.shape[0]
     km = k - 1
 
     eta = H[k - 1, k - 1]
-    Hp = np.array(np.vstack((np.eye(km, k), H[k - 1, :])))
+    Hp = np.vstack((np.eye(km, k), H[k - 1, :]))
     A = H[0:km, 0:km]
     t = H[0:km, -1]
     v = H[k - 1, 0:km].T
@@ -2093,8 +2092,8 @@ def decomposeProjectiveTransformation(H, verbose=0):
     sRK = A - np.array(t).dot(np.array(v.T))
     # upper left block of H*inv(Hp)
     R, K = np.linalg.qr(sRK)
-    K = np.array(K)
-    R = np.array(R)
+    K = np.asarray(K)
+    R = np.asarray(R)
 
     s = (np.abs(np.linalg.det(K)))**(1. / km)
     K = K / s
@@ -2108,8 +2107,8 @@ def decomposeProjectiveTransformation(H, verbose=0):
         K = np.diag(sc).dot(K)
         R = R.dot(np.diag(sc))
     br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
-    Hs = np.array(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
-    Ha = np.array(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))
+    Hs = np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br))
+    Ha = np.vstack((np.hstack((K, np.zeros((km, 1)))), br))
 
     phi = np.arctan2(R[1, 0], R[0, 0])
 
