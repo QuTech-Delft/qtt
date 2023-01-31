@@ -11,6 +11,7 @@ matrix:
     env: FULL_INSTALL=1
     services:
     - xvfb
+
 install:
   - sudo apt-get install libhdf5-dev
   - pip install coveralls
