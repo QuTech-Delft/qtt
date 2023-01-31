@@ -50,6 +50,7 @@ import scipy.ndimage.morphology as morphology
 from numpy.typing import ArrayLike
 
 FloatArray = numpy.typing.NDArray[np.float_]
+AnyArray = numpy.typing.NDArray[Any]
 
 __version__ = '0.7.0'
 
@@ -427,7 +428,11 @@ def projectiveTransformation(H: FloatArray, x: FloatArray) -> FloatArray:
 
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))
     """
-    import cv2
+    try:
+        import cv2
+    except (ModuleNotFoundError, ImportError):
+        assert False, "could not find or load OpenCV, 'projectiveTransformation' is not available"
+
     k = x.shape[0]
     kout = H.shape[0] - 1
     xx = x.transpose().reshape((-1, 1, k))
@@ -990,7 +995,7 @@ def plotPoints(xx, *args, **kwargs):
     return h
 
 
-def plot2Dline(line: ArrayLike, *args: Any, **kwargs: Any) -> Any:
+def plot2Dline(line: Union[List[Any], AnyArray], *args: Any, **kwargs: Any) -> Any:
     """ Plot a 2D line in a matplotlib figure
 
     Args:
@@ -1769,7 +1774,7 @@ def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
     Args:
         x: position in format (x,y,w,h)
         y, w, h: y position, width, height
-        fig (None or int): specification of figure window. Use None for the current active window
+        fig: specification of figure window. Use None for the current active window
 
     Usage: setWindowRectangle([x, y, w, h]) or setWindowRectangle(x, y, w, h)
     """
@@ -1818,20 +1823,24 @@ def raiseWindow(fig):
 
 
 @static_var('monitorindex', -1)
-def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
-             verbose=0, monitorindex=None):
+def tilefigs(lst: List[Union[int, plt.Figure]], geometry: Optional[List[int]] = None,
+             ww: Optional[List[int]] = None, raisewindows: bool = False, tofront: bool = False,
+             verbose: int = 0, monitorindex: Optional[int] = None) -> None:
     """ Tile figure windows on a specified area
 
     Arguments
     ---------
-        lst : list
-                list of figure handles or integers
-        geometry : 2x1 array
-                layout of windows
-        monitorindex (None or int): index of monitor to use for output
-        ww (None or list): monitor sizes
+        lst: list of figure handles or integers
+        geometry: 2x1 array, layout of windows
+        ww: monitor sizes
+        raisewindows: When True, request that the window be raised to appear above other windows
+        tofront: When True, activate the figure
+        verbose: Verbosity level
+        monitorindex: index of monitor to use for output
 
     """
+    if geometry is None:
+        geometry = [2, 2]
     mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
     if monitorindex is None:
@@ -2056,7 +2065,8 @@ def histogram(x, nbins=30, fig=1):
 
 
 # %%
-def decomposeProjectiveTransformation(H: FloatArray, verbose=0) -> tuple[FloatArray, FloatArray, FloatArray, tuple[float]]:
+def decomposeProjectiveTransformation(H: FloatArray, verbose=0) -> tuple[FloatArray, FloatArray, FloatArray,
+                                                                         tuple[Any, Any, FloatArray, FloatArray]]:
     """ Decompose projective transformation
 
     H is decomposed as H = Hs*Ha*Hp with

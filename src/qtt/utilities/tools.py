@@ -367,10 +367,10 @@ def stripDataset(dataset):
 # %%
 
 def interruptable_sleep(seconds: float, step: float = .2) -> None:
-    """ Alternative to time.sleep that can be interrupted
+    """ Alternative to `time.sleep` that can be interrupted
 
     Args:
-        second: Number of seconds to sleep
+        seconds: Number of seconds to sleep
         step: Step size in seconds
     """
     t0 = time.perf_counter()

@@ -36,8 +36,8 @@ tests_require = ['coverage', 'jupyter', 'mypy', 'types-redis', 'types-python-dat
 
 install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'IPython', 'jupyter', 'lmfit', 'matplotlib',
-    'numdifftools', 'numpy>=1.22', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.30.0',
-    'qcodes-contrib-drivers', 'qilib==0.3.9', 'qiskit-terra>=0.22', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
+    'numdifftools', 'numpy>=1.23', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.30.0',
+    'qcodes-contrib-drivers', 'qilib==0.3.11', 'qiskit-terra>=0.22', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
     'shapely', 'sympy', 'imageio', 'rich'
 ] + tests_require
 
@@ -50,7 +50,7 @@ rtd_requires = [
 
 extras_require = {"rtd": rtd_requires}
 
-setup(name='qttpte',
+setup(name='qtt',
       version=get_version(),
       use_2to3=False,
       author='Pieter Eendebak',
@@ -65,6 +65,8 @@ setup(name='qttpte',
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Science/Research',
           'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
           'Programming Language :: Python :: 3.10',
           'Programming Language :: Python :: 3.11',

@@ -8,12 +8,9 @@ matrix:
     python: 3.10.1
     sudo: true
     dist: focal
-#    env: QT_QPA_PLATFORM=offscreen
     env: FULL_INSTALL=1
     services:
     - xvfb
-
-
 install:
   - sudo apt-get install libhdf5-dev
   - pip install coveralls

@@ -23,12 +23,14 @@ class TestGeometryOperations(unittest.TestCase):
 
         H = pg_transl2H([1., -1])
         y = projectiveTransformation(H, x)
-        expected = np.array([[2.,  1.],
-                             [-1.,  1.]])
+        expected = np.array([[2., 1.],
+                             [-1., 1.]])
         np.testing.assert_array_almost_equal(y, expected)
 
         y = projectiveTransformation(np.eye(3), x)
-        np.testing.assert_array_almost_equal(y, y)
+        expected = np.array([[1., 0.],
+                             [0., 2.]])
+        np.testing.assert_array_almost_equal(y, expected)
 
         with self.assertRaises(Exception):
             y = projectiveTransformation(np.eye(2), x)
@@ -36,9 +38,14 @@ class TestGeometryOperations(unittest.TestCase):
         H = np.eye(3)
         H[2, 0] = -1
         y = projectiveTransformation(H, x)
-        expected = np.array([[2.,  1.],
-                             [-1.,  1.]])
+        expected = np.array([[0., 0.],
+                             [0., 2.]])
         np.testing.assert_array_almost_equal(y, expected)
+
+        x = np.array([[], []])
+        y = projectiveTransformation(np.eye(3), x)
+        np.testing.assert_array_almost_equal(x, y)
+
 
     def test_pg_rotx(self):
         I = pgeometry.pg_rotx(90).dot(pgeometry.pg_rotx(-90))
