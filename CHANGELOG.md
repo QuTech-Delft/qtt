@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- type hinting warnings/errors
+- type hinting warnings/errors for mypy (0.991)
 
 ## \[1.3.1] - 19-9-2022
 
