@@ -19,7 +19,7 @@ on [QCoDeS](https://github.com/qdev-dk/Qcodes) (basic framework such as instrume
 
 ## Installation
 
-QTT is compatible with Python 3.7+. QTT can be installed as a pip package to be used in a (virtual) Python environment.
+QTT is compatible with Python 3.8+. QTT can be installed as a pip package to be used in a (virtual) Python environment.
 We assume that software packages like [git](https://git-scm.com/downloads) and [python](https://www.python.org/downloads/)
 are already installed on your system.
 

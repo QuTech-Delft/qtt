@@ -83,14 +83,13 @@ if rtd:
 #
 
 source_suffix = ['.rst', '.md']  # need package recommonmark
-#source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General information about the project.
 project = 'qtt'
-copyright = '2018, Pieter Eendebak'
+copyright = '2023, Pieter Eendebak'
 author = 'Pieter Eendebak'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -122,7 +121,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
