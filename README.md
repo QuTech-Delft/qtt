@@ -25,9 +25,9 @@ are already installed on your system.
 
 Note: when running Ubuntu Linux, installing these packages is done via:
 ```
-sudo apt install git gcc python3.7 python3.7-venv python3.7-dev
+sudo apt install git gcc python3.10 python3.10-venv python3.10-dev
 ```
-for Python 3.7.x. Other Linux distributions require similar steps.
+for Python 3.10.x. Other Linux distributions require similar steps.
 
 ### Setting up a virtual environment
 

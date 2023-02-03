@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # qtt documentation build configuration file, created by
 # sphinx-quickstart on Sat Feb  3 15:16:09 2018.
@@ -25,9 +24,12 @@
 #
 # needs_sphinx = '1.0'
 
+import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+import re
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
@@ -43,7 +45,7 @@ extensions += ['sphinx_automodapi.automodapi']
 
 if 0:
     extensions += ['autoapi.extension']
-    
+
     # Document Python Code
     autoapi_type = 'python'
     autoapi_dirs = '../qtt'
@@ -54,7 +56,6 @@ templates_path = ['_templates']
 
 nbsphinx_execute = 'never'
 
-import os
 rtd = os.environ.get('READTHEDOCS', False)
 print('READTHEDOCS env %s' % (rtd, ))
 
@@ -81,7 +82,7 @@ if rtd:
 # You can specify multiple suffix as a list of string:
 #
 
-source_suffix = ['.rst', '.md'] # need package recommonmark
+source_suffix = ['.rst', '.md']  # need package recommonmark
 #source_suffix = '.rst'
 
 # The master toctree document.
@@ -97,11 +98,11 @@ author = 'Pieter Eendebak'
 # built documents.
 #
 
-import re
+
 def get_version(verbose=1, filename='qtt/version.py'):
     """ Extract version information from source code """
 
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         ln = f.readline()
         m = re.search('.* ''(.*)''', ln)
         version = (m.group(1)).strip('\'')
@@ -112,7 +113,7 @@ def get_version(verbose=1, filename='qtt/version.py'):
 
 # The short X.Y version.
 version = get_version(verbose=1, filename='../src/qtt/version.py')
-    
+
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -127,7 +128,7 @@ language = None
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['_build', 'Thumbs.db', 'legacy.py', '.DS_Store', 'untitled.*py',
-                'notebooks/.ipynb_checkpoints', '../src/qtt/deprecated/*']
+                    'notebooks/.ipynb_checkpoints', '../src/qtt/deprecated/*']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -231,7 +232,6 @@ texinfo_documents = [
 ]
 
 
-
 intersphinx_mapping = {
     'matplotlib': ('http://matplotlib.org/', None),
     'python': ('https://docs.python.org/3.6', None),
@@ -244,13 +244,13 @@ if rtd:
 
     # check packages
     import importlib
-    
-    modules=['skimage', 'matplotlib', 'cv2', 'PyQt5', 'pyqtgraph', 'qtpy', 'qcodes', 'qtt']
+
+    modules = ['skimage', 'matplotlib', 'cv2', 'PyQt5', 'pyqtgraph', 'qtpy', 'qcodes', 'qtt']
     for module_name in modules:
         print('loading module %s' % module_name)
-        m=importlib.import_module(module_name)
+        m = importlib.import_module(module_name)
         try:
-            print('  __version__: %s' % m.__version__)                
+            print('  __version__: %s' % m.__version__)
         except:
             pass
 
@@ -258,28 +258,23 @@ if 1:
     def run_apidoc(_):
         import os
         print('run_apidoc: current dir is %s' % os.getcwd())
-        import numpy; print('numpy.__version__ %s' % (numpy.__version__) )
-    
-        ignore_paths = [
-            'qtt/legacy.py', 'qtt/debug.py', 'qtt/reports.py', 'qtt.loggingGUI.py',
-            '../qtt/legacy.py', '../qtt/debug.py', '../qtt/reports.py', '../qtt/loggingGUI.py', '../qtt/scans.py',
-            '../qtt/deprecated/.*.py', '../qtt/deprecated/tunnelbarrier.py','../qtt/algorithms/untitled*.py',
-            'untitled*.py', 'setup.py',
-        ]
-    
+        import numpy
+        print('numpy.__version__ %s' % (numpy.__version__))
+
+        ignore_paths = ['setup.py',
+                        ]
+
         argv = [
             "-f",
             "-M",
             "-o", ".",
             "../src/qtt"
         ] + ignore_paths
-    
+
         # Sphinx 1.7+
         from sphinx.ext import apidoc
         apidoc.main(argv)
         print('run_apidoc: done')
-    
-
 
     def setup(app):
-        app.connect('builder-inited', run_apidoc)        
+        app.connect('builder-inited', run_apidoc)

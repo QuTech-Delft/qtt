@@ -34,16 +34,6 @@ import qtt.pgeometry
 from qtt.pgeometry import mkdirc  # import for backwards compatibility
 from qtt.pgeometry import mpl2clipboard
 
-NotGitRepositoryError: Type[Exception]
-
-try:
-    from dulwich import porcelain
-    from dulwich.repo import NotGitRepository, Repo
-    NotGitRepositoryError = NotGitRepository
-except ModuleNotFoundError:
-    warnings.warn('please install dulwich: pip install dulwich --global-option="--pure"')
-    NotGitRepositoryError = Exception
-
 # explicit import
 
 try:
@@ -62,7 +52,50 @@ except BaseException:
     pass
 
 
+def profile_expression(expression: str, N: Optional[int] = 1, gui: str = "snakeviz"):
+    """Profile an expression with cProfile and display the results using snakeviz
+
+    Args:
+        expression: Code to be profiled
+        N: Number of iterations. If None, then automatically determine a suitable number of iterations
+        gui: Can be `tuna` or `snakeviz`
+    """
+    import cProfile  # lazy import
+    import subprocess
+
+    tmpdir = tempfile.mkdtemp()
+    statsfile = os.path.join(tmpdir, "profile_expression_stats")
+
+    assert isinstance(expression, str), "expression should be a string"
+
+    if N is None:
+        t0 = time.perf_counter()
+        cProfile.run(expression, filename=statsfile)
+        dt = time.perf_counter() - t0
+        N = int(1. / max(dt - 0.6e-3, 1e-6))
+        if N <= 1:
+            print(f"profiling: 1 iteration, {dt:.2f} [s]")
+            r = subprocess.Popen([gui, statsfile])
+            return r
+    else:
+        N = int(N)
+    print(f"profile_expression: running {N} loops")
+    if N > 1:
+        loop_expression = f"for ijk_kji_no_name in range({N}):\n"
+        loop_expression += "\n".join(["  " + term for term in expression.split("\n")])
+        loop_expression += "\n# loop done"
+        logging.info(loop_expression)
+        expression = loop_expression
+    t0 = time.perf_counter()
+    cProfile.run(expression, statsfile)
+    dt = time.perf_counter() - t0
+
+    print(f"profiling: {N} iterations, {dt:.2f} [s]")
+    r = subprocess.Popen([gui, statsfile])
+    return r
+
 # %%
+
 
 class measure_time():
     """ Create context manager that measures execution time and prints to stdout """
@@ -151,40 +184,7 @@ def get_module_versions(modules, verbose=0):
 
 
 def get_git_versions(repos, get_dirty_status=False, verbose=0):
-    """ Returns the repository head guid and dirty status and package version number if installed via pip.
-        The version is only returned if the repo is installed as pip package without edit mode.
-        NOTE: currently the dirty status is not working correctly due to a bug in dulwich...
-
-    Args:
-        repos ([str]): a list with repositories, e.g. ['qtt', 'qcodes'].
-        get_dirty_status (bool): selects whether to use the dulwich package and collect the local code
-                            changes for the repositories.
-        verbose (int): verbosity (0 == silent).
-
-    Retuns:
-        r (dict): dictionary with repo names, head guid and (optionally) dirty status for each given repository.
-
-    """
-    heads = {}
-    dirty_stats = {}
-    for repo in repos:
-        try:
-            package = importlib.import_module(repo)
-            init_location = os.path.split(package.__file__)[0]
-            repo_location = os.path.join(init_location, '..')
-            repository = Repo(repo_location)
-            heads[repo] = repository.head().decode('ascii')
-            if get_dirty_status:
-                status = porcelain.status(repository)
-                is_dirty = len(status.unstaged) == 0 or any(len(item) != 0 for item in status.staged.values())
-                dirty_stats[repo] = is_dirty
-        except (AttributeError, ModuleNotFoundError, NotGitRepositoryError):
-            heads[repo] = 'none'
-            if get_dirty_status:
-                dirty_stats[repo] = 'none'
-        if verbose:
-            print(f'{repo}: {heads[repo]}')
-    return heads, dirty_stats
+    return {}, {}
 
 
 def get_python_version(verbose=0):
@@ -366,11 +366,17 @@ def stripDataset(dataset):
 
 # %%
 
+def interruptable_sleep(seconds: float, step: float = .2) -> None:
+    """ Alternative to `time.sleep` that can be interrupted
 
-@rdeprecated(txt='method will be removed from qtt', expire='Jul 1 2022')
-def negfloat(x) -> float:
-    """ Helper function """
-    return -float(x)
+    Args:
+        seconds: Number of seconds to sleep
+        step: Step size in seconds
+    """
+    t0 = time.perf_counter()
+
+    while (sleep_time := seconds-(time.perf_counter()-t0)) > 0:
+        time.sleep(min(sleep_time, step))
 
 
 def checkPickle(obj, verbose=0):
@@ -850,9 +856,9 @@ try:
         return notes
 
     def addPPTslide(title: Optional[str] = None, fig: Optional[Union[int, np.ndarray, plt.Figure, Any]] = None, txt: Optional[str] = None,
-                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Tuple[int, int] = None,
+                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Optional[Tuple[int, int]] = None,
                     subtitle: Optional[str] = None, maintext: Optional[str] = None, show: bool = False, verbose: int = 1,
-                    activate_slide: bool = True, ppLayout: int = None, extranotes: str = None, background_color: Optional[Tuple] = None,
+                    activate_slide: bool = True, ppLayout: Optional[int] = None, extranotes: Optional[str] = None, background_color: Optional[Tuple] = None,
                     maximum_notes_size: int = 10000) -> Tuple[Any, Any]:
         """ Add slide to current active Powerpoint presentation.
 
@@ -1115,9 +1121,9 @@ try:
 
 except ImportError:
     def addPPTslide(title: Optional[str] = None, fig: Optional[Union[int, np.ndarray, plt.Figure, Any]] = None, txt: Optional[str] = None,
-                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Tuple[int, int] = None,
+                    notes: Optional[Union[str, qcodes.Station]] = None, figsize: Optional[Tuple[int, int]] = None,
                     subtitle: Optional[str] = None, maintext: Optional[str] = None, show: bool = False, verbose: int = 1,
-                    activate_slide: bool = True, ppLayout: int = None, extranotes: str = None, background_color: Optional[Tuple] = None,
+                    activate_slide: bool = True, ppLayout: Optional[int] = None, extranotes: Optional[str] = None, background_color: Optional[Tuple] = None,
                     maximum_notes_size: int = 10000) -> Tuple[Any, Any]:
         """ Add slide to current active Powerpoint presentation.
 
