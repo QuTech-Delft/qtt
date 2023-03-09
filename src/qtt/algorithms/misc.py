@@ -130,7 +130,7 @@ def polyfit2d(x, y, z, order=3):
         m (array): order of the polynomial
     """
     ncols = (order + 1)**2
-    G = np.zeros((x.size, ncols))
+    G = np.empty((x.size, ncols))
     ij = itertools.product(range(order + 1), range(order + 1))
     for k, (i, j) in enumerate(ij):
         G[:, k] = x**i * y**j

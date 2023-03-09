@@ -126,7 +126,7 @@ def cleanSensingImage(im, dy=0, sigma=None, order=3, fixreversal=True, removeout
     """
     verbose = int(verbose)
     removeoutliers = bool(removeoutliers)
-    im = np.array(im)
+    im = np.asarray(im)
     if sigma is None:
         imx = diffImage(im, dy=dy, size='same')
     else:
