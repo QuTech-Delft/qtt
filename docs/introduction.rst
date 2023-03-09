@@ -20,7 +20,7 @@ QTT is the framework on which you can base your measurement and analysis scripts
 Installation
 ------------
 
-QTT is compatible with Python 3.7+.
+QTT is compatible with Python 3.8+.
 
 QTT can be installed as a pip package:
 

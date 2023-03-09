@@ -7,10 +7,12 @@
 import itertools
 import random
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import List, Optional, Union, cast
 
 import numpy as np
 import scipy.linalg
+
+IntArray = np.typing.NDArray[np.int_]
 
 
 def _solve_least_squares(a: np.ndarray, b: np.ndarray) -> np.ndarray:
@@ -23,35 +25,35 @@ def _solve_least_squares(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 class ChoiceGenerator:
     """ Class to generate random elements with weighted selection
 
-    This is a replacement for random.choices that is efficient when a large number of choices has to be generated.
+    This is a replacement for `random.choices` that is efficient when a large number of choices has to be generated.
 
-    Args:
-        number_of_states: number of choices that has to be generated
-        cum_weights (array[float]): cumulative probabilities of the choices
-        block_size: size of blocks of choices to generate
+    number_of_states: number of choices that has to be generated
+    cum_weights (array[float]): cumulative probabilities of the choices
+    block_size: size of blocks of choices to generate
     """
 
     number_of_states: int
     cum_weights: np.ndarray
     block_size: int = 5000
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.number_of_states == len(self.cum_weights):
             raise Exception(
                 f'specification of cumulative weights (len {len(self.cum_weights)})'
                 + ' does not match number of states {self.number_of_states}')
         self.rng = np.random.Generator(np.random.SFC64())
         self._idx = 0
-        self._block: List[int] = self._generate_block().tolist()
+        self._block: List[int] = cast(List[int], self._generate_block().tolist())
 
-    def _generate_block(self, size: Optional[int] = None) -> np.ndarray:
+    def _generate_block(self, size: Optional[int] = None) -> IntArray:
         if size is None:
             size = self.block_size
         else:
             self.block_size = size
         weights = np.concatenate(([self.cum_weights[0]], np.diff(self.cum_weights)))  # type: ignore
         counts = np.random.multinomial(size, weights)
-        block = np.concatenate(tuple(choice_idx * np.ones(c, dtype=int) for choice_idx, c in enumerate(counts)))
+        block: IntArray = np.concatenate(tuple(choice_idx * np.ones(c, dtype=int) for choice_idx,
+                                                                                      c in enumerate(counts)))
         self.rng.shuffle(block)
         return block
 
@@ -64,7 +66,7 @@ class ChoiceGenerator:
         self._idx = self._idx + 1
         if self._idx == self.block_size:
             self._idx = 0
-            self._block = self._generate_block().tolist()
+            self._block = cast(List[int], self._generate_block().tolist())
         return self._block[self._idx]
 
     def generate_choices(self, size: int) -> np.ndarray:

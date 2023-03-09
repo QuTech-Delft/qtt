@@ -39,11 +39,18 @@ from functools import wraps
 from math import cos, sin
 from typing import Any, List, Optional, Sequence, Tuple, Union
 
+import matplotlib
+import matplotlib.pylab as pylab
+import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import scipy.io
 import scipy.ndimage as filters
 import scipy.ndimage.morphology as morphology
+from numpy.typing import ArrayLike
+
+FloatArray = numpy.typing.NDArray[np.float_]
+AnyArray = numpy.typing.NDArray[Any]
 
 __version__ = '0.7.0'
 
@@ -65,14 +72,11 @@ try:
     try:
         # by default use qtpy to import Qt
         import qtpy
-        _haveqtpy = True
-
         import qtpy.QtCore as QtCore
         import qtpy.QtGui as QtGui
         import qtpy.QtWidgets as QtWidgets
         from qtpy.QtCore import QObject, Signal, Slot
     except ImportError:
-        _haveqtpy = False
         warnings.warn('could not import qtpy, not all functionality available')
         pass
 
@@ -115,28 +119,11 @@ except Exception as ex:
     print('pgeometry: no Qt found')
 
 # %% Load other modules
+
+# needed for 3d plot points, do not remove!
 try:
-    import pylab
-    import pylab as p
-
-except Exception as inst:
-    print(inst)
-    print('could not import pylab, not all functionality available...')
-    pass
-
-try:
-    import matplotlib
-    import matplotlib.pyplot as plt
-
-    # needed for 3d plot points, do not remove!
-    try:
-        from mpl_toolkits.mplot3d import Axes3D
-    except BaseException:
-        pass
-except ModuleNotFoundError as ex:
-    warnings.warn(
-        'could not find matplotlib, not all functionality available...')
-    plt = None
+    from mpl_toolkits.mplot3d import Axes3D
+except BaseException:
     pass
 
 try:
@@ -436,11 +423,16 @@ def mkdirc(d: str):
     return str(p)
 
 
-def projectiveTransformation(H: np.ndarray, x: np.ndarray) -> np.ndarray:
-    """ Apply a projective transformation to a kxN array
+def projectiveTransformation(H: FloatArray, x: FloatArray) -> FloatArray:
+    """ Apply a projective transformation to a k x N array
 
     >>> y = projectiveTransformation( np.eye(3), np.random.rand( 2, 10 ))
     """
+    try:
+        import cv2
+    except (ModuleNotFoundError, ImportError):
+        assert False, "could not find or load OpenCV, 'projectiveTransformation' is not available"
+
     k = x.shape[0]
     kout = H.shape[0] - 1
     xx = x.transpose().reshape((-1, 1, k))
@@ -477,16 +469,15 @@ def breakLoop(wk=None, dt=0.001, verbose=0):
     return False
 
 
-def hom(x: np.ndarray) -> np.ndarray:
-    """ Create affine to homogeneous coordinates
+def hom(x: FloatArray) -> FloatArray:
+    """ Convert affine to homogeneous coordinates
 
     Args:
-        x (kxN array): affine coordinates
+        x: k x N array in affine coordinates
     Returns:
-        h ( (k+1xN) array): homogeneous coordinates
+        An (k+1xN) arrayin homogeneous coordinates
     """
-    nx = x.shape[1]
-    return np.vstack((x, np.ones(nx)))
+    return np.vstack((x, np.ones_like(x)))
 
 
 def dehom(x: np.ndarray) -> np.ndarray:
@@ -494,21 +485,37 @@ def dehom(x: np.ndarray) -> np.ndarray:
     return x[0:-1, :] / x[-1, :]
 
 
-def null(a, rtol=1e-5):
-    """ Calculate null space of a matrix """
+def null(a: FloatArray, rtol: float = 1e-7) -> tuple[int, FloatArray]:
+    """ Calculate null space of a matrix
+
+    Args:
+        a: Input matrix
+        rtol: Relative tolerance on the eigenvalues
+
+    Returns:
+        Tuple with the dimension of the null space and a set of vectors spanning the null space
+
+    Example:
+        >>> a = np.array([[1, 0, 0], [0, 1,0], [0, 0, 0]])
+        >>> null(a)
+        (2,
+         array([[0.],
+                [0.],
+                [1.]]))
+    """
     u, s, v = np.linalg.svd(a)
     rank = (s > rtol * s[0]).sum()
-    return rank, v[rank:].T.copy()
+    return rank, v[rank:].T
 
 
-def intersect2lines(l1, l2):
+def intersect2lines(l1: FloatArray, l2: FloatArray) -> FloatArray:
     """ Calculate intersection between 2 lines
 
     Args:
-        l1 (array): first line in homogeneous format
-        l2 (array): first line in homogeneous format
+        l1: first line in homogeneous coordinates
+        l2: second line in homogeneous coordinates
     Returns:
-        array: intersection in homogeneous format. To convert to affine coordinates use `dehom`
+        Intersection in homogeneous coordinates. To convert to affine coordinates use `dehom`
     """
     r = null(np.vstack((l1, l2)))
     return r[1]
@@ -617,7 +624,7 @@ def RBE2euler(Rbe):
 
 def pg_rotation2H(R):
     """ Convert rotation matrix to homogenous transform matrix """
-    X = np.array(np.eye(R.shape[0] + 1))
+    X = np.eye(R.shape[0] + 1)
     X[0:-1, 0:-1] = R
     return X
 
@@ -726,7 +733,7 @@ def frame2T(f):
     return T
 
 
-def rot2D(phi: float) -> np.ndarray:
+def rot2D(phi: float) -> FloatArray:
     """ Return 2x2 rotation matrix from angle
 
     Arguments
@@ -753,12 +760,21 @@ def rot2D(phi: float) -> np.ndarray:
     return r
 
 
-def pg_rotx(phi: float) -> np.ndarray:
+def pg_rotx(phi: float) -> FloatArray:
     """ Create rotation around the x-axis with specified angle """
     c = cos(phi)
     s = sin(phi)
     R = np.zeros((3, 3))
     R.ravel()[:] = [1, 0, 0, 0, c, -s, 0, s, c]
+    return R
+
+
+def pg_rotz(phi: float) -> FloatArray:
+    """ Create rotation around the z-axis with specified angle """
+    c = cos(phi)
+    s = sin(phi)
+    R = np.zeros((3, 3))
+    R.ravel()[:] = [c, -s, 0, s, c, 0, 0, 0, 1]
     return R
 
 
@@ -799,7 +815,7 @@ def imshowz(im, *args, **kwargs):
     ax.format_coord = format_coord
 
 
-def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None) -> np.ndarray:
+def pg_scaling(scale: Union[float, FloatArray], cc: Optional[FloatArray] = None) -> FloatArray:
     """ Create scale transformation with specified centre
 
     Args:
@@ -820,16 +836,37 @@ def pg_scaling(scale: Union[float, np.ndarray], cc: Optional[np.ndarray] = None)
     scale = np.hstack((scale, 1))
     H = np.diag(scale)
     if cc is not None:
-        cc = np.array(cc).flatten()
+        cc = np.asarray(cc).flatten()
         H = pg_transl2H(cc).dot(H).dot(pg_transl2H(-cc))
 
     return H
 
 
-def pg_transl2H(tr):
+def pg_affine2hom(U: FloatArray) -> FloatArray:
+    """ Create homogeneous transformation from affine transformation
+
+    Args:
+        U: Affine transformation
+
+    Returns:
+        Homogeneous transformation
+
+    Example
+    -------
+    >>> pg_affine2hom(np.array([[2.]]))
+    array([[ 2.,  0.],
+           [ 0.,  1.]])
+
+    """
+    H = np.eye(U.shape[0]+1, dtype=U.dtype)
+    H[:-1, :-1] = U
+    return H
+
+
+def pg_transl2H(tr: FloatArray) -> FloatArray:
     """ Convert translation to homogeneous transform matrix
 
-    >>> pg_transl2H( [1,2])
+    >>> pg_transl2H([1, 2])
     array([[ 1.,  0.,  1.],
             [ 0.,  1.,  2.],
             [ 0.,  0.,  1.]])
@@ -958,26 +995,31 @@ def plotPoints(xx, *args, **kwargs):
     return h
 
 
-def plot2Dline(line, *args, **kwargs):
+def plot2Dline(line: Union[List[Any], AnyArray], *args: Any, **kwargs: Any) -> Any:
     """ Plot a 2D line in a matplotlib figure
 
     Args:
-        line (3x1 array): line to plot
+        line: Line to plot in homogeneous coordinates
+        args: Passed to matplotlib plot method
+        kwargs: Passed to matplotlib plot method
 
-    >>> plot2Dline([-1,1,0], 'b')
+    Returns:
+        Handle to plotted line
+
+    >>> plot2Dline([-1, 1, 0], 'b')
     """
-    if np.abs(line[1]) > .001:
-        xx = plt.xlim()
-        xx = np.array(xx)
+    if np.abs(line[1]) > np.abs(line[0]):
+        xx = np.asarray(plt.xlim())
         yy = (-line[2] - line[0] * xx) / line[1]
-        plt.plot(xx, yy, *args, **kwargs)
+        h = plt.plot(xx, yy, *args, **kwargs)
     else:
-        yy = np.array(plt.ylim())
+        yy = np.asarray(plt.ylim())
         xx = (-line[2] - line[1] * yy) / line[0]
-        plt.plot(xx, yy, *args, **kwargs)
-
+        h = plt.plot(xx, yy, *args, **kwargs)
+    return h
 
 # %%
+
 
 def scaleImage(image: np.ndarray, display_min: Optional[float] = None,
                display_max: Optional[float] = None) -> np.ndarray:
@@ -1077,13 +1119,13 @@ def plotPoints3D(xx, *args, **kwargs):
         print('plotPoints3D: using fig %s' % fig)
         print('plotPoints3D: using args %s' % args)
     if fig is None:
-        ax = p.gca()
+        ax = pylab.gca()
     else:
-        fig = p.figure(fig)
+        fig = pylab.figure(fig)
         ax = fig.gca(projection='3d')
     ax.plot(np.ravel(xx[0, :]), np.ravel(xx[1, :]),
             np.ravel(xx[2, :]), *args, **kwargs)
-    p.draw()
+    pylab.draw()
     return ax
 
 # %%
@@ -1509,7 +1551,6 @@ def choose(n, k):
 
 # %%
 try:
-    import PIL
     from PIL import Image, ImageDraw, ImageFont
 
     def writeTxt(im, txt, pos=(10, 10), fontsize=25, color=(0, 0, 0), fonttype=None):
@@ -1733,7 +1774,7 @@ def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
     Args:
         x: position in format (x,y,w,h)
         y, w, h: y position, width, height
-        fig (None or int): specification of figure window. Use None for the current active window
+        fig: specification of figure window. Use None for the current active window
 
     Usage: setWindowRectangle([x, y, w, h]) or setWindowRectangle(x, y, w, h)
     """
@@ -1782,20 +1823,24 @@ def raiseWindow(fig):
 
 
 @static_var('monitorindex', -1)
-def tilefigs(lst, geometry=[2, 2], ww=None, raisewindows=False, tofront=False,
-             verbose=0, monitorindex=None):
+def tilefigs(lst: List[Union[int, plt.Figure]], geometry: Optional[List[int]] = None,
+             ww: Optional[List[int]] = None, raisewindows: bool = False, tofront: bool = False,
+             verbose: int = 0, monitorindex: Optional[int] = None) -> None:
     """ Tile figure windows on a specified area
 
     Arguments
     ---------
-        lst : list
-                list of figure handles or integers
-        geometry : 2x1 array
-                layout of windows
-        monitorindex (None or int): index of monitor to use for output
-        ww (None or list): monitor sizes
+        lst: list of figure handles or integers
+        geometry: 2x1 array, layout of windows
+        ww: monitor sizes
+        raisewindows: When True, request that the window be raised to appear above other windows
+        tofront: When True, activate the figure
+        verbose: Verbosity level
+        monitorindex: index of monitor to use for output
 
     """
+    if geometry is None:
+        geometry = [2, 2]
     mngr = plt.get_current_fig_manager()
     be = matplotlib.get_backend()
     if monitorindex is None:
@@ -2020,8 +2065,10 @@ def histogram(x, nbins=30, fig=1):
 
 
 # %%
-def decomposeProjectiveTransformation(H, verbose=0):
+def decomposeProjectiveTransformation(H: FloatArray, verbose=0) -> tuple[FloatArray, FloatArray, FloatArray,
+                                                                         tuple[Any, Any, FloatArray, FloatArray]]:
     """ Decompose projective transformation
+
     H is decomposed as H = Hs*Ha*Hp with
 
      Hs = [sR t]
@@ -2039,12 +2086,12 @@ def decomposeProjectiveTransformation(H, verbose=0):
 
     >>> Ha, Hs, Hp, rest = decomposeProjectiveTransformation( np.eye(3) )
     """
-    H = np.array(H)
+    H = np.asarray(H)
     k = H.shape[0]
     km = k - 1
 
     eta = H[k - 1, k - 1]
-    Hp = np.array(np.vstack((np.eye(km, k), H[k - 1, :])))
+    Hp = np.vstack((np.eye(km, k), H[k - 1, :]))
     A = H[0:km, 0:km]
     t = H[0:km, -1]
     v = H[k - 1, 0:km].T
@@ -2056,8 +2103,8 @@ def decomposeProjectiveTransformation(H, verbose=0):
     sRK = A - np.array(t).dot(np.array(v.T))
     # upper left block of H*inv(Hp)
     R, K = np.linalg.qr(sRK)
-    K = np.array(K)
-    R = np.array(R)
+    K = np.asarray(K)
+    R = np.asarray(R)
 
     s = (np.abs(np.linalg.det(K)))**(1. / km)
     K = K / s
@@ -2071,8 +2118,8 @@ def decomposeProjectiveTransformation(H, verbose=0):
         K = np.diag(sc).dot(K)
         R = R.dot(np.diag(sc))
     br = np.hstack((np.zeros((1, km)), np.ones((1, 1))))
-    Hs = np.array(np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br)))
-    Ha = np.array(np.vstack((np.hstack((K, np.zeros((km, 1)))), br)))
+    Hs = np.vstack((np.hstack((s * R, t.reshape((-1, 1)))), br))
+    Ha = np.vstack((np.hstack((K, np.zeros((km, 1)))), br))
 
     phi = np.arctan2(R[1, 0], R[0, 0])
 
@@ -2113,22 +2160,23 @@ def point_in_polygon(pt, pp):
     return r
 
 
-def minAlg_5p4(A: np.ndarray) -> np.ndarray:
+def minAlg_5p4(A: FloatArray) -> FloatArray:
     """ Algebraic minimization function
 
     Function computes the vector x that minimizes ||Ax|| subject to the
     condition ||x||=1.
+
     Implementation of Hartley and Zisserman A5.4 on p593 (2nd Ed)
 
-    Usage:   [x,V] = minAlg_5p4(A)
-    Arguments:
-             A (numpy array) : The constraint matrix, ||Ax|| to be minimized
+    Example:
+        >>> [x,V] = minAlg_5p4(A)
+
+    Args:
+             A : The constraint matrix, ||Ax|| to be minimized
     Returns:
-              x - The vector that minimizes ||Ax|| subject to the
-                  condition ||x||=1
+             The vector x that minimizes ||Ax|| subject to the condition ||x||=1
 
     """
-
     # Compute the SVD of A
     (_, _, V) = np.linalg.svd(A)
 
