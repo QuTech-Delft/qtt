@@ -126,6 +126,8 @@ def analyse_awg_to_plunger(result: dict, method: str = 'hough', fig: Optional[in
         gray = qtt.pgeometry.scaleImage(imx)
 
         edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+        # discard any edge effects
+        edges[0,:]=edges[-1,:]=edges[:,-1]=edges[:,0]=0
 
         lines = cv2.HoughLines(edges, 1, np.pi / 180, int(gray.shape[0] * .5))
         if lines is None:
