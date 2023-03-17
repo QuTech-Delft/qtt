@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import qtt.pgeometry as pgeometry
-from qtt.pgeometry import pg_transl2H, point_in_polygon, points_in_polygon, projectiveTransformation
+from qtt.pgeometry import pg_transl2H, point_in_polygon, points_in_polygon, projectiveTransformation, hom
 
 
 class TestPGeometry(unittest.TestCase):
@@ -18,6 +18,13 @@ class TestPGeometry(unittest.TestCase):
 
 class TestGeometryOperations(unittest.TestCase):
 
+    def test_hom(self):
+        pts = np.array([[1,0], [1,1], [2,2]]).T
+        expected = np.array([[1, 1, 2],
+               [0, 1, 2],
+               [1, 1, 1] ])
+        self.assertEqual(hom(pts), expected)
+        
     def test_projectiveTransformation(self):
         x = np.array([[1., 0], [0, 2]])
 
