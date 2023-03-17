@@ -23,7 +23,7 @@ class TestGeometryOperations(unittest.TestCase):
         expected = np.array([[1, 1, 2],
                [0, 1, 2],
                [1, 1, 1] ])
-        self.assertEqual(hom(pts), expected)
+        np.testing.assert_array_almost_equal(hom(pts), expected)
         
     def test_projectiveTransformation(self):
         x = np.array([[1., 0], [0, 2]])
