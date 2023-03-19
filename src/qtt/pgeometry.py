@@ -477,7 +477,7 @@ def hom(x: FloatArray) -> FloatArray:
     Returns:
         An (k+1xN) arrayin homogeneous coordinates
     """
-    return np.vstack((x, np.ones_like(x)))
+    return np.vstack((x, np.ones_like(x, shape=(1, x.shape[1]))))
 
 
 def dehom(x: np.ndarray) -> np.ndarray:
