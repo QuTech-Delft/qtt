@@ -37,7 +37,7 @@ tests_require = ['coverage', 'jupyter', 'mypy', 'types-redis', 'types-python-dat
 install_requires = [
     'apscheduler', 'attrs', 'dulwich', 'IPython', 'jupyter', 'lmfit', 'matplotlib',
     'numdifftools', 'numpy>=1.23', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph<0.13.0', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.30.0',
-    'qcodes-contrib-drivers', 'qilib==0.3.11', 'qiskit-terra>=0.22', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
+    'qcodes-contrib-drivers', 'qilib==0.3.12', 'qiskit-terra>=0.22', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
     'shapely', 'sympy', 'imageio', 'rich'
 ] + tests_require
 
