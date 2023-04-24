@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- python 3.11 support
 - python 3.10 support
 - pgeometry.pg_rotz
 - pgeometry.pg_affine2hom
