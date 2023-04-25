@@ -17,7 +17,7 @@ import qcodes
 import qcodes.data.io
 from qcodes import ManualParameter, Parameter
 from qcodes.data.data_set import DataSet
-from qcodes.instrument_drivers.devices import VoltageDivider
+from qcodes.parameters import ScaledParameter
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting
@@ -61,7 +61,7 @@ class TestScans(TestCase):
     def test_scan1D(self, verbose=0):
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)
-        r = VoltageDivider(p, 4)
+        r = ScaledParameter(p, division=4)
         _ = MultiParameter(instrumentName('multi_param'), [p, q])
 
         gates = VirtualIVVI(
@@ -91,7 +91,7 @@ class TestScans(TestCase):
 
     def test_scan1D_no_gates(self):
         p = Parameter('p', set_cmd=None)
-        r = VoltageDivider(p, 4)
+        r = ScaledParameter(p, division=4)
         scanjob = scanjob_t({'sweepdata': {'param': p, 'start': 0, 'end': 10, 'step': 2}, 'minstrument': [r]})
         station = qcodes.Station()
         dataset = scan1D(station, scanjob, liveplotwindow=False, verbose=0)
@@ -100,7 +100,7 @@ class TestScans(TestCase):
 
     def test_scanjob_record_label(self):
         p = Parameter('p', set_cmd=None)
-        r = VoltageDivider(p, 4)
+        r = ScaledParameter(p, division=4)
 
         record_label = '123unittest123'
         scanjob = scanjob_t({'sweepdata': dict(
@@ -113,7 +113,7 @@ class TestScans(TestCase):
     def test_scan2D(self, verbose=0):
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)
-        r = VoltageDivider(p, 4)
+        r = ScaledParameter(p, division=4)
         _ = MultiParameter(instrumentName('multi_param'), [p, q])
 
         gates = VirtualIVVI(
@@ -414,7 +414,7 @@ class TestScans(TestCase):
     def test_convert_scanjob_vec_scan2Dfast(self):
         p = Parameter('p', set_cmd=None)
         q = Parameter('q', set_cmd=None)
-        r = VoltageDivider(p, 4)
+        r = ScaledParameter(p, division=4)
         _ = MultiParameter(instrumentName('multi_param'), [p, q])
 
         gates = VirtualIVVI(
