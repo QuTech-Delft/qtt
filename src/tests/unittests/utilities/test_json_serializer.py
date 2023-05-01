@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 import qcodes
-from qcodes.data.data_set import DataSet
-from qcodes.tests.legacy.data_mocks import DataSet2D
+from qcodes_loop.data.data_set import DataSet
+from qcodes_loop.tests.data_mocks import DataSet2D
 
 from qtt.utilities.json_serializer import decode_json, encode_json, qtt_serializer
 

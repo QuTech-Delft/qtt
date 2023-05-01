@@ -9,10 +9,11 @@ from typing import Any, Dict, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
+import qcodes_loop
 import scipy
-from qcodes.data.data_array import DataArray
-from qcodes.data.data_set import DataSet, new_data
-from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes_loop.data.data_array import DataArray
+from qcodes_loop.data.data_set import DataSet, new_data
+from qcodes_loop.plots.qcmatplotlib import MatPlot
 
 import qtt.algorithms.generic
 import qtt.utilities.json_serializer
@@ -155,7 +156,7 @@ def load_dataset(location, io=None, verbose=0):
 
     Args:
         location (str): either the relative or full location
-        io (None or qcodes.data.io.DiskIO):
+        io (None or qcodes_loop.data.io.DiskIO):
     Returns:
         dataset (DataSet or None)
     """
@@ -164,18 +165,18 @@ def load_dataset(location, io=None, verbose=0):
         io = DataSet.default_io
     formatters = [DataSet.default_formatter]
 
-    from qcodes.data.hdf5_format import HDF5FormatMetadata
+    from qcodes_loop.data.hdf5_format import HDF5FormatMetadata
     formatters += [HDF5FormatMetadata()]
     try:
-        from qcodes.data.hdf5_format_hickle import HDF5FormatHickle
+        from qcodes_loop.data.hdf5_format_hickle import HDF5FormatHickle
         formatters += [HDF5FormatHickle()]
     except ImportError as ex:
         logging.info(f'HDF5FormatHickle not available {ex}')
 
-    from qcodes.data.hdf5_format import HDF5Format
+    from qcodes_loop.data.hdf5_format import HDF5Format
     formatters += [HDF5Format()]
 
-    from qcodes.data.gnuplot_format import GNUPlotFormat
+    from qcodes_loop.data.gnuplot_format import GNUPlotFormat
     formatters += [GNUPlotFormat()]
 
     data = None
@@ -189,7 +190,7 @@ def load_dataset(location, io=None, verbose=0):
             try:
                 if verbose:
                     print('%d: %s' % (ii, hformatter))
-                data = qcodes.data.data_set.load_data(location, formatter=hformatter, io=io)
+                data = qcodes_loop.data.data_set.load_data(location, formatter=hformatter, io=io)
                 if len(data.arrays) == 0:
                     data = None
                     raise Exception('empty dataset, probably a HDF5 format misread by GNUPlotFormat')

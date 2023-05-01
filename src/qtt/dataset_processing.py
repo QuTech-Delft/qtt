@@ -2,8 +2,8 @@ import copy
 from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
-from qcodes.data.data_array import DataArray
-from qcodes.data.data_set import DataSet
+from qcodes_loop.data.data_array import DataArray
+from qcodes_loop.data.data_set import DataSet
 
 import qtt.data
 

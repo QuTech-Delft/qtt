@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes_loop.plots.qcmatplotlib import MatPlot
 
 import qtt.algorithms.images
 import qtt.pgeometry

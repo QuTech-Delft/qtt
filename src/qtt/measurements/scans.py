@@ -16,11 +16,11 @@ import numpy as np
 import pyqtgraph
 import qcodes
 from qcodes import Instrument
-from qcodes.data.data_array import DataArray
+from qcodes_loop.data.data_array import DataArray
 from qcodes.instrument.parameter import Parameter
 from qcodes.instrument.sweep_values import SweepFixedValues
-from qcodes.plots.qcmatplotlib import MatPlot
-from qcodes.utils.helpers import tprint
+from qcodes_loop.plots.qcmatplotlib import MatPlot
+from qcodes_loop.loops import tprint
 
 import qtt.algorithms.onedot
 import qtt.gui.live_plotting

@@ -14,9 +14,9 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 import qcodes
-import qcodes.data.io
+import qcodes_loop.data.io
 from qcodes import ManualParameter, Parameter
-from qcodes.data.data_set import DataSet
+from qcodes_loop.data.data_set import DataSet
 from qcodes.parameters import ScaledParameter
 
 import qtt.algorithms.onedot
@@ -39,7 +39,7 @@ if 1:  # prevent auto-formatting
 class TestScans(TestCase):
 
     def setUp(self):
-        DataSet.default_io = qcodes.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        DataSet.default_io = qcodes_loop.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     def test_get_instrument_parameter(self):
         instrument = VirtualIVVI(instrumentName('test'), None)

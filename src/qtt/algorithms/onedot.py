@@ -9,10 +9,9 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qcodes
 import scipy
 import scipy.ndimage
-from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes_loop.plots.qcmatplotlib import MatPlot
 
 import qtt.data
 import qtt.pgeometry as pgeometry

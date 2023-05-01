@@ -10,7 +10,7 @@ import qtt
 import qtt.pgeometry
 import matplotlib.pyplot as plt
 
-from qcodes.plots.qcmatplotlib import MatPlot
+from qcodes_loop.plots.qcmatplotlib import MatPlot
 from qtt.data import diffDataset
 
 

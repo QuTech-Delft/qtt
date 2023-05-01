@@ -266,7 +266,7 @@ def start_measurement_control(doexec=False):
 
 
 try:
-    from qcodes.plots.pyqtgraph import QtPlot
+    from qcodes_loop.plots.pyqtgraph import QtPlot
 
     import qtt.gui
     import qtt.gui.parameterviewer

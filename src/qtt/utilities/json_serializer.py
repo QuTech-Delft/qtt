@@ -2,7 +2,7 @@ from typing import Any
 
 import numpy as np
 import qcodes
-from qcodes.data.data_set import DataSet
+from qcodes_loop.data.data_set import DataSet
 from qilib.utils.serialization import NumpyKeys, JsonSerializeKey, Serializer, serializer
 
 import qtt.data

@@ -8,8 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import qcodes
-from qcodes.data.data_array import DataArray
-from qcodes.tests.legacy.data_mocks import DataSet2D
+import qcodes_loop
+from qcodes_loop.data.data_array import DataArray
+from qcodes_loop.tests.data_mocks import DataSet2D
 
 import qtt.measurements.scans
 from qtt.utilities.tools import (_convert_rgb_color_to_integer, _covert_integer_to_rgb_color, code_version, diffImage,
@@ -104,7 +105,7 @@ class TestTools(unittest.TestCase):
 
     def test_reshape_metadata(self, quiet=True):
         param = qcodes.ManualParameter('dummy')
-        data_set = qcodes.loops.Loop(param[0:1:10]).each(param).run(quiet=quiet)
+        data_set = qcodes_loop.loops.Loop(param[0:1:10]).each(param).run(quiet=quiet)
 
         metadata = reshape_metadata(data_set, printformat='dict')
         self.assertTrue(metadata.startswith('dataset'))

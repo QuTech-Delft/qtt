@@ -11,7 +11,7 @@ from typing import Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qcodes
+import qcodes_loop
 
 from qtt.algorithms.fitting import fit_double_gaussian, refit_double_gaussian
 from qtt.algorithms.functions import double_gaussian, exp_function, fit_exp_decay, gaussian
@@ -227,7 +227,7 @@ def _create_integer_histogram(durations):
     return counts, bin_edges, bin_size
 
 
-def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], samplerate: Optional[float] = None,
+def tunnelrates_RTS(data: Union[np.ndarray, qcodes_loop.data.data_set.DataSet], samplerate: Optional[float] = None,
                     min_sep: float = 2.0, max_sep: float = 7.0, min_duration: int = 5,
                     num_bins: Optional[int] = None, fig: Optional[int] = None, ppt=None,
                     verbose: int = 0,
@@ -267,7 +267,7 @@ def tunnelrates_RTS(data: Union[np.ndarray, qcodes.data.data_set.DataSet], sampl
                 tunnelrate_up (float): tunnel rate up in Hz
 
     """
-    if isinstance(data, qcodes.data.data_set.DataSet):
+    if isinstance(data, qcodes_loop.data.data_set.DataSet):
         if samplerate is None:
             samplerate = data.metadata.get('samplerate', None)
 

@@ -4,8 +4,8 @@ import json
 import tempfile
 
 import qcodes
-import qcodes.data.io
-from qcodes.data.data_set import DataSet
+import qcodes_loop.data.io
+from qcodes_loop.data.data_set import DataSet
 import qtt.simulation.virtual_dot_array
 from qtt.structures import onedot_t, MultiParameter, CombiParameter
 
@@ -13,7 +13,7 @@ from qtt.structures import onedot_t, MultiParameter, CombiParameter
 class TestStructures(unittest.TestCase):
 
     def setUp(self):
-        DataSet.default_io = qcodes.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        DataSet.default_io = qcodes_loop.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     def test_spin_structures(self, verbose=0):
         o = onedot_t('dot1', ['L', 'P1', 'D1'], station=None)

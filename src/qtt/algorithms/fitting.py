@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from lmfit.model import Model, ModelResult
-from qcodes.data.data_array import DataArray
+from qcodes_loop.data.data_array import DataArray
 
 import qtt.pgeometry
 from qtt.algorithms.functions import Fermi, FermiLinear, estimate_dominant_frequency, gaussian, linear_function, sine
