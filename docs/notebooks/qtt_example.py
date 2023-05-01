@@ -15,7 +15,6 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph
-import qcodes
 import qcodes_loop
 from qcodes_loop.data.data_set import DataSet
 

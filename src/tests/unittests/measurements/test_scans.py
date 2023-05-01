@@ -12,7 +12,6 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
 import qcodes
 import qcodes_loop.data.io
 from qcodes import ManualParameter, Parameter

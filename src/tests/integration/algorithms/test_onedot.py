@@ -8,7 +8,6 @@ For more details see https://arxiv.org/abs/1603.02274
 import unittest
 import matplotlib.pyplot as plt
 import tempfile
-import qcodes
 import qcodes_loop.data.io
 from qcodes_loop.data.data_set import DataSet
 from qtt.simulation.virtual_dot_array import initialize
