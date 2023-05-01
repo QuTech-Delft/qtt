@@ -133,9 +133,6 @@ liveValueSet = _redisStrSet
 
 abort_measurements = _abort_measurement  # type: ignore
 
-# patch the qcodes abort function
-qcodes_loop.abort_measurements = _abort_measurement  # type: ignore
-
 # %% Override default location formatter
 
 FormatLocation.default_fmt = '{date}/{time}_{name}_{label}'
