@@ -134,7 +134,7 @@ liveValueSet = _redisStrSet
 abort_measurements = _abort_measurement  # type: ignore
 
 # patch the qcodes abort function
-qcodes_loop.abort_measurements = _abort_measurement  # type: ignore
+qcodes_loop.loops.abort_measurements = _abort_measurement  # type: ignore
 
 # %% Override default location formatter
 

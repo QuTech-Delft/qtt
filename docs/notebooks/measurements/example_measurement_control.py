@@ -8,8 +8,8 @@ Created on Thu Sep  8 13:36:56 2016
 #%% Start the control widget
 import sys
 import platform
-import qcodes
-import qcodes as qc
+import qcodes_loop
+import qcodes_loop as qc
 from qtt.live_plotting import MeasurementControl
 from qcodes.tests.instrument_mocks import DummyInstrument
 import pyqtgraph as pg
