@@ -485,7 +485,7 @@ def dehom(x: np.ndarray) -> np.ndarray:
     return x[0:-1, :] / x[-1, :]
 
 
-def null(a: FloatArray, rtol: float = 1e-7) -> tuple[int, FloatArray]:
+def null(a: FloatArray, rtol: float = 1e-7) -> Tuple[int, FloatArray]:
     """ Calculate null space of a matrix
 
     Args:
@@ -2065,8 +2065,8 @@ def histogram(x, nbins=30, fig=1):
 
 
 # %%
-def decomposeProjectiveTransformation(H: FloatArray, verbose=0) -> tuple[FloatArray, FloatArray, FloatArray,
-                                                                         tuple[Any, Any, FloatArray, FloatArray]]:
+def decomposeProjectiveTransformation(H: FloatArray, verbose=0) -> Tuple[FloatArray, FloatArray, FloatArray,
+                                                                         Tuple[Any, Any, FloatArray, FloatArray]]:
     """ Decompose projective transformation
 
     H is decomposed as H = Hs*Ha*Hp with
