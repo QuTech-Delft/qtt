@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from qcodes.tests.legacy.data_mocks import DataSet1D, DataSet2D
+from qcodes_loop.tests.data_mocks import DataSet1D, DataSet2D
 
 from qtt.dataset_processing import slice_dataset, process_dataarray, average_dataset, dataset_dimension, \
     average_multirow_dataset, resample_dataset

@@ -20,9 +20,9 @@ import importlib
 import warnings
 
 import qcodes
-import qcodes.loops
+import qcodes_loop
 from qcodes import Instrument, ManualParameter, Parameter, Station
-from qcodes.data.location import FormatLocation
+from qcodes_loop.data.location import FormatLocation
 from setuptools._vendor.packaging.version import Version
 
 import qtt.algorithms
@@ -133,20 +133,17 @@ liveValueSet = _redisStrSet
 
 abort_measurements = _abort_measurement  # type: ignore
 
-# patch the qcodes abort function
-qcodes.loops.abort_measurements = _abort_measurement  # type: ignore
-
 # %% Override default location formatter
 
 FormatLocation.default_fmt = '{date}/{time}_{name}_{label}'
-qcodes.data.data_set.DataSet.location_provider = FormatLocation(
+qcodes_loop.data.data_set.DataSet.location_provider = FormatLocation(
     fmt='{date}/{time}_{name}_{label}', record={'name': 'qtt', 'label': 'generic'})
 
 
 def set_location_name(name, verbose=1):
     if verbose:
         print('setting location name tag to %s' % name)
-    qcodes.data.data_set.DataSet.location_provider.base_record['name'] = name
+    qcodes_loop.data.data_set.DataSet.location_provider.base_record['name'] = name
 # %%
 
 
@@ -177,7 +174,7 @@ qcodes.Parameter.__setstate__ = _setstate  # type: ignore
 # %% Enhance the qcodes functionality
 
 try:
-    from qcodes.plots.pyqtgraph import QtPlot
+    from qcodes_loop.plots.pyqtgraph import QtPlot
     from qtpy import QtWidgets
     from qtpy.QtCore import Qt
 

@@ -8,11 +8,11 @@ from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qcodes
+import qcodes_loop
 from qcodes import ManualParameter
-from qcodes.data.data_array import DataArray
-from qcodes.data.data_set import DataSet
-from qcodes.tests.legacy.data_mocks import DataSet1D, DataSet2D
+from qcodes_loop.data.data_array import DataArray
+from qcodes_loop.data.data_set import DataSet
+from qcodes_loop.tests.data_mocks import DataSet1D, DataSet2D
 
 import qtt.data
 from qtt.data import (add_comment, compare_dataset_metadata,
@@ -187,10 +187,10 @@ class TestData(unittest.TestCase):
 
     @staticmethod
     def test_load_dataset(verbose=0):
-        h = qcodes.data.hdf5_format.HDF5Format()
-        g = qcodes.data.gnuplot_format.GNUPlotFormat()
+        h = qcodes_loop.data.hdf5_format.HDF5Format()
+        g = qcodes_loop.data.gnuplot_format.GNUPlotFormat()
 
-        disk_io = qcodes.data.io.DiskIO(tempfile.mkdtemp())
+        disk_io = qcodes_loop.data.io.DiskIO(tempfile.mkdtemp())
         dd = []
         name = DataSet.location_provider.base_record['name']
         for jj, fmt in enumerate([g, h]):

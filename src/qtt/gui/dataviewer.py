@@ -9,10 +9,10 @@ import qtpy.QtGui as QtGui
 import qtpy.QtWidgets as QtWidgets
 from qtpy.QtWidgets import QFileDialog, QWidget
 
-import qcodes
-from qcodes.data.data_set import DataSet
+import qcodes_loop
+from qcodes_loop.data.data_set import DataSet
 import qtt
-from qcodes.plots.pyqtgraph import QtPlot
+from qcodes_loop.plots.pyqtgraph import QtPlot
 
 
 # %% Main class
@@ -153,7 +153,7 @@ class DataViewer(QtWidgets.QMainWindow):
     def set_data_directory(self, data_directory, index=0):
         self.data_directories[index] = data_directory
         self.data_directory = data_directory
-        self.disk_io = qcodes.data.io.DiskIO(data_directory)
+        self.disk_io = qcodes_loop.data.io.DiskIO(data_directory)
         logging.info('DataViewer: data directory %s' % data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
 
@@ -166,7 +166,7 @@ class DataViewer(QtWidgets.QMainWindow):
         index = (self.directory_index + 1) % len(self.data_directories)
         self.directory_index = index
         self.data_directory = self.data_directories[index]
-        self.disk_io = qcodes.data.io.DiskIO(self.data_directory)
+        self.disk_io = qcodes_loop.data.io.DiskIO(self.data_directory)
         logging.info('DataViewer: data directory %s' % self.data_directory)
         self.text.setText('Log files at %s' % self.data_directory)
         self.update_logs()

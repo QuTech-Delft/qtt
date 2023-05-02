@@ -12,7 +12,7 @@ from typing import ContextManager
 
 import numpy as np
 from qcodes import Instrument
-from qcodes.data.data_set import load_data
+from qcodes_loop.data.data_set import load_data
 from qcodes.utils.validators import Numbers
 
 try:

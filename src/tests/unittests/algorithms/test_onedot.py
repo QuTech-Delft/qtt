@@ -8,9 +8,8 @@ For more details see https://arxiv.org/abs/1603.02274
 import unittest
 import matplotlib.pyplot as plt
 import tempfile
-import qcodes
-import qcodes.data.io
-from qcodes.data.data_set import DataSet
+import qcodes_loop.data.io
+from qcodes_loop.data.data_set import DataSet
 from qtt.simulation.virtual_dot_array import initialize
 from qtt.measurements.scans import scan2D, scanjob_t
 from qtt.algorithms.onedot import onedotGetBalance, onedotGetBalanceFine, plot_onedot
@@ -19,7 +18,7 @@ from qtt.algorithms.onedot import onedotGetBalance, onedotGetBalanceFine, plot_o
 class TestOneDot(unittest.TestCase):
 
     def setUp(self):
-        DataSet.default_io = qcodes.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
+        DataSet.default_io = qcodes_loop.data.io.DiskIO(tempfile.mkdtemp(prefix='qtt-unittests'))
 
     @staticmethod
     def one_dot(fig=None, verbose=0):

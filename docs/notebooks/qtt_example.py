@@ -15,8 +15,8 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph
-import qcodes
-from qcodes.data.data_set import DataSet
+import qcodes_loop
+from qcodes_loop.data.data_set import DataSet
 
 import qtt
 import qtt.measurements.videomode
@@ -28,7 +28,7 @@ from qtt.measurements.scans import scanjob_t
 
 _ = pyqtgraph.mkQApp()
 datadir = tempfile.mkdtemp(prefix='qtt_example')
-DataSet.default_io = qcodes.data.io.DiskIO(datadir)
+DataSet.default_io = qcodes_loop.data.io.DiskIO(datadir)
 
 # %% Create a virtual model for testing
 #

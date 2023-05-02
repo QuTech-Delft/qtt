@@ -25,10 +25,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import qcodes
+import qcodes_loop
 import scipy.ndimage as ndimage
 from matplotlib.widgets import Button
-from qcodes.data.data_array import DataArray
-from qcodes.data.data_set import DataSet
+from qcodes_loop.data.data_array import DataArray
+from qcodes_loop.data.data_set import DataSet
 
 import qtt.pgeometry
 from qtt.pgeometry import mkdirc  # import for backwards compatibility
@@ -37,7 +38,7 @@ from qtt.pgeometry import mpl2clipboard
 # explicit import
 
 try:
-    from qcodes.plots.pyqtgraph import QtPlot
+    from qcodes_loop.plots.pyqtgraph import QtPlot
 except BaseException:
     pass
 
@@ -864,7 +865,7 @@ try:
 
         Arguments:
             title (str): title added to slide.
-            fig (matplotlib.figure.Figure or qcodes.plots.pyqtgraph.QtPlot or integer):
+            fig (matplotlib.figure.Figure or qcodes_loop.plots.pyqtgraph.QtPlot or integer):
                 figure added to slide.
             txt (str) : Deprecated, use subtitle instead.
             notes: notes added to slide.
@@ -1011,7 +1012,7 @@ try:
                 except BaseException:
                     figtemp = fig.grab()
                 figtemp.save(fname)
-            elif isinstance(fig, qcodes.plots.pyqtgraph.QtPlot):
+            elif isinstance(fig, qcodes_loop.plots.pyqtgraph.QtPlot):
                 fig.save(fname)
             elif isinstance(fig, np.ndarray):
                 imageio.imwrite(fname, fig)
@@ -1400,7 +1401,7 @@ def clickGatevals(plot, drawmode='ro'):
 
     """
     # TODO: implement for virtual gates
-    if not isinstance(plot, qcodes.plots.qcmatplotlib.MatPlot):
+    if not isinstance(plot, qcodes_loop.plots.qcmatplotlib.MatPlot):
         raise Exception(
             'The plot object is not based on the MatPlot class from qcodes.')
 

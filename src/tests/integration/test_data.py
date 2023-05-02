@@ -5,11 +5,11 @@ import unittest.mock
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qcodes
-import qcodes.data.io
-from qcodes.data.data_set import DataSet
-from qcodes.plots.qcmatplotlib import MatPlot
-from qcodes.tests.legacy.data_mocks import DataSet1D
+import qcodes_loop
+import qcodes_loop.data.io
+from qcodes_loop.data.data_set import DataSet
+from qcodes_loop.plots.qcmatplotlib import MatPlot
+from qcodes_loop.tests.data_mocks import DataSet1D
 
 import qtt.data
 
@@ -45,7 +45,7 @@ class TestDataSet(unittest.TestCase):
         - Serialization
         - Utility functions:
             * default_parameter_array()
-            * qcodes.plots.qcmatplotlib.MatPlot or qcodes.plots.pyqtgraph.QtPlot
+            * qcodes_loop.plots.qcmatplotlib.MatPlot or qcodes_loop.plots.pyqtgraph.QtPlot
             * Easy conversion to numpy: array = np.array(dataset.voltage). Even better: the DataArray's should
                 support the __array_interface__ attribute.
     """
@@ -74,7 +74,7 @@ class TestDataSet(unittest.TestCase):
     def test_load_legacy_dataset(self):
         """ We need to convert old datasets to the current dataset structure."""
         exampledatadir = os.path.join(qtt.__path__[0], 'exampledata')
-        qcodes.data.data_set.DataSet.default_io = qcodes.data.io.DiskIO(exampledatadir)
+        qcodes_loop.data.data_set.DataSet.default_io = qcodes_loop.data.io.DiskIO(exampledatadir)
         old_dataset = qtt.data.load_dataset('PAT_scan')
 
         def convert_legacy(old_dataset):
@@ -82,7 +82,7 @@ class TestDataSet(unittest.TestCase):
             return old_dataset
 
         new_dataset = convert_legacy(old_dataset)
-        self.assertIsInstance(new_dataset, qcodes.data.data_set.DataSet)
+        self.assertIsInstance(new_dataset, qcodes_loop.data.data_set.DataSet)
 
     def test_metadata(self):
         """ Test a dataset has metadata that can be get and set."""
