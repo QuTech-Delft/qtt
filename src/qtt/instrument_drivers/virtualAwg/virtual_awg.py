@@ -5,7 +5,6 @@ import numpy as np
 from qcodes import Instrument
 
 from qtt.instrument_drivers.virtualAwg.awgs.common import AwgCommon
-from qtt.instrument_drivers.virtualAwg.awgs.KeysightM3202A import KeysightM3202A_AWG
 from qtt.instrument_drivers.virtualAwg.awgs.Tektronix5014C import Tektronix5014C_AWG
 from qtt.instrument_drivers.virtualAwg.awgs.ZurichInstrumentsHDAWG8 import ZurichInstrumentsHDAWG8
 from qtt.instrument_drivers.virtualAwg.sequencer import Sequencer
@@ -40,8 +39,8 @@ class VirtualAwg(Instrument):
             markers and the AWG channels. The default settings (marker delays) are constructed at startup.
 
         Arguments:
-            awgs (list): A list with AWG instances. Currently the following AWG's are supported:
-                         Tektronix5014C, KeysightM3202A and the ZurichInstrumentsHDAWG8.
+            awgs (list): A list with AWG instances. Currently the following hardware AWG's are supported:
+                         Tektronix5014C, and the ZurichInstrumentsHDAWG8.
             settings (Instrument): A class containing the settings of the quantum device, which are the
                                   awg_map (specifies the relation between the quantum gates, marker outputs
                                   and AWG channels) and the awg_to_gate [mV/V] (specifies how many millivolt
@@ -68,7 +67,7 @@ class VirtualAwg(Instrument):
 
     def __set_hardware(self, awgs):
         """ Sets the virtual AWG backends using the QCoDeS driver. Currently the following AWG are supported:
-            the Tektronix AWG5014, the Keysight M3201A and the Zurich Instruments HDAWG8.
+            the Tektronix AWG5014, and the Zurich Instruments HDAWG8.
 
         Arguments:
             awgs (list): A list with the QCoDeS driver instances.
@@ -77,8 +76,6 @@ class VirtualAwg(Instrument):
         for awg in awgs:
             if type(awg).__name__ == 'Tektronix_AWG5014':
                 self.awgs.append(Tektronix5014C_AWG(awg))
-            elif type(awg).__name__ == 'Keysight_M3201A':
-                self.awgs.append(KeysightM3202A_AWG(awg))
             elif type(awg).__name__ == 'ZIHDAWG8':
                 self.awgs.append(ZurichInstrumentsHDAWG8(awg))
             else:
