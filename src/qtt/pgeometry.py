@@ -195,7 +195,7 @@ def list_objects(objectype=None, objectclassname='__123', verbose=1):
 
 def package_versions(verbose: int = 1):
     """ Report package versions installed """
-    print('numpy.__version__ %s' % numpy)
+    print('numpy.__version__ %s' % numpy.__version__)
     print('scipy.__version__ %s' % scipy.__version__)
     print('matplotlib.__version__ %s' % matplotlib.__version__)
     try:
