@@ -82,8 +82,8 @@ def subpixelmax(A, mpos, verbose=0):
         subval (array): Values at maximum positions
     """
 
-    A = np.array(A)
-    mpos = np.array(mpos)
+    A = np.asarray(A)
+    mpos = np.asarray(mpos)
     if np.array(mpos).size == 0:
         # corner case
         subpos = copy.copy(mpos)
@@ -102,10 +102,13 @@ def subpixelmax(A, mpos, verbose=0):
     ay = (valm + valp) / 2 - cy
     by = ay + cy - valm
 
-    if np.any(ay == 0):
-        shift = 0 * ay
-    else:
+    if ay.all():
         shift = -by / (2 * ay)  # Maxima of quadradic
+    else:
+        # one of the elements of ay equals zero (e.g. a flat region)
+        shift = 0.0 * ay
+        idx = ay != 0
+        shift[idx] = -by[idx] / (2 * ay[idx])
 
     if verbose:
         print('subpixelmax: mp %d, pp %d\n' % (mp, pp))

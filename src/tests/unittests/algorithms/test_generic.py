@@ -33,6 +33,16 @@ class TestGeneric(unittest.TestCase):
             plt.legend(numpoints=1)
             plt.close('all')
 
+    def test_subpixel_regression(self, fig=None):
+        ims = np.zeros(40)
+        ims[30] = -1.0
+        ims[31] = -1.0
+
+        mpos = [5, 30]
+        subpos, subval = subpixelmax(ims, mpos)
+        np.testing.assert_almost_equal(subpos, np.array([5.0, 30.5]))
+        np.testing.assert_almost_equal(subpos, np.array([0.0, -1.125]))
+        
     def test_rescale_image(self, fig=None):
         np.random.seed(2019)
         im = np.random.rand(300, 600)
