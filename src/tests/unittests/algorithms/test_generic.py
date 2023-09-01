@@ -41,7 +41,7 @@ class TestGeneric(unittest.TestCase):
         mpos = [5, 30]
         subpos, subval = subpixelmax(ims, mpos)
         np.testing.assert_almost_equal(subpos, np.array([5.0, 30.5]))
-        np.testing.assert_almost_equal(subpos, np.array([0.0, -1.125]))
+        np.testing.assert_almost_equal(subval, np.array([0.0, -1.125]))
         
     def test_rescale_image(self, fig=None):
         np.random.seed(2019)
