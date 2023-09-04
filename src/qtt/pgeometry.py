@@ -1781,7 +1781,10 @@ def setWindowRectangle(x: Union[int, Sequence[int]], y: Optional[int] = None,
     if y is None:
         x, y, w, h = x  # type: ignore
     if mngr is None:
-        mngr = plt.get_current_fig_manager()
+        if fig is None:
+            mngr = plt.get_current_fig_manager()
+        else:
+            mngr = plt.figure(fig).canvas.manager
     be = matplotlib.get_backend()
     if be == 'WXAgg':
         mngr.canvas.manager.window.SetPosition((x, y))
