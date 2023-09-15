@@ -35,7 +35,7 @@ def get_package_data(root_dir):
 tests_require = ['coverage', 'jupyter', 'mypy', 'types-redis', 'types-python-dateutil', 'pytest']
 
 install_requires = [
-    'apscheduler', 'attrs', 'dulwich', 'IPython', 'jupyter', 'lmfit', 'matplotlib',
+    'apscheduler', 'attrs', 'dulwich', 'IPython', 'jupyter', 'lmfit', 'matplotlib<3.8.0',
     'numdifftools', 'numpy>=1.23', 'opencv-python', 'pandas', 'PyQt5', 'pyqtgraph', 'pyvisa', 'pyzmqrpc', 'qcodes>=0.30.0',
     'qcodes-contrib-drivers', 'qcodes-loop', 'qilib==0.3.12', 'qiskit-terra>=0.22', 'qtpy', 'qupulse', 'redis', 'scipy', 'scikit-image',
     'shapely', 'sympy', 'imageio', 'rich'
