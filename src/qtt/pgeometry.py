@@ -200,7 +200,7 @@ def package_versions(verbose: int = 1):
     print('matplotlib.__version__ %s' % matplotlib.__version__)
     try:
         import cv2
-        print('cv2.__version__ %s' % cv2.__version__)
+        print('cv2.__version__ %s' % cv2.getVersionString())
     except BaseException:
         pass
     try:
@@ -1861,7 +1861,7 @@ def tilefigs(lst: List[Union[int, plt.Figure]], geometry: Optional[List[int]] = 
         print('tilefigs: ww %s, w %d h %d' % (str(ww), w, h))
     for ii, f in enumerate(lst):
         if isinstance(f, matplotlib.figure.Figure):
-            fignum = f.number
+            fignum = f.number # type: ignore
         elif isinstance(f, (int, numpy.int32, numpy.int64)):
             fignum = f
         else:
@@ -1883,20 +1883,20 @@ def tilefigs(lst: List[Union[int, plt.Figure]], geometry: Optional[List[int]] = 
             print('ii %d: %d %d: f %d: %d %d %d %d' %
                   (ii, ix, iy, fignum, x, y, w, h))
         if be == 'WXAgg':
-            fig.canvas.manager.window.SetPosition((x, y))
-            fig.canvas.manager.window.SetSize((w, h))
+            fig.canvas.manager.window.SetPosition((x, y)) # type: ignore
+            fig.canvas.manager.window.SetSize((w, h)) # type: ignore
         elif be == 'WX':
-            fig.canvas.manager.window.SetPosition((x, y))
-            fig.canvas.manager.window.SetSize((w, h))
+            fig.canvas.manager.window.SetPosition((x, y)) # type: ignore
+            fig.canvas.manager.window.SetSize((w, h)) # type: ignore
         elif be == 'agg':
-            fig.canvas.manager.window.SetPosition((x, y))
-            fig.canvas.manager.window.resize(w, h)
+            fig.canvas.manager.window.SetPosition((x, y)) # type: ignore
+            fig.canvas.manager.window.resize(w, h) # type: ignore
         elif be == 'Qt4Agg' or be == 'QT4' or be == 'QT5Agg' or be == 'Qt5Agg':
             # assume Qt canvas
             try:
-                fig.canvas.manager.window.move(x, y)
-                fig.canvas.manager.window.resize(int(w), int(h))
-                fig.canvas.manager.window.setGeometry(x, y, int(w), int(h))
+                fig.canvas.manager.window.move(x, y) # type: ignore
+                fig.canvas.manager.window.resize(int(w), int(h))# type: ignore
+                fig.canvas.manager.window.setGeometry(x, y, int(w), int(h)) # type: ignore
             except Exception as e:
                 print('problem with window manager: ', )
                 print(be)
@@ -1904,7 +1904,7 @@ def tilefigs(lst: List[Union[int, plt.Figure]], geometry: Optional[List[int]] = 
         else:
             raise NotImplementedError(f'unknown backend {be}')
         if raisewindows:
-            mngr.window.raise_()
+            mngr.window.raise_() # type: ignore
         if tofront:
             plt.figure(f)
 
