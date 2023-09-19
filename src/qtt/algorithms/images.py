@@ -7,11 +7,12 @@
 # %%
 import qtt.pgeometry as pgeometry
 import numpy as np
+cv2_imported = True
 try:
     import cv2
     cv2_interpolation = cv2.INTER_AREA
 except:
-    cv2 = None
+    cv2_imported = False
     cv2_interpolation = 3
 
 
@@ -35,7 +36,7 @@ def straightenImage(im, imextent, mvx=1, mvy=None, verbose=0, interpolation=cv2_
          H is the homogeneous transform from original to straightened image
 
     """
-    if cv2 is None:
+    if not cv2_imported:
         raise Exception('opencv is not installed, method straightenImage is not available')
 
     dxmv = imextent[1] - imextent[0]
