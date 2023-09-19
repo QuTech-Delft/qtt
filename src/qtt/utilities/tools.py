@@ -809,7 +809,7 @@ def create_figure_ppt_callback(fig: Optional[Union[int, matplotlib.figure.Figure
     ax = fig.gca()
     ppt_axis = fig.add_axes(position, label=f'figure_ppt_callback_axis {uuid.uuid1()}')
     ppt_button = Button(ppt_axis, 'ppt')
-    ppt_axis._button = ppt_button
+    ppt_axis._button = ppt_button # type: ignore
     ppt_axis.set_alpha(.5)
     plt.sca(ax)
 
