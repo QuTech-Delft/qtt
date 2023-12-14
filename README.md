@@ -1,6 +1,15 @@
 [![Documentation Status](https://readthedocs.org/projects/qtt/badge/?version=latest)](https://qtt.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/qtt.svg)](https://badge.fury.io/py/qtt)
 
+# Important notice
+
+As of December 2023, this repository is no longer actively maintained. This means the maintenance team:
+* will not release any new version. The latest version 1.4.0 will remain on pypi
+* will not solve still open or any new issues or feature requests
+* will not respond to questions asked
+
+The repository https://github.com/QuTech-Delft/qtt will be archived. An archived repository is still available but read-only.
+
 # Welcome
 
 Welcome to the QTT framework. This README will shortly introduce the framework, and it will guide you through the structure, installation process and how to contribute. We look forward to working with you!
