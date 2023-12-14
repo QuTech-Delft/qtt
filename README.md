@@ -5,8 +5,9 @@
 
 As of December 2023, this repository is no longer actively maintained. This means the maintenance team:
 * will not release any new version. The latest version 1.4.0 will remain on pypi
-* will not solve still open or any new issues or feature requests
-* will not respond to questions asked
+* will not take action on open or any new issues, questions or feature requests
+* will not take action on merge requests
+* will not take action on Dependabot alerts
 
 The repository https://github.com/QuTech-Delft/qtt will be archived. An archived repository is still available but read-only.
 
